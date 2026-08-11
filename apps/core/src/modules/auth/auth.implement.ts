@@ -2,6 +2,7 @@ import type { ServerResponse } from 'node:http'
 import { IncomingMessage } from 'node:http'
 
 import { apiKey } from '@better-auth/api-key'
+import { expo } from '@better-auth/expo'
 import type { PasskeyOptions } from '@better-auth/passkey'
 import { passkey } from '@better-auth/passkey'
 import type { SnowflakeGenerator } from '@mx-space/db-schema/id'
@@ -119,11 +120,12 @@ export async function CreateAuth(
     baseURL: dynamicBaseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: async (request) => {
+      const mobileSchemeOrigins = ['yohaku://']
       if (isDev) {
-        if (!request) return ['http://localhost:2323']
+        if (!request) return ['http://localhost:2323', ...mobileSchemeOrigins]
         const origin = request.headers.get('origin')
         if (origin?.includes('localhost') || origin?.includes('127.0.0.1')) {
-          return [origin]
+          return [origin, ...mobileSchemeOrigins]
         }
       }
 
@@ -137,7 +139,7 @@ export async function CreateAuth(
           }
           return [...acc, `https://${origin}`, `http://${origin}`]
         },
-        [],
+        mobileSchemeOrigins,
       )
     },
     account: {
@@ -177,6 +179,7 @@ export async function CreateAuth(
     appName: 'mx-core',
     secret: SECURITY.jwtSecret,
     plugins: [
+      expo(),
       apiKey({
         schema: {
           apikey: {

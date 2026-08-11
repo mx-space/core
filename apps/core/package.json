@@ -61,6 +61,7 @@
     "@babel/plugin-transform-typescript": "8.0.1",
     "@babel/types": "^8.0.4",
     "@better-auth/api-key": "^1.6.26",
+    "@better-auth/expo": "^1.6.26",
     "@better-auth/passkey": "^1.6.26",
     "@earendil-works/pi-agent-core": "0.83.0",
     "@earendil-works/pi-ai": "0.83.0",
