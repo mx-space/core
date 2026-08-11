@@ -1,4 +1,11 @@
-import { AudioLines, FileText, Languages, Sparkles } from 'lucide-react'
+import {
+  AudioLines,
+  FileText,
+  Languages,
+  LayoutDashboard,
+  Sparkles,
+} from 'lucide-react'
+import { useNavigate } from 'react-router'
 
 import {
   createInsightsTask,
@@ -16,6 +23,7 @@ import { useAiGenerateTask } from './use-ai-generate-task'
 
 export function useAiQuickActions(refId: string) {
   const { t } = useI18n()
+  const navigate = useNavigate()
 
   const mutation = useAiGenerateTask()
   const summaryDefaultLangs = useAiDefaultLangs('summaryTargetLanguages')
@@ -49,6 +57,13 @@ export function useAiQuickActions(refId: string) {
   }
 
   const items: ContextMenuItem[] = [
+    {
+      icon: LayoutDashboard,
+      key: 'ai-overview',
+      label: t('ai.menu.openOverview'),
+      onClick: () => navigate(`/ai/overview/${refId}`),
+    },
+    { key: 'ai-overview-sep', type: 'divider' },
     {
       icon: FileText,
       key: 'ai-summary',

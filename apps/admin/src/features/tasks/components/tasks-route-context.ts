@@ -4,11 +4,13 @@ import type { AITask } from '~/api/tasks'
 
 export interface TasksRouteContextValue {
   canceling: boolean
+  continuing: boolean
   deleting: boolean
   polling: boolean
   retrying: boolean
   onBack: () => void
   onCancel: (task: AITask) => void
+  onContinueTts: (task: AITask) => void
   onDelete: (task: AITask) => void
   onRetry: (task: AITask) => void
 }

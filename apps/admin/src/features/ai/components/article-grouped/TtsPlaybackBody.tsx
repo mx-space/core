@@ -1,29 +1,28 @@
 import { useMutation } from '@tanstack/react-query'
+import { Play } from 'lucide-react'
 import { toast } from 'sonner'
 
 import type { AITtsRow } from '~/api/ai'
 import { TtsSegmentPlayer } from '~/features/_shared/components/tts/TtsSegmentPlayer'
 import { useI18n } from '~/i18n'
+import { Button } from '~/ui/primitives/button'
 
 import { getErrorMessage } from '../../utils/ai'
 import { useArticleGroupedRouteContext } from './article-grouped-route-context'
 import { GenerationMetricsMeta } from './GenerationMetricsMeta'
-import type { EditDrawerBodyProps } from './types'
+import type { EditDrawerBodyProps, ItemAction } from './types'
 
 export function TtsPlaybackBody(props: EditDrawerBodyProps<AITtsRow>) {
   const { t } = useI18n()
   const { item } = props
   const ctx = useArticleGroupedRouteContext<AITtsRow>()
 
-  const regenerateAction = ctx.config
-    .extraItemActions?.(item)
-    .find((a) => a.id === 'regenerate')
+  const itemActions = ctx.config.extraItemActions?.(item) ?? []
+  const regenerateAction = itemActions.find((a) => a.id === 'regenerate')
+  const resumeAction = itemActions.find((a) => a.id === 'resume')
 
-  const regenerateMutation = useMutation({
-    mutationFn: async () => {
-      if (!regenerateAction) return
-      await regenerateAction.run(item)
-    },
+  const actionMutation = useMutation({
+    mutationFn: async (action: ItemAction<AITtsRow>) => action.run(item),
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('ai.toast.taskCreateFailed'))),
     onSuccess: async () => {
@@ -48,13 +47,33 @@ export function TtsPlaybackBody(props: EditDrawerBodyProps<AITtsRow>) {
           {item.model} · {item.voice} · {item.speed}x
         </p>
 
+        {resumeAction ? (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-950 dark:bg-amber-950/30">
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              {t('ai.tts.incompleteNotice')}
+            </p>
+            <Button
+              className="shrink-0"
+              disabled={actionMutation.isPending}
+              onClick={() => actionMutation.mutate(resumeAction)}
+              type="button"
+              variant="secondary"
+            >
+              <Play aria-hidden="true" className="size-3.5" />
+              {t('ai.action.resumeTts')}
+            </Button>
+          </div>
+        ) : null}
+
         <GenerationMetricsMeta metrics={item.generationMetrics} />
 
         <TtsSegmentPlayer
           onRegenerate={
-            regenerateAction ? () => regenerateMutation.mutate() : undefined
+            regenerateAction
+              ? () => actionMutation.mutate(regenerateAction)
+              : undefined
           }
-          regenerateSubmitting={regenerateMutation.isPending}
+          regenerateSubmitting={actionMutation.isPending}
           segments={item.segments}
         />
       </div>

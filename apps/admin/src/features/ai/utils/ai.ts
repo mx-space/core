@@ -93,6 +93,17 @@ export function buildTtsRegeneratePayload(row: {
   return { force: true, langs: [row.lang], refId: row.refId }
 }
 
+// An empty blockOrder is the pipeline's "not published yet" sentinel: the run
+// was interrupted after committing some chunks but before finalize. Re-running
+// without `force` reuses every committed chunk and generates only the rest.
+export function isTtsNarrationIncomplete(row: { blockOrder: string[] }) {
+  return row.blockOrder.length === 0
+}
+
+export function buildTtsResumePayload(row: { lang: string; refId: string }) {
+  return { force: false, langs: [row.lang], refId: row.refId }
+}
+
 export function formatDateString(value?: string) {
   if (!value) return '-'
   const date = new Date(value)

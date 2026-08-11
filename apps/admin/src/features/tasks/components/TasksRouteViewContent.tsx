@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
+import { createTtsTask } from '~/api/ai'
 import { getCronTaskDefinitions } from '~/api/cron-tasks'
 import type { AITask, TaskScope } from '~/api/tasks'
 import {
@@ -193,6 +194,28 @@ export function TasksRouteView() {
     },
   })
 
+  const continueTtsMutation = useMutation({
+    mutationFn: (task: AITask) => {
+      const refId = task.payload.refId as string | undefined
+      if (!refId) throw new Error(t('tasks.toast.continueFailed'))
+      return createTtsTask({
+        force: false,
+        langs: task.payload.langs as string[] | undefined,
+        refId,
+      })
+    },
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('tasks.toast.continueFailed'))),
+    onSuccess: async (result) => {
+      toast.success(
+        result.created
+          ? t('tasks.toast.continueCreated')
+          : t('tasks.toast.taskExists'),
+      )
+      await invalidateTasks()
+    },
+  })
+
   const cancelMutation = useMutation({
     mutationFn: cancelTask,
     onError: (error: unknown) =>
@@ -273,6 +296,7 @@ export function TasksRouteView() {
   const routeContextValue = useMemo(
     () => ({
       canceling: cancelMutation.isPending,
+      continuing: continueTtsMutation.isPending,
       deleting: deleteMutation.isPending,
       onBack: closeDetail,
       onCancel: (task: AITask) => {
@@ -280,6 +304,7 @@ export function TasksRouteView() {
           cancelMutation.mutate(task.id)
         }
       },
+      onContinueTts: (task: AITask) => continueTtsMutation.mutate(task),
       onDelete: (task: AITask) => {
         if (window.confirm(t('tasks.confirm.deleteTask', { id: task.id }))) {
           deleteMutation.mutate(task.id)
@@ -292,6 +317,7 @@ export function TasksRouteView() {
     [
       cancelMutation,
       closeDetail,
+      continueTtsMutation,
       deleteMutation,
       retryMutation,
       t,

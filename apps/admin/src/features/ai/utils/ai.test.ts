@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildTtsRegeneratePayload, parseLangInput } from './ai'
+import {
+  buildTtsRegeneratePayload,
+  buildTtsResumePayload,
+  isTtsNarrationIncomplete,
+  parseLangInput,
+} from './ai'
 
 describe('parseLangInput', () => {
   it('splits on full-width and half-width commas, trims, lowercases, dedupes, and drops empty segments', () => {
@@ -63,5 +68,25 @@ describe('buildTtsRegeneratePayload', () => {
     expect(buildTtsRegeneratePayload({ lang: 'en', refId: '7' }).force).toBe(
       true,
     )
+  })
+})
+
+describe('buildTtsResumePayload', () => {
+  it('never sets force, so committed chunks are reused and only the rest generate', () => {
+    expect(buildTtsResumePayload({ lang: 'zh', refId: '42' })).toEqual({
+      force: false,
+      langs: ['zh'],
+      refId: '42',
+    })
+  })
+})
+
+describe('isTtsNarrationIncomplete', () => {
+  it('treats an empty blockOrder as an interrupted, unpublished narration', () => {
+    expect(isTtsNarrationIncomplete({ blockOrder: [] })).toBe(true)
+  })
+
+  it('treats a published blockOrder as complete', () => {
+    expect(isTtsNarrationIncomplete({ blockOrder: ['a', 'b'] })).toBe(false)
   })
 })

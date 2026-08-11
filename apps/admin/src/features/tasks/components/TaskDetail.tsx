@@ -1,7 +1,7 @@
-import { Loader2, RotateCcw, Trash2, XCircle } from 'lucide-react'
+import { Loader2, Play, RotateCcw, Trash2, XCircle } from 'lucide-react'
 
 import type { AITask } from '~/api/tasks'
-import { AITaskStatus } from '~/api/tasks'
+import { AITaskStatus, AITaskType } from '~/api/tasks'
 import { useI18n } from '~/i18n'
 import { DetailHeader } from '~/ui/layout/detail-header'
 import { Button } from '~/ui/primitives/button'
@@ -35,9 +35,11 @@ import { TaskTimeline } from './TaskTimeline'
 
 export function TaskDetail(props: {
   canceling: boolean
+  continuing: boolean
   deleting: boolean
   onBack: () => void
   onCancel: (task: AITask) => void
+  onContinueTts: (task: AITask) => void
   onDelete: (task: AITask) => void
   onRetry: (task: AITask) => void
   retrying: boolean
@@ -55,6 +57,11 @@ export function TaskDetail(props: {
     task.status === AITaskStatus.Failed ||
     task.status === AITaskStatus.PartialFailed ||
     task.status === AITaskStatus.Cancelled
+  // TTS commits each finished chunk before a task dies, so an interrupted task
+  // can be continued incrementally instead of retried with its original
+  // (possibly force) payload.
+  const canContinueTts =
+    canRetry && task.type === AITaskType.Tts && Boolean(task.payload.refId)
   const canDelete =
     task.status === AITaskStatus.Completed ||
     task.status === AITaskStatus.Failed ||
@@ -68,6 +75,23 @@ export function TaskDetail(props: {
       <DetailHeader
         actions={
           <>
+            {canContinueTts ? (
+              <Button
+                aria-label={t('tasks.action.continueTts')}
+                disabled={props.continuing}
+                iconOnly
+                onClick={() => props.onContinueTts(task)}
+                title={t('tasks.action.continueTts')}
+                type="button"
+                variant="subtle"
+              >
+                {props.continuing ? (
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : (
+                  <Play aria-hidden="true" className="size-4" />
+                )}
+              </Button>
+            ) : null}
             {canRetry ? (
               <Button
                 aria-label={t('tasks.action.retryTask')}

@@ -61,9 +61,11 @@ export function TaskDetailRoute() {
   return (
     <TaskDetail
       canceling={ctx.canceling}
+      continuing={ctx.continuing}
       deleting={ctx.deleting}
       onBack={ctx.onBack}
       onCancel={ctx.onCancel}
+      onContinueTts={ctx.onContinueTts}
       onDelete={ctx.onDelete}
       onRetry={ctx.onRetry}
       polling={ctx.polling}
