@@ -126,9 +126,16 @@ const createCheckoutMock = vi.fn(
 const verifyAndParseWebhookMock = vi.fn(
   async (rawBody: Buffer, headers: Record<string, string>) => {
     if (headers['x-signature'] !== 'valid') {
-      throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
+      throw createAppException(AppErrorCode.WEBHOOK_SIGNATURE_INVALID)
     }
     const body = JSON.parse(rawBody.toString('utf8'))
+    if (body.ignoredReason) {
+      return {
+        ignored: true as const,
+        rawType: body.providerEventType,
+        reason: body.ignoredReason,
+      }
+    }
     return {
       event: {
         eventId: body.eventId,
@@ -591,6 +598,34 @@ describe('MembershipController (e2e)', () => {
       })
     })
 
+    it('returns 200 without persisting an audit row for an ignored event', async () => {
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/webhook/dodo',
+        headers: { 'x-signature': 'valid', 'content-type': 'application/json' },
+        payload: {
+          eventId: 'evt_ignored_1',
+          providerEventType: 'payment.succeeded',
+          ignoredReason: 'unsupported_event',
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({
+        data: { ok: true, applied: false, ignored: 'unsupported_event' },
+      })
+
+      const webhookEventRepository = proxy.app.get(
+        BillingWebhookEventRepository,
+      )
+      expect(
+        await webhookEventRepository.findByProviderAndEventId(
+          'dodo',
+          'evt_ignored_1',
+        ),
+      ).toBeFalsy()
+    })
+
     it('returns 400 on signature verification failure', async () => {
       const res = await proxy.app.inject({
         method: 'POST',
@@ -604,11 +639,11 @@ describe('MembershipController (e2e)', () => {
 
       expect(res.statusCode).toBe(400)
       expect(res.json()).toMatchObject({
-        error: { code: 'WEBHOOK_VERIFY_FAILED' },
+        error: { code: 'WEBHOOK_SIGNATURE_INVALID' },
       })
     })
 
-    it('returns 400 for an unknown provider param', async () => {
+    it('returns 404 for an unknown provider param', async () => {
       const res = await proxy.app.inject({
         method: 'POST',
         url: '/membership/webhook/unknown-provider',
@@ -616,9 +651,9 @@ describe('MembershipController (e2e)', () => {
         payload: {},
       })
 
-      expect(res.statusCode).toBe(400)
+      expect(res.statusCode).toBe(404)
       expect(res.json()).toMatchObject({
-        error: { code: 'WEBHOOK_VERIFY_FAILED' },
+        error: { code: 'MEMBERSHIP_PROVIDER_NOT_SUPPORTED' },
       })
       expect(verifyAndParseWebhookMock).not.toHaveBeenCalled()
     })

@@ -17,6 +17,21 @@ export interface VerifiedBillingEvent {
   rawPayload: unknown
 }
 
+export type IgnoredBillingEventReason =
+  'unsupported_event' | 'missing_reader_metadata'
+
+export interface IgnoredBillingEvent {
+  ignored: true
+  rawType: string
+  reason: IgnoredBillingEventReason
+}
+
+export type BillingWebhookResult = VerifiedBillingEvent | IgnoredBillingEvent
+
+export const isIgnoredBillingEvent = (
+  result: BillingWebhookResult,
+): result is IgnoredBillingEvent => 'ignored' in result
+
 export interface NormalizedPlanPricing {
   amount: number
   currency: string
@@ -36,7 +51,7 @@ export interface PaymentProviderAdapter {
   verifyAndParseWebhook: (
     rawBody: Buffer | string,
     headers: Record<string, string>,
-  ) => Promise<VerifiedBillingEvent>
+  ) => Promise<BillingWebhookResult>
 
   getPortalUrl?: (customerId: string) => Promise<string>
 }

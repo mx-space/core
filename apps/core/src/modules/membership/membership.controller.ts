@@ -33,6 +33,7 @@ import {
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
+import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 
 const CheckoutSchema = z.object({
@@ -176,11 +177,14 @@ export class MembershipController {
 
     const adapter = this.providers.get(provider)
     if (!adapter) {
-      throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
+      throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_SUPPORTED)
     }
     const rawBody = req.rawBody ?? Buffer.alloc(0)
-    const event = await adapter.verifyAndParseWebhook(rawBody, headers)
-    const result = await this.membershipService.applyEvent(event)
+    const verified = await adapter.verifyAndParseWebhook(rawBody, headers)
+    if (isIgnoredBillingEvent(verified)) {
+      return { ok: true, applied: false, ignored: verified.reason }
+    }
+    const result = await this.membershipService.applyEvent(verified)
     return { ok: true, applied: result.applied }
   }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type DodoPayments from 'dodopayments'
 import { Webhook } from 'standardwebhooks'
 
@@ -7,10 +7,10 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '../../configs/configs.service'
 import type { MembershipPlan } from '../membership.types'
 import type {
+  BillingWebhookResult,
   NormalizedBillingEvent,
   NormalizedPlanPricing,
   PaymentProviderAdapter,
-  VerifiedBillingEvent,
 } from './provider.interface'
 
 const PRICING_TTL_MS = 10 * 60 * 1000
@@ -30,14 +30,11 @@ const normalizeInterval = (
   return null
 }
 
+type DodoSubscriptionStatus =
+  'pending' | 'active' | 'on_hold' | 'cancelled' | 'failed' | 'expired'
+
 type DodoSubscriptionEvent = {
-  type:
-    | 'subscription.active'
-    | 'subscription.renewed'
-    | 'subscription.on_hold'
-    | 'subscription.cancelled'
-    | 'subscription.expired'
-    | 'subscription.plan_changed'
+  type: string
   business_id: string
   timestamp: string
   data: {
@@ -46,6 +43,7 @@ type DodoSubscriptionEvent = {
     metadata?: Record<string, string>
     next_billing_date: string
     payment_frequency_interval?: 'Day' | 'Week' | 'Month' | 'Year'
+    status?: DodoSubscriptionStatus
   }
 }
 
@@ -58,7 +56,36 @@ const DODO_EVENT_TYPE_MAP: Record<
   'subscription.on_hold': 'on_hold',
   'subscription.cancelled': 'cancelled',
   'subscription.expired': 'cancelled',
+  'subscription.failed': 'cancelled',
   'subscription.plan_changed': 'plan_changed',
+}
+
+const DODO_STATUS_TYPE_MAP: Record<
+  DodoSubscriptionStatus,
+  NormalizedBillingEvent['type'] | undefined
+> = {
+  pending: undefined,
+  active: 'activated',
+  on_hold: 'on_hold',
+  cancelled: 'cancelled',
+  failed: 'cancelled',
+  expired: 'cancelled',
+}
+
+// These two name no transition — the resulting state lives in `data.status`,
+// so it is resolved there instead of from the event name.
+const DODO_STATUS_DERIVED_EVENTS = new Set([
+  'subscription.updated',
+  'subscription.update_payment_method',
+])
+
+const resolveEventType = (
+  event: DodoSubscriptionEvent,
+): NormalizedBillingEvent['type'] | undefined => {
+  if (!DODO_STATUS_DERIVED_EVENTS.has(event.type)) {
+    return DODO_EVENT_TYPE_MAP[event.type]
+  }
+  return event.data.status ? DODO_STATUS_TYPE_MAP[event.data.status] : undefined
 }
 
 const planFromInterval = (
@@ -81,6 +108,7 @@ const planFromEvent = (
 
 @Injectable()
 export class DodoProvider implements PaymentProviderAdapter {
+  private readonly logger = new Logger(DodoProvider.name)
   private client: DodoPayments | null = null
   private cachedApiKey: string | null = null
   private cachedEnvironment: 'test_mode' | 'live_mode' | null = null
@@ -201,7 +229,7 @@ export class DodoProvider implements PaymentProviderAdapter {
   async verifyAndParseWebhook(
     rawBody: Buffer | string,
     headers: Record<string, string>,
-  ): Promise<VerifiedBillingEvent> {
+  ): Promise<BillingWebhookResult> {
     const membershipConfig = await this.configsService.get('membership')
     if (!membershipConfig.webhookSigningKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
@@ -214,18 +242,35 @@ export class DodoProvider implements PaymentProviderAdapter {
     let event: DodoSubscriptionEvent
     try {
       event = webhook.verify(payload, headers) as DodoSubscriptionEvent
-    } catch {
-      throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
+    } catch (error) {
+      this.logger.warn(
+        `Webhook signature verification failed for ${headers['webhook-id']}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+      throw createAppException(AppErrorCode.WEBHOOK_SIGNATURE_INVALID)
     }
 
-    const type = DODO_EVENT_TYPE_MAP[event.type]
+    const type = resolveEventType(event)
     if (!type) {
-      throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
+      this.logger.log(
+        `Ignoring unsupported Dodo event ${event.type}${
+          event.data?.status ? ` (status: ${event.data.status})` : ''
+        }`,
+      )
+      return { ignored: true, rawType: event.type, reason: 'unsupported_event' }
     }
 
     const readerId = event.data.metadata?.readerId
     if (!readerId) {
-      throw createAppException(AppErrorCode.WEBHOOK_VERIFY_FAILED)
+      this.logger.warn(
+        `Ignoring Dodo event ${event.type} for subscription ${event.data.subscription_id}: metadata.readerId is missing`,
+      )
+      return {
+        ignored: true,
+        rawType: event.type,
+        reason: 'missing_reader_metadata',
+      }
     }
 
     return {

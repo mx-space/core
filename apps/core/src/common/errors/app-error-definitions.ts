@@ -614,13 +614,17 @@ export const APP_ERROR_DEFINITIONS = {
     status: 403,
     message: 'An active membership is required',
   },
-  [AppErrorCode.WEBHOOK_VERIFY_FAILED]: {
+  [AppErrorCode.WEBHOOK_SIGNATURE_INVALID]: {
     status: 400,
     message: 'Webhook signature verification failed',
   },
   [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED]: {
     status: 400,
     message: 'No membership payment provider is configured',
+  },
+  [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_SUPPORTED]: {
+    status: 404,
+    message: 'Unknown membership payment provider',
   },
   [AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE]: {
     status: 409,

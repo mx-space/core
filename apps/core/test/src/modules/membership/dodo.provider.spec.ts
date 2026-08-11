@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
+import type { VerifiedBillingEvent } from '~/modules/membership/providers/provider.interface'
 
 const verifyMock = vi.fn()
 const checkoutCreateMock = vi.fn()
@@ -236,7 +237,10 @@ describe('DodoProvider', () => {
       verifyMock.mockReturnValue(rawEvent)
 
       const provider = new DodoProvider(configsService as any)
-      const event = await provider.verifyAndParseWebhook('{}', headers)
+      const event = (await provider.verifyAndParseWebhook(
+        '{}',
+        headers,
+      )) as VerifiedBillingEvent
 
       expect(event).toEqual({
         event: {
@@ -259,6 +263,7 @@ describe('DodoProvider', () => {
       ['subscription.on_hold', 'on_hold'],
       ['subscription.cancelled', 'cancelled'],
       ['subscription.expired', 'cancelled'],
+      ['subscription.failed', 'cancelled'],
       ['subscription.plan_changed', 'plan_changed'],
     ] as const)('maps %s to %s', async (dodoType, expectedType) => {
       verifyMock.mockReturnValue({
@@ -275,7 +280,10 @@ describe('DodoProvider', () => {
       })
 
       const provider = new DodoProvider(configsService as any)
-      const event = await provider.verifyAndParseWebhook('{}', headers)
+      const event = (await provider.verifyAndParseWebhook(
+        '{}',
+        headers,
+      )) as VerifiedBillingEvent
 
       expect(event.event.type).toBe(expectedType)
       expect(event.event.plan).toBe('yearly')
@@ -300,9 +308,72 @@ describe('DodoProvider', () => {
       })
 
       const provider = new DodoProvider(configsService as any)
-      const event = await provider.verifyAndParseWebhook('{}', headers)
+      const event = (await provider.verifyAndParseWebhook(
+        '{}',
+        headers,
+      )) as VerifiedBillingEvent
 
       expect(event.event.plan).toBe('yearly')
+    })
+
+    it.each([
+      ['subscription.updated', 'active', 'activated'],
+      ['subscription.updated', 'on_hold', 'on_hold'],
+      ['subscription.updated', 'cancelled', 'cancelled'],
+      ['subscription.updated', 'failed', 'cancelled'],
+      ['subscription.updated', 'expired', 'cancelled'],
+      ['subscription.update_payment_method', 'active', 'activated'],
+      ['subscription.update_payment_method', 'on_hold', 'on_hold'],
+    ] as const)(
+      'maps %s with status %s to %s',
+      async (dodoType, status, expectedType) => {
+        verifyMock.mockReturnValue({
+          type: dodoType,
+          business_id: 'biz_1',
+          timestamp: '2026-07-30T00:36:27.584023Z',
+          data: {
+            subscription_id: 'sub_1',
+            customer: { customer_id: 'cus_1' },
+            metadata: { readerId: 'reader-1', plan: 'monthly' },
+            next_billing_date: '2026-08-30T00:36:27.783074Z',
+            payment_frequency_interval: 'Month',
+            status,
+          },
+        })
+
+        const provider = new DodoProvider(configsService as any)
+        const event = (await provider.verifyAndParseWebhook(
+          '{}',
+          headers,
+        )) as VerifiedBillingEvent
+
+        expect(event.event.type).toBe(expectedType)
+        expect(event.event.plan).toBe('monthly')
+        expect(event.rawType).toBe(dodoType)
+      },
+    )
+
+    it('ignores subscription.updated while the subscription is pending', async () => {
+      verifyMock.mockReturnValue({
+        type: 'subscription.updated',
+        business_id: 'biz_1',
+        timestamp: '2026-01-01T00:00:00Z',
+        data: {
+          subscription_id: 'sub_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: { readerId: 'reader-1' },
+          next_billing_date: '2026-02-01T00:00:00Z',
+          status: 'pending',
+        },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        ignored: true,
+        rawType: 'subscription.updated',
+        reason: 'unsupported_event',
+      })
     })
 
     it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when webhookSigningKey is empty', async () => {
@@ -325,7 +396,7 @@ describe('DodoProvider', () => {
       })
     })
 
-    it('throws WebhookVerifyFailed when signature verification fails', async () => {
+    it('throws WebhookSignatureInvalid when signature verification fails', async () => {
       verifyMock.mockImplementation(() => {
         throw new Error('invalid signature')
       })
@@ -334,10 +405,10 @@ describe('DodoProvider', () => {
 
       await expect(
         provider.verifyAndParseWebhook('{}', headers),
-      ).rejects.toMatchObject({ code: AppErrorCode.WEBHOOK_VERIFY_FAILED })
+      ).rejects.toMatchObject({ code: AppErrorCode.WEBHOOK_SIGNATURE_INVALID })
     })
 
-    it('throws WebhookVerifyFailed when readerId metadata is missing', async () => {
+    it('ignores an event whose readerId metadata is missing', async () => {
       verifyMock.mockReturnValue({
         type: 'subscription.active',
         business_id: 'biz_1',
@@ -352,12 +423,14 @@ describe('DodoProvider', () => {
 
       const provider = new DodoProvider(configsService as any)
 
-      await expect(
-        provider.verifyAndParseWebhook('{}', headers),
-      ).rejects.toMatchObject({ code: AppErrorCode.WEBHOOK_VERIFY_FAILED })
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        ignored: true,
+        rawType: 'subscription.active',
+        reason: 'missing_reader_metadata',
+      })
     })
 
-    it('throws WebhookVerifyFailed for an unmapped event type', async () => {
+    it('ignores an unmapped event type', async () => {
       verifyMock.mockReturnValue({
         type: 'payment.succeeded',
         business_id: 'biz_1',
@@ -372,9 +445,11 @@ describe('DodoProvider', () => {
 
       const provider = new DodoProvider(configsService as any)
 
-      await expect(
-        provider.verifyAndParseWebhook('{}', headers),
-      ).rejects.toMatchObject({ code: AppErrorCode.WEBHOOK_VERIFY_FAILED })
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        ignored: true,
+        rawType: 'payment.succeeded',
+        reason: 'unsupported_event',
+      })
     })
   })
 })
