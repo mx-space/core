@@ -15,7 +15,11 @@ import {
   ReaderReplyCommentSchema,
 } from '~/modules/comment/comment.schema'
 import { CommentViews } from '~/modules/comment/comment.views'
-import { ResolveQuerySchema } from '~/modules/enrichment/enrichment.schema'
+import {
+  EnrichmentSearchParamsSchema,
+  EnrichmentSearchQuerySchema,
+  ResolveQuerySchema,
+} from '~/modules/enrichment/enrichment.schema'
 import { EnrichmentViews } from '~/modules/enrichment/enrichment.views'
 import { NoteSchema } from '~/modules/note/note.schema'
 import { NoteViews } from '~/modules/note/note.views'
@@ -397,5 +401,17 @@ export const routeManifest: readonly OpenApiRoute[] = [
     auth: false,
     query: ResolveQuerySchema,
     response: { name: 'EnrichmentResult', schema: EnrichmentViews.result },
+  },
+  {
+    operationId: 'searchEnrichment',
+    method: 'get',
+    path: '/enrichment/search/:provider',
+    tag: 'recently',
+    summary: 'Search a configured enrichment provider by text',
+    auth: true,
+    params: EnrichmentSearchParamsSchema,
+    query: EnrichmentSearchQuerySchema,
+    response: { name: 'EnrichmentResult', schema: EnrichmentViews.result },
+    responseIsArray: true,
   },
 ] as const

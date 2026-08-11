@@ -6,6 +6,17 @@ export const ResolveQuerySchema = z.object({
 })
 export class ResolveQueryDto extends createZodDto(ResolveQuerySchema) {}
 
+export const EnrichmentSearchParamsSchema = z.object({
+  provider: z.string().trim().min(1).max(64),
+})
+export const EnrichmentSearchQuerySchema = z.object({
+  query: z.string().trim().min(1).max(100),
+  size: z.coerce.number().int().min(1).max(20).default(8),
+})
+export class EnrichmentSearchQueryDto extends createZodDto(
+  EnrichmentSearchQuerySchema,
+) {}
+
 export const AdminListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),

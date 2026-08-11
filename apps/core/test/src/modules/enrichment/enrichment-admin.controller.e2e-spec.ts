@@ -74,6 +74,7 @@ const captureStorageMock = {
 
 const enrichmentServiceMock = {
   resolve: vi.fn(),
+  search: vi.fn(),
   refresh: vi.fn(async () => baseRow.normalized),
   probe: vi.fn(),
   matchUrlToRef: vi.fn(),
@@ -108,8 +109,7 @@ const providers = [
   }),
   defineProvider({
     provide: EnrichmentCaptureRepository,
-    useValue:
-      captureRepositoryMock as unknown as EnrichmentCaptureRepository,
+    useValue: captureRepositoryMock as unknown as EnrichmentCaptureRepository,
   }),
   defineProvider({
     provide: CaptureStorageService,
@@ -133,9 +133,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     configState.captureEnabled = false
     enrichmentRepositoryMock.findById.mockResolvedValue(baseRow)
     enrichmentRepositoryMock.clearCapture.mockResolvedValue(undefined)
-    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(
-      baseCaptureRow,
-    )
+    captureRepositoryMock.findByEnrichmentId.mockResolvedValue(baseCaptureRow)
     captureRepositoryMock.getQuotaUsage.mockResolvedValue({
       count: 3,
       totalBytes: 4096,
@@ -172,6 +170,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       async (objectKey: string) => `https://cdn.example.test/${objectKey}`,
     )
     enrichmentServiceMock.refresh.mockResolvedValue(baseRow.normalized as any)
+    enrichmentServiceMock.search.mockResolvedValue([baseRow.normalized] as any)
   })
 
   describe('auth gating', () => {
@@ -183,6 +182,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
       { method: 'GET', url: 'enrichment/admin/by-id/row-1' },
       { method: 'GET', url: 'enrichment/admin/captures' },
       { method: 'GET', url: 'enrichment/admin/captures/quota' },
+      { method: 'GET', url: 'enrichment/search/tmdb?query=Dune' },
       { method: 'DELETE', url: 'enrichment/admin/captures/row-1' },
       {
         method: 'POST',
@@ -208,6 +208,25 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     )
   })
 
+  test('GET search/:provider returns normalized media results', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/enrichment/search/tmdb?query=Dune&size=6`,
+      headers: authPassHeader,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json().data).toEqual([
+      expect.objectContaining({ title: 'Hello', category: 'web' }),
+    ])
+    expect(enrichmentServiceMock.search).toHaveBeenCalledWith(
+      'tmdb',
+      'Dune',
+      undefined,
+      6,
+    )
+  })
+
   test('GET admin/by-id/:id returns row with capture', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
@@ -218,9 +237,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     const body = res.json()
     expect(body.data.id).toBe('row-1')
     expect(body.data.capture).toBeTruthy()
-    expect(body.data.capture.object_key).toBe(
-      'enrichment-captures/row-1.webp',
-    )
+    expect(body.data.capture.object_key).toBe('enrichment-captures/row-1.webp')
   })
 
   test('GET admin/by-id/:id 404 when missing', async () => {
@@ -286,9 +303,7 @@ describe('EnrichmentController admin endpoints (e2e)', () => {
     })
     expect(res.statusCode).toBe(204)
     expect(captureStorageMock.delete).toHaveBeenCalledWith('row-1')
-    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith(
-      'row-1',
-    )
+    expect(enrichmentRepositoryMock.clearCapture).toHaveBeenCalledWith('row-1')
   })
 
   test('POST admin/captures/:id/recapture 409 when fetchMode != browser', async () => {

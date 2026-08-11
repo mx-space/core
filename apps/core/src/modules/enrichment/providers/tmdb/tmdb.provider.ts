@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
-import type { TMDBMovieApiResponse } from '../api-response.types'
+import type {
+  TMDBMovieApiResponse,
+  TMDBSearchApiResponse,
+  TMDBSearchResultApiResponse,
+} from '../api-response.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
 import type { EnrichmentProvider } from '../provider.interface'
 import { TmdbClient } from './tmdb.client'
@@ -87,8 +91,50 @@ export class TmdbProvider implements EnrichmentProvider {
       }
     }
 
+    return this.normalize(data, subtype, backfill)
+  }
+
+  async search(
+    query: string,
+    locale?: string,
+    limit = 8,
+  ): Promise<EnrichmentResult[]> {
+    const normalizedQuery = query.trim()
+    if (!normalizedQuery) return []
+
+    const language = locale ? TMDB_LANG_MAP[locale] : undefined
+    const data = await this.client.fetch<TMDBSearchApiResponse>(
+      '/3/search/multi',
+      {
+        language,
+        query: {
+          include_adult: false,
+          page: 1,
+          query: normalizedQuery,
+        },
+      },
+    )
+
+    return data.results
+      .filter(
+        (
+          item,
+        ): item is TMDBSearchResultApiResponse & {
+          media_type: 'movie' | 'tv'
+        } => item.media_type === 'movie' || item.media_type === 'tv',
+      )
+      .slice(0, Math.min(20, Math.max(1, limit)))
+      .map((item) => this.normalize(item, item.media_type))
+  }
+
+  private normalize(
+    data: TMDBMovieApiResponse,
+    subtype: 'movie' | 'tv',
+    backfill?: TMDBMovieApiResponse,
+  ): EnrichmentResult {
     const title =
-      pickNonBlank(data.title, data.name, backfill?.title, backfill?.name) || id
+      pickNonBlank(data.title, data.name, backfill?.title, backfill?.name) ||
+      `${subtype}/${data.id}`
     const description = pickNonBlank(data.overview, backfill?.overview)
 
     const attrs: NonNullable<EnrichmentResult['attributes']> = []

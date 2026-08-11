@@ -130,6 +130,27 @@ public struct RecentlyService: Sendable {
         }
     }
 
+    /// Searches the server-configured TMDB provider without exposing its API
+    /// key to the app. The results share the normal enrichment shape, so a
+    /// selected title can enter the existing canonical-URL publishing path.
+    public func searchTMDB(query: String, size: Int = 8) async throws -> [EnrichmentResult] {
+        let input = Operations.SearchEnrichment.Input(
+            path: .init(provider: "tmdb"),
+            query: .init(query: query, size: size)
+        )
+        switch try await client.searchEnrichment(input) {
+        case let .ok(response):
+            return try response.body.json.data
+        case let .clientError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .serverError(status, response):
+            throw SpaceError(envelope: try response.body.json, status: status)
+        case let .undocumented(statusCode, _):
+            guard statusCode == 204 else { throw SpaceError.undocumented(statusCode) }
+            return []
+        }
+    }
+
     /// URLs the server will turn into media cards.
     ///
     /// `UrlExtractorService.extractFromMarkdown` runs the content through
@@ -187,7 +208,12 @@ public struct RecentlyService: Sendable {
         selectedEnrichmentURLs: [String]
     ) -> String {
         selectedEnrichmentURLs.reduce(content) { partial, url in
-            isolatingLink(url, in: partial)
+            if detectedURLs(in: partial).contains(url) {
+                return isolatingLink(url, in: partial)
+            }
+            return [partial.trimmingCharacters(in: .whitespacesAndNewlines), url]
+                .filter { !$0.isEmpty }
+                .joined(separator: "\n\n")
         }
     }
 
