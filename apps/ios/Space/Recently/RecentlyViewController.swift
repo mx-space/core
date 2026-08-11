@@ -17,6 +17,7 @@ final class RecentlyViewController: UIViewController {
         onSaved: { [weak self] in self?.applySnapshot() }
     )
     private var composerController: UIHostingController<RecentlyInlineComposerView>!
+    private var composerPanelController: UIHostingController<RecentlyComposerPanelView>!
     private var collectionView: UICollectionView!
     private var dataSource: UICollectionViewDiffableDataSource<Section, String>!
     private let refreshControl = UIRefreshControl()
@@ -60,6 +61,24 @@ final class RecentlyViewController: UIViewController {
         ])
         controller.didMove(toParent: self)
         composerController = controller
+
+        let panelController = UIHostingController(
+            rootView: RecentlyComposerPanelView(store: composerStore)
+        )
+        panelController.sizingOptions = .intrinsicContentSize
+        panelController.view.backgroundColor = .clear
+        panelController.view.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        addChild(panelController)
+        view.addSubview(panelController.view)
+        panelController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            panelController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            panelController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            panelController.view.bottomAnchor.constraint(equalTo: controller.view.topAnchor),
+        ])
+        panelController.didMove(toParent: self)
+        composerPanelController = panelController
     }
 
     private func configureCollectionView() {
@@ -89,6 +108,9 @@ final class RecentlyViewController: UIViewController {
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: composerController.view.topAnchor),
         ])
+
+        view.bringSubviewToFront(composerPanelController.view)
+        view.bringSubviewToFront(composerController.view)
 
         let registration = UICollectionView.CellRegistration<UICollectionViewListCell, RecentlyCard> {
             [weak self] cell, _, entry in
@@ -156,10 +178,10 @@ final class RecentlyViewController: UIViewController {
         }
 
         var configuration = UIContentUnavailableConfiguration.empty()
-        if let message = store.errorMessage {
+        if store.errorMessage != nil {
             configuration.image = UIImage(systemName: "exclamationmark.triangle")
             configuration.text = "Could not load Recently"
-            configuration.secondaryText = message
+            configuration.secondaryText = "Check the Space server connection, then try again."
             var retry = UIButton.Configuration.glass()
             retry.title = "Retry"
             retry.cornerStyle = .capsule

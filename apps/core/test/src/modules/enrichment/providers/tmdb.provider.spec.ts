@@ -181,4 +181,80 @@ describe('TmdbProvider', () => {
       expect(result.description).toBeUndefined() // empty, no backfill
     })
   })
+
+  describe('search', () => {
+    it('searches localized movie and TV results while excluding people', async () => {
+      const client = createClient()
+      vi.mocked(client.fetch).mockResolvedValue({
+        page: 1,
+        total_pages: 1,
+        total_results: 3,
+        results: [
+          {
+            id: 438_631,
+            media_type: 'movie',
+            title: '沙丘',
+            overview: '保罗踏上旅程。',
+            poster_path: '/dune.jpg',
+            vote_average: 7.8,
+            vote_count: 14_000,
+            release_date: '2021-09-15',
+          },
+          {
+            id: 99,
+            media_type: 'person',
+            name: 'A person',
+            overview: null,
+            poster_path: null,
+            vote_average: null,
+            vote_count: null,
+          },
+          {
+            id: 94_953,
+            media_type: 'tv',
+            name: '沙丘：预言',
+            overview: '姐妹会的起源。',
+            poster_path: '/prophecy.jpg',
+            vote_average: 7.2,
+            vote_count: 400,
+            first_air_date: '2024-11-17',
+          },
+        ],
+      })
+      const p = new TmdbProvider(client)
+
+      const results = await p.search('  Dune  ', 'zh', 8)
+
+      expect(client.fetch).toHaveBeenCalledWith('/3/search/multi', {
+        language: 'zh-CN',
+        query: {
+          include_adult: false,
+          page: 1,
+          query: 'Dune',
+        },
+      })
+      expect(
+        results.map(({ title, subtype, url }) => ({ title, subtype, url })),
+      ).toEqual([
+        {
+          title: '沙丘',
+          subtype: 'movie',
+          url: 'https://www.themoviedb.org/movie/438631',
+        },
+        {
+          title: '沙丘：预言',
+          subtype: 'tv',
+          url: 'https://www.themoviedb.org/tv/94953',
+        },
+      ])
+    })
+
+    it('does not call TMDB for an empty query', async () => {
+      const client = createClient()
+      const p = new TmdbProvider(client)
+
+      await expect(p.search('   ')).resolves.toEqual([])
+      expect(client.fetch).not.toHaveBeenCalled()
+    })
+  })
 })

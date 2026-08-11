@@ -14,10 +14,17 @@ struct ComposerLinkPreview: Identifiable, Equatable {
 @MainActor
 @Observable
 final class RecentlyComposerStore {
+    private enum AttachmentSearchScope {
+        case all
+        case context
+        case tmdb
+    }
+
     private struct DraftState {
         let text: String
         let context: RecentlyContext?
         let links: [ComposerLinkPreview]
+        let attachedURLs: [String]
         let selectionOverrides: [String: Bool]
     }
 
@@ -26,18 +33,46 @@ final class RecentlyComposerStore {
 
     private(set) var context: RecentlyContext?
     private(set) var contextCandidates: [RecentlyContext] = []
+    private(set) var tmdbCandidates: [MediaCard] = []
     private(set) var links: [ComposerLinkPreview] = []
     private(set) var isChoosingContext = false
     private(set) var isLoadingContexts = false
+    private(set) var isLoadingTMDB = false
     private(set) var isSaving = false
     private(set) var editingID: String?
+    private(set) var activeCommand: RecentlySlashCommand?
     private(set) var errorMessage: String?
     private(set) var focusRequestID = 0
     private(set) var dismissRequestID = 0
 
     var isEditing: Bool { editingID != nil }
+    var slashCommands: [RecentlySlashCommand] {
+        guard !isChoosingContext, !isSaving else { return [] }
+        return RecentlySlashCommand.suggestions(for: text)
+    }
+
+    var isShowingSlashMenu: Bool { !slashCommands.isEmpty }
+    var isShowingComposerPanel: Bool { isShowingSlashMenu || isChoosingContext }
+    var selectedLinks: [ComposerLinkPreview] { links.filter(\.isSelected) }
+    var showsContextSearchResults: Bool { attachmentSearchScope != .tmdb }
+    var showsTMDBSearchResults: Bool { attachmentSearchScope != .context }
+    var attachmentSearchPlaceholder: String {
+        guard attachmentSearchScope == .context else {
+            return attachmentSearchScope == .tmdb ? "Search TMDB" : "TMDB or context"
+        }
+        return switch contextKindFilter {
+        case .post: "Search posts"
+        case .note: "Search notes"
+        case .page: "Search pages"
+        case .recently: "Search Recently"
+        case nil: "Search Space"
+        }
+    }
+
     var canSubmit: Bool {
-        !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isSaving
+        let hasText = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasSelectedEnrichment = links.contains(where: \.isSelected)
+        return (hasText || hasSelectedEnrichment) && !isSaving
     }
 
     private let service: RecentlyService
@@ -45,11 +80,16 @@ final class RecentlyComposerStore {
     private let onSaved: () -> Void
 
     private var suspendedDraft: DraftState?
+    private var attachedURLs: [String] = []
     private var selectionOverrides: [String: Bool] = [:]
     private var linkGeneration = 0
     private var contextGeneration = 0
+    private var tmdbGeneration = 0
+    private var attachmentSearchScope: AttachmentSearchScope = .all
+    private var contextKindFilter: RecentlyContext.Kind?
     private var linkResolutionTask: Task<Void, Never>?
     private var contextSearchTask: Task<Void, Never>?
+    private var tmdbSearchTask: Task<Void, Never>?
 
     init(
         service: RecentlyService,
@@ -65,7 +105,8 @@ final class RecentlyComposerStore {
         errorMessage = nil
         linkGeneration &+= 1
         let generation = linkGeneration
-        let urls = Self.uniqueURLs(in: text)
+        let detectedURLs = Self.uniqueURLs(in: text)
+        let urls = detectedURLs + attachedURLs.filter { !detectedURLs.contains($0) }
         let existing = Dictionary(uniqueKeysWithValues: links.map { ($0.url, $0) })
 
         links = urls.map { url in
@@ -95,6 +136,13 @@ final class RecentlyComposerStore {
 
     func toggleLink(_ url: String) {
         guard let index = links.firstIndex(where: { $0.url == url }) else { return }
+        if attachedURLs.contains(url), !Self.uniqueURLs(in: text).contains(url) {
+            attachedURLs.removeAll { $0 == url }
+            links.remove(at: index)
+            selectionOverrides.removeValue(forKey: url)
+            errorMessage = nil
+            return
+        }
         links[index].isSelected.toggle()
         selectionOverrides[url] = links[index].isSelected
         errorMessage = nil
@@ -105,22 +153,90 @@ final class RecentlyComposerStore {
     }
 
     func toggleContextPicker() {
-        isChoosingContext.toggle()
-        guard isChoosingContext else { return }
-        if contextCandidates.isEmpty {
-            scheduleContextSearch(immediate: true)
+        errorMessage = nil
+        if isChoosingContext {
+            dismissAttachmentSearch()
+            return
         }
+        openAttachmentSearch(scope: .all)
     }
 
     func contextSearchDidChange() {
+        guard isChoosingContext else { return }
+        errorMessage = nil
         scheduleContextSearch(immediate: false)
+        scheduleTMDBSearch(immediate: false)
     }
 
     func selectContext(_ candidate: RecentlyContext) {
         context = candidate
         isChoosingContext = false
-        contextSearch = ""
+        clearAttachmentSearch()
         errorMessage = nil
+        focusInput()
+    }
+
+    func selectTMDB(_ candidate: MediaCard) {
+        guard let url = candidate.url?.absoluteString else { return }
+
+        if !attachedURLs.contains(url) {
+            attachedURLs.append(url)
+        }
+        selectionOverrides[url] = true
+        if let index = links.firstIndex(where: { $0.url == url }) {
+            links[index].card = candidate
+            links[index].isSelected = true
+            links[index].isResolving = false
+        } else {
+            links.append(
+                ComposerLinkPreview(
+                    url: url,
+                    card: candidate,
+                    isSelected: true,
+                    isResolving: false
+                )
+            )
+        }
+
+        isChoosingContext = false
+        clearAttachmentSearch()
+        errorMessage = nil
+        focusInput()
+    }
+
+    func executeSlashCommand(_ command: RecentlySlashCommand) {
+        guard let invocation = RecentlySlashCommand.invocation(in: text) else { return }
+
+        text.removeSubrange(invocation.range)
+        switch command.searchScope {
+        case .context:
+            openAttachmentSearch(
+                scope: .context,
+                contextKind: command.contextKind,
+                command: command
+            )
+        case .tmdb:
+            openAttachmentSearch(scope: .tmdb, command: command)
+        }
+        errorMessage = nil
+    }
+
+    func dismissAttachmentSearch() {
+        isChoosingContext = false
+        clearAttachmentSearch()
+        errorMessage = nil
+        focusInput()
+    }
+
+    func returnToSlashMenu() {
+        isChoosingContext = false
+        clearAttachmentSearch()
+        errorMessage = nil
+        if let last = text.last, !last.isWhitespace {
+            text.append(" ")
+        }
+        text.append("/")
+        focusInput()
     }
 
     func removeContext() {
@@ -134,6 +250,7 @@ final class RecentlyComposerStore {
                 text: text,
                 context: context,
                 links: links,
+                attachedURLs: attachedURLs,
                 selectionOverrides: selectionOverrides
             )
         }
@@ -143,7 +260,8 @@ final class RecentlyComposerStore {
         context = entry.context
         errorMessage = nil
         isChoosingContext = false
-        contextSearch = ""
+        clearAttachmentSearch()
+        attachedURLs = []
 
         let selected = entry.selectedEnrichmentURLs
         let enrichmentMap = entry.enrichments?.additionalProperties ?? [:]
@@ -225,6 +343,11 @@ final class RecentlyComposerStore {
     }
 
     private func scheduleContextSearch(immediate: Bool) {
+        guard attachmentSearchScope != .tmdb else {
+            contextCandidates = []
+            isLoadingContexts = false
+            return
+        }
         contextGeneration &+= 1
         let generation = contextGeneration
         contextSearchTask?.cancel()
@@ -237,6 +360,32 @@ final class RecentlyComposerStore {
         }
     }
 
+    private func scheduleTMDBSearch(immediate: Bool) {
+        guard attachmentSearchScope != .context else {
+            tmdbCandidates = []
+            isLoadingTMDB = false
+            return
+        }
+        tmdbGeneration &+= 1
+        let generation = tmdbGeneration
+        let query = contextSearch.trimmingCharacters(in: .whitespacesAndNewlines)
+        tmdbSearchTask?.cancel()
+
+        guard !query.isEmpty else {
+            tmdbCandidates = []
+            isLoadingTMDB = false
+            return
+        }
+
+        tmdbSearchTask = Task { [weak self] in
+            if !immediate {
+                try? await Task.sleep(for: .milliseconds(350))
+            }
+            guard !Task.isCancelled, let self else { return }
+            await loadTMDBCandidates(query: query, generation: generation)
+        }
+    }
+
     private func loadContextCandidates(generation: Int) async {
         isLoadingContexts = true
         defer {
@@ -245,7 +394,9 @@ final class RecentlyComposerStore {
         do {
             let candidates = try await service.refCandidates(search: contextSearch)
             if generation == contextGeneration {
-                contextCandidates = candidates
+                contextCandidates = candidates.filter { candidate in
+                    contextKindFilter == nil || candidate.kind == contextKindFilter
+                }
             }
         } catch {
             if generation == contextGeneration {
@@ -255,12 +406,61 @@ final class RecentlyComposerStore {
         }
     }
 
+    private func loadTMDBCandidates(query: String, generation: Int) async {
+        isLoadingTMDB = true
+        defer {
+            if generation == tmdbGeneration { isLoadingTMDB = false }
+        }
+        do {
+            let results = try await service.searchTMDB(query: query)
+            if generation == tmdbGeneration {
+                tmdbCandidates = results.map(MediaCard.init)
+            }
+        } catch {
+            if generation == tmdbGeneration {
+                tmdbCandidates = []
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func clearAttachmentSearch() {
+        contextGeneration &+= 1
+        tmdbGeneration &+= 1
+        contextSearchTask?.cancel()
+        tmdbSearchTask?.cancel()
+        contextSearch = ""
+        contextCandidates = []
+        tmdbCandidates = []
+        isLoadingContexts = false
+        isLoadingTMDB = false
+        attachmentSearchScope = .all
+        contextKindFilter = nil
+        activeCommand = nil
+    }
+
+    private func openAttachmentSearch(
+        scope: AttachmentSearchScope,
+        contextKind: RecentlyContext.Kind? = nil,
+        command: RecentlySlashCommand? = nil
+    ) {
+        clearAttachmentSearch()
+        attachmentSearchScope = scope
+        contextKindFilter = contextKind
+        activeCommand = command
+        isChoosingContext = true
+        scheduleContextSearch(immediate: true)
+        scheduleTMDBSearch(immediate: true)
+        focusInput()
+    }
+
     private func restoreSuspendedDraft() {
         editingID = nil
         if let suspendedDraft {
             text = suspendedDraft.text
             context = suspendedDraft.context
             links = suspendedDraft.links
+            attachedURLs = suspendedDraft.attachedURLs
             selectionOverrides = suspendedDraft.selectionOverrides
         } else {
             resetDraft()
@@ -268,7 +468,7 @@ final class RecentlyComposerStore {
         self.suspendedDraft = nil
         errorMessage = nil
         isChoosingContext = false
-        contextSearch = ""
+        clearAttachmentSearch()
         textDidChange()
     }
 
@@ -277,11 +477,12 @@ final class RecentlyComposerStore {
         text = ""
         context = nil
         links = []
+        attachedURLs = []
         selectionOverrides = [:]
         suspendedDraft = nil
         errorMessage = nil
         isChoosingContext = false
-        contextSearch = ""
+        clearAttachmentSearch()
         linkResolutionTask?.cancel()
     }
 

@@ -7,15 +7,26 @@
 
 export interface TMDBMovieApiResponse {
   id: number
-  title: string
+  title?: string
   name?: string
   overview: string | null
   poster_path: string | null
   vote_average: number | null
   vote_count: number | null
-  genres: Array<{ name: string }> | null
+  genres?: Array<{ name: string }> | null
   release_date?: string
   first_air_date?: string
+}
+
+export interface TMDBSearchResultApiResponse extends TMDBMovieApiResponse {
+  media_type: 'movie' | 'person' | 'tv'
+}
+
+export interface TMDBSearchApiResponse {
+  page: number
+  results: TMDBSearchResultApiResponse[]
+  total_pages: number
+  total_results: number
 }
 
 // TMDB uses a single type — movies have `title`+`release_date`, TV has `name`+`first_air_date`

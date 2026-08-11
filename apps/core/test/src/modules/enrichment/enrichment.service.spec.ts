@@ -155,6 +155,7 @@ function makeService(stubs: ServiceStubs = {}) {
     imageService,
     taskQueueService,
     taskQueueProcessor,
+    configsService,
   }
 }
 
@@ -274,6 +275,46 @@ describe('EnrichmentService.resolveCacheLocale', () => {
       supportedLocales: ['zh'],
     } as any
     expect(service.resolveCacheLocale(provider, undefined)).toBe('')
+  })
+})
+
+describe('EnrichmentService.search', () => {
+  it('checks provider readiness and delegates with the normalized locale', async () => {
+    const { service, provider, configsService } = makeService()
+    const searchResults = [makeResult({ title: 'Dune' })]
+    Object.assign(provider, {
+      featureGateConfigKey: 'tmdb',
+      requiredConfigKeys: ['apiKey'],
+      localeAware: true,
+      supportedLocales: ['zh', 'en'],
+      search: vi.fn(async () => searchResults),
+    })
+    configsService.get.mockResolvedValue({
+      tmdb: { enabled: true, apiKey: 'configured' },
+    })
+
+    await expect(service.search('tmdb', 'Dune', 'zh-CN', 6)).resolves.toBe(
+      searchResults,
+    )
+    expect((provider as any).search).toHaveBeenCalledWith('Dune', 'zh', 6)
+  })
+
+  it('rejects search when the provider credential is missing', async () => {
+    const { service, provider, configsService } = makeService()
+    Object.assign(provider, {
+      featureGateConfigKey: 'tmdb',
+      requiredConfigKeys: ['apiKey'],
+      search: vi.fn(),
+    })
+    configsService.get.mockResolvedValue({
+      tmdb: { enabled: true, apiKey: '' },
+    })
+
+    await expect(service.search('tmdb', 'Dune')).rejects.toMatchObject({
+      name: 'TokenMissingError',
+      providerName: 'tmdb',
+    })
+    expect((provider as any).search).not.toHaveBeenCalled()
   })
 })
 

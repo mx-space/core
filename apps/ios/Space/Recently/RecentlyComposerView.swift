@@ -4,6 +4,7 @@ import SwiftUI
 
 struct RecentlyInlineComposerView: View {
     @Bindable var store: RecentlyComposerStore
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @FocusState private var inputFocused: Bool
 
     var body: some View {
@@ -12,21 +13,23 @@ struct RecentlyInlineComposerView: View {
                 editingBanner
             }
 
-            metadataTray
+            if !store.isShowingComposerPanel {
+                metadataTray
 
-            if let error = store.errorMessage {
-                Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.caption)
-                    .foregroundStyle(Color(SpacePalette.danger))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .lineLimit(2)
-                    .accessibilityIdentifier("recently.composer.error")
+                if let error = store.errorMessage {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(Color(SpacePalette.danger))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(2)
+                        .accessibilityIdentifier("recently.composer.error")
+                }
             }
 
             inputRow
         }
-        .padding(.horizontal, Spacing.regular)
-        .padding(.vertical, Spacing.small)
+        .padding(.horizontal, Spacing.small)
+        .padding(.vertical, Spacing.xSmall)
         .onChange(of: store.text) { _, _ in
             store.textDidChange()
         }
@@ -43,101 +46,9 @@ struct RecentlyInlineComposerView: View {
 
     @ViewBuilder
     private var metadataTray: some View {
-        if store.context != nil || store.isChoosingContext || !store.links.isEmpty {
-            VStack(spacing: Spacing.xSmall) {
-                if store.isChoosingContext {
-                    contextCandidates
-                } else if let context = store.context {
-                    RecentlyContextCardView(context: context) {
-                        store.removeContext()
-                    }
-                }
-
-                if !store.links.isEmpty {
-                    ScrollView(.horizontal) {
-                        LazyHStack(spacing: Spacing.small) {
-                            ForEach(store.links) { preview in
-                                ComposerLinkSelectionCard(preview: preview) {
-                                    store.toggleLink(preview.url)
-                                }
-                            }
-                        }
-                    }
-                    .scrollIndicators(.hidden)
-                    .frame(height: 84)
-                    .accessibilityLabel("Link enrichments")
-                }
-            }
-            .frame(maxHeight: 140)
-            .clipped()
+        if store.context != nil || !store.selectedLinks.isEmpty {
+            RecentlyComposerSelectionTray(store: store)
         }
-    }
-
-    private var contextCandidates: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: Spacing.small) {
-                HStack(spacing: Spacing.small) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.caption)
-                        .foregroundStyle(Color(SpacePalette.subtle))
-                    TextField("Find context", text: $store.contextSearch)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .font(.caption)
-                }
-                .padding(.horizontal, Spacing.medium)
-                .frame(width: 142, height: 44)
-                .background(Color(SpacePalette.inset), in: .rect(cornerRadius: Radius.control))
-
-                if store.isLoadingContexts {
-                    ProgressView()
-                        .frame(width: 44, height: 44)
-                        .accessibilityLabel("Loading context")
-                } else if store.contextCandidates.isEmpty {
-                    Text("No matches")
-                        .font(.caption)
-                        .foregroundStyle(Color(SpacePalette.subtle))
-                        .frame(height: 44)
-                } else {
-                    ForEach(store.contextCandidates) { candidate in
-                        Button {
-                            store.selectContext(candidate)
-                        } label: {
-                            HStack(spacing: Spacing.small) {
-                                Image(systemName: candidate.kind.systemImage)
-                                    .foregroundStyle(Color(SpacePalette.accent))
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(candidate.kind.title)
-                                        .font(.caption2)
-                                        .foregroundStyle(Color(SpacePalette.subtle))
-                                    Text(candidate.title)
-                                        .font(.caption.weight(.medium))
-                                        .foregroundStyle(Color(SpacePalette.primary))
-                                        .lineLimit(1)
-                                }
-                            }
-                            .padding(.horizontal, Spacing.medium)
-                            .frame(width: 174, height: 44, alignment: .leading)
-                            .background(
-                                Color(SpacePalette.inset),
-                                in: .rect(cornerRadius: Radius.control)
-                            )
-                            .overlay {
-                                RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                                    .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier(
-                            "recently.composer.context.candidate.\(candidate.kind.rawValue).\(candidate.id)"
-                        )
-                    }
-                }
-            }
-        }
-        .scrollIndicators(.hidden)
-        .frame(height: 44)
-        .accessibilityLabel("Choose context")
     }
 
     private var editingBanner: some View {
@@ -156,170 +67,176 @@ struct RecentlyInlineComposerView: View {
         .frame(minHeight: 24)
     }
 
+    private func executeSlashCommand(_ command: RecentlySlashCommand) {
+        store.executeSlashCommand(command)
+    }
+
     private var inputRow: some View {
-        HStack(alignment: .bottom, spacing: Spacing.small) {
-            Button("Choose context", systemImage: "paperclip") {
+        HStack(alignment: .bottom, spacing: Spacing.xSmall) {
+            Button {
                 store.toggleContextPicker()
-                inputFocused = true
+            } label: {
+                Image(systemName: "paperclip")
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(
+                        store.context != nil || store.isChoosingContext || !store.links.isEmpty
+                            ? Color(SpacePalette.accent)
+                            : Color(SpacePalette.primary)
+                    )
+                    .frame(width: 44, height: 44)
+                    .background {
+                        if reduceTransparency {
+                            Circle().fill(Color(SpacePalette.surface))
+                        } else {
+                            Circle()
+                                .fill(.clear)
+                                .glassEffect(.regular.interactive(), in: Circle())
+                        }
+                    }
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.52), lineWidth: 0.5)
+                    }
+                    .contentShape(Circle())
             }
-            .labelStyle(.iconOnly)
-            .font(.body.weight(.medium))
-            .buttonStyle(.glass)
-            .tint(
-                store.context != nil || store.isChoosingContext
-                    ? Color(SpacePalette.accent)
-                    : Color(SpacePalette.muted)
-            )
-            .frame(width: 44, height: 44)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Add context or media")
+            .accessibilityHint("Search internal context or TMDB")
             .accessibilityIdentifier("recently.composer.context")
 
-            TextField("Share something…", text: $store.text, axis: .vertical)
-                .lineLimit(1 ... 6)
-                .focused($inputFocused)
-                .font(.body)
-                .composerFieldSurface()
-                .accessibilityIdentifier("recently.composer.text")
+            HStack(alignment: .bottom, spacing: 0) {
+                TextField(inputPlaceholder, text: inputText, axis: .vertical)
+                    .lineLimit(store.isChoosingContext ? 1 ... 1 : 1 ... 6)
+                    .focused($inputFocused)
+                    .font(.body)
+                    .autocorrectionDisabled(store.isChoosingContext)
+                    .padding(.leading, 14)
+                    .padding(.vertical, 10)
+                    .frame(minHeight: 44, alignment: .leading)
+                    .layoutPriority(1)
+                    .onSubmit {
+                        guard !store.isChoosingContext else { return }
+                        if let command = store.slashCommands.first {
+                            executeSlashCommand(command)
+                        }
+                    }
+                    .accessibilityIdentifier(
+                        store.isChoosingContext
+                            ? "recently.composer.attachment.search"
+                            : "recently.composer.text"
+                    )
 
+                if store.isChoosingContext {
+                    searchTrailingControl
+                } else {
+                    submitButton
+                }
+            }
+            .background {
+                let shape = RoundedRectangle(
+                    cornerRadius: Radius.composer,
+                    style: .continuous
+                )
+                if reduceTransparency {
+                    shape.fill(Color(SpacePalette.inset))
+                } else {
+                    shape
+                        .fill(.clear)
+                        .glassEffect(.regular, in: shape)
+                }
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: Radius.composer, style: .continuous)
+                    .stroke(Color.white.opacity(0.42), lineWidth: 0.5)
+            }
+        }
+    }
+
+    private var inputText: Binding<String> {
+        Binding(
+            get: { store.isChoosingContext ? store.contextSearch : store.text },
+            set: { value in
+                if store.isChoosingContext {
+                    store.contextSearch = value
+                } else {
+                    store.text = value
+                }
+            }
+        )
+    }
+
+    private var inputPlaceholder: String {
+        store.isChoosingContext ? store.attachmentSearchPlaceholder : "Share something…"
+    }
+
+    @ViewBuilder
+    private var searchTrailingControl: some View {
+        if store.contextSearch.isEmpty {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color(SpacePalette.subtle))
+                .frame(width: 44, height: 44)
+                .accessibilityHidden(true)
+        } else {
+            Button("Clear search", systemImage: "xmark.circle.fill") {
+                store.contextSearch = ""
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(Color(SpacePalette.subtle))
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+        }
+    }
+
+    private var submitButton: some View {
+        Button {
+            if let command = store.slashCommands.first {
+                executeSlashCommand(command)
+            } else {
+                Task { await store.submit() }
+            }
+        } label: {
             Group {
                 if store.isSaving {
                     ProgressView()
-                        .frame(width: 44, height: 44)
+                        .controlSize(.small)
                 } else {
-                    Button(store.isEditing ? "Save" : "Publish", systemImage: "arrow.up") {
-                        Task { await store.submit() }
-                    }
-                    .labelStyle(.iconOnly)
-                    .font(.body.weight(.semibold))
-                    .buttonStyle(.glassProminent)
-                    .tint(Color(SpacePalette.accent))
-                    .disabled(!store.canSubmit)
-                    .frame(width: 44, height: 44)
-                    .accessibilityIdentifier("recently.composer.post")
+                    Image(systemName: "paperplane.fill")
                 }
             }
-        }
-    }
-}
-
-private struct ComposerLinkSelectionCard: View {
-    let preview: ComposerLinkPreview
-    let toggle: () -> Void
-
-    var body: some View {
-        Button(action: toggle) {
-            Group {
-                if let card = preview.card {
-                    switch card.variant {
-                    case .poster:
-                        poster(card)
-                    case .fallback:
-                        fallback(card)
-                    }
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 40, height: 40)
+            .background {
+                let tint = store.canSubmit || store.isSaving
+                    ? Color(SpacePalette.accent)
+                    : Color(SpacePalette.subtle).opacity(0.18)
+                if reduceTransparency {
+                    Circle().fill(tint)
                 } else {
-                    unresolved
+                    Circle()
+                        .fill(.clear)
+                        .glassEffect(.regular.tint(tint).interactive(), in: Circle())
                 }
             }
-            .frame(width: 184, height: 80)
-            .background(Color(SpacePalette.inset), in: .rect(cornerRadius: Radius.control))
             .overlay {
-                RoundedRectangle(cornerRadius: Radius.control, style: .continuous)
-                    .stroke(
-                        preview.isSelected
-                            ? Color(SpacePalette.accent)
-                            : Color(.separator).opacity(0.5),
-                        lineWidth: preview.isSelected ? 2 : 0.5
-                    )
+                Circle()
+                    .stroke(Color.white.opacity(0.58), lineWidth: 0.5)
             }
-            .overlay(alignment: .topTrailing) {
-                Image(systemName: preview.isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.caption)
-                    .foregroundStyle(
-                        preview.isSelected
-                            ? Color(SpacePalette.accent)
-                            : Color(SpacePalette.subtle)
-                    )
-                    .padding(6)
-            }
-            .opacity(preview.isSelected ? 1 : 0.58)
-            .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("recently.composer.enrichment")
-        .accessibilityLabel("\(preview.card?.title ?? preview.url), link enrichment")
-        .accessibilityValue(preview.isSelected ? "Selected" : "Not selected")
+        .frame(width: 44, height: 44)
+        .contentShape(.rect)
+        .disabled(!store.canSubmit)
+        .accessibilityLabel(submitAccessibilityLabel)
+        .accessibilityIdentifier("recently.composer.post")
     }
 
-    private func poster(_ card: MediaCard) -> some View {
-        HStack(spacing: Spacing.small) {
-            ComposerArtwork(url: card.artworkURL, accent: card.accent)
-                .frame(width: 52, height: 80)
-            copy(card)
-                .padding(.trailing, Spacing.small)
-        }
-    }
-
-    private func fallback(_ card: MediaCard) -> some View {
-        HStack(spacing: Spacing.small) {
-            copy(card)
-                .padding(.leading, Spacing.medium)
-            if card.artworkURL != nil {
-                ComposerArtwork(url: card.artworkURL, accent: card.accent)
-                    .frame(width: 52, height: 52)
-                    .clipShape(.rect(cornerRadius: 8))
-                    .padding(.trailing, Spacing.small)
-            }
-        }
-    }
-
-    private func copy(_ card: MediaCard) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(card.category.uppercased())
-                .font(.system(size: 9, weight: .semibold))
-                .tracking(0.8)
-                .foregroundStyle(Color(SpacePalette.subtle))
-            Text(card.title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color(SpacePalette.primary))
-                .lineLimit(2)
-            Text(card.host ?? card.metaLine)
-                .font(.caption2)
-                .foregroundStyle(Color(SpacePalette.muted))
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var unresolved: some View {
-        HStack(spacing: Spacing.medium) {
-            Image(systemName: "link")
-                .font(.title3)
-                .foregroundStyle(Color(SpacePalette.muted))
-            VStack(alignment: .leading, spacing: Spacing.xSmall) {
-                Text(URL(string: preview.url)?.host() ?? "Link")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color(SpacePalette.primary))
-                    .lineLimit(1)
-                Text(preview.isResolving ? "Resolving…" : "No rich preview")
-                    .font(.caption2)
-                    .foregroundStyle(Color(SpacePalette.subtle))
-            }
-            Spacer(minLength: 0)
-            if preview.isResolving { ProgressView().controlSize(.small) }
-        }
-        .padding(.horizontal, Spacing.medium)
-    }
-}
-
-private struct ComposerArtwork: View {
-    let url: URL?
-    let accent: Color
-
-    var body: some View {
-        AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-        } placeholder: {
-            Rectangle().fill(accent.opacity(0.18))
-        }
-        .clipped()
+    private var submitAccessibilityLabel: String {
+        if store.isSaving { return "Publishing" }
+        if let command = store.slashCommands.first { return "Run \(command.title)" }
+        return store.isEditing ? "Save" : "Publish"
     }
 }

@@ -40,6 +40,17 @@ export interface EnrichmentProvider<TRaw = unknown> {
     ctx?: EnrichmentFetchContext,
   ) => Promise<EnrichmentResult<TRaw>>
 
+  /**
+   * Optional text search for providers that expose a discovery API. Results
+   * use the same normalized shape as URL resolution so clients can preview a
+   * choice and then persist its canonical URL through the existing pipeline.
+   */
+  search?: (
+    query: string,
+    locale?: string,
+    limit?: number,
+  ) => Promise<EnrichmentResult<TRaw>[]>
+
   readonly requiredConfigKeys?: string[]
   readonly featureGateConfigKey?: string
   /**

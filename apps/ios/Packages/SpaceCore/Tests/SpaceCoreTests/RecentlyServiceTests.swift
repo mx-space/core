@@ -94,6 +94,25 @@ import Testing
         #expect(try await service.resolve(url: "https://a.example") == nil)
     }
 
+    @Test func searchesTMDBThroughTheAuthenticatedEnrichmentEndpoint() async throws {
+        let (service, transport) = makeService([
+            .init(
+                operationID: "searchEnrichment",
+                status: .ok,
+                json: #"{"data":[{"title":"Dune","description":"A desert epic","url":"https://www.themoviedb.org/movie/438631","category":"media","subtype":"movie","published_at":"2021-09-15","fetched_at":"","thumbnail_image":{"url":"https://image.tmdb.org/t/p/w500/dune.jpg"}}]}"#
+            ),
+        ])
+
+        let result = try #require(try await service.searchTMDB(query: "Dune", size: 6).first)
+
+        #expect(result.title == "Dune")
+        #expect(result.url == "https://www.themoviedb.org/movie/438631")
+        #expect(transport.operationIDs == ["searchEnrichment"])
+        #expect(transport.requestPaths.first?.contains("query=Dune") == true)
+        #expect(transport.requestPaths.first?.contains("size=6") == true)
+        #expect(transport.requestPaths.first?.contains("/enrichment/search/tmdb") == true)
+    }
+
     /// Mirrors `UrlExtractorService.extractFromMarkdown`: only a link that owns
     /// its whole *paragraph* becomes a card. A single newline is not a
     /// paragraph break in markdown — verified against a live instance.
@@ -135,6 +154,17 @@ import Testing
         let rewritten = RecentlyService.isolatingLink(url, in: text)
         #expect(rewritten == expected)
         #expect(RecentlyService.firstCardableURL(in: rewritten) == url)
+    }
+
+    @Test func preparingAppendsASelectedSearchResultAsACardifiableLink() {
+        let url = "https://www.themoviedb.org/movie/438631"
+        let prepared = RecentlyService.preparing(
+            content: "Watched Dune tonight.",
+            selectedEnrichmentURLs: [url]
+        )
+
+        #expect(prepared == "Watched Dune tonight.\n\n\(url)")
+        #expect(RecentlyService.cardableURLs(in: prepared) == [url])
     }
 
     @Test func deleteRollsBackNothingOnSuccess() async throws {

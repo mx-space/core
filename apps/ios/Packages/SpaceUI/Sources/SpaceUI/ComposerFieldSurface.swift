@@ -11,6 +11,18 @@ public struct ComposerFieldSurface: ViewModifier {
             .padding(.horizontal, Spacing.regular)
             .padding(.vertical, 10)
             .frame(minHeight: 44, alignment: .leading)
+            .composerContainerSurface()
+    }
+}
+
+/// Shared shell for compound composers where text and the primary action live
+/// in one continuous field, matching the visual hierarchy of system messaging
+/// interfaces without forcing identical internal padding on every consumer.
+public struct ComposerContainerSurface: ViewModifier {
+    public init() {}
+
+    public func body(content: Content) -> some View {
+        content
             .background(
                 Color(SpacePalette.inset),
                 in: .rect(cornerRadius: Radius.composer, style: .continuous)
@@ -25,5 +37,9 @@ public struct ComposerFieldSurface: ViewModifier {
 public extension View {
     func composerFieldSurface() -> some View {
         modifier(ComposerFieldSurface())
+    }
+
+    func composerContainerSurface() -> some View {
+        modifier(ComposerContainerSurface())
     }
 }

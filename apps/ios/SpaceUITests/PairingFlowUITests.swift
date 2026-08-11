@@ -191,6 +191,51 @@ final class PairingFlowUITests: XCTestCase {
         settle(0.5)
         capture(app, name: "31-composer-keyboard-empty")
 
+        editor.typeText("/")
+        XCTAssertTrue(
+            app.descendants(matching: .any)["recently.composer.slash.menu"]
+                .waitForExistence(timeout: 5),
+            "slash menu did not open"
+        )
+        XCTAssertTrue(app.buttons["recently.composer.slash.tmdb"].exists)
+        XCTAssertTrue(app.buttons["recently.composer.slash.context"].exists)
+        capture(app, name: "31a-composer-slash-menu")
+
+        editor.typeText("tm")
+        XCTAssertTrue(
+            app.buttons["recently.composer.slash.tmdb"].waitForExistence(timeout: 5),
+            "slash menu did not filter to TMDB"
+        )
+        XCTAssertFalse(app.buttons["recently.composer.slash.context"].exists)
+        let tmdbCommand = app.buttons["recently.composer.slash.tmdb"]
+        XCTAssertTrue(tmdbCommand.isHittable, "the visible TMDB command was not tappable")
+        tmdbCommand.tap()
+
+        let tmdbSearch = app.textFields["recently.composer.attachment.search"]
+        XCTAssertTrue(
+            tmdbSearch.waitForExistence(timeout: 5),
+            "the TMDB command did not open attachment search"
+        )
+        XCTAssertTrue(
+            app.descendants(matching: .any)["recently.composer.command.detail"].exists,
+            "the command detail panel did not appear"
+        )
+        XCTAssertTrue(
+            app.keyboards.firstMatch.waitForExistence(timeout: 5),
+            "command search did not retain the keyboard"
+        )
+        capture(app, name: "31b-composer-slash-tmdb")
+
+        app.buttons["recently.composer.command.back"].tap()
+        XCTAssertTrue(
+            app.descendants(matching: .any)["recently.composer.slash.menu"]
+                .waitForExistence(timeout: 5),
+            "command detail did not return to the slash menu"
+        )
+        app.buttons["recently.composer.slash.tmdb"].tap()
+        XCTAssertTrue(tmdbSearch.waitForExistence(timeout: 5))
+        app.buttons["recently.composer.command.close"].tap()
+
         let message =
             "Local verification confirms that the keyboard-bound composer grows naturally "
             + "while metadata remains visible above the input. "
@@ -199,7 +244,7 @@ final class PairingFlowUITests: XCTestCase {
         capture(app, name: "32-composer-auto-size")
 
         app.buttons["recently.composer.context"].tap()
-        let contextSearch = app.textFields["Find context"]
+        let contextSearch = app.textFields["recently.composer.attachment.search"]
         XCTAssertTrue(
             contextSearch.waitForExistence(timeout: 15),
             "context picker never appeared"
@@ -214,9 +259,9 @@ final class PairingFlowUITests: XCTestCase {
         XCTAssertTrue(context.waitForExistence(timeout: 15), "seeded note context is missing")
         context.tap()
         XCTAssertTrue(
-            app.staticTexts["Note context, Keyboard composer field notes"]
+            app.descendants(matching: .any)["recently.composer.selection.context"]
                 .waitForExistence(timeout: 10),
-            "selected context card never appeared"
+            "selected context receipt never appeared"
         )
         capture(app, name: "34-composer-context-selected")
 

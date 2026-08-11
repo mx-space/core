@@ -26,6 +26,7 @@ import {
   AdminCaptureListQueryDto,
   AdminListQueryDto,
   AdminProbeBodyDto,
+  EnrichmentSearchQueryDto,
   ResolveQueryDto,
 } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
@@ -36,6 +37,7 @@ import { EnrichmentOriginGuard } from './enrichment-origin.guard'
 import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
 
 const PUBLIC_RESOLVE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
+const SEARCH_THROTTLE = { default: { limit: 60, ttl: 60_000 } }
 const ADMIN_PROBE_THROTTLE = { default: { limit: 30, ttl: 60_000 } }
 
 const DEFAULT_CAPTURE_MAX_ITEMS = 500
@@ -69,6 +71,34 @@ export class EnrichmentController {
       }
       this.bumpCaptureAccess(result)
       return result as EnrichmentResult
+    } catch (error) {
+      if (
+        error instanceof ProviderDisabledError ||
+        error instanceof TokenMissingError
+      ) {
+        res.status(204)
+        return
+      }
+      throw error
+    }
+  }
+
+  @Get('search/:provider')
+  @Auth()
+  @Throttle(SEARCH_THROTTLE)
+  async search(
+    @Param('provider') provider: string,
+    @Query() query: EnrichmentSearchQueryDto,
+    @Lang() lang: string | undefined,
+    @Res({ passthrough: true }) res: any,
+  ): Promise<EnrichmentResult[] | undefined> {
+    try {
+      return await this.enrichmentService.search(
+        provider,
+        query.query,
+        lang,
+        query.size,
+      )
     } catch (error) {
       if (
         error instanceof ProviderDisabledError ||

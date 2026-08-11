@@ -261,6 +261,28 @@ export class EnrichmentService implements OnModuleInit {
     return this.fetchAndPersist(provider, id, { locale: cacheLocale })
   }
 
+  async search(
+    providerName: string,
+    query: string,
+    lang?: string,
+    limit = 8,
+  ): Promise<EnrichmentResult[]> {
+    const provider = this.providerRegistry.getByName(providerName)
+    if (!provider?.search) throw new ProviderDisabledError(providerName)
+
+    const config = await this.configsService.get('thirdPartyServiceIntegration')
+    if (!this.isProviderEnabled(provider, config)) {
+      throw new ProviderDisabledError(provider.name)
+    }
+    if (!this.hasRequiredConfig(provider, config)) {
+      throw new TokenMissingError(provider.name)
+    }
+
+    const reqLocale = resolveRequestedLanguage(lang)
+    const locale = this.resolveCacheLocale(provider, reqLocale)
+    return provider.search(query, locale || undefined, limit)
+  }
+
   async refresh(
     providerName: string,
     id: string,
