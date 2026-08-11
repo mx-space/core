@@ -13,14 +13,17 @@ const to = Options.text('to').pipe(
   Options.repeated,
   Options.withDescription('target language code (repeatable)'),
 )
+const force = Options.boolean('force').pipe(
+  Options.withDescription('regenerate even when an up-to-date result exists'),
+)
 const noWait = Options.boolean('no-wait').pipe(
   Options.withDescription('return immediately after creating the task'),
 )
 
 export const regen = Command.make(
   'regen',
-  { id, to, noWait },
-  ({ id, to, noWait }) =>
+  { id, to, force, noWait },
+  ({ id, to, force, noWait }) =>
     Effect.gen(function* () {
       const ai = yield* Ai
       const renderer = yield* Renderer
@@ -29,6 +32,7 @@ export const regen = Command.make(
       const created = yield* ai.regenSummary({
         refId,
         targetLanguages: to.length ? to : undefined,
+        force,
       })
       const final = yield* followTask(ai, renderer, created, noWait)
       yield* renderer.emit(aiTaskView, final)

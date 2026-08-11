@@ -93,6 +93,12 @@ const URL_TRANSLATIONS_GROUPED =
   'https://blog.example.com/api/v2/ai/translations/grouped?page=1&size=50'
 const URL_INSIGHTS_GROUPED =
   'https://blog.example.com/api/v2/ai/insights/grouped?page=1&size=50'
+const URL_SUMMARY_TRANSLATE_POST =
+  'https://blog.example.com/api/v2/ai/summaries/task/translate'
+const URL_INSIGHTS_TRANSLATE_POST =
+  'https://blog.example.com/api/v2/ai/insights/task/translate'
+const URL_OVERVIEW_GROUPED =
+  'https://blog.example.com/api/v2/ai/overview/grouped'
 const taskUrl = (id: string) =>
   `https://blog.example.com/api/v2/tasks/${id}`
 
@@ -270,6 +276,247 @@ describe('Ai.refreshInsights', () => {
     })
     await Effect.runPromise(program.pipe(Effect.provide(buildLayer(http))))
     expect(recorder.calls.at(-1)?.body).toEqual({ refId: 'r' })
+  })
+})
+
+describe('Ai force + insights languages', () => {
+  it('forwards force on summary/translation/insights task creation', async () => {
+    const canned = {
+      status: 200,
+      body: { data: { taskId: '01HF', created: true } },
+    }
+    const { layer: http, recorder } = testHttpLayer({
+      [`POST ${URL_TASK_POST}`]: canned,
+      [`POST ${URL_TRANSLATE_POST}`]: canned,
+      [`POST ${URL_INSIGHTS_POST}`]: canned,
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      yield* ai.regenSummary({ refId: 'a', force: true })
+      yield* ai.translate({ refId: 'a', targetLanguages: ['en'], force: true })
+      yield* ai.refreshInsights({
+        refId: 'a',
+        targetLanguages: ['en', 'ja'],
+        force: true,
+      })
+    })
+    await Effect.runPromise(program.pipe(Effect.provide(buildLayer(http))))
+    expect(recorder.calls.map((c) => c.body)).toEqual([
+      { refId: 'a', force: true },
+      { refId: 'a', targetLanguages: ['en'], force: true },
+      { refId: 'a', targetLanguages: ['en', 'ja'], force: true },
+    ])
+  })
+
+  it('omits force when not set', async () => {
+    const { layer: http, recorder } = testHttpLayer({
+      [`POST ${URL_INSIGHTS_POST}`]: {
+        status: 200,
+        body: { data: { taskId: '01HI', created: true } },
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.refreshInsights({ refId: 'r' })
+    })
+    await Effect.runPromise(program.pipe(Effect.provide(buildLayer(http))))
+    expect(recorder.calls.at(-1)?.body).toEqual({ refId: 'r' })
+  })
+})
+
+describe('Ai.translateSummary / translateInsights', () => {
+  it('creates a summary translation task and reports the target language', async () => {
+    const { layer: http, recorder } = testHttpLayer({
+      [`POST ${URL_SUMMARY_TRANSLATE_POST}`]: {
+        status: 200,
+        body: { data: { taskId: '01HS', created: true } },
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.translateSummary({
+        refId: 'abc',
+        targetLang: 'ja',
+        force: true,
+      })
+    })
+    const r = await Effect.runPromise(
+      program.pipe(Effect.provide(buildLayer(http))),
+    )
+    expect(r.taskId).toBe('01HS')
+    expect(r.type).toBe('summary_translation')
+    expect(r.targetLanguages).toEqual(['ja'])
+    expect(recorder.calls.at(-1)?.body).toEqual({
+      refId: 'abc',
+      targetLang: 'ja',
+      force: true,
+    })
+  })
+
+  it('maps source-missing to an actionable AiTaskCreateFailed', async () => {
+    const { layer: http } = testHttpLayer({
+      [`POST ${URL_SUMMARY_TRANSLATE_POST}`]: {
+        status: 200,
+        body: {
+          data: { taskId: null, created: false, reason: 'source-missing' },
+        },
+      },
+      [`POST ${URL_INSIGHTS_TRANSLATE_POST}`]: {
+        status: 200,
+        body: {
+          data: { taskId: null, created: false, reason: 'source-missing' },
+        },
+      },
+    })
+    const program = (run: Effect.Effect<unknown, unknown, Ai>) =>
+      Effect.runPromise(
+        run.pipe(
+          Effect.provide(buildLayer(http)),
+          Effect.flip,
+        ) as Effect.Effect<unknown, never, never>,
+      )
+    const summaryErr = await program(
+      Effect.gen(function* () {
+        const ai = yield* Ai
+        return yield* ai.translateSummary({ refId: 'abc', targetLang: 'ja' })
+      }),
+    )
+    expect(summaryErr).toBeInstanceOf(AiTaskCreateFailed)
+    expect((summaryErr as AiTaskCreateFailed).message).toContain(
+      'mxs ai summary regen',
+    )
+    const insightsErr = await program(
+      Effect.gen(function* () {
+        const ai = yield* Ai
+        return yield* ai.translateInsights({ refId: 'abc', targetLang: 'ja' })
+      }),
+    )
+    expect(insightsErr).toBeInstanceOf(AiTaskCreateFailed)
+    expect((insightsErr as AiTaskCreateFailed).message).toContain(
+      'mxs ai insights refresh',
+    )
+  })
+})
+
+describe('Ai list search + overview', () => {
+  it('propagates search into grouped list queries', async () => {
+    const { layer: http } = testHttpLayer({
+      [`GET https://blog.example.com/api/v2/ai/summaries/grouped?page=2&size=10&search=hello`]:
+        { status: 200, body: { data: [] } },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.listSummaries({
+        page: 2,
+        size: 10,
+        grouped: true,
+        search: 'hello',
+      })
+    })
+    const res = await Effect.runPromise(
+      program.pipe(Effect.provide(buildLayer(http))),
+    )
+    expect(res).toEqual({ data: [] })
+  })
+
+  it('lists the overview board with filters', async () => {
+    const { layer: http } = testHttpLayer({
+      [`GET ${URL_OVERVIEW_GROUPED}?page=1&size=20&search=x&type=post`]: {
+        status: 200,
+        body: { data: [], meta: { pagination: { totalPages: 0 } } },
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.listOverview({
+        page: 1,
+        size: 20,
+        search: 'x',
+        type: 'post',
+      })
+    })
+    const res = await Effect.runPromise(
+      program.pipe(Effect.provide(buildLayer(http))),
+    )
+    expect(res).toMatchObject({ data: [] })
+  })
+
+  it('fetches the per-article overview', async () => {
+    const { layer: http } = testHttpLayer({
+      [`GET https://blog.example.com/api/v2/ai/overview/article/REF`]: {
+        status: 200,
+        body: { data: { article: { id: 'REF' } } },
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.getOverviewByArticle('REF')
+    })
+    const res = await Effect.runPromise(
+      program.pipe(Effect.provide(buildLayer(http))),
+    )
+    expect(res).toMatchObject({ data: { article: { id: 'REF' } } })
+  })
+})
+
+describe('Ai tts', () => {
+  it('creates a tts task with langs on the wire', async () => {
+    const { layer: http, recorder } = testHttpLayer({
+      'POST https://blog.example.com/api/v2/ai/tts/task': {
+        status: 200,
+        body: { data: { taskId: '01HTTS', created: true } },
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      return yield* ai.runTts({
+        refId: 'abc',
+        targetLanguages: ['en', 'ja'],
+        force: true,
+      })
+    })
+    const r = await Effect.runPromise(
+      program.pipe(Effect.provide(buildLayer(http))),
+    )
+    expect(r.type).toBe('tts')
+    expect(r.targetLanguages).toEqual(['en', 'ja'])
+    expect(recorder.calls.at(-1)?.body).toEqual({
+      refId: 'abc',
+      langs: ['en', 'ja'],
+      force: true,
+    })
+  })
+
+  it('lists narrations, fetches admin rows, discovers voices, deletes', async () => {
+    const { layer: http, recorder } = testHttpLayer({
+      'GET https://blog.example.com/api/v2/ai/tts/grouped?search=x': {
+        status: 200,
+        body: { data: [] },
+      },
+      'GET https://blog.example.com/api/v2/ai/tts/ref/REF': {
+        status: 200,
+        body: { data: { article: { id: 'REF' }, rows: [] } },
+      },
+      'GET https://blog.example.com/api/v2/ai/tts/voices?providerId=p1&model=m1':
+        { status: 200, body: { data: { voices: [] } } },
+      'DELETE https://blog.example.com/api/v2/ai/tts/01H': {
+        status: 204,
+      },
+    })
+    const program = Effect.gen(function* () {
+      const ai = yield* Ai
+      yield* ai.listTts({ grouped: true, search: 'x' })
+      yield* ai.getTtsByArticle('REF')
+      yield* ai.discoverTtsVoices({ providerId: 'p1', model: 'm1' })
+      yield* ai.deleteTts('01H')
+    })
+    await Effect.runPromise(program.pipe(Effect.provide(buildLayer(http))))
+    expect(recorder.calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+      'GET https://blog.example.com/api/v2/ai/tts/grouped?search=x',
+      'GET https://blog.example.com/api/v2/ai/tts/ref/REF',
+      'GET https://blog.example.com/api/v2/ai/tts/voices?providerId=p1&model=m1',
+      'DELETE https://blog.example.com/api/v2/ai/tts/01H',
+    ])
   })
 })
 

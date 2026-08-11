@@ -471,16 +471,17 @@ Use when authoring or reviewing any Postgres migration in this codebase.
 
 ## AI
 
-Manage AI artifacts (summary, translation, insights) produced by the core AI module. Article references accept Snowflake id, post slug, or note nid — the CLI resolves to an article id via post-then-note lookup. Record references (`<recordId>`) are raw Snowflakes.
+Manage AI artifacts (summary, translation, insights, tts, overview) produced by the core AI module. Article references accept Snowflake id, post slug, or note nid — the CLI resolves to an article id via post-then-note lookup. Record references (`<recordId>`) are raw Snowflakes.
 
-Generate verbs (`summary regen`, `translate run`, `insights refresh`) enqueue a task on the server, then poll `GET /tasks/:id` until the task reaches a terminal status (`completed`, `partial_failed`, `failed`, `cancelled`). Progress lines write to stderr. Pass `--no-wait` to return immediately with `status: pending` after the task is created. If the server reports `created: false`, an in-flight deduplicated task already exists and the CLI joins it instead of erroring. The polling cadence is 1000 ms by default; override via `MXS_AI_POLL_MS=<n>` for tests.
+Generate verbs (`summary regen`, `summary translate`, `translate run`, `insights refresh`, `insights translate`, `tts run`) enqueue a task on the server, then poll `GET /tasks/:id` until the task reaches a terminal status (`completed`, `partial_failed`, `failed`, `cancelled`). Progress lines write to stderr. Pass `--no-wait` to return immediately with `status: pending` after the task is created. If the server reports `created: false`, an in-flight deduplicated task already exists and the CLI joins it instead of erroring. Pass `--force` to regenerate even when an up-to-date result exists (without it the server skips languages that are already current). Target-language lists are capped at 8 per task server-side. The polling cadence is 1000 ms by default; override via `MXS_AI_POLL_MS=<n>` for tests.
 
 ### Summary
 
 | Command                                            | Description                                                       |
 | -------------------------------------------------- | ----------------------------------------------------------------- |
-| `mxs ai summary regen <id> [--to <lang>...]`       | Regenerate an article's summary (optionally for given languages). |
-| `mxs ai summary list [--page <n>] [--size <n>] [--grouped]` | List summaries (flat or grouped by article).             |
+| `mxs ai summary regen <id> [--to <lang>...] [--force]` | Regenerate an article's summary (optionally for given languages). |
+| `mxs ai summary translate <id> --to <lang> [--force]` | Translate the existing base summary into one language (fails with a hint when no base summary exists). |
+| `mxs ai summary list [--page <n>] [--size <n>] [--grouped] [--search <q>]` | List summaries (flat or grouped by article).  |
 | `mxs ai summary get <recordId>`                    | Get one summary by record id.                                     |
 | `mxs ai summary by-article <id> [--lang <l>] [--only-db]` | Show an article's summary; `--only-db` skips auto-generate. |
 | `mxs ai summary edit <recordId>`                   | Edit the `summary` field via `$EDITOR` (JSON envelope).           |
@@ -490,8 +491,8 @@ Generate verbs (`summary regen`, `translate run`, `insights refresh`) enqueue a 
 
 | Command                                                  | Description                                                   |
 | -------------------------------------------------------- | ------------------------------------------------------------- |
-| `mxs ai translate run <id> --to <lang>... [--no-wait]`   | Translate an article into one or more languages (`--to` required, repeatable). |
-| `mxs ai translate list [--page <n>] [--size <n>]`        | List translations (always grouped by article — no flat list server-side). |
+| `mxs ai translate run <id> --to <lang>... [--force] [--no-wait]` | Translate an article into one or more languages (`--to` required, repeatable). |
+| `mxs ai translate list [--page <n>] [--size <n>] [--search <q>]` | List translations (always grouped by article — no flat list server-side). |
 | `mxs ai translate get <recordId>`                        | Get one translation by record id.                             |
 | `mxs ai translate by-article <id> [--lang <l>]`          | Show an article's translations (single lang or all).          |
 | `mxs ai translate languages <id>`                        | List languages an article has been translated into.           |
@@ -513,18 +514,41 @@ The i18n dictionary entries layer used by category / topic / note metadata. `--k
 
 | Command                                                | Description                                                         |
 | ------------------------------------------------------ | ------------------------------------------------------------------- |
-| `mxs ai insights refresh <id> [--no-wait]`             | Refresh AI insights for an article.                                 |
-| `mxs ai insights list [--page <n>] [--size <n>] [--grouped]` | List insights (flat or grouped by article).                   |
+| `mxs ai insights refresh <id> [--to <lang>...] [--force] [--no-wait]` | Refresh AI insights for an article; `--to` also translates the result once generated. |
+| `mxs ai insights translate <id> --to <lang> [--force]` | Translate the existing base insights into one language (fails with a hint when no base insights exist). |
+| `mxs ai insights list [--page <n>] [--size <n>] [--grouped] [--search <q>]` | List insights (flat or grouped by article).    |
 | `mxs ai insights get <recordId>`                       | Get one insights record by record id.                               |
 | `mxs ai insights by-article <id> [--lang <l>] [--only-db]` | Show an article's insights; `--only-db` skips auto-generate.    |
 | `mxs ai insights edit <recordId>`                      | Edit the `content` field via `$EDITOR` (JSON envelope).             |
 | `mxs ai insights delete <recordId> [--force]`          | Delete an insights record.                                          |
 
+### TTS (narrations)
+
+| Command                                                | Description                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `mxs ai tts run <id> [--to <lang>...] [--force] [--no-wait]` | Generate AI narration for an article (per language).          |
+| `mxs ai tts list [--page <n>] [--size <n>] [--grouped] [--search <q>]` | List narrations (flat or grouped by article).       |
+| `mxs ai tts by-article <id>`                           | Show all narration rows for an article.                             |
+| `mxs ai tts voices --provider <id> --model <m>`        | Discover TTS voices for a provider/model pair (both required).      |
+| `mxs ai tts delete <recordId> [--force]`               | Delete a narration record.                                          |
+
+### Overview
+
+Read-only board aggregating each article's AI artifact state (summary / translation / insights coverage).
+
+| Command                                                | Description                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `mxs ai overview list [--page <n>] [--size <n>] [--search <q>] [--type post\|note\|page]` | List the per-article AI overview board. |
+| `mxs ai overview by-article <id>`                      | Show the AI artifact overview for one article.                      |
+
 ```bash
-mxs ai summary regen my-post --to en --to ja
+mxs ai summary regen my-post --to en --to ja --force
+mxs ai summary translate my-post --to ja
 mxs ai translate run my-post --to en
-mxs ai insights refresh my-post
-mxs ai summary list --grouped
+mxs ai insights refresh my-post --to en
+mxs ai tts run my-post --to zh
+mxs ai summary list --grouped --search hello
+mxs ai overview list --type post
 mxs ai translate languages my-post
 ```
 

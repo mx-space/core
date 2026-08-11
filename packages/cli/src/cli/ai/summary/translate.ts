@@ -1,7 +1,6 @@
 import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
 
-import { ValidationFailed } from '../../../domain/errors'
 import { Ai } from '../../../services/Ai'
 import { Renderer } from '../../../services/Renderer'
 import { Resolver } from '../../../services/Resolver'
@@ -11,8 +10,7 @@ import { aiTaskView } from '../views'
 
 const id = Args.text({ name: 'idOrSlug' })
 const to = Options.text('to').pipe(
-  Options.repeated,
-  Options.withDescription('target language code (repeatable, at least one)'),
+  Options.withDescription('target language code (single)'),
 )
 const force = Options.boolean('force').pipe(
   Options.withDescription('retranslate even when an up-to-date result exists'),
@@ -21,30 +19,25 @@ const noWait = Options.boolean('no-wait').pipe(
   Options.withDescription('return immediately after creating the task'),
 )
 
-export const run = Command.make(
-  'run',
+export const translate = Command.make(
+  'translate',
   { id, to, force, noWait },
   ({ id, to, force, noWait }) =>
     Effect.gen(function* () {
-      if (!to.length) {
-        return yield* Effect.fail(
-          new ValidationFailed({
-            message: 'at least one --to <lang> is required',
-          }),
-        )
-      }
       const ai = yield* Ai
       const renderer = yield* Renderer
       const resolver = yield* Resolver
       const refId = yield* resolveArticleId(resolver, id)
-      const created = yield* ai.translate({
+      const created = yield* ai.translateSummary({
         refId,
-        targetLanguages: to,
+        targetLang: to,
         force,
       })
       const final = yield* followTask(ai, renderer, created, noWait)
       yield* renderer.emit(aiTaskView, final)
     }),
 ).pipe(
-  Command.withDescription('translate an article into one or more languages'),
+  Command.withDescription(
+    'translate the existing AI summary into another language',
+  ),
 )

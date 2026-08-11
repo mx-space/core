@@ -6,8 +6,17 @@ import { edit } from './edit'
 import { get } from './get'
 import { list } from './list'
 import { refresh } from './refresh'
+import { translate } from './translate'
 
 export const insightsCmd = Command.make('insights').pipe(
   Command.withDescription('manage AI insights'),
-  Command.withSubcommands([refresh, list, get, byArticle, edit, del]),
+  Command.withSubcommands([
+    refresh,
+    translate,
+    list,
+    get,
+    byArticle,
+    edit,
+    del,
+  ]),
 )
