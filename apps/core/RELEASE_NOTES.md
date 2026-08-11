@@ -1,27 +1,19 @@
 ## TL;DR
 
-Multi-language AI generation with force regenerate, a per-article AI overview board, plus several content and privacy fixes.
+Adds an authenticated TMDB search API powering the Space app's new movie/TV search composer for Recently posts.
 
 ## Highlights
 
-The AI generate modal now accepts up to eight target languages at once (comma-separated chips, with language codes normalized so `zh-CN` and `zh` do not double-generate). A force-regenerate option runs across summary, translation, TTS, and insights, with in-flight locking that keeps forced runs from racing or silently replaying incremental results.
+The enrichment module gains a search surface: `GET /enrichment/search/:provider` lets authenticated clients query a provider by keyword. The TMDB provider implements it via TMDB's multi-search, returning normalized movie/TV results (title, overview, poster, rating, genres) with locale-aware output and en-US backfill for untranslated entries.
 
-A new per-article AI overview board shows coverage by capability and language: empty cells dispatch generation, filled ones jump to assets, and live/failed tasks stay accurate while polling. Summary and insights share a base-then-translate pipeline so multi-language work reuses a source-language base instead of regenerating from scratch per language.
-
-Notes can clear mood and weather again; category responses no longer leak unpublished post metadata; and RSS aggregate caches invalidate after content changes and post deletion so feeds stay current.
+On top of this API, the Space iOS app ships a `/tmdb` slash command in the Recently composer: search TMDB inline, pick a result, and attach the movie or show card to your post.
 
 ## Changes
 
 ### Features
-- Generate AI assets for multiple languages in one pass, with force regeneration and shared multi-language pipelines for summary and insights ([#2804])
-- Per-article AI overview board: coverage matrix, active tasks, ad-hoc languages, and cost roll-up ([#2804])
-- Redesign Space iOS mobile workflows ([bec9d0a](https://github.com/mx-space/core/commit/bec9d0ab8fa220ee756f94a254c8b5ffd5318458))
 
-### Bug Fixes
-- Allow clearing mood and weather on notes ([#2800])
-- Prevent unpublished post metadata disclosure via category APIs ([#2801])
-- Invalidate RSS caches after content changes and post deletion ([#2802])
+- New authenticated `GET /enrichment/search/:provider` endpoint with TMDB multi-search support, plus the Space app's TMDB search composer ([#2808](https://github.com/mx-space/core/pull/2808))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v13.26.0...v13.27.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v13.27.0...v13.28.0

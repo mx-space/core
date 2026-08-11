@@ -1,3 +1,10 @@
+# [13.28.0](https://github.com/mx-space/core/compare/v13.27.0...v13.28.0) (2026-08-11)
+
+
+### Features
+
+* **space:** add TMDB search composer ([#2808](https://github.com/mx-space/core/issues/2808)) ([0051341](https://github.com/mx-space/core/commit/00513410c5dbbed1d6fcbdfc03b57e846d540632))
+
 # [13.27.0](https://github.com/mx-space/core/compare/v13.26.0...v13.27.0) (2026-08-10)
 
 
@@ -1407,7 +1414,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 * **schema:** enhance partial schemas for notes, pages, and posts with new fields ([f66c9ed](https://github.com/mx-space/core/commit/f66c9ed9cca1091730985813334adccb9462affd))
 * 更新文件上传前缀支持模板占位符，增强灵活性 ([#2584](https://github.com/mx-space/core/issues/2584)) ([2b5354a](https://github.com/mx-space/core/commit/2b5354a6f907947993dda64733e8bbd62c6cc62d))
 
-# [10.2.0](https://github.com/mx-space/core/compare/v0.7.0...v10.2.0) (2026-03-08)
+# [10.2.0](https://github.com/mx-space/core/compare/v10.1.10...v10.2.0) (2026-03-08)
 
 
 ### Features
