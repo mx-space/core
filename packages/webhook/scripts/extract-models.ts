@@ -41,7 +41,7 @@ const sources: SourceEntry[] = [
     enums: ['ContentFormat'],
   },
   {
-    file: 'constants/db.constant.ts',
+    file: '../../../packages/db-schema/src/ref-types.ts',
     enums: ['CollectionRefTypes'],
   },
   {

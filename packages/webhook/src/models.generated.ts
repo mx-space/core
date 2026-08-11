@@ -73,6 +73,13 @@ export enum ContentFormat {
   Lexical = 'lexical',
 }
 
+export enum CollectionRefTypes {
+  Post = 'post',
+  Note = 'note',
+  Page = 'page',
+  Recently = 'recently',
+}
+
 export enum CommentState {
   Unread,
   Read,
