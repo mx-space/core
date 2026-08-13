@@ -1,5 +1,8 @@
+import { randomUUID } from 'node:crypto'
+
 import { Injectable } from '@nestjs/common'
 
+import { OperationContext } from '~/common/contexts/operation.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 
 import type { AIConfig } from '../configs/configs.schema'
@@ -88,6 +91,7 @@ export class AiService {
     return {
       runtime: createModelRuntime(provider, assignment?.model, {
         reasoningEffort: assignment?.reasoningEffort,
+        sessionId: OperationContext.currentId() ?? randomUUID(),
       }),
       provider,
       assignment,

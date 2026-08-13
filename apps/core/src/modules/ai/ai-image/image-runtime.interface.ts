@@ -7,6 +7,7 @@ export interface ImageRuntimeAdapterConfig {
   projectId?: string
   provider: string
   providerType?: AIProviderType
+  sessionId?: string
 }
 
 export interface ImageGenerateOptions {

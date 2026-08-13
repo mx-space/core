@@ -27,6 +27,7 @@ interface ChatToolInput {
 export interface StreamChatOptions {
   model: string
   providerId: string
+  sessionId: string
   messages: Record<string, unknown>[]
   tools?: ChatToolInput[]
   signal?: AbortSignal
@@ -86,6 +87,7 @@ export class AiAgentChatService {
       messages: piMessages,
       systemPrompt,
       tools,
+      sessionId: options.sessionId,
       signal: options.signal,
     })
 

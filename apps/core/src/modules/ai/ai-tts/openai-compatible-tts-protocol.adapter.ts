@@ -19,11 +19,18 @@ export class OpenAiCompatibleTtsProtocolAdapter implements ITtsProtocolAdapter {
     languageControl,
     options,
   }: TtsProtocolRequest): Promise<{ buffer: Buffer; mimeType: string }> {
+    const sessionId =
+      this.config.sessionId &&
+      (this.config.provider === 'openrouter' ||
+        new URL(this.baseUrl).hostname === 'openrouter.ai')
+        ? this.config.sessionId
+        : undefined
     const response = await fetch(`${this.baseUrl}/audio/speech`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${this.config.apiKey}`,
         'content-type': 'application/json',
+        ...(sessionId ? { 'x-session-id': sessionId } : undefined),
       },
       body: JSON.stringify({
         model: this.config.model,

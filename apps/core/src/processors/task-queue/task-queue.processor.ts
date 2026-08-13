@@ -7,6 +7,8 @@ import {
   type OnModuleInit,
 } from '@nestjs/common'
 
+import { OperationContext } from '~/common/contexts/operation.context'
+
 import { TASK_QUEUE_LIMITS, TASK_QUEUE_TTL_MS } from './task-queue.constants'
 import { TaskQueueEmitter } from './task-queue.emitter'
 import { TaskQueueService } from './task-queue.service'
@@ -237,7 +239,9 @@ export class TaskQueueProcessor implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      await handler.execute(task.payload, context)
+      await OperationContext.run(`task:${taskId}`, () =>
+        handler.execute(task.payload, context),
+      )
 
       const finalStatus = await this.taskService.isTaskCancelled(taskId)
       if (finalStatus) {

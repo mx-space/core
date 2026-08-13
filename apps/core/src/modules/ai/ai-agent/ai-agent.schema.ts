@@ -44,6 +44,7 @@ export class ListConversationsQueryDto extends createZodDto(
 export const ChatProxySchema = z.object({
   model: z.string().min(1),
   providerId: z.string().min(1),
+  sessionId: z.string().min(1).max(256),
   messages: z.array(z.record(z.string(), z.unknown())),
   tools: z
     .array(

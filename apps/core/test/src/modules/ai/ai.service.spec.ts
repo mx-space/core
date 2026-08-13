@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { OperationContext } from '~/common/contexts/operation.context'
 import { AppException } from '~/common/errors/exception.types'
 import { AiService } from '~/modules/ai/ai.service'
 import { AIProviderType } from '~/modules/ai/ai.types'
@@ -15,6 +16,7 @@ vi.mock('~/modules/ai/runtime', () => ({
       model: modelOverride || config.defaultModel,
     },
     reasoningEffort: options?.reasoningEffort,
+    sessionId: options?.sessionId,
     generateText: vi.fn(),
     generateStructured: vi.fn(),
   })),
@@ -84,6 +86,50 @@ describe('AiService', () => {
       expect((runtime as { reasoningEffort?: string }).reasoningEffort).toBe(
         'high',
       )
+      expect((runtime as { sessionId?: string }).sessionId).toMatch(
+        /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i,
+      )
+    })
+
+    it('generates a distinct session id for each business model runtime', async () => {
+      const first = await service.getSummaryModel()
+      const second = await service.getSummaryModel()
+
+      expect((first as { sessionId?: string }).sessionId).not.toBe(
+        (second as { sessionId?: string }).sessionId,
+      )
+    })
+
+    it('reuses one session id throughout an operation', async () => {
+      const [summary, translation, reviewer] = await OperationContext.run(
+        'task:translation-1',
+        () =>
+          Promise.all([
+            service.getSummaryModel(),
+            service.getTranslationModel(),
+            service.getTranslationReviewModel(),
+          ]),
+      )
+
+      expect((summary as { sessionId?: string }).sessionId).toBe(
+        'task:translation-1',
+      )
+      expect((translation as { sessionId?: string }).sessionId).toBe(
+        'task:translation-1',
+      )
+      expect((reviewer as { sessionId?: string }).sessionId).toBe(
+        'task:translation-1',
+      )
+    })
+
+    it('isolates concurrent business operations', async () => {
+      const [first, second] = await Promise.all([
+        OperationContext.run('task:first', () => service.getSummaryModel()),
+        OperationContext.run('task:second', () => service.getSummaryModel()),
+      ])
+
+      expect((first as { sessionId?: string }).sessionId).toBe('task:first')
+      expect((second as { sessionId?: string }).sessionId).toBe('task:second')
     })
   })
 

@@ -1,5 +1,6 @@
 // https://github.dev/ever-co/ever-gauzy/packages/core/src/core/context/request-context.middleware.ts
 
+import { randomUUID } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
 
 import type { NestMiddleware } from '@nestjs/common'
@@ -8,6 +9,7 @@ import { Injectable } from '@nestjs/common'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
 import { normalizeLanguageCode, parseAcceptLanguage } from '~/utils/lang.util'
 
+import { OperationContext } from '../contexts/operation.context'
 import { RequestContext } from '../contexts/request.context'
 
 function parseCookieLocale(cookie?: string): string | undefined {
@@ -35,6 +37,8 @@ export class RequestContextMiddleware implements NestMiddleware {
         parseAcceptLanguage(req.headers['accept-language']) ||
         undefined
 
-    RequestContext.run(requestContext, () => next())
+    OperationContext.run(`request:${randomUUID()}`, () =>
+      RequestContext.run(requestContext, () => next()),
+    )
   }
 }

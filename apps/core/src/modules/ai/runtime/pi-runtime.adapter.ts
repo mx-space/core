@@ -292,6 +292,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly inferredModelListUrl?: string
   private readonly configuredReasoningEffort?: ReasoningEffort
   private readonly providerType: AIProviderType
+  private readonly sessionId?: string
 
   constructor(
     config: PiRuntimeAdapterConfig,
@@ -313,6 +314,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       config.appendV1 ?? true,
     )
     this.configuredReasoningEffort = config.reasoningEffort
+    this.sessionId = config.sessionId
     this.model = this.resolveModel(
       config.model,
       config.endpoint,
@@ -347,11 +349,25 @@ export class PiRuntimeAdapter implements IModelRuntime {
         ? resolveOpenAICompatibleBaseUrl(trimmedEndpoint, appendV1)
         : trimmedEndpoint
     // pi treats provider 'openai' as genuine OpenAI and sends OpenAI-only
-    // fields (`store`) that compat endpoints like Gemini reject with 400
-    const compatOverride =
-      baseUrl && this.api === 'openai-completions' && isNonOpenAIHost(baseUrl)
-        ? { supportsStore: false }
-        : undefined
+    // fields (`store`) that compat endpoints like Gemini reject with 400.
+    // OpenRouter session affinity is opt-in in pi; enable its x-session-id
+    // format so a stable stream option can activate provider stickiness.
+    let compatOverride:
+      | {
+          sendSessionAffinityHeaders?: boolean
+          sessionAffinityFormat?: 'openrouter'
+          supportsStore?: boolean
+        }
+      | undefined
+    if (baseUrl && this.api === 'openai-completions') {
+      const override: NonNullable<typeof compatOverride> = {}
+      if (isNonOpenAIHost(baseUrl)) override.supportsStore = false
+      if (isOpenRouterUrl(baseUrl)) {
+        override.sendSessionAffinityHeaders = true
+        override.sessionAffinityFormat = 'openrouter'
+      }
+      if (Object.keys(override).length > 0) compatOverride = override
+    }
     // OpenRouter rejects `reasoning: { effort: "none" }` on models whose
     // reasoning is mandatory (e.g. Gemini 3.1 Pro); marking `off` unsupported
     // makes pi omit the reasoning param instead of asking to disable it
@@ -468,6 +484,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
     temperature?: number
     maxTokens?: number
     maxRetries?: number
+    sessionId?: string
     signal?: AbortSignal
     reasoningEffort?: ReasoningEffort
     toolChoice?: unknown
@@ -480,6 +497,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       temperature: opts.temperature,
       maxTokens: opts.maxTokens,
       maxRetries: opts.maxRetries,
+      sessionId: opts.sessionId ?? this.sessionId,
       signal: opts.signal,
       ...thinking,
     }
@@ -689,6 +707,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       temperature: options.temperature,
       maxTokens: options.maxTokens,
       maxRetries: options.maxRetries,
+      sessionId: options.sessionId,
       signal: options.signal,
       reasoningEffort: options.reasoningEffort,
     })

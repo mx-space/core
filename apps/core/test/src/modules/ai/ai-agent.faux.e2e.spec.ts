@@ -15,6 +15,7 @@ import {
 
 const PROVIDER = 'faux-agent'
 const MODEL_ID = 'faux-agent-model'
+const SESSION_ID = 'faux-agent-session'
 
 interface SetupOpts {
   responses: ReturnType<typeof fauxAssistantMessage>[]
@@ -124,6 +125,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
     for await (const event of ctx.service.streamChat({
       model: MODEL_ID,
       providerId: PROVIDER,
+      sessionId: SESSION_ID,
       messages: [{ role: 'user', content: 'hi' }],
     })) {
       types.push(event.type)
@@ -146,6 +148,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
     for await (const event of ctx.service.streamChat({
       model: MODEL_ID,
       providerId: PROVIDER,
+      sessionId: SESSION_ID,
       messages: [{ role: 'user', content: 'hi' }],
     })) {
       types.push(event.type)
@@ -163,6 +166,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
     for await (const event of ctx.service.streamChat({
       model: MODEL_ID,
       providerId: PROVIDER,
+      sessionId: SESSION_ID,
       messages: [{ role: 'user', content: 'use tool' }],
     })) {
       if (event.type === 'toolcall_end') {
@@ -190,6 +194,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
       for await (const event of ctx.service.streamChat({
         model: MODEL_ID,
         providerId: PROVIDER,
+        sessionId: SESSION_ID,
         messages: [{ role: 'user', content: 'hi' }],
         conversationId: 'conv-1',
         signal: controller.signal,
@@ -223,6 +228,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
       for await (const _ of ctx.service.streamChat({
         model: MODEL_ID,
         providerId: PROVIDER,
+        sessionId: SESSION_ID,
         messages: [{ role: 'user', content: 'go' }],
         conversationId: 'conv-2',
         signal: controller.signal,
@@ -259,6 +265,7 @@ describe('ai-agent faux e2e (streamChat)', () => {
     for await (const event of ctx.service.streamChat({
       model: MODEL_ID,
       providerId: PROVIDER,
+      sessionId: SESSION_ID,
       messages: [{ role: 'user', content: 'hi' }],
     })) {
       if (event.type === 'error') errors.push(event)

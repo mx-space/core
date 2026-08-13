@@ -91,6 +91,7 @@ describe('generateOpenRouterImages', () => {
       quality: 'high',
       outputFormat: 'png',
       providerParams: { moderation: 'low' },
+      sessionId: 'task:image-1',
     }
 
     const result = await generateOpenRouterImages(model, context, options)
@@ -109,6 +110,7 @@ describe('generateOpenRouterImages', () => {
     expect((requestInit as RequestInit).headers).toEqual({
       'Content-Type': 'application/json',
       Authorization: 'Bearer test-api-key',
+      'x-session-id': 'task:image-1',
     })
     expect(JSON.parse((requestInit as RequestInit).body as string)).toEqual({
       model: 'openai/gpt-image-1',

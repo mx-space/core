@@ -24,4 +24,5 @@ export interface TtsRuntimeAdapterConfig {
   provider: string
   providerType?: AIProviderType
   retryDelayMs?: number
+  sessionId?: string
 }

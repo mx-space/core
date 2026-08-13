@@ -79,6 +79,7 @@ export class AiAgentController {
       const events = this.chatService.streamChat({
         model: body.model,
         providerId: body.providerId,
+        sessionId: body.sessionId,
         messages: body.messages,
         tools: body.tools,
         signal: abortController.signal,

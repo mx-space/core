@@ -100,6 +100,8 @@ export interface StreamMessageOptions extends Omit<
    * for multi-turn tool-call conversations. The adapter detects per-element.
    */
   messages: (Message | PiMessage)[]
+  /** Stable provider-affinity key for a conversation or agent workflow. */
+  sessionId?: string
   systemPrompt?: string
   tools?: Tool[]
 }
@@ -126,4 +128,6 @@ export interface RuntimeConfig {
   model: string
   providerType: AIProviderType
   providerId: string
+  /** Default provider-affinity key for calls made through this runtime. */
+  sessionId?: string
 }

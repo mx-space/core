@@ -2,6 +2,7 @@ import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import pLimit from 'p-limit'
 
+import { OperationContext } from '~/common/contexts/operation.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { DatabaseService } from '~/processors/database/database.service'
@@ -392,6 +393,7 @@ export class AiTtsService implements OnModuleInit {
     const runtime = new TtsRuntimeAdapter({
       ...input.provider,
       model: voice.model,
+      sessionId: OperationContext.currentId(),
     })
     const limit = pLimit(input.concurrency)
     const displaced: TtsStoredObject[] = []

@@ -10,7 +10,7 @@ import { defaultTextProtocolAdapterRegistry } from './text-protocol.registry'
 export function createModelRuntime(
   config: AIProviderConfig,
   modelOverride?: string,
-  options?: { reasoningEffort?: AIReasoningEffort },
+  options?: { reasoningEffort?: AIReasoningEffort; sessionId?: string },
 ): IModelRuntime {
   const model = modelOverride || config.defaultModel
 
@@ -25,6 +25,7 @@ export function createModelRuntime(
     contextWindow: config.contextWindow ?? undefined,
     maxTokens: config.maxTokens ?? undefined,
     reasoningEffort: options?.reasoningEffort,
+    sessionId: options?.sessionId,
   }
 
   return defaultTextProtocolAdapterRegistry.resolve(runtimeConfig)

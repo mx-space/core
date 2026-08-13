@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { createModelRuntime } from '~/modules/ai/runtime'
@@ -15,6 +16,10 @@ interface AdapterInternals {
 function inspect(adapter: unknown): AdapterInternals {
   return adapter as unknown as AdapterInternals
 }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 describe('createModelRuntime — enum coverage', () => {
   it('constructs PiRuntimeAdapter with openai-completions api for OpenAICompatible', () => {
@@ -103,6 +108,47 @@ describe('createModelRuntime — enum coverage', () => {
       'gpt-4o-mini',
     )
     expect(runtime.providerInfo.model).toBe('gpt-4o-mini')
+  })
+
+  it('sends the runtime session id on OpenRouter requests', async () => {
+    registerBuiltInApiProviders()
+    const requestHeaders: Headers[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      requestHeaders.push(
+        new Headers(input instanceof Request ? input.headers : init?.headers),
+      )
+      return new Response(
+        JSON.stringify({ error: { message: 'expected test stop' } }),
+        {
+          headers: { 'Content-Type': 'application/json' },
+          status: 400,
+        },
+      )
+    })
+    const runtime = createModelRuntime(
+      {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        type: AIProviderType.OpenAICompatible,
+        apiKey: 'sk-xxx',
+        endpoint: 'https://openrouter.ai/api/v1',
+        defaultModel: 'openai/gpt-4o-mini',
+        enabled: true,
+      },
+      undefined,
+      { sessionId: 'business-session' },
+    )
+
+    if (!runtime.streamMessage) throw new Error('streamMessage is unavailable')
+    const events = runtime.streamMessage({
+      messages: [{ role: 'user', content: 'probe' }],
+    })
+    for await (const _event of events) {
+      // Consume the expected provider error event.
+    }
+
+    expect(requestHeaders).toHaveLength(1)
+    expect(requestHeaders[0]?.get('x-session-id')).toBe('business-session')
   })
 
   it('throws for unsupported provider type', () => {

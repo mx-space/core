@@ -1,5 +1,6 @@
 import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
 
+import { OperationContext } from '~/common/contexts/operation.context'
 import { RequestContext } from '~/common/contexts/request.context'
 import { RequestContextMiddleware } from '~/common/middlewares/request-context.middleware'
 import type { BizIncomingMessage } from '~/transformers/get-req.transformer'
@@ -22,6 +23,23 @@ const runWith = async (headers: IncomingHttpHeaders) => {
 }
 
 describe('RequestContextMiddleware lang resolution', () => {
+  test('provides one isolated operation id per request', async () => {
+    const middleware = new RequestContextMiddleware()
+    const capture = () =>
+      new Promise<string | undefined>((resolve) => {
+        middleware.use(buildReq({}), buildRes(), async () => {
+          await Promise.resolve()
+          resolve(OperationContext.currentId())
+        })
+      })
+
+    const [first, second] = await Promise.all([capture(), capture()])
+
+    expect(first).toMatch(/^request:/)
+    expect(second).toMatch(/^request:/)
+    expect(first).not.toBe(second)
+  })
+
   test('default chain: x-lang wins over cookie wins over accept-language', async () => {
     expect(
       await runWith({

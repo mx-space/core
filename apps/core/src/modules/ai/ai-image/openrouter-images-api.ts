@@ -31,6 +31,7 @@ export interface OpenRouterImagesOptions extends ImagesOptions {
   quality?: ImageGenerateOptions['quality']
   outputFormat?: ImageGenerateOptions['format']
   providerParams?: Record<string, unknown>
+  sessionId?: string
 }
 
 interface OpenRouterImageResponseItem {
@@ -75,6 +76,9 @@ export const generateOpenRouterImages: ImagesFunction<
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
+        ...(options?.sessionId
+          ? { 'x-session-id': options.sessionId }
+          : undefined),
       },
       body: JSON.stringify(body),
       signal: options?.signal,
@@ -250,6 +254,8 @@ async function readErrorMessage(response: Response): Promise<string> {
     if (typeof payload.error?.message === 'string') {
       return payload.error.message
     }
-  } catch {}
+  } catch {
+    // Fall back to the HTTP status when the provider body is not valid JSON.
+  }
   return `image generation request failed with status ${response.status}`
 }

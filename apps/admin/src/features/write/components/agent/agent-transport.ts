@@ -7,6 +7,7 @@ export type AdminAiAgentSseEvent = AiAgentSseEvent
 export interface AdminAgentChatRequest {
   messages: Record<string, unknown>[]
   model: string
+  sessionId: string
   signal?: AbortSignal
   tools?: Array<{
     description: string
@@ -28,6 +29,7 @@ export function createAdminAgentTransport(
         messages: request.messages,
         model: request.model,
         providerId,
+        sessionId: request.sessionId,
         tools: request.tools,
       }),
       credentials: 'include',

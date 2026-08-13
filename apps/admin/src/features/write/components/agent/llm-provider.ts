@@ -14,6 +14,7 @@ export interface AbortSignalRef {
 interface CreateProviderOptions {
   providerId: string
   model: string
+  sessionId: string
   signalRef: AbortSignalRef
 }
 
@@ -30,6 +31,7 @@ interface CreateProviderOptions {
 export function createSseLlmProvider({
   providerId,
   model,
+  sessionId,
   signalRef,
 }: CreateProviderOptions): LLMProvider {
   const transport = createAdminAgentTransport(providerId)
@@ -39,6 +41,7 @@ export function createSseLlmProvider({
       const stream = transport({
         messages: messages as unknown as Record<string, unknown>[],
         model,
+        sessionId,
         signal: signalRef.current ?? undefined,
         tools,
       })

@@ -123,6 +123,7 @@ describe('TtsRuntimeAdapter', () => {
       provider: 'openrouter',
       apiKey: 'k',
       model: 'openai/tts',
+      sessionId: 'task:tts-1',
     })
     const result = await adapter.generateSpeech({
       input: 'hello',
@@ -135,6 +136,7 @@ describe('TtsRuntimeAdapter', () => {
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('https://openrouter.ai/api/v1/audio/speech')
+    expect(new Headers(init.headers).get('x-session-id')).toBe('task:tts-1')
     expect(JSON.parse(init.body as string)).toMatchObject({
       model: 'openai/tts',
       input: 'hello',
@@ -142,6 +144,22 @@ describe('TtsRuntimeAdapter', () => {
       speed: 1,
       response_format: 'mp3',
     })
+  })
+
+  it('does not send OpenRouter affinity headers to a non-OpenRouter endpoint', async () => {
+    const fetchMock = vi.fn(async () => audio())
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'openai',
+      apiKey: 'k',
+      model: 'tts-1',
+      sessionId: 'task:tts-1',
+    })
+    await adapter.generateSpeech({ input: 'hello', voice: 'alloy', speed: 1 })
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(new Headers(init.headers).has('x-session-id')).toBe(false)
   })
 
   it('applies the registered language strategy to the request body', async () => {

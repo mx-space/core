@@ -98,15 +98,22 @@ export function useWriteAgent(opts: {
 
   const fetchSignalRef = useRef<AbortSignalRef>({ current: null })
   const fetchControllerRef = useRef<AbortController | null>(null)
+  const documentSessionId = deriveDocumentSessionId(
+    opts.documentKind,
+    opts.documentId,
+  )
+  const [generatedProviderSessionId] = useState(() => crypto.randomUUID())
+  const providerSessionId = documentSessionId ?? generatedProviderSessionId
 
   const provider = useMemo<LLMProvider | null>(() => {
     if (!selectedModel) return null
     return createSseLlmProvider({
       model: selectedModel.modelId,
       providerId: selectedModel.providerId,
+      sessionId: providerSessionId,
       signalRef: fetchSignalRef.current,
     })
-  }, [selectedModel])
+  }, [providerSessionId, selectedModel])
 
   useEffect(() => {
     if (!providerGroups.length) return
@@ -157,11 +164,6 @@ export function useWriteAgent(opts: {
     agentLoopRef.current?.abort()
     store.getState().setStatus('idle')
   }
-
-  const documentSessionId = deriveDocumentSessionId(
-    opts.documentKind,
-    opts.documentId,
-  )
 
   const sessionManager = useAgentSessionManager({
     abort,

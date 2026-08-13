@@ -5,6 +5,7 @@ import {
   fauxToolCall,
   Type,
 } from '@earendil-works/pi-ai'
+import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
@@ -31,7 +32,11 @@ interface AdapterInternals {
     api: string
     baseUrl: string
     provider: string
-    compat?: { supportsStore?: boolean }
+    compat?: {
+      sendSessionAffinityHeaders?: boolean
+      sessionAffinityFormat?: string
+      supportsStore?: boolean
+    }
   }
 }
 
@@ -369,6 +374,44 @@ describe('PiRuntimeAdapter', () => {
       }
       expect(types).toContain('text_delta')
       expect(types).toContain('done')
+    })
+
+    it('sends x-session-id on OpenRouter requests', async () => {
+      registerBuiltInApiProviders()
+      const requestHeaders: Headers[] = []
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+        requestHeaders.push(
+          new Headers(input instanceof Request ? input.headers : init?.headers),
+        )
+        return new Response(
+          JSON.stringify({ error: { message: 'expected test stop' } }),
+          {
+            headers: { 'Content-Type': 'application/json' },
+            status: 400,
+          },
+        )
+      })
+
+      const adapter = new PiRuntimeAdapter({
+        apiKey: 'test-key',
+        endpoint: 'https://openrouter.ai/api/v1',
+        model: 'openai/gpt-4o-mini',
+        providerId: 'openrouter',
+        providerType: AIProviderType.OpenAICompatible,
+      })
+      const events = adapter.streamMessage({
+        messages: [{ role: 'user', content: 'probe' }],
+        sessionId: 'mx-core-affinity-test',
+      })
+
+      for await (const _event of events) {
+        // Consume the expected provider error event.
+      }
+
+      expect(requestHeaders).toHaveLength(1)
+      expect(requestHeaders[0]?.get('x-session-id')).toBe(
+        'mx-core-affinity-test',
+      )
     })
   })
 

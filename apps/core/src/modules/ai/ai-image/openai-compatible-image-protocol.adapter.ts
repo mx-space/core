@@ -46,6 +46,7 @@ export class OpenAiCompatibleImageProtocolAdapter implements IImageRuntime {
       quality: opts.quality,
       outputFormat: opts.format,
       providerParams: opts.providerParams,
+      sessionId: this.config.sessionId,
     }
     const result = await generateOpenRouterImages(this.model, context, options)
     if (result.stopReason !== 'stop') {
