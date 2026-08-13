@@ -1,5 +1,7 @@
 # AI Message Engine Implementation Plan
 
+> 2026-08-14 更新：后续重构已删除 `ContextInjector`、`buildPrefix` 和 `seedConversation`。翻译模块现在通过 `createTranslationConversation()` 直接使用 `AI_PROMPTS.translationAgent()` 与 `translationChunk()` 创建初始会话。本文其余内容保留当时的实施过程，不再作为当前接口说明。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the translation writer/reviewer/editor call orchestration with an append-only agent conversation: the model writes and patches a virtual file via tools, review runs as a sub-agent tool, prefix caching falls out of the message shape.

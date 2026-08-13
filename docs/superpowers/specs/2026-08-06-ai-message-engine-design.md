@@ -4,6 +4,8 @@ Date: 2026-08-06
 Status: implemented (step 1); step 2 bench pending
 Scope: `apps/core/src/modules/ai/message-engine/` (generic), first consumer `ai-translation` (lexical strategy)
 
+> 2026-08-14 更新：`ContextInjector`、`buildPrefix` 和 `seedConversation` 已被删除。当前翻译入口由 `createTranslationConversation()` 直接从 `AI_PROMPTS` 创建固定 system prompt 和首条 user message；下文相关段落仅记录原始设计。
+
 ## Motivation
 
 Measured problems in the current translation pipeline (2026-08-06 benchmarks):
@@ -46,12 +48,8 @@ Measured problems in the current translation pipeline (2026-08-06 benchmarks):
 modules/ai/message-engine/
 ├── message-engine.module.ts
 ├── conversation/
-│   ├── conversation.ts       append-only Conversation over pi Message[] (user / assistant /
-│   │                         tool_result); system prompt frozen at construction
-│   └── context-injector.ts   ContextInjector { name, position: 'system' | 'context', build }
-│                             + buildPrefix/seedConversation: system contributors merge into
-│                             ONE system string, context contributors into ONE user message,
-│                             array order fixed (cache-stable prefix)
+│   └── conversation.ts       append-only Conversation over the published Message Engine;
+│                             system prompt frozen at construction
 ├── vfs/
 │   ├── virtual-fs.ts         generic in-memory FS: path → content, patch log, versioning
 │   └── types.ts

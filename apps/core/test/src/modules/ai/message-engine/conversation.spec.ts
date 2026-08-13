@@ -1,10 +1,7 @@
 import type { AssistantMessage } from '@earendil-works/pi-ai'
 import { describe, expect, it } from 'vitest'
 
-import {
-  composeSystemPrompt,
-  Conversation,
-} from '~/modules/ai/message-engine/conversation/conversation'
+import { Conversation } from '~/modules/ai/message-engine/conversation/conversation'
 
 const assistant = (text: string): AssistantMessage =>
   ({
@@ -24,14 +21,6 @@ const assistant = (text: string): AssistantMessage =>
     stopReason: 'stop',
     timestamp: 1,
   }) as AssistantMessage
-
-describe('composeSystemPrompt', () => {
-  it('joins non-empty sections with blank lines and trims trailing space', () => {
-    expect(composeSystemPrompt(['a\n', null, 'b', undefined, ''])).toBe(
-      'a\n\nb',
-    )
-  })
-})
 
 describe('Conversation', () => {
   it('appends in order and only ever grows', () => {

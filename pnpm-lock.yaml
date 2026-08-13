@@ -558,11 +558,11 @@ importers:
         specifier: ^1.6.26
         version: 1.6.26(@better-auth/core@1.6.26(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260804.1)(@opentelemetry/api@1.9.0)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.3.0))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.26(@cloudflare/workers-types@5.20260804.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260804.1)(@opentelemetry/api@1.9.0)(@types/pg@8.20.4)(kysely@0.29.3)(pg@8.22.0))(mongodb@7.5.0(@noble/hashes@2.3.0))(pg@8.22.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10))(better-call@1.3.7(zod@4.4.3))(nanostores@1.3.0)
       '@earendil-works/pi-agent-core':
-        specifier: 0.83.0
-        version: 0.83.0(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
+        specifier: 0.84.1
+        version: 0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
       '@earendil-works/pi-ai':
-        specifier: 0.83.0
-        version: 0.83.0(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
+        specifier: 0.84.1
+        version: 0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
       '@fastify/cookie':
         specifier: 11.1.2
         version: 11.1.2
@@ -575,6 +575,9 @@ importers:
       '@haklex/rich-headless':
         specifier: 0.34.0
         version: 0.34.0(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+      '@innei/message-engine':
+        specifier: 0.2.0
+        version: 0.2.0(@earendil-works/pi-agent-core@0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3))
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -2138,14 +2141,18 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@earendil-works/pi-agent-core@0.83.0':
-    resolution: {integrity: sha512-RorGp9OH5l3ElpuC5a5ZQ2eWcchZGXflXRzVGkV99y3y6tT+LLNyxoYIdVKvTKWEObwhExeQbTH0fI2tE4iX4g==}
+  '@earendil-works/pi-agent-core@0.84.1':
+    resolution: {integrity: sha512-evyzXYWCLQGmcaBYHlmSku02r8qoN4SGI60GZABo6iV+H+nqX+P9ud8fEZ4GmRq9mUSREvvfX+w9dA9ThF9C6w==}
     engines: {node: '>=22.19.0'}
 
-  '@earendil-works/pi-ai@0.83.0':
-    resolution: {integrity: sha512-m3IZD4g3er0V8TC9+Vpgw/sjTKqcJlkcIBy/JvsgRubuuik3tAVzyugUg4rVrShIkkOT69mEd34NEqKUIsl6JQ==}
+  '@earendil-works/pi-ai@0.84.1':
+    resolution: {integrity: sha512-wMsAdJMxuNri08vLqTyYVI201DQQezGhPSTkzYsHdw5dYX3rCNwEmSvpaAwhi7ELKI/2tE/CEgSWg/6iRxSgdQ==}
     engines: {node: '>=22.19.0'}
     hasBin: true
+
+  '@earendil-works/pi-telemetry@0.84.1':
+    resolution: {integrity: sha512-180/xGJtsq7IoR3p9EKWjRd0e9M4DkxInhlo9xyD7prDC7Qrhqq+nhvwrW0lFjPfXcEI2FSHmGCSyvSJE9GsaQ==}
+    engines: {node: '>=22.19.0'}
 
   '@effect/cli@0.77.0':
     resolution: {integrity: sha512-uVw33bcqPaSu6YZqGf6MyM2CbYsE79mrAnQsDzSFnP8jmnjNfXWrfmWUGK2yy0jXD0wWmVbmvwm4xVFv2Utsog==}
@@ -3437,6 +3444,14 @@ packages:
     engines: {node: '>=20.9.0'}
     cpu: [x64]
     os: [win32]
+
+  '@innei/message-engine@0.2.0':
+    resolution: {integrity: sha512-OFGv1feZMjsFA2spnzlTbVj5nxG6BZbzftTmkcw5ZU0e47pC1yzBdF+8kQMVB6WmMHCyykxdd028i3D0GJRbKg==}
+    peerDependencies:
+      '@earendil-works/pi-agent-core': ^0.84.1
+    peerDependenciesMeta:
+      '@earendil-works/pi-agent-core':
+        optional: true
 
   '@innei/next-async@0.4.0':
     resolution: {integrity: sha512-GRIMLlswVGqc9IDVm3uKAtTQH99ouzQdxdCFDPrfSusQzMF2EjKVQIfeF3pWorzqcx3pPoXXbENovkamI5WuEQ==}
@@ -13853,9 +13868,10 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@earendil-works/pi-agent-core@0.83.0(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)':
+  '@earendil-works/pi-agent-core@0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)':
     dependencies:
-      '@earendil-works/pi-ai': 0.83.0(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
+      '@earendil-works/pi-ai': 0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
+      '@earendil-works/pi-telemetry': 0.84.1
       diff: 8.0.4
       ignore: 7.0.5
       typebox: 1.3.7
@@ -13868,10 +13884,11 @@ snapshots:
       - ws
       - zod
 
-  '@earendil-works/pi-ai@0.83.0(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)':
+  '@earendil-works/pi-ai@0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.91.1(zod@4.4.3)
       '@aws-sdk/client-bedrock-runtime': 3.1048.0
+      '@earendil-works/pi-telemetry': 0.84.1
       '@google/genai': 1.52.0(supports-color@5.5.0)
       '@mistralai/mistralai': 2.2.6(@opentelemetry/api@1.9.0)
       '@opentelemetry/api': 1.9.0
@@ -13888,6 +13905,8 @@ snapshots:
       - utf-8-validate
       - ws
       - zod
+
+  '@earendil-works/pi-telemetry@0.84.1': {}
 
   '@effect/cli@0.77.0(@effect/platform@0.97.1(effect@3.22.1))(@effect/printer-ansi@0.51.0(@effect/typeclass@0.41.0(effect@3.22.1))(effect@3.22.1))(@effect/printer@0.51.0(@effect/typeclass@0.41.0(effect@3.22.1))(effect@3.22.1))(effect@3.22.1)':
     dependencies:
@@ -15208,6 +15227,10 @@ snapshots:
 
   '@img/sharp-win32-x64@0.35.3':
     optional: true
+
+  '@innei/message-engine@0.2.0(@earendil-works/pi-agent-core@0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3))':
+    optionalDependencies:
+      '@earendil-works/pi-agent-core': 0.84.1(supports-color@5.5.0)(ws@8.21.1)(zod@4.4.3)
 
   '@innei/next-async@0.4.0': {}
 

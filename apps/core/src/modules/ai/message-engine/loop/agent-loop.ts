@@ -73,18 +73,7 @@ export async function runEngineLoop(opts: {
     )
     conversation.appendAssistant(message)
     for (const result of event.toolResults) {
-      conversation.appendToolResult({
-        toolCallId: result.toolCallId,
-        toolName: result.toolName,
-        content: result.content
-          .filter(
-            (block): block is { type: 'text'; text: string } =>
-              block.type === 'text',
-          )
-          .map((block) => block.text)
-          .join('\n'),
-        isError: result.isError,
-      })
+      conversation.append(result)
     }
     const cost = message.usage?.cost?.total ?? 0
     totalCostUsd += cost
@@ -115,6 +104,7 @@ export async function runEngineLoop(opts: {
         id: runtime.providerInfo.model,
       } as never,
       convertToLlm: (messages) => messages as Message[],
+      transformContext: conversation.transformContext,
       toolExecution: 'sequential',
       beforeToolCall: async ({ toolCall }) => {
         const limit = guards.toolInvocationLimits?.[toolCall.name]

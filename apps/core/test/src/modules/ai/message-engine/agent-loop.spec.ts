@@ -68,7 +68,7 @@ const echoTool: EngineTool = {
 
 describe('runEngineLoop', () => {
   it('executes tool calls, appends results, finishes when model stops', async () => {
-    const { runtime } = stubRuntime([
+    const { runtime, seen } = stubRuntime([
       assistantMsg(
         [
           {
@@ -94,6 +94,7 @@ describe('runEngineLoop', () => {
     expect(result.steps).toBe(2)
     expect(result.toolInvocations).toEqual({ echo: 1 })
     expect(result.totalCostUsd).toBeCloseTo(0.02)
+    expect(seen).toEqual([{ messageCount: 1 }, { messageCount: 3 }])
     const roles = conv.messages.map((m) => m.role)
     expect(roles).toEqual(['user', 'assistant', 'toolResult', 'assistant'])
   })
