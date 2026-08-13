@@ -7,6 +7,10 @@ import { load as yamlLoad } from 'js-yaml'
 import nodeMachineId from 'node-machine-id'
 
 import { isDebugMode, isDev } from './global/env.global'
+import {
+  parseRedisConnectionString,
+  resolveRedisConnectionStringEnv,
+} from './utils/redis-config.util'
 import { parseBooleanishValue } from './utils/tool.util'
 
 const { machineIdSync } = nodeMachineId
@@ -30,49 +34,7 @@ const {
 const ENV_JWT_SECRET = JWT_SECRET || JWTSECRET
 const ENCRYPT_KEY_FROM_ENV = MX_ENCRYPT_KEY || ENV_ENCRYPT_KEY
 const ENCRYPT_ENABLE_FROM_ENV = MX_ENCRYPT_ENABLE || ENV_ENCRYPT_ENABLE
-
-function parseRedisConnectionString(input: string) {
-  const raw = String(input).trim()
-  if (!raw) return null
-
-  const withProtocol =
-    raw.includes('://') || raw.startsWith('redis:') || raw.startsWith('rediss:')
-      ? raw
-      : `redis://${raw}`
-
-  const url = new URL(withProtocol)
-
-  // `redis:` / `rediss:`
-  if (url.protocol !== 'redis:' && url.protocol !== 'rediss:') {
-    throw new Error(`Invalid redis connection string protocol: ${url.protocol}`)
-  }
-
-  const host = url.hostname
-  const port = url.port ? Number(url.port) : undefined
-  const username = url.username ? decodeURIComponent(url.username) : undefined
-  const password = url.password ? decodeURIComponent(url.password) : undefined
-
-  const dbFromPath = url.pathname?.replace(/^\//, '')
-  const db =
-    dbFromPath && /^\d+$/.test(dbFromPath) ? Number(dbFromPath) : undefined
-
-  // Build a sanitized URL (no auth) for downstream clients.
-  const origin =
-    url.port && url.port.length > 0
-      ? `${url.protocol}//${url.hostname}:${url.port}`
-      : `${url.protocol}//${url.hostname}`
-  const sanitizedUrl = `${origin}${url.pathname || ''}${url.search || ''}`
-
-  return {
-    url: sanitizedUrl,
-    host,
-    port,
-    username,
-    password,
-    db,
-    tls: url.protocol === 'rediss:',
-  }
-}
+const REDIS_CONNECTION_STRING_FROM_ENV = resolveRedisConnectionStringEnv()
 
 function applyArgvEnvFallback(argv: Record<string, any>) {
   // Fallback rule:
@@ -120,7 +82,11 @@ const commander = program
   .option('--demo', 'enable demo mode')
 
   // redis
-  .option('--redis_connection_string <string>', 'redis connection string')
+  .option(
+    '--redis_connection_string <string>',
+    'redis connection string',
+    REDIS_CONNECTION_STRING_FROM_ENV,
+  )
   .option('--redis_host <string>', 'redis host')
   .option('--redis_port <number>', 'redis port')
   .option('--redis_password <string>', 'redis password')

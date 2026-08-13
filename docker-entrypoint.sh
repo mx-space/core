@@ -79,11 +79,14 @@ mask_redis_password() {
 #
 # Keep a tiny bit of provenance for logs.
 REDIS_CONNECTION_STRING_ORIG="${REDIS_CONNECTION_STRING:-}"
+REDIS_CONNECTION_ORIG="${REDIS_CONNECTION:-}"
+REDIS_URL_ORIG="${REDIS_URL:-}"
 apply_env_alias CONFIG CONFIG_PATH
 apply_env_alias COLLECTION_NAME DB_COLLECTION_NAME
 apply_env_alias HTTP_REQUEST_VERBOSE DEBUG
 # Redis env compatibility: keep consistent with DB's `MONGO_CONNECTION` handling.
 apply_env_alias REDIS_CONNECTION_STRING REDIS_CONNECTION
+apply_env_alias REDIS_CONNECTION_STRING REDIS_URL
 
 # Derive SNOWFLAKE_WORKER_OFFSET from the Docker Swarm task slot when running
 # multiple replicas. Swarm sets HOSTNAME to "<service>.<slot>.<task-id>" so
@@ -142,8 +145,10 @@ fi
 # Redis summary
 if [ -n "${REDIS_CONNECTION_STRING:-}" ]; then
   redis_conn_source="env:REDIS_CONNECTION_STRING"
-  if [ -z "$REDIS_CONNECTION_STRING_ORIG" ] && [ -n "${REDIS_CONNECTION:-}" ]; then
+  if [ -z "$REDIS_CONNECTION_STRING_ORIG" ] && [ -n "$REDIS_CONNECTION_ORIG" ]; then
     redis_conn_source="env:REDIS_CONNECTION (aliased to REDIS_CONNECTION_STRING)"
+  elif [ -z "$REDIS_CONNECTION_STRING_ORIG" ] && [ -n "$REDIS_URL_ORIG" ]; then
+    redis_conn_source="env:REDIS_URL (aliased to REDIS_CONNECTION_STRING)"
   fi
   log_kv "Redis" "$(mask_redis_password "$REDIS_CONNECTION_STRING")" "$redis_conn_source"
 else

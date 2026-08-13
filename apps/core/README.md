@@ -233,6 +233,7 @@ pnpm test:watch                                           # watch mode
 | `PG_DATABASE` | PostgreSQL database name | `mx_core` |
 | `PG_MAX_POOL_SIZE` | PostgreSQL connection pool size | `20` |
 | `PG_SSL` | Enable PostgreSQL SSL | `false` |
+| `REDIS_CONNECTION_STRING` | Full Redis URI; use `rediss://` for TLS (`REDIS_CONNECTION` and `REDIS_URL` are accepted aliases) | — |
 | `REDIS_HOST` | Redis host | `localhost` |
 | `REDIS_PORT` | Redis port | `6379` |
 | `REDIS_PASSWORD` | Redis password | — |
@@ -244,6 +245,12 @@ pnpm test:watch                                           # watch mode
 | `PORT` | Server port | `2333` |
 | `TZ` | Timezone | `Asia/Shanghai` |
 | `DISABLE_CACHE` | Disable Redis caching | `false` |
+
+For managed Redis providers such as Upstash, pass the provider URI as
+`REDIS_CONNECTION_STRING=rediss://user:password@host:port`. The `rediss://`
+scheme enables TLS. If the provider exposes the same URI as `REDIS_URL`, it is
+accepted directly; `REDIS_CONNECTION_STRING` takes precedence when both are
+set.
 
 Configuration can also be provided via CLI arguments or YAML files. See
 `src/app.config.ts` for the full config schema.
