@@ -352,6 +352,79 @@ describe('useTaskListSubscription', () => {
     })
   })
 
+  it('a stale ack from an unmounted instance does not kill a remounted sibling subscribed to the same payload', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+
+    // Mount A subscribes; its ack never arrives before it unmounts.
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
+
+    act(() => {
+      harness.unmount()
+      harness = mount()
+    })
+
+    // Mount B, same payload, sends its own subscribe request — A's is still
+    // sitting unresolved in the queue.
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(2)
+
+    // A's stale ack resolves. Without cross-mount refcounting this fires a
+    // deferred ai_task.unsubscribe that silently drops B's live room.
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+
+    // B's own ack resolves — B is now the confirmed, sole subscriber.
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+
+    // Prove B's subscription is genuinely still live and correctly tracked
+    // (not corrupted by A's interference): B going tab-hidden now, as the
+    // sole owner, sends the real unsubscribe — the shared refcount reached
+    // zero cleanly rather than being left permanently wedged either way by
+    // A's earlier mount/unmount.
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: true,
+    })
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(1)
+    expect(socket.pending('ai_task.unsubscribe')[0].payload).toEqual({
+      all: true,
+    })
+
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: false,
+    })
+  })
+
   it('disconnect flips socketConnected to false; reconnect re-issues ai_task.subscribe AND invalidates the tasks root cache', async () => {
     const socket = new MockWsClient()
     socket.state = 'open'
