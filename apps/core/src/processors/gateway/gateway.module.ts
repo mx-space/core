@@ -13,6 +13,8 @@ import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
 import { WebEventsGateway } from './web/events.gateway'
 import { VisitorEventDispatchService } from './web/visitor-event-dispatch.service'
+import { WsBusService } from './ws/ws-bus.service'
+import { WsPresenceService } from './ws/ws-presence.service'
 
 @Global()
 @Module({
@@ -25,6 +27,9 @@ import { VisitorEventDispatchService } from './web/visitor-event-dispatch.servic
     GatewayService,
 
     VisitorEventDispatchService,
+
+    WsBusService,
+    WsPresenceService,
   ],
   exports: [
     AdminEventsGateway,
@@ -32,6 +37,9 @@ import { VisitorEventDispatchService } from './web/visitor-event-dispatch.servic
     SharedGateway,
 
     GatewayService,
+
+    WsBusService,
+    WsPresenceService,
   ],
 })
 export class GatewayModule {}
