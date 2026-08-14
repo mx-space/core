@@ -19,15 +19,12 @@ export enum EventTypes {
   NOTE_UPDATE = 'note.update',
   NOTE_DELETE = 'note.delete',
 
-  PAGE_UPDATED = 'PAGE_UPDATED',
-
   SAY_CREATE = 'say.create',
   SAY_DELETE = 'say.delete',
   SAY_UPDATE = 'say.update',
 
   LINK_APPLY = 'link.apply',
 
-  DANMAKU_CREATE = 'DANMAKU_CREATE',
   CONTENT_REFRESH = 'content.refresh',
 
   IMAGE_REFRESH = 'image.refresh',

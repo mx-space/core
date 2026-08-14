@@ -1,16 +1,102 @@
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, createElement } from 'react'
+import type { Root } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
+import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AITask, AITaskLog, AITasksResponse } from '~/api/tasks'
 import { AITaskStatus, AITaskType } from '~/api/tasks'
+import { translate } from '~/i18n/translate'
 import { adminQueryKeys } from '~/query/keys'
 
-import { handleTaskUpdate } from './SocketBridge'
-import type { TaskUpdatePayload, TaskUpdateStreamFrame } from './types'
+// Spec 2 step-27 — SocketBridge TASK_UPDATE phase routing (handleTaskUpdate,
+// unchanged by the ws-client migration) plus the transport wiring added by
+// it: module-singleton exposure, per-event dispatch to subscribers, and the
+// DEV-only $state → toast mapping.
 
-// Spec 2 step-27 — SocketBridge TASK_UPDATE phase routing.
-// Verifies each of the 8 phases routes through the right cache hooks:
-//   created/started/progress/status/log/result/stream/deleted.
+type WsClientState = 'closed' | 'connecting' | 'open' | 'reconnecting'
+type Listener = (payload?: unknown) => void
+
+// `~/api/tasks` (imported below for AITask types) pulls in `~/constants/env`
+// transitively, which freezes GATEWAY_URL from `window.injectData` at import
+// time. vi.hoisted runs before any import statement, so this must set
+// injectData before that chain ever evaluates — a plain top-level assignment
+// runs too late because import declarations are hoisted above it.
+vi.hoisted(() => {
+  ;(window as unknown as { injectData: Record<string, string> }).injectData = {
+    GATEWAY: 'http://localhost:2333',
+  }
+})
+
+class FakeWsClient {
+  state: WsClientState = 'connecting'
+  closed = false
+  readonly options: { url: string }
+  private readonly listeners = new Map<string, Set<Listener>>()
+
+  constructor(options: { url: string }) {
+    this.options = options
+  }
+
+  on(event: string, listener: Listener) {
+    let set = this.listeners.get(event)
+    if (!set) {
+      set = new Set()
+      this.listeners.set(event, set)
+    }
+    set.add(listener)
+    return () => {
+      set!.delete(listener)
+    }
+  }
+
+  emit(event: string, payload?: unknown) {
+    const set = this.listeners.get(event)
+    if (!set) return
+    for (const fn of set) fn(payload)
+  }
+
+  setState(next: WsClientState) {
+    this.state = next
+    this.emit('$state', next)
+  }
+
+  send() {}
+
+  request() {
+    return new Promise(() => {})
+  }
+
+  close() {
+    this.closed = true
+  }
+}
+
+const instances: FakeWsClient[] = []
+
+vi.mock('@mx-space/ws-client', () => ({
+  createWsClient: (options: { url: string }) => {
+    const client = new FakeWsClient(options)
+    instances.push(client)
+    return client
+  },
+}))
+
+vi.mock('sonner', () => ({
+  toast: {
+    dismiss: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+  },
+}))
+
+const { SocketBridge, getAdminSocket, handleTaskUpdate } =
+  await import('./SocketBridge')
+const { EventTypes } = await import('./types')
+const { toast } = await import('sonner')
 
 function makeTask(overrides: Partial<AITask> = {}): AITask {
   return {
@@ -57,14 +143,13 @@ describe('handleTaskUpdate — phase routing', () => {
     )
     const fresh = makeTask({ id: 'new' })
 
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: fresh.id,
       type: fresh.type,
       scope: 'ai',
       phase: 'created',
       patch: fresh,
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     const list = queryClient.getQueryData<AITasksResponse>(
       adminQueryKeys.tasks.tasks(TASKS_PARAMS),
@@ -103,7 +188,7 @@ describe('handleTaskUpdate — phase routing', () => {
       scope: 'enrichment',
       phase: 'created',
       patch: fresh,
-    } satisfies TaskUpdatePayload)
+    })
 
     expect(
       queryClient.getQueryData<AITasksResponse>(
@@ -143,7 +228,7 @@ describe('handleTaskUpdate — phase routing', () => {
       scope: 'ai',
       phase: 'created',
       patch: fresh,
-    } satisfies TaskUpdatePayload)
+    })
 
     expect(
       queryClient
@@ -166,13 +251,12 @@ describe('handleTaskUpdate — phase routing', () => {
     )
     queryClient.setQueryData(adminQueryKeys.tasks.taskDetail('b'), b)
 
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: 'b',
       type: AITaskType.Summary,
       scope: 'ai',
       phase: 'deleted',
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     const list = queryClient.getQueryData<AITasksResponse>(
       adminQueryKeys.tasks.tasks(TASKS_PARAMS),
@@ -188,14 +272,13 @@ describe('handleTaskUpdate — phase routing', () => {
     const child = makeTask({ id: 'c', groupId: 'g' })
     queryClient.setQueryData(adminQueryKeys.tasks.tasksByGroup('g'), [child])
 
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: 'c',
       type: AITaskType.Translation,
       scope: 'ai',
       phase: 'deleted',
       groupId: 'g',
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     expect(
       queryClient.getQueryData<AITask[]>(
@@ -210,30 +293,25 @@ describe('handleTaskUpdate — phase routing', () => {
     const list = makeListResponse([prev])
     queryClient.setQueryData(adminQueryKeys.tasks.tasks(TASKS_PARAMS), list)
 
-    const streamFrame: TaskUpdateStreamFrame = {
-      lang: 'ja',
-      chunk: 'token',
-    }
+    const streamFrame = { lang: 'ja', chunk: 'token' }
     const events: Array<{
       taskId: string
       groupId?: string
-      stream?: TaskUpdateStreamFrame
+      stream?: unknown
     }> = []
     const listener = (event: Event) => {
-      const detail = (event as CustomEvent).detail
-      events.push(detail)
+      events.push((event as CustomEvent).detail)
     }
     window.addEventListener('mx-admin:ai-task-stream', listener)
     try {
-      const payload: TaskUpdatePayload = {
+      handleTaskUpdate(queryClient, {
         id: 'sx',
         type: AITaskType.Translation,
         scope: 'ai',
         phase: 'stream',
         groupId: 'g1',
         stream: streamFrame,
-      }
-      handleTaskUpdate(queryClient, payload)
+      })
     } finally {
       window.removeEventListener('mx-admin:ai-task-stream', listener)
     }
@@ -241,7 +319,6 @@ describe('handleTaskUpdate — phase routing', () => {
     expect(events).toEqual([
       { taskId: 'sx', groupId: 'g1', stream: streamFrame },
     ])
-    // Cache untouched
     expect(
       queryClient.getQueryData<AITask>(adminQueryKeys.tasks.taskDetail('sx')),
     ).toBe(prev)
@@ -258,20 +335,18 @@ describe('handleTaskUpdate — phase routing', () => {
     const listSeed = makeListResponse([seed])
     queryClient.setQueryData(adminQueryKeys.tasks.tasks(TASKS_PARAMS), listSeed)
 
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: 'p1',
       type: AITaskType.Summary,
       scope: 'ai',
       phase: 'progress',
       patch: { progress: 75 },
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     expect(
       queryClient.getQueryData<AITask>(adminQueryKeys.tasks.taskDetail('p1'))
         ?.progress,
     ).toBe(75)
-    // List cache reference stays — progress doesn't propagate to list.
     expect(
       queryClient.getQueryData<AITasksResponse>(
         adminQueryKeys.tasks.tasks(TASKS_PARAMS),
@@ -290,14 +365,13 @@ describe('handleTaskUpdate — phase routing', () => {
       message: 'hello',
       timestamp: 1,
     }
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: 'l1',
       type: AITaskType.Summary,
       scope: 'ai',
       phase: 'log',
       log,
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     expect(
       queryClient.getQueryData<AITask>(adminQueryKeys.tasks.taskDetail('l1'))
@@ -321,14 +395,13 @@ describe('handleTaskUpdate — phase routing', () => {
       makeListResponse([seed]),
     )
 
-    const payload: TaskUpdatePayload = {
+    handleTaskUpdate(queryClient, {
       id: 's1',
       type: AITaskType.Summary,
       scope: 'ai',
       phase: 'started',
       patch: { status: AITaskStatus.Running, startedAt: 42 },
-    }
-    handleTaskUpdate(queryClient, payload)
+    })
 
     expect(
       queryClient.getQueryData<AITask>(adminQueryKeys.tasks.taskDetail('s1'))
@@ -355,7 +428,7 @@ describe('handleTaskUpdate — phase routing', () => {
       scope: 'ai',
       phase: 'status',
       patch: { status: AITaskStatus.Completed },
-    } satisfies TaskUpdatePayload)
+    })
 
     expect(
       queryClient.getQueryData<AITask>(adminQueryKeys.tasks.taskDetail('s2'))
@@ -386,7 +459,7 @@ describe('handleTaskUpdate — phase routing', () => {
         completedAt: 99,
         result: { ok: 1 },
       },
-    } satisfies TaskUpdatePayload)
+    })
 
     const detail = queryClient.getQueryData<AITask>(
       adminQueryKeys.tasks.taskDetail('r1'),
@@ -433,16 +506,12 @@ describe('handleTaskUpdate — phase routing', () => {
       phase: 'status',
       groupId: 'g1',
       patch: { status: AITaskStatus.Completed, subTaskStats: nextStats },
-    } satisfies TaskUpdatePayload)
+    })
 
     const updatedParent = queryClient.getQueryData<AITask>(
       adminQueryKeys.tasks.taskDetail('g1'),
     )
-    // Wholesale replace contract — every field of the incoming stats appears
-    // on the parent (TanStack Query's structural sharing may rewrite the
-    // object reference, so compare by value not identity).
     expect(updatedParent?.subTaskStats).toEqual(nextStats)
-    // And the prev parent stats were really replaced, not merged.
     expect(updatedParent?.subTaskStats?.completed).toBe(1)
   })
 
@@ -462,7 +531,7 @@ describe('handleTaskUpdate — phase routing', () => {
       phase: 'status',
       groupId: 'g2',
       patch: { status: AITaskStatus.Completed },
-    } satisfies TaskUpdatePayload)
+    })
 
     const groupChildren = queryClient.getQueryData<AITask[]>(
       adminQueryKeys.tasks.tasksByGroup('g2'),
@@ -485,7 +554,7 @@ describe('handleTaskUpdate — phase routing', () => {
       phase: 'created',
       groupId: 'g3',
       patch: fresh,
-    } satisfies TaskUpdatePayload)
+    })
 
     expect(
       queryClient.getQueryData<AITask[]>(
@@ -498,11 +567,8 @@ describe('handleTaskUpdate — phase routing', () => {
     const list = makeListResponse([makeTask({ id: 'x' })])
     queryClient.setQueryData(adminQueryKeys.tasks.tasks(TASKS_PARAMS), list)
 
-    // Missing `phase`
     handleTaskUpdate(queryClient, { id: 'x' })
-    // Missing `id`
     handleTaskUpdate(queryClient, { phase: 'status' })
-    // Null/undefined
     handleTaskUpdate(queryClient, null)
     handleTaskUpdate(queryClient, undefined)
 
@@ -514,24 +580,163 @@ describe('handleTaskUpdate — phase routing', () => {
   })
 
   it('is a no-op when the detail cache is empty (does not poison it)', () => {
-    // No prior setQueryData for taskDetail('m1') — patch arrives in the wild.
     handleTaskUpdate(queryClient, {
       id: 'm1',
       type: AITaskType.Summary,
       scope: 'ai',
       phase: 'progress',
       patch: { progress: 50 },
-    } satisfies TaskUpdatePayload)
-    // Should remain undefined — applyTaskPatch only fires when prev exists.
+    })
     expect(
       queryClient.getQueryData(adminQueryKeys.tasks.taskDetail('m1')),
     ).toBeUndefined()
   })
 })
 
-// Sanity check — the spy wiring above relies on vi being callable.
-describe('vi sanity', () => {
-  it('vi.fn() is defined', () => {
-    expect(typeof vi.fn).toBe('function')
+interface Harness {
+  container: HTMLDivElement
+  root: Root
+  unmount: () => void
+}
+
+function mount(): Harness {
+  const container = document.createElement('div')
+  document.body.append(container)
+  const root = createRoot(container)
+  return {
+    container,
+    root,
+    unmount: () => {
+      act(() => {
+        root.unmount()
+      })
+      container.remove()
+    },
+  }
+}
+
+function renderSocketBridge(harness: Harness) {
+  act(() => {
+    harness.root.render(
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(SocketBridge),
+        ),
+      ),
+    )
+  })
+}
+
+describe('SocketBridge — transport wiring', () => {
+  let harness: Harness
+
+  beforeEach(() => {
+    instances.length = 0
+    vi.mocked(toast.info).mockClear()
+    vi.mocked(toast.success).mockClear()
+    vi.mocked(toast.warning).mockClear()
+    harness = mount()
+  })
+
+  afterEach(() => {
+    harness.unmount()
+    document.body.innerHTML = ''
+  })
+
+  it('connects to <gateway as ws scheme>/ws/admin and exposes the client via getAdminSocket(), clearing it on unmount', () => {
+    renderSocketBridge(harness)
+    expect(instances).toHaveLength(1)
+    expect(instances[0].options.url).toBe('ws://localhost:2333/ws/admin')
+    expect(getAdminSocket()).toBe(instances[0])
+
+    harness.unmount()
+    expect(getAdminSocket()).toBeNull()
+  })
+
+  it('dispatches an incoming business event to a window CustomEvent and to its cache/toast handler', () => {
+    renderSocketBridge(harness)
+    const client = instances[0]
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    const events: Array<{ payload: unknown; type: string }> = []
+    const listener = (event: Event) => {
+      events.push((event as CustomEvent).detail)
+    }
+    window.addEventListener('mx-admin:socket-event', listener)
+    try {
+      client.emit(EventTypes.COMMENT_CREATE, { author: 'a', text: 'hi' })
+    } finally {
+      window.removeEventListener('mx-admin:socket-event', listener)
+    }
+
+    expect(events).toEqual([
+      { payload: { author: 'a', text: 'hi' }, type: EventTypes.COMMENT_CREATE },
+    ])
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: adminQueryKeys.comments.root,
+    })
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: adminQueryKeys.aggregate.root,
+    })
+    expect(toast.success).toHaveBeenCalled()
+  })
+
+  it('routes a TASK_UPDATE event through handleTaskUpdate', () => {
+    renderSocketBridge(harness)
+    const client = instances[0]
+    queryClient.setQueryData(
+      adminQueryKeys.tasks.taskDetail('wired-1'),
+      makeTask({ id: 'wired-1' }),
+    )
+
+    client.emit(EventTypes.TASK_UPDATE, {
+      id: 'wired-1',
+      type: AITaskType.Summary,
+      scope: 'ai',
+      phase: 'deleted',
+    })
+
+    expect(
+      queryClient.getQueryData(adminQueryKeys.tasks.taskDetail('wired-1')),
+    ).toBeUndefined()
+  })
+
+  it('closes the client on an AUTH_FAILED event', () => {
+    renderSocketBridge(harness)
+    const client = instances[0]
+    client.emit(EventTypes.AUTH_FAILED, undefined)
+    expect(client.closed).toBe(true)
+  })
+
+  it('$state: first drop before ever connecting toasts socket.connectionError', () => {
+    renderSocketBridge(harness)
+    const client = instances[0]
+
+    client.setState('reconnecting')
+
+    expect(toast.info).toHaveBeenCalledWith(translate('socket.connectionError'))
+    expect(toast.info).not.toHaveBeenCalledWith(
+      translate('socket.reconnecting'),
+    )
+  })
+
+  it('$state: the very first open fires no toast; a later drop+reopen maps to reconnecting/reconnectSuccess', () => {
+    renderSocketBridge(harness)
+    const client = instances[0]
+
+    client.setState('open')
+    expect(toast.info).not.toHaveBeenCalled()
+
+    client.setState('reconnecting')
+    expect(toast.info).toHaveBeenCalledWith(translate('socket.reconnecting'))
+
+    client.setState('open')
+    expect(toast.info).toHaveBeenCalledWith(
+      translate('socket.reconnectSuccess'),
+    )
   })
 })

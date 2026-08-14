@@ -6,60 +6,79 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { adminQueryKeys } from '~/query/keys'
 
-// Spec 2 step-27 — useTaskSubscription connection-fallback contract.
-//
-// We mock the SocketBridge module to expose a deterministic
-// subscribeAdminSocket implementation backed by a tiny EventEmitter-style
-// mock socket. The hook tests then assert:
-//   - socketConnected toggles when the socket connect/disconnect events fire
-//   - reconnect triggers invalidateQueries on the right cache key
-//   - the hook emits ai-task:subscribe + ai-task:unsubscribe with the right
-//     payload shape
+type WsClientState = 'closed' | 'connecting' | 'open' | 'reconnecting'
+type Listener = (payload?: unknown) => void
 
-type Listener = (...args: unknown[]) => void
+interface QueueEntry {
+  event: string
+  payload: unknown
+  resolve: (value: unknown) => void
+  reject: (error: unknown) => void
+}
 
-class MockSocket {
-  connected = false
-  // Map of event name → listeners
+class MockWsClient {
+  state: WsClientState = 'connecting'
   private readonly listeners = new Map<string, Set<Listener>>()
-  readonly emits: Array<{ event: string; payload: unknown }> = []
+  private readonly queue: QueueEntry[] = []
 
   on(event: string, listener: Listener) {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set())
-    this.listeners.get(event)!.add(listener)
-  }
-
-  off(event: string, listener: Listener) {
-    this.listeners.get(event)?.delete(listener)
+    let set = this.listeners.get(event)
+    if (!set) {
+      set = new Set()
+      this.listeners.set(event, set)
+    }
+    set.add(listener)
+    return () => {
+      set!.delete(listener)
+    }
   }
 
   emit(event: string, payload?: unknown) {
-    this.emits.push({ event, payload })
-  }
-
-  // Test-only — fire a fake server-side event into the local listeners
-  trigger(event: string, ...args: unknown[]) {
     const set = this.listeners.get(event)
     if (!set) return
-    for (const fn of set) fn(...args)
+    for (const fn of set) fn(payload)
   }
 
-  setConnected(value: boolean) {
-    this.connected = value
-    this.trigger(value ? 'connect' : 'disconnect')
+  setState(next: WsClientState) {
+    this.state = next
+    this.emit('$state', next)
+  }
+
+  request(event: string, payload?: unknown) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ event, payload, resolve, reject })
+    })
+  }
+
+  pending(event: string): QueueEntry[] {
+    return this.queue.filter((entry) => entry.event === event)
+  }
+
+  resolveOldest(event: string, result: unknown = { ok: true }) {
+    const idx = this.queue.findIndex((entry) => entry.event === event)
+    if (idx === -1) throw new Error(`no pending request for ${event}`)
+    const [entry] = this.queue.splice(idx, 1)
+    entry.resolve(result)
+  }
+
+  rejectOldest(event: string, error: unknown = new Error('rejected')) {
+    const idx = this.queue.findIndex((entry) => entry.event === event)
+    if (idx === -1) throw new Error(`no pending request for ${event}`)
+    const [entry] = this.queue.splice(idx, 1)
+    entry.reject(error)
   }
 }
 
-let mockSocket: MockSocket | null = null
-const socketListeners = new Set<(s: MockSocket | null) => void>()
+let mockSocket: MockWsClient | null = null
+const socketListeners = new Set<(s: MockWsClient | null) => void>()
 
-function setMockSocket(next: MockSocket | null) {
+function setMockSocket(next: MockWsClient | null) {
   mockSocket = next
   for (const listener of socketListeners) listener(next)
 }
 
 vi.mock('~/socket/SocketBridge', () => ({
-  subscribeAdminSocket: (cb: (s: MockSocket | null) => void) => {
+  subscribeAdminSocket: (cb: (s: MockWsClient | null) => void) => {
     socketListeners.add(cb)
     cb(mockSocket)
     return () => {
@@ -69,7 +88,6 @@ vi.mock('~/socket/SocketBridge', () => ({
   getAdminSocket: () => mockSocket,
 }))
 
-// Import the hook AFTER vi.mock so the mocked module is wired in.
 const { useTaskListSubscription, useTaskDetailSubscription } =
   await import('./useTaskSubscription')
 
@@ -93,6 +111,13 @@ function mount(): Harness {
       container.remove()
     },
   }
+}
+
+async function flush() {
+  await act(async () => {
+    await Promise.resolve()
+    await Promise.resolve()
+  })
 }
 
 function StatusProbe(props: {
@@ -138,7 +163,7 @@ afterEach(() => {
 })
 
 describe('useTaskListSubscription', () => {
-  it('reports socketConnected=false while no socket exists, and emits no subscribe', () => {
+  it('reports socketConnected=false while no socket exists, and sends no subscribe request', () => {
     act(() => {
       harness.root.render(
         createElement(
@@ -153,9 +178,9 @@ describe('useTaskListSubscription', () => {
     ).toBe('paused')
   })
 
-  it('flips to connected when a connected socket is installed and emits the list subscribe payload', () => {
-    const socket = new MockSocket()
-    socket.connected = true
+  it('flips to connected when an open socket is installed and requests ai_task.subscribe', () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
     act(() => {
       setMockSocket(socket)
     })
@@ -171,54 +196,15 @@ describe('useTaskListSubscription', () => {
     expect(
       harness.container.querySelector('[data-testid="status"]')?.textContent,
     ).toBe('connected')
-    expect(socket.emits).toContainEqual({
-      event: 'ai-task:subscribe',
-      payload: { all: true },
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
+    expect(socket.pending('ai_task.subscribe')[0].payload).toEqual({
+      all: true,
     })
   })
 
-  it('disconnect flips socketConnected to false; reconnect flips back AND invalidates the tasks root cache', () => {
-    const socket = new MockSocket()
-    socket.connected = true
-    act(() => {
-      setMockSocket(socket)
-    })
-
-    act(() => {
-      harness.root.render(
-        createElement(
-          QueryClientProvider,
-          { client: queryClient },
-          createElement(StatusProbe, { scope: 'list' }),
-        ),
-      )
-    })
-
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    act(() => {
-      socket.setConnected(false)
-    })
-    expect(
-      harness.container.querySelector('[data-testid="status"]')?.textContent,
-    ).toBe('paused')
-    expect(invalidateSpy).not.toHaveBeenCalled()
-
-    act(() => {
-      socket.setConnected(true)
-    })
-    expect(
-      harness.container.querySelector('[data-testid="status"]')?.textContent,
-    ).toBe('connected')
-    // reconnect → onCatchUp → invalidateQueries on the tasks root key
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: adminQueryKeys.tasks.tasksRoot,
-    })
-  })
-
-  it('emits ai-task:unsubscribe on unmount', () => {
-    const socket = new MockSocket()
-    socket.connected = true
+  it('does not resend ai_task.subscribe while the first request is still pending', () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
     setMockSocket(socket)
     act(() => {
       harness.root.render(
@@ -229,33 +215,136 @@ describe('useTaskListSubscription', () => {
         ),
       )
     })
-    expect(
-      socket.emits.some(
-        (e) =>
-          e.event === 'ai-task:subscribe' &&
-          JSON.stringify(e.payload) === JSON.stringify({ all: true }),
-      ),
-    ).toBe(true)
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
+
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
+  })
+
+  it('unmounting before the subscribe ack resolves sends no unsubscribe request', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
 
     act(() => {
       harness.unmount()
-      // Re-mount so afterEach's harness.unmount() is a no-op shape
       harness = mount()
     })
+    await flush()
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+  })
+
+  it('sends ai_task.unsubscribe on unmount only after the subscribe ack resolved ok:true', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+
+    act(() => {
+      harness.unmount()
+      harness = mount()
+    })
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(1)
+    expect(socket.pending('ai_task.unsubscribe')[0].payload).toEqual({
+      all: true,
+    })
+  })
+
+  it('a rejected ack (ok:false) leaves it unsubscribed — no unsubscribe request on unmount', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    act(() => {
+      socket.rejectOldest('ai_task.subscribe')
+    })
+    await flush()
+
+    act(() => {
+      harness.unmount()
+      harness = mount()
+    })
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+  })
+
+  it('disconnect flips socketConnected to false; reconnect re-issues ai_task.subscribe AND invalidates the tasks root cache', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    act(() => {
+      socket.setState('reconnecting')
+    })
     expect(
-      socket.emits.some(
-        (e) =>
-          e.event === 'ai-task:unsubscribe' &&
-          JSON.stringify(e.payload) === JSON.stringify({ all: true }),
-      ),
-    ).toBe(true)
+      harness.container.querySelector('[data-testid="status"]')?.textContent,
+    ).toBe('paused')
+    expect(invalidateSpy).not.toHaveBeenCalled()
+
+    act(() => {
+      socket.setState('open')
+    })
+    expect(
+      harness.container.querySelector('[data-testid="status"]')?.textContent,
+    ).toBe('connected')
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: adminQueryKeys.tasks.tasksRoot,
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
   })
 })
 
 describe('useTaskDetailSubscription', () => {
-  it('emits ai-task:subscribe with the taskId payload', () => {
-    const socket = new MockSocket()
-    socket.connected = true
+  it('requests ai_task.subscribe with the taskId payload', () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
     setMockSocket(socket)
     act(() => {
       harness.root.render(
@@ -266,15 +355,14 @@ describe('useTaskDetailSubscription', () => {
         ),
       )
     })
-    expect(socket.emits).toContainEqual({
-      event: 'ai-task:subscribe',
-      payload: { taskId: 'task-99' },
+    expect(socket.pending('ai_task.subscribe')[0].payload).toEqual({
+      taskId: 'task-99',
     })
   })
 
   it('does not subscribe when taskId is empty / undefined', () => {
-    const socket = new MockSocket()
-    socket.connected = true
+    const socket = new MockWsClient()
+    socket.state = 'open'
     setMockSocket(socket)
     act(() => {
       harness.root.render(
@@ -288,14 +376,12 @@ describe('useTaskDetailSubscription', () => {
         ),
       )
     })
-    expect(
-      socket.emits.filter((e) => e.event === 'ai-task:subscribe'),
-    ).toHaveLength(0)
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(0)
   })
 
-  it('reconnect invalidates the per-detail cache key only when a taskId is supplied', () => {
-    const socket = new MockSocket()
-    socket.connected = true
+  it('reconnect invalidates the per-detail cache key only when a taskId is supplied', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
     setMockSocket(socket)
     act(() => {
       harness.root.render(
@@ -306,13 +392,17 @@ describe('useTaskDetailSubscription', () => {
         ),
       )
     })
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
 
     act(() => {
-      socket.setConnected(false)
+      socket.setState('reconnecting')
     })
     act(() => {
-      socket.setConnected(true)
+      socket.setState('open')
     })
 
     expect(invalidateSpy).toHaveBeenCalledWith({

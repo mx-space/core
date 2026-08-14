@@ -4,15 +4,15 @@ Admin dashboard for MX Space Core — a React 19 SPA served by the core server a
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Framework | React 19 + Vite 8 (+ React Compiler) |
-| Routing | react-router 8 (HashRouter, routes generated from `src/views`) |
-| State | Jotai + Zustand + TanStack Query |
-| UI | Base UI primitives + Tailwind CSS v4 |
-| Editor | Lexical (`@haklex/rich-*`), CodeMirror, Monaco, Excalidraw |
-| Auth | Better Auth + passkeys |
-| Realtime | socket.io-client |
+| Component | Technology                                                     |
+| --------- | -------------------------------------------------------------- |
+| Framework | React 19 + Vite 8 (+ React Compiler)                           |
+| Routing   | react-router 8 (HashRouter, routes generated from `src/views`) |
+| State     | Jotai + Zustand + TanStack Query                               |
+| UI        | Base UI primitives + Tailwind CSS v4                           |
+| Editor    | Lexical (`@haklex/rich-*`), CodeMirror, Monaco, Excalidraw     |
+| Auth      | Better Auth + passkeys                                         |
+| Realtime  | @mx-space/ws-client                                            |
 
 Workspace contracts: `@mx-space/ai` (agent SSE events), `@mx-space/editor` (block node types).
 
@@ -36,12 +36,12 @@ For the full stack, run the core server alongside (`pnpm dev` at the repo root),
 
 All variables are optional (empty = safe defaults); see `.env.example`.
 
-| Variable | Purpose |
-|----------|---------|
-| `VITE_APP_BASE_API` | mx-core API endpoint |
-| `VITE_APP_WEB_URL` | Blog frontend origin ("view on site" links) |
-| `VITE_APP_GATEWAY` | Socket.IO gateway (derived from API origin if empty) |
-| `VITE_APP_PUBLIC_URL` | Vite `base` for production builds |
+| Variable              | Purpose                                              |
+| --------------------- | ---------------------------------------------------- |
+| `VITE_APP_BASE_API`   | mx-core API endpoint                                 |
+| `VITE_APP_WEB_URL`    | Blog frontend origin ("view on site" links)          |
+| `VITE_APP_GATEWAY`    | Socket.IO gateway (derived from API origin if empty) |
+| `VITE_APP_PUBLIC_URL` | Vite `base` for production builds                    |
 
 Runtime URL resolution precedence: server-injected `window.injectData` → build-time `VITE_APP_*` → fallbacks (see `src/constants/env.ts`).
 

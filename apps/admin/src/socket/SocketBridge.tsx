@@ -1,10 +1,10 @@
+import type { WsClient, WsClientState } from '@mx-space/ws-client'
+import { createWsClient } from '@mx-space/ws-client'
 import type { QueryClient } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import type { NavigateFunction } from 'react-router'
 import { useNavigate } from 'react-router'
-import type { Socket } from 'socket.io-client'
-import { io } from 'socket.io-client'
 import { toast } from 'sonner'
 
 import type { AITask } from '~/api/tasks'
@@ -26,31 +26,15 @@ import type {
 } from './types'
 import { EventTypes } from './types'
 
-interface GatewayMessage {
-  code?: number
-  data?: unknown
-  type: EventTypes
-}
+let currentAdminSocket: WsClient | null = null
+const socketChangeListeners = new Set<(socket: WsClient | null) => void>()
 
-// Module-level singleton for hooks (step-22) — allows
-// useTaskSubscription to emit ai-task:subscribe/unsubscribe without
-// passing the socket through React context. Set by SocketBridge on mount
-// and cleared on unmount.
-let currentAdminSocket: Socket | null = null
-const socketChangeListeners = new Set<(socket: Socket | null) => void>()
-
-export function getAdminSocket(): Socket | null {
+export function getAdminSocket(): WsClient | null {
   return currentAdminSocket
 }
 
-/**
- * Subscribe to changes in the underlying socket instance (created /
- * destroyed when SocketBridge mounts / unmounts). Callback fires once
- * synchronously with the current value, then on every change. Returns
- * an unsubscribe function.
- */
 export function subscribeAdminSocket(
-  listener: (socket: Socket | null) => void,
+  listener: (socket: WsClient | null) => void,
 ): () => void {
   socketChangeListeners.add(listener)
   listener(currentAdminSocket)
@@ -59,9 +43,15 @@ export function subscribeAdminSocket(
   }
 }
 
-function setAdminSocket(socket: Socket | null) {
+function setAdminSocket(socket: WsClient | null) {
   currentAdminSocket = socket
   for (const listener of socketChangeListeners) listener(socket)
+}
+
+function toWsOrigin(url: string): string {
+  if (url.startsWith('https://')) return `wss://${url.slice('https://'.length)}`
+  if (url.startsWith('http://')) return `ws://${url.slice('http://'.length)}`
+  return url
 }
 
 export function SocketBridge() {
@@ -71,26 +61,19 @@ export function SocketBridge() {
   useEffect(() => {
     if (!GATEWAY_URL) return
 
-    let disposed = false
-    let reconnectTimer: null | number = null
-    const socket = io(`${GATEWAY_URL}/admin`, {
-      forceNew: true,
-      timeout: 10000,
-      transports: ['websocket'],
-      withCredentials: true,
+    const client = createWsClient({
+      url: `${toWsOrigin(GATEWAY_URL)}/ws/admin`,
     })
-    setAdminSocket(socket)
+    setAdminSocket(client)
 
-    const handleEvent = (type: EventTypes, payload: unknown, code?: number) => {
+    const handleEvent = (type: EventTypes, payload: unknown) => {
       window.dispatchEvent(
-        new CustomEvent('mx-admin:socket-event', {
-          detail: { code, payload, type },
-        }),
+        new CustomEvent('mx-admin:socket-event', { detail: { payload, type } }),
       )
 
       switch (type) {
         case EventTypes.AUTH_FAILED: {
-          socket.close()
+          client.close()
           break
         }
         case EventTypes.GATEWAY_DISCONNECT: {
@@ -149,15 +132,6 @@ export function SocketBridge() {
           })
           break
         }
-        case EventTypes.PAGE_UPDATED: {
-          void queryClient.invalidateQueries({
-            queryKey: adminQueryKeys.pages.root,
-          })
-          void queryClient.invalidateQueries({
-            queryKey: adminQueryKeys.aggregate.root,
-          })
-          break
-        }
         case EventTypes.SAY_CREATE:
         case EventTypes.SAY_UPDATE:
         case EventTypes.SAY_DELETE: {
@@ -183,73 +157,44 @@ export function SocketBridge() {
         default: {
           if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console -- dev-only fallthrough trace
-            console.debug('[socket]', type, payload, code)
+            console.debug('[socket]', type, payload)
           }
         }
       }
     }
 
-    socket.on('message', (message: string | GatewayMessage) => {
-      const parsed = parseGatewayMessage(message)
-      if (!parsed) return
+    const unsubscribeEvents = Object.values(EventTypes).map((type) =>
+      client.on(type, (payload) => handleEvent(type, payload)),
+    )
 
-      handleEvent(parsed.type, parsed.data, parsed.code)
-    })
+    let hasOpenedOnce = false
+    const unsubscribeState = client.on('$state', (state: WsClientState) => {
+      if (!import.meta.env.DEV) {
+        if (state === 'open') hasOpenedOnce = true
+        return
+      }
 
-    socket.on('connect_error', () => {
-      if (import.meta.env.DEV) toast.error(translate('socket.connectionError'))
-    })
-    socket.io.on('error', () => {
-      if (import.meta.env.DEV) toast.error(translate('socket.connectionError'))
-    })
-    socket.io.on('reconnect', () => {
-      if (import.meta.env.DEV) toast.info(translate('socket.reconnectSuccess'))
-    })
-    socket.io.on('reconnect_attempt', () => {
-      if (import.meta.env.DEV) toast.info(translate('socket.reconnecting'))
-    })
-    socket.io.on('reconnect_failed', () => {
-      if (import.meta.env.DEV) toast.info(translate('socket.reconnectFailed'))
-    })
-    socket.on('disconnect', () => {
-      if (disposed || reconnectTimer) return
-      reconnectTimer = reconnectUntilConnected(socket, () => disposed)
+      if (state === 'reconnecting') {
+        toast.info(
+          translate(
+            hasOpenedOnce ? 'socket.reconnecting' : 'socket.connectionError',
+          ),
+        )
+      } else if (state === 'open') {
+        if (hasOpenedOnce) toast.info(translate('socket.reconnectSuccess'))
+        hasOpenedOnce = true
+      }
     })
 
     return () => {
-      disposed = true
-      if (reconnectTimer) window.clearInterval(reconnectTimer)
       setAdminSocket(null)
-      socket.disconnect()
-      socket.off('message')
-      socket.offAny()
+      for (const off of unsubscribeEvents) off()
+      unsubscribeState()
+      client.close()
     }
   }, [navigate, queryClient])
 
   return null
-}
-
-function parseGatewayMessage(message: string | GatewayMessage) {
-  if (typeof message !== 'string') return message
-
-  try {
-    return JSON.parse(message) as GatewayMessage
-  } catch {
-    return null
-  }
-}
-
-function reconnectUntilConnected(socket: Socket, isDisposed: () => boolean) {
-  const timer = window.setInterval(() => {
-    if (isDisposed() || socket.connected) {
-      window.clearInterval(timer)
-      return
-    }
-
-    socket.io.connect()
-  }, 2000)
-
-  return timer
 }
 
 function notifyNewComment(payload: unknown, navigate: NavigateFunction) {
