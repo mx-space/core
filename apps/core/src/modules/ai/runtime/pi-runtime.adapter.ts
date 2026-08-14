@@ -173,9 +173,42 @@ function isNonOpenAIHost(endpoint: string): boolean {
 }
 
 function providerTypeToApi(type: AIProviderType): Api {
-  return type === AIProviderType.Anthropic
-    ? 'anthropic-messages'
-    : 'openai-completions'
+  switch (type) {
+    case AIProviderType.Anthropic: {
+      return 'anthropic-messages'
+    }
+    case AIProviderType.GoogleVertex: {
+      return 'google-vertex'
+    }
+    default: {
+      return 'openai-completions'
+    }
+  }
+}
+
+function resolveVertexScope(endpoint: string | undefined): {
+  location: string
+  projectId?: string
+} {
+  const fallback = { location: 'global' }
+  const trimmed = endpoint?.trim()
+  if (!trimmed) return fallback
+
+  try {
+    const pathname = new URL(trimmed).pathname
+    const projectMatch = pathname.match(/\/projects\/([^/]+)/)
+    const locationMatch = pathname.match(/\/locations\/([^/]+)/)
+    return {
+      location: locationMatch?.[1]
+        ? decodeURIComponent(locationMatch[1])
+        : fallback.location,
+      ...(projectMatch?.[1]
+        ? { projectId: decodeURIComponent(projectMatch[1]) }
+        : {}),
+    }
+  } catch {
+    return fallback
+  }
 }
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
@@ -293,6 +326,8 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly configuredReasoningEffort?: ReasoningEffort
   private readonly providerType: AIProviderType
   private readonly sessionId?: string
+  private readonly vertexLocation?: string
+  private readonly vertexProjectId?: string
 
   constructor(
     config: PiRuntimeAdapterConfig,
@@ -315,6 +350,11 @@ export class PiRuntimeAdapter implements IModelRuntime {
     )
     this.configuredReasoningEffort = config.reasoningEffort
     this.sessionId = config.sessionId
+    if (this.api === 'google-vertex') {
+      const scope = resolveVertexScope(config.endpoint)
+      this.vertexLocation = scope.location
+      this.vertexProjectId = config.projectId?.trim() || scope.projectId
+    }
     this.model = this.resolveModel(
       config.model,
       config.endpoint,
@@ -344,10 +384,16 @@ export class PiRuntimeAdapter implements IModelRuntime {
     maxTokens?: number,
   ): Model<Api> {
     const trimmedEndpoint = endpoint?.trim()
+    // Vertex provider endpoints in persisted configuration point to Google's
+    // OpenAI-compatible facade. The native transport constructs the publisher
+    // generateContent URL itself, so forwarding that endpoint would append a
+    // native path below `/endpoints/openapi` and produce an invalid request.
     const baseUrl =
-      trimmedEndpoint && this.api === 'openai-completions'
-        ? resolveOpenAICompatibleBaseUrl(trimmedEndpoint, appendV1)
-        : trimmedEndpoint
+      this.api === 'google-vertex'
+        ? undefined
+        : trimmedEndpoint && this.api === 'openai-completions'
+          ? resolveOpenAICompatibleBaseUrl(trimmedEndpoint, appendV1)
+          : trimmedEndpoint
     // pi treats provider 'openai' as genuine OpenAI and sends OpenAI-only
     // fields (`store`) that compat endpoints like Gemini reject with 400.
     // OpenRouter session affinity is opt-in in pi; enable its x-session-id
@@ -380,11 +426,11 @@ export class PiRuntimeAdapter implements IModelRuntime {
             thinkingLevelMap: { ...model.thinkingLevelMap, off: null },
           }
         : model
+    const catalogModelId =
+      this.providerType === AIProviderType.GoogleVertex
+        ? modelId.replace(/^google\//, '')
+        : modelId
     try {
-      const catalogModelId =
-        this.providerType === AIProviderType.GoogleVertex
-          ? modelId.replace(/^google\//, '')
-          : modelId
       const registered = getBuiltinModel(
         this.piProviderId as never,
         catalogModelId as never,
@@ -407,7 +453,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       // miss falls through to custom literal
     }
     return {
-      id: modelId,
+      id: catalogModelId,
       name: modelId,
       api: this.api,
       provider: this.piProviderId,
@@ -501,7 +547,10 @@ export class PiRuntimeAdapter implements IModelRuntime {
       signal: opts.signal,
       ...thinking,
     }
-    if (this.providerType === AIProviderType.GoogleVertex) {
+    if (this.api === 'google-vertex') {
+      result.location = this.vertexLocation
+      if (this.vertexProjectId) result.project = this.vertexProjectId
+    } else if (this.providerType === AIProviderType.GoogleVertex) {
       result.headers = {
         Authorization: null,
         'x-goog-api-key': this.apiKey,
@@ -511,6 +560,14 @@ export class PiRuntimeAdapter implements IModelRuntime {
       ;(result as Record<string, unknown>).toolChoice = opts.toolChoice
     }
     return result
+  }
+
+  private getStructuredToolChoice(): unknown {
+    if (this.api === 'anthropic-messages') {
+      return { type: 'tool', name: STRUCTURED_TOOL_NAME }
+    }
+    if (this.api === 'google-vertex') return 'any'
+    return { type: 'function', function: { name: STRUCTURED_TOOL_NAME } }
   }
 
   async generateText(
@@ -574,10 +631,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       maxRetries: typed.maxRetries,
       signal: typed.signal,
       reasoningEffort: typed.reasoningEffort,
-      toolChoice:
-        this.api === 'anthropic-messages'
-          ? { type: 'tool', name: STRUCTURED_TOOL_NAME }
-          : { type: 'function', function: { name: STRUCTURED_TOOL_NAME } },
+      toolChoice: this.getStructuredToolChoice(),
     })
 
     const conversation: Context = {
@@ -736,10 +790,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       maxRetries: options.maxRetries,
       signal: options.signal,
       reasoningEffort: options.reasoningEffort,
-      toolChoice:
-        this.api === 'anthropic-messages'
-          ? { type: 'tool', name: STRUCTURED_TOOL_NAME }
-          : { type: 'function', function: { name: STRUCTURED_TOOL_NAME } },
+      toolChoice: this.getStructuredToolChoice(),
     })
 
     const events = stream(this.model, context, piOptions)

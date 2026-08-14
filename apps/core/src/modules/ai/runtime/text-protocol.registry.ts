@@ -22,10 +22,10 @@ export function createTextProtocolAdapterRegistry(): ProtocolAdapterRegistry<
         new PiRuntimeAdapter(config, { api: 'anthropic-messages' }),
     })
     .register({
-      id: 'google-vertex-openai-compatible',
+      id: 'google-vertex-native',
       matches: (config) => config.providerType === AIProviderType.GoogleVertex,
       create: (config) =>
-        new PiRuntimeAdapter(config, { api: 'openai-completions' }),
+        new PiRuntimeAdapter(config, { api: 'google-vertex' }),
     })
     .register({
       id: 'openai-compatible-completions',

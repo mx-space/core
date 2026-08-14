@@ -123,6 +123,8 @@ export interface ModelInfo {
 export interface RuntimeConfig {
   apiKey: string
   endpoint?: string
+  /** Google Cloud project used by the native Vertex AI transport. */
+  projectId?: string
   modelListUrl?: string
   appendV1?: boolean
   model: string

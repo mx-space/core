@@ -17,6 +17,7 @@ export function createModelRuntime(
   const runtimeConfig: TextProtocolAdapterConfig = {
     apiKey: config.apiKey,
     endpoint: config.endpoint,
+    projectId: config.projectId,
     modelListUrl: config.modelListUrl,
     appendV1: config.appendV1,
     model,
