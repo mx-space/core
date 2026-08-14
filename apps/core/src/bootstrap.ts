@@ -5,20 +5,20 @@ import type { FastifyCorsOptions } from '@fastify/cors'
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
+import { WsAdapter } from '@nestjs/platform-ws'
 import pc from 'picocolors'
 import wcmatch from 'wildcard-match'
 
 import { CROSS_DOMAIN, DEBUG_MODE, PORT, TELEMETRY } from './app.config'
 import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
-import { RedisIoAdapter } from './common/adapters/socket.adapter'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { requestCaseNormalizationPipeInstance } from './common/pipes/case-normalization.pipe'
 import { extendedZodValidationPipeInstance } from './common/zod'
 import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
-import { RedisService } from './processors/redis/redis.service'
+import { wsIncomingEnvelopeSchema } from './processors/gateway/ws/ws-envelope'
 import { checkInit } from './utils/check-init.util'
 import {
   sendTelemetry,
@@ -84,8 +84,16 @@ export async function bootstrap() {
     requestCaseNormalizationPipeInstance,
     extendedZodValidationPipeInstance,
   )
-  !isTest &&
-    app.useWebSocketAdapter(new RedisIoAdapter(app, app.get(RedisService)))
+  app.useWebSocketAdapter(
+    new WsAdapter(app, {
+      messageParser: (raw) => {
+        const msg = wsIncomingEnvelopeSchema.parse(
+          JSON.parse(raw.toString()) as unknown,
+        )
+        return { event: msg.event, data: msg }
+      },
+    }),
+  )
 
   // Dev runs app-data migrations inline; prod boots them via the standalone
   // `app-migrate.ts` CLI invoked by docker `mx-migrate`. Both paths share the
