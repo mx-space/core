@@ -1,14 +1,13 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
+
 import { RedisKeys } from '~/constants/cache.constant'
 import type { SocketMetadata } from '~/types/socket-meta'
 import { getRedisKey } from '~/utils/redis.util'
 import { safeJSONParse } from '~/utils/tool.util'
-import type { DefaultEventsMap, RemoteSocket, Socket } from 'socket.io'
+
 import { RedisService } from '../redis/redis.service'
 
-export type SocketType =
-  | Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
-  | RemoteSocket<any, any>
+export type SocketLike = { id: string }
 
 @Injectable()
 export class GatewayService implements OnModuleInit {
@@ -24,7 +23,7 @@ export class GatewayService implements OnModuleInit {
     void this.ensureSocketStoreReady()
   }
 
-  async setSocketMetadata(socket: SocketType, value: object) {
+  async setSocketMetadata(socket: SocketLike, value: object) {
     if (!(await this.ensureSocketStoreReady())) {
       return
     }
@@ -48,7 +47,7 @@ export class GatewayService implements OnModuleInit {
     }
   }
 
-  async getSocketMetadata(socket: SocketType): Promise<SocketMetadata> {
+  async getSocketMetadata(socket: SocketLike): Promise<SocketMetadata> {
     if (!(await this.ensureSocketStoreReady())) {
       return this.getDefaultSocketMetadata()
     }
@@ -58,7 +57,7 @@ export class GatewayService implements OnModuleInit {
       const data = await client.hget(getRedisKey(RedisKeys.Socket), socket.id)
       return {
         ...this.getDefaultSocketMetadata(),
-        ...(safeJSONParse(data) || {}),
+        ...safeJSONParse(data),
       }
     } catch (error) {
       this.handleRedisError(error, 'Failed to read socket metadata')
@@ -66,7 +65,26 @@ export class GatewayService implements OnModuleInit {
     }
   }
 
-  async clearSocketMetadata(socket: SocketType) {
+  async getSocketMetadataMany(ids: string[]): Promise<SocketMetadata[]> {
+    if (ids.length === 0) return []
+    if (!(await this.ensureSocketStoreReady())) {
+      return ids.map(() => this.getDefaultSocketMetadata())
+    }
+
+    const client = this.redisService.getClient()
+    try {
+      const rows = await client.hmget(getRedisKey(RedisKeys.Socket), ...ids)
+      return rows.map((row) => ({
+        ...this.getDefaultSocketMetadata(),
+        ...safeJSONParse(row),
+      }))
+    } catch (error) {
+      this.handleRedisError(error, 'Failed to read socket metadata')
+      return ids.map(() => this.getDefaultSocketMetadata())
+    }
+  }
+
+  async clearSocketMetadata(socket: SocketLike) {
     if (!(await this.ensureSocketStoreReady())) {
       return
     }
@@ -102,14 +120,8 @@ export class GatewayService implements OnModuleInit {
       return false
     }
 
-    try {
-      await this.redisService.getClient().del(getRedisKey(RedisKeys.Socket))
-      this.socketStoreInitialized = true
-      return true
-    } catch (error) {
-      this.handleRedisError(error, 'Failed to initialize socket metadata store')
-      return false
-    }
+    this.socketStoreInitialized = true
+    return true
   }
 
   private handleRedisError(error: unknown, message: string) {
