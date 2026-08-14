@@ -128,7 +128,7 @@ export interface CompanionPublicPresenceResultV2 {
   state: PublicLiveDeskStateV2
 }
 
-/** Payload carried by the `companion.presence.changed` gateway event. */
+/** Payload carried by the `companion_presence.changed` gateway event. */
 export type CompanionPresenceChangedPayload = PublicLiveDeskStateV2
 
 export type CompanionDeviceScope =
