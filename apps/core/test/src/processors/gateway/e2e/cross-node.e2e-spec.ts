@@ -13,8 +13,6 @@ import {
   WsTestClient,
 } from './gateway-e2e.harness'
 
-// The full gateway suite runs many concurrent real listeners; give each test
-// headroom above the harness's own per-frame wait bound.
 vi.setConfig({ testTimeout: 15_000 })
 
 describe('gateway cross-node e2e', () => {
