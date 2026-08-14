@@ -213,6 +213,47 @@ describe('request_review', () => {
     expect(JSON.parse(allowedLine)).toHaveLength(60)
   })
 
+  it('accepts caller-defined review windows for chunk-aligned review', async () => {
+    const manyUnits: TranslationUnit[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `text:p${i}`,
+      payload: `源${i}`,
+      meta: 'text',
+    }))
+    const vfs = new VirtualFs()
+    const runtime = reviewerStub([{ issues: [] }])
+    const { tools } = createTranslationTools({
+      vfs,
+      units: manyUnits,
+      targetLang: 'ja',
+      reviewer: { runtime, systemPrompt: 'REV' },
+      reviewWindows: [
+        ['text:p0', 'text:p1'],
+        ['text:p2', 'text:p3', 'text:p4'],
+      ],
+    })
+    const byName = Object.fromEntries(tools.map((t) => [t.name, t]))
+    await byName.write_translation.execute({
+      sourceLang: 'zh',
+      translations: Object.fromEntries(
+        manyUnits.map((unit) => [unit.id, `訳${unit.id}`]),
+      ),
+    })
+
+    await byName.request_review.execute({})
+
+    expect(runtime.generateStructured).toHaveBeenCalledTimes(2)
+    const allowedIds = runtime.generateStructured.mock.calls.map((call) => {
+      const lines: string[] = call[0].prompt.split('\n')
+      return JSON.parse(
+        lines[lines.findIndex((line) => line.startsWith('## ALLOWED_IDS')) + 1],
+      )
+    })
+    expect(allowedIds).toEqual([
+      ['text:p0', 'text:p1'],
+      ['text:p2', 'text:p3', 'text:p4'],
+    ])
+  })
+
   it('retries a failed window once and succeeds on the second attempt', async () => {
     const runtime = reviewerStub([{ issues: [] }])
     let calls = 0

@@ -39,3 +39,30 @@ export function unitsToSourceMap(
 export function flatIdsOf(units: TranslationUnit[]): string[] {
   return units.flatMap((unit) => unit.memberIds ?? [unit.id])
 }
+
+export function flattenUnitTranslations(
+  units: readonly TranslationUnit[],
+  translations: Record<string, unknown>,
+): Record<string, string> {
+  const resolved: Record<string, string> = {}
+  for (const unit of units) {
+    const value = translations[unit.id]
+    if (!unit.memberIds?.length) {
+      if (typeof value === 'string') resolved[unit.id] = value
+      continue
+    }
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      unit.memberIds.every(
+        (id) => typeof (value as Record<string, unknown>)[id] === 'string',
+      )
+    ) {
+      for (const id of unit.memberIds) {
+        resolved[id] = (value as Record<string, string>)[id]
+      }
+    }
+  }
+  return resolved
+}

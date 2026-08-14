@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { AI_PROMPTS } from '~/modules/ai/ai.prompts'
-import { createTranslationConversation } from '~/modules/ai/ai-translation/engine/translation-context'
+import { planTranslationChunks } from '~/modules/ai/ai-translation/engine/translation-chunk-planner'
+import {
+  createTranslationConversation,
+  createTranslationCoordinatorConversation,
+} from '~/modules/ai/ai-translation/engine/translation-context'
 import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
 import {
   unitsToEntries,
@@ -55,5 +59,26 @@ describe('createTranslationConversation', () => {
     })
     expect(conversation.systemPrompt).toContain('## Agent mode')
     expect(conversation.systemPrompt).toContain('request_review')
+  })
+})
+
+describe('createTranslationCoordinatorConversation', () => {
+  it('contains only a compact manifest and no source payload', () => {
+    const longUnits: TranslationUnit[] = [
+      { id: 'p1', payload: 'SECRET_SOURCE_TEXT', meta: 'text' },
+    ]
+    const conversation = createTranslationCoordinatorConversation({
+      targetLang: 'ja',
+      chunks: planTranslationChunks(longUnits),
+      reviewEnabled: false,
+    })
+    const serialized = JSON.stringify({
+      systemPrompt: conversation.systemPrompt,
+      messages: conversation.messages,
+    })
+
+    expect(serialized).toContain('chunk-1')
+    expect(serialized).toContain('sourceChars')
+    expect(serialized).not.toContain('SECRET_SOURCE_TEXT')
   })
 })

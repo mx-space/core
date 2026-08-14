@@ -132,4 +132,55 @@ describe('runTranslationAgent (faux e2e)', () => {
     expect(metrics.reviewer?.skippedReason).toBe('review-disabled')
     expect(metrics.editor?.skippedReason).toBe('review-disabled')
   })
+
+  it('routes long documents through coordinator-managed translation sub-agents', async () => {
+    const longUnits: TranslationUnit[] = [
+      { id: 'text:p1', payload: '甲'.repeat(6_100), meta: 'text' },
+      { id: 'text:p2', payload: '乙'.repeat(6_100), meta: 'text' },
+    ]
+    const runtime = makeRuntime([
+      fauxAssistantMessage([
+        fauxToolCall('translate_chunks', {
+          chunkIds: ['chunk-1', 'chunk-2'],
+        }),
+      ]),
+      fauxAssistantMessage([
+        fauxToolCall('structured_output', {
+          sourceLang: 'zh',
+          translations: { 'text:p1': 'A'.repeat(100) },
+        }),
+      ]),
+      fauxAssistantMessage([
+        fauxToolCall('structured_output', {
+          sourceLang: 'zh',
+          translations: { 'text:p2': 'B'.repeat(100) },
+        }),
+      ]),
+      fauxAssistantMessage([fauxToolCall('request_review', {})]),
+      fauxAssistantMessage('done'),
+    ])
+    const longReviewer = reviewerStub([{ issues: [] }])
+    const segmentEvents: Record<string, string>[] = []
+    const metrics: PipelineMetrics = {}
+
+    const result = await runTranslationAgent({
+      targetLang: 'en',
+      units: longUnits,
+      documentContext: 'LONG DOC',
+      runtime,
+      reviewerRuntime: longReviewer,
+      metrics,
+      onSegments: async (segments) => {
+        segmentEvents.push(segments)
+      },
+    })
+
+    expect(result.sourceLang).toBe('zh')
+    expect(result.translations.get('text:p1')).toBe('A'.repeat(100))
+    expect(result.translations.get('text:p2')).toBe('B'.repeat(100))
+    expect(segmentEvents).toHaveLength(2)
+    expect(longReviewer.generateStructured).toHaveBeenCalledTimes(2)
+    expect(metrics.reviewer?.rounds).toBe(1)
+    expect(metrics.reviewer?.issuesCount).toBe(0)
+  })
 })

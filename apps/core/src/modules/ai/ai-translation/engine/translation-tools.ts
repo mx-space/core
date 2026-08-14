@@ -12,6 +12,7 @@ import { REVIEW_WINDOW_SIZE } from '../strategies/base-translation-strategy'
 import type { TranslationUnit } from '../translation-unit.types'
 import {
   flatIdsOf,
+  flattenUnitTranslations,
   unitsToEntries,
   unitsToSourceMap,
 } from '../translation-unit.types'
@@ -73,11 +74,20 @@ export function createTranslationTools(opts: {
   targetLang: string
   styleHints?: string
   reviewer?: SubAgentSpec
+  reviewWindows?: readonly string[][]
   onSegments?: (segments: Record<string, string>) => Promise<void>
   signal?: AbortSignal
 }): { tools: EngineTool[]; state: TranslationToolState } {
-  const { vfs, units, targetLang, styleHints, reviewer, onSegments, signal } =
-    opts
+  const {
+    vfs,
+    units,
+    targetLang,
+    styleHints,
+    reviewer,
+    reviewWindows,
+    onSegments,
+    signal,
+  } = opts
   const flatIds = flatIdsOf(units)
   const sources = unitsToSourceMap(units)
   const state: TranslationToolState = {
@@ -104,27 +114,7 @@ export function createTranslationTools(opts: {
       }
       if (!state.sourceLang) state.sourceLang = sourceLang
       if (state.firstWriteAt === null) state.firstWriteAt = Date.now()
-      const resolved: Record<string, string> = {}
-      for (const unit of units) {
-        const value = translations[unit.id]
-        if (value === undefined) continue
-        if (!unit.memberIds?.length) {
-          if (typeof value === 'string') resolved[unit.id] = value
-          continue
-        }
-        if (
-          value &&
-          typeof value === 'object' &&
-          !Array.isArray(value) &&
-          unit.memberIds.every(
-            (id) => typeof (value as Record<string, unknown>)[id] === 'string',
-          )
-        ) {
-          for (const id of unit.memberIds) {
-            resolved[id] = (value as Record<string, string>)[id]
-          }
-        }
-      }
+      const resolved = flattenUnitTranslations(units, translations)
       vfs.write(TRANSLATION_FILE, {
         ...vfs.read(TRANSLATION_FILE),
         ...resolved,
@@ -236,9 +226,16 @@ export function createTranslationTools(opts: {
         const bilingual = state.reviewRounds > 1
         const current = vfs.read(TRANSLATION_FILE)
         const ids = flatIds.filter((id) => current[id] !== undefined)
-        const windows: string[][] = []
-        for (let i = 0; i < ids.length; i += REVIEW_WINDOW_SIZE) {
-          windows.push(ids.slice(i, i + REVIEW_WINDOW_SIZE))
+        const allowed = new Set(ids)
+        const windows: string[][] = reviewWindows
+          ? reviewWindows
+              .map((window) => window.filter((id) => allowed.has(id)))
+              .filter((window) => window.length > 0)
+          : []
+        if (!reviewWindows) {
+          for (let i = 0; i < ids.length; i += REVIEW_WINDOW_SIZE) {
+            windows.push(ids.slice(i, i + REVIEW_WINDOW_SIZE))
+          }
         }
         const started = Date.now()
         const issues: ReviewerIssue[] = []

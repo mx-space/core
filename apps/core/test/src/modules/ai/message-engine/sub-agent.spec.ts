@@ -33,6 +33,23 @@ describe('invokeSubAgent', () => {
     )
   })
 
+  it('reports usage without exposing provider result details', async () => {
+    const runtime = runtimeWith({ issues: [] })
+    runtime.generateStructured = vi.fn(async () => ({
+      output: { issues: [] },
+      usage: { completionTokens: 7, costBreakdown: { total: 0.02 } },
+    }))
+    const onUsage = vi.fn()
+    await invokeSubAgent(
+      { runtime, systemPrompt: 'SYS' },
+      { prompt: 'P', schema, onUsage },
+    )
+    expect(onUsage).toHaveBeenCalledWith({
+      completionTokens: 7,
+      costBreakdown: { total: 0.02 },
+    })
+  })
+
   it('throws with the failing path on schema mismatch', async () => {
     const runtime = runtimeWith({ issues: 'not-an-array' })
     await expect(

@@ -13,7 +13,9 @@ import {
 import type { PipelineMetrics } from '../translation-strategy.interface'
 import type { TranslationUnit } from '../translation-unit.types'
 import { flatIdsOf, unitsToSourceMap } from '../translation-unit.types'
+import { shouldUseChunkedTranslation } from './translation-chunk-planner'
 import { createTranslationConversation } from './translation-context'
+import { runChunkedTranslationAgent } from './translation-coordinator'
 import { createTranslationTools, TRANSLATION_FILE } from './translation-tools'
 
 export const AGENT_MAX_STEPS = 12
@@ -49,6 +51,25 @@ export async function runTranslationAgent(opts: {
   } = opts
   if (typeof runtime.streamMessage !== 'function') {
     throw new TypeError('runtime does not implement streamMessage')
+  }
+
+  if (shouldUseChunkedTranslation(units)) {
+    logger.log(
+      `Long document detected: units=${units.length}; using translation coordinator`,
+    )
+    return runChunkedTranslationAgent({
+      targetLang,
+      units,
+      documentContext,
+      styleHints,
+      runtime,
+      reviewerRuntime,
+      signal,
+      onToken,
+      onCost,
+      onSegments,
+      metrics,
+    })
   }
 
   const vfs = new VirtualFs()

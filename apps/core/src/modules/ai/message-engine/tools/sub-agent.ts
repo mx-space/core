@@ -1,7 +1,11 @@
 import type { Static, TSchema } from '@earendil-works/pi-ai'
 import { Value } from 'typebox/value'
 
-import type { IModelRuntime, ReasoningEffort } from '../../runtime'
+import type {
+  IModelRuntime,
+  ReasoningEffort,
+  RuntimeUsage,
+} from '../../runtime'
 import { firstSchemaFailure } from './tool.types'
 
 export interface SubAgentSpec {
@@ -15,7 +19,12 @@ const DEFAULT_SUB_AGENT_TIMEOUT_MS = 180_000
 
 export async function invokeSubAgent<T extends TSchema>(
   spec: SubAgentSpec,
-  input: { prompt: string; schema: T; signal?: AbortSignal },
+  input: {
+    prompt: string
+    schema: T
+    signal?: AbortSignal
+    onUsage?: (usage: RuntimeUsage | undefined) => Promise<void> | void
+  },
 ): Promise<Static<T>> {
   const signals = [
     AbortSignal.timeout(spec.timeoutMs ?? DEFAULT_SUB_AGENT_TIMEOUT_MS),
@@ -29,6 +38,7 @@ export async function invokeSubAgent<T extends TSchema>(
     signal: AbortSignal.any(signals),
     validate: false,
   })
+  await input.onUsage?.(result.usage)
   if (!Value.Check(input.schema, result.output)) {
     throw new Error(
       `sub-agent output validation failed at ${firstSchemaFailure(input.schema, result.output)}`,
