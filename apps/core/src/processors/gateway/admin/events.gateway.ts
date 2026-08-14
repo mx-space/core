@@ -1,6 +1,6 @@
+import type { WsEnvelope } from '@mx-space/ws-client/protocol'
 import { forwardRef, Inject } from '@nestjs/common'
 import type {
-  GatewayMetadata,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
@@ -10,53 +10,143 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets'
-import type { BroadcastOperator, Emitter } from '@socket.io/redis-emitter'
-import type { DefaultEventsMap } from 'socket.io'
-import type SocketIO from 'socket.io'
+import type { WebSocket } from 'ws'
 
-import { BusinessEvents } from '~/constants/business-event.constant'
-import { RedisService } from '~/processors/redis/redis.service'
 import { RoomSubsService } from '~/processors/task-queue/task-queue.room-subs.service'
 
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
+import { WsBusService } from '../ws/ws-bus.service'
+import { buildAck } from '../ws/ws-envelope'
+import {
+  aiAgentPayloadSchema,
+  type AiTaskPayload,
+  aiTaskPayloadSchema,
+  WsInboundEvents,
+} from '../ws/ws-events'
+import { WsPresenceService } from '../ws/ws-presence.service'
 
 const AI_TASK_ROOM_PREFIX = 'ai-task:'
 
-type AiTaskSubscribePayload = {
-  taskId?: string
-  groupId?: string
-  all?: boolean
-}
-
 const AuthGateway = createAuthGateway({ namespace: 'admin' })
-@WebSocketGateway<GatewayMetadata>({ namespace: 'admin' })
+
+@WebSocketGateway({ path: '/ws/admin' })
 export class AdminEventsGateway
   extends AuthGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    private readonly redisService: RedisService,
     @Inject(forwardRef(() => AuthService))
     protected readonly authService: AuthService,
     private readonly roomSubs: RoomSubsService,
+    bus: WsBusService,
+    presence: WsPresenceService,
   ) {
-    super(authService, redisService)
+    super(authService, bus, presence)
   }
 
-  async handleDisconnect(client: SocketIO.Socket) {
-    // Snapshot rooms before socket.io clears them on disconnect cleanup.
-    const rooms = [...client.rooms].filter((room) =>
-      room.startsWith(AI_TASK_ROOM_PREFIX),
+  override async handleDisconnect(ws: WebSocket) {
+    const conn = this.resolveConnection(ws)
+    if (!conn) return
+
+    const aiTaskRooms = this.roomManager
+      .roomsOf(conn.id)
+      .filter((room) => room.startsWith(AI_TASK_ROOM_PREFIX))
+
+    await super.handleDisconnect(ws)
+    await this.dropEmptyRoomSubs(aiTaskRooms, conn.id)
+  }
+
+  @SubscribeMessage(WsInboundEvents.aiAgentJoin)
+  async handleJoinSession(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
+    if (!conn || !parsed.success) {
+      return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
+    }
+
+    const room = `session:${parsed.data.sessionId.trim()}`
+    this.roomManager.join(room, conn)
+    await this.presence.joinRoom('admin', room, conn.id)
+    return ack(envelope, { ok: true })
+  }
+
+  @SubscribeMessage(WsInboundEvents.aiAgentLeave)
+  async handleLeaveSession(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
+    if (!conn || !parsed.success) {
+      return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
+    }
+
+    const room = `session:${parsed.data.sessionId.trim()}`
+    this.roomManager.leave(room, conn)
+    await this.presence.leaveRoom('admin', room, conn.id)
+    return ack(envelope, { ok: true })
+  }
+
+  @SubscribeMessage(WsInboundEvents.aiTaskSubscribe)
+  async handleSubscribeAiTask(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
+    if (!conn || !parsed.success) {
+      return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
+    }
+
+    const rooms = resolveAiTaskRooms(parsed.data)
+    await Promise.all(
+      rooms.map(async (room) => {
+        this.roomManager.join(room, conn)
+        await this.presence.joinRoom('admin', room, conn.id)
+        await this.roomSubs.add(room)
+      }),
     )
-    super.handleDisconnect(client)
+    return ack(envelope, { ok: true })
+  }
+
+  @SubscribeMessage(WsInboundEvents.aiTaskUnsubscribe)
+  async handleUnsubscribeAiTask(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
+    if (!conn || !parsed.success) {
+      return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
+    }
+
+    const rooms = resolveAiTaskRooms(parsed.data)
+    await Promise.all(
+      rooms.map(async (room) => {
+        this.roomManager.leave(room, conn)
+        await this.presence.leaveRoom('admin', room, conn.id)
+      }),
+    )
+    await this.dropEmptyRoomSubs(rooms, conn.id)
+    return ack(envelope, { ok: true })
+  }
+
+  @SubscribeMessage(WsInboundEvents.ping)
+  handlePing(@MessageBody() envelope: WsEnvelope) {
+    return ack(envelope, { ok: true })
+  }
+
+  private async dropEmptyRoomSubs(rooms: string[], selfId: string) {
     if (rooms.length === 0) return
     await Promise.all(
       rooms.map(async (room) => {
         try {
-          const remaining = await client.nsp.in(room).fetchSockets()
-          // The disconnecting socket may still appear in the local set; filter it out.
-          const others = remaining.filter((s) => s.id !== client.id)
+          const remaining = await this.presence.roomMemberIds('admin', room)
+          const others = remaining.filter((id) => id !== selfId)
           if (others.length === 0) {
             await this.roomSubs.remove(room)
           }
@@ -66,93 +156,18 @@ export class AdminEventsGateway
       }),
     )
   }
-
-  override broadcast(
-    event: BusinessEvents,
-    data: any,
-    options?: { rooms?: string[]; exclude?: string[] },
-  ) {
-    let socket = this.redisService.emitter.of('/admin') as
-      | Emitter<DefaultEventsMap>
-      | BroadcastOperator<DefaultEventsMap>
-
-    if (options?.rooms?.length) {
-      socket = socket.in(options.rooms)
-    }
-    if (options?.exclude?.length) {
-      socket = socket.except(options.exclude)
-    }
-
-    socket.emit('message', this.gatewayMessageFormat(event, data))
-  }
-
-  @SubscribeMessage('ai-agent:join')
-  handleJoinSession(
-    @ConnectedSocket() client: SocketIO.Socket,
-    @MessageBody() payload: { sessionId?: string },
-  ) {
-    const sessionId = payload?.sessionId?.trim()
-    if (sessionId) client.join(`session:${sessionId}`)
-  }
-
-  @SubscribeMessage('ai-agent:leave')
-  handleLeaveSession(
-    @ConnectedSocket() client: SocketIO.Socket,
-    @MessageBody() payload: { sessionId?: string },
-  ) {
-    const sessionId = payload?.sessionId?.trim()
-    if (sessionId) client.leave(`session:${sessionId}`)
-  }
-
-  @SubscribeMessage('ai-task:subscribe')
-  async handleSubscribeAiTask(
-    @ConnectedSocket() client: SocketIO.Socket,
-    @MessageBody() payload: AiTaskSubscribePayload,
-  ) {
-    const rooms = resolveAiTaskRooms(payload)
-    if (rooms.length === 0) return
-    await Promise.all(
-      rooms.map(async (room) => {
-        client.join(room)
-        await this.roomSubs.add(room)
-      }),
-    )
-  }
-
-  @SubscribeMessage('ai-task:unsubscribe')
-  async handleUnsubscribeAiTask(
-    @ConnectedSocket() client: SocketIO.Socket,
-    @MessageBody() payload: AiTaskSubscribePayload,
-  ) {
-    const rooms = resolveAiTaskRooms(payload)
-    if (rooms.length === 0) return
-    await Promise.all(
-      rooms.map(async (room) => {
-        client.leave(room)
-        try {
-          const remaining = await client.nsp.in(room).fetchSockets()
-          const others = remaining.filter((s) => s.id !== client.id)
-          if (others.length === 0) {
-            await this.roomSubs.remove(room)
-          }
-        } catch {
-          // Best-effort; TTL reaps stale entries.
-        }
-      }),
-    )
-  }
 }
 
-function resolveAiTaskRooms(
-  payload: AiTaskSubscribePayload | undefined,
-): string[] {
-  if (!payload || typeof payload !== 'object') return []
+function ack(envelope: WsEnvelope, payload: { ok: boolean; code?: string }) {
+  return envelope.id ? buildAck(envelope.id, payload) : undefined
+}
+
+function resolveAiTaskRooms(payload: AiTaskPayload): string[] {
   const rooms: string[] = []
   if (payload.all === true) rooms.push(`${AI_TASK_ROOM_PREFIX}list`)
-  const taskId = typeof payload.taskId === 'string' ? payload.taskId.trim() : ''
+  const taskId = payload.taskId?.trim()
   if (taskId) rooms.push(`${AI_TASK_ROOM_PREFIX}detail:${taskId}`)
-  const groupId =
-    typeof payload.groupId === 'string' ? payload.groupId.trim() : ''
+  const groupId = payload.groupId?.trim()
   if (groupId) rooms.push(`${AI_TASK_ROOM_PREFIX}group:${groupId}`)
   return rooms
 }

@@ -425,7 +425,7 @@ export class VisitorEventDispatchService implements OnModuleInit {
         )
       }
 
-      // The socket ID is the room socket.io auto-joins, so we can target it directly
+      // A connection id is addressable as a room, so lang groups fan out directly.
       this.webGateway.broadcast(event, this.toPublicPostPayload(data), {
         rooms: socketIds,
       })
