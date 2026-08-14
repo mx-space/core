@@ -223,7 +223,7 @@ describe('useTaskListSubscription', () => {
     expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
   })
 
-  it('unmounting before the subscribe ack resolves sends no unsubscribe request', async () => {
+  it('unmounting before the subscribe ack resolves sends no unsubscribe immediately, but sends one once the stale ack resolves', async () => {
     const socket = new MockWsClient()
     socket.state = 'open'
     setMockSocket(socket)
@@ -243,7 +243,22 @@ describe('useTaskListSubscription', () => {
       harness = mount()
     })
     await flush()
+    // The ack hasn't resolved yet — nothing to unsubscribe from server-side.
     expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+
+    // The subscribe ack that was in flight at unmount time resolves late.
+    // Without deferring to the caller's current intent, this would silently
+    // mark the (already torn down) closure as subscribed and never tell the
+    // server to drop the room — a leaked subscription for the socket's
+    // lifetime. It must instead unsubscribe on receipt of the stale ack.
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(1)
+    expect(socket.pending('ai_task.unsubscribe')[0].payload).toEqual({
+      all: true,
+    })
   })
 
   it('sends ai_task.unsubscribe on unmount only after the subscribe ack resolved ok:true', async () => {
@@ -297,6 +312,44 @@ describe('useTaskListSubscription', () => {
       harness = mount()
     })
     expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+  })
+
+  it('a stale subscribe ack resolving after a visibility-hide unsubscribe also gets a deferred unsubscribe (not a lasting phantom subscription)', async () => {
+    const socket = new MockWsClient()
+    socket.state = 'open'
+    setMockSocket(socket)
+    act(() => {
+      harness.root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(StatusProbe, { scope: 'list' }),
+        ),
+      )
+    })
+    expect(socket.pending('ai_task.subscribe')).toHaveLength(1)
+
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: true,
+    })
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    // hidden while the first subscribe ack is still in flight — nothing to
+    // unsubscribe from server-side yet.
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(0)
+
+    act(() => {
+      socket.resolveOldest('ai_task.subscribe')
+    })
+    await flush()
+    expect(socket.pending('ai_task.unsubscribe')).toHaveLength(1)
+
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      value: false,
+    })
   })
 
   it('disconnect flips socketConnected to false; reconnect re-issues ai_task.subscribe AND invalidates the tasks root cache', async () => {
