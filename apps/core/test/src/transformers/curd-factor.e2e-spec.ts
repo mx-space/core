@@ -29,7 +29,7 @@ describe('BasePgCrudFactory', () => {
 
     expect(repository.create).toHaveBeenCalledWith({ title: 'Row' })
     expect(eventManager.broadcast).toHaveBeenCalledWith(
-      'EXAMPLE_CREATE',
+      'example.create',
       { id: 'row-1' },
       expect.any(Object),
     )
@@ -47,7 +47,7 @@ describe('BasePgCrudFactory', () => {
 
     expect(repository.deleteById).toHaveBeenCalledWith('row-1')
     expect(eventManager.broadcast).toHaveBeenCalledWith(
-      'EXAMPLE_DELETE',
+      'example.delete',
       { id: 'row-1' },
       expect.any(Object),
     )
