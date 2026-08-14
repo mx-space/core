@@ -35,6 +35,13 @@ export enum RedisKeys {
 
   /** NX lock to throttle Enrichment capture LRU touchAccess */
   EnrichmentCaptureTouch = 'enrichment_capture_touch',
+
+  WsBus = 'ws_bus',
+  WsNode = 'ws_node',
+  WsNodes = 'ws_nodes',
+  WsConns = 'ws_conns',
+  WsRoom = 'ws_room',
+  WsRooms = 'ws_rooms',
 }
 export const API_CACHE_PREFIX = 'mx-api-cache:'
 export enum CacheKeys {
