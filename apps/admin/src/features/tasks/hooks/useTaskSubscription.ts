@@ -37,20 +37,34 @@ function useTaskSubscription(
 
     let subscribed = false
     let pending = false
+    // Tracks the caller's current intent, independent of `subscribed`/
+    // `pending` — a subscribe() ack can resolve after the effect has already
+    // decided (via unmount or a visibility-hide) that it no longer wants the
+    // subscription. Checking this inside the ack callback, instead of only
+    // gating on `subscribed`, is what lets a stale ack still fire the
+    // unsubscribe it owes the server rather than leaking a phantom
+    // subscription for the life of the socket.
+    let wantSubscribed = false
     const subscribe = () => {
+      wantSubscribed = true
       if (subscribed || pending) return
       pending = true
       socket
         .request('ai_task.subscribe', payload)
         .then(() => {
           pending = false
-          subscribed = true
+          if (wantSubscribed) {
+            subscribed = true
+          } else {
+            void socket.request('ai_task.unsubscribe', payload).catch(() => {})
+          }
         })
         .catch(() => {
           pending = false
         })
     }
     const unsubscribe = () => {
+      wantSubscribed = false
       pending = false
       if (!subscribed) return
       subscribed = false
@@ -63,6 +77,7 @@ function useTaskSubscription(
         subscribe()
         onCatchUp()
       } else {
+        wantSubscribed = false
         subscribed = false
         pending = false
       }
