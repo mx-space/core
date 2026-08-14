@@ -452,6 +452,7 @@ export const zhCN = {
 
   'app.loading.auth': '检查登录状态...',
 
+  'auth.login.apple': '使用 Apple 登录',
   'auth.login.failed': '登录失败',
   'auth.login.github': '使用 GitHub 登录',
   'auth.login.google': '使用 Google 登录',
@@ -2519,6 +2520,7 @@ export const zhCN = {
   'settings.oauth.copySuccess': '已复制到剪贴板',
   'settings.oauth.description': '配置第三方账号登录方式。',
   'settings.oauth.error.save': '保存 OAuth 配置失败',
+  'settings.oauth.secretKeptPlaceholder': '留空则不修改',
   'settings.oauth.success.save': 'OAuth 配置已保存',
   'settings.oauth.switch.enabled': '启用',
   'settings.oauth.title': 'OAuth 登录',

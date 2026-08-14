@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { NestMiddleware, OnModuleInit } from '@nestjs/common'
 import { Inject } from '@nestjs/common'
-import type { BetterAuthOptions } from 'better-auth'
 
 import {
   ConfigVersionScopes,
@@ -14,6 +13,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { CreateAuth } from './auth.implement'
 import type { InjectAuthInstance } from './auth.interface'
+import { buildSocialProviders } from './social-providers'
 
 declare module 'http' {
   interface IncomingMessage {
@@ -65,47 +65,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
       const oauth = await this.configService.get('oauth')
       const urls = await this.configService.get('url')
 
-      const providers = {} as NonNullable<BetterAuthOptions['socialProviders']>
-      await Promise.all(
-        (oauth.providers || []).map(async (provider) => {
-          if (!provider.enabled) return
-          const type = provider.type as string
-
-          const mergedConfig = {
-            ...oauth.public?.[type],
-            ...oauth.secrets?.[type],
-          }
-          switch (type) {
-            case 'github': {
-              if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
-
-              providers.github = {
-                clientId: mergedConfig.clientId,
-                clientSecret: mergedConfig.clientSecret,
-                redirectURI: `${urls.serverUrl}/auth/callback/github`,
-                mapProfileToUser: (profile) => {
-                  return {
-                    handle: profile.login,
-                  }
-                },
-              }
-              break
-            }
-
-            case 'google': {
-              if (!mergedConfig.clientId || !mergedConfig.clientSecret) return
-
-              providers.google = {
-                clientId: mergedConfig.clientId,
-                clientSecret: mergedConfig.clientSecret,
-                redirectURI: `${urls.serverUrl}/auth/callback/google`,
-              }
-
-              break
-            }
-          }
-        }),
-      )
+      const providers = buildSocialProviders(oauth, urls.serverUrl)
 
       const parsedAdminUrl = new URL(urls.adminUrl)
       const passkeyOptions = {

@@ -104,26 +104,37 @@ export interface SeoI18nOverlay {
 
 export type SettingsGroupType =
   'account' | 'maintenance' | 'meta-preset' | 'system' | 'user'
-export type OauthProviderType = 'github' | 'google'
+export type OauthProviderType = 'apple' | 'github' | 'google'
 
 export interface OauthOptions {
   providers?: Array<{
     enabled?: boolean
     type: OauthProviderType
   }>
-  public?: Partial<
-    Record<
-      OauthProviderType,
-      {
-        clientId?: string
-      }
-    >
-  >
+  public?: Partial<Record<OauthProviderType, Record<string, string>>>
+}
+
+export interface OauthProviderField {
+  key: string
+  label: string
+  multiline?: boolean
+  optional?: boolean
+  placeholder?: string
+  placeholderKey?: TranslationKey
+  secret?: boolean
 }
 
 export interface FlatOauthProvider {
-  clientId: string
+  configured: boolean
   enabled: boolean
+  public: Record<string, string>
+  type: OauthProviderType
+}
+
+export interface OauthProviderPayload {
+  enabled: boolean
+  public: Record<string, string>
+  secrets: Record<string, string>
   type: OauthProviderType
 }
 

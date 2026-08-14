@@ -469,6 +469,7 @@ export const enUS = {
 
   'app.loading.auth': 'Checking sign-in state...',
 
+  'auth.login.apple': 'Sign in with Apple',
   'auth.login.failed': 'Sign-in failed',
   'auth.login.github': 'Sign in with GitHub',
   'auth.login.google': 'Sign in with Google',
@@ -2656,6 +2657,7 @@ export const enUS = {
   'settings.oauth.copySuccess': 'Copied to clipboard',
   'settings.oauth.description': 'Configure third-party account sign-in.',
   'settings.oauth.error.save': 'Failed to save OAuth config',
+  'settings.oauth.secretKeptPlaceholder': 'Leave blank to keep current',
   'settings.oauth.success.save': 'OAuth config saved',
   'settings.oauth.switch.enabled': 'Enabled',
   'settings.oauth.title': 'OAuth sign-in',

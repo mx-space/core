@@ -1,3 +1,4 @@
+import { oauthProviders } from '../constants'
 import type {
   FlatOauthProvider,
   OauthOptions,
@@ -11,16 +12,18 @@ export function flattenOauthOptions(
     (data?.providers ?? []).map((provider) => [provider.type, provider]),
   )
 
-  return {
-    github: {
-      clientId: data?.public?.github?.clientId ?? '',
-      enabled: providerMap.get('github')?.enabled ?? false,
-      type: 'github',
-    },
-    google: {
-      clientId: data?.public?.google?.clientId ?? '',
-      enabled: providerMap.get('google')?.enabled ?? false,
-      type: 'google',
-    },
-  }
+  return Object.fromEntries(
+    oauthProviders.map((provider) => {
+      const publicFields = { ...data?.public?.[provider.type] }
+      return [
+        provider.type,
+        {
+          configured: Object.values(publicFields).some(Boolean),
+          enabled: providerMap.get(provider.type)?.enabled ?? false,
+          public: publicFields,
+          type: provider.type,
+        },
+      ]
+    }),
+  ) as Record<OauthProviderType, FlatOauthProvider>
 }

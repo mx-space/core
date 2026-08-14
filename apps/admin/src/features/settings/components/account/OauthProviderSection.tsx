@@ -1,40 +1,59 @@
 import { Copy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { FlatOauthProvider, OauthProviderType } from '../../types/settings'
 
 import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { Switch } from '~/ui/primitives/switch'
-import { TextInput } from '~/ui/primitives/text-field'
+import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
 
-import { GitHubIcon, GoogleIcon } from './OauthIcons'
+import type {
+  FlatOauthProvider,
+  OauthProviderField,
+  OauthProviderPayload,
+  OauthProviderType,
+} from '../../types/settings'
+import { AppleIcon, GitHubIcon, GoogleIcon } from './OauthIcons'
+
+const providerIcons = {
+  apple: AppleIcon,
+  github: GitHubIcon,
+  google: GoogleIcon,
+} satisfies Record<OauthProviderType, unknown>
+
+function initialValues(
+  fields: OauthProviderField[],
+  data: FlatOauthProvider,
+): Record<string, string> {
+  return Object.fromEntries(
+    fields.map((field) => [
+      field.key,
+      field.secret ? '' : (data.public[field.key] ?? ''),
+    ]),
+  )
+}
 
 export function OauthProviderSection(props: {
   data: FlatOauthProvider
+  fields: OauthProviderField[]
   label: string
-  onSave: (payload: {
-    clientId: string
-    clientSecret: string
-    enabled: boolean
-    type: OauthProviderType
-  }) => void
+  onSave: (payload: OauthProviderPayload) => void
   saving: boolean
   type: OauthProviderType
 }) {
   const { t } = useI18n()
   const [enabled, setEnabled] = useState(props.data.enabled)
-  const [clientId, setClientId] = useState(props.data.clientId)
-  const [clientSecret, setClientSecret] = useState('')
+  const [values, setValues] = useState(() =>
+    initialValues(props.fields, props.data),
+  )
   const callbackUrl = `${API_URL}/auth/callback/${props.type}`
 
   useEffect(() => {
     setEnabled(props.data.enabled)
-    setClientId(props.data.clientId)
-    setClientSecret('')
-  }, [props.data])
+    setValues(initialValues(props.fields, props.data))
+  }, [props.data, props.fields])
 
   const validate = () => {
     const callback = new URL(location.href)
@@ -45,7 +64,33 @@ export function OauthProviderSection(props: {
     })
   }
 
-  const Icon = props.type === 'github' ? GitHubIcon : GoogleIcon
+  const isMissing = (field: OauthProviderField) => {
+    if (field.optional) return false
+    // A stored secret is never read back, so leaving it blank keeps the
+    // existing value instead of clearing it.
+    if (field.secret && props.data.configured) return false
+    return !values[field.key]?.trim()
+  }
+
+  const save = () => {
+    const payload: OauthProviderPayload = {
+      enabled,
+      public: {},
+      secrets: {},
+      type: props.type,
+    }
+    for (const field of props.fields) {
+      const value = values[field.key]?.trim() ?? ''
+      if (field.secret) {
+        if (value) payload.secrets[field.key] = value
+      } else {
+        payload.public[field.key] = value
+      }
+    }
+    props.onSave(payload)
+  }
+
+  const Icon = providerIcons[props.type]
 
   return (
     <section className="py-4">
@@ -66,19 +111,37 @@ export function OauthProviderSection(props: {
       </div>
 
       <div className="grid gap-3">
-        <TextInput
-          label="Client ID"
-          onChange={setClientId}
-          placeholder={t('settings.oauth.clientIdPlaceholder')}
-          value={clientId}
-        />
-        <TextInput
-          label="Client Secret"
-          onChange={setClientSecret}
-          placeholder={t('settings.oauth.clientSecretPlaceholder')}
-          type="password"
-          value={clientSecret}
-        />
+        {props.fields.map((field) => {
+          const placeholder =
+            field.secret && props.data.configured
+              ? t('settings.oauth.secretKeptPlaceholder')
+              : field.placeholderKey
+                ? t(field.placeholderKey)
+                : field.placeholder
+          const onChange = (value: string) =>
+            setValues((prev) => ({ ...prev, [field.key]: value }))
+
+          return field.multiline ? (
+            <TextArea
+              key={field.key}
+              label={field.label}
+              onChange={onChange}
+              placeholder={placeholder}
+              spellCheck={false}
+              value={values[field.key] ?? ''}
+            />
+          ) : (
+            <TextInput
+              key={field.key}
+              label={field.label}
+              onChange={onChange}
+              placeholder={placeholder}
+              type={field.secret ? 'password' : 'text'}
+              value={values[field.key] ?? ''}
+            />
+          )
+        })}
+
         <div className="grid gap-1.5 text-sm">
           <span className="text-neutral-600 dark:text-neutral-300">
             {t('settings.oauth.callbackLabel')}
@@ -107,15 +170,8 @@ export function OauthProviderSection(props: {
             {t('settings.oauth.action.validate')}
           </Button>
           <Button
-            disabled={props.saving || !clientId.trim() || !clientSecret.trim()}
-            onClick={() =>
-              props.onSave({
-                clientId: clientId.trim(),
-                clientSecret: clientSecret.trim(),
-                enabled,
-                type: props.type,
-              })
-            }
+            disabled={props.saving || props.fields.some(isMissing)}
+            onClick={save}
             type="button"
           >
             {t('settings.oauth.action.save')}

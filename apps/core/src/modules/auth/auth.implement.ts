@@ -28,6 +28,7 @@ import { API_VERSION, CROSS_DOMAIN } from '~/app.config'
 import { SECURITY } from '~/app.config.test'
 import { db } from '~/processors/database/postgres.provider'
 
+import { APPLE_ORIGIN } from './apple-client-secret'
 import { validateMxUsername } from './auth.username-validator'
 
 const bcryptRegex = /^\$2[aby]\$/
@@ -120,12 +121,13 @@ export async function CreateAuth(
     baseURL: dynamicBaseURL,
     basePath: isDev ? '/auth' : `/api/v${API_VERSION}/auth`,
     trustedOrigins: async (request) => {
-      const mobileSchemeOrigins = ['yohaku://']
+      // Apple posts its callback from appleid.apple.com (response_mode=form_post)
+      const alwaysTrustedOrigins = ['yohaku://', APPLE_ORIGIN]
       if (isDev) {
-        if (!request) return ['http://localhost:2323', ...mobileSchemeOrigins]
+        if (!request) return ['http://localhost:2323', ...alwaysTrustedOrigins]
         const origin = request.headers.get('origin')
         if (origin?.includes('localhost') || origin?.includes('127.0.0.1')) {
-          return [origin, ...mobileSchemeOrigins]
+          return [origin, ...alwaysTrustedOrigins]
         }
       }
 
@@ -139,13 +141,13 @@ export async function CreateAuth(
           }
           return [...acc, `https://${origin}`, `http://${origin}`]
         },
-        mobileSchemeOrigins,
+        alwaysTrustedOrigins,
       )
     },
     account: {
       accountLinking: {
         enabled: true,
-        trustedProviders: ['google', 'github'],
+        trustedProviders: ['google', 'github', 'apple'],
       },
     },
     emailAndPassword: {

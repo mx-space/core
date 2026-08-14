@@ -710,6 +710,9 @@ importers:
       isbot:
         specifier: 5.2.1
         version: 5.2.1
+      jose:
+        specifier: ^6.2.8
+        version: 6.2.8
       js-yaml:
         specifier: 5.2.3
         version: 5.2.3
@@ -18040,7 +18043,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 26.1.2
+      '@types/node': 26.2.0
 
   '@typescript-eslint/eslint-plugin@8.61.1(@typescript-eslint/parser@8.61.1(eslint@10.8.1(jiti@2.7.0)(supports-color@5.5.0))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.8.1(jiti@2.7.0)(supports-color@5.5.0))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
@@ -18986,7 +18989,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 26.1.2
+      '@types/node': 26.2.0
 
   buffer@5.7.1:
     dependencies:
@@ -21090,7 +21093,7 @@ snapshots:
 
   happy-dom@20.11.2:
     dependencies:
-      '@types/node': 26.1.2
+      '@types/node': 26.2.0
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4

@@ -1,4 +1,5 @@
 export interface AllowLoginResponse {
+  apple?: boolean
   github?: boolean
   google?: boolean
   passkey: boolean
