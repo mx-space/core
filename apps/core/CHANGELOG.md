@@ -1,4 +1,11 @@
-# [13.29.1](https://github.com/mx-space/core/compare/v13.29.0...v13.29.1) (2026-08-14)
+# [13.29.2](https://github.com/mx-space/core/compare/v13.29.1...v13.29.2) (2026-08-14)
+
+
+### Bug Fixes
+
+* **ai:** use native Vertex text protocol ([556bf64](https://github.com/mx-space/core/commit/556bf64242bcab7da6f26a0e090c32292440591b))
+
+## [13.29.1](https://github.com/mx-space/core/compare/v13.29.0...v13.29.1) (2026-08-14)
 
 
 ### Bug Fixes
