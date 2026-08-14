@@ -1,6 +1,6 @@
+import type { WsClient, WsClientState } from '@mx-space/ws-client'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import type { Socket } from 'socket.io-client'
 
 import { adminQueryKeys } from '~/query/keys'
 import { subscribeAdminSocket } from '~/socket/SocketBridge'
@@ -15,67 +15,71 @@ function useTaskSubscription(
   payload: SubscribePayload | null,
   onCatchUp: () => void,
 ): UseSubscriptionResult {
-  const [socket, setSocket] = useState<null | Socket>(null)
+  const [socket, setSocket] = useState<null | WsClient>(null)
   const [socketConnected, setSocketConnected] = useState(false)
 
   useEffect(() => {
     return subscribeAdminSocket((next) => {
       setSocket(next)
-      setSocketConnected(Boolean(next?.connected))
+      setSocketConnected(next?.state === 'open')
     })
   }, [])
 
   useEffect(() => {
     if (!socket) return
-    const handleConnect = () => setSocketConnected(true)
-    const handleDisconnect = () => setSocketConnected(false)
-    socket.on('connect', handleConnect)
-    socket.on('disconnect', handleDisconnect)
-    return () => {
-      socket.off('connect', handleConnect)
-      socket.off('disconnect', handleDisconnect)
-    }
+    return socket.on('$state', (state: WsClientState) => {
+      setSocketConnected(state === 'open')
+    })
   }, [socket])
 
   useEffect(() => {
     if (!socket || !payload) return
 
     let subscribed = false
+    let pending = false
     const subscribe = () => {
-      if (subscribed) return
-      socket.emit('ai-task:subscribe', payload)
-      subscribed = true
+      if (subscribed || pending) return
+      pending = true
+      socket
+        .request('ai_task.subscribe', payload)
+        .then(() => {
+          pending = false
+          subscribed = true
+        })
+        .catch(() => {
+          pending = false
+        })
     }
     const unsubscribe = () => {
+      pending = false
       if (!subscribed) return
-      socket.emit('ai-task:unsubscribe', payload)
       subscribed = false
+      void socket.request('ai_task.unsubscribe', payload).catch(() => {})
     }
 
-    if (socket.connected) subscribe()
-    const handleConnect = () => {
-      subscribe()
-      onCatchUp()
-    }
-    const handleDisconnect = () => {
-      subscribed = false
-    }
+    if (socket.state === 'open') subscribe()
+    const offState = socket.on('$state', (state: WsClientState) => {
+      if (state === 'open') {
+        subscribe()
+        onCatchUp()
+      } else {
+        subscribed = false
+        pending = false
+      }
+    })
     const handleVisibility = () => {
       if (document.hidden) {
         unsubscribe()
       } else {
-        if (socket.connected) subscribe()
+        if (socket.state === 'open') subscribe()
         onCatchUp()
       }
     }
 
-    socket.on('connect', handleConnect)
-    socket.on('disconnect', handleDisconnect)
     document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
-      socket.off('connect', handleConnect)
-      socket.off('disconnect', handleDisconnect)
+      offState()
       document.removeEventListener('visibilitychange', handleVisibility)
       unsubscribe()
     }
