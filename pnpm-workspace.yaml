@@ -25,7 +25,7 @@ overrides:
   kysely: 0.29.3
   mongodb: ~7.5.0
   pino: ./external/pino
-  rolldown: 1.2.0
+  rolldown: 1.2.4
   "tsdown@0.22.8>rolldown-plugin-dts": 0.27.9
   semver: 7.8.5
   typescript: 6.0.3
@@ -37,7 +37,7 @@ overrides:
   "nanoid@>=4.0.0 <5.0.9": 5.1.11
   "tmp@<0.2.6": 0.2.7
   "uuid@<11.1.1": 11.1.1
-  lucide-react: 1.30.0
+  lucide-react: 1.31.0
   "@codemirror/state": 6.7.1
   "@codemirror/view": 6.43.8
   "@codemirror/commands": 6.10.4
