@@ -5,7 +5,6 @@ import type { FastifyCorsOptions } from '@fastify/cors'
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
-import { WsAdapter } from '@nestjs/platform-ws'
 import pc from 'picocolors'
 import wcmatch from 'wildcard-match'
 
@@ -18,7 +17,7 @@ import { extendedZodValidationPipeInstance } from './common/zod'
 import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
-import { wsIncomingEnvelopeSchema } from './processors/gateway/ws/ws-envelope'
+import { createWsAdapter } from './processors/gateway/ws/ws-adapter.factory'
 import { checkInit } from './utils/check-init.util'
 import {
   sendTelemetry,
@@ -84,16 +83,7 @@ export async function bootstrap() {
     requestCaseNormalizationPipeInstance,
     extendedZodValidationPipeInstance,
   )
-  app.useWebSocketAdapter(
-    new WsAdapter(app, {
-      messageParser: (raw) => {
-        const msg = wsIncomingEnvelopeSchema.parse(
-          JSON.parse(raw.toString()) as unknown,
-        )
-        return { event: msg.event, data: msg }
-      },
-    }),
-  )
+  app.useWebSocketAdapter(createWsAdapter(app))
 
   // Dev runs app-data migrations inline; prod boots them via the standalone
   // `app-migrate.ts` CLI invoked by docker `mx-migrate`. Both paths share the
