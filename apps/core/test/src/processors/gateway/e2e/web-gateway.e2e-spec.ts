@@ -20,8 +20,6 @@ import {
   WsTestClient,
 } from './gateway-e2e.harness'
 
-// The full gateway suite runs many concurrent real listeners; give each test
-// headroom above the harness's own per-frame wait bound.
 vi.setConfig({ testTimeout: 15_000 })
 
 describe('WebEventsGateway e2e', () => {
@@ -46,9 +44,6 @@ describe('WebEventsGateway e2e', () => {
   })
 
   afterEach(async () => {
-    // Each test closes its own clients, but server-side presence cleanup runs
-    // asynchronously after the local close event; settle it here so the next
-    // test's online-count baseline is never contaminated by a straggler.
     await vi.waitFor(async () => {
       expect(await testApp.webGateway.getCurrentClientCount()).toBe(
         preTestClientCount,

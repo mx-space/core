@@ -36,6 +36,8 @@ export interface RedisConn {
   host: string
 }
 
+const REDIS_QUIT_GRACE_MS = 50
+
 export interface AuthServiceStub {
   getSessionUserFromHeaders: Mock
   verifyApiKey: Mock
@@ -77,9 +79,6 @@ export interface GatewayTestApp {
 export async function createGatewayApp(
   redisConn: RedisConn,
 ): Promise<GatewayTestApp> {
-  // Mirrors production RedisService's command timeout so a stalled
-  // redis-memory-server round-trip fails fast into the existing graceful
-  // degradation path instead of hanging a connect handshake indefinitely.
   const redisClient = new IORedis(redisConn.port, redisConn.host, {
     commandTimeout: REDIS_CLIENT_OPTIONS.commandTimeout,
     maxRetriesPerRequest: REDIS_CLIENT_OPTIONS.maxRetriesPerRequest,
@@ -128,10 +127,7 @@ export async function createGatewayApp(
       `ws://127.0.0.1:${port}/ws/admin${query ? `?${query}` : ''}`,
     async close() {
       await app.close()
-      // handleDisconnect fires GatewayService.clearSocketMetadata without
-      // awaiting it; give that fire-and-forget write a moment to reach Redis
-      // before the connection used to send it is quit.
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, REDIS_QUIT_GRACE_MS))
       await redisClient.quit()
     },
   }
@@ -178,11 +174,9 @@ export class WsTestClient {
     options?: WebSocket.ClientOptions,
   ): Promise<WsTestClient> {
     const ws = new WebSocket(url, options)
-    // Construct (and attach the `message`/`close` listeners) before awaiting
-    // `open`: on a fast local round-trip the server's greeting can arrive in
-    // the same read as the upgrade response, firing `message` synchronously
-    // right after `open` — a listener added only after awaiting `open` can
-    // lose that first frame.
+    // Must attach listeners (via the constructor) before awaiting `open` —
+    // the server's first frame can arrive in the same read as the upgrade
+    // response, before an `open`-then-listen ordering would ever see it.
     const client = new WsTestClient(ws)
     await new Promise<void>((resolve, reject) => {
       ws.once('open', () => resolve())
