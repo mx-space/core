@@ -22,6 +22,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@nestjs/testing': resolve(coreRoot, 'node_modules/@nestjs/testing'),
       '~/app.config': resolve(__dirname, 'src/helpers/core-app-config.ts'),
       '~': resolve(coreRoot, 'src'),
       test: resolve(coreRoot, 'test'),
