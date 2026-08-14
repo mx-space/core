@@ -75,6 +75,29 @@ describe('WsPresenceService', () => {
     expect(await client.exists(roomHashKey)).toBe(0)
   })
 
+  it('leaveRoom keeps a room alive if another member is present, and cleans up once truly empty', async () => {
+    await nodeA.joinRoom('web', 'roomZ', 'm1')
+    await client.hset(
+      getRedisKey(RedisKeys.WsRoom, 'web', 'roomZ'),
+      'm2',
+      nodeB.nodeId,
+    )
+
+    await nodeA.leaveRoom('web', 'roomZ', 'm1')
+
+    expect(await nodeA.roomMemberIds('web', 'roomZ')).toEqual(['m2'])
+    const roomsSetKey = getRedisKey(RedisKeys.WsRooms, 'web')
+    const roomHashKey = getRedisKey(RedisKeys.WsRoom, 'web', 'roomZ')
+    expect(await client.sismember(roomsSetKey, 'roomZ')).toBe(1)
+    expect(await client.exists(roomHashKey)).toBe(1)
+
+    await nodeB.leaveRoom('web', 'roomZ', 'm2')
+
+    expect(await nodeA.roomMemberIds('web', 'roomZ')).toEqual([])
+    expect(await client.sismember(roomsSetKey, 'roomZ')).toBe(0)
+    expect(await client.exists(roomHashKey)).toBe(0)
+  })
+
   describe('sweepOnce', () => {
     it('removes a dead node conns/room fields and Socket metadata, keeping the live node intact', async () => {
       await nodeA.addConnection('web', 'dead-conn')

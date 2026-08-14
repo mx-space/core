@@ -19,6 +19,19 @@ const HEARTBEAT_MS = 10_000
 const SWEEP_MS = 60_000
 const WS_NAMESPACES: WsNamespace[] = ['web', 'admin']
 
+// KEYS[1] = room hash, KEYS[2] = rooms set, ARGV[1] = room name, ARGV[2..] = member ids to HDEL first (optional)
+const ROOM_PRUNE_SCRIPT = `
+if #ARGV > 1 then
+  redis.call('HDEL', KEYS[1], unpack(ARGV, 2))
+end
+if redis.call('HLEN', KEYS[1]) == 0 then
+  redis.call('DEL', KEYS[1])
+  redis.call('SREM', KEYS[2], ARGV[1])
+  return 1
+end
+return 0
+`
+
 @Injectable()
 export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WsPresenceService.name)
@@ -51,6 +64,21 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
 
   private roomsKey(ns: WsNamespace): string {
     return getRedisKey(RedisKeys.WsRooms, ns)
+  }
+
+  private async pruneRoomIfEmpty(
+    ns: WsNamespace,
+    room: string,
+    memberIdsToRemove: string[] = [],
+  ): Promise<void> {
+    await this.redis.eval(
+      ROOM_PRUNE_SCRIPT,
+      2,
+      this.roomKey(ns, room),
+      this.roomsKey(ns),
+      room,
+      ...memberIdsToRemove,
+    )
   }
 
   async onModuleInit(): Promise<void> {
@@ -107,12 +135,7 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
 
   async leaveRoom(ns: WsNamespace, room: string, id: string): Promise<void> {
     try {
-      await this.redis.hdel(this.roomKey(ns, room), id)
-      const remaining = await this.redis.hlen(this.roomKey(ns, room))
-      if (remaining === 0) {
-        await this.redis.del(this.roomKey(ns, room))
-        await this.redis.srem(this.roomsKey(ns), room)
-      }
+      await this.pruneRoomIfEmpty(ns, room, [id])
     } catch (error) {
       this.warn('Failed to leave ws room', error)
     }
@@ -147,8 +170,12 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
 
       const sizes: Record<string, number> = {}
       const empties: string[] = []
-      results?.forEach(([, value], index) => {
+      results?.forEach(([err, value], index) => {
         const room = rooms[index]
+        if (err) {
+          this.warn(`Failed to read ws room size for "${room}"`, err)
+          return
+        }
         const size = typeof value === 'number' ? value : 0
         if (size === 0) {
           empties.push(room)
@@ -158,9 +185,8 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
       })
 
       if (empties.length > 0) {
-        await this.redis.srem(this.roomsKey(ns), ...empties)
         await Promise.all(
-          empties.map((room) => this.redis.del(this.roomKey(ns, room))),
+          empties.map((room) => this.pruneRoomIfEmpty(ns, room)),
         )
       }
 
@@ -206,12 +232,7 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
           .map(([id]) => id)
         if (deadMembers.length === 0) continue
 
-        await this.redis.hdel(this.roomKey(ns, room), ...deadMembers)
-        const remaining = await this.redis.hlen(this.roomKey(ns, room))
-        if (remaining === 0) {
-          await this.redis.del(this.roomKey(ns, room))
-          await this.redis.srem(this.roomsKey(ns), room)
-        }
+        await this.pruneRoomIfEmpty(ns, room, deadMembers)
       }
     }
 
