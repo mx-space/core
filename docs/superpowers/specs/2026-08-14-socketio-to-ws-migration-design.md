@@ -41,6 +41,8 @@ mx-core 实时层现基于 socket.io（`@nestjs/platform-socket.io` + `@socket.i
 - 未知 event：静默丢弃；若带 id 则回 `{ ok: false, code: 'UNKNOWN_EVENT' }`
 - 信封以 Zod schema 校验，非法帧丢弃
 
+> **实现偏差**：`@nestjs/platform-ws` 的 `WsAdapter` 对未匹配 `@SubscribeMessage` 的事件静默吞没，不产生任何 ack（无 `UNKNOWN_EVENT`）。客户端 `request()` 以固定超时兜底（见「客户端」节），未收到 ack 时按超时失败处理，非协议层显式拒绝。已计入 release note。
+
 ### 事件命名
 
 规则：`{resource}.{action}`，小写，resource 段内下划线，action 取现有动词直译（`create/update/delete/apply/online/offline/generated…`）。
@@ -58,7 +60,7 @@ TS 枚举键名不动（`POST_CREATE = 'post.create'`），仅改值——core �
 
 ### 心跳
 
-- 服务端：30s 协议层 ping，两次无 pong 即 terminate（浏览器自动回 pong，客户端零代码）
+- 服务端（已实现语义）：单周期 isAlive 标记法——每 30s 巡检一次；巡检时若连接仍标记存活，则清除标记并 ping，等待下一周期的 pong 重新置位；巡检时若标记已是未存活（上一周期未收到 pong），直接 terminate。即一个失联连接最迟在两个心跳周期内断开，而非「连续两次无 pong 才断」。实现见 `WsGatewayBase.sweepHeartbeat`（`apps/core/src/processors/gateway/ws/ws-gateway.base.ts`）。
 - 客户端：30s 上行 `{ event: 'ping', id }` 借 ack 探活，10s 超时自行重连
 
 ## 二、服务端架构
@@ -178,12 +180,18 @@ client.on('$state', handler) // connecting/open/reconnecting/closed
 
 ## 七、发布
 
+发布前置（在删除本 worktree 前必须逐项完成，否则下游装不到包或连不上）：
+
+- `packages/ws-client`：翻转 `private: true` → 可发布，`license` 字段改 `AGPL-3.0-only`（原 `AGPLv3` 非有效 SPDX 标识，npm publish 前须修正）
+- Yohaku、mx-tg-bot 对 `@mx-space/ws-client`（以及本次连带的 `@mx-space/webhook`）的依赖，若当前以 `file:` 本地路径引用，发布前必须换成 npm 版本号（semver range），否则那两个仓库的构建在本 worktree 删除后失效
+- web-gateway（反向代理层）需为 `/ws/web` 与 `/ws/admin` 两条路径显式配置 WebSocket upgrade 路由；缺此配置时 HTTP 层握手可通但 upgrade 被拒，割接后客户端表现为连接失败，且不会有 5xx 提示，需专项验证
+
 顺序：
 
-1. `@mx-space/webhook` major、`@mx-space/ws-client` 首版发 npm
+1. `@mx-space/webhook` **1.0.0**、`@mx-space/ws-client` 首版，先于 mx-core v14 发 npm
 2. mx-core **major**（v14）：core+admin 同体发布，release note 载 breaking 事件名全表
-3. web-gateway 加 `/ws/web`、`/ws/admin` upgrade 路由
-4. Yohaku、tg-bot 升包切换部署
+3. web-gateway 加 `/ws/web`、`/ws/admin` upgrade 路由（先于或随 core 上线生效，不可晚于）
+4. Yohaku、tg-bot 升包（改用发布后的 npm 版本号，非 `file:` 依赖）并切换部署
 
 割接窗口：core 上线至 Yohaku 部署间，旧前端 socket.io 连接失败——页面无损，实时功能歇，刷新自愈（一刀切既定代价）。Dokploy 双副本滚动中 upgrade 或落旧 pod 被拒，客户端退避重试即过，无需 sticky。
 
@@ -193,3 +201,4 @@ client.on('$state', handler) // connecting/open/reconnecting/closed
 - 二进制帧、压缩
 - 消息可靠投递（离线补发、序号重放）——现 socket.io 亦无
 - webhook 出口旧名映射
+- **`apps/mobile`（Yohaku 仓库内的移动端）**：仍使用 socket.io 客户端，本次迁移范围不含。割接后其实时功能将随旧协议一起失效（连接旧 socket.io 端点已不存在），需在核心割接前单独排期跟进，不可与 Yohaku Web 端同批默认完成。
