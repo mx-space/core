@@ -1,3 +1,11 @@
+# [13.29.1](https://github.com/mx-space/core/compare/v13.29.0...v13.29.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* **ai:** stabilize session affinity across operations ([93e1bd0](https://github.com/mx-space/core/commit/93e1bd0f9ca6776a9aad9757a0ef5a0cf69c288a))
+* **redis:** accept REDIS_URL for TLS providers ([#2805](https://github.com/mx-space/core/issues/2805)) ([f05c0cc](https://github.com/mx-space/core/commit/f05c0cccb1ec1d79a5ed4d7b30b3f6dde4066ccb))
+
 # [13.29.0](https://github.com/mx-space/core/compare/v13.28.0...v13.29.0) (2026-08-11)
 
 
