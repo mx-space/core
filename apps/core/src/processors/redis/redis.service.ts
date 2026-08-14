@@ -1,10 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Emitter } from '@socket.io/redis-emitter'
 import type { RedisOptions } from 'ioredis'
 import IORedis from 'ioredis'
 
 import { REDIS } from '~/app.config'
-import { RedisIoAdapterKey } from '~/common/adapters/socket.adapter'
 import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -53,8 +51,6 @@ export class RedisService {
       this.logger.warn(this.formatStateLog('Redis connection closed'))
     })
   }
-
-  private _emitter: Emitter
 
   public getClient() {
     return this.redisClient
@@ -123,17 +119,6 @@ export class RedisService {
       redisStatus: this.getStatus(),
       ...extra,
     })
-  }
-
-  public get emitter(): Emitter {
-    if (this._emitter) {
-      return this._emitter
-    }
-    this._emitter = new Emitter(this.redisClient, {
-      key: RedisIoAdapterKey,
-    })
-
-    return this._emitter
   }
 
   /**
