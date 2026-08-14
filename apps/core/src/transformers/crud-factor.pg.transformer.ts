@@ -44,7 +44,7 @@ export interface BasePgCrudOptions<TRepo extends PgCrudRepository<any>> {
    * Optional URL/event prefix override (singular). Default derives from
    * the repository class name by stripping trailing `Repository`.
    *
-   * Example: SayRepository → "say" → URL /says, events SAY_*.
+   * Example: SayRepository → "say" → URL /says, events say.*.
    */
   prefix?: string
   /** Optional class to mix in (legacy compatibility with BaseCrudFactory). */
@@ -67,7 +67,7 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
       .replace(/Repository$/, '')
       .replace(/^./, (c) => c.toLowerCase())
   const pluralizeName = pluralize(inferredPrefix)
-  const eventNamePrefix = `${inferredPrefix.toUpperCase()}_`
+  const eventNamePrefix = `${inferredPrefix.toLowerCase()}.`
 
   // Empty body DTOs — validation happens via Zod where needed. Mirrors
   // BaseCrudFactory which also leaves these open.
@@ -111,7 +111,7 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     @Auth()
     async create(@Body() body: Dto) {
       const res = await this.repo.create(body)
-      this.eventManager.broadcast(`${eventNamePrefix}CREATE` as any, res, {
+      this.eventManager.broadcast(`${eventNamePrefix}create` as any, res, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
       return res
@@ -121,7 +121,7 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     @Auth()
     async update(@Body() body: Dto, @Param() param: EntityIdDto) {
       const res = await this.repo.update(param.id, body)
-      this.eventManager.broadcast(`${eventNamePrefix}UPDATE` as any, res, {
+      this.eventManager.broadcast(`${eventNamePrefix}update` as any, res, {
         scope: EventScope.TO_SYSTEM_VISITOR,
       })
       return res
@@ -140,7 +140,7 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     async delete(@Param() param: EntityIdDto) {
       await this.repo.deleteById(param.id)
       await this.eventManager.broadcast(
-        `${eventNamePrefix}DELETE` as any,
+        `${eventNamePrefix}delete` as any,
         { id: param.id },
         { scope: EventScope.ALL },
       )

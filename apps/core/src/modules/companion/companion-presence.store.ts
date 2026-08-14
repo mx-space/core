@@ -459,8 +459,8 @@ export class CompanionPresenceStore {
   }
 
   /// Replays the latest unacknowledged public state. A state is emitted three
-  /// times before removal because the current Socket.IO Redis emitter does not
-  /// expose its underlying publish promise. Duplicate revisions are harmless
+  /// times before removal because the ws broadcast bus publishes
+  /// fire-and-forget and exposes no publish promise. Duplicate revisions are harmless
   /// to v2 consumers, while the Redis marker closes the commit-before-publish
   /// process-crash window.
   async flushPendingBroadcast(maximumAttempts = 3) {

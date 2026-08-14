@@ -1,7 +1,6 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { omit, pick, uniqBy } from 'es-toolkit/compat'
-import type { Socket } from 'socket.io'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -9,6 +8,7 @@ import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
+import type { SocketLike } from '~/processors/gateway/gateway.service'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
@@ -103,7 +103,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    const handlePresencePersistToDb = async (socket: Socket) => {
+    const handlePresencePersistToDb = async (socket: SocketLike) => {
       const meta = await this.gatewayService.getSocketMetadata(socket)
 
       const { presence, roomJoinedAtMap } = meta
@@ -314,20 +314,30 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     data.identity = data.identity.toLowerCase()
 
     const roomSockets = await this.webGateway.getSocketsOfRoom(roomName)
+    const roomSocketMetas = await this.gatewayService.getSocketMetadataMany(
+      roomSockets.map((socket) => socket.id),
+    )
 
-    const socket = roomSockets.find((socket) => socket.id === data.sid)
-    if (!socket) {
+    // Clients never learn their server-generated connection id, so `sid` is
+    // matched against the session id they supplied at handshake as well.
+    const index = roomSockets.findIndex(
+      (socket, i) =>
+        socket.id === data.sid || roomSocketMetas[i]?.sessionId === data.sid,
+    )
+    if (index === -1) {
       this.logger.debug(
         `socket not found, room_name: ${roomName} identity: ${data.identity}`,
       )
       return
     }
 
+    const socket = roomSockets[index]
+    const socketMeta = roomSocketMetas[index]
+
     // Prefer the readerId resolved server-side from the HTTP session cookie
     // (RolesGuard runs globally and fills request.readerId before this
     // service runs). Fall back to the socket-handshake binding, and finally
     // the client-provided value, both of which are less authoritative.
-    const socketMeta = await this.gatewayService.getSocketMetadata(socket)
     const resolvedReaderId =
       RequestContext.currentReaderId() || socketMeta?.readerId || data.readerId
 
@@ -336,7 +346,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
 
       operationTime: data.ts,
       updatedAt: Date.now(),
-      connectedAt: +new Date(socket.handshake.time),
+      connectedAt: socketMeta?.connectedAt ?? Date.now(),
       readerId: resolvedReaderId,
       ip,
     }

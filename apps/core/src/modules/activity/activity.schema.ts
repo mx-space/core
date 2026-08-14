@@ -97,7 +97,7 @@ export const UpdatePresenceSchema = z.object({
   ts: z.number(),
   position: z.number().min(0),
   displayName: z.string().max(50).optional(),
-  sid: z.string().max(30),
+  sid: z.string().max(64),
   readerId: z.string().optional(),
 })
 
