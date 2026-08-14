@@ -1,43 +1,43 @@
 import type { AITask, AITaskLog } from '~/api/tasks'
 
 export enum EventTypes {
-  GATEWAY_CONNECT = 'GATEWAY_CONNECT',
-  GATEWAY_DISCONNECT = 'GATEWAY_DISCONNECT',
+  GATEWAY_CONNECT = 'gateway.connect',
+  GATEWAY_DISCONNECT = 'gateway.disconnect',
 
-  VISITOR_ONLINE = 'VISITOR_ONLINE',
-  VISITOR_OFFLINE = 'VISITOR_OFFLINE',
+  VISITOR_ONLINE = 'visitor.online',
+  VISITOR_OFFLINE = 'visitor.offline',
 
-  AUTH_FAILED = 'AUTH_FAILED',
+  AUTH_FAILED = 'auth.failed',
 
-  COMMENT_CREATE = 'COMMENT_CREATE',
+  COMMENT_CREATE = 'comment.create',
 
-  POST_CREATE = 'POST_CREATE',
-  POST_UPDATE = 'POST_UPDATE',
-  POST_DELETE = 'POST_DELETE',
+  POST_CREATE = 'post.create',
+  POST_UPDATE = 'post.update',
+  POST_DELETE = 'post.delete',
 
-  NOTE_CREATE = 'NOTE_CREATE',
-  NOTE_UPDATE = 'NOTE_UPDATE',
-  NOTE_DELETE = 'NOTE_DELETE',
+  NOTE_CREATE = 'note.create',
+  NOTE_UPDATE = 'note.update',
+  NOTE_DELETE = 'note.delete',
 
   PAGE_UPDATED = 'PAGE_UPDATED',
 
-  SAY_CREATE = 'SAY_CREATE',
-  SAY_DELETE = 'SAY_DELETE',
-  SAY_UPDATE = 'SAY_UPDATE',
+  SAY_CREATE = 'say.create',
+  SAY_DELETE = 'say.delete',
+  SAY_UPDATE = 'say.update',
 
-  LINK_APPLY = 'LINK_APPLY',
+  LINK_APPLY = 'link.apply',
 
   DANMAKU_CREATE = 'DANMAKU_CREATE',
-  CONTENT_REFRESH = 'CONTENT_REFRESH',
+  CONTENT_REFRESH = 'content.refresh',
 
-  IMAGE_REFRESH = 'IMAGE_REFRESH',
-  IMAGE_FETCH = 'IMAGE_FETCH',
+  IMAGE_REFRESH = 'image.refresh',
+  IMAGE_FETCH = 'image.fetch',
 
-  ADMIN_NOTIFICATION = 'ADMIN_NOTIFICATION',
+  ADMIN_NOTIFICATION = 'admin.notification',
 
   // Unified Task Queue realtime fan-out. Hand-duplicated from
   // apps/core/src/constants/business-event.constant.ts — no monorepo import.
-  TASK_UPDATE = 'TASK_UPDATE',
+  TASK_UPDATE = 'task.update',
 }
 
 /**

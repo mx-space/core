@@ -91,7 +91,7 @@ describe('AiTtsService.handleArticleDeleted', () => {
       AiTtsService.prototype.handleDeleteArticle,
     )
     expect(listeners.map((listener) => listener.event)).toEqual(
-      expect.arrayContaining(['POST_DELETE', 'NOTE_DELETE', 'PAGE_DELETE']),
+      expect.arrayContaining(['post.delete', 'note.delete', 'page.delete']),
     )
   })
 })
