@@ -13,7 +13,7 @@ const fixturePath = fileURLToPath(
 describe('Companion presence event contract', () => {
   it('uses one public event for snapshot and clear state changes', () => {
     expect(BusinessEvents.COMPANION_PRESENCE_CHANGED).toBe(
-      'companion.presence.changed',
+      'companion_presence.changed',
     )
     expect([snapshotEvent.type, clearedEvent.type]).toEqual([
       BusinessEvents.COMPANION_PRESENCE_CHANGED,

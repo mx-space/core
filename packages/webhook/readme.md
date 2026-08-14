@@ -60,7 +60,7 @@ yourServer.post('/mx/webhook', (req, res) => {
 })
 
 // Listen for specific events (typed payloads)
-handler.emitter.on('POST_CREATE', (payload, source) => {
+handler.emitter.on('post.create', (payload, source) => {
   console.log('New post:', payload.title, 'source:', source)
 })
 
@@ -134,21 +134,21 @@ Events are defined in the core server and re-exported here. The following are co
 
 | Event                     | Payload type (summary) |
 |---------------------------|-------------------------|
-| `POST_CREATE` / `POST_UPDATE` | Normalized post        |
-| `POST_DELETE`             | `{ data: id }`          |
-| `NOTE_CREATE` / `NOTE_UPDATE` | Normalized note        |
-| `NOTE_DELETE`             | `{ data: id }`          |
-| `PAGE_CREATE` / `PAGE_UPDATE` | Page model             |
-| `PAGE_DELETE`             | `{ data: id }`          |
-| `SAY_CREATE` / `SAY_UPDATE` / `SAY_DELETE` | Say model or id   |
-| `RECENTLY_CREATE` / `RECENTLY_UPDATE` | Recently model   |
-| `LINK_APPLY`              | Link model              |
-| `COMMENT_CREATE` / `COMMENT_UPDATE` | Comment payloads  |
-| `ACTIVITY_LIKE`           | Activity like payload   |
-| `AGGREGATE_UPDATE`        | Aggregate update payload |
-| `TRANSLATION_CREATE` / `TRANSLATION_UPDATE` / `TRANSLATION_DELETE` | AI translation payloads |
-| `INSIGHTS_CREATE` / `INSIGHTS_UPDATE` / `INSIGHTS_DELETE` / `INSIGHTS_GENERATED` | AI insights payloads |
-| `ARTICLE_READ_COUNT_UPDATE` | `{ count, type, id }` |
+| `post.create` / `post.update` | Normalized post        |
+| `post.delete`             | `{ data: id }`          |
+| `note.create` / `note.update` | Normalized note        |
+| `note.delete`             | `{ data: id }`          |
+| `page.create` / `page.update` | Page model             |
+| `page.delete`             | `{ data: id }`          |
+| `say.create` / `say.update` / `say.delete` | Say model or id   |
+| `recently.create` / `recently.update` | Recently model   |
+| `link.apply`              | Link model              |
+| `comment.create` / `comment.update` | Comment payloads  |
+| `activity.like`           | Activity like payload   |
+| `aggregate.update`        | Aggregate update payload |
+| `translation.create` / `translation.update` / `translation.delete` | AI translation payloads |
+| `insights.create` / `insights.update` / `insights.delete` / `insights.generated` | AI insights payloads |
+| `article.read_count_update` | `{ count, type, id }` |
 | `health_check`            | `{}`                    |
 
 > Server v12+ serializes all entity ids (`id`, `categoryId`, `topicId`, etc.) as Snowflake **decimal strings**. Cast to `string`, not `number`.
