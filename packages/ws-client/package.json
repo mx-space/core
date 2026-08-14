@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Isomorphic raw WebSocket client shared by mx-core admin, Yohaku, and mx-tg-bot",
-  "license": "AGPLv3",
+  "license": "AGPL-3.0-only",
   "author": "Innei <https://innei.in>",
   "files": [
     "dist",
