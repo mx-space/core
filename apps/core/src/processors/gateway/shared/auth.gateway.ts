@@ -66,11 +66,7 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
         const session =
           await this.authService.getSessionUserFromHeaders(headers)
         if (session?.user?.role === 'owner') {
-          this.sendConnectGreeting(conn)
-          if (session.session?.token) {
-            this.bindToken(session.session.token, conn)
-          }
-          return
+          return this.completeConnection(conn, session.session?.token)
         }
       }
 
@@ -93,8 +89,15 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
         return this.authFailed(conn)
       }
 
+      this.completeConnection(conn, token)
+    }
+
+    // A close during the auth lookups already unbound this connection; binding
+    // now would strand the token entry, since nothing unbinds it again.
+    private completeConnection(conn: WsConnection, token?: string) {
+      if (!this.resolveConnection(conn.ws)) return
       this.sendConnectGreeting(conn)
-      this.bindToken(token, conn)
+      if (token) this.bindToken(token, conn)
     }
 
     async handleDisconnect(ws: WebSocket) {

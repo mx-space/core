@@ -115,19 +115,32 @@ export class WebEventsGateway
     const sessionId = query.get('socket_session_id') || conn.id
     const rawLang = query.get('lang')
     const lang = rawLang && LANG_PATTERN.test(rawLang) ? rawLang : undefined
-    const readerId = await this.resolveReaderId(request)
 
     await this.presence.addConnection('web', conn.id)
     await this.gatewayService.setSocketMetadata(conn, {
       sessionId,
       connectedAt: Date.now(),
       ...(lang ? { lang } : {}),
-      ...(readerId ? { readerId } : {}),
     })
 
     if (lang) {
       this.roomManager.join(langRoom(lang), conn)
       await this.presence.joinRoom('web', langRoom(lang), conn.id)
+    }
+
+    const readerId = await this.resolveReaderId(request)
+
+    // A close anywhere above already ran the disconnect cleanup, which cannot
+    // see writes this handler issues afterwards. Undo them or they outlive the
+    // socket forever: presence GC only reclaims ids owned by dead nodes.
+    if (!this.resolveConnection(ws)) {
+      await this.releaseConnection(conn)
+      await this.gatewayService.clearSocketMetadata(conn)
+      return
+    }
+
+    if (readerId) {
+      await this.gatewayService.setSocketMetadata(conn, { readerId })
     }
 
     this.whenUserOnline()
