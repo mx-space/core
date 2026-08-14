@@ -1,4 +1,11 @@
-# [13.29.2](https://github.com/mx-space/core/compare/v13.29.1...v13.29.2) (2026-08-14)
+# [13.30.0](https://github.com/mx-space/core/compare/v13.29.2...v13.30.0) (2026-08-14)
+
+
+### Features
+
+* **ai:** coordinate long-document translation ([76b0d2e](https://github.com/mx-space/core/commit/76b0d2e02c40ae5c5f75073c3c02c78e4814adcf))
+
+## [13.29.2](https://github.com/mx-space/core/compare/v13.29.1...v13.29.2) (2026-08-14)
 
 
 ### Bug Fixes
