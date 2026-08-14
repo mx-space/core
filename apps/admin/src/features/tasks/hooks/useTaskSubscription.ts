@@ -11,6 +11,37 @@ interface UseSubscriptionResult {
   socketConnected: boolean
 }
 
+// Room membership on the server is per-connection with no refcount — a
+// second `ai_task.unsubscribe` for the same payload drops the room outright,
+// even if another mount still wants it live. Multiple hook instances (two
+// detail panels for the same task, a fast remount, React StrictMode's double
+// invoke, or this effect simply re-running because `payload`/`onCatchUp` are
+// fresh references every render of the caller) can all want the same
+// payload at once, so "should the wire-level unsubscribe fire" has to be
+// decided against how many current instances still want it, not just this
+// one's own local state.
+const wantSubscribedCounts = new Map<string, number>()
+
+function payloadKey(payload: SubscribePayload): string {
+  return JSON.stringify(payload)
+}
+
+function incrementWantCount(payload: SubscribePayload): void {
+  const key = payloadKey(payload)
+  wantSubscribedCounts.set(key, (wantSubscribedCounts.get(key) ?? 0) + 1)
+}
+
+function decrementWantCount(payload: SubscribePayload): void {
+  const key = payloadKey(payload)
+  const next = (wantSubscribedCounts.get(key) ?? 1) - 1
+  if (next <= 0) wantSubscribedCounts.delete(key)
+  else wantSubscribedCounts.set(key, next)
+}
+
+function hasWantCount(payload: SubscribePayload): boolean {
+  return (wantSubscribedCounts.get(payloadKey(payload)) ?? 0) > 0
+}
+
 function useTaskSubscription(
   payload: SubscribePayload | null,
   onCatchUp: () => void,
@@ -37,16 +68,26 @@ function useTaskSubscription(
 
     let subscribed = false
     let pending = false
-    // Tracks the caller's current intent, independent of `subscribed`/
-    // `pending` — a subscribe() ack can resolve after the effect has already
-    // decided (via unmount or a visibility-hide) that it no longer wants the
-    // subscription. Checking this inside the ack callback, instead of only
-    // gating on `subscribed`, is what lets a stale ack still fire the
-    // unsubscribe it owes the server rather than leaking a phantom
-    // subscription for the life of the socket.
+    // This instance's own current intent — separate from the shared
+    // wantSubscribedCounts map, which aggregates intent across every mount
+    // sharing this payload.
     let wantSubscribed = false
+    const setWantSubscribed = (next: boolean) => {
+      if (wantSubscribed === next) return
+      wantSubscribed = next
+      if (next) incrementWantCount(payload)
+      else decrementWantCount(payload)
+    }
+    // A stale ack (this instance no longer wants the subscription by the
+    // time it resolves) must only drop the room when nobody else sharing
+    // this payload wants it either — otherwise it kills a sibling mount's
+    // live subscription with no error or $state change to signal it.
+    const maybeSendUnsubscribe = () => {
+      if (hasWantCount(payload)) return
+      void socket.request('ai_task.unsubscribe', payload).catch(() => {})
+    }
     const subscribe = () => {
-      wantSubscribed = true
+      setWantSubscribed(true)
       if (subscribed || pending) return
       pending = true
       socket
@@ -56,7 +97,7 @@ function useTaskSubscription(
           if (wantSubscribed) {
             subscribed = true
           } else {
-            void socket.request('ai_task.unsubscribe', payload).catch(() => {})
+            maybeSendUnsubscribe()
           }
         })
         .catch(() => {
@@ -64,11 +105,11 @@ function useTaskSubscription(
         })
     }
     const unsubscribe = () => {
-      wantSubscribed = false
+      setWantSubscribed(false)
       pending = false
       if (!subscribed) return
       subscribed = false
-      void socket.request('ai_task.unsubscribe', payload).catch(() => {})
+      maybeSendUnsubscribe()
     }
 
     if (socket.state === 'open') subscribe()
@@ -77,7 +118,7 @@ function useTaskSubscription(
         subscribe()
         onCatchUp()
       } else {
-        wantSubscribed = false
+        setWantSubscribed(false)
         subscribed = false
         pending = false
       }
