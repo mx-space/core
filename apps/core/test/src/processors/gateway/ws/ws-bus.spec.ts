@@ -89,6 +89,42 @@ describe('WsBusService', () => {
     expect(received).toHaveLength(0)
   })
 
+  it('retries the subscription on a later ready event after initial failure', async () => {
+    const readyHandlers: (() => void)[] = []
+    let ready = false
+    let waitCalls = 0
+    const subClient = {
+      on: vi.fn((event: string, handler: () => void) => {
+        if (event === 'ready') readyHandlers.push(handler)
+      }),
+      subscribe: vi.fn(async () => {
+        if (!ready) {
+          throw new Error(
+            "Stream isn't writeable and enableOfflineQueue options is false",
+          )
+        }
+      }),
+      unsubscribe: vi.fn(async () => {}),
+      quit: vi.fn(async () => {}),
+    }
+    const bus = new WsBusService({
+      getClient: () => ({}) as any,
+      duplicateClient: () => subClient,
+      waitForReady: async () => {
+        waitCalls += 1
+        if (waitCalls === 1) throw new Error('Timed out waiting for ready')
+      },
+    } as any)
+
+    await bus.onModuleInit()
+    expect(subClient.subscribe).not.toHaveBeenCalled()
+
+    ready = true
+    readyHandlers.forEach((handler) => handler())
+    await vi.waitFor(() => expect(subClient.subscribe).toHaveBeenCalledTimes(1))
+    await bus.onModuleDestroy()
+  })
+
   it('waits for the duplicated client to be ready before subscribing', async () => {
     let ready = false
     let subscribedWhileReady = false

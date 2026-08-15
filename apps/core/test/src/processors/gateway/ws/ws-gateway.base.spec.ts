@@ -33,6 +33,7 @@ function createFakes() {
     presence: {
       removeConnection: vi.fn(async () => undefined),
       leaveRoom: vi.fn(async () => undefined),
+      registerLocalIndex: vi.fn(),
     },
   }
 }

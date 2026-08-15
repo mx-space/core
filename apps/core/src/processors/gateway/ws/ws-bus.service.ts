@@ -22,6 +22,7 @@ export class WsBusService implements OnModuleInit, OnModuleDestroy {
   >()
 
   private subClient?: IORedis
+  private subscribed = false
 
   constructor(private readonly redisService: RedisService) {}
 
@@ -31,13 +32,24 @@ export class WsBusService implements OnModuleInit, OnModuleDestroy {
     subClient.on('message', (_channel, message) => {
       this.handleMessage(message)
     })
+    // Every delivery (local included) flows through this subscription, so a
+    // one-shot subscribe would leave the whole node broadcast-dead if the
+    // first attempt fails. Retry on each `ready` until it sticks; once
+    // subscribed, ioredis restores the subscription across reconnects itself.
+    subClient.on('ready', () => {
+      if (!this.subscribed) void this.trySubscribe(subClient)
+    })
+    await this.trySubscribe(subClient)
+  }
 
+  private async trySubscribe(subClient: IORedis): Promise<void> {
     try {
       // The duplicated client inherits enableOfflineQueue: false, so a
       // subscribe issued before its connection is ready is rejected outright
       // instead of being queued — wait for ready or the bus never delivers.
       await this.redisService.waitForReady(subClient)
       await subClient.subscribe(this.channel)
+      this.subscribed = true
     } catch (error) {
       this.warn('Failed to subscribe ws bus channel', error)
     }

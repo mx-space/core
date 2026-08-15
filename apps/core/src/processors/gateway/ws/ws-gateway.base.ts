@@ -41,6 +41,9 @@ export abstract class WsGatewayBase
     this.unregisterBus = this.bus.register(this.namespace, (frame) =>
       this.deliverLocal(frame),
     )
+    this.presence.registerLocalIndex(this.namespace, () =>
+      this.registry.all().map((conn) => conn.id),
+    )
     this.heartbeatTimer = setInterval(
       () => this.sweepHeartbeat(),
       HEARTBEAT_INTERVAL_MS,

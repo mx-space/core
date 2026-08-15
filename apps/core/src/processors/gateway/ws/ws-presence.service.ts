@@ -37,6 +37,8 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WsPresenceService.name)
   readonly nodeId = `${hostname()}-${process.pid}-${randomBytes(2).toString('hex')}`
 
+  private readonly localIndexes = new Map<WsNamespace, () => string[]>()
+
   private heartbeatTimer?: ReturnType<typeof setInterval>
   private sweepTimer?: ReturnType<typeof setInterval>
 
@@ -201,6 +203,10 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  registerLocalIndex(ns: WsNamespace, liveIds: () => string[]): void {
+    this.localIndexes.set(ns, liveIds)
+  }
+
   async sweepOnce(): Promise<void> {
     try {
       const nodeIds = await this.redis.smembers(this.nodesKey())
@@ -211,8 +217,41 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
         if (alive) continue
         await this.sweepDeadNode(nodeId)
       }
+      await this.reconcileOwnEntries()
     } catch (error) {
       this.warn('Failed to sweep ws presence', error)
+    }
+  }
+
+  // A write that fails during disconnect (transient redis outage) leaves an
+  // entry owned by this still-alive node, which the dead-node sweep can never
+  // reclaim. Reconcile our own entries against the live local registry.
+  private async reconcileOwnEntries(): Promise<void> {
+    for (const ns of WS_NAMESPACES) {
+      const liveIds = this.localIndexes.get(ns)
+      if (!liveIds) continue
+      const live = new Set(liveIds())
+
+      const conns = await this.redis.hgetall(this.connsKey(ns))
+      const zombies = Object.entries(conns)
+        .filter(([id, owner]) => owner === this.nodeId && !live.has(id))
+        .map(([id]) => id)
+
+      if (zombies.length > 0) {
+        await this.redis.hdel(this.connsKey(ns), ...zombies)
+        await this.redis.hdel(getRedisKey(RedisKeys.Socket), ...zombies)
+      }
+
+      const rooms = await this.redis.smembers(this.roomsKey(ns))
+      for (const room of rooms) {
+        const members = await this.redis.hgetall(this.roomKey(ns, room))
+        const deadMembers = Object.entries(members)
+          .filter(([id, owner]) => owner === this.nodeId && !live.has(id))
+          .map(([id]) => id)
+        if (deadMembers.length === 0) continue
+
+        await this.pruneRoomIfEmpty(ns, room, deadMembers)
+      }
     }
   }
 
