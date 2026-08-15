@@ -33,6 +33,10 @@ export class WsBusService implements OnModuleInit, OnModuleDestroy {
     })
 
     try {
+      // The duplicated client inherits enableOfflineQueue: false, so a
+      // subscribe issued before its connection is ready is rejected outright
+      // instead of being queued — wait for ready or the bus never delivers.
+      await this.redisService.waitForReady(subClient)
       await subClient.subscribe(this.channel)
     } catch (error) {
       this.warn('Failed to subscribe ws bus channel', error)
