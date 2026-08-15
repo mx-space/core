@@ -186,12 +186,12 @@ client.on('$state', handler) // connecting/open/reconnecting/closed
 - Yohaku、mx-tg-bot 对 `@mx-space/ws-client`（以及本次连带的 `@mx-space/webhook`）的依赖，若当前以 `file:` 本地路径引用，发布前必须换成 npm 版本号（semver range），否则那两个仓库的构建在本 worktree 删除后失效
 - web-gateway（反向代理层）需为 `/ws/web` 与 `/ws/admin` 两条路径显式配置 WebSocket upgrade 路由；缺此配置时 HTTP 层握手可通但 upgrade 被拒，割接后客户端表现为连接失败，且不会有 5xx 提示，需专项验证
 
-顺序：
+顺序（执行状态 2026-08-15）：
 
-1. `@mx-space/webhook` **1.0.0**、`@mx-space/ws-client` 首版，先于 mx-core v14 发 npm
-2. mx-core **major**（v14）：core+admin 同体发布，release note 载 breaking 事件名全表
-3. web-gateway 加 `/ws/web`、`/ws/admin` upgrade 路由（先于或随 core 上线生效，不可晚于）
-4. Yohaku、tg-bot 升包（改用发布后的 npm 版本号，非 `file:` 依赖）并切换部署
+1. ✅ `@mx-space/webhook` **1.0.0**、`@mx-space/ws-client` **0.1.0** 已发 npm（latest）
+2. ✅ mx-core **v14.0.0** 已 tag 发布（release workflow：Docker + GitHub Release + Dokploy 重部）
+3. 反代 upgrade 路由：本仓 `configs/nginx.conf` 已加 `/ws/` 块（`proxy_http_version 1.1` + Upgrade 头）；生产（Dokploy/Traefik）与社区 nginx 样例同步处理
+4. ✅ Yohaku（#167）、tg-bot（#120）已换 npm 依赖并入 main，随各自流程部署
 
 割接窗口：core 上线至 Yohaku 部署间，旧前端 socket.io 连接失败——页面无损，实时功能歇，刷新自愈（一刀切既定代价）。Dokploy 双副本滚动中 upgrade 或落旧 pod 被拒，客户端退避重试即过，无需 sticky。
 
