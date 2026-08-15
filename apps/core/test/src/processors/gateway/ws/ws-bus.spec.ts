@@ -12,6 +12,7 @@ function buildBus(client: Redis): WsBusService {
   const redisService = {
     getClient: () => client,
     duplicateClient: () => client.duplicate(),
+    waitForReady: () => Promise.resolve(),
   } as any
   return new WsBusService(redisService)
 }
@@ -86,6 +87,35 @@ describe('WsBusService', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 200))
     expect(received).toHaveLength(0)
+  })
+
+  it('waits for the duplicated client to be ready before subscribing', async () => {
+    let ready = false
+    let subscribedWhileReady = false
+    const subClient = {
+      on: vi.fn(),
+      subscribe: vi.fn(async () => {
+        if (!ready) {
+          throw new Error(
+            "Stream isn't writeable and enableOfflineQueue options is false",
+          )
+        }
+        subscribedWhileReady = true
+      }),
+      unsubscribe: vi.fn(async () => {}),
+      quit: vi.fn(async () => {}),
+    }
+    const bus = new WsBusService({
+      getClient: () => ({}) as any,
+      duplicateClient: () => subClient,
+      waitForReady: async () => {
+        ready = true
+      },
+    } as any)
+
+    await bus.onModuleInit()
+    expect(subscribedWhileReady).toBe(true)
+    await bus.onModuleDestroy()
   })
 
   it('drops a malformed (non-JSON) frame without throwing or dispatching', async () => {

@@ -48,6 +48,7 @@ function buildFakeRedisService(client: Redis) {
   return {
     getClient: () => client,
     duplicateClient: () => client.duplicate(),
+    waitForReady: () => Promise.resolve(),
     isReady: () => true,
     isUnavailableError: () => false,
     getStatus: () => 'ready',
