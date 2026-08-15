@@ -21,7 +21,7 @@ export function isWsEnvelope(value: unknown): value is WsEnvelope {
 
   const candidate = value as Record<string, unknown>
 
-  if (typeof candidate.v !== 'number') return false
+  if (candidate.v !== WS_PROTOCOL_VERSION) return false
   if (typeof candidate.event !== 'string' || candidate.event.length === 0) {
     return false
   }

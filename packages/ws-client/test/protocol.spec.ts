@@ -67,6 +67,11 @@ describe('isWsEnvelope', () => {
     expect(isWsEnvelope({ v: '1', event: 'ping' })).toBe(false)
   })
 
+  it('rejects an unsupported protocol version', () => {
+    expect(isWsEnvelope({ v: 2, event: 'ping' })).toBe(false)
+    expect(isWsEnvelope({ v: 0, event: 'ping' })).toBe(false)
+  })
+
   it('rejects a missing or empty event', () => {
     expect(isWsEnvelope({ v: 1 })).toBe(false)
     expect(isWsEnvelope({ v: 1, event: '' })).toBe(false)
