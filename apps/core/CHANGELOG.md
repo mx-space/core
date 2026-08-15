@@ -1,3 +1,10 @@
+## [14.0.2](https://github.com/mx-space/core/compare/v14.0.1...v14.0.2) (2026-08-15)
+
+
+### Bug Fixes
+
+* **deps:** repair pnpm-lock corrupted by stale renovate rebases ([34e437d](https://github.com/mx-space/core/commit/34e437d35b4e384ac47092eb05aefdac8bad4bab)) — the v14.0.1 release run failed on the broken lockfile and never shipped; this release carries its content
+
 ## [14.0.1](https://github.com/mx-space/core/compare/v14.0.0...v14.0.1) (2026-08-15)
 
 
@@ -8,12 +15,6 @@
 * **s3:** avoid explicit content length in fetch uploads ([3b176de](https://github.com/mx-space/core/commit/3b176de7c7e756f8953d33f5922f46766b4dd288))
 
 # [14.0.0](https://github.com/mx-space/core/compare/v13.30.0...v14.0.0) (2026-08-15)
-
-
-### BREAKING CHANGES
-
-* **gateway:** replace socket.io with raw ws ([40c8319](https://github.com/mx-space/core/commit/40c831959b6c9d565d92f5ffec23bc1e41aaae74)) — realtime moves to `/ws/web` and `/ws/admin` with the `{v:1,event,payload?,id?}` envelope; socket.io clients can no longer connect
-* **events:** rewrite BusinessEvents to Stripe-style dot values ([edc11e9](https://github.com/mx-space/core/commit/edc11e92d758b7e38970b8bfc2e602777dc3e718)) — webhook and ws event names change (e.g. `POST_CREATE` → `post.create`); consumers must upgrade to `@mx-space/webhook@1.0.0`
 
 
 ### Bug Fixes
