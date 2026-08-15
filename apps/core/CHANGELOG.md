@@ -1,3 +1,28 @@
+# [14.0.0](https://github.com/mx-space/core/compare/v13.30.0...v14.0.0) (2026-08-15)
+
+
+### BREAKING CHANGES
+
+* **gateway:** replace socket.io with raw ws ([40c8319](https://github.com/mx-space/core/commit/40c831959b6c9d565d92f5ffec23bc1e41aaae74)) — realtime moves to `/ws/web` and `/ws/admin` with the `{v:1,event,payload?,id?}` envelope; socket.io clients can no longer connect
+* **events:** rewrite BusinessEvents to Stripe-style dot values ([edc11e9](https://github.com/mx-space/core/commit/edc11e92d758b7e38970b8bfc2e602777dc3e718)) — webhook and ws event names change (e.g. `POST_CREATE` → `post.create`); consumers must upgrade to `@mx-space/webhook@1.0.0`
+
+
+### Bug Fixes
+
+* **gateway:** address codex review findings ([2a24c24](https://github.com/mx-space/core/commit/2a24c24fc3c7401de905dba99a2073d139a51553))
+* **gateway:** cap ws maxPayload and restore lost presence writes ([d672d13](https://github.com/mx-space/core/commit/d672d13f4fda6dfa6e17d8b71fbf86a8d17fca5e))
+* **gateway:** close room-cleanup check-then-act race with atomic Lua ([70d89d5](https://github.com/mx-space/core/commit/70d89d579dd88c42e9cc230fef5985d82d522630))
+* **gateway:** drop phantom presence on a connect/close race ([88d23e2](https://github.com/mx-space/core/commit/88d23e24879fe0d2d67bbd7bf601b26cd2483afc))
+* **gateway:** final review fixes ([c61beae](https://github.com/mx-space/core/commit/c61beae234fff91939b506e49b5228bfe013e325))
+* **gateway:** harden ws bus subscription and presence self-reconciliation ([b50829a](https://github.com/mx-space/core/commit/b50829a6bf5017aca4ed13cc534498a51b7deefe))
+* **gateway:** subscribe ws bus only after the redis client is ready ([1a5cbc7](https://github.com/mx-space/core/commit/1a5cbc7fc84c21afa65b71f456d1a92b1a6942b3))
+
+
+### Features
+
+* **auth:** add Apple sign-in support ([55030fb](https://github.com/mx-space/core/commit/55030fb5214ff938bc886a1be89b0984f1392161))
+* **gateway:** ws infrastructure (bus, presence, rooms, registry, envelope) ([4c969fd](https://github.com/mx-space/core/commit/4c969fd2462efb0f7d5d999528f973deb68e6121))
+
 # [13.30.0](https://github.com/mx-space/core/compare/v13.29.2...v13.30.0) (2026-08-14)
 
 
