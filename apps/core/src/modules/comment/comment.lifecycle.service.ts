@@ -434,6 +434,25 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
+  afterReportComment(commentId: string) {
+    scheduleManager.schedule(async () => {
+      const comment = await this.commentService.findById(commentId)
+      if (!comment) return
+      const { adminUrl } = await this.configsService.get('url')
+      try {
+        await this.barkService.push({
+          title: 'Comment reported',
+          body: comment.text.slice(0, 140),
+          url: `${adminUrl}#/comments`,
+        })
+      } catch (err) {
+        this.logger.warn(
+          `bark after report(${commentId}) failed: ${err instanceof Error ? err.message : err}`,
+        )
+      }
+    })
+  }
+
   private async resolveUrlByType(type: CollectionRefTypes, model: any) {
     const {
       url: { webUrl: base },

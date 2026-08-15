@@ -32,4 +32,25 @@ describe('CommentController routes', () => {
       undefined,
     )
   })
+
+  it('exposes reader activity and public report routes ahead of /:id', () => {
+    const prototype = CommentController.prototype
+    expect(Reflect.getMetadata(PATH_METADATA, prototype.getMyComments)).toBe(
+      '/reader/me',
+    )
+    expect(Reflect.getMetadata(METHOD_METADATA, prototype.getMyComments)).toBe(
+      RequestMethod.GET,
+    )
+    expect(Reflect.getMetadata(PATH_METADATA, prototype.reportComment)).toBe(
+      '/:id/report',
+    )
+    expect(Reflect.getMetadata(METHOD_METADATA, prototype.reportComment)).toBe(
+      RequestMethod.POST,
+    )
+
+    const names = Object.getOwnPropertyNames(prototype)
+    expect(names.indexOf('getMyComments')).toBeLessThan(
+      names.indexOf('getComments'),
+    )
+  })
 })

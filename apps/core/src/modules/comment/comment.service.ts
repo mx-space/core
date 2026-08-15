@@ -73,6 +73,8 @@ const TAB_COUNTS_KEY_PREFIX = 'comment:tab-counts:'
 const TAB_COUNTS_TTL_SECONDS = 30
 const AUTHOR_ACTIVITY_KEY_PREFIX = 'comment:author-activity:'
 const AUTHOR_ACTIVITY_TTL_SECONDS = 300
+const COMMENT_REPORT_KEY_PREFIX = 'comment:report:'
+const COMMENT_REPORT_TTL_SECONDS = 60 * 60 * 24 * 90
 
 const DEFAULT_STATE_TO_TAB: Record<number, CommentTab> = {
   0: 'unread',
@@ -513,6 +515,66 @@ export class CommentService {
     const dataWithParent = await this.attachParentPreview(dataWithRef)
     const dataWithCountry = await this.enrichCommentsWithCountry(dataWithParent)
     return { ...queryList, data: dataWithCountry }
+  }
+
+  async getReaderComments(readerId: string, page: number, size: number) {
+    return this.getComments({
+      page,
+      size,
+      filter: {
+        excludeJunk: true,
+        isDeleted: false,
+        readerId,
+      },
+    })
+  }
+
+  projectReaderComment(doc: CommentModel & { ref?: CommentRefSummary | null }) {
+    return {
+      createdAt: doc.createdAt,
+      id: String(doc.id),
+      refId: String(doc.refId),
+      refType: doc.refType,
+      source: doc.ref
+        ? {
+            categorySlug: doc.ref.category?.slug ?? null,
+            nid: doc.ref.nid ?? null,
+            slug: doc.ref.slug ?? null,
+          }
+        : null,
+      sourceTitle: doc.ref?.title ?? null,
+      text: doc.text,
+    }
+  }
+
+  async reportComment(
+    id: string,
+    reporter: { ip?: string; readerId?: string | null },
+  ): Promise<{ notified: boolean }> {
+    const comment = await this.commentRepository.findById(id)
+    if (!comment) {
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })
+    }
+    const reporterKey = reporter.readerId || reporter.ip || 'anon'
+    const key = `${COMMENT_REPORT_KEY_PREFIX}${id}:${reporterKey}`
+    let acquired = true
+    try {
+      const stored = await this.redisService
+        .getClient()
+        .set(key, '1', 'EX', COMMENT_REPORT_TTL_SECONDS, 'NX')
+      acquired = stored === 'OK'
+    } catch (err) {
+      this.logger.debug(
+        `report dedupe write failed for ${key}: ${err instanceof Error ? err.message : err}`,
+      )
+    }
+    if (!acquired) return { notified: false }
+    await this.eventManager.broadcast(
+      BusinessEvents.COMMENT_UPDATE,
+      { id, reported: true },
+      { scope: EventScope.TO_SYSTEM_ADMIN },
+    )
+    return { notified: true }
   }
 
   /**

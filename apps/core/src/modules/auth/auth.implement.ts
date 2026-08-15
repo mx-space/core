@@ -342,6 +342,16 @@ export async function CreateAuth(
     },
     user: {
       modelName: 'reader',
+      deleteUser: {
+        enabled: true,
+        beforeDelete: async (user) => {
+          if ((user as { role?: string }).role === 'owner') {
+            throw new APIError('FORBIDDEN', {
+              message: 'owner cannot delete',
+            })
+          }
+        },
+      },
       additionalFields: {
         role: {
           type: 'string',
