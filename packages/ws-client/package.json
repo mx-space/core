@@ -1,7 +1,6 @@
 {
   "name": "@mx-space/ws-client",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "Isomorphic raw WebSocket client shared by mx-core admin, Yohaku, and mx-tg-bot",
   "license": "AGPL-3.0-only",
@@ -40,6 +39,7 @@
   },
   "scripts": {
     "build": "tsdown",
+    "prepublishOnly": "tsdown",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
