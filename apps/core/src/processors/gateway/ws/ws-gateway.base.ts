@@ -41,9 +41,16 @@ export abstract class WsGatewayBase
     this.unregisterBus = this.bus.register(this.namespace, (frame) =>
       this.deliverLocal(frame),
     )
-    this.presence.registerLocalIndex(this.namespace, () =>
-      this.registry.all().map((conn) => conn.id),
-    )
+    this.presence.registerLocalIndex(this.namespace, () => {
+      const conns = this.registry.all().map((conn) => conn.id)
+      const rooms: Record<string, string[]> = {}
+      for (const id of conns) {
+        for (const room of this.roomManager.roomsOf(id)) {
+          ;(rooms[room] ??= []).push(id)
+        }
+      }
+      return { conns, rooms }
+    })
     this.heartbeatTimer = setInterval(
       () => this.sweepHeartbeat(),
       HEARTBEAT_INTERVAL_MS,

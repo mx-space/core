@@ -157,8 +157,10 @@ describe('WsPresenceService', () => {
 
     it('reconciles zombie entries owned by a live node against the local index', async () => {
       await client.set(getRedisKey(RedisKeys.WsNode, nodeB.nodeId), '1')
-      nodeB.registerLocalIndex('web', () => ['recon-live'])
-      await nodeB.addConnection('web', 'recon-live')
+      nodeB.registerLocalIndex('web', () => ({
+        conns: ['recon-live'],
+        rooms: { reconLiveRoom: ['recon-live'] },
+      }))
       await nodeB.addConnection('web', 'recon-zombie')
       await nodeB.joinRoom('web', 'reconRoom', 'recon-zombie')
 
@@ -168,8 +170,12 @@ describe('WsPresenceService', () => {
       expect(ids).toContain('recon-live')
       expect(ids).not.toContain('recon-zombie')
       expect(await nodeB.roomMemberIds('web', 'reconRoom')).toHaveLength(0)
+      expect(await nodeB.roomMemberIds('web', 'reconLiveRoom')).toEqual([
+        'recon-live',
+      ])
 
       await nodeB.removeConnection('web', 'recon-live')
+      await nodeB.leaveRoom('web', 'reconLiveRoom', 'recon-live')
     })
   })
 })
