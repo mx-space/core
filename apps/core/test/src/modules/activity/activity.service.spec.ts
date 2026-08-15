@@ -78,6 +78,61 @@ describe('ActivityService.getRecentPublish', () => {
   })
 })
 
+describe('ActivityService presence persist dedupe', () => {
+  it('persists a read-duration once when disconnect fires every hook', async () => {
+    const hooks: Record<string, ((...args: any[]) => Promise<void>)[]> = {
+      onDisconnected: [],
+      onLeaveRoom: [],
+    }
+    const webGateway = {
+      registerHook: vi.fn((name: string, fn: any) => {
+        hooks[name].push(fn)
+        return () => {}
+      }),
+      broadcast: vi.fn(),
+    }
+    const meta = {
+      presence: {
+        connectedAt: 1000,
+        operationTime: 200_000,
+        updatedAt: 200_000,
+        position: 5,
+        roomName: 'article-1',
+        displayName: 'reader',
+        ip: '::1',
+        identity: 'id-1',
+      },
+      roomJoinedAtMap: { 'article-1': 100_000 },
+    }
+    const gatewayService = { getSocketMetadata: vi.fn(async () => meta) }
+    const activityRepository = { create: vi.fn(async () => ({})) }
+    const service = new ActivityService(
+      {} as any,
+      {} as any,
+      activityRepository as any,
+      {} as any,
+      {} as any,
+      webGateway as any,
+      gatewayService as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    )
+    service.onModuleInit()
+
+    const socket = { id: 'conn-1' }
+    await Promise.all([
+      hooks.onDisconnected[0](socket),
+      hooks.onLeaveRoom[0](socket, 'article-1'),
+      hooks.onLeaveRoom[0](socket, 'lang:zh'),
+    ])
+
+    expect(activityRepository.create).toHaveBeenCalledTimes(1)
+    service.onModuleDestroy()
+  })
+})
+
 describe('ActivityService.getLastYearPublication', () => {
   it('requests only published posts and teasers a premium post', async () => {
     const findRecent = vi.fn(async () => [premiumPost])

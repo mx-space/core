@@ -145,9 +145,13 @@ export class AdminEventsGateway
     await Promise.all(
       rooms.map(async (room) => {
         try {
-          const remaining = await this.presence.roomMemberIds('admin', room)
-          const others = remaining.filter((id) => id !== selfId)
-          if (others.length === 0) {
+          // roomSubs entries are per-pod, so the emptiness test must be local:
+          // a member on another pod keeps its own entry alive, while a global
+          // check would leave this pod refreshing a subscription nobody backs.
+          const remaining = this.roomManager
+            .membersOf(room)
+            .filter((member) => member.id !== selfId)
+          if (remaining.length === 0) {
             await this.roomSubs.remove(room)
           }
         } catch {

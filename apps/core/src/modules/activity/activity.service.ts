@@ -103,6 +103,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
+    // handleDisconnect fires onDisconnected plus onLeaveRoom per room for the
+    // same connection; without this mark the same read-duration would be
+    // inserted once per hook invocation. The check-and-set is synchronous
+    // (no await in between) so concurrent hook runs cannot both pass it.
+    const persistedOperationTime = new Map<string, number>()
     const handlePresencePersistToDb = async (socket: SocketLike) => {
       const meta = await this.gatewayService.getSocketMetadata(socket)
 
@@ -125,6 +130,13 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         if (duration < 10_000 || (position === 0 && duration < 60_000)) {
           return
         }
+        if (persistedOperationTime.get(socket.id) === operationTime) return
+        persistedOperationTime.set(socket.id, operationTime)
+        setTimeout(() => {
+          if (persistedOperationTime.get(socket.id) === operationTime) {
+            persistedOperationTime.delete(socket.id)
+          }
+        }, 60_000).unref?.()
         this.activityRepository.create({
           type: Activity.ReadDuration,
           payload: {
