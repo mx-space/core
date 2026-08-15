@@ -1,3 +1,12 @@
+## [14.0.1](https://github.com/mx-space/core/compare/v14.0.0...v14.0.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* **activity:** prevent private note data leakage ([d255b2e](https://github.com/mx-space/core/commit/d255b2e36b2712931a82c821ff0d164f0519e8f9))
+* **s3:** add sanitized transport diagnostics ([d2b2042](https://github.com/mx-space/core/commit/d2b204218be288809afa12f8ebc08b9a4443e6a2))
+* **s3:** avoid explicit content length in fetch uploads ([3b176de](https://github.com/mx-space/core/commit/3b176de7c7e756f8953d33f5922f46766b4dd288))
+
 # [14.0.0](https://github.com/mx-space/core/compare/v13.30.0...v14.0.0) (2026-08-15)
 
 
