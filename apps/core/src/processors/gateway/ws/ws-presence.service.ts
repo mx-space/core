@@ -12,7 +12,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { RedisService } from '../../redis/redis.service'
-import type { WsNamespace } from './ws.types'
+import type { WsLocalSnapshot, WsNamespace } from './ws.types'
 
 const NODE_TTL_SECONDS = 30
 const HEARTBEAT_MS = 10_000
@@ -37,7 +37,7 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WsPresenceService.name)
   readonly nodeId = `${hostname()}-${process.pid}-${randomBytes(2).toString('hex')}`
 
-  private readonly localIndexes = new Map<WsNamespace, () => string[]>()
+  private readonly localIndexes = new Map<WsNamespace, () => WsLocalSnapshot>()
 
   private heartbeatTimer?: ReturnType<typeof setInterval>
   private sweepTimer?: ReturnType<typeof setInterval>
@@ -203,8 +203,8 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  registerLocalIndex(ns: WsNamespace, liveIds: () => string[]): void {
-    this.localIndexes.set(ns, liveIds)
+  registerLocalIndex(ns: WsNamespace, snapshot: () => WsLocalSnapshot): void {
+    this.localIndexes.set(ns, snapshot)
   }
 
   async sweepOnce(): Promise<void> {
@@ -223,14 +223,17 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  // A write that fails during disconnect (transient redis outage) leaves an
-  // entry owned by this still-alive node, which the dead-node sweep can never
-  // reclaim. Reconcile our own entries against the live local registry.
+  // Writes that fail during connect/disconnect (transient redis outage) leave
+  // this still-alive node's records diverged from local truth in both
+  // directions, and the dead-node sweep can never touch them. Reconcile: drop
+  // owned entries with no live connection, and re-add live connections and
+  // room memberships the registry knows but redis lost.
   private async reconcileOwnEntries(): Promise<void> {
     for (const ns of WS_NAMESPACES) {
-      const liveIds = this.localIndexes.get(ns)
-      if (!liveIds) continue
-      const live = new Set(liveIds())
+      const snapshot = this.localIndexes.get(ns)
+      if (!snapshot) continue
+      const { conns: liveConns, rooms: liveRooms } = snapshot()
+      const live = new Set(liveConns)
 
       const conns = await this.redis.hgetall(this.connsKey(ns))
       const zombies = Object.entries(conns)
@@ -242,6 +245,14 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
         await this.redis.hdel(getRedisKey(RedisKeys.Socket), ...zombies)
       }
 
+      const missingConns = liveConns.filter((id) => !(id in conns))
+      if (missingConns.length > 0) {
+        await this.redis.hset(
+          this.connsKey(ns),
+          Object.fromEntries(missingConns.map((id) => [id, this.nodeId])),
+        )
+      }
+
       const rooms = await this.redis.smembers(this.roomsKey(ns))
       for (const room of rooms) {
         const members = await this.redis.hgetall(this.roomKey(ns, room))
@@ -251,6 +262,19 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
         if (deadMembers.length === 0) continue
 
         await this.pruneRoomIfEmpty(ns, room, deadMembers)
+      }
+
+      for (const [room, memberIds] of Object.entries(liveRooms)) {
+        const members = await this.redis.hgetall(this.roomKey(ns, room))
+        const missing = memberIds.filter(
+          (id) => live.has(id) && !(id in members),
+        )
+        if (missing.length === 0) continue
+        await this.redis.hset(
+          this.roomKey(ns, room),
+          Object.fromEntries(missing.map((id) => [id, this.nodeId])),
+        )
+        await this.redis.sadd(this.roomsKey(ns), room)
       }
     }
   }

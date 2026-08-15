@@ -52,7 +52,9 @@ declare module '~/types/socket-meta' {
 
 const langRoom = (lang: string) => `lang:${lang}`
 
-@WebSocketGateway({ path: '/ws/web' })
+// ws defaults maxPayload to 100 MiB; cap at the ~1 MiB the socket.io
+// transport enforced so unauthenticated clients cannot buffer-bomb the node.
+@WebSocketGateway({ path: '/ws/web', maxPayload: 1024 * 1024 })
 export class WebEventsGateway
   extends WsGatewayBase
   implements OnGatewayConnection, OnGatewayDisconnect

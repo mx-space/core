@@ -14,3 +14,8 @@ export interface WsBusFrame {
   rooms?: string[]
   exclude?: string[]
 }
+
+export interface WsLocalSnapshot {
+  conns: string[]
+  rooms: Record<string, string[]>
+}

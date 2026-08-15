@@ -30,7 +30,7 @@ const AI_TASK_ROOM_PREFIX = 'ai-task:'
 
 const AuthGateway = createAuthGateway({ namespace: 'admin' })
 
-@WebSocketGateway({ path: '/ws/admin' })
+@WebSocketGateway({ path: '/ws/admin', maxPayload: 1024 * 1024 })
 export class AdminEventsGateway
   extends AuthGateway
   implements OnGatewayConnection, OnGatewayDisconnect
