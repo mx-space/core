@@ -95,6 +95,10 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
     this.heartbeatTimer = undefined
     this.sweepTimer = undefined
 
+    // Reclaim our own conn/room entries before deregistering: sweepOnce only
+    // discovers node ids still in the nodes set, so anything left behind after
+    // the srem below would be unreclaimable phantom state.
+    await this.sweepDeadNode(this.nodeId).catch(() => undefined)
     await this.redis.del(this.nodeKey()).catch(() => undefined)
     await this.redis.srem(this.nodesKey(), this.nodeId).catch(() => undefined)
   }
