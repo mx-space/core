@@ -8,6 +8,7 @@ export const CronTaskType = {
   DeleteExpiredJWT: 'cron:delete-expired-jwt',
   RebuildSearchIndex: 'cron:rebuild-search-index',
   CleanCommentUploads: 'cron:clean-comment-uploads',
+  ResetReviewDemo: 'cron:reset-review-demo',
 } as const
 
 export type CronTaskTypeValue = (typeof CronTaskType)[keyof typeof CronTaskType]
@@ -77,6 +78,12 @@ export const CronTaskMetas: Record<
     description: 'Clean up comment image uploads',
     cronExpression: '*/15 * * * *',
     methodName: 'cleanCommentUploads',
+  },
+  [CronTaskType.ResetReviewDemo]: {
+    name: 'resetReviewDemo',
+    description: 'Reset App Review demo reader content and profile',
+    cronExpression: 'EVERY_DAY_AT_MIDNIGHT',
+    methodName: 'resetReviewDemo',
   },
 }
 

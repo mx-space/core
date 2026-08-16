@@ -24,6 +24,7 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import { AuthInstanceInjectKey } from './auth.constant'
 import type { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
+import { ReviewDemoService } from './review-demo.service'
 
 const TokenSchema = z.object({
   expired: z.preprocess(
@@ -43,6 +44,7 @@ export class AuthController {
     private readonly eventEmitter: EventEmitter2,
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
+    private readonly reviewDemoService: ReviewDemoService,
   ) {}
 
   @Get('token')
@@ -119,5 +121,14 @@ export class AuthController {
   })
   async getProviders() {
     return this.authInstance.get().api.getProviders()
+  }
+
+  @Get('review-demo')
+  @Auth()
+  @HttpCache({
+    disable: true,
+  })
+  getReviewDemo() {
+    return this.reviewDemoService.getCredentials()
   }
 }

@@ -129,4 +129,12 @@ export class PollVoteRepository extends BaseRepository {
       .where(eq(pollVoteOptions.voteId, idBig))
     return rows.map((r) => r.optionId)
   }
+
+  async deleteByFingerprint(fingerprint: string): Promise<number> {
+    const deleted = await this.db
+      .delete(pollVotes)
+      .where(eq(pollVotes.voterFingerprint, fingerprint))
+      .returning({ id: pollVotes.id })
+    return deleted.length
+  }
 }

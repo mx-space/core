@@ -151,6 +151,8 @@ describe('AuthMiddleware', () => {
       expect(shouldBypassBetterAuth('/auth/token')).toBe(true)
       expect(shouldBypassBetterAuth('/auth/session?x=1')).toBe(true)
       expect(shouldBypassBetterAuth('/api/v2/auth/providers/')).toBe(true)
+      expect(shouldBypassBetterAuth('/auth/review-demo')).toBe(true)
+      expect(shouldBypassBetterAuth('/api/v2/auth/review-demo/')).toBe(true)
 
       expect(shouldBypassBetterAuth('/auth/device/token')).toBe(false)
       expect(shouldBypassBetterAuth('/api/v2/auth/device/token')).toBe(false)

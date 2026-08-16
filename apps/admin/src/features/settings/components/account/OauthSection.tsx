@@ -33,7 +33,12 @@ export function OauthSection() {
       toast.error(getErrorMessage(error, t('settings.oauth.error.save'))),
     onSuccess: async () => {
       toast.success(t('settings.oauth.success.save'))
-      await queryClient.invalidateQueries({ queryKey: accountQueryKey })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: accountQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.settings.reviewDemo(),
+        }),
+      ])
     },
   })
 

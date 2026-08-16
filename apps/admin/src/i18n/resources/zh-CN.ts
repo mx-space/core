@@ -2512,6 +2512,18 @@ export const zhCN = {
     '粘贴该 Endpoint 的 Secret Key',
   'settings.membership.webhook.title': 'Webhook 回调',
   'settings.oauth.action.save': '保存配置',
+  'settings.oauth.apple.bundleIdHelp':
+    '原生 App 的 Bundle ID，仅用于校验 iOS 端签发的 id token。纯 Web 登录可留空。',
+  'settings.oauth.apple.callbackHelp':
+    '将此地址原样填入 Services ID → Sign in with Apple → Return URLs，Domains 填不含协议与路径的域名。',
+  'settings.oauth.apple.keyIdHelp':
+    'Keys 中勾选 Sign in with Apple 所创建密钥的 10 位 ID，其 Primary App ID 须与上方一致。',
+  'settings.oauth.apple.privateKeyHelp':
+    '粘贴下载的 .p8 文件全文，含 BEGIN PRIVATE KEY 与 END PRIVATE KEY 两行。',
+  'settings.oauth.apple.servicesIdHelp':
+    '在 Identifiers → Services IDs 中单独创建的标识符，如 dev.example.web。它不是 App 的 Bundle ID，填 Bundle ID 会报 invalid_client。',
+  'settings.oauth.apple.teamIdHelp':
+    'Apple Developer 的 Membership 页面所示的 10 位 Team ID。',
   'settings.oauth.action.validate': '验证连接',
   'settings.oauth.callbackCopyAria': '复制 Callback URL',
   'settings.oauth.callbackLabel': 'Callback URL',
@@ -2520,6 +2532,15 @@ export const zhCN = {
   'settings.oauth.copySuccess': '已复制到剪贴板',
   'settings.oauth.description': '配置第三方账号登录方式。',
   'settings.oauth.error.save': '保存 OAuth 配置失败',
+  'settings.oauth.reviewDemo.copyEmailAria': '复制审核邮箱',
+  'settings.oauth.reviewDemo.copyPasswordAria': '复制审核密码',
+  'settings.oauth.reviewDemo.email': '审核邮箱',
+  'settings.oauth.reviewDemo.helper':
+    '创建供 App Store 审核使用的读者账号。评论与资料每日重置。即使关闭密码登录，仍可用邮箱表单登录此账号。',
+  'settings.oauth.reviewDemo.password': '审核密码',
+  'settings.oauth.reviewDemo.provisionFailed':
+    'Demo 账号已开启但尚未就绪，请再保存一次或查看日志。',
+  'settings.oauth.reviewDemo.switch': 'App 审核 Demo 账号',
   'settings.oauth.secretKeptPlaceholder': '留空则不修改',
   'settings.oauth.success.save': 'OAuth 配置已保存',
   'settings.oauth.switch.enabled': '启用',

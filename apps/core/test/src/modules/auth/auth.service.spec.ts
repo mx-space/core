@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { AppException } from '~/common/errors/exception.types'
 import { AuthService } from '~/modules/auth/auth.service'
+import {
+  REVIEW_DEMO_EMAIL,
+  REVIEW_DEMO_HANDLE,
+} from '~/modules/auth/review-demo.constants'
 
 const createService = () => {
   const authRepository = {
@@ -17,6 +21,8 @@ const createService = () => {
     countOwners: vi.fn(),
     existsByUsernameOrEmail: vi.fn(),
     createReader: vi.fn(),
+    setRole: vi.fn(),
+    setOwnersExceptToReader: vi.fn(),
   }
   const ownerRepository = {
     upsertByReaderId: vi.fn(),
@@ -134,5 +140,20 @@ describe('AuthService', () => {
     expect(sessionHeaders.get('authorization')).toBe(
       'Bearer device-access-token',
     )
+  })
+
+  it('rejects transferring owner to the app review demo reader', async () => {
+    const { readerRepository, service } = createService()
+    readerRepository.findById.mockResolvedValue({
+      id: 'demo-1',
+      email: REVIEW_DEMO_EMAIL,
+      handle: REVIEW_DEMO_HANDLE,
+      username: REVIEW_DEMO_HANDLE,
+    })
+
+    await expect(service.transferOwnerRole('demo-1')).rejects.toThrow(
+      AppException,
+    )
+    expect(readerRepository.setRole).not.toHaveBeenCalled()
   })
 })

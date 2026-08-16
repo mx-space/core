@@ -30,6 +30,7 @@ import { db } from '~/processors/database/postgres.provider'
 
 import { APPLE_ORIGIN } from './apple-client-secret'
 import { validateMxUsername } from './auth.username-validator'
+import { denyEmailSignIn, type EmailSignInGate } from './email-sign-in-gate'
 
 const bcryptRegex = /^\$2[aby]\$/
 const isBcryptHash = (value?: string | null) =>
@@ -96,6 +97,7 @@ export async function CreateAuth(
   passkeyOptions?: PasskeyOptions,
   serverUrl?: string,
   idGenerator?: SnowflakeGenerator,
+  getEmailSignInGate?: () => Promise<EmailSignInGate>,
 ) {
   const deviceVerificationPath = isDev
     ? '/device'
@@ -237,6 +239,22 @@ export async function CreateAuth(
           throw new APIError('FORBIDDEN', {
             message: 'role cannot be modified',
           })
+        }
+        if (ctx.path === '/sign-in/email') {
+          const email =
+            typeof ctx.body?.email === 'string' ? ctx.body.email : ''
+          const gate = getEmailSignInGate
+            ? await getEmailSignInGate()
+            : {
+                disablePasswordLogin: false,
+                reviewDemoEnabled: false,
+                reviewDemoBanned: false,
+              }
+          if (denyEmailSignIn(email, gate)) {
+            throw new APIError('UNAUTHORIZED', {
+              message: 'Invalid email or password',
+            })
+          }
         }
       }),
       after: createAuthMiddleware(async (ctx) => {

@@ -138,10 +138,26 @@ export const oauthProviders: Array<{
   { fields: clientCredentialFields, label: 'Google', type: 'google' },
   {
     fields: [
-      { key: 'clientId', label: 'Services ID', placeholder: 'dev.example.web' },
-      { key: 'teamId', label: 'Team ID', placeholder: 'ABCDE12345' },
-      { key: 'keyId', label: 'Key ID', placeholder: 'ABC1234567' },
       {
+        descriptionKey: 'settings.oauth.apple.servicesIdHelp',
+        key: 'clientId',
+        label: 'Services ID',
+        placeholder: 'dev.example.web',
+      },
+      {
+        descriptionKey: 'settings.oauth.apple.teamIdHelp',
+        key: 'teamId',
+        label: 'Team ID',
+        placeholder: 'ABCDE12345',
+      },
+      {
+        descriptionKey: 'settings.oauth.apple.keyIdHelp',
+        key: 'keyId',
+        label: 'Key ID',
+        placeholder: 'ABC1234567',
+      },
+      {
+        descriptionKey: 'settings.oauth.apple.privateKeyHelp',
         key: 'privateKey',
         label: 'Private Key (.p8)',
         multiline: true,
@@ -149,6 +165,7 @@ export const oauthProviders: Array<{
         secret: true,
       },
       {
+        descriptionKey: 'settings.oauth.apple.bundleIdHelp',
         key: 'appBundleIdentifier',
         label: 'App Bundle ID',
         optional: true,

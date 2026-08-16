@@ -115,6 +115,7 @@ export interface OauthOptions {
 }
 
 export interface OauthProviderField {
+  descriptionKey?: TranslationKey
   key: string
   label: string
   multiline?: boolean

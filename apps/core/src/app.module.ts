@@ -26,6 +26,7 @@ import { AggregateModule } from './modules/aggregate/aggregate.module'
 import { AiModule } from './modules/ai/ai.module'
 import { AnalyzeModule } from './modules/analyze/analyze.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { ReviewDemoModule } from './modules/auth/review-demo.module'
 import { BackupModule } from './modules/backup/backup.module'
 import { CategoryModule } from './modules/category/category.module'
 import { CommentModule } from './modules/comment/comment.module'
@@ -94,6 +95,7 @@ import { SampleResponseInterceptor } from './shared/sample/sample-response.inter
     AnalyzeModule,
     EnrichmentModule,
     AuthModule.forRoot(),
+    ReviewDemoModule,
     BackupModule,
     BizHelperModule,
     CategoryModule,

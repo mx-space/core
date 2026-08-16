@@ -1,6 +1,5 @@
-import type { TokenModel } from '~/models/token'
-
 import { translate } from '~/i18n/translate'
+import type { TokenModel } from '~/models/token'
 import { authClient } from '~/utils/authjs/auth'
 
 import { getJson, postJson, requestJson } from './http'
@@ -23,8 +22,17 @@ export interface LoggedStatus {
   ok: boolean | number
 }
 
+export type ReviewDemoResponse =
+  | { enabled: false }
+  | { enabled: true; email: string; password: string }
+  | { enabled: true; email: string; error: 'provision_failed' }
+
 export function checkLogged() {
   return getJson<LoggedStatus>('/owner/check_logged')
+}
+
+export function getReviewDemo() {
+  return getJson<ReviewDemoResponse>('/auth/review-demo')
 }
 
 export function getTokens() {
