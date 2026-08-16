@@ -57,7 +57,7 @@ export function OauthProviderSection(props: {
   const callbackUrl = `${API_URL}/auth/callback/${props.type}`
   const savedReviewDemo = props.data.public.reviewDemoEnabled === 'true'
   const reviewDemoQuery = useQuery({
-    enabled: props.type === 'apple' && savedReviewDemo,
+    enabled: props.type === 'apple' && savedReviewDemo && reviewDemoEnabled,
     queryFn: getReviewDemo,
     queryKey: adminQueryKeys.settings.reviewDemo(),
   })
@@ -173,7 +173,9 @@ export function OauthProviderSection(props: {
               label={t('settings.oauth.reviewDemo.switch')}
               onCheckedChange={setReviewDemoEnabled}
             />
-            {savedReviewDemo && reviewDemoQuery.data?.enabled === true ? (
+            {savedReviewDemo &&
+            reviewDemoEnabled &&
+            reviewDemoQuery.data?.enabled === true ? (
               'password' in reviewDemoQuery.data ? (
                 <>
                   <ReviewDemoSecretRow

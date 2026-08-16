@@ -1,10 +1,13 @@
 import { randomBytes } from 'node:crypto'
 
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { hashPassword } from 'better-auth/crypto'
+import type pkg from 'pg'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
+import { PG_POOL_TOKEN } from '~/constants/system.constant'
+import { withAdvisoryLock } from '~/processors/database/postgres.lock'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { CommentRepository } from '../comment/comment.repository'
@@ -13,10 +16,10 @@ import { ConfigsService } from '../configs/configs.service'
 import { PollVoteRepository } from '../poll/poll-vote.repository'
 import { ReaderRepository } from '../reader/reader.repository'
 import { AuthRepository } from './auth.repository'
-import type { EmailSignInGate } from './email-sign-in-gate'
+import type { CredentialSignInGate } from './email-sign-in-gate'
 import {
   isReviewDemoEnabled,
-  isReviewDemoIdentity,
+  isReviewDemoProvisioned,
   REVIEW_DEMO_BAN_REASON,
   REVIEW_DEMO_EMAIL,
   REVIEW_DEMO_HANDLE,
@@ -29,11 +32,12 @@ export type ReviewDemoCredentials =
   | { enabled: true; email: string; password: string }
   | { enabled: true; email: string; error: 'provision_failed' }
 
+const REVIEW_DEMO_SYNC_LOCK_KEY = -3216835155137105914n
+
 @Injectable()
 export class ReviewDemoService {
-  private readonly logger = new Logger(ReviewDemoService.name)
-  private syncing = false
-  private readonly syncWaiters: Array<() => void> = []
+  private syncPromise?: Promise<void>
+  private syncRerunRequested = false
 
   constructor(
     private readonly configsService: ConfigsService,
@@ -44,6 +48,7 @@ export class ReviewDemoService {
     private readonly commentService: CommentService,
     private readonly commentRepository: CommentRepository,
     private readonly pollVoteRepository: PollVoteRepository,
+    @Inject(PG_POOL_TOKEN) private readonly postgresPool: pkg.Pool,
   ) {}
 
   generatePassword() {
@@ -56,15 +61,14 @@ export class ReviewDemoService {
   }
 
   async waitForSync() {
-    if (this.syncing) {
-      await new Promise<void>((resolve) => this.syncWaiters.push(resolve))
+    if (this.syncPromise) {
+      await this.syncPromise
       return
     }
     await this.sync()
   }
 
-  async getEmailSignInGate(): Promise<EmailSignInGate> {
-    await this.waitForSync()
+  async getCredentialSignInGate(): Promise<CredentialSignInGate> {
     const [authSecurity, oauth] = await Promise.all([
       this.configsService.get('authSecurity'),
       this.configsService.get('oauth'),
@@ -91,7 +95,7 @@ export class ReviewDemoService {
     if (
       !password ||
       !reader ||
-      !isReviewDemoIdentity(reader) ||
+      !isReviewDemoProvisioned(reader) ||
       reader.bannedAt
     ) {
       return {
@@ -103,15 +107,34 @@ export class ReviewDemoService {
     return { enabled: true, email: REVIEW_DEMO_EMAIL, password }
   }
 
-  async sync() {
-    if (this.syncing) return
-    this.syncing = true
-    try {
-      await this.syncUnlocked()
-    } finally {
-      this.syncing = false
-      const waiters = this.syncWaiters.splice(0)
-      for (const waiter of waiters) waiter()
+  sync(): Promise<void> {
+    if (this.syncPromise) {
+      this.syncRerunRequested = true
+      return this.syncPromise
+    }
+    this.syncPromise = this.runSyncLoop().finally(() => {
+      this.syncPromise = undefined
+    })
+    return this.syncPromise
+  }
+
+  private async runSyncLoop() {
+    let lastError: unknown
+    do {
+      this.syncRerunRequested = false
+      try {
+        await withAdvisoryLock(
+          this.postgresPool,
+          REVIEW_DEMO_SYNC_LOCK_KEY,
+          () => this.syncUnlocked(),
+        )
+        lastError = undefined
+      } catch (error) {
+        lastError = error
+      }
+    } while (this.syncRerunRequested)
+    if (lastError) {
+      throw lastError
     }
   }
 
@@ -121,18 +144,15 @@ export class ReviewDemoService {
     const reader = await this.readerRepository.findByEmail(REVIEW_DEMO_EMAIL)
 
     if (!enabled) {
-      if (reader && isReviewDemoIdentity(reader)) {
-        await this.readerRepository.setBanned(reader.id, {
-          bannedAt: new Date(),
-          banReason: REVIEW_DEMO_BAN_REASON,
-        })
+      if (reader) {
+        if (!reader.bannedAt) {
+          await this.readerRepository.setBanned(reader.id, {
+            bannedAt: new Date(),
+            banReason: REVIEW_DEMO_BAN_REASON,
+          })
+        }
         await this.readerRepository.deleteSessionsForUser(reader.id)
       }
-      return
-    }
-
-    if (reader && !isReviewDemoIdentity(reader)) {
-      this.logger.error('review demo email is occupied by a non-demo reader')
       return
     }
 
@@ -168,12 +188,31 @@ export class ReviewDemoService {
       return
     }
 
-    if (reader.bannedAt) {
+    const shouldUnban =
+      Boolean(reader.bannedAt) && reader.banReason === REVIEW_DEMO_BAN_REASON
+    if (shouldUnban) {
       await this.readerRepository.unsetBanned(reader.id)
+    }
+    const identityChanged =
+      reader.email !== REVIEW_DEMO_EMAIL ||
+      reader.emailVerified !== true ||
+      reader.handle !== REVIEW_DEMO_HANDLE ||
+      reader.username !== REVIEW_DEMO_HANDLE ||
+      reader.role !== 'reader'
+    if (identityChanged || shouldUnban) {
       await this.readerRepository.update(reader.id, {
-        name: REVIEW_DEMO_NAME,
-        displayUsername: REVIEW_DEMO_NAME,
-        image: null,
+        email: REVIEW_DEMO_EMAIL,
+        emailVerified: true,
+        handle: REVIEW_DEMO_HANDLE,
+        role: 'reader',
+        username: REVIEW_DEMO_HANDLE,
+        ...(shouldUnban
+          ? {
+              displayUsername: REVIEW_DEMO_NAME,
+              image: null,
+              name: REVIEW_DEMO_NAME,
+            }
+          : {}),
       })
     }
 
@@ -181,21 +220,20 @@ export class ReviewDemoService {
     const credential = accounts.find(
       (account) => account.providerId === 'credential',
     )
-    const passwordHash = await hashPassword(password)
     if (!credential) {
       await this.authRepository.createAccount({
         id: this.snowflakeService.nextId(),
         providerAccountId: reader.id,
         providerId: 'credential',
         userId: reader.id,
-        password: passwordHash,
+        password: await hashPassword(password),
       })
       return
     }
     if (generated) {
       await this.authRepository.updateAccountPassword(
         credential.id,
-        passwordHash,
+        await hashPassword(password),
       )
     }
   }
@@ -208,7 +246,7 @@ export class ReviewDemoService {
       return { skipped: true }
     }
     const reader = await this.readerRepository.findByEmail(REVIEW_DEMO_EMAIL)
-    if (!reader || !isReviewDemoIdentity(reader)) {
+    if (!reader) {
       return { skipped: true }
     }
     const comments = await this.commentRepository.findByFilter({

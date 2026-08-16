@@ -89,7 +89,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
         passkeyOptions,
         urls.serverUrl,
         this.snowflakeService,
-        () => this.reviewDemoService.getEmailSignInGate(),
+        () => this.reviewDemoService.getCredentialSignInGate(),
       )
       this.authHandler = handler
 

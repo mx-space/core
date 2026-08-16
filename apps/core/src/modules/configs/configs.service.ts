@@ -592,7 +592,9 @@ export class ConfigsService implements OnModuleInit {
       this.validateTtsProvider(nextConfig)
     }
 
-    encryptObject(instanceValue, key)
+    if (key !== 'oauth') {
+      encryptObject(instanceValue, key)
+    }
 
     switch (key) {
       case 'url': {
@@ -617,7 +619,10 @@ export class ConfigsService implements OnModuleInit {
         const value = instanceValue as unknown as OAuthConfig
         const current = await this.get('oauth')
 
-        const currentProvidersMap = (current.providers || []).reduce(
+        const currentProviders = (current.providers || []).map((provider) => ({
+          ...provider,
+        }))
+        const currentProvidersMap = currentProviders.reduce(
           (acc, item) => {
             acc[item.type] = item
             return acc
@@ -625,7 +630,6 @@ export class ConfigsService implements OnModuleInit {
           {} as Record<string, any>,
         )
 
-        const currentProviders = current.providers || []
         ;(value.providers || []).forEach((p) => {
           if (!currentProvidersMap[p.type]) {
             currentProviders.push(p)
@@ -634,20 +638,13 @@ export class ConfigsService implements OnModuleInit {
           }
         })
 
-        let nextAuthSecrets = value.secrets
-        if (value.secrets) {
-          nextAuthSecrets = merge(current.secrets, nextAuthSecrets)
-        }
-
-        let nextAuthPublic = value.public
-        if (value.public) {
-          nextAuthPublic = merge(current.public, nextAuthPublic)
-        }
-        const option = await this.patch(key as 'oauth', {
+        const nextOauth = {
           providers: currentProviders,
-          secrets: nextAuthSecrets,
-          public: nextAuthPublic,
-        })
+          public: merge(cloneDeep(current.public || {}), value.public || {}),
+          secrets: merge(cloneDeep(current.secrets || {}), value.secrets || {}),
+        }
+        encryptObject(nextOauth, key)
+        const option = await this.patch(key as 'oauth', nextOauth)
 
         await this.configVersionService.bump(ConfigVersionScopes.OAuth)
         return option

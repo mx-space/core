@@ -11,14 +11,22 @@ export function isReviewDemoEnabled(oauth: {
   return oauth.public?.apple?.[REVIEW_DEMO_PUBLIC_ENABLED_KEY] === 'true'
 }
 
-export function isReviewDemoIdentity(input: {
+export function isReviewDemoEmail(input: { email?: string | null }): boolean {
+  return input.email?.trim().toLowerCase() === REVIEW_DEMO_EMAIL
+}
+
+export function isReviewDemoProvisioned(input: {
   email?: string | null
+  emailVerified?: boolean | null
   handle?: string | null
+  role?: string | null
   username?: string | null
 }): boolean {
   return (
-    input.email === REVIEW_DEMO_EMAIL &&
-    (input.handle === REVIEW_DEMO_HANDLE ||
-      input.username === REVIEW_DEMO_HANDLE)
+    isReviewDemoEmail(input) &&
+    input.emailVerified === true &&
+    input.handle === REVIEW_DEMO_HANDLE &&
+    input.username === REVIEW_DEMO_HANDLE &&
+    input.role === 'reader'
   )
 }

@@ -1,3 +1,4 @@
+import { verifyPassword } from 'better-auth/crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -11,6 +12,47 @@ import { ReviewDemoService } from '~/modules/auth/review-demo.service'
 const DEMO_PASSWORD = 'generated-pass-1'
 const DEMO_ID = 'demo-reader-1'
 const ACCOUNT_ID = 'demo-account-1'
+
+type DemoAccount = {
+  id: string
+  password?: string
+  providerAccountId?: string
+  providerId: string
+  userId?: string
+}
+
+function createDeferred() {
+  let resolve!: () => void
+  const promise = new Promise<void>((innerResolve) => {
+    resolve = innerResolve
+  })
+  return { promise, resolve }
+}
+
+function createAdvisoryPool() {
+  let lockTail = Promise.resolve()
+  return {
+    connect: vi.fn(async () => {
+      let releaseLock = () => {}
+      return {
+        query: vi.fn(async (statement: string) => {
+          if (statement.includes('pg_advisory_lock')) {
+            const previousLock = lockTail
+            lockTail = new Promise<void>((resolve) => {
+              releaseLock = resolve
+            })
+            await previousLock
+          }
+          if (statement.includes('pg_advisory_unlock')) {
+            releaseLock()
+          }
+          return { rows: [] }
+        }),
+        release: vi.fn(),
+      }
+    }),
+  }
+}
 
 function demoReader(overrides?: Record<string, unknown>) {
   return {
@@ -33,9 +75,11 @@ function createHarness(options?: {
   enabled?: boolean
   password?: string
   reader?: ReturnType<typeof demoReader> | null
-  accounts?: Array<{ id: string; providerId: string }>
+  accounts?: DemoAccount[]
   disablePasswordLogin?: boolean
 }) {
+  let reader = options?.reader === undefined ? null : options.reader
+  const accounts = [...(options?.accounts ?? [])]
   const oauth = {
     public: {
       apple: {
@@ -69,19 +113,42 @@ function createHarness(options?: {
     ),
   }
   const readerRepository = {
-    findByEmail: vi
-      .fn()
-      .mockResolvedValue(options?.reader === undefined ? null : options.reader),
-    create: vi.fn().mockResolvedValue(demoReader()),
-    update: vi.fn(),
-    setBanned: vi.fn(),
-    unsetBanned: vi.fn(),
+    findByEmail: vi.fn(async () => reader),
+    create: vi.fn(async (input: ReturnType<typeof demoReader>) => {
+      reader = demoReader(input)
+      return reader
+    }),
+    update: vi.fn(
+      async (_id: string, patch: Partial<ReturnType<typeof demoReader>>) => {
+        if (!reader) return null
+        reader = { ...reader, ...patch }
+        return reader
+      },
+    ),
+    setBanned: vi.fn(
+      async (_id: string, patch: { bannedAt: Date; banReason: string }) => {
+        if (!reader) return null
+        reader = { ...reader, ...patch }
+        return reader
+      },
+    ),
+    unsetBanned: vi.fn(async () => {
+      if (!reader) return null
+      reader = { ...reader, bannedAt: null, banReason: null }
+      return reader
+    }),
     deleteSessionsForUser: vi.fn(),
   }
   const authRepository = {
-    createAccount: vi.fn(),
-    findAccountsForUser: vi.fn().mockResolvedValue(options?.accounts ?? []),
-    updateAccountPassword: vi.fn(),
+    createAccount: vi.fn(async (account: DemoAccount) => {
+      accounts.push(account)
+      return account
+    }),
+    findAccountsForUser: vi.fn(async () => accounts),
+    updateAccountPassword: vi.fn(async (id: string, password: string) => {
+      const account = accounts.find((item) => item.id === id)
+      if (account) account.password = password
+    }),
   }
   const commentService = {
     softDeleteComment: vi.fn(),
@@ -98,6 +165,13 @@ function createHarness(options?: {
       .mockReturnValueOnce(DEMO_ID)
       .mockReturnValueOnce(ACCOUNT_ID),
   }
+  const postgresClient = {
+    query: vi.fn().mockResolvedValue({ rows: [] }),
+    release: vi.fn(),
+  }
+  const postgresPool = {
+    connect: vi.fn().mockResolvedValue(postgresClient),
+  }
   const service = new ReviewDemoService(
     configsService as any,
     readerRepository as any,
@@ -106,6 +180,7 @@ function createHarness(options?: {
     commentService as any,
     commentRepository as any,
     pollVoteRepository as any,
+    postgresPool as any,
   )
   vi.spyOn(service, 'generatePassword').mockReturnValue(DEMO_PASSWORD)
   return {
@@ -113,10 +188,14 @@ function createHarness(options?: {
     commentRepository,
     commentService,
     configsService,
+    getReader: () => reader,
     oauth,
     pollVoteRepository,
     readerRepository,
     service,
+    setEnabled: (enabled: boolean) => {
+      oauth.public.apple.reviewDemoEnabled = enabled ? 'true' : ''
+    },
     snowflakeService,
   }
 }
@@ -190,11 +269,19 @@ describe('ReviewDemoService', () => {
     await service.sync()
 
     expect(readerRepository.unsetBanned).toHaveBeenCalledWith(DEMO_ID)
-    expect(readerRepository.update).toHaveBeenCalledWith(DEMO_ID, {
-      name: REVIEW_DEMO_NAME,
-      displayUsername: REVIEW_DEMO_NAME,
-      image: null,
-    })
+    expect(readerRepository.update).toHaveBeenCalledWith(
+      DEMO_ID,
+      expect.objectContaining({
+        displayUsername: REVIEW_DEMO_NAME,
+        email: REVIEW_DEMO_EMAIL,
+        emailVerified: true,
+        handle: REVIEW_DEMO_HANDLE,
+        image: null,
+        name: REVIEW_DEMO_NAME,
+        role: 'reader',
+        username: REVIEW_DEMO_HANDLE,
+      }),
+    )
     expect(configsService.patchAndValid).not.toHaveBeenCalled()
   })
 
@@ -215,13 +302,16 @@ describe('ReviewDemoService', () => {
     expect(readerRepository.create).not.toHaveBeenCalled()
   })
 
-  it('does not overwrite a non-demo occupant of the reserved email', async () => {
+  it('restores immutable identity fields for the reserved email', async () => {
     const { authRepository, readerRepository, service } = createHarness({
       enabled: true,
+      password: 'kept-password',
       reader: demoReader({
         handle: 'someone-else',
+        role: 'owner',
         username: 'someone-else',
       }),
+      accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
     })
 
     await service.sync()
@@ -231,8 +321,18 @@ describe('ReviewDemoService', () => {
     await expect(service.getCredentials()).resolves.toEqual({
       enabled: true,
       email: REVIEW_DEMO_EMAIL,
-      error: 'provision_failed',
+      password: 'kept-password',
     })
+    expect(readerRepository.update).toHaveBeenCalledWith(
+      DEMO_ID,
+      expect.objectContaining({
+        email: REVIEW_DEMO_EMAIL,
+        emailVerified: true,
+        handle: REVIEW_DEMO_HANDLE,
+        role: 'reader',
+        username: REVIEW_DEMO_HANDLE,
+      }),
+    )
   })
 
   it('regenerates a missing password onto an existing credential account', async () => {
@@ -254,19 +354,222 @@ describe('ReviewDemoService', () => {
     expect(authRepository.createAccount).not.toHaveBeenCalled()
   })
 
-  it('maps disablePasswordLogin and bannedAt into the sign-in gate', async () => {
-    const { service } = createHarness({
+  it('preserves a manual ban while reading the sign-in gate and credentials', async () => {
+    const { getReader, readerRepository, service } = createHarness({
       enabled: true,
       password: 'kept-password',
-      reader: demoReader({ bannedAt: new Date() }),
+      reader: demoReader({
+        bannedAt: new Date(),
+        banReason: 'manual-abuse-ban',
+      }),
       disablePasswordLogin: true,
     })
 
-    await expect(service.getEmailSignInGate()).resolves.toEqual({
+    await expect(service.getCredentialSignInGate()).resolves.toEqual({
       disablePasswordLogin: true,
       reviewDemoEnabled: true,
       reviewDemoBanned: true,
     })
+    await expect(service.getCredentials()).resolves.toEqual({
+      enabled: true,
+      email: REVIEW_DEMO_EMAIL,
+      error: 'provision_failed',
+    })
+    expect(readerRepository.unsetBanned).not.toHaveBeenCalled()
+    expect(getReader()?.banReason).toBe('manual-abuse-ban')
+  })
+
+  it('unbans only the service ban across an off-to-on transition', async () => {
+    const { getReader, oauth, readerRepository, service, setEnabled } =
+      createHarness({
+        enabled: false,
+        password: 'kept-password',
+        reader: demoReader(),
+        accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
+      })
+
+    await service.sync()
+    expect(getReader()).toMatchObject({
+      id: DEMO_ID,
+      banReason: REVIEW_DEMO_BAN_REASON,
+    })
+
+    setEnabled(true)
+    await service.sync()
+
+    expect(readerRepository.unsetBanned).toHaveBeenCalledWith(DEMO_ID)
+    expect(getReader()).toMatchObject({
+      id: DEMO_ID,
+      bannedAt: null,
+      banReason: null,
+    })
+    expect(oauth.secrets.apple.reviewDemoPassword).toBe('kept-password')
+  })
+
+  it('keeps the generated identity and password through disable and re-enable', async () => {
+    const {
+      authRepository,
+      getReader,
+      oauth,
+      readerRepository,
+      service,
+      setEnabled,
+    } = createHarness({ enabled: true })
+
+    await service.sync()
+    const readerId = getReader()?.id
+    const password = oauth.secrets.apple.reviewDemoPassword
+    setEnabled(false)
+    await service.sync()
+    setEnabled(true)
+    await service.sync()
+
+    expect(getReader()?.id).toBe(readerId)
+    expect(oauth.secrets.apple.reviewDemoPassword).toBe(password)
+    expect(service.generatePassword).toHaveBeenCalledOnce()
+    expect(readerRepository.create).toHaveBeenCalledOnce()
+    expect(authRepository.createAccount).toHaveBeenCalledOnce()
+  })
+
+  it('keeps a manual ban across an off-to-on transition', async () => {
+    const { getReader, readerRepository, service, setEnabled } = createHarness({
+      enabled: false,
+      password: 'kept-password',
+      reader: demoReader({
+        bannedAt: new Date(),
+        banReason: 'manual-abuse-ban',
+      }),
+      accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
+    })
+
+    await service.sync()
+    setEnabled(true)
+    await service.sync()
+
+    expect(readerRepository.setBanned).not.toHaveBeenCalled()
+    expect(readerRepository.unsetBanned).not.toHaveBeenCalled()
+    expect(getReader()?.banReason).toBe('manual-abuse-ban')
+  })
+
+  it('coalesces overlapping sync calls and reruns with the latest toggle', async () => {
+    const started = createDeferred()
+    const release = createDeferred()
+    const { configsService, getReader, readerRepository, service, setEnabled } =
+      createHarness({ enabled: true })
+    const currentGet = configsService.get.getMockImplementation()!
+    configsService.get.mockImplementationOnce(async (key: string) => {
+      const value = structuredClone(await currentGet(key))
+      started.resolve()
+      await release.promise
+      return value
+    })
+
+    const firstSync = service.sync()
+    await started.promise
+    setEnabled(false)
+    const secondSync = service.sync()
+
+    expect(secondSync).toBe(firstSync)
+    release.resolve()
+    await secondSync
+
+    expect(readerRepository.create).toHaveBeenCalledOnce()
+    expect(readerRepository.setBanned).toHaveBeenCalledWith(DEMO_ID, {
+      bannedAt: expect.any(Date),
+      banReason: REVIEW_DEMO_BAN_REASON,
+    })
+    expect(readerRepository.deleteSessionsForUser).toHaveBeenCalledWith(DEMO_ID)
+    expect(getReader()?.banReason).toBe(REVIEW_DEMO_BAN_REASON)
+  })
+
+  it('serializes provisioning across service instances with the advisory lock', async () => {
+    const pool = createAdvisoryPool()
+    const oauth = {
+      public: { apple: { reviewDemoEnabled: 'true' } },
+      secrets: { apple: {} as Record<string, string> },
+    }
+    let reader: ReturnType<typeof demoReader> | null = null
+    const accounts: DemoAccount[] = []
+    const configsService = {
+      get: vi.fn(async () => oauth),
+      patchAndValid: vi.fn(
+        async (
+          _key: string,
+          value: { secrets: { apple: Record<string, string> } },
+        ) => {
+          Object.assign(oauth.secrets.apple, value.secrets.apple)
+          return oauth
+        },
+      ),
+    }
+    const readerRepository = {
+      create: vi.fn(async (input: ReturnType<typeof demoReader>) => {
+        reader = demoReader(input)
+        return reader
+      }),
+      deleteSessionsForUser: vi.fn(),
+      findByEmail: vi.fn(async () => reader),
+      setBanned: vi.fn(),
+      unsetBanned: vi.fn(),
+      update: vi.fn(),
+    }
+    const authRepository = {
+      createAccount: vi.fn(async (account: DemoAccount) => {
+        accounts.push(account)
+        return account
+      }),
+      findAccountsForUser: vi.fn(async () => accounts),
+      updateAccountPassword: vi.fn(),
+    }
+    const firstSnowflake = {
+      nextId: vi
+        .fn()
+        .mockReturnValueOnce('reader-a')
+        .mockReturnValueOnce('account-a'),
+    }
+    const secondSnowflake = {
+      nextId: vi
+        .fn()
+        .mockReturnValueOnce('reader-b')
+        .mockReturnValueOnce('account-b'),
+    }
+    const commentService = { softDeleteComment: vi.fn() }
+    const commentRepository = { findByFilter: vi.fn() }
+    const pollVoteRepository = { deleteByFingerprint: vi.fn() }
+    const firstService = new ReviewDemoService(
+      configsService as any,
+      readerRepository as any,
+      authRepository as any,
+      firstSnowflake as any,
+      commentService as any,
+      commentRepository as any,
+      pollVoteRepository as any,
+      pool,
+    )
+    const secondService = new ReviewDemoService(
+      configsService as any,
+      readerRepository as any,
+      authRepository as any,
+      secondSnowflake as any,
+      commentService as any,
+      commentRepository as any,
+      pollVoteRepository as any,
+      pool,
+    )
+    vi.spyOn(firstService, 'generatePassword').mockReturnValue('password-a')
+    vi.spyOn(secondService, 'generatePassword').mockReturnValue('password-b')
+
+    await Promise.all([firstService.sync(), secondService.sync()])
+
+    expect(configsService.patchAndValid).toHaveBeenCalledOnce()
+    expect(readerRepository.create).toHaveBeenCalledOnce()
+    expect(authRepository.createAccount).toHaveBeenCalledOnce()
+    const password = oauth.secrets.apple.reviewDemoPassword
+    expect(['password-a', 'password-b']).toContain(password)
+    await expect(
+      verifyPassword({ hash: accounts[0].password!, password }),
+    ).resolves.toBe(true)
+    expect(accounts[0].userId).toBe(reader?.id)
   })
 
   it('skips daily reset when the toggle is off', async () => {
@@ -292,8 +595,10 @@ describe('ReviewDemoService', () => {
       enabled: true,
       password: 'kept-password',
       reader: demoReader({
+        handle: 'changed-handle',
         name: 'Changed',
         image: 'https://example.com/x.png',
+        username: 'changed-username',
       }),
     })
     commentRepository.findByFilter.mockResolvedValue([

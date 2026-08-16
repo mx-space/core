@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  type CredentialSignInGate,
   denyEmailSignIn,
-  type EmailSignInGate,
+  denyUsernameSignIn,
 } from '~/modules/auth/email-sign-in-gate'
 import {
+  isReviewDemoEmail,
   isReviewDemoEnabled,
-  isReviewDemoIdentity,
+  isReviewDemoProvisioned,
   REVIEW_DEMO_EMAIL,
 } from '~/modules/auth/review-demo.constants'
 
-const open: EmailSignInGate = {
+const open: CredentialSignInGate = {
   disablePasswordLogin: false,
   reviewDemoEnabled: true,
   reviewDemoBanned: false,
@@ -56,7 +58,40 @@ describe('denyEmailSignIn', () => {
   })
 })
 
-describe('isReviewDemoEnabled / isReviewDemoIdentity', () => {
+describe('denyUsernameSignIn', () => {
+  it('denies every username when password login is disabled', () => {
+    expect(
+      denyUsernameSignIn('owner', {
+        ...open,
+        disablePasswordLogin: true,
+      }),
+    ).toBe(true)
+    expect(
+      denyUsernameSignIn('app-review', {
+        ...open,
+        disablePasswordLogin: true,
+      }),
+    ).toBe(true)
+  })
+
+  it('denies the demo username when the demo is disabled or banned', () => {
+    expect(
+      denyUsernameSignIn('app-review', {
+        ...open,
+        reviewDemoEnabled: false,
+      }),
+    ).toBe(true)
+    expect(
+      denyUsernameSignIn('app-review', {
+        ...open,
+        reviewDemoBanned: true,
+      }),
+    ).toBe(true)
+    expect(denyUsernameSignIn('owner', open)).toBe(false)
+  })
+})
+
+describe('review demo identity', () => {
   it('reads only apple.reviewDemoEnabled === "true"', () => {
     expect(
       isReviewDemoEnabled({
@@ -70,17 +105,36 @@ describe('isReviewDemoEnabled / isReviewDemoIdentity', () => {
     ).toBe(false)
   })
 
-  it('matches the reserved email and handle', () => {
+  it('reserves the email independently of mutable profile fields', () => {
+    const mutatedProfile = {
+      email: REVIEW_DEMO_EMAIL,
+      handle: 'someone-else',
+    }
     expect(
-      isReviewDemoIdentity({
+      isReviewDemoEmail({
         email: REVIEW_DEMO_EMAIL,
+      }),
+    ).toBe(true)
+    expect(isReviewDemoEmail(mutatedProfile)).toBe(true)
+  })
+
+  it('requires the complete immutable provisioned shape', () => {
+    expect(
+      isReviewDemoProvisioned({
+        email: REVIEW_DEMO_EMAIL,
+        emailVerified: true,
         handle: 'app-review',
+        role: 'reader',
+        username: 'app-review',
       }),
     ).toBe(true)
     expect(
-      isReviewDemoIdentity({
+      isReviewDemoProvisioned({
         email: REVIEW_DEMO_EMAIL,
+        emailVerified: true,
         handle: 'someone-else',
+        role: 'reader',
+        username: 'app-review',
       }),
     ).toBe(false)
   })
