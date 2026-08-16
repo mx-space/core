@@ -1,17 +1,20 @@
 ## TL;DR
 
-Delivers the fixes v14.0.1 never shipped (its release run failed on a corrupted lockfile): a private-note data leak, S3 upload failures, and the admin snippet editor.
+Adds reader activity/report endpoints and reader account deletion for the Yohaku Me tab, plus a toggleable App Review demo account for Apple sign-in review.
+
+## Highlights
+
+Readers can now see their own comment history via `GET /comments/reader/me`, flag problematic comments with `POST /comments/:id/report`, and delete their own account through Expo sessions. Together these endpoints back the Yohaku app's Me tab and satisfy app-store account-deletion requirements without any admin involvement.
+
+A new App Review demo account streamlines Apple sign-in review: enabling the toggle provisions a fixed reader identity (`app-review@users.invalid`) that can sign in via the email form even when password login is globally disabled. The account is reset daily by cron, its credentials surface in the admin panel, and disabling the toggle bans the account and cleans up its sessions.
 
 ## Changes
 
-- Last-year publication feed no longer returns private note bodies — only public metadata for published, password-free notes ([#2803](https://github.com/mx-space/core/pull/2803))
-- S3 uploads no longer send an explicit content length with fetch, fixing failures on some providers, and transport errors now log sanitized diagnostics ([#2797](https://github.com/mx-space/core/pull/2797))
-- Admin snippet editor keeps JSON readable after save ([#2806](https://github.com/mx-space/core/pull/2806))
-- pnpm lockfile repaired after stale renovate rebases spliced duplicate keys into it, which made CI ignore the lockfile and resolve a mixed dependency graph ([34e437d](https://github.com/mx-space/core/commit/34e437d35b4e384ac47092eb05aefdac8bad4bab))
-- Dependency updates: nanoid 5.1.16 and brace-expansion security ranges
+### Features
 
-v14.0.1 was tagged but its release pipeline failed before publishing; this release supersedes it.
+- Reader activity list (`GET /comments/reader/me`), public comment reporting (`POST /comments/:id/report`), and reader self-service account deletion for the Yohaku Me tab ([#2811](https://github.com/mx-space/core/pull/2811))
+- App Review demo account behind an admin toggle: idempotent provisioning, email sign-in bypass when password login is disabled, daily content/profile reset, and full cleanup on toggle-off ([#2811](https://github.com/mx-space/core/pull/2811))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.0.0...v14.0.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.0.2...v14.1.0

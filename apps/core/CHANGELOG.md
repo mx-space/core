@@ -1,9 +1,11 @@
+## [14.1.0](https://github.com/mx-space/core/compare/v14.0.2...v14.1.0) (2026-08-16)
+
+
+### Features
+
+* **auth:** app review demo account for Apple sign-in review ([#2811](https://github.com/mx-space/core/issues/2811)) ([4221c20](https://github.com/mx-space/core/commit/4221c20952f385fea8f8058c7f02abd7cac1a90b))
+
 ## [14.0.2](https://github.com/mx-space/core/compare/v14.0.1...v14.0.2) (2026-08-15)
-
-
-### Bug Fixes
-
-* **deps:** repair pnpm-lock corrupted by stale renovate rebases ([34e437d](https://github.com/mx-space/core/commit/34e437d35b4e384ac47092eb05aefdac8bad4bab)) — the v14.0.1 release run failed on the broken lockfile and never shipped; this release carries its content
 
 ## [14.0.1](https://github.com/mx-space/core/compare/v14.0.0...v14.0.1) (2026-08-15)
 
