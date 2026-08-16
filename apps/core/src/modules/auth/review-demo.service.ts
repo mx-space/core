@@ -1,13 +1,17 @@
 import { randomBytes } from 'node:crypto'
 
-import { forwardRef, Inject, Injectable } from '@nestjs/common'
+import type { OnModuleInit } from '@nestjs/common'
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import { hashPassword } from 'better-auth/crypto'
 import type pkg from 'pg'
 
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { PG_POOL_TOKEN } from '~/constants/system.constant'
-import { withAdvisoryLock } from '~/processors/database/postgres.lock'
+import {
+  REVIEW_DEMO_SYNC_LOCK_KEY,
+  withAdvisoryLock,
+} from '~/processors/database/postgres.lock'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { CommentRepository } from '../comment/comment.repository'
@@ -25,6 +29,7 @@ import {
   REVIEW_DEMO_HANDLE,
   REVIEW_DEMO_NAME,
   REVIEW_DEMO_SECRET_PASSWORD_KEY,
+  REVIEW_DEMO_SECRET_READER_ID_KEY,
 } from './review-demo.constants'
 
 export type ReviewDemoCredentials =
@@ -32,10 +37,20 @@ export type ReviewDemoCredentials =
   | { enabled: true; email: string; password: string }
   | { enabled: true; email: string; error: 'provision_failed' }
 
-const REVIEW_DEMO_SYNC_LOCK_KEY = -3216835155137105914n
+type ReviewDemoReader = {
+  id: string
+  email?: string | null
+  emailVerified?: boolean | null
+  handle?: string | null
+  role?: string | null
+  username?: string | null
+}
+
+const RESET_BATCH_SIZE = 50
 
 @Injectable()
-export class ReviewDemoService {
+export class ReviewDemoService implements OnModuleInit {
+  private readonly logger = new Logger(ReviewDemoService.name)
   private syncPromise?: Promise<void>
   private syncRerunRequested = false
 
@@ -55,9 +70,23 @@ export class ReviewDemoService {
     return randomBytes(18).toString('base64url')
   }
 
+  async onModuleInit() {
+    await this.runQuietly('boot reconciliation', () => this.sync())
+  }
+
   @OnEvent(EventBusEvents.ConfigChanged)
   async onConfigChanged() {
-    await this.sync()
+    await this.runQuietly('config change', () => this.sync())
+  }
+
+  private async runQuietly(reason: string, run: () => Promise<void>) {
+    try {
+      await run()
+    } catch (error) {
+      this.logger.error(
+        `review demo sync failed (${reason}): ${error instanceof Error ? error.message : error}`,
+      )
+    }
   }
 
   async waitForSync() {
@@ -85,7 +114,7 @@ export class ReviewDemoService {
   }
 
   async getCredentials(): Promise<ReviewDemoCredentials> {
-    await this.waitForSync()
+    await this.runQuietly('credential read', () => this.waitForSync())
     const oauth = await this.configsService.get('oauth')
     if (!isReviewDemoEnabled(oauth)) {
       return { enabled: false }
@@ -156,18 +185,30 @@ export class ReviewDemoService {
       return
     }
 
+    const managedId = oauth.secrets?.apple?.[REVIEW_DEMO_SECRET_READER_ID_KEY]
+    const conflict = await this.findConflict(reader, managedId)
+    if (conflict) {
+      this.logger.error(
+        `review demo provisioning refused: ${conflict} is already taken by another account`,
+      )
+      return
+    }
+
+    const secretsPatch: Record<string, string> = {}
     let password = oauth.secrets?.apple?.[REVIEW_DEMO_SECRET_PASSWORD_KEY]
     let generated = false
     if (!password) {
       password = this.generatePassword()
       generated = true
-      await this.configsService.patchAndValid('oauth', {
-        secrets: { apple: { [REVIEW_DEMO_SECRET_PASSWORD_KEY]: password } },
-      })
+      secretsPatch[REVIEW_DEMO_SECRET_PASSWORD_KEY] = password
     }
 
     if (!reader) {
       const id = this.snowflakeService.nextId()
+      secretsPatch[REVIEW_DEMO_SECRET_READER_ID_KEY] = id
+      await this.configsService.patchAndValid('oauth', {
+        secrets: { apple: secretsPatch },
+      })
       await this.readerRepository.create({
         id,
         email: REVIEW_DEMO_EMAIL,
@@ -186,6 +227,15 @@ export class ReviewDemoService {
         password: await hashPassword(password),
       })
       return
+    }
+
+    if (managedId !== reader.id) {
+      secretsPatch[REVIEW_DEMO_SECRET_READER_ID_KEY] = reader.id
+    }
+    if (Object.keys(secretsPatch).length > 0) {
+      await this.configsService.patchAndValid('oauth', {
+        secrets: { apple: secretsPatch },
+      })
     }
 
     const shouldUnban =
@@ -238,6 +288,25 @@ export class ReviewDemoService {
     }
   }
 
+  private async findConflict(
+    reader: ReviewDemoReader | null,
+    managedId?: string,
+  ): Promise<'email' | 'username' | null> {
+    // A row the service never provisioned may legitimately belong to a real
+    // person; rewriting its identity would demote and lock out that account.
+    // Rows provisioned before the id was recorded are adopted by their shape.
+    if (reader) {
+      const managed = managedId
+        ? reader.id === managedId
+        : isReviewDemoProvisioned(reader)
+      if (!managed) return 'email'
+    }
+    const usernameHolder =
+      await this.readerRepository.findByUsername(REVIEW_DEMO_HANDLE)
+    if (usernameHolder && usernameHolder.id !== reader?.id) return 'username'
+    return null
+  }
+
   async resetDaily(): Promise<
     { skipped: true } | { comments: number; pollVotes: number }
   > {
@@ -249,12 +318,29 @@ export class ReviewDemoService {
     if (!reader) {
       return { skipped: true }
     }
-    const comments = await this.commentRepository.findByFilter({
-      readerId: reader.id,
-      isDeleted: false,
-    })
-    for (const comment of comments) {
-      await this.commentService.softDeleteComment(String(comment.id))
+    let comments = 0
+    let previousBatchHead: string | undefined
+    for (;;) {
+      const batch = await this.commentRepository.paginatedFind(
+        { readerId: reader.id, isDeleted: false },
+        1,
+        RESET_BATCH_SIZE,
+      )
+      const rows = batch.data
+      if (rows.length === 0) break
+      const head = String(rows[0].id)
+      if (head === previousBatchHead) {
+        this.logger.warn(
+          `review demo reset stalled on comment ${head}, aborting sweep`,
+        )
+        break
+      }
+      previousBatchHead = head
+      for (const comment of rows) {
+        await this.commentService.softDeleteComment(String(comment.id))
+      }
+      comments += rows.length
+      if (rows.length < RESET_BATCH_SIZE) break
     }
     const pollVotes = await this.pollVoteRepository.deleteByFingerprint(
       `r:${reader.id}`,
@@ -264,6 +350,6 @@ export class ReviewDemoService {
       displayUsername: REVIEW_DEMO_NAME,
       image: null,
     })
-    return { comments: comments.length, pollVotes }
+    return { comments, pollVotes }
   }
 }

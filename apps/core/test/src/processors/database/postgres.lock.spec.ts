@@ -1,15 +1,16 @@
 import { createHash } from 'node:crypto'
 
 import pkg from 'pg'
-
-import {
-  SCHEMA_MIGRATION_LOCK_KEY,
-  withAdvisoryLock,
-} from '~/processors/database/postgres.lock'
 import {
   createPgTestDatabase,
   type PgTestDatabase,
 } from 'test/helper/pg-verify-url'
+
+import {
+  REVIEW_DEMO_SYNC_LOCK_KEY,
+  SCHEMA_MIGRATION_LOCK_KEY,
+  withAdvisoryLock,
+} from '~/processors/database/postgres.lock'
 
 const { Pool } = pkg
 
@@ -22,6 +23,21 @@ describe('SCHEMA_MIGRATION_LOCK_KEY', () => {
     const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength)
     const big = view.getBigInt64(0, false)
     expect(SCHEMA_MIGRATION_LOCK_KEY).toBe(big)
+  })
+})
+
+describe('REVIEW_DEMO_SYNC_LOCK_KEY', () => {
+  it('matches sha256("mx-core:review-demo-sync:v1") first 8 bytes as signed bigint', () => {
+    const h = createHash('sha256')
+      .update('mx-core:review-demo-sync:v1')
+      .digest()
+    const buf = h.subarray(0, 8)
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength)
+    expect(REVIEW_DEMO_SYNC_LOCK_KEY).toBe(view.getBigInt64(0, false))
+  })
+
+  it('differs from the migration lock keys', () => {
+    expect(REVIEW_DEMO_SYNC_LOCK_KEY).not.toBe(SCHEMA_MIGRATION_LOCK_KEY)
   })
 })
 

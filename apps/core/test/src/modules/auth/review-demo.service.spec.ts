@@ -75,6 +75,8 @@ function createHarness(options?: {
   enabled?: boolean
   password?: string
   reader?: ReturnType<typeof demoReader> | null
+  readerId?: string
+  usernameHolder?: { id: string; username: string } | null
   accounts?: DemoAccount[]
   disablePasswordLogin?: boolean
 }) {
@@ -89,7 +91,8 @@ function createHarness(options?: {
     secrets: {
       apple: {
         ...(options?.password ? { reviewDemoPassword: options.password } : {}),
-      },
+        ...(options?.readerId ? { reviewDemoReaderId: options.readerId } : {}),
+      } as Record<string, string>,
     },
   }
   const configsService = {
@@ -114,6 +117,12 @@ function createHarness(options?: {
   }
   const readerRepository = {
     findByEmail: vi.fn(async () => reader),
+    findByUsername: vi.fn(async (username: string) => {
+      if (options?.usernameHolder?.username === username) {
+        return options.usernameHolder
+      }
+      return reader?.username === username ? reader : null
+    }),
     create: vi.fn(async (input: ReturnType<typeof demoReader>) => {
       reader = demoReader(input)
       return reader
@@ -154,7 +163,7 @@ function createHarness(options?: {
     softDeleteComment: vi.fn(),
   }
   const commentRepository = {
-    findByFilter: vi.fn().mockResolvedValue([]),
+    paginatedFind: vi.fn().mockResolvedValue({ data: [] }),
   }
   const pollVoteRepository = {
     deleteByFingerprint: vi.fn().mockResolvedValue(0),
@@ -232,7 +241,12 @@ describe('ReviewDemoService', () => {
       }),
     )
     expect(configsService.patchAndValid).toHaveBeenCalledWith('oauth', {
-      secrets: { apple: { reviewDemoPassword: DEMO_PASSWORD } },
+      secrets: {
+        apple: {
+          reviewDemoPassword: DEMO_PASSWORD,
+          reviewDemoReaderId: DEMO_ID,
+        },
+      },
     })
   })
 
@@ -242,6 +256,7 @@ describe('ReviewDemoService', () => {
         enabled: true,
         password: 'kept-password',
         reader: demoReader(),
+        readerId: DEMO_ID,
         accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
       })
 
@@ -257,6 +272,7 @@ describe('ReviewDemoService', () => {
     const { configsService, readerRepository, service } = createHarness({
       enabled: true,
       password: 'kept-password',
+      readerId: DEMO_ID,
       reader: demoReader({
         bannedAt: new Date('2026-01-01'),
         banReason: REVIEW_DEMO_BAN_REASON,
@@ -306,6 +322,7 @@ describe('ReviewDemoService', () => {
     const { authRepository, readerRepository, service } = createHarness({
       enabled: true,
       password: 'kept-password',
+      readerId: DEMO_ID,
       reader: demoReader({
         handle: 'someone-else',
         role: 'owner',
@@ -345,13 +362,95 @@ describe('ReviewDemoService', () => {
     await service.sync()
 
     expect(configsService.patchAndValid).toHaveBeenCalledWith('oauth', {
-      secrets: { apple: { reviewDemoPassword: DEMO_PASSWORD } },
+      secrets: {
+        apple: {
+          reviewDemoPassword: DEMO_PASSWORD,
+          reviewDemoReaderId: DEMO_ID,
+        },
+      },
     })
     expect(authRepository.updateAccountPassword).toHaveBeenCalledWith(
       ACCOUNT_ID,
       expect.any(String),
     )
     expect(authRepository.createAccount).not.toHaveBeenCalled()
+  })
+
+  it('adopts a legacy provisioned reader and records its id', async () => {
+    const { oauth, readerRepository, service } = createHarness({
+      enabled: true,
+      password: 'kept-password',
+      reader: demoReader(),
+      accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
+    })
+
+    await service.sync()
+
+    expect(oauth.secrets.apple.reviewDemoReaderId).toBe(DEMO_ID)
+    expect(readerRepository.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses to take over a foreign account holding the reserved email', async () => {
+    const foreign = demoReader({
+      id: 'foreign-1',
+      handle: 'real-person',
+      role: 'owner',
+      username: 'real-person',
+    })
+    const {
+      authRepository,
+      configsService,
+      getReader,
+      readerRepository,
+      service,
+    } = createHarness({
+      enabled: true,
+      reader: foreign,
+      accounts: [{ id: ACCOUNT_ID, providerId: 'credential' }],
+    })
+
+    await service.sync()
+
+    expect(readerRepository.update).not.toHaveBeenCalled()
+    expect(readerRepository.create).not.toHaveBeenCalled()
+    expect(authRepository.updateAccountPassword).not.toHaveBeenCalled()
+    expect(configsService.patchAndValid).not.toHaveBeenCalled()
+    expect(getReader()).toMatchObject({ id: 'foreign-1', role: 'owner' })
+    await expect(service.getCredentials()).resolves.toEqual({
+      enabled: true,
+      email: REVIEW_DEMO_EMAIL,
+      error: 'provision_failed',
+    })
+  })
+
+  it('refuses to provision when the reserved username is taken', async () => {
+    const { authRepository, configsService, readerRepository, service } =
+      createHarness({
+        enabled: true,
+        usernameHolder: { id: 'foreign-2', username: REVIEW_DEMO_HANDLE },
+      })
+
+    await service.sync()
+
+    expect(readerRepository.create).not.toHaveBeenCalled()
+    expect(authRepository.createAccount).not.toHaveBeenCalled()
+    expect(configsService.patchAndValid).not.toHaveBeenCalled()
+    await expect(service.getCredentials()).resolves.toEqual({
+      enabled: true,
+      email: REVIEW_DEMO_EMAIL,
+      error: 'provision_failed',
+    })
+  })
+
+  it('reports provision_failed instead of throwing when sync fails', async () => {
+    const { readerRepository, service } = createHarness({ enabled: true })
+    readerRepository.findByEmail.mockRejectedValueOnce(new Error('db down'))
+
+    await expect(service.getCredentials()).resolves.toEqual({
+      enabled: true,
+      email: REVIEW_DEMO_EMAIL,
+      error: 'provision_failed',
+    })
   })
 
   it('preserves a manual ban while reading the sign-in gate and credentials', async () => {
@@ -509,6 +608,9 @@ describe('ReviewDemoService', () => {
       }),
       deleteSessionsForUser: vi.fn(),
       findByEmail: vi.fn(async () => reader),
+      findByUsername: vi.fn(async (username: string) =>
+        reader?.username === username ? reader : null,
+      ),
       setBanned: vi.fn(),
       unsetBanned: vi.fn(),
       update: vi.fn(),
@@ -534,7 +636,7 @@ describe('ReviewDemoService', () => {
         .mockReturnValueOnce('account-b'),
     }
     const commentService = { softDeleteComment: vi.fn() }
-    const commentRepository = { findByFilter: vi.fn() }
+    const commentRepository = { paginatedFind: vi.fn() }
     const pollVoteRepository = { deleteByFingerprint: vi.fn() }
     const firstService = new ReviewDemoService(
       configsService as any,
@@ -601,10 +703,9 @@ describe('ReviewDemoService', () => {
         username: 'changed-username',
       }),
     })
-    commentRepository.findByFilter.mockResolvedValue([
-      { id: 'c1' },
-      { id: 'c2' },
-    ])
+    commentRepository.paginatedFind.mockResolvedValue({
+      data: [{ id: 'c1' }, { id: 'c2' }],
+    })
     pollVoteRepository.deleteByFingerprint.mockResolvedValue(3)
 
     await expect(service.resetDaily()).resolves.toEqual({
@@ -622,5 +723,48 @@ describe('ReviewDemoService', () => {
       image: null,
     })
     expect(readerRepository.deleteSessionsForUser).not.toHaveBeenCalled()
+  })
+
+  it('sweeps comments in batches until the reader has none left', async () => {
+    const { commentRepository, commentService, service } = createHarness({
+      enabled: true,
+      password: 'kept-password',
+      readerId: DEMO_ID,
+      reader: demoReader(),
+    })
+    const remaining = Array.from({ length: 120 }, (_, index) => ({
+      id: `c${index}`,
+    }))
+    commentRepository.paginatedFind.mockImplementation(async () => ({
+      data: remaining.slice(0, 50),
+    }))
+    commentService.softDeleteComment.mockImplementation(async (id: string) => {
+      const index = remaining.findIndex((comment) => comment.id === id)
+      if (index >= 0) remaining.splice(index, 1)
+    })
+
+    await expect(service.resetDaily()).resolves.toMatchObject({ comments: 120 })
+    expect(commentRepository.paginatedFind).toHaveBeenCalledWith(
+      { readerId: DEMO_ID, isDeleted: false },
+      1,
+      50,
+    )
+    expect(commentService.softDeleteComment).toHaveBeenCalledTimes(120)
+  })
+
+  it('aborts the sweep when a batch stops shrinking', async () => {
+    const { commentRepository, commentService, service } = createHarness({
+      enabled: true,
+      password: 'kept-password',
+      readerId: DEMO_ID,
+      reader: demoReader(),
+    })
+    const stuck = Array.from({ length: 50 }, (_, index) => ({
+      id: `stuck-${index}`,
+    }))
+    commentRepository.paginatedFind.mockResolvedValue({ data: stuck })
+
+    await expect(service.resetDaily()).resolves.toMatchObject({ comments: 50 })
+    expect(commentService.softDeleteComment).toHaveBeenCalledTimes(50)
   })
 })

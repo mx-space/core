@@ -4,6 +4,7 @@ export const REVIEW_DEMO_NAME = 'App Reviewer'
 export const REVIEW_DEMO_BAN_REASON = 'app-review-demo'
 export const REVIEW_DEMO_PUBLIC_ENABLED_KEY = 'reviewDemoEnabled'
 export const REVIEW_DEMO_SECRET_PASSWORD_KEY = 'reviewDemoPassword'
+export const REVIEW_DEMO_SECRET_READER_ID_KEY = 'reviewDemoReaderId'
 
 export function isReviewDemoEnabled(oauth: {
   public?: Partial<Record<string, Record<string, string>>>

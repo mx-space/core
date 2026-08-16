@@ -51,3 +51,13 @@ export const SCHEMA_MIGRATION_LOCK_KEY = 7607331879281575547n
  * as a signed bigint.
  */
 export const APP_MIGRATION_LOCK_KEY = 5183248167463294041n
+
+/**
+ * Project-specific advisory lock key for App Review demo provisioning, so two
+ * replicas cannot generate two different demo passwords.
+ *
+ * Derived from `sha256("mx-core:review-demo-sync:v1")`, taking the first 8
+ * bytes as a signed bigint. The constant is asserted in tests so that it is
+ * only changed deliberately.
+ */
+export const REVIEW_DEMO_SYNC_LOCK_KEY = -3216835155137105914n
