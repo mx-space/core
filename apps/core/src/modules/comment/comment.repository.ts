@@ -747,6 +747,15 @@ export class CommentRepository extends BaseRepository {
         )
       }
     }
+    if (filter.readerId) {
+      filters.push(eq(comments.readerId, filter.readerId))
+    }
+    if (filter.isDeleted !== undefined) {
+      filters.push(eq(comments.isDeleted, filter.isDeleted))
+    }
+    if (filter.excludeJunk) {
+      filters.push(ne(comments.state, CommentState.Junk))
+    }
     return filters.length > 0 ? and(...filters) : undefined
   }
 

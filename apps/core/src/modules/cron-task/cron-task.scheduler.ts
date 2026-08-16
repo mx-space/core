@@ -32,6 +32,11 @@ export class CronTaskScheduler {
     return this.dispatch('resetIPAccess', CronTaskType.ResetIPAccess)
   }
 
+  @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'resetReviewDemo' })
+  scheduleResetReviewDemo() {
+    return this.dispatch('resetReviewDemo', CronTaskType.ResetReviewDemo)
+  }
+
   @CronOnce(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
     name: 'resetLikedOrReadArticleRecord',
   })

@@ -30,6 +30,12 @@ import { db } from '~/processors/database/postgres.provider'
 
 import { APPLE_ORIGIN } from './apple-client-secret'
 import { validateMxUsername } from './auth.username-validator'
+import {
+  type CredentialSignInGate,
+  denyEmailSignIn,
+  denyUsernameSignIn,
+} from './email-sign-in-gate'
+import { isReviewDemoEmail } from './review-demo.constants'
 
 const bcryptRegex = /^\$2[aby]\$/
 const isBcryptHash = (value?: string | null) =>
@@ -45,6 +51,104 @@ export const DEVICE_AUTHORIZATION_CLIENT_IDS: ReadonlySet<string> = new Set([
 
 const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
+const reviewDemoMutableProfileFields = new Set(['image', 'name'])
+
+export const reviewDemoDatabaseHooks: NonNullable<
+  BetterAuthOptions['databaseHooks']
+> = {
+  account: {
+    update: {
+      before: async (_account, context) => {
+        if (
+          context?.path === '/change-password' &&
+          isReviewDemoEmail(context.context.session?.user ?? {})
+        ) {
+          throw new APIError('FORBIDDEN', {
+            message: 'app review demo credentials cannot be changed',
+          })
+        }
+      },
+    },
+  },
+  user: {
+    update: {
+      before: async (_user, context) => {
+        if (
+          context?.path !== '/update-user' ||
+          !isReviewDemoEmail(context.context.session?.user ?? {})
+        ) {
+          return
+        }
+        const body = context.body
+        if (
+          body &&
+          typeof body === 'object' &&
+          !Array.isArray(body) &&
+          Object.keys(body).every((key) =>
+            reviewDemoMutableProfileFields.has(key),
+          )
+        ) {
+          return
+        }
+        throw new APIError('FORBIDDEN', {
+          message: 'app review demo identity cannot be changed',
+        })
+      },
+    },
+  },
+}
+
+export function assertUserDeletionAllowed(user: {
+  email?: string | null
+  role?: string | null
+}) {
+  if (user.role === 'owner') {
+    throw new APIError('FORBIDDEN', {
+      message: 'owner cannot delete',
+    })
+  }
+  if (isReviewDemoEmail(user)) {
+    throw new APIError('FORBIDDEN', {
+      message: 'app review demo account cannot be deleted',
+    })
+  }
+}
+
+export const createCredentialSignInHook = (
+  getCredentialSignInGate?: () => Promise<CredentialSignInGate>,
+) =>
+  createAuthMiddleware(async (ctx) => {
+    if (ctx.body?.role !== undefined) {
+      throw new APIError('FORBIDDEN', {
+        message: 'role cannot be modified',
+      })
+    }
+    if (!['/sign-in/email', '/sign-in/username'].includes(ctx.path)) {
+      return
+    }
+    const gate = getCredentialSignInGate
+      ? await getCredentialSignInGate()
+      : {
+          disablePasswordLogin: false,
+          reviewDemoEnabled: false,
+          reviewDemoBanned: false,
+        }
+    const denied =
+      ctx.path === '/sign-in/email'
+        ? denyEmailSignIn(
+            typeof ctx.body?.email === 'string' ? ctx.body.email : '',
+            gate,
+          )
+        : denyUsernameSignIn(
+            typeof ctx.body?.username === 'string' ? ctx.body.username : '',
+            gate,
+          )
+    if (denied) {
+      throw new APIError('UNAUTHORIZED', {
+        message: 'Invalid email or password',
+      })
+    }
+  })
 
 const normalizeOrigin = (url: string | undefined): string | null => {
   if (!url) return null
@@ -96,6 +200,7 @@ export async function CreateAuth(
   passkeyOptions?: PasskeyOptions,
   serverUrl?: string,
   idGenerator?: SnowflakeGenerator,
+  getCredentialSignInGate?: () => Promise<CredentialSignInGate>,
 ) {
   const deviceVerificationPath = isDev
     ? '/device'
@@ -150,6 +255,7 @@ export async function CreateAuth(
         trustedProviders: ['google', 'github', 'apple'],
       },
     },
+    databaseHooks: reviewDemoDatabaseHooks,
     emailAndPassword: {
       enabled: true,
       disableSignUp: true,
@@ -232,13 +338,7 @@ export async function CreateAuth(
       }),
     ],
     hooks: {
-      before: createAuthMiddleware(async (ctx) => {
-        if (ctx.body?.role !== undefined) {
-          throw new APIError('FORBIDDEN', {
-            message: 'role cannot be modified',
-          })
-        }
-      }),
+      before: createCredentialSignInHook(getCredentialSignInGate),
       after: createAuthMiddleware(async (ctx) => {
         const newSession = ctx.context.newSession as
           | {
@@ -342,6 +442,10 @@ export async function CreateAuth(
     },
     user: {
       modelName: 'reader',
+      deleteUser: {
+        enabled: true,
+        beforeDelete: async (user) => assertUserDeletionAllowed(user),
+      },
       additionalFields: {
         role: {
           type: 'string',

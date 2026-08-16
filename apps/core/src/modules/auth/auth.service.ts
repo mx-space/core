@@ -21,6 +21,7 @@ import type { TokenDto } from './auth.controller'
 import type { InjectAuthInstance } from './auth.interface'
 import { AuthRepository } from './auth.repository'
 import type { SessionUser } from './auth.types'
+import { isReviewDemoEmail } from './review-demo.constants'
 
 type CreateOwnerByCredentialInput = {
   username: string
@@ -399,6 +400,11 @@ export class AuthService {
     const target = await this.readerRepository.findById(targetUserId)
     if (!target?.id) {
       throw createAppException(AppErrorCode.AUTH_USER_ID_NOT_FOUND)
+    }
+    if (isReviewDemoEmail(target)) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'cannot transfer owner to the app review demo account',
+      })
     }
 
     await this.readerRepository.setOwnersExceptToReader(target.id)

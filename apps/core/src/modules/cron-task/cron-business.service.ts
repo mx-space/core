@@ -8,6 +8,7 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { STATIC_FILE_TRASH_DIR, TEMP_DIR } from '~/constants/path.constant'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeRepository } from '~/modules/analyze/analyze.repository'
+import { ReviewDemoService } from '~/modules/auth/review-demo.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { SearchService } from '~/modules/search/search.service'
@@ -37,6 +38,7 @@ export class CronBusinessService {
 
     private readonly searchService: SearchService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly reviewDemoService: ReviewDemoService,
   ) {
     this.logger = new Logger(CronBusinessService.name)
   }
@@ -222,6 +224,15 @@ export class CronBusinessService {
     const result = await this.fileReferenceService.cleanupCommentUploads()
     this.logger.log(
       `--> Comment image upload cleanup finished pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
+    )
+    return result
+  }
+
+  async resetReviewDemo() {
+    this.logger.log('--> Starting App Review demo account reset')
+    const result = await this.reviewDemoService.resetDaily()
+    this.logger.log(
+      `--> App Review demo reset finished ${JSON.stringify(result)}`,
     )
     return result
   }

@@ -72,9 +72,12 @@ export interface CommentCreateInput {
 }
 
 export interface CommentFindFilter {
+  excludeJunk?: boolean
+  isDeleted?: boolean
   state?: number
   refType?: CommentRefType
   refId?: EntityId | string
+  readerId?: string
   search?: string
   tab?: CommentTab
   author?: string
@@ -85,12 +88,7 @@ export interface CommentFindFilter {
  * deprecated parameter; `tab` semantics supersede it (spec §6.1).
  */
 export type CommentTab =
-  | 'unread'
-  | 'read'
-  | 'junk'
-  | 'whispers'
-  | 'awaiting'
-  | 'all'
+  'unread' | 'read' | 'junk' | 'whispers' | 'awaiting' | 'all'
 
 export interface CommentTabCounts {
   unread: number

@@ -13,6 +13,7 @@ import { ConfigsService } from '../configs/configs.service'
 import { AuthInstanceInjectKey } from './auth.constant'
 import { CreateAuth } from './auth.implement'
 import type { InjectAuthInstance } from './auth.interface'
+import { ReviewDemoService } from './review-demo.service'
 import { buildSocialProviders } from './social-providers'
 
 declare module 'http' {
@@ -35,6 +36,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
     private readonly snowflakeService: SnowflakeService,
+    private readonly reviewDemoService: ReviewDemoService,
   ) {}
 
   async onModuleInit() {
@@ -87,6 +89,7 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
         passkeyOptions,
         urls.serverUrl,
         this.snowflakeService,
+        () => this.reviewDemoService.getCredentialSignInGate(),
       )
       this.authHandler = handler
 
@@ -122,5 +125,5 @@ export class AuthMiddleware implements NestMiddleware, OnModuleInit {
 
 export function shouldBypassBetterAuth(originalUrl: string) {
   const pathname = originalUrl.split('?')[0]?.replace(/\/+$/, '') || ''
-  return /\/auth\/(?:token|session|providers)$/.test(pathname)
+  return /\/auth\/(?:token|session|providers|review-demo)$/.test(pathname)
 }

@@ -21,6 +21,7 @@ import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
+import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
@@ -221,6 +222,24 @@ export class CommentController {
     return withMeta(candidates, new MetaObjectBuilder().build())
   }
 
+  @Get('/reader/me')
+  @ReaderAuth()
+  async getMyComments(
+    @Query() query: BasicPagerDto,
+    @CurrentReaderId() readerId: string,
+  ) {
+    const { page = 1, size = 20 } = query
+    const comments = await this.commentService.getReaderComments(
+      readerId,
+      page,
+      size,
+    )
+    return withMeta(
+      comments.data.map((doc) => this.commentService.projectReaderComment(doc)),
+      new MetaObjectBuilder().pagination(comments.pagination).build(),
+    )
+  }
+
   @Get('/ref/:id')
   async getCommentsByRefId(
     @Param() params: EntityIdDto,
@@ -326,6 +345,22 @@ export class CommentController {
     }
 
     return data
+  }
+
+  @Post('/:id/report')
+  async reportComment(
+    @Param() params: EntityIdDto,
+    @CurrentReaderId() readerId: string,
+    @IpLocation() ipLocation: IpRecord,
+  ) {
+    const result = await this.commentService.reportComment(params.id, {
+      ip: ipLocation.ip,
+      readerId: readerId || null,
+    })
+    if (result.notified) {
+      this.lifecycleService.afterReportComment(params.id)
+    }
+    return { ok: true }
   }
 
   @Post('/guest/:id')

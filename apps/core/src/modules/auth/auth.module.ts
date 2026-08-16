@@ -33,8 +33,7 @@ export class AuthModule implements NestModule {
 
     return {
       controllers: [AuthController, DeviceController],
-      exports: [AuthService, authProvider],
-      imports: [],
+      exports: [AuthService, AuthRepository, authProvider],
       module: AuthModule,
       global: true,
 

@@ -28,6 +28,7 @@ import {
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
+import { authProvider } from '../../../mock/modules/auth.mock'
 import { eventEmitterProvider } from '../../../mock/processors/event.mock'
 
 const POST_REF = {
@@ -216,6 +217,7 @@ describe('CommentController admin contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [CommentController],
     providers: [
+      authProvider,
       commentServiceProvider,
       lifecycleProvider,
       configsProvider,
