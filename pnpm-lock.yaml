@@ -18,7 +18,7 @@ overrides:
   whatwg-url: 17.1.0
   zod: 4.4.3
   lodash-es@<4.18.0: 4.18.1
-  nanoid@<3.3.8: 3.3.12
+  nanoid@<3.3.8: 5.1.16
   nanoid@>=4.0.0 <5.0.9: 5.1.16
   tmp@<0.2.6: 0.2.7
   uuid@<11.1.1: 11.1.1
@@ -56,7 +56,7 @@ overrides:
   '@esbuild-kit/core-utils>esbuild': 0.25.12
   '@fastify/static': 10.1.3
   brace-expansion@<1.1.16: 1.1.18
-  brace-expansion@>=2.0.0 <2.1.2: 2.1.2
+  brace-expansion@>=2.0.0 <2.1.2: 2.1.4
   brace-expansion@>=3.0.0 <5.0.8: 5.0.9
   dompurify: 3.4.13
   fast-uri@>=3.0.0 <3.1.4: 3.1.5
@@ -7092,8 +7092,8 @@ packages:
   brace-expansion@1.1.18:
     resolution: {integrity: sha512-Edep/X9fGqVNmzKBVsDYIOtD+z1tuezV70LBjdCst9Tqu76lsnvRiZ6oTic1n+/BIwX6QDGAO94PN4N2SADvtw==}
 
-  brace-expansion@2.1.2:
-    resolution: {integrity: sha512-w5JZcKgdhDOgOwm8H+KgbosopHMuGcl6qbulwjtz3SM7I7P3yW1eAjzMPLrIE+NQ9vjgANKHWeMHnrT0OXW1oA==}
+  brace-expansion@2.1.4:
+    resolution: {integrity: sha512-hGfVzPxthbf3+2yjg/RBs60cB0FhqBS/zvdV/4wn4/BmN0bNMMHPc4V/BbFieqf1TKAGGAHnY4eSjajCl0f2Xg==}
 
   brace-expansion@5.0.9:
     resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
@@ -10203,11 +10203,6 @@ packages:
 
   nan@2.27.0:
     resolution: {integrity: sha512-hC+0LidcL3XE4rp1C4H54KujgXKzbfyTngZTwBByQxsOxCEKZT0MPQ4hOKUH2jU1OYstqdDH4onyHPDzcV0XdQ==}
-
-  nanoid@3.3.12:
-    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
 
   nanoid@3.3.18:
     resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
@@ -14484,7 +14479,7 @@ snapshots:
       jotai-scope: 0.7.2(jotai@2.11.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       lodash.debounce: 4.0.8
       lodash.throttle: 4.1.1
-      nanoid: 3.3.12
+      nanoid: 5.1.16
       open-color: 1.9.1
       pako: 2.0.3
       perfect-freehand: 1.2.0
@@ -18932,7 +18927,7 @@ snapshots:
       balanced-match: 1.0.2
       concat-map: 0.0.1
 
-  brace-expansion@2.1.2:
+  brace-expansion@2.1.4:
     dependencies:
       balanced-match: 1.0.2
 
@@ -22516,11 +22511,11 @@ snapshots:
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.1.2
+      brace-expansion: 2.1.4
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.1.2
+      brace-expansion: 2.1.4
 
   minimist@1.2.8: {}
 
@@ -22603,8 +22598,6 @@ snapshots:
 
   nan@2.27.0:
     optional: true
-
-  nanoid@3.3.12: {}
 
   nanoid@3.3.18: {}
 
