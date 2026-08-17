@@ -27,6 +27,8 @@ import {
   PushActivationRequestSchema,
   PushActivationResponseSchema,
   PushBindingIdParamSchema,
+  PushPreferencesPatchSchema,
+  PushReaderPreferencesSchema,
   PushStatusResponseSchema,
 } from '~/modules/push/push.schema'
 import {
@@ -148,7 +150,7 @@ export const routeManifest: readonly OpenApiRoute[] = [
     method: 'post',
     path: '/notifications/push/activate',
     tag: 'notifications',
-    summary: 'Bind this authenticated owner installation to a Push Relay',
+    summary: 'Bind this authenticated reader installation to a Push Relay',
     auth: true,
     body: {
       name: 'PushActivationRequest',
@@ -164,11 +166,39 @@ export const routeManifest: readonly OpenApiRoute[] = [
     method: 'get',
     path: '/notifications/push/status',
     tag: 'notifications',
-    summary: 'Read the current owner push binding status',
+    summary: 'Read the current reader push binding status',
     auth: true,
     response: {
       name: 'PushStatus',
       schema: PushStatusResponseSchema,
+    },
+  },
+  {
+    operationId: 'getPushNotificationPreferences',
+    method: 'get',
+    path: '/notifications/push/preferences',
+    tag: 'notifications',
+    summary: 'Read this authenticated reader push topic preferences',
+    auth: true,
+    response: {
+      name: 'PushPreferences',
+      schema: PushReaderPreferencesSchema,
+    },
+  },
+  {
+    operationId: 'updatePushNotificationPreferences',
+    method: 'patch',
+    path: '/notifications/push/preferences',
+    tag: 'notifications',
+    summary: 'Update this authenticated reader push topic preferences',
+    auth: true,
+    body: {
+      name: 'PushPreferencesPatch',
+      schema: PushPreferencesPatchSchema,
+    },
+    response: {
+      name: 'PushPreferences',
+      schema: PushReaderPreferencesSchema,
     },
   },
   {

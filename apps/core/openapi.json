@@ -245,7 +245,7 @@
     "/notifications/push/activate": {
       "post": {
         "operationId": "activatePushNotifications",
-        "summary": "Bind this authenticated owner installation to a Push Relay",
+        "summary": "Bind this authenticated reader installation to a Push Relay",
         "tags": [
           "notifications"
         ],
@@ -313,7 +313,7 @@
     "/notifications/push/status": {
       "get": {
         "operationId": "getPushNotificationStatus",
-        "summary": "Read the current owner push binding status",
+        "summary": "Read the current reader push binding status",
         "tags": [
           "notifications"
         ],
@@ -336,6 +336,130 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/PushStatus"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/push/preferences": {
+      "get": {
+        "operationId": "getPushNotificationPreferences",
+        "summary": "Read this authenticated reader push topic preferences",
+        "tags": [
+          "notifications"
+        ],
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PushPreferences"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ResponseMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updatePushNotificationPreferences",
+        "summary": "Update this authenticated reader push topic preferences",
+        "tags": [
+          "notifications"
+        ],
+        "parameters": [],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushPreferencesPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PushPreferences"
                     },
                     "meta": {
                       "$ref": "#/components/schemas/ResponseMeta"
@@ -2257,6 +2381,48 @@
           "configured",
           "enabled"
         ],
+        "additionalProperties": false
+      },
+      "PushPreferences": {
+        "type": "object",
+        "properties": {
+          "content_post": {
+            "type": "boolean"
+          },
+          "content_note": {
+            "type": "boolean"
+          },
+          "content_recently": {
+            "type": "boolean"
+          },
+          "comment_replied": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "content_post",
+          "content_note",
+          "content_recently",
+          "comment_replied"
+        ],
+        "additionalProperties": false
+      },
+      "PushPreferencesPatch": {
+        "type": "object",
+        "properties": {
+          "contentPost": {
+            "type": "boolean"
+          },
+          "contentNote": {
+            "type": "boolean"
+          },
+          "contentRecently": {
+            "type": "boolean"
+          },
+          "commentReplied": {
+            "type": "boolean"
+          }
+        },
         "additionalProperties": false
       },
       "Desk": {

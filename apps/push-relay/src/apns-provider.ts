@@ -1,7 +1,13 @@
 import { createPrivateKey, sign } from 'node:crypto'
 import { connect } from 'node:http2'
 
-import type { PushEvent } from '@mx-space/push-protocol'
+import {
+  COMMENT_CREATED_EVENT,
+  COMMENT_REPLIED_EVENT,
+  CONTENT_PUBLISHED_EVENT,
+  PUSH_PROTOCOL_VERSION,
+  type PushEvent,
+} from '@mx-space/push-protocol'
 
 import type { ApnsAppConfig, ApnsKeyConfig } from './config.js'
 import type { ApnsProvider, ApnsResult } from './types.js'
@@ -99,18 +105,79 @@ export class Http2ApnsProvider implements ApnsProvider {
   }
 }
 
-export const buildApnsPayload = (event: PushEvent) => ({
-  aps: {
-    alert: {
-      title: 'New comment',
-      body: 'A new comment is ready to review.',
-    },
-    sound: 'default',
-    'thread-id': 'comments',
-    category: 'SPACE_COMMENT',
-  },
-  schema_version: 1,
+const customFields = (
+  event: PushEvent,
+  extras: Record<string, unknown> = {},
+) => ({
+  ...extras,
+  schema_version: PUSH_PROTOCOL_VERSION,
   source_id: event.source.replace('urn:mx-core:instance:', ''),
   resource_type: event.data.resource_type,
   resource_id: event.data.resource_id,
 })
+
+const publishedCopy = {
+  post: {
+    title: 'New post',
+    body: 'A new post is ready to read.',
+    threadId: 'posts',
+  },
+  note: {
+    title: 'New note',
+    body: 'A new note is ready to read.',
+    threadId: 'notes',
+  },
+  recently: {
+    title: 'New thinking',
+    body: 'A new thinking is ready to read.',
+    threadId: 'recently',
+  },
+} as const
+
+export const buildApnsPayload = (event: PushEvent) => {
+  if (event.type === COMMENT_CREATED_EVENT) {
+    return {
+      aps: {
+        alert: {
+          title: 'New comment',
+          body: 'A new comment is ready to review.',
+        },
+        sound: 'default',
+        'thread-id': 'comments',
+        category: 'SPACE_COMMENT',
+      },
+      ...customFields(event),
+    }
+  }
+
+  if (event.type === CONTENT_PUBLISHED_EVENT) {
+    const copy = publishedCopy[event.data.resource_type]
+    return {
+      aps: {
+        alert: { title: copy.title, body: copy.body },
+        sound: 'default',
+        'thread-id': copy.threadId,
+        category: 'YOHAKU_CONTENT',
+      },
+      ...customFields(event, { event_type: event.type }),
+    }
+  }
+
+  if (event.type === COMMENT_REPLIED_EVENT) {
+    return {
+      aps: {
+        alert: {
+          title: 'New reply',
+          body: 'Someone replied to your comment.',
+        },
+        sound: 'default',
+        'thread-id': 'comment-replies',
+        category: 'YOHAKU_COMMENT_REPLIED',
+      },
+      ...customFields(event, { event_type: event.type }),
+    }
+  }
+
+  const exhaustive: never = event
+  return exhaustive
+}

@@ -56,10 +56,26 @@ export const PushStatusResponseSchema = z.object({
   bindingId: z.string().nullable(),
 })
 
+export const PushReaderPreferencesSchema = z
+  .object({
+    contentPost: z.boolean(),
+    contentNote: z.boolean(),
+    contentRecently: z.boolean(),
+    commentReplied: z.boolean(),
+  })
+  .strict()
+
+export const PushPreferencesPatchSchema =
+  PushReaderPreferencesSchema.partial().strict()
+
 export class PushActivationRequestDto extends createZodDto(
   PushActivationRequestSchema,
 ) {}
 
 export class PushBindingIdParamDto extends createZodDto(
   PushBindingIdParamSchema,
+) {}
+
+export class PushPreferencesPatchDto extends createZodDto(
+  PushPreferencesPatchSchema,
 ) {}

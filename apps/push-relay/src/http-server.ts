@@ -112,6 +112,19 @@ export const createPushRelayServer = (service: PushRelayService) =>
         return
       }
 
+      const preferencesMatch = /^\/v1\/bindings\/([^/]+)\/preferences$/.exec(
+        url.pathname,
+      )
+      if (request.method === 'PUT' && preferencesMatch) {
+        const result = await service.updateBindingPreferences(
+          header(request, 'authorization'),
+          decodeURIComponent(preferencesMatch[1]!),
+          parseJSON(await readBody(request)),
+        )
+        sendJSON(response, 200, result)
+        return
+      }
+
       if (
         request.method === 'POST' &&
         url.pathname === '/v1/webhooks/mx-core'

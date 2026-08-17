@@ -1,5 +1,6 @@
 import type { Pool, PoolClient } from 'pg'
 
+import { FANOUT_DELIVERY_INSERT_SQL, fanoutQueryForEvent } from './fanout.js'
 import type {
   ActivationTicketRecord,
   DeliveryRecord,
@@ -158,14 +159,32 @@ export class PostgresPushRelayStore implements PushRelayStore {
 
   async createBinding(input: Parameters<PushRelayStore['createBinding']>[0]) {
     const result = await this.pool.query<{ id: string }>(
-      `INSERT INTO push_bindings (id, source_id, installation_id)
-       VALUES ($1, $2, $3)
+      `INSERT INTO push_bindings (id, source_id, installation_id, reader_id, preferences)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (source_id, installation_id)
-       DO UPDATE SET revoked_at = NULL, updated_at = now()
+       DO UPDATE SET revoked_at = NULL, reader_id = EXCLUDED.reader_id,
+           preferences = EXCLUDED.preferences, updated_at = now()
        RETURNING id`,
-      [input.id, input.sourceId, input.installationId],
+      [
+        input.id,
+        input.sourceId,
+        input.installationId,
+        input.readerId,
+        input.preferences,
+      ],
     )
     return result.rows[0]!.id
+  }
+
+  async updateBindingPreferences(
+    input: Parameters<PushRelayStore['updateBindingPreferences']>[0],
+  ) {
+    const result = await this.pool.query(
+      `UPDATE push_bindings SET preferences = $3, updated_at = now()
+       WHERE source_id = $1 AND id = $2 AND revoked_at IS NULL`,
+      [input.sourceId, input.bindingId, input.preferences],
+    )
+    return result.rowCount === 1
   }
 
   async revokeBinding(sourceId: string, bindingId: string, now: Date) {
@@ -208,16 +227,17 @@ export class PostgresPushRelayStore implements PushRelayStore {
         }
       }
 
-      const deliveries = await client.query(
-        `INSERT INTO push_deliveries
-         (id, source_id, event_id, binding_id, installation_id, next_attempt_at)
-         SELECT 'dlv_' || encode(gen_random_bytes(18), 'hex'), b.source_id, $1,
-                b.id, b.installation_id, $3
-         FROM push_bindings b
-         JOIN push_installations i ON i.id = b.installation_id
-         WHERE b.source_id = $2 AND b.revoked_at IS NULL AND i.revoked_at IS NULL`,
-        [input.id, input.sourceId, input.now],
-      )
+      const fanout = fanoutQueryForEvent(input.event)
+      if (!fanout) return { accepted: true, deliveries: 0 }
+
+      const deliveries = await client.query(FANOUT_DELIVERY_INSERT_SQL, [
+        input.id,
+        input.sourceId,
+        input.now,
+        fanout.appId,
+        fanout.readerId,
+        fanout.preferenceKey,
+      ])
       return { accepted: true, deliveries: deliveries.rowCount ?? 0 }
     })
   }

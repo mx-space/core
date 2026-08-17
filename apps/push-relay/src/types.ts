@@ -1,4 +1,4 @@
-import type { PushEvent } from '@mx-space/push-protocol'
+import type { PushEvent, PushPreferences } from '@mx-space/push-protocol'
 
 export type ApnsEnvironment = 'development' | 'production'
 
@@ -72,7 +72,14 @@ export interface PushRelayStore {
     id: string
     sourceId: string
     installationId: string
+    readerId: string | null
+    preferences: PushPreferences
   }) => Promise<string>
+  updateBindingPreferences: (input: {
+    sourceId: string
+    bindingId: string
+    preferences: PushPreferences
+  }) => Promise<boolean>
   revokeBinding: (
     sourceId: string,
     bindingId: string,

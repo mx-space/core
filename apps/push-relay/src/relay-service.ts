@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto'
 
 import {
   ClaimSourceActivationSchema,
+  DEFAULT_PUSH_PREFERENCES,
   isPushTimestampFresh,
   PushEventSchema,
+  PushPreferencesSchema,
   RegisterInstallationSchema,
   UpdateInstallationTokenSchema,
   verifyPushRequestSignature,
@@ -171,6 +173,8 @@ export class PushRelayService {
       id: `bnd_${randomUUID()}`,
       sourceId,
       installationId: ticket.installationId,
+      readerId: parsed.reader_id ?? null,
+      preferences: parsed.preferences ?? { ...DEFAULT_PUSH_PREFERENCES },
     })
     return {
       source_id: sourceId,
@@ -274,6 +278,28 @@ export class PushRelayService {
       throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
     }
     return { revoked: true }
+  }
+
+  async updateBindingPreferences(
+    authorization: string | undefined,
+    bindingId: string,
+    input: unknown,
+  ) {
+    const source = await this.authenticateSource(authorization)
+    const preferences = PushPreferencesSchema.parse(input)
+    const updated = await this.store.updateBindingPreferences({
+      sourceId: source.id,
+      bindingId,
+      preferences,
+    })
+    if (!updated) {
+      throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
+    }
+    return {
+      updated: true as const,
+      binding_id: bindingId,
+      preferences,
+    }
   }
 
   private async authenticateInstallation(authorization: string | undefined) {

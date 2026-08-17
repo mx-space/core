@@ -1,5 +1,19 @@
 import type { PushEvent } from '@mx-space/push-protocol'
 
+export type PushReaderPreferences = {
+  contentPost: boolean
+  contentNote: boolean
+  contentRecently: boolean
+  commentReplied: boolean
+}
+
+export const DEFAULT_PUSH_READER_PREFERENCES: PushReaderPreferences = {
+  contentPost: true,
+  contentNote: true,
+  contentRecently: true,
+  commentReplied: true,
+}
+
 export type PushRelaySourceRow = {
   id: string
   relayUrl: string
@@ -14,9 +28,10 @@ export type PushRelayBindingRow = {
   sourceId: string
   remoteBindingId: string
   installationId: string
-  ownerId: string
+  readerId: string
   relayUrl: string
   revokedAt: Date | null
+  source?: PushRelaySourceRow
 }
 
 export type PushRelayDeliveryRow = {
