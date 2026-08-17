@@ -14,9 +14,10 @@ export type PushRelayBindingRow = {
   sourceId: string
   remoteBindingId: string
   installationId: string
-  ownerId: string
+  readerId: string | null
   relayUrl: string
   revokedAt: Date | null
+  source?: PushRelaySourceRow
 }
 
 export type PushRelayDeliveryRow = {

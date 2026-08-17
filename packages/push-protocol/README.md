@@ -9,7 +9,11 @@ Versioned, privacy-preserving push protocol shared between [`apps/core`](../../a
 
 ### Protocol (`src/protocol.ts`)
 
-- **Event schemas** — CloudEvents 1.0-shaped Zod schemas. The only v1 event projection is `comment.created.v1`, which carries **only** `resource_id` and `resource_type`. Comment text, author, email, IP address, and user agent never enter the protocol.
+- **Event schemas** — CloudEvents 1.0-shaped Zod schemas. v1 projections carry resource identifiers only; comment text, author, email, IP address, and user agent never enter the protocol.
+  - `comment.created.v1` — Space admin comment review (`resource_id`, `resource_type`)
+  - `content.published.v1` — Yohaku reader content broadcast (`resource_id`, `resource_type`: `post` | `note` | `recently`)
+  - `comment.replied.v1` — Yohaku reader reply routing (`resource_id`, `resource_type`, `recipient_reader_id` for signed fan-out; not an APNs display field)
+- **Preferences** — strict `PushPreferencesSchema` (`content_post`, `content_note`, `content_recently`, `comment_replied`) and `DEFAULT_PUSH_PREFERENCES` (all `true`).
 - **Relay DTOs** — registration, claim, and activation request/response schemas.
 - **Authorization helpers** — Installation/Source authorization-header builders.
 

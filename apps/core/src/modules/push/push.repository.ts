@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
@@ -27,6 +27,20 @@ const mapSource = (
   sourceSecret: row.sourceSecret,
   eventEndpoint: row.eventEndpoint,
   enabled: row.enabled,
+})
+
+const mapBinding = (
+  binding: typeof pushRelayBindings.$inferSelect,
+  source: typeof pushRelaySources.$inferSelect,
+): PushRelayBindingRow => ({
+  id: binding.id,
+  sourceId: binding.sourceId,
+  remoteBindingId: binding.remoteBindingId,
+  installationId: binding.installationId,
+  readerId: binding.ownerId,
+  relayUrl: source.relayUrl,
+  revokedAt: binding.revokedAt,
+  source: mapSource(source),
 })
 
 @Injectable()
@@ -62,7 +76,7 @@ export class PushRepository extends BaseRepository {
   }
 
   async saveActivation(input: {
-    ownerId: string
+    readerId: string | null
     relayUrl: string
     remoteSourceId: string
     sourceSecret: string | null
@@ -105,7 +119,7 @@ export class PushRepository extends BaseRepository {
           sourceId: source.id,
           remoteBindingId: input.remoteBindingId,
           installationId: input.installationId,
-          ownerId: input.ownerId,
+          ownerId: input.readerId,
         })
         .onConflictDoUpdate({
           target: [
@@ -114,7 +128,7 @@ export class PushRepository extends BaseRepository {
           ],
           set: {
             remoteBindingId: input.remoteBindingId,
-            ownerId: input.ownerId,
+            ownerId: input.readerId,
             revokedAt: null,
             updatedAt: new Date(),
           },
@@ -122,75 +136,8 @@ export class PushRepository extends BaseRepository {
         .returning()
       const binding = rows[0]
       if (!binding) throw new Error('Unable to persist Push Relay binding')
-      return {
-        id: binding.id,
-        sourceId: binding.sourceId,
-        remoteBindingId: binding.remoteBindingId,
-        installationId: binding.installationId,
-        ownerId: binding.ownerId,
-        relayUrl: source.relayUrl,
-        revokedAt: binding.revokedAt,
-      }
+      return mapBinding(binding, source)
     })
-  }
-
-  async findActiveBinding(ownerId: string) {
-    const [row] = await this.db
-      .select({ binding: pushRelayBindings, source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(
-        and(
-          eq(pushRelayBindings.ownerId, ownerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .orderBy(desc(pushRelayBindings.createdAt))
-      .limit(1)
-    return row
-      ? {
-          id: row.binding.id,
-          sourceId: row.binding.sourceId,
-          remoteBindingId: row.binding.remoteBindingId,
-          installationId: row.binding.installationId,
-          ownerId: row.binding.ownerId,
-          relayUrl: row.source.relayUrl,
-          revokedAt: row.binding.revokedAt,
-          source: mapSource(row.source),
-        }
-      : null
-  }
-
-  async findLatestSourceForOwner(ownerId: string) {
-    const [row] = await this.db
-      .select({ source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(eq(pushRelayBindings.ownerId, ownerId))
-      .orderBy(desc(pushRelayBindings.updatedAt))
-      .limit(1)
-    return row ? mapSource(row.source) : null
-  }
-
-  async revokeBinding(ownerId: string, id: string, now = new Date()) {
-    const [row] = await this.db
-      .update(pushRelayBindings)
-      .set({ revokedAt: now, updatedAt: now })
-      .where(
-        and(
-          eq(pushRelayBindings.id, id),
-          eq(pushRelayBindings.ownerId, ownerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .returning()
-    return row ?? null
   }
 
   async enqueueDelivery(input: {

@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto'
 
 import {
   ClaimSourceActivationSchema,
+  DEFAULT_PUSH_PREFERENCES,
   isPushTimestampFresh,
   PushEventSchema,
+  PushPreferencesSchema,
   RegisterInstallationSchema,
   UpdateInstallationTokenSchema,
   verifyPushRequestSignature,
@@ -171,6 +173,8 @@ export class PushRelayService {
       id: `bnd_${randomUUID()}`,
       sourceId,
       installationId: ticket.installationId,
+      readerId: parsed.reader_id ?? null,
+      preferences: parsed.preferences ?? { ...DEFAULT_PUSH_PREFERENCES },
     })
     return {
       source_id: sourceId,
@@ -263,17 +267,61 @@ export class PushRelayService {
     }
   }
 
+  async getBinding(authorization: string | undefined, bindingId: string) {
+    const installation = await this.authenticateInstallation(authorization)
+    const binding = await this.store.findBindingForInstallation(
+      installation.id,
+      bindingId,
+    )
+    if (!binding || binding.revokedAt) {
+      throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
+    }
+    return {
+      binding_id: binding.id,
+      source_id: binding.sourceId,
+      installation_id: binding.installationId,
+      reader_id: binding.readerId,
+      preferences: binding.preferences,
+    }
+  }
+
   async revokeBinding(
     authorization: string | undefined,
     bindingId: string,
     now = new Date(),
   ) {
-    const source = await this.authenticateSource(authorization)
-    const revoked = await this.store.revokeBinding(source.id, bindingId, now)
+    const installation = await this.authenticateInstallation(authorization)
+    const revoked = await this.store.revokeBindingForInstallation(
+      installation.id,
+      bindingId,
+      now,
+    )
     if (!revoked) {
       throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
     }
     return { revoked: true }
+  }
+
+  async updateBindingPreferences(
+    authorization: string | undefined,
+    bindingId: string,
+    input: unknown,
+  ) {
+    const installation = await this.authenticateInstallation(authorization)
+    const preferences = PushPreferencesSchema.parse(input)
+    const updated = await this.store.updateBindingPreferencesForInstallation({
+      installationId: installation.id,
+      bindingId,
+      preferences,
+    })
+    if (!updated) {
+      throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
+    }
+    return {
+      updated: true as const,
+      binding_id: bindingId,
+      preferences,
+    }
   }
 
   private async authenticateInstallation(authorization: string | undefined) {

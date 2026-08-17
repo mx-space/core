@@ -26,8 +26,6 @@ import { NoteViews } from '~/modules/note/note.views'
 import {
   PushActivationRequestSchema,
   PushActivationResponseSchema,
-  PushBindingIdParamSchema,
-  PushStatusResponseSchema,
 } from '~/modules/push/push.schema'
 import {
   RecentlyRefCandidatesQuerySchema,
@@ -148,8 +146,9 @@ export const routeManifest: readonly OpenApiRoute[] = [
     method: 'post',
     path: '/notifications/push/activate',
     tag: 'notifications',
-    summary: 'Bind this authenticated owner installation to a Push Relay',
-    auth: true,
+    summary:
+      'Claim a Push Relay activation ticket for this device, optionally associating the current reader',
+    auth: false,
     body: {
       name: 'PushActivationRequest',
       schema: PushActivationRequestSchema,
@@ -158,27 +157,6 @@ export const routeManifest: readonly OpenApiRoute[] = [
       name: 'PushActivationResponse',
       schema: PushActivationResponseSchema,
     },
-  },
-  {
-    operationId: 'getPushNotificationStatus',
-    method: 'get',
-    path: '/notifications/push/status',
-    tag: 'notifications',
-    summary: 'Read the current owner push binding status',
-    auth: true,
-    response: {
-      name: 'PushStatus',
-      schema: PushStatusResponseSchema,
-    },
-  },
-  {
-    operationId: 'deactivatePushNotifications',
-    method: 'delete',
-    path: '/notifications/push/:bindingId',
-    tag: 'notifications',
-    summary: 'Revoke one mobile push binding',
-    auth: true,
-    params: PushBindingIdParamSchema,
   },
 
   {

@@ -103,10 +103,31 @@ export const createPushRelayServer = (service: PushRelayService) =>
       }
 
       const bindingMatch = /^\/v1\/bindings\/([^/]+)$/.exec(url.pathname)
+      if (request.method === 'GET' && bindingMatch) {
+        const result = await service.getBinding(
+          header(request, 'authorization'),
+          decodeURIComponent(bindingMatch[1]!),
+        )
+        sendJSON(response, 200, result)
+        return
+      }
       if (request.method === 'DELETE' && bindingMatch) {
         const result = await service.revokeBinding(
           header(request, 'authorization'),
           decodeURIComponent(bindingMatch[1]!),
+        )
+        sendJSON(response, 200, result)
+        return
+      }
+
+      const preferencesMatch = /^\/v1\/bindings\/([^/]+)\/preferences$/.exec(
+        url.pathname,
+      )
+      if (request.method === 'PUT' && preferencesMatch) {
+        const result = await service.updateBindingPreferences(
+          header(request, 'authorization'),
+          decodeURIComponent(preferencesMatch[1]!),
+          parseJSON(await readBody(request)),
         )
         sendJSON(response, 200, result)
         return

@@ -281,3 +281,16 @@ describe('buildOpenApiDocument', () => {
     )
   })
 })
+
+describe('push notification routes', () => {
+  const pushRoutes = routeManifest.filter((route) =>
+    route.path.startsWith('/notifications/push'),
+  )
+
+  it('documents activation as the only push route, and as a public one', () => {
+    expect(pushRoutes.map((route) => `${route.method} ${route.path}`)).toEqual([
+      'post /notifications/push/activate',
+    ])
+    expect(pushRoutes[0]!.auth).toBe(false)
+  })
+})

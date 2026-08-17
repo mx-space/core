@@ -232,6 +232,13 @@
       "when": 1786521600000,
       "tag": "0032_ai_summaries_multilang",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1786974601234,
+      "tag": "0033_push_binding_optional_owner",
+      "breakpoints": true
     }
   ]
 }

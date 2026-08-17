@@ -47,9 +47,9 @@ export const pushRelayBindings = pgTable(
       .references(() => pushRelaySources.id, { onDelete: 'cascade' }),
     remoteBindingId: text('remote_binding_id').notNull(),
     installationId: text('installation_id').notNull(),
-    ownerId: text('owner_id')
-      .notNull()
-      .references(() => readers.id, { onDelete: 'cascade' }),
+    ownerId: text('owner_id').references(() => readers.id, {
+      onDelete: 'set null',
+    }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     revokedAt: tsCol('revoked_at'),

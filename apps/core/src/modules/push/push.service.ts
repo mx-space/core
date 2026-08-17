@@ -1,7 +1,12 @@
 import {
   COMMENT_CREATED_EVENT,
+  COMMENT_REPLIED_EVENT,
   type CommentCreatedEvent,
+  type CommentRepliedEvent,
+  CONTENT_PUBLISHED_EVENT,
+  type ContentPublishedEvent,
   PUSH_SIGNATURE_HEADERS,
+  type PushEvent,
   RelayClaimResponseSchema,
   signPushRequest,
   sourceAuthorization,
@@ -11,14 +16,63 @@ import { Injectable, Logger } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { CommentRepository } from '~/modules/comment/comment.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import {
+  DatabaseService,
+  type GlobalDocumentResult,
+} from '~/processors/database/database.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { PushRepository } from './push.repository'
 import type { PushActivationRequestDto } from './push.schema'
+import type { PushRelaySourceRow } from './push.types'
 import { resolveAllowedPushRelayOrigin } from './push-relay-origin'
 import { PushSecretVault } from './push-secret.vault'
+
+const resourceIdOf = (data: unknown) => {
+  const value = (data as { id?: unknown } | null)?.id
+  const resourceId = String(value ?? '')
+  return resourceId && resourceId !== 'undefined' ? resourceId : null
+}
+
+const eventTimeOf = (data: unknown) => {
+  const rawTime = (data as { createdAt?: unknown } | null)?.createdAt
+  const parsedTime =
+    rawTime instanceof Date ? rawTime : new Date(String(rawTime ?? ''))
+  return Number.isNaN(parsedTime.getTime()) ? new Date() : parsedTime
+}
+
+const publicText = (value: unknown, max: number) => {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim()
+  return normalized ? normalized.slice(0, max) : null
+}
+
+const httpsUrlOf = (value: unknown) => {
+  if (typeof value !== 'string') return undefined
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' ? url.toString() : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const isPublicPushTarget = (
+  resolved: GlobalDocumentResult,
+  now = new Date(),
+) => {
+  if (resolved.type === 'post') return resolved.document.isPublished
+  if (resolved.type !== 'note') return true
+  const { hasPassword, isPublished, publicAt } = resolved.document
+  return (
+    isPublished &&
+    !hasPassword &&
+    (publicAt === null || publicAt.getTime() <= now.getTime())
+  )
+}
 
 @Injectable()
 export class PushService implements OnModuleInit, OnModuleDestroy {
@@ -30,16 +84,16 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     private readonly repository: PushRepository,
     private readonly configs: ConfigsService,
     private readonly events: EventManagerService,
+    private readonly comments: CommentRepository,
+    private readonly database: DatabaseService,
   ) {}
 
   onModuleInit() {
     this.listenerDisposer = this.events.registerHandler(
       (event: BusinessEvents, data, scope) => {
-        if (event !== BusinessEvents.COMMENT_CREATE) return
-        if ((scope & EventScope.TO_ADMIN) === 0) return
-        void this.enqueueComment(data).catch((error) => {
+        void this.handleBusinessEvent(event, data, scope).catch((error) => {
           this.logger.error(
-            `Unable to enqueue comment push: ${error instanceof Error ? error.message : String(error)}`,
+            `Unable to enqueue push event: ${error instanceof Error ? error.message : String(error)}`,
           )
         })
       },
@@ -50,11 +104,22 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     this.listenerDisposer?.()
   }
 
-  async activate(ownerId: string, input: PushActivationRequestDto) {
+  async activate(
+    readerId: string | undefined,
+    input: PushActivationRequestDto,
+  ) {
     PushSecretVault.assertConfigured()
     const relayUrl = resolveAllowedPushRelayOrigin(input.relayUrl)
     const existing = await this.repository.findSourceByRelayUrl(relayUrl)
     const sourceOrigin = await this.sourceOrigin()
+    const claimBody: Record<string, unknown> = {
+      ticket: input.activationTicket,
+      source_origin: sourceOrigin,
+      source_label: new URL(sourceOrigin).hostname,
+    }
+    if (readerId) {
+      claimBody.reader_id = readerId
+    }
     const response = await fetch(`${relayUrl}/v1/source-activations/claim`, {
       method: 'POST',
       headers: {
@@ -68,11 +133,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
             }
           : {}),
       },
-      body: JSON.stringify({
-        ticket: input.activationTicket,
-        source_origin: sourceOrigin,
-        source_label: new URL(sourceOrigin).hostname,
-      }),
+      body: JSON.stringify(claimBody),
       redirect: 'error',
       signal: AbortSignal.timeout(10_000),
     })
@@ -95,8 +156,8 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       throw new Error('Push Relay returned an untrusted event endpoint')
     }
 
-    const binding = await this.repository.saveActivation({
-      ownerId,
+    await this.repository.saveActivation({
+      readerId: readerId ?? null,
       relayUrl,
       remoteSourceId: claim.source_id,
       sourceSecret: claim.source_secret
@@ -106,46 +167,11 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       remoteBindingId: claim.binding_id,
       installationId: claim.installation_id,
     })
-    return { enabled: true as const, relayUrl, bindingId: binding.id }
-  }
-
-  async status(ownerId: string) {
-    const [binding, source] = await Promise.all([
-      this.repository.findActiveBinding(ownerId),
-      this.repository.findLatestSourceForOwner(ownerId),
-    ])
     return {
-      configured: source !== null,
-      enabled: binding !== null,
-      relayUrl: binding?.relayUrl ?? source?.relayUrl ?? null,
-      bindingId: binding?.id ?? null,
+      enabled: true as const,
+      relayUrl,
+      bindingId: claim.binding_id,
     }
-  }
-
-  async deactivate(ownerId: string, bindingId: string) {
-    const binding = await this.repository.findActiveBinding(ownerId)
-    if (!binding || binding.id !== bindingId) return
-    const relayUrl = resolveAllowedPushRelayOrigin(binding.source.relayUrl)
-    const response = await fetch(
-      `${relayUrl}/v1/bindings/${encodeURIComponent(binding.remoteBindingId)}`,
-      {
-        method: 'DELETE',
-        headers: {
-          authorization: sourceAuthorization(
-            binding.source.remoteSourceId,
-            PushSecretVault.decrypt(binding.source.sourceSecret),
-          ),
-        },
-        redirect: 'error',
-        signal: AbortSignal.timeout(10_000),
-      },
-    )
-    if (!response.ok && response.status !== 404) {
-      throw new Error(
-        `Push Relay deactivation failed with HTTP ${response.status}`,
-      )
-    }
-    await this.repository.revokeBinding(ownerId, bindingId)
   }
 
   private async sourceOrigin() {
@@ -156,21 +182,46 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     return new URL(raw).origin
   }
 
-  private async enqueueComment(data: unknown) {
+  private async handleBusinessEvent(
+    event: BusinessEvents,
+    data: unknown,
+    scope: EventScope,
+  ) {
+    if (event === BusinessEvents.COMMENT_CREATE) {
+      if ((scope & EventScope.TO_ADMIN) !== 0) {
+        await this.enqueueCommentCreated(data)
+      }
+      if ((scope & EventScope.TO_VISITOR) !== 0) {
+        await this.enqueueCommentReplied(data)
+      }
+      return
+    }
+
+    if ((scope & EventScope.TO_VISITOR) === 0) return
+    if (event === BusinessEvents.POST_CREATE) {
+      await this.enqueueContentPublished(data, 'post')
+      return
+    }
+    if (event === BusinessEvents.NOTE_CREATE) {
+      await this.enqueueContentPublished(data, 'note')
+      return
+    }
+    if (event === BusinessEvents.RECENTLY_CREATE) {
+      await this.enqueueContentPublished(data, 'recently')
+    }
+  }
+
+  private async enqueueCommentCreated(data: unknown) {
     const comment = data as {
       id?: unknown
       createdAt?: unknown
       isOwnerReply?: unknown
     }
     if (comment.isOwnerReply === true) return
-    const resourceId = String(comment.id ?? '')
-    if (!resourceId || resourceId === 'undefined') return
-    const rawTime = comment.createdAt
-    const parsedTime =
-      rawTime instanceof Date ? rawTime : new Date(String(rawTime ?? ''))
-    const time = Number.isNaN(parsedTime.getTime()) ? new Date() : parsedTime
-    const sources = await this.repository.listEnabledSources()
-    for (const source of sources) {
+    const resourceId = resourceIdOf(comment)
+    if (!resourceId) return
+    const time = eventTimeOf(comment)
+    await this.enqueueToEnabledSources((source) => {
       const event: CommentCreatedEvent = {
         specversion: '1.0',
         id: `comment.created:${resourceId}`,
@@ -181,10 +232,164 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
         datacontenttype: 'application/json',
         data: { resource_id: resourceId, resource_type: 'comment' },
       }
+      return event
+    })
+  }
+
+  private async enqueueCommentReplied(data: unknown) {
+    const comment = data as {
+      id?: unknown
+      createdAt?: unknown
+      parentCommentId?: unknown
+      readerId?: unknown
+      author?: unknown
+      avatar?: unknown
+      refId?: unknown
+    }
+    const resourceId = resourceIdOf(comment)
+    const parentCommentId = comment.parentCommentId
+    if (!resourceId || parentCommentId == null || parentCommentId === '') return
+    const parent = await this.comments.findById(String(parentCommentId))
+    const recipientReaderId = parent?.readerId
+    if (!recipientReaderId) return
+    if (recipientReaderId === String(comment.readerId ?? '')) return
+    const targetId = resourceIdOf({ id: comment.refId })
+    const senderName = publicText(comment.author, 80)
+    if (!targetId || !senderName) return
+    const target = await this.database.findGlobalById(targetId)
+    if (!target || !isPublicPushTarget(target)) return
+    const targetTitle = publicText(
+      (target.document as { title?: unknown }).title ??
+        (target.type === 'recently' ? 'Thinking' : null),
+      160,
+    )
+    if (!targetTitle) return
+    const time = eventTimeOf(comment)
+    await this.enqueueToEnabledSources((source) => {
+      const event: CommentRepliedEvent = {
+        specversion: '1.0',
+        id: `comment.replied:${resourceId}`,
+        source: `urn:mx-core:instance:${source.remoteSourceId}`,
+        type: COMMENT_REPLIED_EVENT,
+        subject: `comment/${resourceId}`,
+        time: time.toISOString(),
+        datacontenttype: 'application/json',
+        data: {
+          resource_id: resourceId,
+          resource_type: 'comment',
+          recipient_reader_id: recipientReaderId,
+          sender_id:
+            publicText(comment.readerId, 128) ?? `comment:${resourceId}`,
+          sender_name: senderName,
+          ...(httpsUrlOf(comment.avatar)
+            ? { sender_avatar_url: httpsUrlOf(comment.avatar) }
+            : {}),
+          target_title: targetTitle,
+          target_path: `/comments/${encodeURIComponent(targetId)}`,
+        },
+      }
+      return event
+    })
+  }
+
+  private async enqueueContentPublished(
+    data: unknown,
+    resourceType: ContentPublishedEvent['data']['resource_type'],
+  ) {
+    const resourceId = resourceIdOf(data)
+    if (!resourceId) return
+    const resolved = await this.database.findGlobalById(resourceId)
+    if (
+      !resolved ||
+      resolved.type !== resourceType ||
+      !isPublicPushTarget(resolved)
+    ) {
+      return
+    }
+    const document = resolved.document as {
+      title?: unknown
+      summary?: unknown
+      slug?: unknown
+      nid?: unknown
+      category?: { slug?: unknown }
+      metadata?: { summary?: unknown; title?: unknown } | null
+    }
+    const summary = publicText(
+      document.summary ?? document.metadata?.summary,
+      360,
+    )
+    if (!summary) return
+    const displayTitle = publicText(
+      document.title ??
+        document.metadata?.title ??
+        (resourceType === 'recently' ? 'Thinking' : null),
+      160,
+    )
+    if (!displayTitle) return
+    const targetPath = this.contentTargetPath(
+      resourceType,
+      document,
+      resourceId,
+    )
+    if (!targetPath) return
+    const time = eventTimeOf(data)
+    await this.enqueueToEnabledSources((source) => {
+      const event: ContentPublishedEvent = {
+        specversion: '1.0',
+        id: `content.published:${resourceType}:${resourceId}`,
+        source: `urn:mx-core:instance:${source.remoteSourceId}`,
+        type: CONTENT_PUBLISHED_EVENT,
+        subject: `${resourceType}/${resourceId}`,
+        time: time.toISOString(),
+        datacontenttype: 'application/json',
+        data: {
+          resource_id: resourceId,
+          resource_type: resourceType,
+          display_title: displayTitle,
+          summary,
+          target_path: targetPath,
+        },
+      }
+      return event
+    })
+  }
+
+  private contentTargetPath(
+    resourceType: ContentPublishedEvent['data']['resource_type'],
+    document: {
+      slug?: unknown
+      nid?: unknown
+      category?: { slug?: unknown }
+    },
+    resourceId: string,
+  ) {
+    if (resourceType === 'post') {
+      const category = publicText(document.category?.slug, 128)
+      const slug = publicText(document.slug, 128)
+      return category && slug
+        ? `/posts/${encodeURIComponent(category)}/${encodeURIComponent(slug)}`
+        : null
+    }
+    if (resourceType === 'note') {
+      const nid =
+        typeof document.nid === 'number' || typeof document.nid === 'string'
+          ? String(document.nid)
+          : ''
+      return nid ? `/notes/${encodeURIComponent(nid)}` : null
+    }
+    return `/thinking/${encodeURIComponent(resourceId)}`
+  }
+
+  private async enqueueToEnabledSources(
+    buildEvent: (source: PushRelaySourceRow) => PushEvent,
+  ) {
+    const sources = await this.repository.listEnabledSources()
+    const now = new Date()
+    for (const source of sources) {
       await this.repository.enqueueDelivery({
         sourceId: source.id,
-        event,
-        now: new Date(),
+        event: buildEvent(source),
+        now,
       })
     }
     void this.dispatchDue()

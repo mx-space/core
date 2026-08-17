@@ -5,6 +5,11 @@ public struct PushActivationTicket: Sendable, Equatable {
     public let expiresAt: Date
 }
 
+public struct PushRelayBinding: Sendable, Equatable {
+    public let bindingID: String
+    public let readerID: String?
+}
+
 public enum PushRelayError: LocalizedError, Sendable {
     case invalidResponse
     case rejected(Int)
@@ -38,16 +43,37 @@ public struct PushRelayClient: Sendable {
         }
     }
 
+    private struct BindingResponse: Decodable {
+        let bindingID: String
+        let readerID: String?
+
+        enum CodingKeys: String, CodingKey {
+            case bindingID = "binding_id"
+            case readerID = "reader_id"
+        }
+    }
+
     private let configuration: PushConfiguration
-    private let session: URLSession
     private let decoder: JSONDecoder
+    private let requestData: @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
     public init(configuration: PushConfiguration, session: URLSession = .shared) {
         self.configuration = configuration
-        self.session = session
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         self.decoder = decoder
+        requestData = { request in try await session.data(for: request) }
+    }
+
+    init(
+        configuration: PushConfiguration,
+        requestData: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)
+    ) {
+        self.configuration = configuration
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        self.decoder = decoder
+        self.requestData = requestData
     }
 
     public func register(deviceToken: String) async throws -> PushInstallationCredential {
@@ -77,7 +103,7 @@ public struct PushRelayClient: Sendable {
             "apns_environment": configuration.environment.rawValue,
             "apns_token": deviceToken,
         ])
-        let (_, response) = try await session.data(for: request)
+        let (_, response) = try await requestData(request)
         try validate(response, success: 200)
     }
 
@@ -88,6 +114,29 @@ public struct PushRelayClient: Sendable {
         request.setValue(authorization(credential), forHTTPHeaderField: "Authorization")
         let response: TicketResponse = try await send(request, success: 201)
         return PushActivationTicket(ticket: response.ticket, expiresAt: response.expiresAt)
+    }
+
+    public func binding(
+        bindingID: String,
+        credential: PushInstallationCredential
+    ) async throws -> PushRelayBinding {
+        var request = request(path: "v1/bindings/\(bindingID)", method: "GET")
+        request.setValue(authorization(credential), forHTTPHeaderField: "Authorization")
+        let response: BindingResponse = try await send(request, success: 200)
+        return PushRelayBinding(
+            bindingID: response.bindingID,
+            readerID: response.readerID
+        )
+    }
+
+    public func revokeBinding(
+        bindingID: String,
+        credential: PushInstallationCredential
+    ) async throws {
+        var request = request(path: "v1/bindings/\(bindingID)", method: "DELETE")
+        request.setValue(authorization(credential), forHTTPHeaderField: "Authorization")
+        let (_, response) = try await requestData(request)
+        try validate(response, success: 200)
     }
 
     private func request(path: String, method: String) -> URLRequest {
@@ -103,7 +152,7 @@ public struct PushRelayClient: Sendable {
     }
 
     private func send<T: Decodable>(_ request: URLRequest, success: Int) async throws -> T {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await requestData(request)
         try validate(response, success: success)
         do {
             return try decoder.decode(T.self, from: data)

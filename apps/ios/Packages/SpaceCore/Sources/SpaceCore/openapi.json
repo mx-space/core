@@ -245,16 +245,11 @@
     "/notifications/push/activate": {
       "post": {
         "operationId": "activatePushNotifications",
-        "summary": "Bind this authenticated owner installation to a Push Relay",
+        "summary": "Claim a Push Relay activation ticket for this device, optionally associating the current reader",
         "tags": [
           "notifications"
         ],
         "parameters": [],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -286,115 +281,6 @@
                 }
               }
             }
-          },
-          "4XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/notifications/push/status": {
-      "get": {
-        "operationId": "getPushNotificationStatus",
-        "summary": "Read the current owner push binding status",
-        "tags": [
-          "notifications"
-        ],
-        "parameters": [],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/PushStatus"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/ResponseMeta"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "4XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          },
-          "5XX": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelope"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/notifications/push/{binding_id}": {
-      "delete": {
-        "operationId": "deactivatePushNotifications",
-        "summary": "Revoke one mobile push binding",
-        "tags": [
-          "notifications"
-        ],
-        "parameters": [
-          {
-            "name": "binding_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            }
-          }
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
           },
           "4XX": {
             "description": "Error",
@@ -2233,29 +2119,6 @@
           "enabled",
           "relay_url",
           "binding_id"
-        ],
-        "additionalProperties": false
-      },
-      "PushStatus": {
-        "type": "object",
-        "properties": {
-          "configured": {
-            "type": "boolean"
-          },
-          "enabled": {
-            "type": "boolean"
-          },
-          "relay_url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "binding_id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "configured",
-          "enabled"
         ],
         "additionalProperties": false
       },

@@ -3,10 +3,16 @@ import Foundation
 public struct PushInstallationCredential: Codable, Sendable, Equatable {
     public let installationID: String
     public let installationSecret: String
+    public let bindingID: String?
 
-    public init(installationID: String, installationSecret: String) {
+    public init(
+        installationID: String,
+        installationSecret: String,
+        bindingID: String? = nil
+    ) {
         self.installationID = installationID
         self.installationSecret = installationSecret
+        self.bindingID = bindingID
     }
 }
 

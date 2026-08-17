@@ -1,7 +1,13 @@
 import { createPrivateKey, sign } from 'node:crypto'
 import { connect } from 'node:http2'
 
-import type { PushEvent } from '@mx-space/push-protocol'
+import {
+  COMMENT_CREATED_EVENT,
+  COMMENT_REPLIED_EVENT,
+  CONTENT_PUBLISHED_EVENT,
+  PUSH_PROTOCOL_VERSION,
+  type PushEvent,
+} from '@mx-space/push-protocol'
 
 import type { ApnsAppConfig, ApnsKeyConfig } from './config.js'
 import type { ApnsProvider, ApnsResult } from './types.js'
@@ -99,18 +105,97 @@ export class Http2ApnsProvider implements ApnsProvider {
   }
 }
 
-export const buildApnsPayload = (event: PushEvent) => ({
-  aps: {
-    alert: {
-      title: 'New comment',
-      body: 'A new comment is ready to review.',
-    },
-    sound: 'default',
-    'thread-id': 'comments',
-    category: 'SPACE_COMMENT',
-  },
-  schema_version: 1,
+const customFields = (
+  event: PushEvent,
+  extras: Record<string, unknown> = {},
+) => ({
+  ...extras,
+  schema_version: PUSH_PROTOCOL_VERSION,
   source_id: event.source.replace('urn:mx-core:instance:', ''),
   resource_type: event.data.resource_type,
   resource_id: event.data.resource_id,
 })
+
+const publishedCopy = {
+  post: {
+    subtitleLocKey: 'PUSH_CONTENT_POST_SUBTITLE',
+    threadId: 'posts',
+  },
+  note: {
+    subtitleLocKey: 'PUSH_CONTENT_NOTE_SUBTITLE',
+    threadId: 'notes',
+  },
+  recently: {
+    subtitleLocKey: 'PUSH_CONTENT_RECENTLY_SUBTITLE',
+    threadId: 'recently',
+  },
+} as const
+
+export const buildApnsPayload = (event: PushEvent) => {
+  if (event.type === COMMENT_CREATED_EVENT) {
+    return {
+      aps: {
+        alert: {
+          title: 'New comment',
+          body: 'A new comment is ready to review.',
+        },
+        sound: 'default',
+        'thread-id': 'comments',
+        category: 'SPACE_COMMENT',
+      },
+      ...customFields(event),
+    }
+  }
+
+  if (event.type === CONTENT_PUBLISHED_EVENT) {
+    const copy = publishedCopy[event.data.resource_type]
+    return {
+      aps: {
+        alert: {
+          'title-loc-key': 'PUSH_CONTENT_TITLE',
+          'title-loc-args': [event.data.display_title],
+          'subtitle-loc-key': copy.subtitleLocKey,
+          'loc-key': 'PUSH_CONTENT_SUMMARY',
+          'loc-args': [event.data.summary],
+        },
+        sound: 'default',
+        'thread-id': copy.threadId,
+        category: 'YOHAKU_CONTENT',
+      },
+      ...customFields(event, {
+        event_type: event.type,
+        target_path: event.data.target_path,
+      }),
+    }
+  }
+
+  if (event.type === COMMENT_REPLIED_EVENT) {
+    return {
+      aps: {
+        alert: {
+          'title-loc-key': 'PUSH_REPLY_TITLE',
+          'title-loc-args': [event.data.sender_name],
+          'loc-key': 'PUSH_REPLY_BODY',
+          'loc-args': [event.data.target_title],
+        },
+        sound: 'default',
+        'thread-id': 'comment-replies',
+        category: 'YOHAKU_COMMENT_REPLIED',
+        'mutable-content': 1,
+      },
+      ...customFields(event, {
+        event_type: event.type,
+        sender_id: event.data.sender_id,
+        sender_name: event.data.sender_name,
+        ...(event.data.sender_avatar_url
+          ? { sender_avatar_url: event.data.sender_avatar_url }
+          : {}),
+        target_title: event.data.target_title,
+        target_path: event.data.target_path,
+      }),
+    }
+  }
+
+  const exhaustive: never = event
+  return exhaustive
+}

@@ -46,6 +46,8 @@ run
 /data
 /assets
 .env
+.env.local
+apps/push-relay/.env.local
 
 scripts/workflow/docker-compose.yml
 scripts/workflow/data

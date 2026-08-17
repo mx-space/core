@@ -1,7 +1,9 @@
 import type { Pool, PoolClient } from 'pg'
 
+import { FANOUT_DELIVERY_INSERT_SQL, fanoutQueryForEvent } from './fanout.js'
 import type {
   ActivationTicketRecord,
+  BindingRecord,
   DeliveryRecord,
   InstallationRecord,
   PushRelayStore,
@@ -158,14 +160,77 @@ export class PostgresPushRelayStore implements PushRelayStore {
 
   async createBinding(input: Parameters<PushRelayStore['createBinding']>[0]) {
     const result = await this.pool.query<{ id: string }>(
-      `INSERT INTO push_bindings (id, source_id, installation_id)
-       VALUES ($1, $2, $3)
+      `INSERT INTO push_bindings (id, source_id, installation_id, reader_id, preferences)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (source_id, installation_id)
-       DO UPDATE SET revoked_at = NULL, updated_at = now()
+       DO UPDATE SET revoked_at = NULL, reader_id = EXCLUDED.reader_id,
+           updated_at = now()
        RETURNING id`,
-      [input.id, input.sourceId, input.installationId],
+      [
+        input.id,
+        input.sourceId,
+        input.installationId,
+        input.readerId,
+        input.preferences,
+      ],
     )
     return result.rows[0]!.id
+  }
+
+  async findBindingForInstallation(
+    installationId: string,
+    bindingId: string,
+  ): Promise<BindingRecord | null> {
+    const result = await this.pool.query<{
+      id: string
+      source_id: string
+      installation_id: string
+      reader_id: string | null
+      preferences: BindingRecord['preferences']
+      revoked_at: Date | null
+    }>(
+      `SELECT id, source_id, installation_id, reader_id, preferences, revoked_at
+       FROM push_bindings
+       WHERE id = $2 AND installation_id = $1 AND revoked_at IS NULL`,
+      [installationId, bindingId],
+    )
+    const row = result.rows[0]
+    return row
+      ? {
+          id: row.id,
+          sourceId: row.source_id,
+          installationId: row.installation_id,
+          readerId: row.reader_id,
+          preferences: row.preferences,
+          revokedAt: row.revoked_at,
+        }
+      : null
+  }
+
+  async updateBindingPreferencesForInstallation(
+    input: Parameters<
+      PushRelayStore['updateBindingPreferencesForInstallation']
+    >[0],
+  ) {
+    const result = await this.pool.query(
+      `UPDATE push_bindings SET preferences = $3, updated_at = now()
+       WHERE installation_id = $1 AND id = $2 AND revoked_at IS NULL`,
+      [input.installationId, input.bindingId, input.preferences],
+    )
+    return result.rowCount === 1
+  }
+
+  async revokeBindingForInstallation(
+    installationId: string,
+    bindingId: string,
+    now: Date,
+  ) {
+    const result = await this.pool.query(
+      `UPDATE push_bindings SET revoked_at = $3, updated_at = $3
+       WHERE installation_id = $1 AND id = $2 AND revoked_at IS NULL`,
+      [installationId, bindingId, now],
+    )
+    return result.rowCount === 1
   }
 
   async revokeBinding(sourceId: string, bindingId: string, now: Date) {
@@ -208,16 +273,17 @@ export class PostgresPushRelayStore implements PushRelayStore {
         }
       }
 
-      const deliveries = await client.query(
-        `INSERT INTO push_deliveries
-         (id, source_id, event_id, binding_id, installation_id, next_attempt_at)
-         SELECT 'dlv_' || encode(gen_random_bytes(18), 'hex'), b.source_id, $1,
-                b.id, b.installation_id, $3
-         FROM push_bindings b
-         JOIN push_installations i ON i.id = b.installation_id
-         WHERE b.source_id = $2 AND b.revoked_at IS NULL AND i.revoked_at IS NULL`,
-        [input.id, input.sourceId, input.now],
-      )
+      const fanout = fanoutQueryForEvent(input.event)
+      if (!fanout) return { accepted: true, deliveries: 0 }
+
+      const deliveries = await client.query(FANOUT_DELIVERY_INSERT_SQL, [
+        input.id,
+        input.sourceId,
+        input.now,
+        fanout.appId,
+        fanout.readerId,
+        fanout.preferenceKey,
+      ])
       return { accepted: true, deliveries: deliveries.rowCount ?? 0 }
     })
   }

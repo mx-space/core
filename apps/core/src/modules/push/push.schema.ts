@@ -39,27 +39,12 @@ export const PushActivationRequestSchema = z
   })
   .strict()
 
-export const PushBindingIdParamSchema = z
-  .object({ bindingId: z.string().min(1).max(128) })
-  .strict()
-
 export const PushActivationResponseSchema = z.object({
   enabled: z.literal(true),
   relayUrl: z.url(),
   bindingId: z.string().min(1),
 })
 
-export const PushStatusResponseSchema = z.object({
-  configured: z.boolean(),
-  enabled: z.boolean(),
-  relayUrl: z.url().nullable(),
-  bindingId: z.string().nullable(),
-})
-
 export class PushActivationRequestDto extends createZodDto(
   PushActivationRequestSchema,
-) {}
-
-export class PushBindingIdParamDto extends createZodDto(
-  PushBindingIdParamSchema,
 ) {}
