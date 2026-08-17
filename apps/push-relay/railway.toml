@@ -1,0 +1,7 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/push-relay/Dockerfile"
+watchPatterns = [
+  "/apps/push-relay/**",
+  "/packages/push-protocol/**",
+]
