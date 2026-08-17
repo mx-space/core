@@ -18,7 +18,10 @@ import { Interval } from '@nestjs/schedule'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CommentRepository } from '~/modules/comment/comment.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { DatabaseService } from '~/processors/database/database.service'
+import {
+  DatabaseService,
+  type GlobalDocumentResult,
+} from '~/processors/database/database.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
@@ -55,6 +58,20 @@ const httpsUrlOf = (value: unknown) => {
   } catch {
     return undefined
   }
+}
+
+const isPublicPushTarget = (
+  resolved: GlobalDocumentResult,
+  now = new Date(),
+) => {
+  if (resolved.type === 'post') return resolved.document.isPublished
+  if (resolved.type !== 'note') return true
+  const { hasPassword, isPublished, publicAt } = resolved.document
+  return (
+    isPublished &&
+    !hasPassword &&
+    (publicAt === null || publicAt.getTime() <= now.getTime())
+  )
 }
 
 @Injectable()
@@ -240,9 +257,10 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     const senderName = publicText(comment.author, 80)
     if (!targetId || !senderName) return
     const target = await this.database.findGlobalById(targetId)
+    if (!target || !isPublicPushTarget(target)) return
     const targetTitle = publicText(
-      (target?.document as { title?: unknown } | undefined)?.title ??
-        (target?.type === 'recently' ? 'Thinking' : null),
+      (target.document as { title?: unknown }).title ??
+        (target.type === 'recently' ? 'Thinking' : null),
       160,
     )
     if (!targetTitle) return
@@ -281,7 +299,13 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     const resourceId = resourceIdOf(data)
     if (!resourceId) return
     const resolved = await this.database.findGlobalById(resourceId)
-    if (!resolved) return
+    if (
+      !resolved ||
+      resolved.type !== resourceType ||
+      !isPublicPushTarget(resolved)
+    ) {
+      return
+    }
     const document = resolved.document as {
       title?: unknown
       summary?: unknown

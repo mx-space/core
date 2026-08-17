@@ -46,9 +46,24 @@ final class PushNotificationManager {
         authorizationStatus = await UNUserNotificationCenter.current()
             .notificationSettings().authorizationStatus
         do {
-            let status = try await activation.status()
-            bindingID = status.bindingID
-            state = status.enabled ? .enabled : .idle
+            guard
+                let credential = try credentials.read(),
+                let storedBindingID = credential.bindingID
+            else {
+                bindingID = nil
+                state = .idle
+                return
+            }
+            let binding = try await relay.binding(
+                bindingID: storedBindingID,
+                credential: credential
+            )
+            bindingID = binding.bindingID
+            state = .enabled
+        } catch PushRelayError.rejected(404) {
+            try? credentials.clear()
+            bindingID = nil
+            state = .idle
         } catch {
             state = .failed(error.localizedDescription)
         }
@@ -106,10 +121,18 @@ final class PushNotificationManager {
     }
 
     func disable() async {
-        guard let bindingID, !isWorking else { return }
+        guard
+            let bindingID,
+            let credential = try? credentials.read(),
+            !isWorking
+        else { return }
         state = .disabling
         do {
-            try await activation.deactivate(bindingID: bindingID)
+            try await relay.revokeBinding(
+                bindingID: bindingID,
+                credential: credential
+            )
+            try credentials.clear()
             self.bindingID = nil
             state = .idle
         } catch {
@@ -145,6 +168,12 @@ final class PushNotificationManager {
                 relayURL: configuration.relayURL,
                 ticket: ticket.ticket
             )
+            let activatedCredential = PushInstallationCredential(
+                installationID: credential.installationID,
+                installationSecret: credential.installationSecret,
+                bindingID: status.bindingID
+            )
+            try credentials.write(activatedCredential)
             bindingID = status.bindingID
             state = .enabled
         } catch {

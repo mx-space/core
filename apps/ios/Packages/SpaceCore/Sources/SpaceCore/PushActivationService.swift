@@ -40,38 +40,4 @@ public struct PushActivationService: Sendable {
         }
     }
 
-    public func status() async throws -> PushBindingStatus {
-        switch try await client.getPushNotificationStatus() {
-        case let .ok(response):
-            let data = try response.body.json.data
-            return PushBindingStatus(
-                configured: data.configured,
-                enabled: data.enabled,
-                relayURL: data.relayUrl.flatMap(URL.init(string:)),
-                bindingID: data.bindingId
-            )
-        case let .clientError(status, response):
-            throw SpaceError(envelope: try response.body.json, status: status)
-        case let .serverError(status, response):
-            throw SpaceError(envelope: try response.body.json, status: status)
-        case let .undocumented(statusCode, _):
-            throw SpaceError.undocumented(statusCode)
-        }
-    }
-
-    public func deactivate(bindingID: String) async throws {
-        let input = Operations.DeactivatePushNotifications.Input(
-            path: .init(bindingId: bindingID)
-        )
-        switch try await client.deactivatePushNotifications(input) {
-        case .noContent:
-            return
-        case let .clientError(status, response):
-            throw SpaceError(envelope: try response.body.json, status: status)
-        case let .serverError(status, response):
-            throw SpaceError(envelope: try response.body.json, status: status)
-        case let .undocumented(statusCode, _):
-            throw SpaceError.undocumented(statusCode)
-        }
-    }
 }

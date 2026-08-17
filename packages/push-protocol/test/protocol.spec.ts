@@ -130,6 +130,29 @@ describe('push protocol', () => {
     )
   })
 
+  it.each([
+    '/posts/%2e%2e/admin',
+    '/posts/category/%2Fadmin',
+    '/posts/category/%5cadmin',
+    '/posts/category/%00admin',
+  ])('rejects encoded traversal or separators in target_path %s', (targetPath) => {
+    const result = PushEventSchema.safeParse({
+      ...cloudEventBase,
+      id: 'content.published:post-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'post/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'post',
+        display_title: 'Public title',
+        summary: 'Public summary.',
+        target_path: targetPath,
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
+
   it('accepts comment.replied.v1 with recipient_reader_id for signed routing', () => {
     const replied = {
       ...cloudEventBase,

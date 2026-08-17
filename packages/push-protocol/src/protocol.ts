@@ -9,6 +9,21 @@ export const COMMENT_REPLIED_EVENT = 'dev.mx-space.comment.replied.v1' as const
 const resourceId = z.string().min(1).max(128)
 const publicTitle = z.string().trim().min(1).max(160)
 const publicSummary = z.string().trim().min(1).max(360)
+const isSafeTargetSegment = (segment: string) => {
+  try {
+    const decoded = decodeURIComponent(segment)
+    if (decoded === '.' || decoded === '..') return false
+    for (const char of decoded) {
+      const code = char.charCodeAt(0)
+      if (char === '/' || char === '\\' || code <= 0x1f || code === 0x7f) {
+        return false
+      }
+    }
+    return true
+  } catch {
+    return false
+  }
+}
 const internalTargetPath = z
   .string()
   .min(2)
@@ -20,7 +35,7 @@ const internalTargetPath = z
       !value.includes('\\') &&
       !value.includes('?') &&
       !value.includes('#') &&
-      !value.split('/').some((segment) => segment === '.' || segment === '..'),
+      value.split('/').every(isSafeTargetSegment),
     'target_path must be a safe internal absolute path',
   )
 const httpsUrl = z

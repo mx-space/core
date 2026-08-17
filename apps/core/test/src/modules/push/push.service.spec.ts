@@ -138,6 +138,7 @@ describe('PushService', () => {
         title: 'Public title',
         summary: 'Public summary.',
         slug: 'public-title',
+        isPublished: true,
         category: { slug: 'journal' },
       },
     })
@@ -166,6 +167,76 @@ describe('PushService', () => {
     expect(JSON.stringify(event)).not.toContain('private body')
     service.onModuleDestroy()
   })
+
+  it.each([
+    {
+      type: 'unpublished post',
+      event: BusinessEvents.POST_CREATE,
+      resolvedType: 'post',
+      document: {
+        title: 'Draft title',
+        summary: 'Draft summary.',
+        slug: 'draft',
+        isPublished: false,
+        category: { slug: 'journal' },
+      },
+    },
+    {
+      type: 'unpublished note',
+      event: BusinessEvents.NOTE_CREATE,
+      resolvedType: 'note',
+      document: {
+        title: 'Draft note',
+        summary: 'Draft summary.',
+        nid: 42,
+        isPublished: false,
+        hasPassword: false,
+        publicAt: null,
+      },
+    },
+    {
+      type: 'password-protected note',
+      event: BusinessEvents.NOTE_CREATE,
+      resolvedType: 'note',
+      document: {
+        title: 'Protected note',
+        summary: 'Protected summary.',
+        nid: 42,
+        isPublished: true,
+        hasPassword: true,
+        publicAt: null,
+      },
+    },
+    {
+      type: 'future note',
+      event: BusinessEvents.NOTE_CREATE,
+      resolvedType: 'note',
+      document: {
+        title: 'Scheduled note',
+        summary: 'Scheduled summary.',
+        nid: 42,
+        isPublished: true,
+        hasPassword: false,
+        publicAt: new Date('2099-01-01T00:00:00.000Z'),
+      },
+    },
+  ] as const)(
+    'does not publish a $type',
+    async ({ event, resolvedType, document }) => {
+      database.findGlobalById.mockResolvedValue({
+        type: resolvedType,
+        document,
+      })
+      const service = createService()
+      service.onModuleInit()
+
+      handler?.(event, { id: 'private-content' }, EventScope.TO_SYSTEM_VISITOR)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(repository.enqueueDelivery).not.toHaveBeenCalled()
+      service.onModuleDestroy()
+    },
+  )
 
   it.each([
     { event: BusinessEvents.POST_CREATE, type: 'post' },
@@ -211,7 +282,7 @@ describe('PushService', () => {
     })
     database.findGlobalById.mockResolvedValue({
       type: 'post',
-      document: { id: 'post-1', title: 'Public post' },
+      document: { id: 'post-1', title: 'Public post', isPublished: true },
     })
     const service = createService()
     service.onModuleInit()
@@ -249,6 +320,39 @@ describe('PushService', () => {
       },
     })
     expect(JSON.stringify(event)).not.toContain('private reply')
+    service.onModuleDestroy()
+  })
+
+  it('does not emit a reply that reveals an unpublished target title', async () => {
+    commentRepository.findById.mockResolvedValue({
+      id: 'parent-1',
+      readerId: 'reader-parent',
+    })
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: {
+        id: 'post-private',
+        title: 'Private target',
+        isPublished: false,
+      },
+    })
+    const service = createService()
+    service.onModuleInit()
+
+    handler?.(
+      BusinessEvents.COMMENT_CREATE,
+      {
+        id: 'private-reply',
+        parentCommentId: 'parent-1',
+        readerId: 'reader-child',
+        author: 'Reply author',
+        refId: 'post-private',
+      },
+      EventScope.TO_VISITOR,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(repository.enqueueDelivery).not.toHaveBeenCalled()
     service.onModuleDestroy()
   })
 
@@ -304,7 +408,7 @@ describe('PushService', () => {
     })
     database.findGlobalById.mockResolvedValue({
       type: 'post',
-      document: { id: 'post-1', title: 'Public post' },
+      document: { id: 'post-1', title: 'Public post', isPublished: true },
     })
     const service = createService()
     service.onModuleInit()
@@ -340,7 +444,7 @@ describe('PushService', () => {
     })
     database.findGlobalById.mockResolvedValue({
       type: 'post',
-      document: { id: 'post-1', title: 'Public post' },
+      document: { id: 'post-1', title: 'Public post', isPublished: true },
     })
     const service = createService()
     service.onModuleInit()

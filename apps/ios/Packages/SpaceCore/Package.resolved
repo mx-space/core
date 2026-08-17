@@ -1,5 +1,5 @@
 {
-  "originHash" : "a77a606c95c1156a77f634436bc7e7b96e8616db01194c9c0512e1179c6144d3",
+  "originHash" : "7fc9e4743ddc6fc064153e42d9cce2badca521f8bfb07bc861047ee7c3b6f778",
   "pins" : [
     {
       "identity" : "openapikit",
@@ -69,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-openapi-runtime",
       "state" : {
-        "revision" : "7722cf8eac05c1f1b5b05895b04cfcc29576d9be",
-        "version" : "1.8.3"
+        "revision" : "3d3a8457661daf7fb260ceeb9f0e24e5204ba5fb",
+        "version" : "1.12.0"
       }
     },
     {
