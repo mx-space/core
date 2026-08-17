@@ -1,3 +1,15 @@
+## [14.2.0](https://github.com/mx-space/core/compare/v14.1.0...v14.2.0) (2026-08-18)
+
+
+### Bug Fixes
+
+* **activity:** keep presence avatars without trusting client readerId ([9e0e9ab](https://github.com/mx-space/core/commit/9e0e9aba2fa72a5147c53fd4b937b4a674ce9ccf))
+
+
+### Features
+
+* **push:** reader content and reply notification fan-out ([#2812](https://github.com/mx-space/core/issues/2812)) ([bdb7cd4](https://github.com/mx-space/core/commit/bdb7cd42629154f1ab206fb08c1b271dbe4bd306))
+
 ## [14.1.0](https://github.com/mx-space/core/compare/v14.0.2...v14.1.0) (2026-08-16)
 
 

@@ -1,20 +1,33 @@
 ## TL;DR
 
-Adds reader activity/report endpoints and reader account deletion for the Yohaku Me tab, plus a toggleable App Review demo account for Apple sign-in review.
+Ships reader content and comment-reply push for Yohaku, with APNs Communication metadata and a presence-avatar trust fix.
 
 ## Highlights
 
-Readers can now see their own comment history via `GET /comments/reader/me`, flag problematic comments with `POST /comments/:id/report`, and delete their own account through Expo sessions. Together these endpoints back the Yohaku app's Me tab and satisfy app-store account-deletion requirements without any admin involvement.
+Yohaku readers can now receive alerts when published posts, notes, or recently entries go live, and when someone replies to their comments. Core enriches those events with public titles, summaries, and tap paths, skips content that has no summary, and keeps private or unpublished work out of the payload. Comment replies carry sender metadata so iOS can render Communication Notifications.
 
-A new App Review demo account streamlines Apple sign-in review: enabling the toggle provisions a fixed reader identity (`app-review@users.invalid`) that can sign in via the email form even when password login is globally disabled. The account is reset daily by cron, its credentials surface in the admin panel, and disabling the toggle bans the account and cleans up its sessions.
+Device activation is a single public `POST /notifications/push/activate`. Relay owns per-device preferences; Core stores source metadata with an optional reader. Bindings are scoped to the owning installation, so a device can read, update, or revoke its own record without a session cookie.
+
+Presence avatars no longer trust a client-supplied reader id. The gateway accepts an optional HTTPS image, resolves identity from session or socket, and returns only the public reader card.
 
 ## Changes
 
 ### Features
 
-- Reader activity list (`GET /comments/reader/me`), public comment reporting (`POST /comments/:id/report`), and reader self-service account deletion for the Yohaku Me tab ([#2811](https://github.com/mx-space/core/pull/2811))
-- App Review demo account behind an admin toggle: idempotent provisioning, email sign-in bypass when password login is disabled, daily content/profile reset, and full cleanup on toggle-off ([#2811](https://github.com/mx-space/core/pull/2811))
+- Fan out published content and comment-reply alerts to Yohaku readers, including localized APNs payloads and mutable-content on replies ([#2812](https://github.com/mx-space/core/pull/2812))
+- Public push activation and installation-scoped Relay binding APIs, with optional reader association instead of reader-owned endpoints ([#2812](https://github.com/mx-space/core/pull/2812))
+
+### Bug Fixes
+
+- Keep presence avatars without trusting a client-supplied `readerId` ([9e0e9ab](https://github.com/mx-space/core/commit/9e0e9aba2fa72a5147c53fd4b937b4a674ce9ccf))
+- Block private content metadata from push payloads and reject encoded path traversal in notification targets ([#2812](https://github.com/mx-space/core/pull/2812))
+
+## Upgrade Notes
+
+Release-phase will apply migration `0033`, which makes `push_relay_bindings.owner_id` nullable and drops any leftover `push_reader_preferences` table. No extra operator SQL is required.
+
+Comment-reply Communication Notifications also need a Push Relay that understands the enriched payload. Redeploy Relay alongside this Core tag before shipping the Yohaku client.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.0.2...v14.1.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.1.0...v14.2.0
