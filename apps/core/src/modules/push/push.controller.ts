@@ -12,8 +12,8 @@ export class PushController {
 
   @Post('/activate')
   activate(
-    @CurrentReaderId() readerId: string | undefined,
     @Body() body: PushActivationRequestDto,
+    @CurrentReaderId() readerId?: string,
   ) {
     return this.service.activate(readerId, body)
   }
