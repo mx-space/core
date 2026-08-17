@@ -3,6 +3,7 @@ import type { Pool, PoolClient } from 'pg'
 import { FANOUT_DELIVERY_INSERT_SQL, fanoutQueryForEvent } from './fanout.js'
 import type {
   ActivationTicketRecord,
+  BindingRecord,
   DeliveryRecord,
   InstallationRecord,
   PushRelayStore,
@@ -163,7 +164,7 @@ export class PostgresPushRelayStore implements PushRelayStore {
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (source_id, installation_id)
        DO UPDATE SET revoked_at = NULL, reader_id = EXCLUDED.reader_id,
-           preferences = EXCLUDED.preferences, updated_at = now()
+           updated_at = now()
        RETURNING id`,
       [
         input.id,
@@ -176,13 +177,58 @@ export class PostgresPushRelayStore implements PushRelayStore {
     return result.rows[0]!.id
   }
 
-  async updateBindingPreferences(
-    input: Parameters<PushRelayStore['updateBindingPreferences']>[0],
+  async findBindingForInstallation(
+    installationId: string,
+    bindingId: string,
+  ): Promise<BindingRecord | null> {
+    const result = await this.pool.query<{
+      id: string
+      source_id: string
+      installation_id: string
+      reader_id: string | null
+      preferences: BindingRecord['preferences']
+      revoked_at: Date | null
+    }>(
+      `SELECT id, source_id, installation_id, reader_id, preferences, revoked_at
+       FROM push_bindings
+       WHERE id = $2 AND installation_id = $1 AND revoked_at IS NULL`,
+      [installationId, bindingId],
+    )
+    const row = result.rows[0]
+    return row
+      ? {
+          id: row.id,
+          sourceId: row.source_id,
+          installationId: row.installation_id,
+          readerId: row.reader_id,
+          preferences: row.preferences,
+          revokedAt: row.revoked_at,
+        }
+      : null
+  }
+
+  async updateBindingPreferencesForInstallation(
+    input: Parameters<
+      PushRelayStore['updateBindingPreferencesForInstallation']
+    >[0],
   ) {
     const result = await this.pool.query(
       `UPDATE push_bindings SET preferences = $3, updated_at = now()
-       WHERE source_id = $1 AND id = $2 AND revoked_at IS NULL`,
-      [input.sourceId, input.bindingId, input.preferences],
+       WHERE installation_id = $1 AND id = $2 AND revoked_at IS NULL`,
+      [input.installationId, input.bindingId, input.preferences],
+    )
+    return result.rowCount === 1
+  }
+
+  async revokeBindingForInstallation(
+    installationId: string,
+    bindingId: string,
+    now: Date,
+  ) {
+    const result = await this.pool.query(
+      `UPDATE push_bindings SET revoked_at = $3, updated_at = $3
+       WHERE installation_id = $1 AND id = $2 AND revoked_at IS NULL`,
+      [installationId, bindingId, now],
     )
     return result.rowCount === 1
   }

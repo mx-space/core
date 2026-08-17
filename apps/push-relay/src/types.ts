@@ -24,6 +24,15 @@ export type SourceRecord = {
   revokedAt: Date | null
 }
 
+export type BindingRecord = {
+  id: string
+  sourceId: string
+  installationId: string
+  readerId: string | null
+  preferences: PushPreferences
+  revokedAt: Date | null
+}
+
 export type DeliveryRecord = {
   id: string
   eventId: string
@@ -68,6 +77,7 @@ export interface PushRelayStore {
     secretCiphertext: string
   }) => Promise<void>
   findSource: (id: string) => Promise<SourceRecord | null>
+  /** Upsert on (sourceId, installationId); `preferences` only applies to a first insert because devices own them afterwards. */
   createBinding: (input: {
     id: string
     sourceId: string
@@ -75,11 +85,21 @@ export interface PushRelayStore {
     readerId: string | null
     preferences: PushPreferences
   }) => Promise<string>
-  updateBindingPreferences: (input: {
-    sourceId: string
+  findBindingForInstallation: (
+    installationId: string,
+    bindingId: string,
+  ) => Promise<BindingRecord | null>
+  updateBindingPreferencesForInstallation: (input: {
+    installationId: string
     bindingId: string
     preferences: PushPreferences
   }) => Promise<boolean>
+  revokeBindingForInstallation: (
+    installationId: string,
+    bindingId: string,
+    now: Date,
+  ) => Promise<boolean>
+  /** Source-wide control retained for mx-core; device flows use the installation-scoped methods. */
   revokeBinding: (
     sourceId: string,
     bindingId: string,

@@ -267,13 +267,35 @@ export class PushRelayService {
     }
   }
 
+  async getBinding(authorization: string | undefined, bindingId: string) {
+    const installation = await this.authenticateInstallation(authorization)
+    const binding = await this.store.findBindingForInstallation(
+      installation.id,
+      bindingId,
+    )
+    if (!binding || binding.revokedAt) {
+      throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
+    }
+    return {
+      binding_id: binding.id,
+      source_id: binding.sourceId,
+      installation_id: binding.installationId,
+      reader_id: binding.readerId,
+      preferences: binding.preferences,
+    }
+  }
+
   async revokeBinding(
     authorization: string | undefined,
     bindingId: string,
     now = new Date(),
   ) {
-    const source = await this.authenticateSource(authorization)
-    const revoked = await this.store.revokeBinding(source.id, bindingId, now)
+    const installation = await this.authenticateInstallation(authorization)
+    const revoked = await this.store.revokeBindingForInstallation(
+      installation.id,
+      bindingId,
+      now,
+    )
     if (!revoked) {
       throw new RelayHttpError(404, 'binding_not_found', 'Binding not found')
     }
@@ -285,10 +307,10 @@ export class PushRelayService {
     bindingId: string,
     input: unknown,
   ) {
-    const source = await this.authenticateSource(authorization)
+    const installation = await this.authenticateInstallation(authorization)
     const preferences = PushPreferencesSchema.parse(input)
-    const updated = await this.store.updateBindingPreferences({
-      sourceId: source.id,
+    const updated = await this.store.updateBindingPreferencesForInstallation({
+      installationId: installation.id,
       bindingId,
       preferences,
     })

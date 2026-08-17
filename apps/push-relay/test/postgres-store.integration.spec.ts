@@ -150,7 +150,19 @@ describe.skipIf(!databaseUrl)('PostgresPushRelayStore integration', () => {
     return result.rows
   }
 
-  it('reactivates the same source+installation binding and updates metadata', async () => {
+  const bindingRow = async (bindingId: string) => {
+    const row = await pool.query<{
+      reader_id: string | null
+      preferences: PushPreferences
+      revoked_at: Date | null
+    }>(
+      `SELECT reader_id, preferences, revoked_at FROM push_bindings WHERE id = $1`,
+      [bindingId],
+    )
+    return row.rows[0]
+  }
+
+  it('reactivates the same source+installation binding and replaces reader metadata', async () => {
     const sourceId = await createSource()
     const installationId = await createInstallation('yohaku')
     const firstId = await store.createBinding({
@@ -170,20 +182,103 @@ describe.skipIf(!databaseUrl)('PostgresPushRelayStore integration', () => {
       preferences: prefs({ content_post: false }),
     })
     expect(secondId).toBe(firstId)
-
-    const row = await pool.query<{
-      reader_id: string | null
-      preferences: PushPreferences
-      revoked_at: Date | null
-    }>(
-      `SELECT reader_id, preferences, revoked_at FROM push_bindings WHERE id = $1`,
-      [firstId],
-    )
-    expect(row.rows[0]).toMatchObject({
+    expect(await bindingRow(firstId)).toMatchObject({
       reader_id: 'reader_new',
-      preferences: prefs({ content_post: false }),
       revoked_at: null,
     })
+  })
+
+  it('keeps device preferences when a claim upserts the binding and clears reader_id', async () => {
+    const sourceId = await createSource()
+    const installationId = await createInstallation('yohaku')
+    const bindingId = await store.createBinding({
+      id: `bnd_${randomUUID()}`,
+      sourceId,
+      installationId,
+      readerId: 'reader_old',
+      preferences: prefs(),
+    })
+    const devicePreferences = prefs({
+      content_post: false,
+      comment_replied: false,
+    })
+    await expect(
+      store.updateBindingPreferencesForInstallation({
+        installationId,
+        bindingId,
+        preferences: devicePreferences,
+      }),
+    ).resolves.toBe(true)
+
+    const reclaimedId = await store.createBinding({
+      id: `bnd_${randomUUID()}`,
+      sourceId,
+      installationId,
+      readerId: null,
+      preferences: prefs(),
+    })
+    expect(reclaimedId).toBe(bindingId)
+    expect(await bindingRow(bindingId)).toMatchObject({
+      reader_id: null,
+      preferences: devicePreferences,
+      revoked_at: null,
+    })
+  })
+
+  it('scopes binding lookup, preference updates, and revocation to the owning installation', async () => {
+    const sourceId = await createSource()
+    const installationId = await createInstallation('yohaku')
+    const otherInstallationId = await createInstallation('yohaku')
+    const bindingId = await store.createBinding({
+      id: `bnd_${randomUUID()}`,
+      sourceId,
+      installationId,
+      readerId: 'reader_1',
+      preferences: prefs(),
+    })
+
+    await expect(
+      store.findBindingForInstallation(installationId, bindingId),
+    ).resolves.toMatchObject({
+      id: bindingId,
+      sourceId,
+      installationId,
+      readerId: 'reader_1',
+      preferences: prefs(),
+      revokedAt: null,
+    })
+    await expect(
+      store.findBindingForInstallation(otherInstallationId, bindingId),
+    ).resolves.toBeNull()
+
+    await expect(
+      store.updateBindingPreferencesForInstallation({
+        installationId: otherInstallationId,
+        bindingId,
+        preferences: prefs({ content_note: false }),
+      }),
+    ).resolves.toBe(false)
+    await expect(
+      store.revokeBindingForInstallation(
+        otherInstallationId,
+        bindingId,
+        new Date(),
+      ),
+    ).resolves.toBe(false)
+    expect(await bindingRow(bindingId)).toMatchObject({
+      preferences: prefs(),
+      revoked_at: null,
+    })
+
+    await expect(
+      store.revokeBindingForInstallation(installationId, bindingId, new Date()),
+    ).resolves.toBe(true)
+    await expect(
+      store.findBindingForInstallation(installationId, bindingId),
+    ).resolves.toBeNull()
+    await expect(
+      store.revokeBindingForInstallation(installationId, bindingId, new Date()),
+    ).resolves.toBe(false)
   })
 
   it('does not update preferences on a revoked binding', async () => {
@@ -199,18 +294,13 @@ describe.skipIf(!databaseUrl)('PostgresPushRelayStore integration', () => {
     await store.revokeBinding(sourceId, bindingId, new Date())
 
     await expect(
-      store.updateBindingPreferences({
-        sourceId,
+      store.updateBindingPreferencesForInstallation({
+        installationId,
         bindingId,
         preferences: prefs({ comment_replied: false }),
       }),
     ).resolves.toBe(false)
-
-    const row = await pool.query<{ preferences: PushPreferences }>(
-      `SELECT preferences FROM push_bindings WHERE id = $1`,
-      [bindingId],
-    )
-    expect(row.rows[0]?.preferences).toEqual(prefs())
+    expect((await bindingRow(bindingId))?.preferences).toEqual(prefs())
   })
 
   it('fans out Space comments, Yohaku content preferences, and targeted replies', async () => {

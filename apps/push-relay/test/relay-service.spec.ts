@@ -464,125 +464,260 @@ describe('claimSourceActivation reader metadata', () => {
   })
 })
 
-describe('updateBindingPreferences', () => {
-  const sourceSecret = 'srcsec-owned'
+describe('device-owned bindings', () => {
   const vault = new DataVault(dataKey)
   const preferences = mixedPreferences
 
-  const createPreferencesService = (
-    updateBindingPreferences: PushRelayStore['updateBindingPreferences'],
-  ) => {
+  type StoredBinding = {
+    id: string
+    sourceId: string
+    installationId: string
+    readerId: string | null
+    preferences: typeof preferences
+    revokedAt: Date | null
+  }
+
+  const createDeviceHarness = () => {
+    const installations = new Map<string, any>()
+    const bindings = new Map<string, StoredBinding>()
+    for (const id of ['ins-owned', 'ins-other']) {
+      installations.set(id, {
+        id,
+        appId: 'yohaku',
+        apnsEnvironment: 'development',
+        tokenCiphertext: 'cipher',
+        secretHash: credentialHash(`inssec-${id}`),
+        revokedAt: null,
+      })
+    }
+    bindings.set('bnd-owned', {
+      id: 'bnd-owned',
+      sourceId: 'src-1',
+      installationId: 'ins-owned',
+      readerId: 'reader_1',
+      preferences: allOnPreferences,
+      revokedAt: null,
+    })
+    bindings.set('bnd-foreign', {
+      id: 'bnd-foreign',
+      sourceId: 'src-1',
+      installationId: 'ins-other',
+      readerId: 'reader_2',
+      preferences: allOnPreferences,
+      revokedAt: null,
+    })
+    bindings.set('bnd-revoked', {
+      id: 'bnd-revoked',
+      sourceId: 'src-1',
+      installationId: 'ins-owned',
+      readerId: 'reader_1',
+      preferences: allOnPreferences,
+      revokedAt: new Date('2026-08-17T00:00:00.000Z'),
+    })
+
+    const ownedBinding = (installationId: string, bindingId: string) => {
+      const binding = bindings.get(bindingId)
+      if (!binding || binding.installationId !== installationId) return null
+      return binding
+    }
+
     const store = {
+      findInstallation: vi.fn(
+        async (id: string) => installations.get(id) ?? null,
+      ),
       findSource: vi.fn(async (id: string) =>
         id === 'src-owned'
           ? {
               id: 'src-owned',
-              secretCiphertext: vault.encrypt(sourceSecret),
+              secretCiphertext: vault.encrypt('srcsec-owned'),
               origin: 'https://core.example.com',
               revokedAt: null,
             }
           : null,
       ),
-      updateBindingPreferences,
+      findBindingForInstallation: vi.fn(
+        async (installationId: string, bindingId: string) => {
+          const binding = ownedBinding(installationId, bindingId)
+          return binding && !binding.revokedAt ? { ...binding } : null
+        },
+      ),
+      updateBindingPreferencesForInstallation: vi.fn(
+        async (input: {
+          installationId: string
+          bindingId: string
+          preferences: typeof preferences
+        }) => {
+          const binding = ownedBinding(input.installationId, input.bindingId)
+          if (!binding || binding.revokedAt) return false
+          binding.preferences = input.preferences
+          return true
+        },
+      ),
+      revokeBindingForInstallation: vi.fn(
+        async (installationId: string, bindingId: string, now: Date) => {
+          const binding = ownedBinding(installationId, bindingId)
+          if (!binding || binding.revokedAt) return false
+          binding.revokedAt = now
+          return true
+        },
+      ),
     } as unknown as PushRelayStore
-    return new PushRelayService(store, {
+    const service = new PushRelayService(store, {
       publicUrl: 'https://push.example.com',
       dataKey,
       apps: yohakuApps,
     })
+    return { service, store, bindings }
   }
 
-  it('updates preferences for a binding owned by the authenticated source', async () => {
-    const updateBindingPreferences = vi.fn(async () => true)
-    const service = createPreferencesService(updateBindingPreferences)
+  const ownedAuthorization = 'Installation ins-owned.inssec-ins-owned'
+
+  it('reads its own binding with installation credentials', async () => {
+    const { service } = createDeviceHarness()
+
+    await expect(
+      service.getBinding(ownedAuthorization, 'bnd-owned'),
+    ).resolves.toEqual({
+      binding_id: 'bnd-owned',
+      source_id: 'src-1',
+      installation_id: 'ins-owned',
+      reader_id: 'reader_1',
+      preferences: allOnPreferences,
+    })
+  })
+
+  it('returns 404 when reading a binding owned by another installation', async () => {
+    const { service } = createDeviceHarness()
+
+    await expect(
+      service.getBinding(ownedAuthorization, 'bnd-foreign'),
+    ).rejects.toMatchObject({ status: 404, code: 'binding_not_found' })
+  })
+
+  it('returns 404 when reading a revoked binding', async () => {
+    const { service } = createDeviceHarness()
+
+    await expect(
+      service.getBinding(ownedAuthorization, 'bnd-revoked'),
+    ).rejects.toMatchObject({ status: 404, code: 'binding_not_found' })
+  })
+
+  it('updates preferences on its own binding', async () => {
+    const { service, store, bindings } = createDeviceHarness()
 
     await expect(
       service.updateBindingPreferences(
-        `Source src-owned.${sourceSecret}`,
-        'bnd-1',
+        ownedAuthorization,
+        'bnd-owned',
         preferences,
       ),
     ).resolves.toEqual({
       updated: true,
-      binding_id: 'bnd-1',
+      binding_id: 'bnd-owned',
       preferences,
     })
-    expect(updateBindingPreferences).toHaveBeenCalledWith({
-      sourceId: 'src-owned',
-      bindingId: 'bnd-1',
+    expect(store.updateBindingPreferencesForInstallation).toHaveBeenCalledWith({
+      installationId: 'ins-owned',
+      bindingId: 'bnd-owned',
       preferences,
     })
+    expect(bindings.get('bnd-owned')?.preferences).toEqual(preferences)
   })
 
-  it('does not update an unknown or mismatched binding', async () => {
-    const updateBindingPreferences = vi.fn(async () => false)
-    const service = createPreferencesService(updateBindingPreferences)
+  it('does not update preferences on another installation binding', async () => {
+    const { service, bindings } = createDeviceHarness()
 
     await expect(
       service.updateBindingPreferences(
-        `Source src-owned.${sourceSecret}`,
-        'bnd-other',
+        ownedAuthorization,
+        'bnd-foreign',
         preferences,
       ),
     ).rejects.toMatchObject({ status: 404, code: 'binding_not_found' })
-    expect(updateBindingPreferences).toHaveBeenCalledWith({
-      sourceId: 'src-owned',
-      bindingId: 'bnd-other',
-      preferences,
-    })
+    expect(bindings.get('bnd-foreign')?.preferences).toEqual(allOnPreferences)
   })
 
-  it('does not update a revoked binding belonging to the source', async () => {
-    const stored = {
-      preferences: allOnPreferences,
-      revokedAt: new Date('2026-08-17T00:00:00.000Z'),
-    }
-    const updateBindingPreferences = vi.fn(
-      async (input: {
-        sourceId: string
-        bindingId: string
-        preferences: typeof preferences
-      }) => {
-        if (
-          input.sourceId !== 'src-owned' ||
-          input.bindingId !== 'bnd-revoked' ||
-          stored.revokedAt
-        ) {
-          return false
-        }
-        stored.preferences = input.preferences
-        return true
-      },
-    )
-    const service = createPreferencesService(updateBindingPreferences)
+  it('does not update preferences on a revoked binding', async () => {
+    const { service, bindings } = createDeviceHarness()
 
     await expect(
       service.updateBindingPreferences(
-        `Source src-owned.${sourceSecret}`,
+        ownedAuthorization,
         'bnd-revoked',
         preferences,
       ),
     ).rejects.toMatchObject({ status: 404, code: 'binding_not_found' })
-    expect(stored.preferences).toEqual(allOnPreferences)
-    expect(updateBindingPreferences).toHaveBeenCalledWith({
-      sourceId: 'src-owned',
-      bindingId: 'bnd-revoked',
-      preferences,
-    })
+    expect(bindings.get('bnd-revoked')?.preferences).toEqual(allOnPreferences)
   })
 
   it('rejects preference bodies that are not the strict protocol object', async () => {
-    const updateBindingPreferences = vi.fn(async () => true)
-    const service = createPreferencesService(updateBindingPreferences)
+    const { service, store } = createDeviceHarness()
 
     await expect(
-      service.updateBindingPreferences(
-        `Source src-owned.${sourceSecret}`,
-        'bnd-1',
-        { content_post: true },
-      ),
+      service.updateBindingPreferences(ownedAuthorization, 'bnd-owned', {
+        content_post: true,
+      }),
     ).rejects.toThrow()
-    expect(updateBindingPreferences).not.toHaveBeenCalled()
+    expect(store.updateBindingPreferencesForInstallation).not.toHaveBeenCalled()
+  })
+
+  it('revokes its own binding', async () => {
+    const { service, store, bindings } = createDeviceHarness()
+    const now = new Date('2026-08-17T12:00:00.000Z')
+
+    await expect(
+      service.revokeBinding(ownedAuthorization, 'bnd-owned', now),
+    ).resolves.toEqual({ revoked: true })
+    expect(store.revokeBindingForInstallation).toHaveBeenCalledWith(
+      'ins-owned',
+      'bnd-owned',
+      now,
+    )
+    expect(bindings.get('bnd-owned')?.revokedAt).toEqual(now)
+  })
+
+  it('does not revoke another installation binding', async () => {
+    const { service, bindings } = createDeviceHarness()
+
+    await expect(
+      service.revokeBinding(ownedAuthorization, 'bnd-foreign'),
+    ).rejects.toMatchObject({ status: 404, code: 'binding_not_found' })
+    expect(bindings.get('bnd-foreign')?.revokedAt).toBeNull()
+  })
+
+  it('refuses source credentials on device binding endpoints', async () => {
+    const { service, store } = createDeviceHarness()
+    const sourceAuthorization = 'Source src-owned.srcsec-owned'
+
+    await expect(
+      service.getBinding(sourceAuthorization, 'bnd-owned'),
+    ).rejects.toMatchObject({ status: 401, code: 'installation_unauthorized' })
+    await expect(
+      service.updateBindingPreferences(
+        sourceAuthorization,
+        'bnd-owned',
+        preferences,
+      ),
+    ).rejects.toMatchObject({ status: 401, code: 'installation_unauthorized' })
+    await expect(
+      service.revokeBinding(sourceAuthorization, 'bnd-owned'),
+    ).rejects.toMatchObject({ status: 401, code: 'installation_unauthorized' })
+    expect(store.findBindingForInstallation).not.toHaveBeenCalled()
+    expect(store.updateBindingPreferencesForInstallation).not.toHaveBeenCalled()
+    expect(store.revokeBindingForInstallation).not.toHaveBeenCalled()
+  })
+
+  it('refuses a revoked installation credential', async () => {
+    const { service, store } = createDeviceHarness()
+    ;(store.findInstallation as any).mockImplementation(async () => ({
+      id: 'ins-owned',
+      secretHash: credentialHash('inssec-ins-owned'),
+      revokedAt: new Date('2026-08-16T00:00:00.000Z'),
+    }))
+
+    await expect(
+      service.getBinding(ownedAuthorization, 'bnd-owned'),
+    ).rejects.toMatchObject({ status: 401, code: 'installation_unauthorized' })
   })
 })
 
