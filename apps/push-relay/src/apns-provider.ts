@@ -118,18 +118,15 @@ const customFields = (
 
 const publishedCopy = {
   post: {
-    title: 'New post',
-    body: 'A new post is ready to read.',
+    subtitleLocKey: 'PUSH_CONTENT_POST_SUBTITLE',
     threadId: 'posts',
   },
   note: {
-    title: 'New note',
-    body: 'A new note is ready to read.',
+    subtitleLocKey: 'PUSH_CONTENT_NOTE_SUBTITLE',
     threadId: 'notes',
   },
   recently: {
-    title: 'New thinking',
-    body: 'A new thinking is ready to read.',
+    subtitleLocKey: 'PUSH_CONTENT_RECENTLY_SUBTITLE',
     threadId: 'recently',
   },
 } as const
@@ -154,12 +151,21 @@ export const buildApnsPayload = (event: PushEvent) => {
     const copy = publishedCopy[event.data.resource_type]
     return {
       aps: {
-        alert: { title: copy.title, body: copy.body },
+        alert: {
+          'title-loc-key': 'PUSH_CONTENT_TITLE',
+          'title-loc-args': [event.data.display_title],
+          'subtitle-loc-key': copy.subtitleLocKey,
+          'loc-key': 'PUSH_CONTENT_SUMMARY',
+          'loc-args': [event.data.summary],
+        },
         sound: 'default',
         'thread-id': copy.threadId,
         category: 'YOHAKU_CONTENT',
       },
-      ...customFields(event, { event_type: event.type }),
+      ...customFields(event, {
+        event_type: event.type,
+        target_path: event.data.target_path,
+      }),
     }
   }
 
@@ -167,14 +173,26 @@ export const buildApnsPayload = (event: PushEvent) => {
     return {
       aps: {
         alert: {
-          title: 'New reply',
-          body: 'Someone replied to your comment.',
+          'title-loc-key': 'PUSH_REPLY_TITLE',
+          'title-loc-args': [event.data.sender_name],
+          'loc-key': 'PUSH_REPLY_BODY',
+          'loc-args': [event.data.target_title],
         },
         sound: 'default',
         'thread-id': 'comment-replies',
         category: 'YOHAKU_COMMENT_REPLIED',
+        'mutable-content': 1,
       },
-      ...customFields(event, { event_type: event.type }),
+      ...customFields(event, {
+        event_type: event.type,
+        sender_id: event.data.sender_id,
+        sender_name: event.data.sender_name,
+        ...(event.data.sender_avatar_url
+          ? { sender_avatar_url: event.data.sender_avatar_url }
+          : {}),
+        target_title: event.data.target_title,
+        target_path: event.data.target_path,
+      }),
     }
   }
 

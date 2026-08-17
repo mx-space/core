@@ -7,6 +7,26 @@ export const CONTENT_PUBLISHED_EVENT =
 export const COMMENT_REPLIED_EVENT = 'dev.mx-space.comment.replied.v1' as const
 
 const resourceId = z.string().min(1).max(128)
+const publicTitle = z.string().trim().min(1).max(160)
+const publicSummary = z.string().trim().min(1).max(360)
+const internalTargetPath = z
+  .string()
+  .min(2)
+  .max(512)
+  .refine(
+    (value) =>
+      value.startsWith('/') &&
+      !value.startsWith('//') &&
+      !value.includes('\\') &&
+      !value.includes('?') &&
+      !value.includes('#') &&
+      !value.split('/').some((segment) => segment === '.' || segment === '..'),
+    'target_path must be a safe internal absolute path',
+  )
+const httpsUrl = z
+  .url()
+  .max(2048)
+  .refine((value) => new URL(value).protocol === 'https:', 'HTTPS URL required')
 
 export const PushResourceDataSchema = z
   .object({
@@ -19,6 +39,9 @@ export const ContentPublishedDataSchema = z
   .object({
     resource_id: resourceId,
     resource_type: z.enum(['post', 'note', 'recently']),
+    display_title: publicTitle,
+    summary: publicSummary,
+    target_path: internalTargetPath,
   })
   .strict()
 
@@ -27,6 +50,11 @@ export const CommentRepliedDataSchema = z
     resource_id: resourceId,
     resource_type: z.literal('comment'),
     recipient_reader_id: resourceId,
+    sender_id: resourceId,
+    sender_name: z.string().trim().min(1).max(80),
+    sender_avatar_url: httpsUrl.optional(),
+    target_title: publicTitle,
+    target_path: internalTargetPath,
   })
   .strict()
 

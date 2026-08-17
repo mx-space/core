@@ -14,6 +14,7 @@ import {
   configuredPushRelayOrigins,
   resolveAllowedPushRelayOrigin,
 } from '~/modules/push/push-relay-origin'
+import type { DatabaseService } from '~/processors/database/database.service'
 import type { EventManagerService } from '~/processors/helper/helper.event.service'
 
 describe('PushService', () => {
@@ -36,6 +37,9 @@ describe('PushService', () => {
   const commentRepository = {
     findById: vi.fn(),
   }
+  const database = {
+    findGlobalById: vi.fn(),
+  }
   const originalRelayOrigins = process.env.MX_PUSH_RELAY_ORIGINS
 
   const createService = () =>
@@ -44,6 +48,7 @@ describe('PushService', () => {
       configs as unknown as ConfigsService,
       events as unknown as EventManagerService,
       commentRepository as unknown as CommentRepository,
+      database as unknown as DatabaseService,
     )
 
   const flushHandler = async () => {
@@ -69,6 +74,7 @@ describe('PushService', () => {
     repository.enqueueDelivery.mockResolvedValue('delivery-1')
     repository.claimDueDeliveries.mockResolvedValue([])
     commentRepository.findById.mockResolvedValue(null)
+    database.findGlobalById.mockResolvedValue(null)
   })
 
   afterEach(() => {
@@ -124,44 +130,64 @@ describe('PushService', () => {
     expect(repository.enqueueDelivery).not.toHaveBeenCalled()
   })
 
-  it.each([
-    {
-      event: BusinessEvents.POST_CREATE,
-      payload: { id: 'post-1', title: 'Secret title', text: 'private body' },
-      resourceType: 'post',
-    },
-    {
-      event: BusinessEvents.NOTE_CREATE,
-      payload: { id: 'note-1', title: 'Secret note', text: 'private body' },
-      resourceType: 'note',
-    },
-    {
-      event: BusinessEvents.RECENTLY_CREATE,
-      payload: {
-        id: 'recently-1',
-        content: 'private recently body',
-        title: 'Secret recently',
+  it('projects public post title, summary, and route metadata', async () => {
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: {
+        id: 'post-1',
+        title: 'Public title',
+        summary: 'Public summary.',
+        slug: 'public-title',
+        category: { slug: 'journal' },
       },
-      resourceType: 'recently',
-    },
+    })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1', text: 'private body' },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    const event = repository.enqueueDelivery.mock.calls[0]![0].event
+    expect(event).toMatchObject({
+      id: 'content.published:post:post-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'post/post-1',
+      data: {
+        resource_id: 'post-1',
+        resource_type: 'post',
+        display_title: 'Public title',
+        summary: 'Public summary.',
+        target_path: '/posts/journal/public-title',
+      },
+    })
+    expect(JSON.stringify(event)).not.toContain('private body')
+    service.onModuleDestroy()
+  })
+
+  it.each([
+    { event: BusinessEvents.POST_CREATE, type: 'post' },
+    { event: BusinessEvents.NOTE_CREATE, type: 'note' },
+    { event: BusinessEvents.RECENTLY_CREATE, type: 'recently' },
   ] as const)(
-    'projects a public $resourceType publish without private fields',
-    async ({ event: businessEvent, payload, resourceType }) => {
+    'skips a $type publish without an explicit summary',
+    async ({ event }) => {
+      database.findGlobalById.mockResolvedValue({
+        type:
+          event === BusinessEvents.POST_CREATE
+            ? 'post'
+            : event === BusinessEvents.NOTE_CREATE
+              ? 'note'
+              : 'recently',
+        document: { id: 'content-1', title: 'Title', nid: 42 },
+      })
       const service = createService()
       service.onModuleInit()
-      handler?.(businessEvent, payload, EventScope.TO_SYSTEM_VISITOR)
-
-      await flushHandler()
-      const event = repository.enqueueDelivery.mock.calls[0]![0].event
-      expect(event).toMatchObject({
-        id: `content.published:${resourceType}:${payload.id}`,
-        type: CONTENT_PUBLISHED_EVENT,
-        subject: `${resourceType}/${payload.id}`,
-        data: { resource_id: payload.id, resource_type: resourceType },
-      })
-      expect(Object.keys(event.data)).toEqual(['resource_id', 'resource_type'])
-      expect(JSON.stringify(event)).not.toContain('private')
-      expect(JSON.stringify(event)).not.toContain('Secret')
+      handler?.(event, { id: 'content-1' }, EventScope.TO_SYSTEM_VISITOR)
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(repository.enqueueDelivery).not.toHaveBeenCalled()
       service.onModuleDestroy()
     },
   )
@@ -183,6 +209,10 @@ describe('PushService', () => {
       id: 'parent-1',
       readerId: 'reader-parent',
     })
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: { id: 'post-1', title: 'Public post' },
+    })
     const service = createService()
     service.onModuleInit()
     handler?.(
@@ -191,6 +221,9 @@ describe('PushService', () => {
         id: '456',
         parentCommentId: 'parent-1',
         readerId: 'reader-child',
+        author: 'Reply author',
+        avatar: 'https://cdn.example.com/avatar.png',
+        refId: 'post-1',
         text: 'private reply',
         createdAt: new Date('2026-08-07T12:00:00.000Z'),
       },
@@ -208,6 +241,11 @@ describe('PushService', () => {
         resource_id: '456',
         resource_type: 'comment',
         recipient_reader_id: 'reader-parent',
+        sender_id: 'reader-child',
+        sender_name: 'Reply author',
+        sender_avatar_url: 'https://cdn.example.com/avatar.png',
+        target_title: 'Public post',
+        target_path: '/comments/post-1',
       },
     })
     expect(JSON.stringify(event)).not.toContain('private reply')
@@ -264,12 +302,18 @@ describe('PushService', () => {
       id: 'parent-1',
       readerId: 'reader-parent',
     })
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: { id: 'post-1', title: 'Public post' },
+    })
     const service = createService()
     service.onModuleInit()
     const payload = {
       id: '789',
       parentCommentId: 'parent-1',
       readerId: 'reader-child',
+      author: 'Reply author',
+      refId: 'post-1',
       createdAt: new Date('2026-08-07T12:00:00.000Z'),
     }
     handler?.(
@@ -294,6 +338,10 @@ describe('PushService', () => {
       id: 'parent-1',
       readerId: 'reader-parent',
     })
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: { id: 'post-1', title: 'Public post' },
+    })
     const service = createService()
     service.onModuleInit()
     handler?.(
@@ -302,6 +350,8 @@ describe('PushService', () => {
         id: '790',
         parentCommentId: 'parent-1',
         readerId: 'reader-child',
+        author: 'Reply author',
+        refId: 'post-1',
         createdAt: new Date('2026-08-07T12:00:00.000Z'),
       },
       EventScope.ALL,

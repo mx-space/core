@@ -18,6 +18,7 @@ import { Interval } from '@nestjs/schedule'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CommentRepository } from '~/modules/comment/comment.repository'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { DatabaseService } from '~/processors/database/database.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
@@ -40,6 +41,22 @@ const eventTimeOf = (data: unknown) => {
   return Number.isNaN(parsedTime.getTime()) ? new Date() : parsedTime
 }
 
+const publicText = (value: unknown, max: number) => {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim()
+  return normalized ? normalized.slice(0, max) : null
+}
+
+const httpsUrlOf = (value: unknown) => {
+  if (typeof value !== 'string') return undefined
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' ? url.toString() : undefined
+  } catch {
+    return undefined
+  }
+}
+
 @Injectable()
 export class PushService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PushService.name)
@@ -51,6 +68,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     private readonly configs: ConfigsService,
     private readonly events: EventManagerService,
     private readonly comments: CommentRepository,
+    private readonly database: DatabaseService,
   ) {}
 
   onModuleInit() {
@@ -207,6 +225,9 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       createdAt?: unknown
       parentCommentId?: unknown
       readerId?: unknown
+      author?: unknown
+      avatar?: unknown
+      refId?: unknown
     }
     const resourceId = resourceIdOf(comment)
     const parentCommentId = comment.parentCommentId
@@ -215,6 +236,16 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     const recipientReaderId = parent?.readerId
     if (!recipientReaderId) return
     if (recipientReaderId === String(comment.readerId ?? '')) return
+    const targetId = resourceIdOf({ id: comment.refId })
+    const senderName = publicText(comment.author, 80)
+    if (!targetId || !senderName) return
+    const target = await this.database.findGlobalById(targetId)
+    const targetTitle = publicText(
+      (target?.document as { title?: unknown } | undefined)?.title ??
+        (target?.type === 'recently' ? 'Thinking' : null),
+      160,
+    )
+    if (!targetTitle) return
     const time = eventTimeOf(comment)
     await this.enqueueToEnabledSources((source) => {
       const event: CommentRepliedEvent = {
@@ -229,6 +260,14 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
           resource_id: resourceId,
           resource_type: 'comment',
           recipient_reader_id: recipientReaderId,
+          sender_id:
+            publicText(comment.readerId, 128) ?? `comment:${resourceId}`,
+          sender_name: senderName,
+          ...(httpsUrlOf(comment.avatar)
+            ? { sender_avatar_url: httpsUrlOf(comment.avatar) }
+            : {}),
+          target_title: targetTitle,
+          target_path: `/comments/${encodeURIComponent(targetId)}`,
         },
       }
       return event
@@ -241,6 +280,34 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
   ) {
     const resourceId = resourceIdOf(data)
     if (!resourceId) return
+    const resolved = await this.database.findGlobalById(resourceId)
+    if (!resolved) return
+    const document = resolved.document as {
+      title?: unknown
+      summary?: unknown
+      slug?: unknown
+      nid?: unknown
+      category?: { slug?: unknown }
+      metadata?: { summary?: unknown; title?: unknown } | null
+    }
+    const summary = publicText(
+      document.summary ?? document.metadata?.summary,
+      360,
+    )
+    if (!summary) return
+    const displayTitle = publicText(
+      document.title ??
+        document.metadata?.title ??
+        (resourceType === 'recently' ? 'Thinking' : null),
+      160,
+    )
+    if (!displayTitle) return
+    const targetPath = this.contentTargetPath(
+      resourceType,
+      document,
+      resourceId,
+    )
+    if (!targetPath) return
     const time = eventTimeOf(data)
     await this.enqueueToEnabledSources((source) => {
       const event: ContentPublishedEvent = {
@@ -251,10 +318,42 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
         subject: `${resourceType}/${resourceId}`,
         time: time.toISOString(),
         datacontenttype: 'application/json',
-        data: { resource_id: resourceId, resource_type: resourceType },
+        data: {
+          resource_id: resourceId,
+          resource_type: resourceType,
+          display_title: displayTitle,
+          summary,
+          target_path: targetPath,
+        },
       }
       return event
     })
+  }
+
+  private contentTargetPath(
+    resourceType: ContentPublishedEvent['data']['resource_type'],
+    document: {
+      slug?: unknown
+      nid?: unknown
+      category?: { slug?: unknown }
+    },
+    resourceId: string,
+  ) {
+    if (resourceType === 'post') {
+      const category = publicText(document.category?.slug, 128)
+      const slug = publicText(document.slug, 128)
+      return category && slug
+        ? `/posts/${encodeURIComponent(category)}/${encodeURIComponent(slug)}`
+        : null
+    }
+    if (resourceType === 'note') {
+      const nid =
+        typeof document.nid === 'number' || typeof document.nid === 'string'
+          ? String(document.nid)
+          : ''
+      return nid ? `/notes/${encodeURIComponent(nid)}` : null
+    }
+    return `/thinking/${encodeURIComponent(resourceId)}`
   }
 
   private async enqueueToEnabledSources(

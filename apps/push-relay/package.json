@@ -9,6 +9,7 @@
     "build": "tsdown",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.mjs",
+    "start:1p": "bash scripts/start-local-with-1password.sh",
     "db:migrate": "tsx src/migrate.ts",
     "db:migrate:prod": "node dist/migrate.mjs",
     "test": "vitest run",

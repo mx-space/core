@@ -722,7 +722,7 @@ describe('device-owned bindings', () => {
 })
 
 describe('buildApnsPayload yohaku events', () => {
-  it('projects published posts with generic English copy and event metadata', () => {
+  it('projects published posts with localized standard copy and a target path', () => {
     const payload = buildApnsPayload({
       specversion: '1.0',
       id: 'content.published:post-1',
@@ -731,13 +731,22 @@ describe('buildApnsPayload yohaku events', () => {
       subject: 'post/post-1',
       time: '2026-08-07T12:00:00.000Z',
       datacontenttype: 'application/json',
-      data: { resource_id: 'post-1', resource_type: 'post' },
+      data: {
+        resource_id: 'post-1',
+        resource_type: 'post',
+        display_title: 'Public title',
+        summary: 'Public summary.',
+        target_path: '/posts/journal/public-title',
+      },
     })
     expect(payload).toEqual({
       aps: {
         alert: {
-          title: 'New post',
-          body: 'A new post is ready to read.',
+          'title-loc-key': 'PUSH_CONTENT_TITLE',
+          'title-loc-args': ['Public title'],
+          'subtitle-loc-key': 'PUSH_CONTENT_POST_SUBTITLE',
+          'loc-key': 'PUSH_CONTENT_SUMMARY',
+          'loc-args': ['Public summary.'],
         },
         sound: 'default',
         'thread-id': 'posts',
@@ -748,6 +757,7 @@ describe('buildApnsPayload yohaku events', () => {
       source_id: 'src-1',
       resource_type: 'post',
       resource_id: 'post-1',
+      target_path: '/posts/journal/public-title',
     })
   })
 
@@ -761,10 +771,16 @@ describe('buildApnsPayload yohaku events', () => {
         subject: 'note/note-1',
         time: '2026-08-07T12:00:00.000Z',
         datacontenttype: 'application/json',
-        data: { resource_id: 'note-1', resource_type: 'note' },
+        data: {
+          resource_id: 'note-1',
+          resource_type: 'note',
+          display_title: 'Public note',
+          summary: 'Public summary.',
+          target_path: '/notes/42',
+        },
       }).aps,
     ).toMatchObject({
-      alert: { title: 'New note' },
+      alert: { 'subtitle-loc-key': 'PUSH_CONTENT_NOTE_SUBTITLE' },
       'thread-id': 'notes',
       category: 'YOHAKU_CONTENT',
     })
@@ -777,16 +793,22 @@ describe('buildApnsPayload yohaku events', () => {
         subject: 'recently/recently-1',
         time: '2026-08-07T12:00:00.000Z',
         datacontenttype: 'application/json',
-        data: { resource_id: 'recently-1', resource_type: 'recently' },
+        data: {
+          resource_id: 'recently-1',
+          resource_type: 'recently',
+          display_title: 'Thinking',
+          summary: 'Public summary.',
+          target_path: '/thinking/recently-1',
+        },
       }).aps,
     ).toMatchObject({
-      alert: { title: 'New thinking' },
+      alert: { 'subtitle-loc-key': 'PUSH_CONTENT_RECENTLY_SUBTITLE' },
       'thread-id': 'recently',
       category: 'YOHAKU_CONTENT',
     })
   })
 
-  it('projects comment replies without recipient_reader_id', () => {
+  it('projects comment replies as mutable communication notifications', () => {
     const payload = buildApnsPayload({
       specversion: '1.0',
       id: 'comment.replied:456',
@@ -799,23 +821,36 @@ describe('buildApnsPayload yohaku events', () => {
         resource_id: '456',
         resource_type: 'comment',
         recipient_reader_id: 'reader_1',
+        sender_id: 'reader_2',
+        sender_name: 'A reader',
+        sender_avatar_url: 'https://cdn.example.com/avatar.png',
+        target_title: 'Public post',
+        target_path: '/comments/post-1',
       },
     })
     expect(payload).toEqual({
       aps: {
         alert: {
-          title: 'New reply',
-          body: 'Someone replied to your comment.',
+          'title-loc-key': 'PUSH_REPLY_TITLE',
+          'title-loc-args': ['A reader'],
+          'loc-key': 'PUSH_REPLY_BODY',
+          'loc-args': ['Public post'],
         },
         sound: 'default',
         'thread-id': 'comment-replies',
         category: 'YOHAKU_COMMENT_REPLIED',
+        'mutable-content': 1,
       },
       event_type: COMMENT_REPLIED_EVENT,
       schema_version: 1,
       source_id: 'src-1',
       resource_type: 'comment',
       resource_id: '456',
+      sender_id: 'reader_2',
+      sender_name: 'A reader',
+      sender_avatar_url: 'https://cdn.example.com/avatar.png',
+      target_title: 'Public post',
+      target_path: '/comments/post-1',
     })
     expect(JSON.stringify(payload)).not.toContain('recipient_reader_id')
     expect(JSON.stringify(payload)).not.toContain('reader_1')

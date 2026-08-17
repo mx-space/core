@@ -79,6 +79,21 @@ pnpm --filter @mx-space/push-relay build
 pnpm --filter @mx-space/push-relay start
 ```
 
+### Local Yohaku sandbox via 1Password
+
+The Yohaku development APNs `.p8` lives in 1Password
+(`Apple Developer` / `Yohaku APNs Sandbox`). It is never committed.
+
+```sh
+cp apps/push-relay/.env.local.example apps/push-relay/.env.local
+# set PUSH_RELAY_DATABASE_URL and PUSH_RELAY_DATA_KEY
+pnpm --filter @mx-space/push-relay start:1p
+```
+
+The script runs `op document get`, writes a temp `.p8`, injects
+`PUSH_RELAY_APPS_JSON` for `yohaku` / `in.innei`, migrates, then starts
+`dev`. Requires a signed-in `op` CLI (`brew install --cask 1password-cli`).
+
 Plain HTTP is accepted only for `localhost`, `127.0.0.1`, `::1`, and `.local`
 development hosts. All other relay origins must use HTTPS.
 

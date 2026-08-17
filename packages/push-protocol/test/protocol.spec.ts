@@ -67,14 +67,25 @@ describe('push protocol', () => {
   })
 
   it.each(['post', 'note', 'recently'] as const)(
-    'accepts content.published.v1 for resource_type %s',
+    'accepts public content metadata for resource_type %s',
     (resourceType) => {
       const published = {
         ...cloudEventBase,
         id: `content.published:${resourceType}-1`,
         type: CONTENT_PUBLISHED_EVENT,
         subject: `${resourceType}/abc`,
-        data: { resource_id: 'abc', resource_type: resourceType },
+        data: {
+          resource_id: 'abc',
+          resource_type: resourceType,
+          display_title: 'A public title',
+          summary: 'A public summary.',
+          target_path:
+            resourceType === 'post'
+              ? '/posts/category/a-public-title'
+              : resourceType === 'note'
+                ? '/notes/42'
+                : '/thinking/abc',
+        },
       }
 
       expect(CONTENT_PUBLISHED_EVENT).toBe(
@@ -84,21 +95,35 @@ describe('push protocol', () => {
     },
   )
 
-  it('rejects extra visitor data on content.published.v1', () => {
+  it('rejects private visitor data and unsafe paths on content.published.v1', () => {
+    const data = {
+      resource_id: 'abc',
+      resource_type: 'post',
+      display_title: 'Public title',
+      summary: 'Public summary.',
+    } as const
     const result = PushEventSchema.safeParse({
       ...cloudEventBase,
       id: 'content.published:post-1',
       type: CONTENT_PUBLISHED_EVENT,
       subject: 'post/abc',
       data: {
-        resource_id: 'abc',
-        resource_type: 'post',
+        ...data,
+        target_path: '/posts/category/public-title',
         title: 'Private title',
         text: 'Private body',
       },
     })
+    const unsafePath = PushEventSchema.safeParse({
+      ...cloudEventBase,
+      id: 'content.published:post-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'post/abc',
+      data: { ...data, target_path: 'https://attacker.example/post' },
+    })
 
     expect(result.success).toBe(false)
+    expect(unsafePath.success).toBe(false)
     if (result.success) return
     expect(result.error.issues.some((issue) => issue.code === 'unrecognized_keys')).toBe(
       true,
@@ -115,6 +140,11 @@ describe('push protocol', () => {
         resource_id: '456',
         resource_type: 'comment',
         recipient_reader_id: 'reader_1',
+        sender_id: 'reader_2',
+        sender_name: 'A reader',
+        sender_avatar_url: 'https://cdn.example.com/avatar.png',
+        target_title: 'A public post',
+        target_path: '/comments/post-1',
       },
     }
 
@@ -122,22 +152,37 @@ describe('push protocol', () => {
     expect(PushEventSchema.parse(replied)).toEqual(replied)
   })
 
-  it('rejects extra visitor data on comment.replied.v1', () => {
+  it('rejects reply text and non-HTTPS sender avatars', () => {
+    const data = {
+      resource_id: '456',
+      resource_type: 'comment',
+      recipient_reader_id: 'reader_1',
+      sender_id: 'reader_2',
+      sender_name: 'A reader',
+      target_title: 'A public post',
+      target_path: '/comments/post-1',
+    } as const
     const result = PushEventSchema.safeParse({
       ...cloudEventBase,
       id: 'comment.replied:456',
       type: COMMENT_REPLIED_EVENT,
       subject: 'comment/456',
       data: {
-        resource_id: '456',
-        resource_type: 'comment',
-        recipient_reader_id: 'reader_1',
+        ...data,
         author: 'Visitor',
         text: 'Private reply',
       },
     })
+    const insecureAvatar = PushEventSchema.safeParse({
+      ...cloudEventBase,
+      id: 'comment.replied:456',
+      type: COMMENT_REPLIED_EVENT,
+      subject: 'comment/456',
+      data: { ...data, sender_avatar_url: 'http://example.com/avatar.png' },
+    })
 
     expect(result.success).toBe(false)
+    expect(insecureAvatar.success).toBe(false)
     if (result.success) return
     expect(result.error.issues.some((issue) => issue.code === 'unrecognized_keys')).toBe(
       true,
@@ -150,7 +195,14 @@ describe('push protocol', () => {
       id: 'comment.replied:456',
       type: COMMENT_REPLIED_EVENT,
       subject: 'comment/456',
-      data: { resource_id: '456', resource_type: 'comment' },
+      data: {
+        resource_id: '456',
+        resource_type: 'comment',
+        sender_id: 'reader_2',
+        sender_name: 'A reader',
+        target_title: 'A public post',
+        target_path: '/comments/post-1',
+      },
     })
 
     expect(result.success).toBe(false)
@@ -231,7 +283,13 @@ describe('push protocol', () => {
         id: 'content.published:post-1',
         type: CONTENT_PUBLISHED_EVENT,
         subject: 'note/abc',
-        data: { resource_id: 'abc', resource_type: 'post' as const },
+        data: {
+          resource_id: 'abc',
+          resource_type: 'post' as const,
+          display_title: 'A public post',
+          summary: 'A public summary.',
+          target_path: '/posts/category/a-public-post',
+        },
       },
     },
     {
@@ -241,7 +299,13 @@ describe('push protocol', () => {
         id: 'content.published:post-1',
         type: CONTENT_PUBLISHED_EVENT,
         subject: 'post/other',
-        data: { resource_id: 'abc', resource_type: 'post' as const },
+        data: {
+          resource_id: 'abc',
+          resource_type: 'post' as const,
+          display_title: 'A public post',
+          summary: 'A public summary.',
+          target_path: '/posts/category/a-public-post',
+        },
       },
     },
     {
@@ -255,6 +319,10 @@ describe('push protocol', () => {
           resource_id: '456',
           resource_type: 'comment' as const,
           recipient_reader_id: 'reader_1',
+          sender_id: 'reader_2',
+          sender_name: 'A reader',
+          target_title: 'A public post',
+          target_path: '/comments/post-1',
         },
       },
     },
