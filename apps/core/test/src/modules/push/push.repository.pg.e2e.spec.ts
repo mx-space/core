@@ -1,4 +1,5 @@
 import * as schema from '@mx-space/db-schema/schema'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
@@ -30,21 +31,11 @@ describe('PushRepository anonymous relay bindings (real PG)', () => {
     const [row] = await db
       .select({ ownerId: schema.pushRelayBindings.ownerId })
       .from(schema.pushRelayBindings)
-      .where(eqBindingId(bindingId))
+      .where(eq(schema.pushRelayBindings.id, bindingId))
     return row?.ownerId ?? null
   }
 
-  const eqBindingId = (bindingId: string) =>
-    (schema.pushRelayBindings.id as any).getSQL
-      ? sqlEq(bindingId)
-      : sqlEq(bindingId)
-
-  let sqlEq: (bindingId: string) => any
-
   beforeAll(async () => {
-    const { eq } = await import('drizzle-orm')
-    sqlEq = (bindingId: string) => eq(schema.pushRelayBindings.id, bindingId)
-
     database = await createIsolatedPgDatabase()
     pool = new Pool({ connectionString: database.getConnectionUri(), max: 4 })
     db = drizzle(pool, { schema }) as unknown as AppDatabase
@@ -109,7 +100,7 @@ describe('PushRepository anonymous relay bindings (real PG)', () => {
     await expect(ownerIdOf(associated.id)).resolves.toBeNull()
   })
 
-  it('keeps the binding when its associated reader is deleted', async () => {
+  it('keeps the binding after its associated reader is deleted', async () => {
     const binding = await repository.saveActivation(
       activation({
         readerId,
@@ -117,7 +108,6 @@ describe('PushRepository anonymous relay bindings (real PG)', () => {
         installationId: 'inst-orphan',
       }),
     )
-    const { eq } = await import('drizzle-orm')
     await db.delete(schema.readers).where(eq(schema.readers.id, readerId))
 
     await expect(ownerIdOf(binding.id)).resolves.toBeNull()
