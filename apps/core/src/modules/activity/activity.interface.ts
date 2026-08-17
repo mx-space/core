@@ -19,4 +19,5 @@ export interface ActivityPresence {
 
   ip?: string
   readerId?: string
+  image?: string
 }

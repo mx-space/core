@@ -94,6 +94,7 @@ export class ActivityController<ResponseWrapper> implements IController {
     ts,
     displayName,
     readerId,
+    image,
   }: {
     roomName: string
     position: number
@@ -103,6 +104,7 @@ export class ActivityController<ResponseWrapper> implements IController {
     displayName?: string
     ts?: number
     readerId?: string
+    image?: string
   }) {
     return this.proxy.presence.update.post({
       data: {
@@ -113,6 +115,7 @@ export class ActivityController<ResponseWrapper> implements IController {
         sid,
         readerId,
         displayName,
+        image,
       },
     })
   }

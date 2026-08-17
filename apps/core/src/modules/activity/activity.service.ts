@@ -41,6 +41,8 @@ import {
   extractArticleIdFromRoomName,
   isValidRoomName,
   parseRoomName,
+  resolvePresenceReaderId,
+  toPublicPresenceReader,
 } from './activity.util'
 
 interface ActivityPayloadWithRef {
@@ -346,12 +348,10 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const socket = roomSockets[index]
     const socketMeta = roomSocketMetas[index]
 
-    // Prefer the readerId resolved server-side from the HTTP session cookie
-    // (RolesGuard runs globally and fills request.readerId before this
-    // service runs). Fall back to the socket-handshake binding, and finally
-    // the client-provided value, both of which are less authoritative.
-    const resolvedReaderId =
-      RequestContext.currentReaderId() || socketMeta?.readerId || data.readerId
+    const resolvedReaderId = resolvePresenceReaderId(
+      RequestContext.currentReaderId(),
+      socketMeta?.readerId,
+    )
 
     const presenceData: ActivityPresence = {
       ...data,
@@ -360,6 +360,7 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
       updatedAt: Date.now(),
       connectedAt: socketMeta?.connectedAt ?? Date.now(),
       readerId: resolvedReaderId,
+      image: data.image,
       ip,
     }
 
@@ -370,12 +371,14 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
         resolvedReaderId,
       ])
       if (reader.length) {
+        const publicReader = toPublicPresenceReader(reader[0])
         Object.assign(serializedPresenceData, {
-          reader: camelcaseKeys({
-            ...reader[0],
-            id: reader[0].id.toString(),
-          }),
+          reader: camelcaseKeys(publicReader),
         })
+        if (!serializedPresenceData.image && publicReader.image) {
+          serializedPresenceData.image = publicReader.image
+          presenceData.image = publicReader.image
+        }
       }
     }
 

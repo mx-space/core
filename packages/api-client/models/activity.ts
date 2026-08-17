@@ -13,6 +13,7 @@ export interface ActivityPresence {
   readerId?: string
 
   displayName?: string
+  image?: string
 }
 
 export interface RoomOmittedNote {

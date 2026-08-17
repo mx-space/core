@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-import { zCoerceInt, zEntityId } from '~/common/zod'
+import { zCoerceInt, zEntityId, zHttpsUrl } from '~/common/zod'
 import { BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { Activity } from './activity.constant'
@@ -99,6 +99,7 @@ export const UpdatePresenceSchema = z.object({
   displayName: z.string().max(50).optional(),
   sid: z.string().min(1).max(64),
   readerId: z.string().optional(),
+  image: z.string().max(2048).pipe(zHttpsUrl).optional(),
 })
 
 export class UpdatePresenceDto extends createZodDto(UpdatePresenceSchema) {}

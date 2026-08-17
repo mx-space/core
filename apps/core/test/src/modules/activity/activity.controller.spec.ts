@@ -103,8 +103,44 @@ const createController = (opts: {
     translationService as any,
   )
 
-  return { controller, activityService, translationService }
+  return { controller, activityService, translationService, readerService }
 }
+
+describe('ActivityController.getPresence', () => {
+  it('returns only the public reader card', async () => {
+    const { controller, activityService, readerService } = createController({})
+    activityService.getRoomPresence = vi.fn(async () => [
+      {
+        identity: 'abcd1234',
+        readerId: 'reader-1',
+        ip: '1.2.3.4',
+        position: 12,
+      },
+    ])
+    readerService.findReaderInIds = vi.fn(async () => [
+      {
+        id: 'reader-1',
+        name: 'Magren',
+        image: 'https://avatars.githubusercontent.com/u/1?v=4',
+        handle: 'magren',
+        email: 'hidden@example.com',
+        emailVerified: true,
+        role: 'reader',
+        membership: { status: 'active' },
+      },
+    ])
+
+    const res = await controller.getPresence({ roomName: 'article-1' } as any)
+
+    expect(res.readers['reader-1']).toEqual({
+      id: 'reader-1',
+      name: 'Magren',
+      image: 'https://avatars.githubusercontent.com/u/1?v=4',
+      handle: 'magren',
+    })
+    expect(res.presence.abcd1234).not.toHaveProperty('ip')
+  })
+})
 
 describe('ActivityController.getRoomsInfo', () => {
   it('returns bare data when lang is absent', async () => {

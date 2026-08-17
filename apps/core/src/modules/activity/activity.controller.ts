@@ -37,6 +37,7 @@ import {
   UpdatePresenceDto,
 } from './activity.schema'
 import { ActivityService } from './activity.service'
+import { toPublicPresenceReader } from './activity.util'
 import { ActivitySampleService } from './sample/activity-sample.service'
 
 const ARTICLE_REF_FIELDS = [
@@ -126,7 +127,7 @@ export class ActivityController {
       .map((item) => item.readerId)
       .filter(Boolean) as string[]
     const readerRows = await this.readerService.findReaderInIds(readerIds)
-    const readers = readerRows.map((item) => ({ ...item, id: item.id }))
+    const readers = readerRows.map((item) => toPublicPresenceReader(item))
 
     return {
       presence: keyBy(
