@@ -26,10 +26,6 @@ import { NoteViews } from '~/modules/note/note.views'
 import {
   PushActivationRequestSchema,
   PushActivationResponseSchema,
-  PushBindingIdParamSchema,
-  PushPreferencesPatchSchema,
-  PushReaderPreferencesSchema,
-  PushStatusResponseSchema,
 } from '~/modules/push/push.schema'
 import {
   RecentlyRefCandidatesQuerySchema,
@@ -150,8 +146,9 @@ export const routeManifest: readonly OpenApiRoute[] = [
     method: 'post',
     path: '/notifications/push/activate',
     tag: 'notifications',
-    summary: 'Bind this authenticated reader installation to a Push Relay',
-    auth: true,
+    summary:
+      'Claim a Push Relay activation ticket for this device, optionally associating the current reader',
+    auth: false,
     body: {
       name: 'PushActivationRequest',
       schema: PushActivationRequestSchema,
@@ -160,55 +157,6 @@ export const routeManifest: readonly OpenApiRoute[] = [
       name: 'PushActivationResponse',
       schema: PushActivationResponseSchema,
     },
-  },
-  {
-    operationId: 'getPushNotificationStatus',
-    method: 'get',
-    path: '/notifications/push/status',
-    tag: 'notifications',
-    summary: 'Read the current reader push binding status',
-    auth: true,
-    response: {
-      name: 'PushStatus',
-      schema: PushStatusResponseSchema,
-    },
-  },
-  {
-    operationId: 'getPushNotificationPreferences',
-    method: 'get',
-    path: '/notifications/push/preferences',
-    tag: 'notifications',
-    summary: 'Read this authenticated reader push topic preferences',
-    auth: true,
-    response: {
-      name: 'PushPreferences',
-      schema: PushReaderPreferencesSchema,
-    },
-  },
-  {
-    operationId: 'updatePushNotificationPreferences',
-    method: 'patch',
-    path: '/notifications/push/preferences',
-    tag: 'notifications',
-    summary: 'Update this authenticated reader push topic preferences',
-    auth: true,
-    body: {
-      name: 'PushPreferencesPatch',
-      schema: PushPreferencesPatchSchema,
-    },
-    response: {
-      name: 'PushPreferences',
-      schema: PushReaderPreferencesSchema,
-    },
-  },
-  {
-    operationId: 'deactivatePushNotifications',
-    method: 'delete',
-    path: '/notifications/push/:bindingId',
-    tag: 'notifications',
-    summary: 'Revoke one mobile push binding',
-    auth: true,
-    params: PushBindingIdParamSchema,
   },
 
   {

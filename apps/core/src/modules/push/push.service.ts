@@ -7,7 +7,6 @@ import {
   type ContentPublishedEvent,
   PUSH_SIGNATURE_HEADERS,
   type PushEvent,
-  type PushPreferences,
   RelayClaimResponseSchema,
   signPushRequest,
   sourceAuthorization,
@@ -24,22 +23,9 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 
 import { PushRepository } from './push.repository'
 import type { PushActivationRequestDto } from './push.schema'
-import type {
-  PushReaderPreferences,
-  PushRelayBindingRow,
-  PushRelaySourceRow,
-} from './push.types'
+import type { PushRelaySourceRow } from './push.types'
 import { resolveAllowedPushRelayOrigin } from './push-relay-origin'
 import { PushSecretVault } from './push-secret.vault'
-
-const toRelayPreferences = (
-  preferences: PushReaderPreferences,
-): PushPreferences => ({
-  content_post: preferences.contentPost,
-  content_note: preferences.contentNote,
-  content_recently: preferences.contentRecently,
-  comment_replied: preferences.commentReplied,
-})
 
 const resourceIdOf = (data: unknown) => {
   const value = (data as { id?: unknown } | null)?.id
@@ -52,11 +38,6 @@ const eventTimeOf = (data: unknown) => {
   const parsedTime =
     rawTime instanceof Date ? rawTime : new Date(String(rawTime ?? ''))
   return Number.isNaN(parsedTime.getTime()) ? new Date() : parsedTime
-}
-
-const safePreferenceSyncReason = (reason: unknown) => {
-  const raw = reason instanceof Error ? reason.message : String(reason)
-  return raw.replaceAll(/\s+/g, ' ').slice(0, 200)
 }
 
 @Injectable()
@@ -88,12 +69,22 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     this.listenerDisposer?.()
   }
 
-  async activate(readerId: string, input: PushActivationRequestDto) {
+  async activate(
+    readerId: string | undefined,
+    input: PushActivationRequestDto,
+  ) {
     PushSecretVault.assertConfigured()
     const relayUrl = resolveAllowedPushRelayOrigin(input.relayUrl)
     const existing = await this.repository.findSourceByRelayUrl(relayUrl)
     const sourceOrigin = await this.sourceOrigin()
-    const preferences = await this.repository.getOrDefaultPreferences(readerId)
+    const claimBody: Record<string, unknown> = {
+      ticket: input.activationTicket,
+      source_origin: sourceOrigin,
+      source_label: new URL(sourceOrigin).hostname,
+    }
+    if (readerId) {
+      claimBody.reader_id = readerId
+    }
     const response = await fetch(`${relayUrl}/v1/source-activations/claim`, {
       method: 'POST',
       headers: {
@@ -107,13 +98,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
             }
           : {}),
       },
-      body: JSON.stringify({
-        ticket: input.activationTicket,
-        source_origin: sourceOrigin,
-        source_label: new URL(sourceOrigin).hostname,
-        reader_id: readerId,
-        preferences: toRelayPreferences(preferences),
-      }),
+      body: JSON.stringify(claimBody),
       redirect: 'error',
       signal: AbortSignal.timeout(10_000),
     })
@@ -136,8 +121,8 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       throw new Error('Push Relay returned an untrusted event endpoint')
     }
 
-    const binding = await this.repository.saveActivation({
-      readerId,
+    await this.repository.saveActivation({
+      readerId: readerId ?? null,
       relayUrl,
       remoteSourceId: claim.source_id,
       sourceSecret: claim.source_secret
@@ -147,78 +132,11 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       remoteBindingId: claim.binding_id,
       installationId: claim.installation_id,
     })
-    return { enabled: true as const, relayUrl, bindingId: binding.id }
-  }
-
-  async status(readerId: string) {
-    const [binding, source] = await Promise.all([
-      this.repository.findActiveBinding(readerId),
-      this.repository.findLatestSourceForReader(readerId),
-    ])
     return {
-      configured: source !== null,
-      enabled: binding !== null,
-      relayUrl: binding?.relayUrl ?? source?.relayUrl ?? null,
-      bindingId: binding?.id ?? null,
+      enabled: true as const,
+      relayUrl,
+      bindingId: claim.binding_id,
     }
-  }
-
-  async getPreferences(readerId: string) {
-    return this.repository.getOrDefaultPreferences(readerId)
-  }
-
-  async updatePreferences(
-    readerId: string,
-    patch: Partial<PushReaderPreferences>,
-  ) {
-    const current = await this.repository.getOrDefaultPreferences(readerId)
-    const next = { ...current, ...patch }
-    await this.repository.upsertPreferences(readerId, next)
-    const bindings = await this.repository.listActiveBindingsForReader(readerId)
-    const results = await Promise.allSettled(
-      bindings.map((binding) => this.syncRemotePreferences(binding, next)),
-    )
-    const failed = results.flatMap((result, index) => {
-      if (result.status !== 'rejected') return []
-      const binding = bindings[index]
-      if (!binding) return []
-      return [`${binding.id}: ${safePreferenceSyncReason(result.reason)}`]
-    })
-    if (failed.length > 0) {
-      throw new Error(
-        `Push Relay preferences sync failed for ${failed.join('; ')}`,
-      )
-    }
-    return next
-  }
-
-  async deactivate(readerId: string, bindingId: string) {
-    const binding = await this.repository.findOwnedActiveBinding(
-      readerId,
-      bindingId,
-    )
-    if (!binding?.source) return
-    const relayUrl = resolveAllowedPushRelayOrigin(binding.source.relayUrl)
-    const response = await fetch(
-      `${relayUrl}/v1/bindings/${encodeURIComponent(binding.remoteBindingId)}`,
-      {
-        method: 'DELETE',
-        headers: {
-          authorization: sourceAuthorization(
-            binding.source.remoteSourceId,
-            PushSecretVault.decrypt(binding.source.sourceSecret),
-          ),
-        },
-        redirect: 'error',
-        signal: AbortSignal.timeout(10_000),
-      },
-    )
-    if (!response.ok && response.status !== 404) {
-      throw new Error(
-        `Push Relay deactivation failed with HTTP ${response.status}`,
-      )
-    }
-    await this.repository.revokeBinding(readerId, bindingId)
   }
 
   private async sourceOrigin() {
@@ -352,37 +270,6 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       })
     }
     void this.dispatchDue()
-  }
-
-  private async syncRemotePreferences(
-    binding: PushRelayBindingRow,
-    preferences: PushReaderPreferences,
-  ) {
-    if (!binding.source) {
-      throw new Error('Push binding is missing source credentials')
-    }
-    const relayUrl = resolveAllowedPushRelayOrigin(binding.source.relayUrl)
-    const response = await fetch(
-      `${relayUrl}/v1/bindings/${encodeURIComponent(binding.remoteBindingId)}/preferences`,
-      {
-        method: 'PUT',
-        headers: {
-          'content-type': 'application/json',
-          authorization: sourceAuthorization(
-            binding.source.remoteSourceId,
-            PushSecretVault.decrypt(binding.source.sourceSecret),
-          ),
-        },
-        body: JSON.stringify(toRelayPreferences(preferences)),
-        redirect: 'error',
-        signal: AbortSignal.timeout(10_000),
-      },
-    )
-    if (!response.ok) {
-      throw new Error(
-        `Push Relay preference update failed with HTTP ${response.status}`,
-      )
-    }
   }
 
   @Interval(15_000)

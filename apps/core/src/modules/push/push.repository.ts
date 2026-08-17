@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
-  pushReaderPreferences,
   pushRelayBindings,
   pushRelayDeliveries,
   pushRelaySources,
@@ -14,12 +13,10 @@ import { BaseRepository } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 
 import type {
-  PushReaderPreferences,
   PushRelayBindingRow,
   PushRelayDeliveryRow,
   PushRelaySourceRow,
 } from './push.types'
-import { DEFAULT_PUSH_READER_PREFERENCES } from './push.types'
 
 const mapSource = (
   row: typeof pushRelaySources.$inferSelect,
@@ -30,15 +27,6 @@ const mapSource = (
   sourceSecret: row.sourceSecret,
   eventEndpoint: row.eventEndpoint,
   enabled: row.enabled,
-})
-
-const mapPreferences = (
-  row: typeof pushReaderPreferences.$inferSelect,
-): PushReaderPreferences => ({
-  contentPost: row.contentPost,
-  contentNote: row.contentNote,
-  contentRecently: row.contentRecently,
-  commentReplied: row.commentReplied,
 })
 
 const mapBinding = (
@@ -88,7 +76,7 @@ export class PushRepository extends BaseRepository {
   }
 
   async saveActivation(input: {
-    readerId: string
+    readerId: string | null
     relayUrl: string
     remoteSourceId: string
     sourceSecret: string | null
@@ -150,131 +138,6 @@ export class PushRepository extends BaseRepository {
       if (!binding) throw new Error('Unable to persist Push Relay binding')
       return mapBinding(binding, source)
     })
-  }
-
-  async getOrDefaultPreferences(
-    readerId: string,
-  ): Promise<PushReaderPreferences> {
-    const [row] = await this.db
-      .select()
-      .from(pushReaderPreferences)
-      .where(eq(pushReaderPreferences.readerId, readerId))
-      .limit(1)
-    return row ? mapPreferences(row) : { ...DEFAULT_PUSH_READER_PREFERENCES }
-  }
-
-  async upsertPreferences(
-    readerId: string,
-    preferences: PushReaderPreferences,
-  ): Promise<PushReaderPreferences> {
-    const [row] = await this.db
-      .insert(pushReaderPreferences)
-      .values({
-        readerId,
-        contentPost: preferences.contentPost,
-        contentNote: preferences.contentNote,
-        contentRecently: preferences.contentRecently,
-        commentReplied: preferences.commentReplied,
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: pushReaderPreferences.readerId,
-        set: {
-          contentPost: preferences.contentPost,
-          contentNote: preferences.contentNote,
-          contentRecently: preferences.contentRecently,
-          commentReplied: preferences.commentReplied,
-          updatedAt: new Date(),
-        },
-      })
-      .returning()
-    if (!row) throw new Error('Unable to persist push preferences')
-    return mapPreferences(row)
-  }
-
-  async listActiveBindingsForReader(readerId: string) {
-    const rows = await this.db
-      .select({ binding: pushRelayBindings, source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(
-        and(
-          eq(pushRelayBindings.ownerId, readerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .orderBy(desc(pushRelayBindings.createdAt))
-    return rows.map((row) => mapBinding(row.binding, row.source))
-  }
-
-  async findActiveBinding(readerId: string) {
-    const [row] = await this.db
-      .select({ binding: pushRelayBindings, source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(
-        and(
-          eq(pushRelayBindings.ownerId, readerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .orderBy(desc(pushRelayBindings.createdAt))
-      .limit(1)
-    return row ? mapBinding(row.binding, row.source) : null
-  }
-
-  async findOwnedActiveBinding(readerId: string, id: string) {
-    const [row] = await this.db
-      .select({ binding: pushRelayBindings, source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(
-        and(
-          eq(pushRelayBindings.id, id),
-          eq(pushRelayBindings.ownerId, readerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .limit(1)
-    return row ? mapBinding(row.binding, row.source) : null
-  }
-
-  async findLatestSourceForReader(readerId: string) {
-    const [row] = await this.db
-      .select({ source: pushRelaySources })
-      .from(pushRelayBindings)
-      .innerJoin(
-        pushRelaySources,
-        eq(pushRelaySources.id, pushRelayBindings.sourceId),
-      )
-      .where(eq(pushRelayBindings.ownerId, readerId))
-      .orderBy(desc(pushRelayBindings.updatedAt))
-      .limit(1)
-    return row ? mapSource(row.source) : null
-  }
-
-  async revokeBinding(readerId: string, id: string, now = new Date()) {
-    const [row] = await this.db
-      .update(pushRelayBindings)
-      .set({ revokedAt: now, updatedAt: now })
-      .where(
-        and(
-          eq(pushRelayBindings.id, id),
-          eq(pushRelayBindings.ownerId, readerId),
-          isNull(pushRelayBindings.revokedAt),
-        ),
-      )
-      .returning()
-    return row ?? null
   }
 
   async enqueueDelivery(input: {

@@ -38,19 +38,6 @@ export const pushRelaySources = pgTable(
   ],
 )
 
-export const pushReaderPreferences = pgTable('push_reader_preferences', {
-  readerId: text('reader_id')
-    .primaryKey()
-    .notNull()
-    .references(() => readers.id, { onDelete: 'cascade' }),
-  contentPost: boolean('content_post').notNull().default(true),
-  contentNote: boolean('content_note').notNull().default(true),
-  contentRecently: boolean('content_recently').notNull().default(true),
-  commentReplied: boolean('comment_replied').notNull().default(true),
-  createdAt: createdAt(),
-  updatedAt: updatedAt(),
-})
-
 export const pushRelayBindings = pgTable(
   'push_relay_bindings',
   {
@@ -60,9 +47,9 @@ export const pushRelayBindings = pgTable(
       .references(() => pushRelaySources.id, { onDelete: 'cascade' }),
     remoteBindingId: text('remote_binding_id').notNull(),
     installationId: text('installation_id').notNull(),
-    ownerId: text('owner_id')
-      .notNull()
-      .references(() => readers.id, { onDelete: 'cascade' }),
+    ownerId: text('owner_id').references(() => readers.id, {
+      onDelete: 'set null',
+    }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     revokedAt: tsCol('revoked_at'),

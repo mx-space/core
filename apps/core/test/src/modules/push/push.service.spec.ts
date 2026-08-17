@@ -14,15 +14,7 @@ import {
   configuredPushRelayOrigins,
   resolveAllowedPushRelayOrigin,
 } from '~/modules/push/push-relay-origin'
-import { PushSecretVault } from '~/modules/push/push-secret.vault'
 import type { EventManagerService } from '~/processors/helper/helper.event.service'
-
-const defaultPreferences = {
-  contentPost: true,
-  contentNote: true,
-  contentRecently: true,
-  commentReplied: true,
-}
 
 describe('PushService', () => {
   let handler:
@@ -31,15 +23,8 @@ describe('PushService', () => {
     listEnabledSources: vi.fn(),
     enqueueDelivery: vi.fn(),
     claimDueDeliveries: vi.fn(),
-    findActiveBinding: vi.fn(),
-    findLatestSourceForReader: vi.fn(),
     findSourceByRelayUrl: vi.fn(),
     saveActivation: vi.fn(),
-    getOrDefaultPreferences: vi.fn(),
-    upsertPreferences: vi.fn(),
-    listActiveBindingsForReader: vi.fn(),
-    findOwnedActiveBinding: vi.fn(),
-    revokeBinding: vi.fn(),
   }
   const configs = { get: vi.fn() }
   const events = {
@@ -83,11 +68,6 @@ describe('PushService', () => {
     ])
     repository.enqueueDelivery.mockResolvedValue('delivery-1')
     repository.claimDueDeliveries.mockResolvedValue([])
-    repository.getOrDefaultPreferences.mockResolvedValue(defaultPreferences)
-    repository.upsertPreferences.mockImplementation(
-      async (_readerId: string, prefs: typeof defaultPreferences) => prefs,
-    )
-    repository.listActiveBindingsForReader.mockResolvedValue([])
     commentRepository.findById.mockResolvedValue(null)
   })
 
@@ -337,30 +317,7 @@ describe('PushService', () => {
     service.onModuleDestroy()
   })
 
-  it('keeps relay configuration visible after the active binding is revoked', async () => {
-    repository.findActiveBinding.mockResolvedValue(null)
-    repository.findLatestSourceForReader.mockResolvedValue({
-      relayUrl: 'https://push.example.com',
-    })
-    const service = createService()
-
-    await expect(service.status('reader-1')).resolves.toEqual({
-      configured: true,
-      enabled: false,
-      relayUrl: 'https://push.example.com',
-      bindingId: null,
-    })
-  })
-
-  it('returns default preferences without requiring a stored row', async () => {
-    const service = createService()
-    await expect(service.getPreferences('reader-1')).resolves.toEqual(
-      defaultPreferences,
-    )
-    expect(repository.getOrDefaultPreferences).toHaveBeenCalledWith('reader-1')
-  })
-
-  it('sends reader_id and snake_case preferences on activation claim', async () => {
+  const stubClaim = () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -373,29 +330,30 @@ describe('PushService', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
     repository.findSourceByRelayUrl.mockResolvedValue(null)
-    repository.getOrDefaultPreferences.mockResolvedValue({
-      contentPost: false,
-      contentNote: true,
-      contentRecently: true,
-      commentReplied: false,
-    })
     repository.saveActivation.mockResolvedValue({ id: 'bnd_local' })
     configs.get.mockResolvedValue({
       serverUrl: 'https://core.example.com',
       webUrl: 'https://web.example.com',
     })
+    return fetchMock
+  }
+
+  const activationInput = {
+    relayUrl: 'https://push.example.com',
+    activationTicket: 't'.repeat(32),
+  }
+
+  it('claims anonymously and answers with the relay binding id', async () => {
+    const fetchMock = stubClaim()
 
     const service = createService()
-    await expect(
-      service.activate('reader-1', {
+    await expect(service.activate(undefined, activationInput)).resolves.toEqual(
+      {
+        enabled: true,
         relayUrl: 'https://push.example.com',
-        activationTicket: 't'.repeat(32),
-      }),
-    ).resolves.toEqual({
-      enabled: true,
-      relayUrl: 'https://push.example.com',
-      bindingId: 'bnd_local',
-    })
+        bindingId: 'bnd_remote',
+      },
+    )
 
     expect(fetchMock).toHaveBeenCalledOnce()
     const [, init] = fetchMock.mock.calls[0]!
@@ -403,233 +361,70 @@ describe('PushService', () => {
       ticket: 't'.repeat(32),
       source_origin: 'https://core.example.com',
       source_label: 'core.example.com',
+    })
+    expect(repository.saveActivation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        readerId: null,
+        remoteBindingId: 'bnd_remote',
+      }),
+    )
+  })
+
+  it('associates the claim with the reader that owns the current session', async () => {
+    const fetchMock = stubClaim()
+
+    const service = createService()
+    await expect(
+      service.activate('reader-1', activationInput),
+    ).resolves.toMatchObject({ bindingId: 'bnd_remote' })
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]![1].body))).toEqual({
+      ticket: 't'.repeat(32),
+      source_origin: 'https://core.example.com',
+      source_label: 'core.example.com',
       reader_id: 'reader-1',
-      preferences: {
-        content_post: false,
-        content_note: true,
-        content_recently: true,
-        comment_replied: false,
-      },
     })
     expect(repository.saveActivation).toHaveBeenCalledWith(
       expect.objectContaining({ readerId: 'reader-1' }),
     )
   })
 
-  it('persists preferences first and surfaces a remote partial failure without rolling back', async () => {
-    const sourceSecret = PushSecretVault.encrypt('srcsec_private')
-    repository.listActiveBindingsForReader.mockResolvedValue([
-      {
-        id: 'bnd-1',
-        remoteBindingId: 'remote-1',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-      {
-        id: 'bnd-2',
-        remoteBindingId: 'remote-2',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-    ])
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ updated: true }),
-      })
-      .mockResolvedValueOnce({ ok: false, status: 500 })
-    vi.stubGlobal('fetch', fetchMock)
-
+  it('clears the reader association when the same device reactivates logged out', async () => {
+    const fetchMock = stubClaim()
     const service = createService()
-    await expect(
-      service.updatePreferences('reader-1', { contentPost: false }),
-    ).rejects.toThrow(/preferences/i)
 
-    expect(repository.upsertPreferences).toHaveBeenCalledWith('reader-1', {
-      contentPost: false,
-      contentNote: true,
-      contentRecently: true,
-      commentReplied: true,
-    })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-    expect(String(fetchMock.mock.calls[0]![0])).toBe(
-      'https://push.example.com/v1/bindings/remote-1/preferences',
-    )
-    expect(fetchMock.mock.calls[0]![1]).toMatchObject({ method: 'PUT' })
-    expect(JSON.parse(String(fetchMock.mock.calls[0]![1].body))).toEqual({
-      content_post: false,
-      content_note: true,
-      content_recently: true,
-      comment_replied: true,
-    })
-    expect(repository.upsertPreferences).toHaveBeenCalledOnce()
-  })
+    await service.activate('reader-1', activationInput)
+    await service.activate(undefined, activationInput)
 
-  it('aggregates every failed binding id and reason while still attempting the successful one', async () => {
-    const sourceSecret = PushSecretVault.encrypt('srcsec_private')
-    repository.listActiveBindingsForReader.mockResolvedValue([
-      {
-        id: 'bnd-ok',
-        remoteBindingId: 'remote-ok',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-      {
-        id: 'bnd-fail-a',
-        remoteBindingId: 'remote-a',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-      {
-        id: 'bnd-fail-b',
-        remoteBindingId: 'remote-b',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-    ])
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ updated: true }),
-      })
-      .mockResolvedValueOnce({ ok: false, status: 500 })
-      .mockRejectedValueOnce(new Error('relay timeout'))
-    vi.stubGlobal('fetch', fetchMock)
-
-    const service = createService()
-    const error = await service
-      .updatePreferences('reader-1', { commentReplied: false })
-      .then(
-        () => {
-          throw new Error('expected updatePreferences to reject')
-        },
-        (reason: unknown) => reason,
-      )
-    expect(error).toBeInstanceOf(Error)
-    expect((error as Error).message).toContain('bnd-fail-a')
-    expect((error as Error).message).toContain('HTTP 500')
-    expect((error as Error).message).toContain('bnd-fail-b')
-    expect((error as Error).message).toContain('relay timeout')
-
-    expect(repository.upsertPreferences).toHaveBeenCalledOnce()
-    expect(fetchMock).toHaveBeenCalledTimes(3)
-    expect(String(fetchMock.mock.calls[0]![0])).toContain('remote-ok')
-    expect(String(fetchMock.mock.calls[1]![0])).toContain('remote-a')
-    expect(String(fetchMock.mock.calls[2]![0])).toContain('remote-b')
-  })
-
-  it('synchronizes every active binding and returns the stored preferences', async () => {
-    const sourceSecret = PushSecretVault.encrypt('srcsec_private')
-    repository.listActiveBindingsForReader.mockResolvedValue([
-      {
-        id: 'bnd-1',
-        remoteBindingId: 'remote-1',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-      {
-        id: 'bnd-2',
-        remoteBindingId: 'remote-2',
-        source: {
-          relayUrl: 'https://push.example.com',
-          remoteSourceId: 'src-1',
-          sourceSecret,
-        },
-      },
-    ])
-    vi.stubGlobal(
-      'fetch',
-      vi
-        .fn()
-        .mockResolvedValue({ ok: true, json: async () => ({ updated: true }) }),
-    )
-
-    const service = createService()
-    await expect(
-      service.updatePreferences('reader-1', {
-        contentPost: false,
-        contentNote: false,
-        contentRecently: true,
-        commentReplied: true,
-      }),
-    ).resolves.toEqual({
-      contentPost: false,
-      contentNote: false,
-      contentRecently: true,
-      commentReplied: true,
-    })
-    expect(repository.listActiveBindingsForReader).toHaveBeenCalledWith(
-      'reader-1',
+    expect(
+      JSON.parse(String(fetchMock.mock.calls[1]![1].body)),
+    ).not.toHaveProperty('reader_id')
+    expect(repository.saveActivation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ readerId: null }),
     )
   })
 
-  it('deactivates only the requested owned binding in a multi-device setup', async () => {
-    const sourceSecret = PushSecretVault.encrypt('srcsec_private')
-    repository.findActiveBinding.mockResolvedValue({
-      id: 'bnd-latest',
-      remoteBindingId: 'remote-latest',
-      source: {
-        relayUrl: 'https://push.example.com',
-        remoteSourceId: 'src-1',
-        sourceSecret,
-      },
-    })
-    repository.findOwnedActiveBinding.mockResolvedValue({
-      id: 'bnd-older',
-      remoteBindingId: 'remote-older',
-      source: {
-        relayUrl: 'https://push.example.com',
-        remoteSourceId: 'src-1',
-        sourceSecret,
-      },
-    })
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true })
-    vi.stubGlobal('fetch', fetchMock)
+  it('never asks the relay to overwrite device-owned preferences', async () => {
+    const fetchMock = stubClaim()
 
     const service = createService()
-    await service.deactivate('reader-1', 'bnd-older')
+    await service.activate('reader-1', activationInput)
 
-    expect(repository.findOwnedActiveBinding).toHaveBeenCalledWith(
-      'reader-1',
-      'bnd-older',
-    )
-    expect(String(fetchMock.mock.calls[0]![0])).toContain('remote-older')
-    expect(repository.revokeBinding).toHaveBeenCalledWith(
-      'reader-1',
-      'bnd-older',
+    expect(String(fetchMock.mock.calls[0]![1].body)).not.toContain(
+      'preferences',
     )
   })
 
-  it('ignores deactivation of a binding owned by another reader', async () => {
-    repository.findOwnedActiveBinding.mockResolvedValue(null)
-    const fetchMock = vi.fn()
-    vi.stubGlobal('fetch', fetchMock)
-
-    const service = createService()
-    await service.deactivate('reader-1', 'bnd-foreign')
-
-    expect(fetchMock).not.toHaveBeenCalled()
-    expect(repository.revokeBinding).not.toHaveBeenCalled()
+  it('drops the reader-scoped operations Relay device endpoints now own', () => {
+    const service = createService() as unknown as Record<string, unknown>
+    for (const removed of [
+      'status',
+      'getPreferences',
+      'updatePreferences',
+      'deactivate',
+    ]) {
+      expect(service[removed]).toBeUndefined()
+    }
   })
 })
 

@@ -1,72 +1,80 @@
 import { describe, expect, it } from 'vitest'
 
+import * as pushSchema from '~/modules/push/push.schema'
 import {
-  PushPreferencesPatchSchema,
-  PushReaderPreferencesSchema,
+  PushActivationRequestSchema,
+  PushActivationResponseSchema,
 } from '~/modules/push/push.schema'
 
-describe('PushReaderPreferencesSchema', () => {
-  const full = {
-    contentPost: true,
-    contentNote: true,
-    contentRecently: false,
-    commentReplied: true,
-  }
+const ticket = 't'.repeat(32)
 
-  it('accepts the four camelCase booleans', () => {
-    expect(PushReaderPreferencesSchema.parse(full)).toEqual(full)
+describe('PushActivationRequestSchema', () => {
+  it('accepts an https relay origin with a device activation ticket', () => {
+    expect(
+      PushActivationRequestSchema.parse({
+        relayUrl: 'https://push.example.com',
+        activationTicket: ticket,
+      }),
+    ).toEqual({
+      relayUrl: 'https://push.example.com',
+      activationTicket: ticket,
+    })
   })
 
-  it('rejects extra keys and incomplete payloads', () => {
+  it('accepts a loopback relay origin for local development', () => {
     expect(
-      PushReaderPreferencesSchema.safeParse({
-        ...full,
-        extra: true,
+      PushActivationRequestSchema.safeParse({
+        relayUrl: 'http://localhost:8787',
+        activationTicket: ticket,
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects plain http, non-origin URLs, short tickets, and extra keys', () => {
+    expect(
+      PushActivationRequestSchema.safeParse({
+        relayUrl: 'http://push.example.com',
+        activationTicket: ticket,
       }).success,
     ).toBe(false)
     expect(
-      PushReaderPreferencesSchema.safeParse({ contentPost: true }).success,
-    ).toBe(false)
-    expect(
-      PushReaderPreferencesSchema.safeParse({
-        content_post: true,
-        content_note: true,
-        content_recently: true,
-        comment_replied: true,
+      PushActivationRequestSchema.safeParse({
+        relayUrl: 'https://push.example.com/v1',
+        activationTicket: ticket,
       }).success,
     ).toBe(false)
+    expect(
+      PushActivationRequestSchema.safeParse({
+        relayUrl: 'https://push.example.com',
+        activationTicket: 'short',
+      }).success,
+    ).toBe(false)
+    expect(
+      PushActivationRequestSchema.safeParse({
+        relayUrl: 'https://push.example.com',
+        activationTicket: ticket,
+        readerId: 'reader-1',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('describes the response with the relay binding id the device must store', () => {
+    expect(
+      PushActivationResponseSchema.parse({
+        enabled: true,
+        relayUrl: 'https://push.example.com',
+        bindingId: 'bnd_remote',
+      }),
+    ).toMatchObject({ bindingId: 'bnd_remote' })
   })
 })
 
-describe('PushPreferencesPatchSchema', () => {
-  it('accepts a strict partial or a full preferences object', () => {
-    expect(PushPreferencesPatchSchema.parse({ contentPost: false })).toEqual({
-      contentPost: false,
-    })
-    expect(
-      PushPreferencesPatchSchema.parse({
-        contentPost: false,
-        contentNote: true,
-        contentRecently: true,
-        commentReplied: false,
-      }),
-    ).toEqual({
-      contentPost: false,
-      contentNote: true,
-      contentRecently: true,
-      commentReplied: false,
-    })
-  })
-
-  it('rejects undeclared keys and non-boolean values', () => {
-    expect(
-      PushPreferencesPatchSchema.safeParse({ content_post: false }).success,
-    ).toBe(false)
-    expect(
-      PushPreferencesPatchSchema.safeParse({ contentPost: 'yes' }).success,
-    ).toBe(false)
-    expect(PushPreferencesPatchSchema.safeParse({ extra: true }).success).toBe(
-      false,
-    )
+describe('push schema surface', () => {
+  it('no longer exports reader-scoped preference or status contracts', () => {
+    expect(Object.keys(pushSchema).sort()).toEqual([
+      'PushActivationRequestDto',
+      'PushActivationRequestSchema',
+      'PushActivationResponseSchema',
+    ])
   })
 })

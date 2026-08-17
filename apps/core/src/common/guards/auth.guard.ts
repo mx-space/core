@@ -25,26 +25,6 @@ export class AuthGuard implements CanActivate {
       return true
     }
 
-    await this.activateOwnerApiKey(request)
-    return true
-  }
-
-  getRequest(context: ExecutionContext) {
-    return getNestExecutionContextRequest(context)
-  }
-
-  attachUserAndToken(
-    request: FastifyBizRequest,
-    user: SessionUser,
-    token: string,
-  ) {
-    request.user = user
-    request.token = token
-
-    Object.assign(request.raw, { user, token })
-  }
-
-  protected async activateOwnerApiKey(request: FastifyBizRequest) {
     const apiKey = this.authService.getApiKeyFromRequest({
       headers: request.headers,
     })
@@ -63,5 +43,21 @@ export class AuthGuard implements CanActivate {
       throw createAppException(AppErrorCode.AUTH_TOKEN_INVALID)
     }
     this.attachUserAndToken(request, readerUser, apiKey.key)
+    return true
+  }
+
+  getRequest(context: ExecutionContext) {
+    return getNestExecutionContextRequest(context)
+  }
+
+  attachUserAndToken(
+    request: FastifyBizRequest,
+    user: SessionUser,
+    token: string,
+  ) {
+    request.user = user
+    request.token = token
+
+    Object.assign(request.raw, { user, token })
   }
 }

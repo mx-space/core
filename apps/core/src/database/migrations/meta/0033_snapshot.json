@@ -1,6 +1,6 @@
 {
-  "id": "2a1bff8a-cafa-4eb7-b1a6-6130dacc9e5d",
-  "prevId": "7f3bb260-3987-450c-bbe2-d6dee5d24ec4",
+  "id": "7f3bb260-3987-450c-bbe2-d6dee5d24ec4",
+  "prevId": "5dcfb637-3af0-477a-a039-79793862af95",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6593,80 +6593,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.push_reader_preferences": {
-      "name": "push_reader_preferences",
-      "schema": "",
-      "columns": {
-        "reader_id": {
-          "name": "reader_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "content_post": {
-          "name": "content_post",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "content_note": {
-          "name": "content_note",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "content_recently": {
-          "name": "content_recently",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "comment_replied": {
-          "name": "comment_replied",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "push_reader_preferences_reader_id_readers_id_fk": {
-          "name": "push_reader_preferences_reader_id_readers_id_fk",
-          "tableFrom": "push_reader_preferences",
-          "tableTo": "readers",
-          "columnsFrom": [
-            "reader_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.push_relay_bindings": {
       "name": "push_relay_bindings",
       "schema": "",
@@ -6699,7 +6625,7 @@
           "name": "owner_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -6811,7 +6737,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
