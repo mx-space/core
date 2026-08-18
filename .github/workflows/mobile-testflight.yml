@@ -20,6 +20,7 @@ jobs:
     env:
       APPLE_TEAM_ID: KAMM5N88X3
       SPACE_BUNDLE_ID: dev.innei.space
+      SPACE_PUSH_RELAY_URL: ${{ vars.SPACE_PUSH_RELAY_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +50,13 @@ jobs:
         run: bash scripts/import-ci-signing-assets.sh
         working-directory: apps/ios
 
+      - name: Require official Push Relay origin
+        run: |
+          if [ -z "${SPACE_PUSH_RELAY_URL}" ]; then
+            echo "::error::Set the SPACE_PUSH_RELAY_URL GitHub Actions variable to the production Push Relay origin."
+            exit 1
+          fi
+
       - name: Archive
         run: |
           set -o pipefail
@@ -61,6 +69,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/Space.xcarchive" \
             archive \
             CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            SPACE_PUSH_RELAY_URL="$SPACE_PUSH_RELAY_URL" \
             | xcbeautify --renderer github-actions
         working-directory: apps/ios
 
@@ -71,6 +80,7 @@ jobs:
           test -s "$APP_PATH/PrivacyInfo.xcprivacy"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = "$SPACE_BUNDLE_ID"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Info.plist")" = "$GITHUB_RUN_NUMBER"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :SpacePushRelayURL' "$APP_PATH/Info.plist")" = "$SPACE_PUSH_RELAY_URL"
 
       - name: Prepare App Store Connect authentication
         env:
