@@ -27,6 +27,9 @@ x-mx-env: &mx-env
   JWT_SECRET: ${JWT_SECRET:-}
   JWT_EXPIRE: ${JWT_EXPIRE:-}
 
+  # Comma-separated HTTPS origins mx-core may contact for Push Relay.
+  MX_PUSH_RELAY_ORIGINS: ${MX_PUSH_RELAY_ORIGINS:-}
+
   # Cache
   DISABLE_CACHE: ${DISABLE_CACHE:-false}
 
