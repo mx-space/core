@@ -219,5 +219,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     applePrivateKey: '',
     appleMonthlyProductId: '',
     appleYearlyProductId: '',
+    appleAppAppleId: '',
   },
 })

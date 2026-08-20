@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Optional } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 
 import type { MembershipProvider } from '../membership.types'
+import { AppleProvider } from './apple.provider'
 import { DodoProvider } from './dodo.provider'
 import type { PaymentProviderAdapter } from './provider.interface'
 
@@ -12,8 +13,12 @@ export class PaymentProviderRegistry {
     Record<MembershipProvider, PaymentProviderAdapter>
   >
 
-  constructor(dodoProvider: DodoProvider) {
+  constructor(
+    dodoProvider: DodoProvider,
+    @Optional() appleProvider?: AppleProvider,
+  ) {
     this.registry = { dodo: dodoProvider }
+    if (appleProvider) this.registry.apple = appleProvider
   }
 
   get(provider?: string | null): PaymentProviderAdapter | undefined {

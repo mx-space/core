@@ -1178,6 +1178,7 @@ export const MembershipSchema = section('Membership', {
     z.string().optional(),
     'Apple yearly product ID',
   ),
+  appleAppAppleId: field.plain(z.string().optional(), 'Apple app Apple ID'),
 })
 export class MembershipDto extends createZodDto(MembershipSchema) {}
 export type MembershipConfig = z.infer<typeof MembershipSchema>
