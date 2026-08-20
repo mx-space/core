@@ -72,6 +72,7 @@ const NOTIFICATION_TYPE_MAP: Record<
   DID_FAIL_TO_RENEW: 'on_hold',
   EXPIRED: 'cancelled',
   REFUND: 'cancelled',
+  REFUND_REVERSED: 'renewed',
   REVOKE: 'cancelled',
   GRACE_PERIOD_EXPIRED: 'cancelled',
   DID_CHANGE_RENEWAL_PREF: 'plan_changed',

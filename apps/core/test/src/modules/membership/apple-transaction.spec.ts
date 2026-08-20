@@ -71,6 +71,7 @@ describe('appleNotificationEventType', () => {
     expect(appleNotificationEventType('DID_RENEW')).toBe('renewed')
     expect(appleNotificationEventType('EXPIRED')).toBe('cancelled')
     expect(appleNotificationEventType('REFUND')).toBe('cancelled')
+    expect(appleNotificationEventType('REFUND_REVERSED')).toBe('renewed')
     expect(appleNotificationEventType('TEST')).toBeUndefined()
   })
 })
