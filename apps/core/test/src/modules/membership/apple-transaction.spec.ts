@@ -46,6 +46,7 @@ describe('appleActivatedEvent', () => {
         expiresDate: Date.parse('2026-09-01T00:00:00.000Z'),
         originalTransactionId: 'orig-1',
         productId: 'yohaku.membership.yearly',
+        signedDate: Date.parse('2026-08-01T00:00:00.000Z'),
         transactionId: 'txn-1',
       },
       'reader-1',
@@ -63,6 +64,7 @@ describe('appleActivatedEvent', () => {
     expect(event.currentPeriodEnd.toISOString()).toBe(
       '2026-09-01T00:00:00.000Z',
     )
+    expect(event.occurredAt?.toISOString()).toBe('2026-08-01T00:00:00.000Z')
   })
 })
 

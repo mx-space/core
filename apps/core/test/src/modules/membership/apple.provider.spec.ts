@@ -36,6 +36,7 @@ describe('AppleProvider', () => {
       originalTransactionId: 'original-1',
       productId: 'yohaku.membership.monthly',
       revocationDate: Date.parse('2026-08-21T00:00:00.000Z'),
+      signedDate: Date.parse('2026-08-01T00:00:00.000Z'),
       transactionId: 'transaction-1',
     })
 
@@ -68,6 +69,7 @@ describe('AppleProvider', () => {
         data: { signedTransactionInfo: 'signed-transaction' },
         notificationType,
         notificationUUID: 'notification-1',
+        signedDate: Date.parse('2026-08-21T00:00:00.000Z'),
       })
       vi.spyOn(
         provider as any,
@@ -107,6 +109,7 @@ describe('AppleProvider', () => {
       },
       notificationType: 'DID_FAIL_TO_RENEW',
       notificationUUID: 'notification-1',
+      signedDate: Date.parse('2026-08-21T00:00:00.000Z'),
       subtype: 'GRACE_PERIOD',
     })
     vi.spyOn(
@@ -133,6 +136,7 @@ describe('AppleProvider', () => {
     expect(result).toMatchObject({
       event: {
         currentPeriodEnd: new Date('2026-08-27T00:00:00.000Z'),
+        occurredAt: new Date('2026-08-21T00:00:00.000Z'),
         type: 'on_hold',
       },
     })

@@ -238,6 +238,9 @@ export class MembershipController {
         verified.event.subscriptionId,
       )
       if (!bound) {
+        if (verified.event.provider === 'apple') {
+          await this.membershipService.deferEvent(verified)
+        }
         return {
           ok: true,
           applied: false,

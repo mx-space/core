@@ -59,6 +59,12 @@ const createService = () => {
   membershipRepository.findByReaderId.mockResolvedValue(null)
   membershipRepository.readerExists.mockResolvedValue(true)
   billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue(null)
+  billingWebhookEventRepository.findLatestProcessedByProviderSubscriptionId.mockResolvedValue(
+    null,
+  )
+  billingWebhookEventRepository.findPendingByProviderSubscriptionId.mockResolvedValue(
+    [],
+  )
   billingWebhookEventRepository.create.mockResolvedValue({
     id: 'event-1' as any,
     provider: 'dodo',
@@ -495,6 +501,7 @@ describe('MembershipService', () => {
       expiresDate: now.getTime() + 86_400_000,
       originalTransactionId: 'orig-apple',
       productId: 'yohaku.membership.monthly',
+      signedDate: now.getTime(),
       transactionId: 'txn-apple',
     }
     const products = {
@@ -724,5 +731,128 @@ describe('MembershipService', () => {
       expect(membershipRepository.update).not.toHaveBeenCalled()
       expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
     })
+
+    it('replays a newer deferred refund before returning confirmed status', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+      const active = createMembership({
+        provider: 'apple',
+        providerCustomerId: decoded.appAccountToken,
+        providerSubscriptionId: decoded.originalTransactionId,
+        status: 'active',
+      })
+      const cancelled = createMembership({
+        ...active,
+        status: 'cancelled',
+      })
+      const refundOccurredAt = new Date(decoded.signedDate + 1_000)
+      const refund = createEvent({
+        customerId: decoded.appAccountToken,
+        eventId: 'refund-before-confirm',
+        provider: 'apple',
+        readerId: '',
+        subscriptionId: decoded.originalTransactionId,
+        type: 'cancelled',
+        occurredAt: refundOccurredAt,
+      })
+      const pendingRefund = {
+        id: 'pending-refund' as any,
+        provider: 'apple',
+        eventId: refund.event.eventId,
+        type: 'REFUND',
+        payload: {
+          _normalizedMembershipEvent: {
+            ...refund.event,
+            currentPeriodEnd: refund.event.currentPeriodEnd.toISOString(),
+            occurredAt: refundOccurredAt.toISOString(),
+          },
+        },
+        processedAt: null,
+        receivedAt: refundOccurredAt,
+      }
+
+      await service.deferEvent(refund)
+      billingWebhookEventRepository.findPendingByProviderSubscriptionId.mockResolvedValue(
+        [pendingRefund],
+      )
+      membershipRepository.findByProviderSubscriptionId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(active)
+      membershipRepository.findByReaderId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(cancelled)
+      membershipRepository.create.mockResolvedValue(active)
+      membershipRepository.update.mockResolvedValue(cancelled)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(billingWebhookEventRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventId: 'refund-before-confirm',
+          payload: expect.objectContaining({
+            _normalizedMembershipEvent: expect.objectContaining({
+              occurredAt: refundOccurredAt.toISOString(),
+              subscriptionId: decoded.originalTransactionId,
+              type: 'cancelled',
+            }),
+          }),
+        }),
+      )
+      expect(membershipRepository.update).toHaveBeenCalledWith(
+        active.id,
+        expect.objectContaining({ status: 'cancelled' }),
+      )
+      expect(result).toMatchObject({ provider: 'apple', status: 'cancelled' })
+    })
+  })
+
+  it('does not apply an Apple renewal older than the latest processed refund', async () => {
+    const { service, membershipRepository, billingWebhookEventRepository } =
+      createService()
+    const refundOccurredAt = new Date(now.getTime() - 1_000)
+    billingWebhookEventRepository.findLatestProcessedByProviderSubscriptionId.mockResolvedValue(
+      {
+        id: 'latest-refund' as any,
+        provider: 'apple',
+        eventId: 'refund-latest',
+        type: 'REFUND',
+        payload: {
+          _normalizedMembershipEvent: {
+            eventId: 'refund-latest',
+            provider: 'apple',
+            type: 'cancelled',
+            customerId: 'customer-apple',
+            subscriptionId: 'subscription-apple',
+            currentPeriodEnd: now.toISOString(),
+            readerId: 'reader-1',
+            occurredAt: refundOccurredAt.toISOString(),
+          },
+        },
+        processedAt: refundOccurredAt,
+        receivedAt: refundOccurredAt,
+      },
+    )
+
+    const result = await service.applyEvent(
+      createEvent({
+        eventId: 'renewal-delayed',
+        provider: 'apple',
+        type: 'renewed',
+        customerId: 'customer-apple',
+        subscriptionId: 'subscription-apple',
+        occurredAt: new Date(refundOccurredAt.getTime() - 1_000),
+      }),
+    )
+
+    expect(result).toEqual({ applied: false })
+    expect(membershipRepository.create).not.toHaveBeenCalled()
+    expect(membershipRepository.update).not.toHaveBeenCalled()
+    expect(billingWebhookEventRepository.markProcessed).toHaveBeenCalled()
   })
 })

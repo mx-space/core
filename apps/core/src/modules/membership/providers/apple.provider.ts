@@ -58,7 +58,8 @@ export class AppleProvider implements PaymentProviderAdapter {
         !decoded.transactionId ||
         !decoded.originalTransactionId ||
         !decoded.productId ||
-        !decoded.expiresDate
+        !decoded.expiresDate ||
+        !decoded.signedDate
       ) {
         throw createAppException(
           AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
@@ -70,6 +71,7 @@ export class AppleProvider implements PaymentProviderAdapter {
         originalTransactionId: decoded.originalTransactionId,
         productId: decoded.productId,
         revocationDate: decoded.revocationDate,
+        signedDate: decoded.signedDate,
         transactionId: decoded.transactionId,
       }
     } catch (error) {
@@ -119,6 +121,7 @@ export class AppleProvider implements PaymentProviderAdapter {
     let signedRenewalInfo: string | undefined
     let signedTransactionInfo: string | undefined
     let notificationUUID: string
+    let notificationSignedDate: number | undefined
     try {
       const notification = await this.verifyNotificationWithFallback(
         signedPayload,
@@ -128,6 +131,7 @@ export class AppleProvider implements PaymentProviderAdapter {
       notificationType = notification.notificationType ?? ''
       notificationSubtype = notification.subtype ?? ''
       notificationUUID = notification.notificationUUID ?? notificationType
+      notificationSignedDate = notification.signedDate
       signedRenewalInfo = notification.data?.signedRenewalInfo
       signedTransactionInfo = notification.data?.signedTransactionInfo
     } catch (error) {
@@ -161,7 +165,12 @@ export class AppleProvider implements PaymentProviderAdapter {
       bundleId,
       membershipConfig.appleAppAppleId,
     ).catch(() => null)
-    if (!decoded?.originalTransactionId || !decoded.expiresDate) {
+    const occurredAt = notificationSignedDate ?? decoded?.signedDate
+    if (
+      !decoded?.originalTransactionId ||
+      !decoded.expiresDate ||
+      !Number.isFinite(occurredAt)
+    ) {
       return {
         ignored: true,
         rawType: notificationType,
@@ -216,6 +225,7 @@ export class AppleProvider implements PaymentProviderAdapter {
         plan,
         currentPeriodEnd: new Date(currentPeriodEnd),
         readerId: '',
+        occurredAt: new Date(occurredAt!),
       },
       rawType: notificationType,
       rawPayload: {

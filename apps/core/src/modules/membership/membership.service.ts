@@ -22,6 +22,70 @@ import type {
   VerifiedBillingEvent,
 } from './providers/provider.interface'
 
+const NORMALIZED_EVENT_PAYLOAD_KEY = '_normalizedMembershipEvent'
+
+type StoredNormalizedBillingEvent = Omit<
+  NormalizedBillingEvent,
+  'currentPeriodEnd' | 'occurredAt'
+> & {
+  currentPeriodEnd: string
+  occurredAt?: string
+}
+
+const storeBillingEventPayload = (
+  event: NormalizedBillingEvent,
+  rawPayload: unknown,
+): Record<string, unknown> => {
+  const payload =
+    rawPayload && typeof rawPayload === 'object' && !Array.isArray(rawPayload)
+      ? { ...(rawPayload as Record<string, unknown>) }
+      : { rawPayload }
+  const storedEvent: StoredNormalizedBillingEvent = {
+    ...event,
+    currentPeriodEnd: event.currentPeriodEnd.toISOString(),
+    occurredAt: event.occurredAt?.toISOString(),
+  }
+  payload[NORMALIZED_EVENT_PAYLOAD_KEY] = storedEvent
+  return payload
+}
+
+const readStoredBillingEvent = (
+  payload: unknown,
+): NormalizedBillingEvent | null => {
+  if (!payload || typeof payload !== 'object') return null
+  const stored = (payload as Record<string, unknown>)[
+    NORMALIZED_EVENT_PAYLOAD_KEY
+  ] as Partial<StoredNormalizedBillingEvent> | undefined
+  if (
+    !stored ||
+    typeof stored.eventId !== 'string' ||
+    typeof stored.provider !== 'string' ||
+    typeof stored.type !== 'string' ||
+    typeof stored.customerId !== 'string' ||
+    typeof stored.subscriptionId !== 'string' ||
+    typeof stored.currentPeriodEnd !== 'string' ||
+    typeof stored.readerId !== 'string'
+  ) {
+    return null
+  }
+  const currentPeriodEnd = new Date(stored.currentPeriodEnd)
+  const occurredAt = stored.occurredAt ? new Date(stored.occurredAt) : undefined
+  if (
+    Number.isNaN(currentPeriodEnd.getTime()) ||
+    (occurredAt && Number.isNaN(occurredAt.getTime()))
+  ) {
+    return null
+  }
+  return {
+    ...(stored as Omit<
+      NormalizedBillingEvent,
+      'currentPeriodEnd' | 'occurredAt'
+    >),
+    currentPeriodEnd,
+    occurredAt,
+  }
+}
+
 const isLiveProviderSubscription = (row: MembershipRow): boolean => {
   if (row.provider === 'manual') return false
   if (row.status !== 'active' && row.status !== 'on_hold') return false
@@ -115,6 +179,11 @@ export class MembershipService {
       rawPayload: input.decoded,
       rawType: 'apple.confirm',
     })
+    await this.replayDeferredEvents(
+      event.provider,
+      event.subscriptionId,
+      input.readerId,
+    )
 
     return this.toStatusResult(
       await this.membershipRepository.findByReaderId(input.readerId),
@@ -133,7 +202,7 @@ export class MembershipService {
       provider: event.provider,
       eventId: event.eventId,
       type: rawType,
-      payload: rawPayload,
+      payload: storeBillingEventPayload(event, rawPayload),
     })
 
     if (!webhookEventRow) {
@@ -161,9 +230,57 @@ export class MembershipService {
     return { applied }
   }
 
+  async deferEvent(verifiedEvent: VerifiedBillingEvent): Promise<void> {
+    const { event, rawPayload, rawType } = verifiedEvent
+    await this.billingWebhookEventRepository.create({
+      provider: event.provider,
+      eventId: event.eventId,
+      type: rawType,
+      payload: storeBillingEventPayload(event, rawPayload),
+    })
+  }
+
+  private async replayDeferredEvents(
+    provider: string,
+    subscriptionId: string,
+    readerId: string,
+  ): Promise<void> {
+    const rows =
+      await this.billingWebhookEventRepository.findPendingByProviderSubscriptionId(
+        provider,
+        subscriptionId,
+      )
+    for (const row of rows) {
+      const storedEvent = readStoredBillingEvent(row.payload)
+      if (storedEvent) {
+        await this.applyMembershipState({ ...storedEvent, readerId })
+      }
+      await this.billingWebhookEventRepository.markProcessed(row.id, new Date())
+    }
+  }
+
+  private async isSupersededEvent(
+    event: NormalizedBillingEvent,
+  ): Promise<boolean> {
+    if (!event.occurredAt) return false
+    const latestRow =
+      await this.billingWebhookEventRepository.findLatestProcessedByProviderSubscriptionId(
+        event.provider,
+        event.subscriptionId,
+      )
+    if (!latestRow) return false
+    const latestEvent = readStoredBillingEvent(latestRow.payload)
+    return Boolean(
+      latestEvent?.occurredAt &&
+      latestEvent.occurredAt.getTime() >= event.occurredAt.getTime(),
+    )
+  }
+
   private async applyMembershipState(
     event: NormalizedBillingEvent,
   ): Promise<boolean> {
+    if (await this.isSupersededEvent(event)) return false
+
     let existing = await this.membershipRepository.findByProviderSubscriptionId(
       event.subscriptionId,
     )

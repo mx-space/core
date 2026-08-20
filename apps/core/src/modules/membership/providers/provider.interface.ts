@@ -9,6 +9,7 @@ export interface NormalizedBillingEvent {
   plan?: MembershipPlan
   currentPeriodEnd: Date
   readerId: string
+  occurredAt?: Date
 }
 
 export interface VerifiedBillingEvent {

@@ -594,6 +594,7 @@ describe('MembershipController (e2e)', () => {
         expiresDate: Date.now() + 86_400_000,
         originalTransactionId: 'orig-e2e',
         productId: 'yohaku.membership.monthly',
+        signedDate: Date.now(),
         transactionId: 'txn-e2e',
       })
 
@@ -628,6 +629,7 @@ describe('MembershipController (e2e)', () => {
         expiresDate: Date.now() + 86_400_000,
         originalTransactionId: 'orig-other-reader',
         productId: 'yohaku.membership.monthly',
+        signedDate: Date.now(),
         transactionId: 'txn-other-reader',
       })
 

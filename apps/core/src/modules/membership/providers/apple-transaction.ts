@@ -13,6 +13,7 @@ export interface AppleDecodedTransaction {
   originalTransactionId: string
   productId: string
   revocationDate?: number
+  signedDate: number
   transactionId: string
 }
 
@@ -59,6 +60,7 @@ export function appleActivatedEvent(
     plan,
     currentPeriodEnd: new Date(decoded.expiresDate),
     readerId,
+    occurredAt: new Date(decoded.signedDate),
   }
 }
 
