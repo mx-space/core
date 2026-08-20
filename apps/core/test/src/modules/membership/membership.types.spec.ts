@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  resolveAppleIapAvailability,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from '~/modules/membership/membership.types'
@@ -114,4 +115,55 @@ describe('resolveMembershipReturnUrl', () => {
       resolveMembershipReturnUrl('/posts/foo', 'not-a-url'),
     ).toBeUndefined()
   })
+})
+
+const appleCredentials = {
+  appleAppAppleId: '1234567890',
+  appleBundleId: 'dev.yohaku.app',
+  appleKeyId: 'KEYID',
+  appleIssuerId: 'ISSUER',
+  applePrivateKey: '-----BEGIN PRIVATE KEY-----\nX\n-----END PRIVATE KEY-----',
+  appleMonthlyProductId: 'yohaku.membership.monthly',
+  appleYearlyProductId: 'yohaku.membership.yearly',
+}
+
+describe('resolveAppleIapAvailability', () => {
+  it('is enabled when the master switch and all Apple fields are set', () => {
+    expect(
+      resolveAppleIapAvailability({ enabled: true, ...appleCredentials }),
+    ).toEqual({
+      enabled: true,
+      monthlyProductId: 'yohaku.membership.monthly',
+      yearlyProductId: 'yohaku.membership.yearly',
+    })
+  })
+
+  it('is disabled when the master switch is off', () => {
+    expect(
+      resolveAppleIapAvailability({ enabled: false, ...appleCredentials }),
+    ).toEqual({ enabled: false })
+  })
+
+  it('is disabled when any Apple field is missing', () => {
+    expect(
+      resolveAppleIapAvailability({
+        enabled: true,
+        ...appleCredentials,
+        appleKeyId: '',
+      }),
+    ).toEqual({ enabled: false })
+  })
+
+  it.each([undefined, '', 'not-a-number', '1.5', '0'])(
+    'is disabled when the App Apple ID is not a positive integer (%s)',
+    (appleAppAppleId) => {
+      expect(
+        resolveAppleIapAvailability({
+          enabled: true,
+          ...appleCredentials,
+          appleAppAppleId,
+        }),
+      ).toEqual({ enabled: false })
+    },
+  )
 })

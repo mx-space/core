@@ -1163,6 +1163,22 @@ export const MembershipSchema = section('Membership', {
       { label: 'Test mode', value: 'test_mode' },
     ],
   ),
+  appleBundleId: field.halfGrid(z.string().optional(), 'Apple bundle ID'),
+  appleKeyId: field.halfGrid(z.string().optional(), 'Apple key ID'),
+  appleIssuerId: field.plain(z.string().optional(), 'Apple issuer ID'),
+  applePrivateKey: field.password(
+    z.string().optional(),
+    'Apple .p8 private key',
+  ),
+  appleMonthlyProductId: field.halfGrid(
+    z.string().optional(),
+    'Apple monthly product ID',
+  ),
+  appleYearlyProductId: field.halfGrid(
+    z.string().optional(),
+    'Apple yearly product ID',
+  ),
+  appleAppAppleId: field.plain(z.string().optional(), 'Apple app Apple ID'),
 })
 export class MembershipDto extends createZodDto(MembershipSchema) {}
 export type MembershipConfig = z.infer<typeof MembershipSchema>

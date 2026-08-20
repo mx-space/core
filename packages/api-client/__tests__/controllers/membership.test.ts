@@ -55,4 +55,25 @@ describe('test Membership client', () => {
     const data = await client.membership.status()
     expect(data).toEqual({ status: 'none' })
   })
+
+  test('POST /membership/apple/confirm', async () => {
+    mockResponse(
+      '/membership/apple/confirm',
+      {
+        status: 'active',
+        plan: 'monthly',
+        provider: 'apple',
+        current_period_end: '2027-08-20T00:00:00.000Z',
+      },
+      'post',
+      { signedTransactionInfo: 'jws' },
+    )
+
+    const data = await client.membership.confirmApple('jws')
+    expect(data).toMatchObject({
+      status: 'active',
+      plan: 'monthly',
+      provider: 'apple',
+    })
+  })
 })

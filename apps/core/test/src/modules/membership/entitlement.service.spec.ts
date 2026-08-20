@@ -177,6 +177,30 @@ describe('EntitlementService.getAvailability', () => {
     })
   })
 
+  it('locks premium content when Apple IAP is the only purchase path', async () => {
+    const { service, membershipRepository } = createService({
+      enabled: true,
+      appleAppAppleId: '1234567890',
+      appleBundleId: 'dev.yohaku.app',
+      appleIssuerId: 'ISSUER',
+      appleKeyId: 'KEYID',
+      appleMonthlyProductId: 'yohaku.membership.monthly',
+      applePrivateKey:
+        '-----BEGIN PRIVATE KEY-----\nX\n-----END PRIVATE KEY-----',
+      appleYearlyProductId: 'yohaku.membership.yearly',
+    })
+    membershipRepository.findByReaderId.mockResolvedValue(null)
+
+    expect(await service.isMembershipPurchasable()).toBe(true)
+    expect(
+      await service.isPremiumLocked({
+        isOwner: false,
+        isPremium: true,
+        readerId: 'reader-1',
+      }),
+    ).toBe(true)
+  })
+
   it('is not purchasable when disabled', async () => {
     const { service } = createService({
       enabled: false,

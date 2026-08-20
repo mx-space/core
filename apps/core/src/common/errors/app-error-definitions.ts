@@ -630,6 +630,14 @@ export const APP_ERROR_DEFINITIONS = {
     status: 409,
     message: 'Reader already has an active membership',
   },
+  [AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID]: {
+    status: 400,
+    message: 'Apple transaction could not be verified',
+  },
+  [AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND]: {
+    status: 409,
+    message: 'This Apple subscription is already linked to another reader',
+  },
   [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: {
     status: 400,
     message: 'Only Lexical-format posts can be marked as premium',

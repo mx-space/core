@@ -2648,6 +2648,30 @@ export const enUS = {
   'settings.membership.webhook.signingKeyPlaceholder':
     'Paste the endpoint Secret Key',
   'settings.membership.webhook.title': 'Webhook delivery',
+  'settings.membership.apple.title': 'App Store in-app purchase',
+  'settings.membership.apple.description':
+    'iOS subscriptions use StoreKit, not the web checkout provider. Fill every field to expose the in-app buy buttons.',
+  'settings.membership.apple.bundleId.label': 'Bundle ID',
+  'settings.membership.apple.bundleId.placeholder': 'dev.yohaku.app',
+  'settings.membership.apple.keyId.label': 'Key ID',
+  'settings.membership.apple.keyId.placeholder': 'Ten-character key ID',
+  'settings.membership.apple.issuerId.label': 'Issuer ID',
+  'settings.membership.apple.issuerId.placeholder': 'App Store Connect issuer',
+  'settings.membership.apple.privateKey.label': '.p8 private key',
+  'settings.membership.apple.privateKey.description':
+    'Full contents of the In-App Purchase key, including the BEGIN and END lines.',
+  'settings.membership.apple.privateKey.placeholder':
+    '-----BEGIN PRIVATE KEY-----',
+  'settings.membership.apple.monthly.label': 'Monthly product ID',
+  'settings.membership.apple.monthly.placeholder': 'yohaku.membership.monthly',
+  'settings.membership.apple.yearly.label': 'Yearly product ID',
+  'settings.membership.apple.yearly.placeholder': 'yohaku.membership.yearly',
+  'settings.membership.apple.appAppleId.label': 'App Apple ID',
+  'settings.membership.apple.appAppleId.description':
+    'Numeric App Store app id. Required to verify production transactions.',
+  'settings.membership.apple.appAppleId.placeholder': '1234567890',
+  'settings.membership.apple.webhook.description':
+    'Point App Store Server Notifications V2 at this URL.',
   'settings.oauth.action.save': 'Save config',
   'settings.oauth.apple.bundleIdHelp':
     'Bundle ID of the native app, used only to verify id tokens signed for iOS. Leave blank for web-only sign-in.',

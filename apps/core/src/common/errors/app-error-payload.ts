@@ -182,6 +182,8 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED]: undefined
   [AppErrorCode.MEMBERSHIP_PROVIDER_NOT_SUPPORTED]: undefined
   [AppErrorCode.MEMBERSHIP_ALREADY_ACTIVE]: undefined
+  [AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID]: undefined
+  [AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND]: undefined
   [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: undefined
 
   // page

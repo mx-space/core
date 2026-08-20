@@ -2511,6 +2511,30 @@ export const zhCN = {
   'settings.membership.webhook.signingKeyPlaceholder':
     '粘贴该 Endpoint 的 Secret Key',
   'settings.membership.webhook.title': 'Webhook 回调',
+  'settings.membership.apple.title': 'App Store 内购',
+  'settings.membership.apple.description':
+    'iOS 订阅走 StoreKit，不占用网页结账渠道。六项都填齐后，App 才会显示购买入口。',
+  'settings.membership.apple.bundleId.label': 'Bundle ID',
+  'settings.membership.apple.bundleId.placeholder': 'dev.yohaku.app',
+  'settings.membership.apple.keyId.label': 'Key ID',
+  'settings.membership.apple.keyId.placeholder': '10 位密钥 ID',
+  'settings.membership.apple.issuerId.label': 'Issuer ID',
+  'settings.membership.apple.issuerId.placeholder': 'App Store Connect Issuer',
+  'settings.membership.apple.privateKey.label': '.p8 私钥',
+  'settings.membership.apple.privateKey.description':
+    '粘贴 In-App Purchase 密钥全文，含 BEGIN PRIVATE KEY 与 END PRIVATE KEY。',
+  'settings.membership.apple.privateKey.placeholder':
+    '-----BEGIN PRIVATE KEY-----',
+  'settings.membership.apple.monthly.label': '月付商品 ID',
+  'settings.membership.apple.monthly.placeholder': 'yohaku.membership.monthly',
+  'settings.membership.apple.yearly.label': '年付商品 ID',
+  'settings.membership.apple.yearly.placeholder': 'yohaku.membership.yearly',
+  'settings.membership.apple.appAppleId.label': 'App Apple ID',
+  'settings.membership.apple.appAppleId.description':
+    'App Store 数字应用 ID。正式环境验签需要填写。',
+  'settings.membership.apple.appAppleId.placeholder': '1234567890',
+  'settings.membership.apple.webhook.description':
+    '将 App Store Server Notifications V2 指向此地址。',
   'settings.oauth.action.save': '保存配置',
   'settings.oauth.apple.bundleIdHelp':
     '原生 App 的 Bundle ID，仅用于校验 iOS 端签发的 id token。纯 Web 登录可留空。',

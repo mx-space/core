@@ -9,6 +9,7 @@ import {
   KeyRound,
   PackageOpen,
   PlugZap,
+  Smartphone,
   Webhook,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -26,7 +27,9 @@ import { TextInput } from '~/ui/primitives/text-field'
 
 import {
   buildMembershipWebhookUrl,
+  getAppleIapSetupChecks,
   getMembershipSetupChecks,
+  getMembershipSetupProgress,
   MEMBERSHIP_WEBHOOK_EVENTS,
   type MembershipConfigValue,
 } from '../../utils/membership'
@@ -135,22 +138,30 @@ export function MembershipConfigEditor(props: {
   const environment = props.value.environment || 'live_mode'
   const status = statusQuery.data ?? {
     apiKeyConfigured: false,
+    applePrivateKeyConfigured: false,
     supportedProviders: ['dodo'],
     webhookSigningKeyConfigured: false,
   }
   const checks = getMembershipSetupChecks(props.value, status)
-  const completedCount = Object.values(checks).filter(Boolean).length
-  const totalCount = Object.keys(checks).length
-  const setupComplete = completedCount === totalCount
+  const appleChecks = getAppleIapSetupChecks(props.value, status)
+  const { completedCount, setupComplete, totalCount } =
+    getMembershipSetupProgress(checks, appleChecks)
   const providerSupported = checks.provider
   const apiKeyConfigured =
     Boolean(props.value.apiKey?.trim()) || status.apiKeyConfigured
   const webhookKeyConfigured =
     Boolean(props.value.webhookSigningKey?.trim()) ||
     status.webhookSigningKeyConfigured
+  const applePrivateKeyConfigured =
+    Boolean(props.value.applePrivateKey?.trim()) ||
+    Boolean(status.applePrivateKeyConfigured)
   const webhookUrl = buildMembershipWebhookUrl(
     API_URL || location.origin,
     provider,
+  )
+  const appleWebhookUrl = buildMembershipWebhookUrl(
+    API_URL || location.origin,
+    'apple',
   )
   const rawProviderOptions = getStringOptions(props.fields, 'provider')
   const providerOptions = rawProviderOptions.map((option) => ({
@@ -177,9 +188,9 @@ export function MembershipConfigEditor(props: {
     value: MembershipConfigValue[TKey],
   ) => props.onChange({ ...props.value, [key]: value })
 
-  const copyWebhookUrl = async () => {
+  const copyWebhookUrl = async (url: string) => {
     try {
-      await navigator.clipboard.writeText(webhookUrl)
+      await navigator.clipboard.writeText(url)
       toast.success(t('settings.membership.webhook.copySuccess'))
     } catch {
       toast.error(t('settings.membership.webhook.copyFailed'))
@@ -324,7 +335,7 @@ export function MembershipConfigEditor(props: {
         </div>
       </section>
 
-      <section className="grid gap-5 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+      <section className="grid gap-5 border-b border-border py-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
         <div>
           <GuideSectionHeading
             description={t('settings.membership.webhook.description')}
@@ -356,7 +367,7 @@ export function MembershipConfigEditor(props: {
               <Button
                 aria-label={t('settings.membership.webhook.copyAria')}
                 iconOnly
-                onClick={() => void copyWebhookUrl()}
+                onClick={() => void copyWebhookUrl(webhookUrl)}
                 type="button"
                 variant="secondary"
               >
@@ -413,6 +424,98 @@ export function MembershipConfigEditor(props: {
                 value={props.value.webhookSigningKey ?? ''}
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-5 pt-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+        <div>
+          <GuideSectionHeading
+            description={t('settings.membership.apple.description')}
+            icon={Smartphone}
+            title={t('settings.membership.apple.title')}
+          />
+          <p className="mt-3 text-xs text-fg-muted">
+            {Object.values(appleChecks).filter(Boolean).length}/
+            {Object.keys(appleChecks).length}
+          </p>
+        </div>
+        <div className="min-w-0 space-y-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextInput
+              label={t('settings.membership.apple.bundleId.label')}
+              onChange={(value) => update('appleBundleId', value)}
+              placeholder={t('settings.membership.apple.bundleId.placeholder')}
+              value={props.value.appleBundleId ?? ''}
+            />
+            <TextInput
+              label={t('settings.membership.apple.keyId.label')}
+              onChange={(value) => update('appleKeyId', value)}
+              placeholder={t('settings.membership.apple.keyId.placeholder')}
+              value={props.value.appleKeyId ?? ''}
+            />
+            <TextInput
+              label={t('settings.membership.apple.issuerId.label')}
+              onChange={(value) => update('appleIssuerId', value)}
+              placeholder={t('settings.membership.apple.issuerId.placeholder')}
+              value={props.value.appleIssuerId ?? ''}
+            />
+            <TextInput
+              label={t('settings.membership.apple.appAppleId.label')}
+              onChange={(value) => update('appleAppAppleId', value)}
+              placeholder={t(
+                'settings.membership.apple.appAppleId.placeholder',
+              )}
+              value={props.value.appleAppAppleId ?? ''}
+            />
+          </div>
+          <p className="text-xs leading-5 text-fg-muted">
+            {t('settings.membership.apple.appAppleId.description')}
+          </p>
+          <SecretField
+            configured={applePrivateKeyConfigured}
+            description={`${t('settings.membership.apple.privateKey.description')} ${t('settings.membership.credential.keep')}`}
+            keepHint={t('settings.membership.credential.configured')}
+            label={t('settings.membership.apple.privateKey.label')}
+            onChange={(value) => update('applePrivateKey', value)}
+            placeholder={t('settings.membership.apple.privateKey.placeholder')}
+            value={props.value.applePrivateKey ?? ''}
+          />
+          <div className="grid gap-5 md:grid-cols-2">
+            <TextInput
+              label={t('settings.membership.apple.monthly.label')}
+              onChange={(value) => update('appleMonthlyProductId', value)}
+              placeholder={t('settings.membership.apple.monthly.placeholder')}
+              value={props.value.appleMonthlyProductId ?? ''}
+            />
+            <TextInput
+              label={t('settings.membership.apple.yearly.label')}
+              onChange={(value) => update('appleYearlyProductId', value)}
+              placeholder={t('settings.membership.apple.yearly.placeholder')}
+              value={props.value.appleYearlyProductId ?? ''}
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-fg">
+              {t('settings.membership.webhook.endpointLabel')}
+            </p>
+            <div className="flex items-center gap-2 rounded-sm border border-border bg-surface-inset px-3 py-2">
+              <code className="min-w-0 flex-1 break-all text-xs text-fg">
+                {appleWebhookUrl}
+              </code>
+              <Button
+                aria-label={t('settings.membership.webhook.copyAria')}
+                iconOnly
+                onClick={() => void copyWebhookUrl(appleWebhookUrl)}
+                type="button"
+                variant="secondary"
+              >
+                <Copy aria-hidden="true" className="size-3.5" />
+              </Button>
+            </div>
+            <p className="text-xs leading-5 text-fg-muted">
+              {t('settings.membership.apple.webhook.description')}
+            </p>
           </div>
         </div>
       </section>

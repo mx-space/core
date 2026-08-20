@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { AppErrorCode } from '~/common/errors'
 import type { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import type { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
 import type { MembershipRow } from '~/modules/membership/membership.types'
+import { appleAccountTokenForReader } from '~/modules/membership/providers/apple-transaction'
 import type {
   NormalizedBillingEvent,
   VerifiedBillingEvent,
@@ -57,6 +59,12 @@ const createService = () => {
   membershipRepository.findByReaderId.mockResolvedValue(null)
   membershipRepository.readerExists.mockResolvedValue(true)
   billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue(null)
+  billingWebhookEventRepository.findLatestProcessedByProviderSubscriptionId.mockResolvedValue(
+    null,
+  )
+  billingWebhookEventRepository.findPendingByProviderSubscriptionId.mockResolvedValue(
+    [],
+  )
   billingWebhookEventRepository.create.mockResolvedValue({
     id: 'event-1' as any,
     provider: 'dodo',
@@ -485,5 +493,366 @@ describe('MembershipService', () => {
       await expect(service.revokeManual('reader-1')).rejects.toThrow()
       expect(membershipRepository.update).not.toHaveBeenCalled()
     })
+  })
+
+  describe('confirmAppleTransaction', () => {
+    const decoded = {
+      appAccountToken: appleAccountTokenForReader('reader-1'),
+      expiresDate: now.getTime() + 86_400_000,
+      originalTransactionId: 'orig-apple',
+      productId: 'yohaku.membership.monthly',
+      signedDate: now.getTime(),
+      transactionId: 'txn-apple',
+    }
+    const products = {
+      monthlyProductId: 'yohaku.membership.monthly',
+      yearlyProductId: 'yohaku.membership.yearly',
+    }
+
+    it('creates an apple membership for a new reader', async () => {
+      const { service, membershipRepository } = createService()
+      const created = createMembership({
+        provider: 'apple',
+        providerSubscriptionId: 'orig-apple',
+        readerId: 'reader-1',
+      })
+      membershipRepository.create.mockResolvedValue(created)
+      membershipRepository.findByReaderId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(created)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.create).toHaveBeenCalled()
+      expect(result).toMatchObject({
+        status: 'active',
+        plan: 'monthly',
+        provider: 'apple',
+      })
+    })
+
+    it('returns the existing live Dodo membership without rewriting it', async () => {
+      const { service, membershipRepository } = createService()
+      const live = createMembership({ provider: 'dodo' })
+      membershipRepository.findByReaderId.mockResolvedValue(live)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(result).toMatchObject({ provider: 'dodo', status: 'active' })
+    })
+
+    it('returns an existing active manual membership without rewriting it', async () => {
+      const { service, membershipRepository } = createService()
+      const live = createMembership({
+        provider: 'manual',
+        providerCustomerId: null,
+        providerSubscriptionId: null,
+      })
+      membershipRepository.findByReaderId.mockResolvedValue(live)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(result).toMatchObject({ provider: 'manual', status: 'active' })
+    })
+
+    it('rebinds an inactive non-Apple row to the confirmed Apple subscription', async () => {
+      const { service, membershipRepository } = createService()
+      const inactive = createMembership({
+        provider: 'dodo',
+        status: 'cancelled',
+        currentPeriodEnd: new Date(now.getTime() - 1_000),
+      })
+      const rebound = createMembership({
+        provider: 'apple',
+        providerCustomerId: 'orig-apple',
+        providerSubscriptionId: 'orig-apple',
+        plan: 'monthly',
+        status: 'active',
+        currentPeriodEnd: new Date(decoded.expiresDate),
+      })
+      membershipRepository.findByReaderId
+        .mockResolvedValueOnce(inactive)
+        .mockResolvedValueOnce(inactive)
+        .mockResolvedValueOnce(rebound)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.update).toHaveBeenCalledWith(
+        inactive.id,
+        expect.objectContaining({
+          plan: 'monthly',
+          provider: 'apple',
+          providerSubscriptionId: 'orig-apple',
+          status: 'active',
+        }),
+      )
+      expect(result).toMatchObject({ provider: 'apple', status: 'active' })
+    })
+
+    it('does not reactivate a cancelled Apple membership when confirmation is replayed', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+      const cancelled = createMembership({
+        provider: 'apple',
+        providerCustomerId: 'orig-apple',
+        providerSubscriptionId: 'orig-apple',
+        status: 'cancelled',
+      })
+      membershipRepository.findByProviderSubscriptionId.mockResolvedValue(
+        cancelled,
+      )
+      membershipRepository.findByReaderId.mockResolvedValue(cancelled)
+      billingWebhookEventRepository.create.mockResolvedValue(null)
+      billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue({
+        id: 'event-apple' as any,
+        provider: 'apple',
+        eventId: decoded.transactionId,
+        type: 'apple.confirm',
+        payload: decoded,
+        processedAt: now,
+        receivedAt: now,
+      })
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(result).toMatchObject({ provider: 'apple', status: 'cancelled' })
+    })
+
+    it('rejects when the originalTransactionId is bound to another reader', async () => {
+      const { service, membershipRepository } = createService()
+      membershipRepository.findByProviderSubscriptionId.mockResolvedValue(
+        createMembership({ readerId: 'other-reader', provider: 'apple' }),
+      )
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded,
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND,
+      })
+    })
+
+    it('rejects an unknown product id', async () => {
+      const { service } = createService()
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, productId: 'unknown.sku' },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+    })
+
+    it('rejects a transaction purchased for another reader account', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: {
+            ...decoded,
+            appAccountToken: appleAccountTokenForReader('reader-2'),
+          },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+    })
+
+    it('rejects a transaction without an account token', async () => {
+      const { service, membershipRepository } = createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, appAccountToken: undefined },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects a revoked Apple transaction before granting membership', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, revocationDate: now.getTime() },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+    })
+
+    it('replays a newer deferred refund before returning confirmed status', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+      const active = createMembership({
+        provider: 'apple',
+        providerCustomerId: decoded.appAccountToken,
+        providerSubscriptionId: decoded.originalTransactionId,
+        status: 'active',
+      })
+      const cancelled = createMembership({
+        ...active,
+        status: 'cancelled',
+      })
+      const refundOccurredAt = new Date(decoded.signedDate + 1_000)
+      const refund = createEvent({
+        customerId: decoded.appAccountToken,
+        eventId: 'refund-before-confirm',
+        provider: 'apple',
+        readerId: '',
+        subscriptionId: decoded.originalTransactionId,
+        type: 'cancelled',
+        occurredAt: refundOccurredAt,
+      })
+      const pendingRefund = {
+        id: 'pending-refund' as any,
+        provider: 'apple',
+        eventId: refund.event.eventId,
+        type: 'REFUND',
+        payload: {
+          _normalizedMembershipEvent: {
+            ...refund.event,
+            currentPeriodEnd: refund.event.currentPeriodEnd.toISOString(),
+            occurredAt: refundOccurredAt.toISOString(),
+          },
+        },
+        processedAt: null,
+        receivedAt: refundOccurredAt,
+      }
+
+      await service.deferEvent(refund)
+      billingWebhookEventRepository.findPendingByProviderSubscriptionId.mockResolvedValue(
+        [pendingRefund],
+      )
+      membershipRepository.findByProviderSubscriptionId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(active)
+      membershipRepository.findByReaderId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(cancelled)
+      membershipRepository.create.mockResolvedValue(active)
+      membershipRepository.update.mockResolvedValue(cancelled)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(billingWebhookEventRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventId: 'refund-before-confirm',
+          payload: expect.objectContaining({
+            _normalizedMembershipEvent: expect.objectContaining({
+              occurredAt: refundOccurredAt.toISOString(),
+              subscriptionId: decoded.originalTransactionId,
+              type: 'cancelled',
+            }),
+          }),
+        }),
+      )
+      expect(membershipRepository.update).toHaveBeenCalledWith(
+        active.id,
+        expect.objectContaining({ status: 'cancelled' }),
+      )
+      expect(result).toMatchObject({ provider: 'apple', status: 'cancelled' })
+    })
+  })
+
+  it('does not apply an Apple renewal older than the latest processed refund', async () => {
+    const { service, membershipRepository, billingWebhookEventRepository } =
+      createService()
+    const refundOccurredAt = new Date(now.getTime() - 1_000)
+    billingWebhookEventRepository.findLatestProcessedByProviderSubscriptionId.mockResolvedValue(
+      {
+        id: 'latest-refund' as any,
+        provider: 'apple',
+        eventId: 'refund-latest',
+        type: 'REFUND',
+        payload: {
+          _normalizedMembershipEvent: {
+            eventId: 'refund-latest',
+            provider: 'apple',
+            type: 'cancelled',
+            customerId: 'customer-apple',
+            subscriptionId: 'subscription-apple',
+            currentPeriodEnd: now.toISOString(),
+            readerId: 'reader-1',
+            occurredAt: refundOccurredAt.toISOString(),
+          },
+        },
+        processedAt: refundOccurredAt,
+        receivedAt: refundOccurredAt,
+      },
+    )
+
+    const result = await service.applyEvent(
+      createEvent({
+        eventId: 'renewal-delayed',
+        provider: 'apple',
+        type: 'renewed',
+        customerId: 'customer-apple',
+        subscriptionId: 'subscription-apple',
+        occurredAt: new Date(refundOccurredAt.getTime() - 1_000),
+      }),
+    )
+
+    expect(result).toEqual({ applied: false })
+    expect(membershipRepository.create).not.toHaveBeenCalled()
+    expect(membershipRepository.update).not.toHaveBeenCalled()
+    expect(billingWebhookEventRepository.markProcessed).toHaveBeenCalled()
   })
 })

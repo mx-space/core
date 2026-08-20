@@ -1,7 +1,7 @@
 import type { EntityId } from '~/shared/id/entity-id'
 
 export type MembershipProvider =
-  'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual'
+  'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual' | 'apple'
 
 export const REGISTERED_PAYMENT_PROVIDERS: readonly string[] = ['dodo']
 
@@ -57,6 +57,44 @@ export function resolveMembershipAvailability(config: {
     hasProviderCredentials &&
     plans.length > 0
   return { enabled, plans: enabled ? plans : [] }
+}
+
+export interface AppleIapAvailability {
+  enabled: boolean
+  monthlyProductId?: string
+  yearlyProductId?: string
+}
+
+const nonEmpty = (value?: string) => Boolean(value?.trim())
+
+const positiveInteger = (value?: string) => {
+  const parsed = Number(value?.trim())
+  return Number.isSafeInteger(parsed) && parsed > 0
+}
+
+export function resolveAppleIapAvailability(config: {
+  enabled?: boolean
+  appleBundleId?: string
+  appleAppAppleId?: string
+  appleKeyId?: string
+  appleIssuerId?: string
+  applePrivateKey?: string
+  appleMonthlyProductId?: string
+  appleYearlyProductId?: string
+}): AppleIapAvailability {
+  const monthlyProductId = config.appleMonthlyProductId?.trim()
+  const yearlyProductId = config.appleYearlyProductId?.trim()
+  const enabled =
+    !!config.enabled &&
+    nonEmpty(config.appleBundleId) &&
+    positiveInteger(config.appleAppAppleId) &&
+    nonEmpty(config.appleKeyId) &&
+    nonEmpty(config.appleIssuerId) &&
+    nonEmpty(config.applePrivateKey) &&
+    nonEmpty(monthlyProductId) &&
+    nonEmpty(yearlyProductId)
+  if (!enabled) return { enabled: false }
+  return { enabled: true, monthlyProductId, yearlyProductId }
 }
 
 export function resolveMembershipReturnUrl(
