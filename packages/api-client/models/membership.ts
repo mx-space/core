@@ -1,5 +1,5 @@
 export type MembershipProvider =
-  'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual'
+  'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual' | 'apple'
 
 export type MembershipPlan = 'monthly' | 'yearly'
 
@@ -21,7 +21,14 @@ export interface MembershipPlanInfo {
   pricing?: MembershipPlanPricing
 }
 
+export interface MembershipAppleIap {
+  enabled: boolean
+  monthlyProductId?: string
+  yearlyProductId?: string
+}
+
 export interface MembershipPlansResult {
+  appleIap: MembershipAppleIap
   enabled: boolean
   plans: MembershipPlanInfo[]
 }

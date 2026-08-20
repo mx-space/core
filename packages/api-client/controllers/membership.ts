@@ -45,4 +45,10 @@ export class MembershipController<ResponseWrapper> implements IController {
   plans() {
     return this.proxy.plans.get<MembershipPlansResult>()
   }
+
+  confirmApple(signedTransactionInfo: string) {
+    return this.proxy.apple.confirm.post<MembershipStatusResult>({
+      data: { signedTransactionInfo },
+    })
+  }
 }

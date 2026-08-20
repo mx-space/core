@@ -2,6 +2,7 @@ import { getJson } from './http'
 
 export interface MembershipConfigStatus {
   apiKeyConfigured: boolean
+  applePrivateKeyConfigured?: boolean
   supportedProviders: string[]
   webhookSigningKeyConfigured: boolean
 }

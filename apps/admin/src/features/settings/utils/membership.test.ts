@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildMembershipWebhookUrl,
+  getAppleIapSetupChecks,
   getMembershipSetupChecks,
 } from './membership'
 
@@ -10,6 +11,12 @@ describe('buildMembershipWebhookUrl', () => {
     expect(
       buildMembershipWebhookUrl('https://mx.example.com/api/v3/', 'dodo'),
     ).toBe('https://mx.example.com/api/v3/membership/webhook/dodo')
+  })
+
+  it('builds the Apple webhook URL', () => {
+    expect(
+      buildMembershipWebhookUrl('https://mx.example.com/api/v3/', 'apple'),
+    ).toBe('https://mx.example.com/api/v3/membership/webhook/apple')
   })
 })
 
@@ -51,5 +58,34 @@ describe('getMembershipSetupChecks', () => {
     )
 
     expect(Object.values(checks).every(Boolean)).toBe(true)
+  })
+})
+
+describe('getAppleIapSetupChecks', () => {
+  it('is complete when all Apple fields or persisted private key are present', () => {
+    expect(
+      getAppleIapSetupChecks(
+        {
+          appleBundleId: 'dev.yohaku.app',
+          appleIssuerId: 'ISSUER',
+          appleKeyId: 'KEYID',
+          appleMonthlyProductId: 'monthly',
+          appleYearlyProductId: 'yearly',
+        },
+        {
+          apiKeyConfigured: false,
+          applePrivateKeyConfigured: true,
+          supportedProviders: ['dodo'],
+          webhookSigningKeyConfigured: false,
+        },
+      ),
+    ).toEqual({
+      bundleId: true,
+      issuerId: true,
+      keyId: true,
+      monthlyProductId: true,
+      privateKey: true,
+      yearlyProductId: true,
+    })
   })
 })

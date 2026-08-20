@@ -104,6 +104,9 @@ describe('MembershipConfigEditor', () => {
     expect(harness.container.textContent).toContain(
       'https://mx.example.com/api/v3/membership/webhook/dodo',
     )
+    expect(harness.container.textContent).toContain(
+      'https://mx.example.com/api/v3/membership/webhook/apple',
+    )
     for (const event of MEMBERSHIP_WEBHOOK_EVENTS) {
       expect(harness.container.textContent).toContain(event)
     }

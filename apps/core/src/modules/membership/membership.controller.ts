@@ -184,6 +184,7 @@ export class MembershipController {
 
     return {
       apiKeyConfigured: Boolean(membershipConfig.apiKey),
+      applePrivateKeyConfigured: Boolean(membershipConfig.applePrivateKey),
       supportedProviders: REGISTERED_PAYMENT_PROVIDERS,
       webhookSigningKeyConfigured: Boolean(membershipConfig.webhookSigningKey),
     }

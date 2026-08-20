@@ -266,6 +266,7 @@ describe('MembershipController (e2e)', () => {
       expect(res.json()).toEqual({
         data: {
           api_key_configured: true,
+          apple_private_key_configured: false,
           supported_providers: ['dodo'],
           webhook_signing_key_configured: true,
         },
