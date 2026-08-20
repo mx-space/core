@@ -42,6 +42,7 @@ const NOTIFICATION_TYPE_MAP: Record<
 > = {
   SUBSCRIBED: 'activated',
   DID_RENEW: 'renewed',
+  RENEWAL_EXTENDED: 'renewed',
   DID_FAIL_TO_RENEW: 'on_hold',
   EXPIRED: 'cancelled',
   REFUND: 'cancelled',

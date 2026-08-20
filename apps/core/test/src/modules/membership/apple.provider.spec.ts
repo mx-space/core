@@ -48,6 +48,7 @@ describe('AppleProvider', () => {
 
   it.each([
     ['DID_RENEW', 'renewed'],
+    ['RENEWAL_EXTENDED', 'renewed'],
     ['DID_CHANGE_RENEWAL_PREF', 'plan_changed'],
   ] as const)(
     'maps the current Apple product during %s',

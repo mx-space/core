@@ -29,6 +29,7 @@ import {
   buildMembershipWebhookUrl,
   getAppleIapSetupChecks,
   getMembershipSetupChecks,
+  getMembershipSetupProgress,
   MEMBERSHIP_WEBHOOK_EVENTS,
   type MembershipConfigValue,
 } from '../../utils/membership'
@@ -143,9 +144,8 @@ export function MembershipConfigEditor(props: {
   }
   const checks = getMembershipSetupChecks(props.value, status)
   const appleChecks = getAppleIapSetupChecks(props.value, status)
-  const completedCount = Object.values(checks).filter(Boolean).length
-  const totalCount = Object.keys(checks).length
-  const setupComplete = completedCount === totalCount
+  const { completedCount, setupComplete, totalCount } =
+    getMembershipSetupProgress(checks, appleChecks)
   const providerSupported = checks.provider
   const apiKeyConfigured =
     Boolean(props.value.apiKey?.trim()) || status.apiKeyConfigured

@@ -4,6 +4,7 @@ import {
   buildMembershipWebhookUrl,
   getAppleIapSetupChecks,
   getMembershipSetupChecks,
+  getMembershipSetupProgress,
 } from './membership'
 
 describe('buildMembershipWebhookUrl', () => {
@@ -66,6 +67,7 @@ describe('getAppleIapSetupChecks', () => {
     expect(
       getAppleIapSetupChecks(
         {
+          appleAppAppleId: '1234567890',
           appleBundleId: 'dev.yohaku.app',
           appleIssuerId: 'ISSUER',
           appleKeyId: 'KEYID',
@@ -80,12 +82,64 @@ describe('getAppleIapSetupChecks', () => {
         },
       ),
     ).toEqual({
+      appAppleId: true,
       bundleId: true,
       issuerId: true,
       keyId: true,
       monthlyProductId: true,
       privateKey: true,
       yearlyProductId: true,
+    })
+  })
+
+  it.each(['', '0', '-1', '1.5', 'not-a-number'])(
+    'rejects an invalid App Apple ID: %s',
+    (appleAppAppleId) => {
+      const checks = getAppleIapSetupChecks(
+        {
+          appleAppAppleId,
+          appleBundleId: 'dev.yohaku.app',
+          appleIssuerId: 'ISSUER',
+          appleKeyId: 'KEYID',
+          appleMonthlyProductId: 'monthly',
+          applePrivateKey: 'private-key',
+          appleYearlyProductId: 'yearly',
+        },
+        {
+          apiKeyConfigured: false,
+          supportedProviders: ['dodo'],
+          webhookSigningKeyConfigured: false,
+        },
+      )
+
+      expect(checks.appAppleId).toBe(false)
+    },
+  )
+
+  it('lets a complete Apple-only setup satisfy the enable gate', () => {
+    const status = {
+      apiKeyConfigured: false,
+      supportedProviders: ['dodo'],
+      webhookSigningKeyConfigured: false,
+    }
+    const membershipChecks = getMembershipSetupChecks({}, status)
+    const appleChecks = getAppleIapSetupChecks(
+      {
+        appleAppAppleId: '1234567890',
+        appleBundleId: 'dev.yohaku.app',
+        appleIssuerId: 'ISSUER',
+        appleKeyId: 'KEYID',
+        appleMonthlyProductId: 'monthly',
+        applePrivateKey: 'private-key',
+        appleYearlyProductId: 'yearly',
+      },
+      status,
+    )
+
+    expect(getMembershipSetupProgress(membershipChecks, appleChecks)).toEqual({
+      completedCount: 7,
+      setupComplete: true,
+      totalCount: 7,
     })
   })
 })
