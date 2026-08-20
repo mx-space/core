@@ -13,6 +13,7 @@ import { APPLE_ROOT_CA_PEMS } from './apple-root-cas'
 import {
   type AppleDecodedTransaction,
   appleNotificationEventType,
+  planFromAppleProductId,
 } from './apple-transaction'
 import type {
   BillingWebhookResult,
@@ -162,6 +163,16 @@ export class AppleProvider implements PaymentProviderAdapter {
       }
     }
 
+    const monthlyProductId = membershipConfig.appleMonthlyProductId?.trim()
+    const yearlyProductId = membershipConfig.appleYearlyProductId?.trim()
+    const plan =
+      decoded.productId && monthlyProductId && yearlyProductId
+        ? (planFromAppleProductId(decoded.productId, {
+            monthlyProductId,
+            yearlyProductId,
+          }) ?? undefined)
+        : undefined
+
     return {
       event: {
         eventId: notificationUUID,
@@ -169,6 +180,7 @@ export class AppleProvider implements PaymentProviderAdapter {
         type,
         customerId: decoded.appAccountToken ?? decoded.originalTransactionId,
         subscriptionId: decoded.originalTransactionId,
+        plan,
         currentPeriodEnd: new Date(decoded.expiresDate),
         readerId: '',
       },
@@ -228,7 +240,7 @@ export class AppleProvider implements PaymentProviderAdapter {
   private environmentsToTry(appleAppAppleId?: string) {
     const appAppleId = Number(appleAppAppleId)
     const production =
-      Number.isFinite(appAppleId) && appAppleId > 0
+      Number.isSafeInteger(appAppleId) && appAppleId > 0
         ? [
             {
               environment: Environment.PRODUCTION,

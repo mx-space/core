@@ -118,6 +118,7 @@ describe('resolveMembershipReturnUrl', () => {
 })
 
 const appleCredentials = {
+  appleAppAppleId: '1234567890',
   appleBundleId: 'dev.yohaku.app',
   appleKeyId: 'KEYID',
   appleIssuerId: 'ISSUER',
@@ -152,4 +153,17 @@ describe('resolveAppleIapAvailability', () => {
       }),
     ).toEqual({ enabled: false })
   })
+
+  it.each([undefined, '', 'not-a-number', '1.5', '0'])(
+    'is disabled when the App Apple ID is not a positive integer (%s)',
+    (appleAppAppleId) => {
+      expect(
+        resolveAppleIapAvailability({
+          enabled: true,
+          ...appleCredentials,
+          appleAppAppleId,
+        }),
+      ).toEqual({ enabled: false })
+    },
+  )
 })

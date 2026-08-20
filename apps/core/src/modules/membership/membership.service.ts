@@ -27,6 +27,11 @@ const isLiveProviderSubscription = (row: MembershipRow): boolean => {
   return row.currentPeriodEnd.getTime() > Date.now()
 }
 
+const hasCurrentEntitlement = (row: MembershipRow): boolean => {
+  const status = effectiveMembershipStatus(row)
+  return status === 'active' || status === 'on_hold'
+}
+
 @Injectable()
 export class MembershipService {
   constructor(
@@ -82,30 +87,18 @@ export class MembershipService {
     )
     if (
       byReader &&
-      isLiveProviderSubscription(byReader) &&
+      hasCurrentEntitlement(byReader) &&
       byReader.provider !== 'apple'
     ) {
       return this.toStatusResult(byReader)
     }
 
     const event = appleActivatedEvent(input.decoded, input.readerId, plan)
-    const applied = await this.applyEvent({
+    await this.applyEvent({
       event,
       rawPayload: input.decoded,
       rawType: 'apple.confirm',
     })
-
-    if (!applied.applied && byReader?.provider === 'apple') {
-      await this.membershipRepository.update(byReader.id, {
-        provider: 'apple',
-        providerCustomerId:
-          input.decoded.appAccountToken ?? input.decoded.originalTransactionId,
-        providerSubscriptionId: input.decoded.originalTransactionId,
-        plan,
-        status: 'active',
-        currentPeriodEnd: new Date(input.decoded.expiresDate),
-      })
-    }
 
     return this.toStatusResult(
       await this.membershipRepository.findByReaderId(input.readerId),
@@ -165,9 +158,10 @@ export class MembershipService {
       )
       if (byReader) {
         const canBindInitialSubscription =
-          byReader.provider === event.provider &&
-          byReader.providerSubscriptionId === null &&
-          event.type === 'activated'
+          event.type === 'activated' &&
+          ((byReader.provider === event.provider &&
+            byReader.providerSubscriptionId === null) ||
+            !hasCurrentEntitlement(byReader))
         if (!canBindInitialSubscription) return false
         existing = byReader
       }

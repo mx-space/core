@@ -240,6 +240,7 @@ describe('MembershipController (e2e)', () => {
     membershipConfig.enabled = true
     membershipConfig.provider = 'dodo'
     membershipConfig.webhookSigningKey = 'webhook-key'
+    delete (membershipConfig as { appleAppAppleId?: string }).appleAppAppleId
     delete (membershipConfig as { appleBundleId?: string }).appleBundleId
     delete (membershipConfig as { appleKeyId?: string }).appleKeyId
     delete (membershipConfig as { appleIssuerId?: string }).appleIssuerId
@@ -528,6 +529,7 @@ describe('MembershipController (e2e)', () => {
 
     it('reports appleIap when Apple fields are configured', async () => {
       Object.assign(membershipConfig, {
+        appleAppAppleId: '1234567890',
         appleBundleId: 'dev.yohaku.app',
         appleKeyId: 'KEYID',
         appleIssuerId: 'ISSUER',
@@ -554,6 +556,7 @@ describe('MembershipController (e2e)', () => {
   describe('POST /membership/apple/confirm', () => {
     it('returns the new apple membership for a signed-in reader', async () => {
       Object.assign(membershipConfig, {
+        appleAppAppleId: '1234567890',
         appleBundleId: 'dev.yohaku.app',
         appleKeyId: 'KEYID',
         appleIssuerId: 'ISSUER',

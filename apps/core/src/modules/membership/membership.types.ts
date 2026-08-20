@@ -67,9 +67,15 @@ export interface AppleIapAvailability {
 
 const nonEmpty = (value?: string) => Boolean(value?.trim())
 
+const positiveInteger = (value?: string) => {
+  const parsed = Number(value?.trim())
+  return Number.isSafeInteger(parsed) && parsed > 0
+}
+
 export function resolveAppleIapAvailability(config: {
   enabled?: boolean
   appleBundleId?: string
+  appleAppAppleId?: string
   appleKeyId?: string
   appleIssuerId?: string
   applePrivateKey?: string
@@ -81,6 +87,7 @@ export function resolveAppleIapAvailability(config: {
   const enabled =
     !!config.enabled &&
     nonEmpty(config.appleBundleId) &&
+    positiveInteger(config.appleAppAppleId) &&
     nonEmpty(config.appleKeyId) &&
     nonEmpty(config.appleIssuerId) &&
     nonEmpty(config.applePrivateKey) &&
