@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
+import { AppErrorCode } from '~/common/errors'
 import type { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import type { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
@@ -484,6 +485,92 @@ describe('MembershipService', () => {
 
       await expect(service.revokeManual('reader-1')).rejects.toThrow()
       expect(membershipRepository.update).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('confirmAppleTransaction', () => {
+    const decoded = {
+      expiresDate: now.getTime() + 86_400_000,
+      originalTransactionId: 'orig-apple',
+      productId: 'yohaku.membership.monthly',
+      transactionId: 'txn-apple',
+    }
+    const products = {
+      monthlyProductId: 'yohaku.membership.monthly',
+      yearlyProductId: 'yohaku.membership.yearly',
+    }
+
+    it('creates an apple membership for a new reader', async () => {
+      const { service, membershipRepository } = createService()
+      const created = createMembership({
+        provider: 'apple',
+        providerSubscriptionId: 'orig-apple',
+        readerId: 'reader-1',
+      })
+      membershipRepository.create.mockResolvedValue(created)
+      membershipRepository.findByReaderId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(created)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.create).toHaveBeenCalled()
+      expect(result).toMatchObject({
+        status: 'active',
+        plan: 'monthly',
+        provider: 'apple',
+      })
+    })
+
+    it('returns the existing live Dodo membership without rewriting it', async () => {
+      const { service, membershipRepository } = createService()
+      const live = createMembership({ provider: 'dodo' })
+      membershipRepository.findByReaderId.mockResolvedValue(live)
+
+      const result = await service.confirmAppleTransaction({
+        decoded,
+        readerId: 'reader-1',
+        ...products,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(result).toMatchObject({ provider: 'dodo', status: 'active' })
+    })
+
+    it('rejects when the originalTransactionId is bound to another reader', async () => {
+      const { service, membershipRepository } = createService()
+      membershipRepository.findByProviderSubscriptionId.mockResolvedValue(
+        createMembership({ readerId: 'other-reader', provider: 'apple' }),
+      )
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded,
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND,
+      })
+    })
+
+    it('rejects an unknown product id', async () => {
+      const { service } = createService()
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, productId: 'unknown.sku' },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
     })
   })
 })

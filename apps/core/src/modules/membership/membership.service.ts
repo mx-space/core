@@ -4,11 +4,18 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
 import { MembershipRepository } from './membership.repository'
-import type {
-  MembershipPlan,
-  MembershipProvider,
-  MembershipRow,
+import {
+  effectiveMembershipStatus,
+  type MembershipPlan,
+  type MembershipProvider,
+  type MembershipRow,
+  type MembershipStatus,
 } from './membership.types'
+import {
+  appleActivatedEvent,
+  type AppleDecodedTransaction,
+  planFromAppleProductId,
+} from './providers/apple-transaction'
 import type {
   NormalizedBillingEvent,
   VerifiedBillingEvent,
@@ -29,6 +36,72 @@ export class MembershipService {
 
   async getByReaderId(readerId: string): Promise<MembershipRow | null> {
     return this.membershipRepository.findByReaderId(readerId)
+  }
+
+  async confirmAppleTransaction(input: {
+    decoded: AppleDecodedTransaction
+    monthlyProductId: string
+    readerId: string
+    yearlyProductId: string
+  }): Promise<
+    | { status: 'none' }
+    | {
+        currentPeriodEnd: Date
+        plan: MembershipPlan
+        provider: MembershipProvider
+        status: MembershipStatus
+      }
+  > {
+    const plan = planFromAppleProductId(input.decoded.productId, {
+      monthlyProductId: input.monthlyProductId,
+      yearlyProductId: input.yearlyProductId,
+    })
+    if (!plan) {
+      throw createAppException(
+        AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      )
+    }
+
+    const bySub = await this.membershipRepository.findByProviderSubscriptionId(
+      input.decoded.originalTransactionId,
+    )
+    if (bySub && bySub.readerId !== input.readerId) {
+      throw createAppException(AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND)
+    }
+
+    const byReader = await this.membershipRepository.findByReaderId(
+      input.readerId,
+    )
+    if (
+      byReader &&
+      isLiveProviderSubscription(byReader) &&
+      byReader.provider !== 'apple'
+    ) {
+      return this.toStatusResult(byReader)
+    }
+
+    const event = appleActivatedEvent(input.decoded, input.readerId, plan)
+    const applied = await this.applyEvent({
+      event,
+      rawPayload: input.decoded,
+      rawType: 'apple.confirm',
+    })
+
+    if (!applied.applied && byReader?.provider === 'apple') {
+      await this.membershipRepository.update(byReader.id, {
+        provider: 'apple',
+        providerCustomerId:
+          input.decoded.appAccountToken ?? input.decoded.originalTransactionId,
+        providerSubscriptionId: input.decoded.originalTransactionId,
+        plan,
+        status: 'active',
+        currentPeriodEnd: new Date(input.decoded.expiresDate),
+      })
+    }
+
+    return this.toStatusResult(
+      await this.membershipRepository.findByReaderId(input.readerId),
+    )
   }
 
   async listMembers(page: number, size: number) {
@@ -195,6 +268,23 @@ export class MembershipService {
       status: 'cancelled',
     })
     return updated!
+  }
+
+  private toStatusResult(row: MembershipRow | null):
+    | { status: 'none' }
+    | {
+        currentPeriodEnd: Date
+        plan: MembershipPlan
+        provider: MembershipProvider
+        status: MembershipStatus
+      } {
+    if (!row) return { status: 'none' }
+    return {
+      currentPeriodEnd: row.currentPeriodEnd,
+      plan: row.plan,
+      provider: row.provider,
+      status: effectiveMembershipStatus(row),
+    }
   }
 
   private async assertReaderExists(readerId: string): Promise<void> {
