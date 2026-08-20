@@ -213,5 +213,11 @@ export const generateDefaultConfig: () => IConfig = () => ({
     apiKey: '',
     webhookSigningKey: '',
     environment: 'live_mode',
+    appleBundleId: '',
+    appleKeyId: '',
+    appleIssuerId: '',
+    applePrivateKey: '',
+    appleMonthlyProductId: '',
+    appleYearlyProductId: '',
   },
 })
