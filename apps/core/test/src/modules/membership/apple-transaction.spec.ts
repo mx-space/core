@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  appleAccountTokenForReader,
   appleActivatedEvent,
   appleNotificationEventType,
   planFromAppleProductId,
@@ -10,6 +11,18 @@ const products = {
   monthlyProductId: 'yohaku.membership.monthly',
   yearlyProductId: 'yohaku.membership.yearly',
 }
+
+describe('appleAccountTokenForReader', () => {
+  it('returns a stable UUID scoped to the reader account', () => {
+    const token = appleAccountTokenForReader('reader-1')
+
+    expect(token).toMatch(
+      /^[\da-f]{8}-[\da-f]{4}-8[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/,
+    )
+    expect(appleAccountTokenForReader('reader-1')).toBe(token)
+    expect(appleAccountTokenForReader('reader-2')).not.toBe(token)
+  })
+})
 
 describe('planFromAppleProductId', () => {
   it('maps configured product ids', () => {

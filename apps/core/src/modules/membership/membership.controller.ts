@@ -35,6 +35,7 @@ import {
   resolveMembershipReturnUrl,
 } from './membership.types'
 import { AppleProvider } from './providers/apple.provider'
+import { appleAccountTokenForReader } from './providers/apple-transaction'
 import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 
@@ -145,6 +146,12 @@ export class MembershipController {
     )
 
     return { enabled: true, plans, appleIap }
+  }
+
+  @ReaderAuth()
+  @Get('/apple/account-token')
+  appleAccountToken(@CurrentUser() user: SessionUser) {
+    return { accountToken: appleAccountTokenForReader(user.id) }
   }
 
   @ReaderAuth()

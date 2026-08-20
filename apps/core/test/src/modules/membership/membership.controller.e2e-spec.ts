@@ -23,6 +23,7 @@ import { MembershipController } from '~/modules/membership/membership.controller
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
 import { AppleProvider } from '~/modules/membership/providers/apple.provider'
+import { appleAccountTokenForReader } from '~/modules/membership/providers/apple-transaction'
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
 import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -553,6 +554,29 @@ describe('MembershipController (e2e)', () => {
     })
   })
 
+  describe('GET /membership/apple/account-token', () => {
+    it('returns the authenticated reader token', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/apple/account-token',
+        headers: { 'x-test-reader': 'apple-confirm' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data).toEqual({
+        account_token: appleAccountTokenForReader(appleConfirmReaderId),
+      })
+    })
+
+    it('returns 401 without a reader session', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/apple/account-token',
+      })
+      expect(res.statusCode).toBe(401)
+    })
+  })
+
   describe('POST /membership/apple/confirm', () => {
     it('returns the new apple membership for a signed-in reader', async () => {
       Object.assign(membershipConfig, {
@@ -566,6 +590,7 @@ describe('MembershipController (e2e)', () => {
         appleYearlyProductId: 'yohaku.membership.yearly',
       })
       verifySignedTransactionMock.mockResolvedValueOnce({
+        appAccountToken: appleAccountTokenForReader(appleConfirmReaderId),
         expiresDate: Date.now() + 86_400_000,
         originalTransactionId: 'orig-e2e',
         productId: 'yohaku.membership.monthly',
@@ -584,6 +609,38 @@ describe('MembershipController (e2e)', () => {
         plan: 'monthly',
         provider: 'apple',
         status: 'active',
+      })
+    })
+
+    it('rejects a signed transaction owned by another reader', async () => {
+      Object.assign(membershipConfig, {
+        appleAppAppleId: '1234567890',
+        appleBundleId: 'dev.yohaku.app',
+        appleKeyId: 'KEYID',
+        appleIssuerId: 'ISSUER',
+        applePrivateKey:
+          '-----BEGIN PRIVATE KEY-----\\nX\\n-----END PRIVATE KEY-----',
+        appleMonthlyProductId: 'yohaku.membership.monthly',
+        appleYearlyProductId: 'yohaku.membership.yearly',
+      })
+      verifySignedTransactionMock.mockResolvedValueOnce({
+        appAccountToken: appleAccountTokenForReader(otherReaderId),
+        expiresDate: Date.now() + 86_400_000,
+        originalTransactionId: 'orig-other-reader',
+        productId: 'yohaku.membership.monthly',
+        transactionId: 'txn-other-reader',
+      })
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/apple/confirm',
+        headers: { 'x-test-reader': 'apple-confirm' },
+        payload: { signedTransactionInfo: 'jws' },
+      })
+
+      expect(res.statusCode).toBe(400)
+      expect(res.json()).toMatchObject({
+        error: { code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID },
       })
     })
 

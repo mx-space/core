@@ -6,6 +6,7 @@ import type { BillingWebhookEventRepository } from '~/modules/membership/billing
 import type { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
 import type { MembershipRow } from '~/modules/membership/membership.types'
+import { appleAccountTokenForReader } from '~/modules/membership/providers/apple-transaction'
 import type {
   NormalizedBillingEvent,
   VerifiedBillingEvent,
@@ -490,6 +491,7 @@ describe('MembershipService', () => {
 
   describe('confirmAppleTransaction', () => {
     const decoded = {
+      appAccountToken: appleAccountTokenForReader('reader-1'),
       expiresDate: now.getTime() + 86_400_000,
       originalTransactionId: 'orig-apple',
       productId: 'yohaku.membership.monthly',
@@ -663,6 +665,45 @@ describe('MembershipService', () => {
       ).rejects.toMatchObject({
         code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
       })
+    })
+
+    it('rejects a transaction purchased for another reader account', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: {
+            ...decoded,
+            appAccountToken: appleAccountTokenForReader('reader-2'),
+          },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+    })
+
+    it('rejects a transaction without an account token', async () => {
+      const { service, membershipRepository } = createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, appAccountToken: undefined },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
     })
 
     it('rejects a revoked Apple transaction before granting membership', async () => {

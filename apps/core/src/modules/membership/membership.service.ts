@@ -12,6 +12,7 @@ import {
   type MembershipStatus,
 } from './membership.types'
 import {
+  appleAccountTokenForReader,
   appleActivatedEvent,
   type AppleDecodedTransaction,
   planFromAppleProductId,
@@ -65,6 +66,15 @@ export class MembershipService {
         status: MembershipStatus
       }
   > {
+    if (
+      input.decoded.appAccountToken?.toLowerCase() !==
+      appleAccountTokenForReader(input.readerId)
+    ) {
+      throw createAppException(
+        AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      )
+    }
+
     if (input.decoded.revocationDate !== undefined) {
       throw createAppException(
         AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
