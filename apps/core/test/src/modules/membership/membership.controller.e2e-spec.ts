@@ -22,6 +22,7 @@ import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { MembershipController } from '~/modules/membership/membership.controller'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
+import { AppleProvider } from '~/modules/membership/providers/apple.provider'
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
 import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -37,6 +38,7 @@ const liveSubReaderId = snowflake.nextId()
 const expiredReaderId = snowflake.nextId()
 const checkoutActiveReaderId = snowflake.nextId()
 const checkoutExpiredReaderId = snowflake.nextId()
+const appleConfirmReaderId = snowflake.nextId()
 
 const readerUser = {
   id: readerId,
@@ -63,6 +65,13 @@ const checkoutExpiredReaderUser = {
   id: checkoutExpiredReaderId,
   email: 'checkout-expired@example.com',
   name: 'Reader Checkout Expired',
+  role: 'reader' as const,
+}
+
+const appleConfirmReaderUser = {
+  id: appleConfirmReaderId,
+  email: 'apple-confirm@example.com',
+  name: 'Reader Apple Confirm',
   role: 'reader' as const,
 }
 
@@ -111,6 +120,12 @@ const authServiceMock = {
       return {
         user: checkoutExpiredReaderUser,
         session: { token: 'checkout-expired-token' },
+      }
+    }
+    if (header === 'apple-confirm') {
+      return {
+        user: appleConfirmReaderUser,
+        session: { token: 'apple-confirm-token' },
       }
     }
     return null
@@ -166,6 +181,12 @@ const dodoProviderMock = {
   getPlanPricing: getPlanPricingMock,
 }
 
+const verifySignedTransactionMock = vi.fn()
+
+const appleProviderMock = {
+  verifySignedTransaction: verifySignedTransactionMock,
+}
+
 const membershipModule: ModuleMetadata = {
   controllers: [MembershipController],
   providers: [
@@ -175,6 +196,7 @@ const membershipModule: ModuleMetadata = {
     EntitlementService,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: DodoProvider, useValue: dodoProviderMock },
+    { provide: AppleProvider, useValue: appleProviderMock },
     PaymentProviderRegistry,
     { provide: AuthService, useValue: authServiceMock },
     { provide: ConfigsService, useValue: configsServiceMock },
@@ -201,6 +223,7 @@ beforeAll(async () => {
     { id: expiredReaderId, name: 'Reader Expired', role: 'reader' },
     { id: checkoutActiveReaderId, name: 'Checkout Active', role: 'reader' },
     { id: checkoutExpiredReaderId, name: 'Checkout Expired', role: 'reader' },
+    { id: appleConfirmReaderId, name: 'Apple Confirm', role: 'reader' },
   ])
 }, 120_000)
 
@@ -217,9 +240,18 @@ describe('MembershipController (e2e)', () => {
     membershipConfig.enabled = true
     membershipConfig.provider = 'dodo'
     membershipConfig.webhookSigningKey = 'webhook-key'
+    delete (membershipConfig as { appleBundleId?: string }).appleBundleId
+    delete (membershipConfig as { appleKeyId?: string }).appleKeyId
+    delete (membershipConfig as { appleIssuerId?: string }).appleIssuerId
+    delete (membershipConfig as { applePrivateKey?: string }).applePrivateKey
+    delete (membershipConfig as { appleMonthlyProductId?: string })
+      .appleMonthlyProductId
+    delete (membershipConfig as { appleYearlyProductId?: string })
+      .appleYearlyProductId
     urlConfig.webUrl = undefined
     createCheckoutMock.mockClear()
     verifyAndParseWebhookMock.mockClear()
+    verifySignedTransactionMock.mockReset()
   })
 
   describe('GET /membership/config-status', () => {
@@ -439,6 +471,7 @@ describe('MembershipController (e2e)', () => {
       expect(res.statusCode).toBe(200)
       expect(res.json()).toEqual({
         data: {
+          apple_iap: { enabled: false },
           enabled: true,
           plans: [
             {
@@ -487,7 +520,76 @@ describe('MembershipController (e2e)', () => {
       })
 
       expect(res.statusCode).toBe(200)
-      expect(res.json()).toEqual({ data: { enabled: false, plans: [] } })
+      expect(res.json()).toEqual({
+        data: { apple_iap: { enabled: false }, enabled: false, plans: [] },
+      })
+    })
+
+    it('reports appleIap when Apple fields are configured', async () => {
+      Object.assign(membershipConfig, {
+        appleBundleId: 'dev.yohaku.app',
+        appleKeyId: 'KEYID',
+        appleIssuerId: 'ISSUER',
+        applePrivateKey:
+          '-----BEGIN PRIVATE KEY-----\\nX\\n-----END PRIVATE KEY-----',
+        appleMonthlyProductId: 'yohaku.membership.monthly',
+        appleYearlyProductId: 'yohaku.membership.yearly',
+      })
+
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/plans',
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data.apple_iap).toEqual({
+        enabled: true,
+        monthly_product_id: 'yohaku.membership.monthly',
+        yearly_product_id: 'yohaku.membership.yearly',
+      })
+    })
+  })
+
+  describe('POST /membership/apple/confirm', () => {
+    it('returns the new apple membership for a signed-in reader', async () => {
+      Object.assign(membershipConfig, {
+        appleBundleId: 'dev.yohaku.app',
+        appleKeyId: 'KEYID',
+        appleIssuerId: 'ISSUER',
+        applePrivateKey:
+          '-----BEGIN PRIVATE KEY-----\\nX\\n-----END PRIVATE KEY-----',
+        appleMonthlyProductId: 'yohaku.membership.monthly',
+        appleYearlyProductId: 'yohaku.membership.yearly',
+      })
+      verifySignedTransactionMock.mockResolvedValueOnce({
+        expiresDate: Date.now() + 86_400_000,
+        originalTransactionId: 'orig-e2e',
+        productId: 'yohaku.membership.monthly',
+        transactionId: 'txn-e2e',
+      })
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/apple/confirm',
+        headers: { 'x-test-reader': 'apple-confirm' },
+        payload: { signedTransactionInfo: 'jws' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data).toMatchObject({
+        plan: 'monthly',
+        provider: 'apple',
+        status: 'active',
+      })
+    })
+
+    it('returns 401 without a reader session', async () => {
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/apple/confirm',
+        payload: { signedTransactionInfo: 'jws' },
+      })
+      expect(res.statusCode).toBe(401)
     })
   })
 

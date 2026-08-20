@@ -30,9 +30,11 @@ import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
   REGISTERED_PAYMENT_PROVIDERS,
+  resolveAppleIapAvailability,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
+import { AppleProvider } from './providers/apple.provider'
 import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 
@@ -59,6 +61,11 @@ const ReaderIdParamSchema = z.object({
 })
 class ReaderIdParamDto extends createZodDto(ReaderIdParamSchema) {}
 
+const AppleConfirmSchema = z.object({
+  signedTransactionInfo: z.string().min(1),
+})
+class AppleConfirmDto extends createZodDto(AppleConfirmSchema) {}
+
 const assertNotDemoMode = () => {
   if (DEMO_MODE) {
     throw createAppException(AppErrorCode.DEMO_FORBIDDEN)
@@ -71,6 +78,7 @@ export class MembershipController {
     private readonly membershipService: MembershipService,
     private readonly configsService: ConfigsService,
     private readonly providers: PaymentProviderRegistry,
+    private readonly appleProvider: AppleProvider,
   ) {}
 
   @ReaderAuth()
@@ -114,7 +122,10 @@ export class MembershipController {
   async plans() {
     const membershipConfig = await this.configsService.get('membership')
     const availability = resolveMembershipAvailability(membershipConfig)
-    if (!availability.enabled) return { enabled: false, plans: [] }
+    const appleIap = resolveAppleIapAvailability(membershipConfig)
+    if (!availability.enabled) {
+      return { enabled: false, plans: [], appleIap }
+    }
 
     const adapter = this.providers.get(membershipConfig.provider)
     const productIdByPlan: Record<string, string | undefined> = {
@@ -133,7 +144,37 @@ export class MembershipController {
       }),
     )
 
-    return { enabled: true, plans }
+    return { enabled: true, plans, appleIap }
+  }
+
+  @ReaderAuth()
+  @Post('/apple/confirm')
+  @HttpCode(200)
+  async confirmApple(
+    @Body() body: AppleConfirmDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    assertNotDemoMode()
+
+    const membershipConfig = await this.configsService.get('membership')
+    const appleIap = resolveAppleIapAvailability(membershipConfig)
+    if (
+      !appleIap.enabled ||
+      !appleIap.monthlyProductId ||
+      !appleIap.yearlyProductId
+    ) {
+      throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
+    }
+
+    const decoded = await this.appleProvider.verifySignedTransaction(
+      body.signedTransactionInfo,
+    )
+    return this.membershipService.confirmAppleTransaction({
+      decoded,
+      monthlyProductId: appleIap.monthlyProductId,
+      readerId: user.id,
+      yearlyProductId: appleIap.yearlyProductId,
+    })
   }
 
   @Auth()
@@ -183,6 +224,19 @@ export class MembershipController {
     const verified = await adapter.verifyAndParseWebhook(rawBody, headers)
     if (isIgnoredBillingEvent(verified)) {
       return { ok: true, applied: false, ignored: verified.reason }
+    }
+    if (!verified.event.readerId) {
+      const bound = await this.membershipService.getByProviderSubscriptionId(
+        verified.event.subscriptionId,
+      )
+      if (!bound) {
+        return {
+          ok: true,
+          applied: false,
+          ignored: 'missing_reader_metadata',
+        }
+      }
+      verified.event.readerId = bound.readerId
     }
     const result = await this.membershipService.applyEvent(verified)
     return { ok: true, applied: result.applied }

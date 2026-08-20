@@ -38,6 +38,14 @@ export class MembershipService {
     return this.membershipRepository.findByReaderId(readerId)
   }
 
+  async getByProviderSubscriptionId(
+    providerSubscriptionId: string,
+  ): Promise<MembershipRow | null> {
+    return this.membershipRepository.findByProviderSubscriptionId(
+      providerSubscriptionId,
+    )
+  }
+
   async confirmAppleTransaction(input: {
     decoded: AppleDecodedTransaction
     monthlyProductId: string
