@@ -664,5 +664,24 @@ describe('MembershipService', () => {
         code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
       })
     })
+
+    it('rejects a revoked Apple transaction before granting membership', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, revocationDate: now.getTime() },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).rejects.toMatchObject({
+        code: AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      })
+
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+    })
   })
 })

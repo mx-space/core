@@ -1,5 +1,6 @@
 import {
   Environment,
+  type JWSRenewalInfoDecodedPayload,
   type JWSTransactionDecodedPayload,
   SignedDataVerifier,
 } from '@apple/app-store-server-library'
@@ -68,6 +69,7 @@ export class AppleProvider implements PaymentProviderAdapter {
         expiresDate: decoded.expiresDate,
         originalTransactionId: decoded.originalTransactionId,
         productId: decoded.productId,
+        revocationDate: decoded.revocationDate,
         transactionId: decoded.transactionId,
       }
     } catch (error) {
@@ -113,6 +115,8 @@ export class AppleProvider implements PaymentProviderAdapter {
     }
 
     let notificationType: string
+    let notificationSubtype: string
+    let signedRenewalInfo: string | undefined
     let signedTransactionInfo: string | undefined
     let notificationUUID: string
     try {
@@ -122,7 +126,9 @@ export class AppleProvider implements PaymentProviderAdapter {
         membershipConfig.appleAppAppleId,
       )
       notificationType = notification.notificationType ?? ''
+      notificationSubtype = notification.subtype ?? ''
       notificationUUID = notification.notificationUUID ?? notificationType
+      signedRenewalInfo = notification.data?.signedRenewalInfo
       signedTransactionInfo = notification.data?.signedTransactionInfo
     } catch (error) {
       this.logger.warn(
@@ -173,6 +179,33 @@ export class AppleProvider implements PaymentProviderAdapter {
           }) ?? undefined)
         : undefined
 
+    let currentPeriodEnd = decoded.expiresDate
+    let renewalInfo: JWSRenewalInfoDecodedPayload | undefined
+    if (
+      notificationType === 'DID_FAIL_TO_RENEW' &&
+      notificationSubtype === 'GRACE_PERIOD'
+    ) {
+      renewalInfo = signedRenewalInfo
+        ? await this.verifyRenewalInfoWithFallback(
+            signedRenewalInfo,
+            bundleId,
+            membershipConfig.appleAppAppleId,
+          ).catch(() => undefined)
+        : undefined
+      if (
+        !renewalInfo?.gracePeriodExpiresDate ||
+        (renewalInfo.originalTransactionId &&
+          renewalInfo.originalTransactionId !== decoded.originalTransactionId)
+      ) {
+        return {
+          ignored: true,
+          rawType: notificationType,
+          reason: 'missing_reader_metadata',
+        }
+      }
+      currentPeriodEnd = renewalInfo.gracePeriodExpiresDate
+    }
+
     return {
       event: {
         eventId: notificationUUID,
@@ -181,11 +214,16 @@ export class AppleProvider implements PaymentProviderAdapter {
         customerId: decoded.appAccountToken ?? decoded.originalTransactionId,
         subscriptionId: decoded.originalTransactionId,
         plan,
-        currentPeriodEnd: new Date(decoded.expiresDate),
+        currentPeriodEnd: new Date(currentPeriodEnd),
         readerId: '',
       },
       rawType: notificationType,
-      rawPayload: { notificationType, decoded },
+      rawPayload: {
+        notificationType,
+        notificationSubtype,
+        decoded,
+        renewalInfo,
+      },
     }
   }
 
@@ -230,6 +268,30 @@ export class AppleProvider implements PaymentProviderAdapter {
           appAppleId,
         )
         return await verifier.verifyAndDecodeNotification(signedPayload)
+      } catch (error) {
+        lastError = error
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error('verify failed')
+  }
+
+  private async verifyRenewalInfoWithFallback(
+    signedRenewalInfo: string,
+    bundleId: string,
+    appleAppAppleId?: string,
+  ): Promise<JWSRenewalInfoDecodedPayload> {
+    const environments = this.environmentsToTry(appleAppAppleId)
+    let lastError: unknown
+    for (const { environment, appAppleId } of environments) {
+      try {
+        const verifier = new SignedDataVerifier(
+          appleRootCaBuffers,
+          true,
+          environment,
+          bundleId,
+          appAppleId,
+        )
+        return await verifier.verifyAndDecodeRenewalInfo(signedRenewalInfo)
       } catch (error) {
         lastError = error
       }

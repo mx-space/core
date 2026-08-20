@@ -65,6 +65,12 @@ export class MembershipService {
         status: MembershipStatus
       }
   > {
+    if (input.decoded.revocationDate !== undefined) {
+      throw createAppException(
+        AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
+      )
+    }
+
     const plan = planFromAppleProductId(input.decoded.productId, {
       monthlyProductId: input.monthlyProductId,
       yearlyProductId: input.yearlyProductId,

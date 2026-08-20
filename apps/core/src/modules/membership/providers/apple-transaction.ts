@@ -6,6 +6,7 @@ export interface AppleDecodedTransaction {
   expiresDate: number
   originalTransactionId: string
   productId: string
+  revocationDate?: number
   transactionId: string
 }
 
