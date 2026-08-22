@@ -1,33 +1,24 @@
 ## TL;DR
 
-Ships reader content and comment-reply push for Yohaku, with APNs Communication metadata and a presence-avatar trust fix.
+Readers can confirm Apple In-App Purchase memberships, and orphan file listing no longer flags live TTS audio.
 
 ## Highlights
 
-Yohaku readers can now receive alerts when published posts, notes, or recently entries go live, and when someone replies to their comments. Core enriches those events with public titles, summaries, and tap paths, skips content that has no summary, and keeps private or unpublished work out of the payload. Comment replies carry sender metadata so iOS can render Communication Notifications.
+Membership now accepts Apple In-App Purchases from signed-in readers. The server verifies App Store JWS transactions, maps monthly and yearly product IDs onto the membership row, and applies App Store Server Notifications in order so renewals, cancellations, and entitlement changes stay consistent. `/membership/plans` reports `appleIap` so clients know when StoreKit checkout is available. Owners configure bundle ID, key material, and product IDs in membership settings; Apple IAP can run without replacing the existing Dodo checkout path.
 
-Device activation is a single public `POST /notifications/push/activate`. Relay owns per-device preferences; Core stores source metadata with an optional reader. Bindings are scoped to the owning installation, so a device can read, update, or revoke its own record without a session cookie.
-
-Presence avatars no longer trust a client-supplied reader id. The gateway accepts an optional HTTPS image, resolves identity from session or socket, and returns only the public reader card.
+The orphan file list no longer treats live TTS narration as abandoned. Usage checks skip stale TTS reconciliation rows and match generated audio by exact URL instead of a cross-table regex, so newly rendered speech stays off the orphan page immediately. TTS object keys now include the voice configuration, so re-voicing a block writes a new object instead of overwriting a year-long CDN cache under the previous key.
 
 ## Changes
 
 ### Features
 
-- Fan out published content and comment-reply alerts to Yohaku readers, including localized APNs payloads and mutable-content on replies ([#2812](https://github.com/mx-space/core/pull/2812))
-- Public push activation and installation-scoped Relay binding APIs, with optional reader association instead of reader-owned endpoints ([#2812](https://github.com/mx-space/core/pull/2812))
+- Confirm Apple In-App Purchases onto a reader's membership, including App Store notifications and admin IAP settings ([#2813](https://github.com/mx-space/core/pull/2813))
 
 ### Bug Fixes
 
-- Keep presence avatars without trusting a client-supplied `readerId` ([9e0e9ab](https://github.com/mx-space/core/commit/9e0e9aba2fa72a5147c53fd4b937b4a674ce9ccf))
-- Block private content metadata from push payloads and reject encoded path traversal in notification targets ([#2812](https://github.com/mx-space/core/pull/2812))
-
-## Upgrade Notes
-
-Release-phase will apply migration `0033`, which makes `push_relay_bindings.owner_id` nullable and drops any leftover `push_reader_preferences` table. No extra operator SQL is required.
-
-Comment-reply Communication Notifications also need a Push Relay that understands the enriched payload. Redeploy Relay alongside this Core tag before shipping the Yohaku client.
+- Keep live TTS audio out of the orphan file list, and address re-voiced speech by voice config so CDN-cached objects are not overwritten ([ddf130f](https://github.com/mx-space/core/commit/ddf130f58a29a39834b565044104bdf8e2862a44))
+- Align settings detail content with the header padding ([c1f7e62](https://github.com/mx-space/core/commit/c1f7e626c))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.1.0...v14.2.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.2.0...v14.3.0

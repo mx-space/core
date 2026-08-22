@@ -1,3 +1,15 @@
+## [14.3.0](https://github.com/mx-space/core/compare/v14.2.0...v14.3.0) (2026-08-22)
+
+
+### Bug Fixes
+
+* **files:** optimize orphan listing and TTS paths ([ddf130f](https://github.com/mx-space/core/commit/ddf130f58a29a39834b565044104bdf8e2862a44))
+
+
+### Features
+
+* **membership:** confirm Apple IAP subscriptions ([#2813](https://github.com/mx-space/core/issues/2813)) ([e7e838d](https://github.com/mx-space/core/commit/e7e838dec257cb6464b9d637d0cd488e06bc757e))
+
 ## [14.2.0](https://github.com/mx-space/core/compare/v14.1.0...v14.2.0) (2026-08-18)
 
 
