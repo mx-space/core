@@ -1,8 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, gte, inArray, lt, ne, or, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lt,
+  ne,
+  notExists,
+  or,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { fileReferences } from '~/database/schema'
+import { aiTtsBlocks, fileReferences, fileUsages } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
@@ -42,6 +53,37 @@ export class FileReferenceRepository extends BaseRepository {
     private readonly snowflake: SnowflakeService,
   ) {
     super(db)
+  }
+
+  private ownerOrphanWhere() {
+    return and(
+      or(
+        ne(fileReferences.uploadedBy, FileUploadedBy.Reader),
+        sql`${fileReferences.uploadedBy} IS NULL`,
+      ),
+      notExists(
+        this.db
+          .select({ id: fileUsages.id })
+          .from(fileUsages)
+          .where(
+            and(
+              eq(fileUsages.fileReferenceId, fileReferences.id),
+              // TTS usage is checked against its live block row below. A
+              // reconciled usage row can otherwise outlive a deleted block.
+              ne(fileUsages.sourceType, 'ai_tts'),
+            ),
+          ),
+      ),
+      // TTS blocks are written before the general reconciliation pass. Keep
+      // newly generated narration out of the orphan list immediately, using
+      // an exact URL match rather than the previous cross-table regex scan.
+      notExists(
+        this.db
+          .select({ id: aiTtsBlocks.id })
+          .from(aiTtsBlocks)
+          .where(eq(aiTtsBlocks.url, fileReferences.fileUrl)),
+      ),
+    )!
   }
 
   async findById(id: EntityId | string): Promise<FileReferenceRow | null> {
@@ -476,10 +518,7 @@ export class FileReferenceRepository extends BaseRepository {
     page = Math.max(1, page)
     size = Math.min(100, Math.max(1, size))
     const offset = (page - 1) * size
-    const where = inArray(fileReferences.status, [
-      FileReferenceStatus.Pending,
-      FileReferenceStatus.Detached,
-    ])
+    const where = this.ownerOrphanWhere()
     const [rows, [{ count }]] = await Promise.all([
       this.db
         .select()
@@ -497,6 +536,14 @@ export class FileReferenceRepository extends BaseRepository {
       data: rows.map(mapRow),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
+  }
+
+  async countOrphans(): Promise<number> {
+    const [{ count }] = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(fileReferences)
+      .where(this.ownerOrphanWhere())
+    return Number(count ?? 0)
   }
 
   async findOwnerPendingOlderThan(

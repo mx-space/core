@@ -5,7 +5,6 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { paginationOf } from '~/processors/database/base.repository'
 import type { ContentFormat } from '~/shared/types/content-format.type'
 import { extractFileUrlsFromContent } from '~/utils/content.util'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
@@ -565,20 +564,11 @@ export class FileReferenceService {
   }
 
   async getOrphanFilesCount() {
-    const candidates = await this.fileReferenceRepository.findOwnerReferences()
-    return (await this.filterIsolatedFiles(candidates)).length
+    return this.fileReferenceRepository.countOrphans()
   }
 
   async listOrphanFiles(page = 1, size = 20) {
-    page = Math.max(1, page)
-    size = Math.min(100, Math.max(1, size))
-    const candidates = await this.fileReferenceRepository.findOwnerReferences()
-    const isolatedFiles = await this.filterIsolatedFiles(candidates)
-    const offset = (page - 1) * size
-    return {
-      data: isolatedFiles.slice(offset, offset + size),
-      pagination: paginationOf(isolatedFiles.length, page, size),
-    }
+    return this.fileReferenceRepository.listOrphans(page, size)
   }
 
   async listReaderUploads(params: {

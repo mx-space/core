@@ -1,6 +1,15 @@
+import { replaceFilenameTemplate } from '~/utils/filename-template.util'
 import { md5 } from '~/utils/tool.util'
 
 const SAFE_SEGMENT = /[^\w-]/g
+
+export function resolveTtsObjectKeyPrefix(prefix?: string): string | undefined {
+  if (!prefix) return undefined
+  return replaceFilenameTemplate(prefix, {
+    fileType: 'audio',
+    originalFilename: '',
+  })
+}
 
 // The speech fingerprint addresses the *text*, so on its own it would give
 // re-voiced audio the key of the audio it replaces — an in-place overwrite

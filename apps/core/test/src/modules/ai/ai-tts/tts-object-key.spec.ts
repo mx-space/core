@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   buildTtsObjectKey,
   computeTtsObjectFingerprint,
+  resolveTtsObjectKeyPrefix,
 } from '~/modules/ai/ai-tts/tts-object-key'
 
 const base = {
@@ -39,6 +40,19 @@ describe('buildTtsObjectKey', () => {
   it('sanitizes path separators out of the block id', () => {
     expect(buildTtsObjectKey({ ...base, blockId: '../escape' })).toBe(
       'tts/123/zh/--escape-0-abcdef123456.mp3',
+    )
+  })
+})
+
+describe('resolveTtsObjectKeyPrefix', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('expands the configured storage date and file-type placeholders once', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 7, 22, 12, 30, 0))
+
+    expect(resolveTtsObjectKeyPrefix('mx-space/{Y}/{m}{d}/{type}')).toBe(
+      'mx-space/2026/0822/audio',
     )
   })
 })

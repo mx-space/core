@@ -119,32 +119,31 @@ describe('FileReferenceService', () => {
     })
   })
 
-  it('excludes files still referenced by persisted modules from the isolated list', async () => {
+  it('returns the repository-paginated isolated file list', async () => {
     const { repository, service, usageRepository } = createService()
-    const referenced = createRef({
-      id: 'referenced' as any,
-      fileUrl: 'https://cdn.example.com/skill.zip',
-      fileName: 'skill.zip',
-      status: FileReferenceStatus.Active,
-    })
     const isolated = createRef({
       id: 'isolated' as any,
       fileUrl: 'https://cdn.example.com/unused.pdf',
       fileName: 'unused.pdf',
     })
-    repository.findOwnerReferences.mockResolvedValue([referenced, isolated])
-    usageRepository.findReferencedUrls.mockResolvedValue(
-      new Set([referenced.fileUrl]),
-    )
+    repository.listOrphans.mockResolvedValue({
+      data: [isolated],
+      pagination: {
+        currentPage: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+        size: 20,
+        total: 1,
+        totalPage: 1,
+      },
+    })
 
     const result = await service.listOrphanFiles(1, 20)
 
     expect(result.data).toEqual([isolated])
     expect(result.pagination.total).toBe(1)
-    expect(usageRepository.findReferencedUrls).toHaveBeenCalledWith([
-      referenced.fileUrl,
-      isolated.fileUrl,
-    ])
+    expect(repository.listOrphans).toHaveBeenCalledWith(1, 20)
+    expect(usageRepository.findReferencedUrls).not.toHaveBeenCalled()
   })
 
   it('refuses selected deletion when a persisted reference still exists', async () => {

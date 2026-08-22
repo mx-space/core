@@ -38,6 +38,7 @@ import { withTtsLangLock } from './tts-lang-lock'
 import {
   buildTtsObjectKey,
   computeTtsObjectFingerprint,
+  resolveTtsObjectKeyPrefix,
 } from './tts-object-key'
 import {
   resolveTtsLanguageControl,
@@ -133,6 +134,7 @@ export class AiTtsService implements OnModuleInit {
     }
 
     const { prefix } = await this.configService.get('imageStorageOptions')
+    const objectKeyPrefix = resolveTtsObjectKeyPrefix(prefix)
 
     const perLang: TtsLanguageResult[] = []
     const skipped: Array<{ lang: string; reason: string }> = []
@@ -149,7 +151,7 @@ export class AiTtsService implements OnModuleInit {
       force: Boolean(payload.force),
       maxCharsPerChunk: config.maxCharsPerChunk,
       maxCharsPerRun: config.maxCharsPerRun,
-      objectKeyPrefix: prefix,
+      objectKeyPrefix,
       provider: {
         provider: provider.id,
         apiKey: provider.apiKey,

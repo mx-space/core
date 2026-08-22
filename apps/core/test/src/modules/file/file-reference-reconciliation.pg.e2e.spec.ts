@@ -384,6 +384,17 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
       storageBackend: 'local',
       storageKey: 'tts/9001/en/blk-0-abc123456789.mp3',
     })
+    await db.insert(schema.fileReferences).values({
+      id: '9003',
+      fileName: 'blk-0-abc123456789.mp3',
+      fileUrl: audioUrl,
+      status: FileReferenceStatus.Pending,
+      uploadedBy: FileUploadedBy.Owner,
+    })
+
+    await expect(fileReferenceService.listOrphanFiles(1, 24)).resolves.toEqual(
+      expect.objectContaining({ data: [] }),
+    )
 
     await expect(
       usageRepository.findReferencedUrls([audioUrl]),
@@ -443,6 +454,9 @@ describe('File reference reconciliation (real PG and filesystem)', () => {
     expect(referencedBefore?.status).toBe(FileReferenceStatus.Active)
 
     await db.delete(schema.aiTtsBlocks).where(eq(schema.aiTtsBlocks.id, '9002'))
+
+    const orphanList = await fileReferenceService.listOrphanFiles(1, 24)
+    expect(orphanList.data.map((file) => file.fileUrl)).toEqual([audioUrl])
 
     await expect(
       usageRepository.findReferencedUrls([audioUrl]),
