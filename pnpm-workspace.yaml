@@ -22,10 +22,17 @@ allowBuilds:
 overrides:
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
-  kysely: 0.29.3
+  # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
+  # migration; hold the 1.6 line until that lands.
+  better-auth: 1.6.27
+  "@better-auth/api-key": 1.6.27
+  "@better-auth/core": 1.6.27
+  "@better-auth/expo": 1.6.27
+  "@better-auth/passkey": 1.6.27
+  kysely: 0.29.5
   mongodb: ~7.5.0
   pino: ./external/pino
-  rolldown: 1.2.4
+  rolldown: 1.2.5
   "tsdown@0.22.8>rolldown-plugin-dts": 0.27.9
   semver: 7.8.5
   typescript: 6.0.3
@@ -37,14 +44,14 @@ overrides:
   "nanoid@>=4.0.0 <5.0.9": 5.1.16
   "tmp@<0.2.6": 0.2.7
   "uuid@<11.1.1": 11.1.1
-  lucide-react: 1.31.0
+  lucide-react: 1.33.0
   "@codemirror/state": 6.7.1
-  "@codemirror/view": 6.43.8
-  "@codemirror/commands": 6.10.4
+  "@codemirror/view": 6.43.9
+  "@codemirror/commands": 6.11.0
   "@codemirror/language": 6.12.4
   # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
   # @haklex/rich-editor peers shiki>=4.0.0; force one runtime copy.
-  shiki: ^4.4.2
+  shiki: ^4.4.3
   # Editor stack tracks a single lexical runtime copy; keep in lockstep with
   # the @haklex/* peer floor (^0.49 as of @haklex 0.33.0).
   lexical: 0.49.0
@@ -77,15 +84,15 @@ overrides:
   "brace-expansion@<1.1.16": 1.1.18
   "brace-expansion@>=2.0.0 <2.1.2": 2.1.4
   "brace-expansion@>=3.0.0 <5.0.8": 5.0.9
-  dompurify: 3.4.13
+  dompurify: 3.4.14
   "fast-uri@>=3.0.0 <3.1.4": 3.1.5
   "fast-uri@>=4.0.0 <4.1.1": 4.1.2
-  fast-xml-parser: 5.10.1
-  find-my-way: 9.7.0
+  fast-xml-parser: 5.11.0
+  find-my-way: 9.8.0
   immutable: 4.3.9
   "isomorphic-fetch>node-fetch": 2.7.0
   "js-yaml@>=4.0.0 <4.3.0": 4.3.1
-  "js-yaml@>=5.0.0 <5.2.2": 5.2.2
+  "js-yaml@>=5.0.0 <5.3.0": 5.3.0
   "postcss@<8.5.18": 8.5.24
   "protobufjs@>=7.5.0 <7.6.5": 7.6.5
   sharp: 0.35.3

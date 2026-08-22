@@ -13,20 +13,20 @@
     "@mx-space/db-schema": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.1.29",
-    "@swc/core": "1.15.47",
+    "@nestjs/testing": "11.2.1",
+    "@swc/core": "1.16.1",
     "@testcontainers/postgresql": "^12.1.0",
     "@types/node": "26.2.0",
-    "@types/pg": "^8.21.0",
+    "@types/pg": "^8.23.1",
     "better-auth": "^1.6.27",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.23.0",
     "testcontainers": "^12.1.0",
     "tsx": "^4.23.12",
     "typescript": "6.0.3",
-    "unplugin-swc": "1.5.10",
-    "vite": "8.2.1",
+    "unplugin-swc": "1.5.11",
+    "vite": "8.2.2",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
