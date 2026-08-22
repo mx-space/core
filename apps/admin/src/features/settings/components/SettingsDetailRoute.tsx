@@ -116,7 +116,7 @@ export function SettingsDetailRoute() {
           </div>
         </div>
 
-        <Scroll className="flex-1" innerClassName="p-4">
+        <Scroll className="flex-1" innerClassName="px-5 py-4">
           {activeGroup.type === 'user' ? (
             <OwnerSettings
               onSaved={async () => {
