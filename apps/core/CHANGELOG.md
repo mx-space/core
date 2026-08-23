@@ -1,3 +1,10 @@
+## [14.3.1](https://github.com/mx-space/core/compare/v14.3.0...v14.3.1) (2026-08-23)
+
+
+### Bug Fixes
+
+* **events:** emit visitor content events by visibility transition ([a9e0047](https://github.com/mx-space/core/commit/a9e0047a4d46391f01e8d2a5072441b42ab71b9e))
+
 ## [14.3.0](https://github.com/mx-space/core/compare/v14.2.0...v14.3.0) (2026-08-22)
 
 

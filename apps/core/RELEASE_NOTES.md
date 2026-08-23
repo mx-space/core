@@ -1,24 +1,12 @@
 ## TL;DR
 
-Readers can confirm Apple In-App Purchase memberships, and orphan file listing no longer flags live TTS audio.
-
-## Highlights
-
-Membership now accepts Apple In-App Purchases from signed-in readers. The server verifies App Store JWS transactions, maps monthly and yearly product IDs onto the membership row, and applies App Store Server Notifications in order so renewals, cancellations, and entitlement changes stay consistent. `/membership/plans` reports `appleIap` so clients know when StoreKit checkout is available. Owners configure bundle ID, key material, and product IDs in membership settings; Apple IAP can run without replacing the existing Dodo checkout path.
-
-The orphan file list no longer treats live TTS narration as abandoned. Usage checks skip stale TTS reconciliation rows and match generated audio by exact URL instead of a cross-table regex, so newly rendered speech stays off the orphan page immediately. TTS object keys now include the voice configuration, so re-voicing a block writes a new object instead of overwriting a year-long CDN cache under the previous key.
+Publishing now guides administrators through draft conflicts, while content visibility changes emit the correct visitor-facing lifecycle events.
 
 ## Changes
 
-### Features
-
-- Confirm Apple In-App Purchases onto a reader's membership, including App Store notifications and admin IAP settings ([#2813](https://github.com/mx-space/core/pull/2813))
-
-### Bug Fixes
-
-- Keep live TTS audio out of the orphan file list, and address re-voiced speech by voice config so CDN-cached objects are not overwritten ([ddf130f](https://github.com/mx-space/core/commit/ddf130f58a29a39834b565044104bdf8e2862a44))
-- Align settings detail content with the header padding ([c1f7e62](https://github.com/mx-space/core/commit/c1f7e626c))
+- Publishing remains available when a linked draft conflicts and opens a dialog explaining how to keep the current content or use the server version ([55340d5](https://github.com/mx-space/core/commit/55340d504ad6024a6d427371c28dd9757d18b77a)).
+- Posts and notes now emit the correct create or delete event when publication visibility changes, while draft-only updates stay private ([a9e0047](https://github.com/mx-space/core/commit/a9e0047a4d46391f01e8d2a5072441b42ab71b9e)).
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.2.0...v14.3.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.3.0...v14.3.1
