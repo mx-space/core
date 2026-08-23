@@ -265,7 +265,11 @@ export class PostService implements OnApplicationBootstrap {
         this.eventManager.emit(
           BusinessEvents.POST_CREATE,
           { id: doc.id },
-          { scope: EventScope.TO_SYSTEM_VISITOR },
+          {
+            scope: doc.isPublished
+              ? EventScope.TO_SYSTEM_VISITOR
+              : EventScope.TO_SYSTEM,
+          },
         ),
       ])
     })
@@ -500,13 +504,14 @@ export class PostService implements OnApplicationBootstrap {
       await this.draftService.markAsPublished(draftId)
     }
 
-    scheduleManager.schedule(() => this.afterUpdatePost(id))
+    const wasPublished = oldDocument.isPublished
+    scheduleManager.schedule(() => this.afterUpdatePost(id, wasPublished))
     if (updated) this.enrichmentService.scheduleDocPrefetch(updated)
     return updated
   }
 
   afterUpdatePost = debounce(
-    async (id: string) => {
+    async (id: string, wasPublished: boolean) => {
       const doc = await this.findById(id)
       if (doc) {
         await this.fileReferenceService.updateReferencesForDocument(
@@ -531,9 +536,18 @@ export class PostService implements OnApplicationBootstrap {
           ),
         doc &&
           this.eventManager.emit(
-            BusinessEvents.POST_UPDATE,
+            wasPublished === doc.isPublished
+              ? BusinessEvents.POST_UPDATE
+              : doc.isPublished
+                ? BusinessEvents.POST_CREATE
+                : BusinessEvents.POST_DELETE,
             { id: doc.id },
-            { scope: EventScope.TO_SYSTEM_VISITOR },
+            {
+              scope:
+                wasPublished || doc.isPublished
+                  ? EventScope.TO_SYSTEM_VISITOR
+                  : EventScope.TO_SYSTEM,
+            },
           ),
       ])
     },

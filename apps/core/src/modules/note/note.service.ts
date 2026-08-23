@@ -343,7 +343,11 @@ export class NoteService {
         this.eventManager.emit(
           BusinessEvents.NOTE_CREATE,
           { id: note.id },
-          { scope: EventScope.TO_SYSTEM_VISITOR },
+          {
+            scope: note.isPublished
+              ? EventScope.TO_SYSTEM_VISITOR
+              : EventScope.TO_SYSTEM,
+          },
         ),
         !normalizedSlug &&
           this.aiSlugBackfillService
@@ -507,17 +511,26 @@ export class NoteService {
 
     this.enrichmentService.scheduleDocPrefetch(updated)
 
-    await this.broadcastNoteUpdateEvent(updated)
+    await this.broadcastNoteUpdateEvent(updated, oldDoc.isPublished)
     return updated
   }
 
   private broadcastNoteUpdateEvent = debounce(
-    async (updated: NoteRow) => {
+    async (updated: NoteRow, wasPublished: boolean) => {
       if (!updated) return
       this.eventManager.emit(
-        BusinessEvents.NOTE_UPDATE,
+        wasPublished === updated.isPublished
+          ? BusinessEvents.NOTE_UPDATE
+          : updated.isPublished
+            ? BusinessEvents.NOTE_CREATE
+            : BusinessEvents.NOTE_DELETE,
         { id: updated.id },
-        { scope: EventScope.TO_SYSTEM_VISITOR },
+        {
+          scope:
+            wasPublished || updated.isPublished
+              ? EventScope.TO_SYSTEM_VISITOR
+              : EventScope.TO_SYSTEM,
+        },
       )
     },
     1000,

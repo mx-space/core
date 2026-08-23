@@ -314,6 +314,54 @@ describe('PostService', () => {
     expect(eventManager.emit).not.toHaveBeenCalled()
   })
 
+  it('emits POST_CREATE to visitors when a post flips to published', async () => {
+    vi.useFakeTimers()
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost({ isPublished: true }))
+
+    service.afterUpdatePost('post-1', false)
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1' },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
+    )
+  })
+
+  it('emits POST_DELETE to visitors when a post flips back to draft', async () => {
+    vi.useFakeTimers()
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost({ isPublished: false }))
+
+    service.afterUpdatePost('post-1', true)
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_DELETE,
+      { id: 'post-1' },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
+    )
+  })
+
+  it('keeps draft-only updates off the visitor scope', async () => {
+    vi.useFakeTimers()
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost({ isPublished: false }))
+
+    service.afterUpdatePost('post-1', false)
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_UPDATE,
+      { id: 'post-1' },
+      { scope: EventScope.TO_SYSTEM },
+    )
+  })
+
   it('rejects missing related post ids', async () => {
     const { repository, service } = createService()
     repository.findManyByIds.mockResolvedValue([])
