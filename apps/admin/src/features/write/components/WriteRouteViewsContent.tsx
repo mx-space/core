@@ -98,6 +98,7 @@ import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
 import { DraftConflictBanner } from '~/features/write/components/DraftConflictBanner'
+import { DraftConflictDialog } from '~/features/write/components/DraftConflictDialog'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
@@ -458,6 +459,7 @@ function WritePage(props: { kind: WriteKind }) {
   const [lastSavedFingerprint, setLastSavedFingerprint] = useState('')
   const [draftConflict, setDraftConflict] =
     useState<ActiveDraftConflict | null>(null)
+  const [draftConflictDialogOpen, setDraftConflictDialogOpen] = useState(false)
   const [draftConflictResolving, setDraftConflictResolving] = useState(false)
   const [markdownMigration, setMarkdownMigration] =
     useState<MarkdownMigrationSession | null>(null)
@@ -1035,8 +1037,9 @@ function WritePage(props: { kind: WriteKind }) {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (draftConflict || draftConflictResolving) {
-      toast.error(t('write.toast.draftConflictBlocksPublish'))
+    if (draftConflictResolving) return
+    if (draftConflict) {
+      setDraftConflictDialogOpen(true)
       return
     }
     if (validationError) {
@@ -1403,6 +1406,7 @@ function WritePage(props: { kind: WriteKind }) {
     reconstructedMigrationKeyRef.current = null
     setState(nextState)
     setDraftConflict(null)
+    setDraftConflictDialogOpen(false)
     toast.success(t('write.toast.draftRemoteApplied'))
   }
 
@@ -1410,6 +1414,7 @@ function WritePage(props: { kind: WriteKind }) {
     if (!draftConflict) return
     draftDirtyRef.current = true
     setDraftConflict(null)
+    setDraftConflictDialogOpen(false)
     toast.success(t('write.toast.draftLocalKept'))
   }
 
@@ -1575,7 +1580,6 @@ function WritePage(props: { kind: WriteKind }) {
                 disabled={
                   saveMutation.isPending ||
                   detailLoading ||
-                  Boolean(draftConflict) ||
                   draftConflictResolving
                 }
                 title={t('write.header.publish')}
@@ -1622,7 +1626,6 @@ function WritePage(props: { kind: WriteKind }) {
                 disabled={
                   saveMutation.isPending ||
                   detailLoading ||
-                  Boolean(draftConflict) ||
                   draftConflictResolving
                 }
                 title={t('write.header.publish')}
@@ -1909,6 +1912,16 @@ function WritePage(props: { kind: WriteKind }) {
         open={migrationDiagnosticsOpen}
         staged={Boolean(markdownMigration?.staged)}
       />
+      {draftConflict ? (
+        <DraftConflictDialog
+          conflictCount={draftConflict.conflicts.length}
+          onClose={() => setDraftConflictDialogOpen(false)}
+          onKeepLocal={keepLocalConflictDraft}
+          onUseRemote={useRemoteConflictDraft}
+          open={draftConflictDialogOpen}
+          remoteVersion={draftConflict.remote.version}
+        />
+      ) : null}
     </form>
   )
 }

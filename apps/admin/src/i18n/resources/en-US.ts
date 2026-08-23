@@ -3580,6 +3580,9 @@ export const enUS = {
   'write.meta.tab.preset': 'Preset fields',
   'write.meta.tags.placeholder': 'Type and press Enter to add',
   'write.conflict.keepLocal': 'Keep current content',
+  'write.conflict.dialog.guidance':
+    'Your choice will not publish immediately. Review the content, wait for the draft to save, then publish again.',
+  'write.conflict.dialog.title': 'Resolve the draft conflict before publishing',
   'write.conflict.message':
     'Draft v{version} changed elsewhere. Independent changes were merged, but {count} overlapping change(s) still require review. Autosave is paused.',
   'write.conflict.useRemote': 'Use server version',
@@ -3791,8 +3794,6 @@ export const enUS = {
     'Merged {count} non-conflicting change(s); saving will retry automatically',
   'write.toast.draftBaselineMissing':
     'The saved draft baseline is unavailable; reload the draft before saving',
-  'write.toast.draftConflictBlocksPublish':
-    'Resolve the draft conflict before publishing',
   'write.toast.draftConflictLoadFailed':
     'Failed to load the latest server draft',
   'write.toast.draftConflictNeedsResolution':

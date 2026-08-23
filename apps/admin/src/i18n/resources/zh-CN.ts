@@ -3407,6 +3407,9 @@ export const zhCN = {
   'write.meta.tab.preset': '预设字段',
   'write.meta.tags.placeholder': '输入后按回车添加',
   'write.conflict.keepLocal': '保留当前内容',
+  'write.conflict.dialog.guidance':
+    '选择后不会立即发布。请先确认内容并等待草稿保存完成，再次点击发布。',
+  'write.conflict.dialog.title': '发布前先处理草稿冲突',
   'write.conflict.message':
     '草稿已在其他位置更新至 v{version}。互不冲突的改动已合并，仍有 {count} 项重叠修改需要确认；自动保存已暂停。',
   'write.conflict.useRemote': '使用服务器版本',
@@ -3610,7 +3613,6 @@ export const zhCN = {
     '已合并 {count} 项非冲突修改，稍后将自动重试保存',
   'write.toast.draftBaselineMissing':
     '缺少已保存的草稿基线，请重新加载草稿后再保存',
-  'write.toast.draftConflictBlocksPublish': '请先处理草稿冲突再发布',
   'write.toast.draftConflictLoadFailed': '无法加载服务器上的最新草稿',
   'write.toast.draftConflictNeedsResolution': '请先选择需要保留的内容',
   'write.toast.draftConflictNeedsReview': '有 {count} 项重叠修改需要确认',
