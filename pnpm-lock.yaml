@@ -1066,6 +1066,10 @@ importers:
         version: 4.1.11(@opentelemetry/api@1.9.0)(@types/node@26.2.0)(@vitest/coverage-v8@4.1.11)(happy-dom@20.11.6)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/cli:
+    dependencies:
+      '@haklex/rich-litexml':
+        specifier: ^0.36.1
+        version: 0.36.1(typescript@6.0.3)
     devDependencies:
       '@clack/prompts':
         specifier: ^1.7.0
@@ -1088,9 +1092,6 @@ importers:
       '@haklex/rich-headless':
         specifier: 0.36.0
         version: 0.36.0(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
-      '@haklex/rich-litexml':
-        specifier: 0.36.0
-        version: 0.36.0(typescript@6.0.3)
       '@haklex/rich-litexml-cli':
         specifier: 0.36.0
         version: 0.36.0(fb3cf332d0fbaf9c707f43549f89c115)
@@ -3194,6 +3195,9 @@ packages:
 
   '@haklex/rich-litexml@0.36.0':
     resolution: {integrity: sha512-wKr4DcOlhsr2/eJc8gYJHgZp6UkFhP5enZZthzr6un5NbVFFk5tkqyhpF1xK8xm63n7O0tDupO6ux8Qbg1dVgQ==}
+
+  '@haklex/rich-litexml@0.36.1':
+    resolution: {integrity: sha512-I80+xSAWicTSBA+fdroxJ5G1WY1olcaRwd2At/CgWXfzWwKzvoj9zPoaIVdJandHuBWekK+bCOA554PLMIuTWw==}
 
   '@haklex/rich-plugin-block-handle@0.35.0':
     resolution: {integrity: sha512-/kkK3Tn/kxBjoAuJVHY6rLp/SKYgci1oxSm9m12kO/sKx4NqpVUcsWX6UdUP7uY7F3QfpO+lwjYWlP4VtawP7Q==}
@@ -14985,6 +14989,15 @@ snapshots:
       - utf-8-validate
 
   '@haklex/rich-litexml@0.36.0(typescript@6.0.3)':
+    dependencies:
+      lexical: 0.49.0(typescript@6.0.3)
+      linkedom: 0.18.13
+      nanoid: 6.0.1
+    transitivePeerDependencies:
+      - canvas
+      - typescript
+
+  '@haklex/rich-litexml@0.36.1(typescript@6.0.3)':
     dependencies:
       lexical: 0.49.0(typescript@6.0.3)
       linkedom: 0.18.13

@@ -479,7 +479,7 @@ const make = Effect.gen(function* () {
               slug,
               message: `no skill chapter with slug '${slug}'`,
               hint: isLitexml
-                ? 'upgrade @haklex/rich-litexml to >=0.16.0 to ship liteXML chapters'
+                ? 'upgrade @haklex/rich-litexml to >=0.36.1 to ship liteXML chapters'
                 : 'run `mxs skill` to list available chapters',
             }),
           )

@@ -694,7 +694,7 @@ The variant (`article` / `note`) is auto-detected from the envelope root. Overri
 
 ## Skill bundle
 
-`mxs skill` exposes the bundled AI-agent documentation directly from the CLI binary. Chapters are shipped inside the published `@mx-space/cli` package; liteXML chapters are pulled live from `@haklex/rich-litexml` at runtime (requires `@haklex/rich-litexml@>=0.16.0`).
+`mxs skill` exposes the bundled AI-agent documentation directly from the CLI binary. Chapters are shipped inside the published `@mx-space/cli` package; liteXML chapters are pulled live from `@haklex/rich-litexml` at runtime (requires `@haklex/rich-litexml@>=0.36.1`).
 
 | Command                          | Behaviour                                                  |
 | -------------------------------- | ---------------------------------------------------------- |

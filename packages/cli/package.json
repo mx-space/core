@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/cli",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Command line interface for mx-space (mx-core) \u2014 auth, content, configuration",
   "keywords": [
     "mx-space",
@@ -59,6 +59,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@haklex/rich-litexml": "^0.36.1"
+  },
   "devDependencies": {
     "@clack/prompts": "^1.7.0",
     "@effect/cli": "0.77.0",
@@ -67,7 +70,6 @@
     "@effect/vitest": "0.30.0",
     "@haklex/rich-compose": "0.36.0",
     "@haklex/rich-headless": "0.36.0",
-    "@haklex/rich-litexml": "0.36.0",
     "@haklex/rich-litexml-cli": "0.36.0",
     "@lexical/headless": "^0.49.0",
     "@mx-space/api-client": "workspace:*",
