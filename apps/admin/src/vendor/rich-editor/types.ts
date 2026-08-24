@@ -18,6 +18,11 @@ export type VideoUpload = (
   opts?: { onProgress?: (percent: number) => void },
 ) => Promise<{ src: string }>
 
+export type FileUpload = (
+  file: File,
+  opts?: { onProgress?: (percent: number) => void },
+) => Promise<{ src: string }>
+
 export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
 
 export type AgentLitexmlRegistryProvider = LitexmlRegistryProvider

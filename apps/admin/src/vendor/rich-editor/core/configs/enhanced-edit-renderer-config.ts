@@ -21,6 +21,7 @@ import { GALLERY_NODE_KEY } from '@haklex/rich-ext-gallery/node'
 import { AlertEditRenderer } from '@haklex/rich-renderer-alert'
 import { BannerEditRenderer } from '@haklex/rich-renderer-banner'
 import { CodeBlockEditRenderer } from '@haklex/rich-renderer-codeblock'
+import { FileEditRenderer } from '@haklex/rich-renderer-file'
 import { ImageEditRenderer } from '@haklex/rich-renderer-image'
 import { MentionEditRenderer } from '@haklex/rich-renderer-mention'
 import { MermaidEditRenderer } from '@haklex/rich-renderer-mermaid'
@@ -52,4 +53,5 @@ export const enhancedEditRendererConfig: RendererConfig = {
   [RUBY_NODE_KEY]: RubyEditRenderer,
   [TAG_NODE_KEY]: TagEditRenderer,
   [VIDEO_NODE_KEY]: VideoEditRenderer,
+  File: FileEditRenderer,
 }

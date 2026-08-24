@@ -161,6 +161,42 @@ describe('content.util', () => {
     ])
   })
 
+  it('should collect file attachment sources from lexical content', () => {
+    const extracted = extractFileUrlsFromContent({
+      text: '',
+      contentFormat: 'lexical',
+      content: JSON.stringify({
+        root: {
+          type: 'root',
+          version: 1,
+          children: [
+            {
+              type: 'file',
+              version: 1,
+              src: 'https://cdn.example/file/report.pdf',
+              name: 'report.pdf',
+              ext: 'pdf',
+              mimeType: 'application/pdf',
+              size: 1024,
+            },
+            paragraph({
+              type: 'file',
+              version: 1,
+              src: 'https://cdn.example/file/notes.md',
+              name: 'notes.md',
+              display: 'inline',
+            }),
+          ],
+        },
+      }),
+    })
+
+    expect(extracted).toEqual([
+      'https://cdn.example/file/report.pdf',
+      'https://cdn.example/file/notes.md',
+    ])
+  })
+
   it('should fall back to cover image when lexical content is invalid', () => {
     const extracted = extractFileUrlsFromContent({
       text: '',

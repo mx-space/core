@@ -20,6 +20,7 @@ import { GalleryRenderer } from '@haklex/rich-ext-gallery/renderer'
 import { AlertRenderer } from '@haklex/rich-renderer-alert/static'
 import { BannerRenderer } from '@haklex/rich-renderer-banner/static'
 import { CodeBlockRenderer } from '@haklex/rich-renderer-codeblock/static'
+import { FileRenderer } from '@haklex/rich-renderer-file/static'
 import { ImageRenderer } from '@haklex/rich-renderer-image/static'
 import { LinkCardRenderer } from '@haklex/rich-renderer-linkcard/static'
 import { MentionRenderer } from '@haklex/rich-renderer-mention/static'
@@ -47,4 +48,5 @@ export const enhancedRendererConfig: RendererConfig = {
   [MERMAID_NODE_KEY]: MermaidRenderer,
   [RUBY_NODE_KEY]: RubyRenderer,
   [VIDEO_NODE_KEY]: VideoRenderer,
+  File: FileRenderer,
 }

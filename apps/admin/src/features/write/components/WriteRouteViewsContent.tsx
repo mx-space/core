@@ -4571,6 +4571,13 @@ function RichWriteSurface(props: {
       })
       return { src: result.url }
     },
+    fileUpload: async (file, opts) => {
+      const result = await uploadFileWithProgress(file, {
+        type: 'file',
+        onProgress: (percent) => opts?.onProgress?.(percent),
+      })
+      return { src: result.url }
+    },
     initialValue: parseSerializedEditorState(props.content),
     litexmlRegistry: createMxLitexmlRegistry,
     systemMessages: [
