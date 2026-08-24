@@ -1,6 +1,6 @@
 # MongoDB to PostgreSQL Production Migration Guide
 
-This document is the production runbook for the one-time MX Space Core cutover
+This document is the production runbook for the one-time Mix Space Core cutover
 from MongoDB to PostgreSQL.
 
 The migration is a hard cutover. There is no dual-write window. MongoDB is the
@@ -67,7 +67,7 @@ switch are complete.
 | Maintenance window | Stop public and admin writes before the final backup. |
 | Application version | Deploy a build that contains the PostgreSQL schema and repositories. The migration CLI is shipped separately as `@mx-space/mongo-pg-cli` on npm; the runtime image no longer bundles it. |
 | Node.js | Use the version required by `apps/core/package.json`; currently Node.js 22+. |
-| PostgreSQL | Use PostgreSQL 16+ and a database created for MX Space Core. |
+| PostgreSQL | Use PostgreSQL 16+ and a database created for Mix Space Core. |
 | MongoDB source | Use a connection string that includes the correct production database name. |
 | Redis and object storage | Keep unchanged; this migration does not move Redis or file storage data. |
 | Snowflake worker IDs | Allocate unique runtime IDs before starting clustered production. |

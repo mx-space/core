@@ -4,7 +4,7 @@ Guidance for Claude Code when working in the admin app inside the mx-core monore
 
 ## Project Overview
 
-This is the MX Space admin dashboard — a React 19 SPA (package `@mx-admin/admin`).
+This is the Mix Space admin dashboard — a React 19 SPA (package `@mx-admin/admin`).
 It lives at `apps/admin` within the mx-core monorepo and is built locally during the
 core build/release; it is no longer downloaded from GitHub releases. The built output
 (`apps/admin/dist`) is served by the sibling backend app `apps/core` under the route

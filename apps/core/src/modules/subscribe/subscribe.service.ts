@@ -248,7 +248,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   ) {
     const { seo, mailOptions } = await this.configService.waitForConfigReady()
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    const sendfrom = `"${seo.title || 'Mix Space'}" <${senderEmail}>`
     const cacheKey = 'template'
     let finalTemplate = this.lruCache.get(cacheKey)
     if (!finalTemplate) {
@@ -260,7 +260,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
 
     const options: Mail.Options = {
       from: sendfrom,
-      subject: `[${seo.title || 'Mx Space'}] New content published`,
+      subject: `[${seo.title || 'Mix Space'}] New content published`,
       to: email,
       html: ejs.render(finalTemplate, source),
       headers: { 'List-Unsubscribe': `<${unsubscribeLink}>` },

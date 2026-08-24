@@ -6,7 +6,7 @@ Author: Codex
 
 ## 1. Overview
 
-MX Space Core currently persists application data through MongoDB, Mongoose, and Typegoose. The migration target is PostgreSQL with a type-safe repository layer and Snowflake IDs as the canonical identity model.
+Mix Space Core currently persists application data through MongoDB, Mongoose, and Typegoose. The migration target is PostgreSQL with a type-safe repository layer and Snowflake IDs as the canonical identity model.
 
 The migration is a hard database cutover. MongoDB remains only as the source for the one-time migration tool and as historical backup input. After cutover, application runtime code must not depend on MongoDB, Mongoose, Typegoose, Mongo ObjectId, `mongodump`, or `mongorestore`.
 
@@ -469,7 +469,7 @@ Auth requires a separate implementation checkpoint because Better Auth owns tabl
 | Schema alignment | Generate or handwrite required `users`, `accounts`, `sessions`, `apikey`, and passkey tables. |
 | Legacy password support | Preserve bcrypt-to-Better-Auth-hash upgrade behavior. |
 | API key compatibility | Preserve custom `txo` token handling and legacy `referenceId` fallback during migration. |
-| Owner profile | Keep owner profile as MX Space table linked by Snowflake `reader_id`. |
+| Owner profile | Keep owner profile as Mix Space table linked by Snowflake `reader_id`. |
 
 The auth migration must include focused tests for sign-in, API key verification, owner lookup, token creation, token deletion, and legacy token migration.
 

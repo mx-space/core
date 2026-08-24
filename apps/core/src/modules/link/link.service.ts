@@ -186,7 +186,7 @@ export class LinkService {
   ): Promise<void> {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    const sendfrom = `"${seo.title || 'Mix Space'}" <${senderEmail}>`
     await this.emailService.send({
       from: sendfrom,
       to,
@@ -207,7 +207,7 @@ export class LinkService {
     template: LinkApplyEmailType
   }) {
     const { seo } = await this.configsService.waitForConfigReady()
-    const siteTitle = seo.title || 'Mx Space'
+    const siteTitle = seo.title || 'Mix Space'
     const isToOwner = template === LinkApplyEmailType.ToOwner
     const subject = isToOwner
       ? `[${siteTitle}] New friend ${authorName}`

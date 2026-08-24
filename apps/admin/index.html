@@ -15,14 +15,14 @@
       link.href = favicon
       document.head.appendChild(link)
     </script>
-    <title>Mx Space Admin</title>
+    <title>Mix Space Admin</title>
     <script>
       window.injectData = {}
       window.version = 'N/A'
       window.pageSource = 'self'
     </script>
     <!-- ENV INJECT -->
-    <!-- MX SPACE ADMIN DASHBOARD VERSION INJECT -->
+    <!-- Mix Space ADMIN DASHBOARD VERSION INJECT -->
     <!-- injectable script -->
   </head>
 
@@ -98,8 +98,8 @@
     </div>
     <noscript>
       <strong
-        >We're sorry but MX Space Admin doesn't work properly without JavaScript
-        enabled. Please enable it to continue.</strong
+        >We're sorry but Mix Space Admin doesn't work properly without
+        JavaScript enabled. Please enable it to continue.</strong
       >
       <strong>
         It may be a network problem that caused the failure to load the JS file.
@@ -134,17 +134,13 @@
           var w = JSON.parse(
             localStorage.getItem('admin:sidebar-width') || '240',
           )
-          var px =
-            typeof w === 'number' && w >= 200 && w <= 360 ? w : 240
+          var px = typeof w === 'number' && w >= 200 && w <= 360 ? w : 240
           document.documentElement.style.setProperty(
             '--sidebar-width',
             c ? '0px' : px + 'px',
           )
         } catch (_) {
-          document.documentElement.style.setProperty(
-            '--sidebar-width',
-            '240px',
-          )
+          document.documentElement.style.setProperty('--sidebar-width', '240px')
         }
       })()
     </script>

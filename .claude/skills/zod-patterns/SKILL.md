@@ -1,6 +1,6 @@
 ---
 name: zod-patterns
-description: MX Space project Zod schema patterns. Apply when creating DTOs, validation schemas, or handling request validation.
+description: Mix Space project Zod schema patterns. Apply when creating DTOs, validation schemas, or handling request validation.
 user-invocable: false
 ---
 
@@ -33,41 +33,41 @@ Location: `apps/core/src/common/zod/`
 ```typescript
 import {
   // From primitives.ts:
-  zNonEmptyString,       // Non-empty string (z.string().min(1))
-  zCoerceInt,            // Coerced integer
-  zCoercePositiveInt,    // Coerced positive integer
-  zCoerceBoolean,        // Coerced boolean (handles 'true'/'1'/1/etc.)
-  zCoerceDate,           // Coerced date
-  zOptionalDate,         // Optional date (null/empty → undefined)
-  zOptionalBoolean,      // Optional coerced boolean
-  zEmptyStringToNull,    // Empty string → null, else string
-  zNilOrString,          // string | null | undefined
-  zHexColor,             // Hex color (#fff or #ffffff)
-  zAllowedUrl,           // HTTP or HTTPS URL
-  zStrictUrl,            // Strict URL validation
-  zHttpsUrl,             // HTTPS-only URL
-  zPaginationPage,       // Coerced int, min 1, default 1
-  zPaginationSize,       // Coerced int, min 1, max 50, default 20
-  zSortOrder,            // 1 | -1 | undefined (accepts 'asc'/'desc')
-  zArrayUnique,          // Unique array elements (generic)
-  zUniqueStringArray,    // Unique non-empty string array
+  zNonEmptyString, // Non-empty string (z.string().min(1))
+  zCoerceInt, // Coerced integer
+  zCoercePositiveInt, // Coerced positive integer
+  zCoerceBoolean, // Coerced boolean (handles 'true'/'1'/1/etc.)
+  zCoerceDate, // Coerced date
+  zOptionalDate, // Optional date (null/empty → undefined)
+  zOptionalBoolean, // Optional coerced boolean
+  zEmptyStringToNull, // Empty string → null, else string
+  zNilOrString, // string | null | undefined
+  zHexColor, // Hex color (#fff or #ffffff)
+  zAllowedUrl, // HTTP or HTTPS URL
+  zStrictUrl, // Strict URL validation
+  zHttpsUrl, // HTTPS-only URL
+  zPaginationPage, // Coerced int, min 1, default 1
+  zPaginationSize, // Coerced int, min 1, max 50, default 20
+  zSortOrder, // 1 | -1 | undefined (accepts 'asc'/'desc')
+  zArrayUnique, // Unique array elements (generic)
+  zUniqueStringArray, // Unique non-empty string array
 
   // From custom.ts:
-  zBooleanOrString,      // boolean | string union
-  zTransformEmptyNull,   // Empty string → null (generic wrapper)
-  zTransformBoolean,     // Transform to optional boolean
-  zPinDate,              // Pin date (Date | null | undefined, true=now, false=null)
-  zSlug,                 // Slug string (trimmed)
-  zEmail,                // Email with custom message
-  zUrl,                  // URL with custom message
-  zMaxLengthString,      // Max length string factory
-  zRefTypeTransform,     // Content ref type ('post'→'Post', etc.)
-  zPrefer,               // 'lexical' enum optional
-  zLang,                 // 2-char language code
+  zBooleanOrString, // boolean | string union
+  zTransformEmptyNull, // Empty string → null (generic wrapper)
+  zTransformBoolean, // Transform to optional boolean
+  zPinDate, // Pin date (Date | null | undefined, true=now, false=null)
+  zSlug, // Slug string (trimmed)
+  zEmail, // Email with custom message
+  zUrl, // URL with custom message
+  zMaxLengthString, // Max length string factory
+  zRefTypeTransform, // Content ref type ('post'→'Post', etc.)
+  zPrefer, // 'lexical' enum optional
+  zLang, // 2-char language code
 
   // From shared/id/entity-id.ts:
-  zEntityId,             // Snowflake entity ID string validation
-  zEntityIdOrInt,        // Entity ID or positive integer union
+  zEntityId, // Snowflake entity ID string validation
+  zEntityIdOrInt, // Entity ID or positive integer union
 } from '~/common/zod'
 ```
 
@@ -77,9 +77,9 @@ import {
 import { zEntityId } from '~/common/zod'
 
 const Schema = z.object({
-  id: zEntityId,                    // Snowflake ID string
-  categoryId: zEntityId,            // Foreign key reference
-  relatedIds: z.array(zEntityId),   // Array of entity IDs
+  id: zEntityId, // Snowflake ID string
+  categoryId: zEntityId, // Foreign key reference
+  relatedIds: z.array(zEntityId), // Array of entity IDs
 })
 
 // For DTOs used in path params:
@@ -116,13 +116,13 @@ z.array(z.string()).default([]).optional()
 // Empty string to null
 z.preprocess(
   (val) => (val === '' ? null : val),
-  z.string().nullable()
+  z.string().nullable(),
 ).optional()
 
 // String to number
 z.preprocess(
   (val) => (typeof val === 'string' ? parseInt(val, 10) : val),
-  z.number()
+  z.number(),
 )
 ```
 
@@ -168,10 +168,9 @@ const UserSchema = z.object({
 z.object({
   password: z.string(),
   confirmPassword: z.string(),
-}).refine(
-  (data) => data.password === data.confirmPassword,
-  { message: 'Passwords must match' }
-)
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords must match',
+})
 ```
 
 ## Type Inference

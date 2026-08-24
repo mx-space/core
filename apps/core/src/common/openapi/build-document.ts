@@ -400,7 +400,7 @@ export const buildOpenApiDocument = (
     document: {
       openapi: '3.1.0',
       info: {
-        title: 'MX Space Core API',
+        title: 'Mix Space Core API',
         version: `v${apiVersion}`,
         description:
           'Endpoints consumed by the Space iOS client. Generated from Zod schemas — do not edit by hand.',

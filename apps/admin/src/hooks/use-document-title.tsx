@@ -5,7 +5,7 @@ import { appRoutes } from 'virtual:admin-routes'
 
 import { useI18n } from '~/i18n'
 
-const APP_NAME = 'Mx Space Admin'
+const APP_NAME = 'Mix Space Admin'
 
 const overrideStack: string[] = []
 const listeners = new Set<() => void>()

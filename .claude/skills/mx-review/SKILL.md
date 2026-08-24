@@ -1,10 +1,10 @@
 ---
 name: mx-review
-description: Review code for MX Space project conventions. Checks NestJS patterns, Drizzle ORM repositories, Zod schemas, API design, etc.
+description: Review code for Mix Space project conventions. Checks NestJS patterns, Drizzle ORM repositories, Zod schemas, API design, etc.
 argument-hint: [file-path]
 ---
 
-# MX Space Code Review
+# Mix Space Code Review
 
 Review code for project conventions. Target: `$ARGUMENTS`
 

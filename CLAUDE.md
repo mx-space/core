@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MX Space is a personal blog server application (AI-powered headless CMS) built with NestJS, PostgreSQL, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`; the admin dashboard SPA lives at `apps/admin/` and is built into the server release (see `apps/admin/CLAUDE.md`).
+Mix Space is a personal blog server application (AI-powered headless CMS) built with NestJS, PostgreSQL, and Redis. This is a monorepo containing the core server application and related packages. The main application is located in `apps/core/`; the admin dashboard SPA lives at `apps/admin/` and is built into the server release (see `apps/admin/CLAUDE.md`).
 
 ## Related Projects
 

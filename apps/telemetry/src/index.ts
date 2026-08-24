@@ -220,7 +220,7 @@ function generateDashboardHtml(stats: StatsData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MX Space Telemetry</title>
+  <title>Mix Space Telemetry</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -300,7 +300,7 @@ function generateDashboardHtml(stats: StatsData): string {
 </head>
 <body>
   <div class="container">
-    <h1>MX Space Telemetry</h1>
+    <h1>Mix Space Telemetry</h1>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -353,7 +353,7 @@ function generateDashboardHtml(stats: StatsData): string {
     </div>
 
     <footer>
-      <p>Anonymous telemetry data from <a href="https://github.com/mx-space/core" target="_blank">MX Space</a></p>
+      <p>Anonymous telemetry data from <a href="https://github.com/mx-space/core" target="_blank">Mix Space</a></p>
     </footer>
   </div>
 
