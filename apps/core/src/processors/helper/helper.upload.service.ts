@@ -11,11 +11,14 @@ export class UploadService {
       maxFileSize?: number
     },
   ): Promise<MultipartFile> {
-    const data = await req.file({
-      limits: {
-        fileSize: options?.maxFileSize,
-      },
-    })
+    // Passing `fileSize: undefined` does not fall back to the limit registered
+    // on the plugin — deepmerge overwrites the 6MB default with the undefined,
+    // leaving busboy unbounded. Omit the option entirely instead.
+    const data = await req.file(
+      options?.maxFileSize === undefined
+        ? undefined
+        : { limits: { fileSize: options.maxFileSize } },
+    )
 
     if (!data) {
       throw new BadRequestException('Only file uploads are accepted!')
