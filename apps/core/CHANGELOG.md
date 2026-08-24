@@ -1,3 +1,15 @@
+## [14.4.0](https://github.com/mx-space/core/compare/v14.3.1...v14.4.0) (2026-08-24)
+
+
+### Bug Fixes
+
+* **files:** restore the plugin-wide upload size limit ([e4593b0](https://github.com/mx-space/core/commit/e4593b0df4927a0bc631a2143715d161ce99191e))
+
+
+### Features
+
+* **files:** wire file attachment node through admin editor and reference guard ([ddfcc57](https://github.com/mx-space/core/commit/ddfcc57ed95700cd76ca2e86c9b067a0fc5e1c57))
+
 ## [14.3.1](https://github.com/mx-space/core/compare/v14.3.0...v14.3.1) (2026-08-23)
 
 
