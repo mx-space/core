@@ -50,15 +50,60 @@ export const PushResourceDataSchema = z
   })
   .strict()
 
-export const ContentPublishedDataSchema = z
+const ownerName = z.string().trim().min(1).max(80)
+const thinkingVerb = z.enum([
+  'watched',
+  'read',
+  'listened',
+  'studied',
+  'linked',
+])
+const thinkingFactType = z.enum(['tv', 'movie', 'book', 'album', 'song'])
+const thinkingFactYear = z.string().regex(/^\d{4}$/)
+
+const ContentArticleDataSchema = z
   .object({
     resource_id: resourceId,
-    resource_type: z.enum(['post', 'note', 'recently']),
+    resource_type: z.enum(['post', 'note']),
     display_title: publicTitle,
     summary: publicSummary.optional(),
     target_path: internalTargetPath,
   })
   .strict()
+
+const RecentlyEnrichedDataSchema = z
+  .object({
+    resource_id: resourceId,
+    resource_type: z.literal('recently'),
+    target_path: internalTargetPath,
+    kind: z.literal('enriched'),
+    owner_name: ownerName,
+    verb: thinkingVerb,
+    work_title: publicTitle,
+    description: publicSummary.optional(),
+    fact_creator: ownerName.optional(),
+    fact_year: thinkingFactYear.optional(),
+    fact_type: thinkingFactType.optional(),
+  })
+  .strict()
+
+const RecentlyPlainDataSchema = z
+  .object({
+    resource_id: resourceId,
+    resource_type: z.literal('recently'),
+    target_path: internalTargetPath,
+    kind: z.literal('plain'),
+    owner_name: ownerName,
+    text: publicTitle,
+    summary: publicSummary.optional(),
+  })
+  .strict()
+
+export const ContentPublishedDataSchema = z.union([
+  ContentArticleDataSchema,
+  RecentlyEnrichedDataSchema,
+  RecentlyPlainDataSchema,
+])
 
 export const CommentRepliedDataSchema = z
   .object({

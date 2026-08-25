@@ -66,7 +66,7 @@ describe('push protocol', () => {
     expect(isPushTimestampFresh('not-a-timestamp', 1786104000000)).toBe(false)
   })
 
-  it.each(['post', 'note', 'recently'] as const)(
+  it.each(['post', 'note'] as const)(
     'accepts public content metadata for resource_type %s',
     (resourceType) => {
       const published = {
@@ -82,9 +82,7 @@ describe('push protocol', () => {
           target_path:
             resourceType === 'post'
               ? '/posts/category/a-public-title'
-              : resourceType === 'note'
-                ? '/notes/42'
-                : '/thinking/abc',
+              : '/notes/42',
         },
       }
 
@@ -94,6 +92,66 @@ describe('push protocol', () => {
       expect(PushEventSchema.parse(published)).toEqual(published)
     },
   )
+
+  it('accepts an enriched recently projection', () => {
+    const published = {
+      ...cloudEventBase,
+      id: 'content.published:recently-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'recently/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'recently' as const,
+        target_path: '/thinking/abc',
+        kind: 'enriched' as const,
+        owner_name: 'Innei',
+        verb: 'watched' as const,
+        work_title: 'EVA',
+        description: 'Rewatched tonight.',
+        fact_type: 'tv' as const,
+        fact_year: '1995',
+      },
+    }
+
+    expect(PushEventSchema.parse(published)).toEqual(published)
+  })
+
+  it('accepts a plain recently projection', () => {
+    const published = {
+      ...cloudEventBase,
+      id: 'content.published:recently-2',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'recently/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'recently' as const,
+        target_path: '/thinking/abc',
+        kind: 'plain' as const,
+        owner_name: 'Innei',
+        text: 'Afternoon light.',
+        summary: 'Second paragraph.',
+      },
+    }
+
+    expect(PushEventSchema.parse(published)).toEqual(published)
+  })
+
+  it('rejects recently payloads that still use display_title', () => {
+    const result = PushEventSchema.safeParse({
+      ...cloudEventBase,
+      id: 'content.published:recently-old',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'recently/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'recently',
+        display_title: 'Thinking',
+        target_path: '/thinking/abc',
+      },
+    })
+
+    expect(result.success).toBe(false)
+  })
 
   it('accepts published content without a summary', () => {
     const published = {
@@ -141,10 +199,6 @@ describe('push protocol', () => {
 
     expect(result.success).toBe(false)
     expect(unsafePath.success).toBe(false)
-    if (result.success) return
-    expect(result.error.issues.some((issue) => issue.code === 'unrecognized_keys')).toBe(
-      true,
-    )
   })
 
   it.each([

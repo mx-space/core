@@ -744,7 +744,6 @@ describe('buildApnsPayload yohaku events', () => {
         alert: {
           'title-loc-key': 'PUSH_CONTENT_TITLE',
           'title-loc-args': ['Public title'],
-          'subtitle-loc-key': 'PUSH_CONTENT_POST_SUBTITLE',
           'loc-key': 'PUSH_CONTENT_SUMMARY',
           'loc-args': ['Public summary.'],
         },
@@ -781,11 +780,11 @@ describe('buildApnsPayload yohaku events', () => {
     expect(payload.aps.alert).toEqual({
       'title-loc-key': 'PUSH_CONTENT_TITLE',
       'title-loc-args': ['Public note'],
-      'subtitle-loc-key': 'PUSH_CONTENT_NOTE_SUBTITLE',
     })
+    expect(payload.aps.alert).not.toHaveProperty('subtitle-loc-key')
   })
 
-  it('projects published notes and thinkings with matching threads', () => {
+  it('projects published notes onto the notes thread without a subtitle', () => {
     expect(
       buildApnsPayload({
         specversion: '1.0',
@@ -804,31 +803,77 @@ describe('buildApnsPayload yohaku events', () => {
         },
       }).aps,
     ).toMatchObject({
-      alert: { 'subtitle-loc-key': 'PUSH_CONTENT_NOTE_SUBTITLE' },
+      alert: {
+        'title-loc-key': 'PUSH_CONTENT_TITLE',
+        'loc-key': 'PUSH_CONTENT_SUMMARY',
+      },
       'thread-id': 'notes',
       category: 'YOHAKU_CONTENT',
     })
+  })
+
+  it('projects enriched thinking with a type-year subtitle', () => {
+    const payload = buildApnsPayload({
+      specversion: '1.0',
+      id: 'content.published:recently-1',
+      source: 'urn:mx-core:instance:src-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'recently/recently-1',
+      time: '2026-08-07T12:00:00.000Z',
+      datacontenttype: 'application/json',
+      data: {
+        resource_id: 'recently-1',
+        resource_type: 'recently',
+        target_path: '/thinking/recently-1',
+        kind: 'enriched',
+        owner_name: 'Innei',
+        verb: 'watched',
+        work_title: 'EVA',
+        description: 'Rewatched tonight.',
+        fact_type: 'tv',
+        fact_year: '1995',
+      },
+    })
+    expect(payload.aps).toEqual({
+      alert: {
+        'title-loc-key': 'PUSH_THINKING_WATCHED',
+        'title-loc-args': ['Innei', 'EVA'],
+        'subtitle-loc-key': 'PUSH_THINKING_FACT_TV',
+        'subtitle-loc-args': ['1995'],
+        'loc-key': 'PUSH_CONTENT_SUMMARY',
+        'loc-args': ['Rewatched tonight.'],
+      },
+      sound: 'default',
+      'thread-id': 'recently',
+      category: 'YOHAKU_CONTENT',
+    })
+  })
+
+  it('projects plain thinking without a subtitle', () => {
     expect(
       buildApnsPayload({
         specversion: '1.0',
-        id: 'content.published:recently-1',
+        id: 'content.published:recently-2',
         source: 'urn:mx-core:instance:src-1',
         type: CONTENT_PUBLISHED_EVENT,
-        subject: 'recently/recently-1',
+        subject: 'recently/recently-2',
         time: '2026-08-07T12:00:00.000Z',
         datacontenttype: 'application/json',
         data: {
-          resource_id: 'recently-1',
+          resource_id: 'recently-2',
           resource_type: 'recently',
-          display_title: 'Thinking',
-          summary: 'Public summary.',
-          target_path: '/thinking/recently-1',
+          target_path: '/thinking/recently-2',
+          kind: 'plain',
+          owner_name: 'Innei',
+          text: 'Afternoon light.',
+          summary: 'Second paragraph.',
         },
-      }).aps,
-    ).toMatchObject({
-      alert: { 'subtitle-loc-key': 'PUSH_CONTENT_RECENTLY_SUBTITLE' },
-      'thread-id': 'recently',
-      category: 'YOHAKU_CONTENT',
+      }).aps.alert,
+    ).toEqual({
+      'title-loc-key': 'PUSH_THINKING_PLAIN',
+      'title-loc-args': ['Innei', 'Afternoon light.'],
+      'loc-key': 'PUSH_CONTENT_SUMMARY',
+      'loc-args': ['Second paragraph.'],
     })
   })
 

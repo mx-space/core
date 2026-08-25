@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import type { CommentRepository } from '~/modules/comment/comment.repository'
 import type { ConfigsService } from '~/modules/configs/configs.service'
+import type { OwnerService } from '~/modules/owner/owner.service'
 import type { PushRepository } from '~/modules/push/push.repository'
 import { PushService } from '~/modules/push/push.service'
 import {
@@ -40,6 +41,9 @@ describe('PushService', () => {
   const database = {
     findGlobalById: vi.fn(),
   }
+  const owner = {
+    getOwner: vi.fn(),
+  }
   const originalRelayOrigins = process.env.MX_PUSH_RELAY_ORIGINS
 
   const createService = () =>
@@ -49,6 +53,7 @@ describe('PushService', () => {
       events as unknown as EventManagerService,
       commentRepository as unknown as CommentRepository,
       database as unknown as DatabaseService,
+      owner as unknown as OwnerService,
     )
 
   const flushHandler = async () => {
@@ -75,6 +80,7 @@ describe('PushService', () => {
     repository.claimDueDeliveries.mockResolvedValue([])
     commentRepository.findById.mockResolvedValue(null)
     database.findGlobalById.mockResolvedValue(null)
+    owner.getOwner.mockResolvedValue({ name: 'Innei' })
   })
 
   afterEach(() => {
@@ -468,6 +474,107 @@ describe('PushService', () => {
       (call) => call[0].event.type === COMMENT_REPLIED_EVENT,
     )
     expect(replied).toHaveLength(1)
+    service.onModuleDestroy()
+  })
+
+  it('projects an enriched thinking with owner verb and compact fact', async () => {
+    const url = 'https://www.themoviedb.org/tv/285838'
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.RECENTLY_CREATE,
+      {
+        id: 'think-1',
+        content: `今晚重看了一遍。\n\n${url}`,
+        enrichments: {
+          [url]: {
+            title: '新世紀エヴァンゲリオン',
+            url,
+            category: 'media',
+            subtype: 'tv',
+            publishedAt: '1995-10-04',
+            fetchedAt: '2026-08-25T00:00:00.000Z',
+          },
+        },
+        createdAt: new Date('2026-08-07T12:00:00.000Z'),
+      },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    expect(repository.enqueueDelivery.mock.calls[0]![0].event.data).toEqual({
+      resource_id: 'think-1',
+      resource_type: 'recently',
+      target_path: '/thinking/think-1',
+      kind: 'enriched',
+      owner_name: 'Innei',
+      verb: 'watched',
+      work_title: '新世紀エヴァンゲリオン',
+      description: '今晚重看了一遍。',
+      fact_type: 'tv',
+      fact_year: '1995',
+    })
+    service.onModuleDestroy()
+  })
+
+  it('projects plain thinking as owner plus first line', async () => {
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.RECENTLY_CREATE,
+      {
+        id: 'think-2',
+        content: '下午的光把桌面切成两半。\n\n键盘声比想法先到。',
+        createdAt: new Date('2026-08-07T12:00:00.000Z'),
+      },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    expect(repository.enqueueDelivery.mock.calls[0]![0].event.data).toEqual({
+      resource_id: 'think-2',
+      resource_type: 'recently',
+      target_path: '/thinking/think-2',
+      kind: 'plain',
+      owner_name: 'Innei',
+      text: '下午的光把桌面切成两半。',
+      summary: '键盘声比想法先到。',
+    })
+    service.onModuleDestroy()
+  })
+
+  it('does not publish a bare unresolved thinking URL', async () => {
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.RECENTLY_CREATE,
+      {
+        id: 'think-url',
+        content: 'https://example.com/x',
+        createdAt: new Date('2026-08-07T12:00:00.000Z'),
+      },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(repository.enqueueDelivery).not.toHaveBeenCalled()
+    service.onModuleDestroy()
+  })
+
+  it('does not publish thinking without an owner name', async () => {
+    owner.getOwner.mockResolvedValue({ name: '' })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.RECENTLY_CREATE,
+      {
+        id: 'think-anon',
+        content: '下午的光把桌面切成两半。',
+        createdAt: new Date('2026-08-07T12:00:00.000Z'),
+      },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(repository.enqueueDelivery).not.toHaveBeenCalled()
     service.onModuleDestroy()
   })
 

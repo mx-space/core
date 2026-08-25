@@ -116,20 +116,54 @@ const customFields = (
   resource_id: event.data.resource_id,
 })
 
-const publishedCopy = {
-  post: {
-    subtitleLocKey: 'PUSH_CONTENT_POST_SUBTITLE',
-    threadId: 'posts',
-  },
-  note: {
-    subtitleLocKey: 'PUSH_CONTENT_NOTE_SUBTITLE',
-    threadId: 'notes',
-  },
-  recently: {
-    subtitleLocKey: 'PUSH_CONTENT_RECENTLY_SUBTITLE',
-    threadId: 'recently',
-  },
+const thinkingTitleKey = {
+  watched: 'PUSH_THINKING_WATCHED',
+  read: 'PUSH_THINKING_READ',
+  listened: 'PUSH_THINKING_LISTENED',
+  studied: 'PUSH_THINKING_STUDIED',
+  linked: 'PUSH_THINKING_LINKED',
 } as const
+
+const thinkingFactTypeKey = {
+  tv: 'PUSH_THINKING_FACT_TV',
+  movie: 'PUSH_THINKING_FACT_MOVIE',
+  book: 'PUSH_THINKING_FACT_BOOK',
+  album: 'PUSH_THINKING_FACT_ALBUM',
+  song: 'PUSH_THINKING_FACT_SONG',
+} as const
+
+const summaryAlert = (body?: string) =>
+  body
+    ? {
+        'loc-key': 'PUSH_CONTENT_SUMMARY',
+        'loc-args': [body],
+      }
+    : {}
+
+const thinkingSubtitle = (
+  data: Extract<PushEvent, { type: typeof CONTENT_PUBLISHED_EVENT }>['data'],
+) => {
+  if (data.resource_type !== 'recently' || data.kind !== 'enriched') return {}
+  if (data.fact_creator && data.fact_year) {
+    return {
+      'subtitle-loc-key': 'PUSH_THINKING_FACT_CREATOR',
+      'subtitle-loc-args': [data.fact_creator, data.fact_year],
+    }
+  }
+  if (data.fact_creator) {
+    return {
+      'subtitle-loc-key': 'PUSH_THINKING_FACT_CREATOR_ONLY',
+      'subtitle-loc-args': [data.fact_creator],
+    }
+  }
+  if (data.fact_type && data.fact_year) {
+    return {
+      'subtitle-loc-key': thinkingFactTypeKey[data.fact_type],
+      'subtitle-loc-args': [data.fact_year],
+    }
+  }
+  return {}
+}
 
 export const buildApnsPayload = (event: PushEvent) => {
   if (event.type === COMMENT_CREATED_EVENT) {
@@ -148,22 +182,44 @@ export const buildApnsPayload = (event: PushEvent) => {
   }
 
   if (event.type === CONTENT_PUBLISHED_EVENT) {
-    const copy = publishedCopy[event.data.resource_type]
+    if (event.data.resource_type === 'recently') {
+      const data = event.data
+      const alert =
+        data.kind === 'enriched'
+          ? {
+              'title-loc-key': thinkingTitleKey[data.verb],
+              'title-loc-args': [data.owner_name, data.work_title],
+              ...thinkingSubtitle(data),
+              ...summaryAlert(data.description),
+            }
+          : {
+              'title-loc-key': 'PUSH_THINKING_PLAIN',
+              'title-loc-args': [data.owner_name, data.text],
+              ...summaryAlert(data.summary),
+            }
+      return {
+        aps: {
+          alert,
+          sound: 'default',
+          'thread-id': 'recently',
+          category: 'YOHAKU_CONTENT',
+        },
+        ...customFields(event, {
+          event_type: event.type,
+          target_path: data.target_path,
+        }),
+      }
+    }
+
     return {
       aps: {
         alert: {
           'title-loc-key': 'PUSH_CONTENT_TITLE',
           'title-loc-args': [event.data.display_title],
-          'subtitle-loc-key': copy.subtitleLocKey,
-          ...(event.data.summary
-            ? {
-                'loc-key': 'PUSH_CONTENT_SUMMARY',
-                'loc-args': [event.data.summary],
-              }
-            : {}),
+          ...summaryAlert(event.data.summary),
         },
         sound: 'default',
-        'thread-id': copy.threadId,
+        'thread-id': event.data.resource_type === 'post' ? 'posts' : 'notes',
         category: 'YOHAKU_CONTENT',
       },
       ...customFields(event, {

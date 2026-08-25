@@ -14,6 +14,7 @@ import {
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { Interval } from '@nestjs/schedule'
+import { isString } from 'es-toolkit/compat'
 
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { CommentRepository } from '~/modules/comment/comment.repository'
@@ -25,11 +26,13 @@ import {
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 
+import { OwnerService } from '../owner/owner.service'
 import { PushRepository } from './push.repository'
 import type { PushActivationRequestDto } from './push.schema'
 import type { PushRelaySourceRow } from './push.types'
 import { resolveAllowedPushRelayOrigin } from './push-relay-origin'
 import { PushSecretVault } from './push-secret.vault'
+import { enrichmentMapOf, projectThinkingCopy } from './recently-copy'
 
 const resourceIdOf = (data: unknown) => {
   const value = (data as { id?: unknown } | null)?.id
@@ -45,13 +48,13 @@ const eventTimeOf = (data: unknown) => {
 }
 
 const publicText = (value: unknown, max: number) => {
-  if (typeof value !== 'string') return null
+  if (!isString(value)) return null
   const normalized = value.trim()
   return normalized ? normalized.slice(0, max) : null
 }
 
 const httpsUrlOf = (value: unknown) => {
-  if (typeof value !== 'string') return undefined
+  if (!isString(value)) return undefined
   try {
     const url = new URL(value)
     return url.protocol === 'https:' ? url.toString() : undefined
@@ -86,6 +89,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     private readonly events: EventManagerService,
     private readonly comments: CommentRepository,
     private readonly database: DatabaseService,
+    private readonly owner: OwnerService,
   ) {}
 
   onModuleInit() {
@@ -207,7 +211,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       return
     }
     if (event === BusinessEvents.RECENTLY_CREATE) {
-      await this.enqueueContentPublished(data, 'recently')
+      await this.enqueueRecentlyPublished(data)
     }
   }
 
@@ -294,7 +298,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
 
   private async enqueueContentPublished(
     data: unknown,
-    resourceType: ContentPublishedEvent['data']['resource_type'],
+    resourceType: 'post' | 'note',
   ) {
     const resourceId = resourceIdOf(data)
     if (!resourceId) return
@@ -319,17 +323,11 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       360,
     )
     const displayTitle = publicText(
-      document.title ??
-        document.metadata?.title ??
-        (resourceType === 'recently' ? 'Thinking' : null),
+      document.title ?? document.metadata?.title,
       160,
     )
     if (!displayTitle) return
-    const targetPath = this.contentTargetPath(
-      resourceType,
-      document,
-      resourceId,
-    )
+    const targetPath = this.contentTargetPath(resourceType, document)
     if (!targetPath) return
     const time = eventTimeOf(data)
     await this.enqueueToEnabledSources((source) => {
@@ -353,14 +351,71 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     })
   }
 
+  private async enqueueRecentlyPublished(data: unknown) {
+    const resourceId = resourceIdOf(data)
+    if (!resourceId) return
+    const ownerName = publicText(await this.ownerDisplayName(), 80)
+    if (!ownerName) return
+    const row = data as { content?: unknown; enrichments?: unknown }
+    const content = typeof row.content === 'string' ? row.content : ''
+    const copy = projectThinkingCopy(content, enrichmentMapOf(row.enrichments))
+    if (copy.kind === 'skip') return
+    const time = eventTimeOf(data)
+    await this.enqueueToEnabledSources((source) => {
+      const event: ContentPublishedEvent = {
+        specversion: '1.0',
+        id: `content.published:recently:${resourceId}`,
+        source: `urn:mx-core:instance:${source.remoteSourceId}`,
+        type: CONTENT_PUBLISHED_EVENT,
+        subject: `recently/${resourceId}`,
+        time: time.toISOString(),
+        datacontenttype: 'application/json',
+        data:
+          copy.kind === 'enriched'
+            ? {
+                resource_id: resourceId,
+                resource_type: 'recently',
+                target_path: `/thinking/${encodeURIComponent(resourceId)}`,
+                kind: 'enriched',
+                owner_name: ownerName,
+                verb: copy.verb,
+                work_title: copy.work_title,
+                ...(copy.description ? { description: copy.description } : {}),
+                ...(copy.fact_creator
+                  ? { fact_creator: copy.fact_creator }
+                  : {}),
+                ...(copy.fact_year ? { fact_year: copy.fact_year } : {}),
+                ...(copy.fact_type ? { fact_type: copy.fact_type } : {}),
+              }
+            : {
+                resource_id: resourceId,
+                resource_type: 'recently',
+                target_path: `/thinking/${encodeURIComponent(resourceId)}`,
+                kind: 'plain',
+                owner_name: ownerName,
+                text: copy.text,
+                ...(copy.summary ? { summary: copy.summary } : {}),
+              },
+      }
+      return event
+    })
+  }
+
+  private async ownerDisplayName() {
+    try {
+      return (await this.owner.getOwner()).name
+    } catch {
+      return null
+    }
+  }
+
   private contentTargetPath(
-    resourceType: ContentPublishedEvent['data']['resource_type'],
+    resourceType: 'post' | 'note',
     document: {
       slug?: unknown
       nid?: unknown
       category?: { slug?: unknown }
     },
-    resourceId: string,
   ) {
     if (resourceType === 'post') {
       const category = publicText(document.category?.slug, 128)
@@ -376,7 +431,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
           : ''
       return nid ? `/notes/${encodeURIComponent(nid)}` : null
     }
-    return `/thinking/${encodeURIComponent(resourceId)}`
+    return null
   }
 
   private async enqueueToEnabledSources(
