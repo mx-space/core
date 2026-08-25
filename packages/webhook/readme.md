@@ -1,6 +1,6 @@
 # @mx-space/webhook
 
-SDK for receiving and verifying MX Space Core webhooks. It provides a signature-verified HTTP handler and an event emitter so you can react to server events (post/note/page/say/comment updates, link applications, activity, etc.) in your own Node.js or edge services.
+SDK for receiving and verifying Mix Space Core webhooks. It provides a signature-verified HTTP handler and an event emitter so you can react to server events (post/note/page/say/comment updates, link applications, activity, etc.) in your own Node.js or edge services.
 
 ---
 
@@ -21,7 +21,7 @@ SDK for receiving and verifying MX Space Core webhooks. It provides a signature-
 ## Requirements
 
 - **Node.js** ≥ 22 (see `engines` in `package.json`)
-- **MX Space Core** server with webhooks configured; the webhook endpoint must use the same **secret** you pass to `createHandler`.
+- **Mix Space Core** server with webhooks configured; the webhook endpoint must use the same **secret** you pass to `createHandler`.
 
 ---
 
@@ -45,7 +45,7 @@ No framework is bundled; you plug the handler into your own HTTP server (Express
 
 ## Quick Start
 
-1. **Create a handler** with the same `secret` as in your MX Space Core webhook configuration.
+1. **Create a handler** with the same `secret` as in your Mix Space Core webhook configuration.
 2. **Mount the handler** on the path your server sends webhooks to (e.g. `POST /mx/webhook`).
 3. **Subscribe to events** on `handler.emitter`.
 
@@ -159,7 +159,7 @@ Use the TypeScript types from `@mx-space/webhook` for precise payload shapes whe
 
 ## Security
 
-- **Secret**: Must match the webhook secret configured in MX Space Core. Keep it in environment variables or a secrets manager, not in source.
+- **Secret**: Must match the webhook secret configured in Mix Space Core. Keep it in environment variables or a secrets manager, not in source.
 - **Signatures**: The handler requires both SHA-1 (`X-Webhook-Signature`) and SHA-256 (`X-Webhook-Signature256`) and validates with `timingSafeEqual`.
 - **Body**: Verification uses the raw body string. Your server must pass the **parsed** body as `req.body` for the handler to use; ensure the body is not modified before parsing (e.g. use the same raw body for verification if you implement custom verification).
 

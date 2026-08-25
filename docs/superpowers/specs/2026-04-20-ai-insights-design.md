@@ -6,7 +6,7 @@ Author: Claude (brainstormed with @innei)
 
 ## 1. Overview & Motivation
 
-MX Space currently ships an **AI Summary** feature: a 100–200 word concise summary of an article. For long-form articles (technical deep-dives, travelogues, diary compilations) a single summary is insufficient — it compresses too aggressively and loses structure, timelines, diagrams, and core thesis.
+Mix Space currently ships an **AI Summary** feature: a 100–200 word concise summary of an article. For long-form articles (technical deep-dives, travelogues, diary compilations) a single summary is insufficient — it compresses too aggressively and loses structure, timelines, diagrams, and core thesis.
 
 **AI Insights** is a complementary feature: a **精读 (deep-reading) rendition** of the article expressed as rich Markdown. Where Summary answers *"what is this article about in one paragraph?"*, Insights answers *"if I only had five minutes and wanted to internalise the author's thinking, what would I read?"*.
 

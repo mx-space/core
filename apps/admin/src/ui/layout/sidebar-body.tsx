@@ -185,7 +185,9 @@ export function SidebarBody(props: { onCollapseSidebar?: () => void }) {
             decoding="async"
             src={faviconUrl}
           />
-          <span className="truncate text-sm font-medium text-fg">Mx Space</span>
+          <span className="truncate text-sm font-medium text-fg">
+            Mix Space
+          </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {props.onCollapseSidebar ? (

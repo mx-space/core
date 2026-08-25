@@ -2936,9 +2936,9 @@ export const enUS = {
   'socket.gatewayDisconnect': 'Gateway disconnected',
   'socket.newComment': 'New comment',
   'socket.newLinkApply': 'New friend link application',
-  'socket.notificationCommentTitle': 'Mx Space Admin received a new comment',
+  'socket.notificationCommentTitle': 'Mix Space Admin received a new comment',
   'socket.notificationLinkApplyTitle':
-    'Mx Space Admin received a new friend link application',
+    'Mix Space Admin received a new friend link application',
   'socket.reconnectFailed': 'Socket reconnect failed',
   'socket.reconnectSuccess': 'Socket reconnected',
   'socket.reconnecting': 'Socket reconnecting',

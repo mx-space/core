@@ -1,6 +1,6 @@
 # @mx-space/api-client
 
-A framework-agnostic TypeScript/JavaScript SDK for the MX Space Core server. It wraps common API endpoints with typed request methods and response types for fast frontend and server-side integration.
+A framework-agnostic TypeScript/JavaScript SDK for the Mix Space Core server. It wraps common API endpoints with typed request methods and response types for fast frontend and server-side integration.
 
 ---
 
@@ -23,7 +23,7 @@ A framework-agnostic TypeScript/JavaScript SDK for the MX Space Core server. It 
 ## Requirements
 
 - **Node.js** ≥ 22 (see `engines` in `package.json`)
-- **MX Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v5.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
+- **Mix Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v5.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
 
 ---
 

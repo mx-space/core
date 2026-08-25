@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Create NestJS Module (PostgreSQL / Drizzle)
 
-Create a new NestJS module for MX Space project. Module name: `$ARGUMENTS`
+Create a new NestJS module for Mix Space project. Module name: `$ARGUMENTS`
 
 ## Directory Structure
 

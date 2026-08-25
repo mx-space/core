@@ -265,7 +265,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     const mailOptions = await this.configsService.get('mailOptions')
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
     return this.send({
-      from: `"Mx Space" <${senderEmail}>`,
+      from: `"Mix Space" <${senderEmail}>`,
       to: owner.mail,
       subject: 'Test email',
       text: 'This is a test email',

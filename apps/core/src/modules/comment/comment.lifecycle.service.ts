@@ -490,11 +490,11 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }) {
     const { seo, mailOptions } = await this.configsService.waitForConfigReady()
     const senderEmail = mailOptions.from || mailOptions.smtp?.user
-    const sendfrom = `"${seo.title || 'Mx Space'}" <${senderEmail}>`
+    const sendfrom = `"${seo.title || 'Mix Space'}" <${senderEmail}>`
     const subject =
       type === CommentReplyMailType.Guest
-        ? `[${seo.title || 'Mx Space'}] ${source.owner || 'Someone'} has replied to you`
-        : `[${seo.title || 'Mx Space'}] You have a new reply`
+        ? `[${seo.title || 'Mix Space'}] ${source.owner || 'Someone'} has replied to you`
+        : `[${seo.title || 'Mix Space'}] You have a new reply`
 
     source.ip ??= ''
     const options = {

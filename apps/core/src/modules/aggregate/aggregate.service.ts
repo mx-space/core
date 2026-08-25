@@ -218,7 +218,7 @@ export class AggregateService {
     const baseURL = urlConfig.webUrl?.replace(/\/$/, '') ?? ''
     const items = latest as Array<Record<string, any>>
     return {
-      title: seo.title || owner.name || 'Mx Space',
+      title: seo.title || owner.name || 'Mix Space',
       url: urlConfig.webUrl ?? '',
       author: owner.name || '',
       description: seo.description || '',

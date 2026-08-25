@@ -257,7 +257,7 @@ const htmlPlugin: (env: any) => PluginOption = (env) => {
     transformIndexHtml(html) {
       return html
         .replace(
-          '<!-- MX SPACE ADMIN DASHBOARD VERSION INJECT -->',
+          '<!-- Mix Space ADMIN DASHBOARD VERSION INJECT -->',
           `<script>window.version = '${PKG.version}';</script>`,
         )
         .replaceAll('@gh-pages', `@page_v${PKG.version}`)

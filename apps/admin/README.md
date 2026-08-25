@@ -1,6 +1,6 @@
 # @mx-admin/admin
 
-Admin dashboard for MX Space Core — a React 19 SPA served by the core server at `/proxy/qaqdmin`.
+Admin dashboard for Mix Space Core — a React 19 SPA served by the core server at `/proxy/qaqdmin`.
 
 ## Tech Stack
 
