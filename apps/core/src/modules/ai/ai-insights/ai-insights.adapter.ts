@@ -7,6 +7,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { EntitlementService } from '../../membership/entitlement.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { isGlobalArticleVisible } from '../ai-article-visibility.util'
@@ -54,6 +55,7 @@ export class AiInsightsAdapter implements MultilangAdapter<
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly entitlementService: EntitlementService,
   ) {}
 
   toInsightsDoc(row: AiInsightsRow | null): AIInsightsModel | null {
@@ -75,7 +77,11 @@ export class AiInsightsAdapter implements MultilangAdapter<
 
   async resolveArticleDetailed(
     articleId: string,
-    options?: { blockPremium?: boolean },
+    options?: {
+      blockPremium?: boolean
+      isOwner?: boolean
+      readerId?: string
+    },
   ): Promise<{
     article: ArticleForInsights
     sourceLang: string
@@ -97,7 +103,12 @@ export class AiInsightsAdapter implements MultilangAdapter<
     if (
       options?.blockPremium &&
       article.type === CollectionRefTypes.Post &&
-      (article.document as { isPremium?: boolean | null }).isPremium
+      (await this.entitlementService.isPremiumLocked({
+        isPremium: (article.document as { isPremium?: boolean | null })
+          .isPremium,
+        isOwner: Boolean(options.isOwner),
+        readerId: options.readerId,
+      }))
     ) {
       throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
     }

@@ -140,7 +140,7 @@ export class AiInsightsService implements OnModuleInit {
 
   async streamInsightsForArticle(
     articleId: string,
-    options: { lang: string },
+    options: { lang: string; isOwner?: boolean; readerId?: string },
   ): Promise<{
     events: AsyncIterable<AiStreamEvent>
     result: Promise<AIInsightsModel>
@@ -151,7 +151,11 @@ export class AiInsightsService implements OnModuleInit {
     }
     const { article, sourceLang } = await this.adapter.resolveArticleDetailed(
       articleId,
-      { blockPremium: true },
+      {
+        blockPremium: true,
+        isOwner: options.isOwner,
+        readerId: options.readerId,
+      },
     )
     const lang = options.lang || sourceLang
     const existing = await this.findValidInsights(articleId, lang, article.text)
@@ -169,11 +173,20 @@ export class AiInsightsService implements OnModuleInit {
 
   async getOrGenerateInsightsForArticle(
     articleId: string,
-    options: { lang: string; onlyDb?: boolean },
+    options: {
+      lang: string
+      onlyDb?: boolean
+      isOwner?: boolean
+      readerId?: string
+    },
   ): Promise<AIInsightsModel | null> {
     const { article, sourceLang } = await this.adapter.resolveArticleDetailed(
       articleId,
-      { blockPremium: true },
+      {
+        blockPremium: true,
+        isOwner: options.isOwner,
+        readerId: options.readerId,
+      },
     )
     const lang = options.lang || sourceLang
     const existing = await this.findValidInsights(articleId, lang, article.text)

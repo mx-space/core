@@ -56,6 +56,15 @@ const createService = () => {
     createInsightsTranslationTask: vi.fn(),
   }
   const eventEmitter = { emit: vi.fn() }
+  const entitlementService = {
+    isPremiumLocked: vi.fn(
+      async (input: {
+        isPremium?: boolean | null
+        isOwner: boolean
+        readerId?: string
+      }) => Boolean(input.isPremium) && !input.isOwner && !input.readerId,
+    ),
+  }
   const generationMetrics = {
     attachLatest: vi.fn(async (_type: string, items: unknown[]) =>
       items.map((item) => ({
@@ -72,6 +81,7 @@ const createService = () => {
     configService as any,
     aiService as any,
     eventEmitter as any,
+    entitlementService as any,
   )
   const multilang = new MultilangGenerationService(
     aiInFlightService as any,
@@ -94,6 +104,7 @@ const createService = () => {
     aiTaskService,
     configService,
     databaseService,
+    entitlementService,
     eventEmitter,
     generationMetrics,
     repository,
@@ -268,6 +279,58 @@ describe('AiInsightsService', () => {
     await expect(
       service.streamInsightsForArticle('post-1', { lang: 'zh' }),
     ).rejects.toThrow(AppException)
+  })
+
+  it('serves cached insights for a premium post to an entitled reader', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Premium Post',
+        text: 'Premium text',
+        isPublished: true,
+        isPremium: true,
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue({
+      ...row,
+      hash: 'mismatch-so-onlyDb-returns-null',
+    } as any)
+
+    await expect(
+      service.getOrGenerateInsightsForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+        readerId: 'reader-1',
+      }),
+    ).resolves.toBeNull()
+  })
+
+  it('serves cached insights for a premium post to the owner', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Premium Post',
+        text: 'Premium text',
+        isPublished: true,
+        isPremium: true,
+      },
+    })
+    repository.findByRefAndLang.mockResolvedValue({
+      ...row,
+      hash: 'mismatch-so-onlyDb-returns-null',
+    } as any)
+
+    await expect(
+      service.getOrGenerateInsightsForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+        isOwner: true,
+      }),
+    ).resolves.toBeNull()
   })
 
   it('does not block background insight regeneration for a premium post', async () => {

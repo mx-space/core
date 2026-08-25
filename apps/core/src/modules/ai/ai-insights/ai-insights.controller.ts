@@ -12,7 +12,9 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -118,10 +120,14 @@ export class AiInsightsController {
   getArticleInsights(
     @Param() params: EntityIdDto,
     @Query() query: GetInsightsQueryDto,
+    @HasAdminAccess() isOwner?: boolean,
+    @CurrentReaderId() readerId?: string,
   ) {
     return this.service.getOrGenerateInsightsForArticle(params.id, {
       lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
+      isOwner: Boolean(isOwner),
+      readerId,
     })
   }
 
@@ -131,6 +137,8 @@ export class AiInsightsController {
     @Param() params: EntityIdDto,
     @Query() query: GetInsightsStreamQueryDto,
     @Res() reply: FastifyReply,
+    @HasAdminAccess() isOwner?: boolean,
+    @CurrentReaderId() readerId?: string,
   ) {
     initSse(reply)
     let closed = false
@@ -144,6 +152,8 @@ export class AiInsightsController {
           lang: query.lang
             ? parseLanguageCode(query.lang)
             : DEFAULT_SUMMARY_LANG,
+          isOwner: Boolean(isOwner),
+          readerId,
         },
       )
       let sentToken = false

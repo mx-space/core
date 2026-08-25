@@ -41,6 +41,7 @@ const createService = () => {
     configService as any,
     aiService as any,
     eventEmitter as any,
+    { isPremiumLocked: vi.fn(async () => false) } as any,
   )
   const multilang = new MultilangGenerationService(
     aiInFlightService as any,
