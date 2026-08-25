@@ -95,6 +95,23 @@ describe('push protocol', () => {
     },
   )
 
+  it('accepts published content without a summary', () => {
+    const published = {
+      ...cloudEventBase,
+      id: 'content.published:note-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'note/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'note',
+        display_title: 'A public title',
+        target_path: '/notes/42',
+      },
+    }
+
+    expect(PushEventSchema.parse(published)).toEqual(published)
+  })
+
   it('rejects private visitor data and unsafe paths on content.published.v1', () => {
     const data = {
       resource_id: 'abc',

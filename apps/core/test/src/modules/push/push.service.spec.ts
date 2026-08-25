@@ -238,30 +238,30 @@ describe('PushService', () => {
     },
   )
 
-  it.each([
-    { event: BusinessEvents.POST_CREATE, type: 'post' },
-    { event: BusinessEvents.NOTE_CREATE, type: 'note' },
-    { event: BusinessEvents.RECENTLY_CREATE, type: 'recently' },
-  ] as const)(
-    'skips a $type publish without an explicit summary',
-    async ({ event }) => {
-      database.findGlobalById.mockResolvedValue({
-        type:
-          event === BusinessEvents.POST_CREATE
-            ? 'post'
-            : event === BusinessEvents.NOTE_CREATE
-              ? 'note'
-              : 'recently',
-        document: { id: 'content-1', title: 'Title', nid: 42 },
-      })
-      const service = createService()
-      service.onModuleInit()
-      handler?.(event, { id: 'content-1' }, EventScope.TO_SYSTEM_VISITOR)
-      await new Promise((resolve) => setTimeout(resolve, 0))
-      expect(repository.enqueueDelivery).not.toHaveBeenCalled()
-      service.onModuleDestroy()
-    },
-  )
+  it('publishes content without a summary', async () => {
+    database.findGlobalById.mockResolvedValue({
+      type: 'note',
+      document: {
+        title: 'Title',
+        nid: 42,
+        isPublished: true,
+        hasPassword: false,
+        publicAt: null,
+      },
+    })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.NOTE_CREATE,
+      { id: 'content-1' },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+    await flushHandler()
+    expect(
+      repository.enqueueDelivery.mock.calls[0]![0].event.data,
+    ).not.toHaveProperty('summary')
+    service.onModuleDestroy()
+  })
 
   it('does not publish content events without a visitor scope', async () => {
     const service = createService()

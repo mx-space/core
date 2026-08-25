@@ -155,8 +155,12 @@ export const buildApnsPayload = (event: PushEvent) => {
           'title-loc-key': 'PUSH_CONTENT_TITLE',
           'title-loc-args': [event.data.display_title],
           'subtitle-loc-key': copy.subtitleLocKey,
-          'loc-key': 'PUSH_CONTENT_SUMMARY',
-          'loc-args': [event.data.summary],
+          ...(event.data.summary
+            ? {
+                'loc-key': 'PUSH_CONTENT_SUMMARY',
+                'loc-args': [event.data.summary],
+              }
+            : {}),
         },
         sound: 'default',
         'thread-id': copy.threadId,

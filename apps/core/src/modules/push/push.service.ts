@@ -318,7 +318,6 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       document.summary ?? document.metadata?.summary,
       360,
     )
-    if (!summary) return
     const displayTitle = publicText(
       document.title ??
         document.metadata?.title ??
@@ -346,7 +345,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
           resource_id: resourceId,
           resource_type: resourceType,
           display_title: displayTitle,
-          summary,
+          ...(summary ? { summary } : {}),
           target_path: targetPath,
         },
       }

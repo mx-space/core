@@ -761,6 +761,30 @@ describe('buildApnsPayload yohaku events', () => {
     })
   })
 
+  it('projects published content without requiring a summary', () => {
+    const payload = buildApnsPayload({
+      specversion: '1.0',
+      id: 'content.published:note-1',
+      source: 'urn:mx-core:instance:src-1',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'note/note-1',
+      time: '2026-08-07T12:00:00.000Z',
+      datacontenttype: 'application/json',
+      data: {
+        resource_id: 'note-1',
+        resource_type: 'note',
+        display_title: 'Public note',
+        target_path: '/notes/42',
+      },
+    })
+
+    expect(payload.aps.alert).toEqual({
+      'title-loc-key': 'PUSH_CONTENT_TITLE',
+      'title-loc-args': ['Public note'],
+      'subtitle-loc-key': 'PUSH_CONTENT_NOTE_SUBTITLE',
+    })
+  })
+
   it('projects published notes and thinkings with matching threads', () => {
     expect(
       buildApnsPayload({

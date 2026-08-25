@@ -55,7 +55,7 @@ export const ContentPublishedDataSchema = z
     resource_id: resourceId,
     resource_type: z.enum(['post', 'note', 'recently']),
     display_title: publicTitle,
-    summary: publicSummary,
+    summary: publicSummary.optional(),
     target_path: internalTargetPath,
   })
   .strict()
