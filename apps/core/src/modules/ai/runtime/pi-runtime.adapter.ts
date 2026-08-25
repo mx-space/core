@@ -823,7 +823,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
         const fromEvent = evToolCall?.arguments
         let final: Record<string, unknown>
         if (isPlainObject(fromEvent)) {
-          final = fromEvent
+          final = fromEvent as Record<string, unknown>
         } else {
           final = JSON.parse(jsonrepair(buffer)) as Record<string, unknown>
         }
