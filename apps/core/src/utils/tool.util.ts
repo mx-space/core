@@ -17,10 +17,6 @@ export function getAvatar(mail: string | null | undefined) {
   return `https://cravatar.cn/avatar/${md5(mail)}?d=retro`
 }
 
-export function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 export function hasChinese(str: string) {
   return !escape(str).includes('%u') ? false : true
 }

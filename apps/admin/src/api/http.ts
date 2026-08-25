@@ -1,3 +1,5 @@
+import { isPlainObject } from 'es-toolkit'
+
 import { API_URL } from '~/constants/env'
 import { SESSION_WITH_LOGIN } from '~/constants/keys'
 
@@ -283,13 +285,6 @@ function camelcaseKeys<T>(value: T): T {
       camelcaseKeys(item),
     ]),
   ) as T
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (!value || typeof value !== 'object') return false
-  const prototype = Object.getPrototypeOf(value)
-
-  return prototype === Object.prototype || prototype === null
 }
 
 function toCamelCase(value: string) {

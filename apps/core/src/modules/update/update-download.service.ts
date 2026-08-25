@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto'
 
 import { Injectable } from '@nestjs/common'
+import { delay } from 'es-toolkit'
 import { FetchError, FetchOptions, ofetch } from 'ofetch'
 import pc from 'picocolors'
 
 import { HttpService } from '~/processors/helper/helper.http.service'
 import { formatByteSize } from '~/utils/system.util'
-import { sleep } from '~/utils/tool.util'
 
 import { ConfigsService } from '../configs/configs.service'
 
@@ -104,8 +104,8 @@ export class UpdateDownloadService {
           throw new Error(finalMsg, { cause: error })
         }
 
-        const delay = Math.min(1000 * 2 ** (attempt - 1), 10000)
-        await sleep(delay)
+        const waitMs = Math.min(1000 * 2 ** (attempt - 1), 10000)
+        await delay(waitMs)
       }
     }
   }

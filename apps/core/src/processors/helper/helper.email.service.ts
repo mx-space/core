@@ -1,6 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
+import { delay } from 'es-toolkit'
 import type Mail from 'nodemailer/lib/mailer'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -11,7 +12,6 @@ import {
   ConfigVersionScopes,
   ConfigVersionService,
 } from '~/processors/redis/config-version.service'
-import { sleep } from '~/utils/tool.util'
 
 import { AssetService } from './helper.asset.service'
 
@@ -296,7 +296,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         const now = Date.now()
         const waitTime = this.lastSendTime + minIntervalMs - now
         if (waitTime > 0) {
-          await sleep(waitTime)
+          await delay(waitTime)
         }
 
         const item = this.pendingQueue.shift()
@@ -318,7 +318,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
             this.logger.warn(
               `Failed to send email, retry ${item.attempts}: ${error instanceof Error ? error.message : String(error)}`,
             )
-            await sleep(1000 * item.attempts)
+            await delay(1000 * item.attempts)
             this.pendingQueue.push(item)
             continue
           }

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { delay } from 'es-toolkit'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { isDev } from '~/global/env.global'
 import { RedisService } from '~/processors/redis/redis.service'
-import { sleep } from '~/utils/tool.util'
 
 import type { AiInFlightOptions, AiStreamEvent } from './ai-inflight.types'
 
@@ -164,7 +164,7 @@ export class AiInFlightService {
 
     const deadline = Date.now() + lockTtlSec * 1000
     while (Date.now() < deadline) {
-      await sleep(200)
+      await delay(200)
       if (
         (await redis.set(lockKey, lockValue, 'EX', lockTtlSec, 'NX')) === 'OK'
       ) {
@@ -401,7 +401,7 @@ export class AiInFlightService {
         })
       }
 
-      await sleep(100)
+      await delay(100)
     }
   }
 }

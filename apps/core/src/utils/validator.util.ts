@@ -2,19 +2,7 @@
  * Common validation utility functions to replace class-validator utilities
  */
 
-/**
- * Check if value is defined (not null and not undefined)
- */
-export function isDefined<T>(value: T | null | undefined): value is T {
-  return value !== undefined && value !== null
-}
-
-/**
- * Check if value is a string
- */
-export function isString(value: unknown): value is string {
-  return typeof value === 'string'
-}
+import { isString } from 'es-toolkit/compat'
 
 /**
  * Check if value is a valid URL with protocol
@@ -26,7 +14,7 @@ export function isURL(
     protocols?: string[]
   },
 ): boolean {
-  if (typeof value !== 'string') return false
+  if (!isString(value)) return false
   let protocol: string
   try {
     protocol = new URL(value).protocol.replace(':', '')
@@ -43,7 +31,7 @@ export function isURL(
  * Check if value is a valid semver version
  */
 export function isSemVer(value: unknown): boolean {
-  if (typeof value !== 'string') return false
+  if (!isString(value)) return false
   // Match standard semver format: X.Y.Z with optional pre-release and build metadata
   // Using non-capturing groups since we only need to test, not extract
   const semverRegex =

@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common'
+import { isNotNil } from 'es-toolkit'
 import { omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
 
@@ -19,7 +20,6 @@ import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
-import { isDefined } from '~/utils/validator.util'
 
 import { DraftRefType } from '../draft/draft.enum'
 import { DraftService } from '../draft/draft.service'
@@ -181,7 +181,7 @@ export class PageService {
       )
     }
 
-    if (['text', 'title', 'subtitle'].some((key) => isDefined(doc[key]))) {
+    if (['text', 'title', 'subtitle'].some((key) => isNotNil(doc[key]))) {
       doc.modifiedAt = new Date()
     }
     if (doc.slug) {

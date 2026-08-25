@@ -1,5 +1,6 @@
+import { delay } from 'es-toolkit'
+
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { sleep } from '~/utils/tool.util'
 
 import { resolveTtsBaseUrl } from './tts-base-url'
 import {
@@ -60,7 +61,7 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
           attempt === this.maxAttempts
         )
           break
-        await sleep(this.retryDelayMs * 2 ** (attempt - 1))
+        await delay(this.retryDelayMs * 2 ** (attempt - 1))
       }
     }
 

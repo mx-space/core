@@ -4,12 +4,12 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
+import { isNotNil } from 'es-toolkit'
 import { cloneDeep, isArrayLike, isObjectLike } from 'es-toolkit/compat'
 import { map } from 'rxjs'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils/tool.util'
-import { isDefined } from '~/utils/validator.util'
 
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {
@@ -28,7 +28,7 @@ export class CommentFilterEmailInterceptor implements NestInterceptor {
         try {
           if (isArrayLike(data?.data)) {
             data?.data?.forEach((item: any, i: number) => {
-              if (isDefined(item.mail)) {
+              if (isNotNil(item.mail)) {
                 data.data[i].avatar = getAvatar(item.mail)
                 delete data.data[i].mail
               }

@@ -17,6 +17,7 @@ import {
   getBuiltinModels,
 } from '@earendil-works/pi-ai/providers/all'
 import { Logger } from '@nestjs/common'
+import { isPlainObject } from 'es-toolkit/compat'
 import { jsonrepair } from 'jsonrepair'
 import { Value } from 'typebox/value'
 
@@ -209,10 +210,6 @@ function resolveVertexScope(endpoint: string | undefined): {
   } catch {
     return fallback
   }
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 interface PiUsageLike {
@@ -689,7 +686,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       if (typeof args === 'string') {
         args = JSON.parse(args)
       }
-      if (!isObjectRecord(args)) {
+      if (!isPlainObject(args)) {
         throw new Error(
           'pi tool call arguments are neither an object nor JSON-parseable string',
         )
@@ -825,7 +822,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
           .toolCall
         const fromEvent = evToolCall?.arguments
         let final: Record<string, unknown>
-        if (isObjectRecord(fromEvent)) {
+        if (isPlainObject(fromEvent)) {
           final = fromEvent
         } else {
           final = JSON.parse(jsonrepair(buffer)) as Record<string, unknown>

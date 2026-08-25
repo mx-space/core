@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common'
+import { isNotNil } from 'es-toolkit'
 import { debounce, omit } from 'es-toolkit/compat'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -25,7 +26,6 @@ import { isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { normalizeSlug } from '~/utils/slug.util'
 import { getLessThanNow } from '~/utils/time.util'
-import { isDefined } from '~/utils/validator.util'
 
 import { AiSlugBackfillService } from '../ai/ai-writer/ai-slug-backfill.service'
 import { CommentService } from '../comment/comment.service'
@@ -425,10 +425,10 @@ export class NoteService {
       ['title', 'text', 'mood', 'weather', 'meta', 'topicId', 'slug'] as const
     ).some((key) => {
       if (key === 'slug' && hasSlugInput) return normalizedSlug !== oldDoc.slug
-      return isDefined(data[key]) && data[key] !== oldDoc[key]
+      return isNotNil(data[key]) && data[key] !== oldDoc[key]
     })
     const hasContentChanged = ['title', 'text'].some((key) =>
-      isDefined(data[key as keyof NoteModel]),
+      isNotNil(data[key as keyof NoteModel]),
     )
 
     const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
