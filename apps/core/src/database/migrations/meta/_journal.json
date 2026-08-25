@@ -239,6 +239,13 @@
       "when": 1786974601234,
       "tag": "0033_push_binding_optional_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1787596646000,
+      "tag": "0034_webhook_event_names",
+      "breakpoints": true
     }
   ]
 }
