@@ -184,7 +184,13 @@ export class PostService implements OnApplicationBootstrap {
     return this.postRepository.findAdjacent(direction, pivotDate, options)
   }
 
-  async create(post: PostModel & { draftId?: string }) {
+  async create(
+    post: PostModel & {
+      draftId?: string
+      preparedAiResources?: string[]
+      skipAiAutoGeneration?: boolean
+    },
+  ) {
     this.lexicalService.normalizeContentForStorage(post)
 
     const effectiveContentFormat = post.contentFormat ?? ContentFormat.Markdown
@@ -264,7 +270,15 @@ export class PostService implements OnApplicationBootstrap {
         }),
         this.eventManager.emit(
           BusinessEvents.POST_CREATE,
-          { id: doc.id },
+          {
+            id: doc.id,
+            ...(post.preparedAiResources?.length
+              ? { preparedAiResources: post.preparedAiResources }
+              : {}),
+            ...(post.skipAiAutoGeneration
+              ? { skipAiAutoGeneration: true }
+              : {}),
+          },
           {
             scope: doc.isPublished
               ? EventScope.TO_SYSTEM_VISITOR
@@ -359,6 +373,8 @@ export class PostService implements OnApplicationBootstrap {
     data: Partial<PostModel> & {
       draftId?: string
       migration?: MarkdownToLexicalMigrationDescriptor
+      preparedAiResources?: string[]
+      skipAiAutoGeneration?: boolean
     },
   ) {
     this.lexicalService.normalizeContentForStorage(data)
@@ -368,7 +384,8 @@ export class PostService implements OnApplicationBootstrap {
       throw createAppException(AppErrorCode.POST_NOT_FOUND, { id })
     }
 
-    const { draftId, migration } = data
+    const { draftId, migration, preparedAiResources, skipAiAutoGeneration } =
+      data
     const isMarkdownToLexical =
       oldDocument.contentFormat === ContentFormat.Markdown &&
       data.contentFormat === ContentFormat.Lexical
@@ -505,13 +522,25 @@ export class PostService implements OnApplicationBootstrap {
     }
 
     const wasPublished = oldDocument.isPublished
-    scheduleManager.schedule(() => this.afterUpdatePost(id, wasPublished))
+    scheduleManager.schedule(() =>
+      this.afterUpdatePost(
+        id,
+        wasPublished,
+        skipAiAutoGeneration,
+        preparedAiResources,
+      ),
+    )
     if (updated) this.enrichmentService.scheduleDocPrefetch(updated)
     return updated
   }
 
   afterUpdatePost = debounce(
-    async (id: string, wasPublished: boolean) => {
+    async (
+      id: string,
+      wasPublished: boolean,
+      skipAiAutoGeneration?: boolean,
+      preparedAiResources?: string[],
+    ) => {
       const doc = await this.findById(id)
       if (doc) {
         await this.fileReferenceService.updateReferencesForDocument(
@@ -541,7 +570,11 @@ export class PostService implements OnApplicationBootstrap {
               : doc.isPublished
                 ? BusinessEvents.POST_CREATE
                 : BusinessEvents.POST_DELETE,
-            { id: doc.id },
+            {
+              id: doc.id,
+              ...(preparedAiResources?.length ? { preparedAiResources } : {}),
+              ...(skipAiAutoGeneration ? { skipAiAutoGeneration: true } : {}),
+            },
             {
               scope:
                 wasPublished || doc.isPublished

@@ -330,6 +330,38 @@ describe('PostService', () => {
     )
   })
 
+  it('marks a prepared publish so automatic AI hooks do not run again', async () => {
+    vi.useFakeTimers()
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost({ isPublished: true }))
+
+    service.afterUpdatePost('post-1', false, true)
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1', skipAiAutoGeneration: true },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
+    )
+  })
+
+  it('reports which AI assets were prepared before publishing', async () => {
+    vi.useFakeTimers()
+    const { eventManager, repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost({ isPublished: true }))
+
+    service.afterUpdatePost('post-1', false, undefined, ['summary', 'tts'])
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1', preparedAiResources: ['summary', 'tts'] },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
+    )
+  })
+
   it('emits POST_DELETE to visitors when a post flips back to draft', async () => {
     vi.useFakeTimers()
     const { eventManager, repository, service } = createService()

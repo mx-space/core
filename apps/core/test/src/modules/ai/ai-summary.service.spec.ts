@@ -275,6 +275,18 @@ describe('AiSummaryService', () => {
       targetLanguages: ['en', 'ja'],
     })
   })
+
+  it('does not auto-generate a summary that was prepared before publishing', async () => {
+    const { aiTaskService, configService, service } = createService()
+
+    await service.handleCreateArticle({
+      id: 'post-1',
+      preparedAiResources: ['summary'],
+    })
+
+    expect(configService.get).not.toHaveBeenCalled()
+    expect(aiTaskService.createSummaryTask).not.toHaveBeenCalled()
+  })
 })
 
 describe('AiSummaryService — summary task pipeline', () => {

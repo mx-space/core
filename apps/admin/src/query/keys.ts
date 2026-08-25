@@ -37,6 +37,7 @@ export const adminQueryKeys = {
       ['ai', 'overview', 'grouped', params] as const,
     overviewListRoot: ['ai', 'overview', 'grouped'] as const,
     overviewRoot: ['ai', 'overview'] as const,
+    publishOptions: () => ['ai', 'publish-options'] as const,
     root: ['ai'] as const,
     translationEntriesRoot: ['ai', 'translation-entries'] as const,
     translationEntries: (params: {

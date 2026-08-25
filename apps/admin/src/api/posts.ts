@@ -34,7 +34,9 @@ export interface CreatePostData {
   meta?: Record<string, unknown>
   pin?: null | string
   pinOrder?: null | number
+  preparedAiResources?: string[]
   relatedId?: string[]
+  skipAiAutoGeneration?: boolean
   slug?: string
   summary?: null | string
   tags?: string[]
@@ -72,8 +74,20 @@ export function updatePost(id: string, data: Partial<CreatePostData>) {
   return putJson<PostModel, Partial<CreatePostData>>(`/posts/${id}`, data)
 }
 
-export function patchPost(id: string, data: Partial<PostModel>) {
-  return patchJson<PostModel, Partial<PostModel>>(`/posts/${id}`, data)
+export function patchPost(
+  id: string,
+  data: Partial<PostModel> & {
+    preparedAiResources?: string[]
+    skipAiAutoGeneration?: boolean
+  },
+) {
+  return patchJson<
+    PostModel,
+    Partial<PostModel> & {
+      preparedAiResources?: string[]
+      skipAiAutoGeneration?: boolean
+    }
+  >(`/posts/${id}`, data)
 }
 
 export function deletePost(id: string) {

@@ -415,7 +415,17 @@ export class AiSummaryService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_CREATE)
   @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleCreateArticle(event: { id: string }) {
+  async handleCreateArticle(event: {
+    id: string
+    preparedAiResources?: string[]
+    skipAiAutoGeneration?: boolean
+  }) {
+    if (
+      event.skipAiAutoGeneration ||
+      event.preparedAiResources?.includes('summary')
+    ) {
+      return
+    }
     const aiConfig = await this.configService.get('ai')
     if (
       !aiConfig.enableSummary ||
@@ -455,7 +465,17 @@ export class AiSummaryService implements OnModuleInit {
 
   @OnEvent(BusinessEvents.POST_UPDATE)
   @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleUpdateArticle(event: { id: string }) {
+  async handleUpdateArticle(event: {
+    id: string
+    preparedAiResources?: string[]
+    skipAiAutoGeneration?: boolean
+  }) {
+    if (
+      event.skipAiAutoGeneration ||
+      event.preparedAiResources?.includes('summary')
+    ) {
+      return
+    }
     const aiConfig = await this.configService.get('ai')
     if (
       !aiConfig.enableSummary ||

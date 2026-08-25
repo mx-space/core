@@ -60,6 +60,10 @@ const NoteBaseSchema = WriteBaseSchema.extend({
   images: ImageArraySchema.optional().default([]),
   /** ID of the associated draft; marked as published when this note is published */
   draftId: zEntityId.optional(),
+  skipAiAutoGeneration: z.boolean().optional(),
+  preparedAiResources: z
+    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
+    .optional(),
   migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
@@ -159,6 +163,9 @@ export class NoteSlugDateParamsDto extends createZodDto(
  */
 export const SetNotePublishStatusSchema = z.object({
   isPublished: z.boolean(),
+  preparedAiResources: z
+    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
+    .optional(),
 })
 
 export class SetNotePublishStatusDto extends createZodDto(

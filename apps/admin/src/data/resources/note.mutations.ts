@@ -20,13 +20,17 @@ async function ensureNoteHydrated(id: string): Promise<void> {
 export async function publishNote(
   id: string,
   isPublished: boolean,
+  options?: { preparedAiResources?: string[] },
 ): Promise<NoteModel> {
   await ensureNoteHydrated(id)
   const tx = createTransaction()
   tx.update(notes, id, (draft) => {
     draft.isPublished = isPublished
   })
-  const result = await tx.commit(() => patchNotePublish(id, isPublished))
+  const result = await tx.commit(async () => {
+    await patchNotePublish(id, isPublished, options?.preparedAiResources)
+    return getNoteById(id, { single: true })
+  })
   notes.hydrate([result])
   return result
 }

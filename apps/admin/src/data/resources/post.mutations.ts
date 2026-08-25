@@ -1,5 +1,11 @@
 import type { CreatePostData } from '~/api/posts'
-import { createPost, deletePost, getPostById, updatePost } from '~/api/posts'
+import {
+  createPost,
+  deletePost,
+  getPostById,
+  patchPost,
+  updatePost,
+} from '~/api/posts'
 import { createTransaction } from '~/data/resource/transaction'
 import type { PostModel } from '~/models/post'
 
@@ -14,8 +20,26 @@ async function ensurePostHydrated(id: string): Promise<void> {
 export async function publishPost(
   id: string,
   isPublished: boolean,
+  options?: {
+    preparedAiResources?: string[]
+    skipAiAutoGeneration?: boolean
+  },
 ): Promise<PostModel | void> {
   await ensurePostHydrated(id)
+  if (options?.skipAiAutoGeneration || options?.preparedAiResources?.length) {
+    const tx = createTransaction()
+    tx.update(posts, id, (draft) => {
+      draft.isPublished = isPublished
+    })
+    return tx.commit(async () => {
+      await patchPost(id, {
+        isPublished,
+        preparedAiResources: options.preparedAiResources,
+        skipAiAutoGeneration: options.skipAiAutoGeneration,
+      })
+      return posts.get(id)
+    })
+  }
   return posts.update(id, (draft) => {
     draft.isPublished = isPublished
   })

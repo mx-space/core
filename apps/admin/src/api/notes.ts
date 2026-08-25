@@ -39,6 +39,7 @@ export interface CreateNoteData {
   mood?: string
   password?: null | string
   publicAt?: Date | null | string
+  skipAiAutoGeneration?: boolean
   slug?: string
   text: string
   title: string
@@ -88,13 +89,18 @@ export function patchNote(id: string, data: PatchNoteData) {
   return patchJson<NoteModel, PatchNoteData>(`/notes/${id}`, data)
 }
 
-export function patchNotePublish(id: string, isPublished: boolean) {
-  return patchJson<NoteModel, { isPublished: boolean }>(
-    `/notes/${id}/publish`,
-    {
-      isPublished,
-    },
-  )
+export function patchNotePublish(
+  id: string,
+  isPublished: boolean,
+  preparedAiResources?: string[],
+) {
+  return patchJson<
+    NoteModel,
+    { isPublished: boolean; preparedAiResources?: string[] }
+  >(`/notes/${id}/publish`, {
+    isPublished,
+    preparedAiResources,
+  })
 }
 
 export function deleteNote(id: string) {

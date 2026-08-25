@@ -95,6 +95,7 @@ import { posts as postsCollection } from '~/data/resources/post'
 import { savePost } from '~/data/resources/post.mutations'
 import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
+import type { AIConfig } from '~/features/settings/types/settings'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
 import { DraftConflictBanner } from '~/features/write/components/DraftConflictBanner'
@@ -106,6 +107,11 @@ import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGeneratio
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import type { DraftMergeConflict } from '~/features/write/utils/merge-draft-conflict'
 import { mergeDraftConflict } from '~/features/write/utils/merge-draft-conflict'
+import {
+  prepareAndPublishNote,
+  prepareAndPublishPost,
+  type PublishAiResource,
+} from '~/features/write/utils/prepare-post-publish'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
@@ -133,6 +139,7 @@ import { HeaderBackButton } from '~/ui/layout/header-back-button'
 import { Popover } from '~/ui/overlay/popover'
 import { EmptyState } from '~/ui/patterns/EmptyState'
 import { Button } from '~/ui/primitives/button'
+import { Checkbox } from '~/ui/primitives/checkbox'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
@@ -253,6 +260,19 @@ const emptyState: WriteFormState = {
 }
 
 const PREFERRED_CONTENT_FORMAT_STORAGE_KEY = 'preferred-content-format'
+const PRE_GENERATE_AI_RESOURCES_META_KEY = 'preGenerateAiResources'
+const PUBLISH_AI_RESOURCES: PublishAiResource[] = [
+  'summary',
+  'insights',
+  'translation',
+  'tts',
+]
+const PUBLISH_AI_RESOURCE_LABELS: Record<PublishAiResource, TranslationKey> = {
+  insights: 'ai.overview.capability.insights',
+  summary: 'ai.overview.capability.summary',
+  translation: 'ai.overview.capability.translation',
+  tts: 'ai.overview.capability.tts',
+}
 const RichEditorWithAgent = lazy(() =>
   import('~/vendor/rich-editor/components/RichEditorWithAgent').then(
     (module) => ({
@@ -465,6 +485,7 @@ function WritePage(props: { kind: WriteKind }) {
     useState<MarkdownMigrationSession | null>(null)
   const [migrationDiagnosticsOpen, setMigrationDiagnosticsOpen] =
     useState(false)
+  const preparedDraftRef = useRef<NoteModel | PostModel | null>(null)
   const reconstructedMigrationKeyRef = useRef<string | null>(null)
   const draftRefType = draftRefTypeByKind[props.kind]
 
@@ -495,6 +516,12 @@ function WritePage(props: { kind: WriteKind }) {
     enabled: props.kind === 'post',
     queryFn: getTags,
     queryKey: adminQueryKeys.categories.tags(),
+  })
+  const aiPublishOptionsQuery = useQuery({
+    enabled: props.kind !== 'page',
+    queryFn: () => getOption<AIConfig>('ai'),
+    queryKey: adminQueryKeys.ai.publishOptions(),
+    staleTime: 5 * 60_000,
   })
   useCollectionListQuery(postsCollection, {
     enabled: props.kind === 'post',
@@ -819,6 +846,7 @@ function WritePage(props: { kind: WriteKind }) {
 
   const saveMutation = useMutation<WriteModel>({
     mutationFn: async () => {
+      preparedDraftRef.current = null
       let migration: MarkdownToLexicalMigrationDescriptor | undefined
       const requiresMigration =
         isEditing &&
@@ -851,19 +879,68 @@ function WritePage(props: { kind: WriteKind }) {
         migration = migrationDescriptorFromDryRun(sourceMarkdown, dryRun)
       }
 
+      const resources = getPreGenerateAiResources(state.meta)
+      const isPublishing =
+        props.kind !== 'page' &&
+        state.isPublished &&
+        !Boolean(
+          (detailModel as NoteModel | PostModel | undefined)?.isPublished,
+        )
+
+      if (isPublishing && resources.length > 0) {
+        const common = {
+          config: aiPublishOptionsQuery.data,
+          id,
+          onDraftSaved: (draft: NoteModel | PostModel) => {
+            preparedDraftRef.current = draft
+          },
+          resources,
+        }
+        return props.kind === 'post'
+          ? prepareAndPublishPost({
+              ...common,
+              data: buildPostWriteData(state, draftId || undefined, migration),
+            })
+          : prepareAndPublishNote({
+              ...common,
+              data: buildNoteWriteData(state, draftId || undefined, migration),
+            })
+      }
+
       return saveWrite(props.kind, id, state, draftId || undefined, migration)
     },
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('write.toast.saveFailed'))),
+    onError: (error: unknown) => {
+      const preparedDraft = preparedDraftRef.current
+      if (!preparedDraft) {
+        toast.error(getErrorMessage(error, t('write.toast.saveFailed')))
+        return
+      }
+
+      setState((previous) => ({ ...previous, isPublished: false }))
+      if (!id) {
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.set('id', preparedDraft.id)
+        setSearchParams(nextParams, { replace: true })
+      }
+      toast.error(
+        getErrorMessage(error, t('write.publishAi.preparationFailed')),
+      )
+    },
     onSuccess: async (result) => {
+      const wasPrepared = Boolean(preparedDraftRef.current)
       setMarkdownMigration(null)
       setMigrationDiagnosticsOpen(false)
       draftDirtyRef.current = false
       lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
       setLastSavedFingerprint(latestDraftFingerprintRef.current)
       toast.success(
-        isEditing ? t('write.toast.saved') : t('write.toast.createOk'),
+        wasPrepared
+          ? t('write.publishAi.published')
+          : isEditing
+            ? t('write.toast.saved')
+            : t('write.toast.createOk'),
       )
+      preparedDraftRef.current = null
       await queryClient.invalidateQueries({
         queryKey: adminQueryKeys.write.contentRoot(props.kind),
       })
@@ -1823,6 +1900,7 @@ function WritePage(props: { kind: WriteKind }) {
               />
             ) : (
               <ContentSettingsPanel
+                aiConfig={aiPublishOptionsQuery.data}
                 availableDraft={availableDraft}
                 draftId={draftId || routeDraftId || undefined}
                 draftMutationData={draftMutation.data}
@@ -2049,6 +2127,7 @@ function MarkdownMigrationDialog(props: {
 }
 
 function ContentSettingsPanel(props: {
+  aiConfig?: AIConfig
   availableDraft?: DraftModel
   draftId?: string
   draftMutationData?: DraftModel
@@ -2070,6 +2149,17 @@ function ContentSettingsPanel(props: {
   writerGeneratePending: boolean
 }) {
   const { t } = useI18n()
+  const preGenerateResources = getPreGenerateAiResources(props.state.meta)
+  const togglePreGenerateResource = (
+    resource: PublishAiResource,
+    checked: boolean,
+  ) => {
+    const next = checked
+      ? [...new Set([...preGenerateResources, resource])]
+      : preGenerateResources.filter((item) => item !== resource)
+    props.updateField('meta', setPreGenerateAiResources(props.state.meta, next))
+  }
+
   return (
     <AsidePanel>
       <Scroll
@@ -2084,6 +2174,55 @@ function ContentSettingsPanel(props: {
               props.updateField('isPublished', checked)
             }
           />
+          <div className="mt-4 border-t border-border pt-3">
+            <div className="text-sm font-medium text-fg">
+              {t('write.publishAi.title')}
+            </div>
+            <p className="mt-1 text-xs leading-5 text-fg-muted">
+              {t('write.publishAi.description')}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {PUBLISH_AI_RESOURCES.map((resource) => {
+                const checked = preGenerateResources.includes(resource)
+                const unavailableKey = getPreGenerateUnavailableKey(
+                  resource,
+                  props.aiConfig,
+                  props.state.contentFormat,
+                )
+
+                return (
+                  <label
+                    className={cn(
+                      'flex min-w-0 items-center gap-2 rounded-md border border-border bg-surface-inset px-2.5 py-2 text-sm transition-colors',
+                      checked && 'border-accent/40 bg-accent-soft',
+                      unavailableKey && !checked && 'opacity-50',
+                    )}
+                    key={resource}
+                    title={unavailableKey ? t(unavailableKey) : undefined}
+                  >
+                    <Checkbox
+                      aria-label={t(PUBLISH_AI_RESOURCE_LABELS[resource])}
+                      checked={checked}
+                      disabled={Boolean(unavailableKey) && !checked}
+                      onCheckedChange={(next) =>
+                        togglePreGenerateResource(resource, next)
+                      }
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate">
+                        {t(PUBLISH_AI_RESOURCE_LABELS[resource])}
+                      </span>
+                      {unavailableKey ? (
+                        <span className="block truncate text-xs text-fg-muted">
+                          {t(unavailableKey)}
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
           {props.saveResultId ? (
             <div className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
               <Check aria-hidden="true" className="size-4" />
@@ -3113,7 +3252,10 @@ function GetCurrentLocationButton(props: {
       }
     },
     onError(error) {
-      const geolocationErrorCode = isRecord(error) ? error.code : undefined
+      const geolocationErrorCode =
+        error != null && typeof error === 'object' && 'code' in error
+          ? error.code
+          : undefined
       if (geolocationErrorCode === 2) {
         toast.error(t('write.location.error.timeout'))
         return
@@ -3680,11 +3822,7 @@ function parsePageMarkdown(value: string): ParsedPageMarkdown {
 
 function parseYamlMeta(value: string): Record<string, unknown> {
   try {
-    const meta = load(value)
-
-    return meta && typeof meta === 'object' && !Array.isArray(meta)
-      ? (meta as Record<string, unknown>)
-      : {}
+    return asRecord(load(value))
   } catch (error) {
     const message =
       error instanceof Error
@@ -3704,6 +3842,13 @@ function optionalString(value: unknown) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function asRecord(
+  value: unknown,
+  fallback: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return isRecord(value) ? value : fallback
 }
 
 function getMetaString(meta: Record<string, unknown>, key: string) {
@@ -3727,27 +3872,76 @@ function setMetaValue(
   return next
 }
 
+function getPreGenerateAiResources(
+  meta: Record<string, unknown>,
+): PublishAiResource[] {
+  const value = meta[PRE_GENERATE_AI_RESOURCES_META_KEY]
+  if (!Array.isArray(value)) return []
+  const selected = new Set(value.filter((item) => typeof item === 'string'))
+  return PUBLISH_AI_RESOURCES.filter((resource) => selected.has(resource))
+}
+
+function setPreGenerateAiResources(
+  meta: Record<string, unknown>,
+  resources: PublishAiResource[],
+) {
+  return setMetaValue(
+    meta,
+    PRE_GENERATE_AI_RESOURCES_META_KEY,
+    resources.length > 0 ? resources : null,
+  )
+}
+
+function getPreGenerateUnavailableKey(
+  resource: PublishAiResource,
+  config: AIConfig | undefined,
+  contentFormat: ContentFormat,
+): TranslationKey | undefined {
+  if (resource === 'tts' && contentFormat !== 'lexical') {
+    return 'write.publishAi.ttsRequiresLexical'
+  }
+  if (!config) return 'write.publishAi.unavailable'
+  if (resource === 'summary' && !config.enableSummary) {
+    return 'write.publishAi.unavailable'
+  }
+  if (resource === 'insights' && !config.enableInsights) {
+    return 'write.publishAi.unavailable'
+  }
+  if (resource === 'translation') {
+    if (!config.enableTranslation) return 'write.publishAi.unavailable'
+    if (!config.translationTargetLanguages?.length) {
+      return 'write.publishAi.translationRequiresLanguages'
+    }
+  }
+  if (resource === 'tts' && !config.tts?.enable) {
+    return 'write.publishAi.unavailable'
+  }
+  return undefined
+}
+
+function getPaywall(meta: Record<string, unknown>) {
+  return isRecord(meta.paywall) ? meta.paywall : undefined
+}
+
 function getPaywallPreviewBlocks(meta: Record<string, unknown>) {
-  const paywall = isRecord(meta.paywall) ? meta.paywall : undefined
-  return typeof paywall?.previewBlocks === 'number'
-    ? paywall.previewBlocks
-    : undefined
+  const previewBlocks = getPaywall(meta)?.previewBlocks
+  return typeof previewBlocks === 'number' ? previewBlocks : undefined
 }
 
 function withPaywallPreviewBlocks(
   meta: Record<string, unknown>,
   previewBlocks: number,
 ) {
-  const paywall = isRecord(meta.paywall) ? meta.paywall : {}
-  return { ...meta, paywall: { ...paywall, previewBlocks } }
+  return { ...meta, paywall: { ...getPaywall(meta), previewBlocks } }
 }
 
 function withoutPaywallPreviewBlocks(meta: Record<string, unknown>) {
-  if (!isRecord(meta.paywall)) {
+  const paywall = getPaywall(meta)
+  if (!paywall) {
     return meta
   }
 
-  const { previewBlocks, ...restPaywall } = meta.paywall
+  const { previewBlocks, ...restPaywall } = paywall
   if (Object.keys(restPaywall).length === 0) {
     const { paywall, ...restMeta } = meta
     return restMeta
@@ -4051,6 +4245,7 @@ function isDraftNewerThanPublished(draft: DraftModel, model: WriteModel) {
 function fromModel(kind: WriteKind, model: WriteModel) {
   if (kind === 'post') {
     const post = model as PostModel
+    const meta = asRecord(post.meta)
     return {
       ...emptyState,
       categoryId: post.categoryId,
@@ -4060,12 +4255,10 @@ function fromModel(kind: WriteKind, model: WriteModel) {
       images: post.images ?? [],
       isPremium: Boolean(post.isPremium),
       isPublished: post.isPublished ?? true,
-      meta: isRecord(post.meta) ? post.meta : {},
+      meta,
       pin: Boolean(post.pinAt),
       pinOrder: String(post.pinOrder ?? 1),
-      previewBlocks: String(
-        getPaywallPreviewBlocks(isRecord(post.meta) ? post.meta : {}) ?? 3,
-      ),
+      previewBlocks: String(getPaywallPreviewBlocks(meta) ?? 3),
       relatedId: post.related?.map((item) => item.id).join(', ') ?? '',
       slug: post.slug,
       summary: post.summary ?? '',
@@ -4093,7 +4286,7 @@ function fromModel(kind: WriteKind, model: WriteModel) {
       isPublished: note.isPublished,
       images: note.images ?? [],
       location: note.location ?? '',
-      meta: isRecord(note.meta) ? note.meta : {},
+      meta: asRecord(note.meta),
       mood: note.mood ?? '',
       password: '',
       passwordProtected: Boolean(note.hasPassword || note.password),
@@ -4113,7 +4306,7 @@ function fromModel(kind: WriteKind, model: WriteModel) {
     contentFormat: page.contentFormat ?? 'markdown',
     images: page.images ?? [],
     isPublished: true,
-    meta: isRecord(page.meta) ? page.meta : {},
+    meta: asRecord(page.meta),
     order: typeof page.order === 'number' ? String(page.order) : '',
     slug: page.slug,
     subtitle: page.subtitle ?? '',
@@ -4135,7 +4328,7 @@ function fromDraft(
       draft.contentFormat ??
       (draft.text || draft.content ? 'markdown' : previous.contentFormat),
     images: draft.images ?? previous.images,
-    meta: isRecord(draft.meta) ? draft.meta : previous.meta,
+    meta: asRecord(draft.meta, previous.meta),
     text: draft.text ?? '',
     title: draft.title ?? '',
   }

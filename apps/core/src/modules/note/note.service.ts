@@ -342,7 +342,15 @@ export class NoteService {
         }),
         this.eventManager.emit(
           BusinessEvents.NOTE_CREATE,
-          { id: note.id },
+          {
+            id: note.id,
+            ...(document.preparedAiResources?.length
+              ? { preparedAiResources: document.preparedAiResources }
+              : {}),
+            ...(document.skipAiAutoGeneration
+              ? { skipAiAutoGeneration: true }
+              : {}),
+          },
           {
             scope: note.isPublished
               ? EventScope.TO_SYSTEM_VISITOR
@@ -374,13 +382,16 @@ export class NoteService {
     data: Partial<NoteModel> & {
       draftId?: string
       migration?: MarkdownToLexicalMigrationDescriptor
+      preparedAiResources?: string[]
+      skipAiAutoGeneration?: boolean
     },
   ) {
     this.lexicalService.normalizeContentForStorage(data)
     const oldDoc = await this.findById(id)
     if (!oldDoc) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
-    const { draftId, migration } = data
+    const { draftId, migration, preparedAiResources, skipAiAutoGeneration } =
+      data
     const isMarkdownToLexical =
       oldDoc.contentFormat === ContentFormat.Markdown &&
       data.contentFormat === ContentFormat.Lexical
@@ -511,12 +522,22 @@ export class NoteService {
 
     this.enrichmentService.scheduleDocPrefetch(updated)
 
-    await this.broadcastNoteUpdateEvent(updated, oldDoc.isPublished)
+    await this.broadcastNoteUpdateEvent(
+      updated,
+      oldDoc.isPublished,
+      skipAiAutoGeneration,
+      preparedAiResources,
+    )
     return updated
   }
 
   private broadcastNoteUpdateEvent = debounce(
-    async (updated: NoteRow, wasPublished: boolean) => {
+    async (
+      updated: NoteRow,
+      wasPublished: boolean,
+      skipAiAutoGeneration?: boolean,
+      preparedAiResources?: string[],
+    ) => {
       if (!updated) return
       this.eventManager.emit(
         wasPublished === updated.isPublished
@@ -524,7 +545,11 @@ export class NoteService {
           : updated.isPublished
             ? BusinessEvents.NOTE_CREATE
             : BusinessEvents.NOTE_DELETE,
-        { id: updated.id },
+        {
+          id: updated.id,
+          ...(preparedAiResources?.length ? { preparedAiResources } : {}),
+          ...(skipAiAutoGeneration ? { skipAiAutoGeneration: true } : {}),
+        },
         {
           scope:
             wasPublished || updated.isPublished

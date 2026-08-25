@@ -43,6 +43,11 @@ const PostBaseSchema = WriteBaseSchema.extend({
   isPremium: z.boolean().optional(),
   /** ID of the associated draft; marked as published when this post is published */
   draftId: zEntityId.optional(),
+  /** Admin-controlled publish flow already prepared the selected AI assets. */
+  skipAiAutoGeneration: z.boolean().optional(),
+  preparedAiResources: z
+    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
+    .optional(),
   migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 

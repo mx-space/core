@@ -91,6 +91,13 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_CREATE)
   @OnEvent(BusinessEvents.PAGE_CREATE)
   async handleCreateArticle(event: ArticleEventPayload) {
+    if (
+      ('skipAiAutoGeneration' in event && event.skipAiAutoGeneration) ||
+      ('preparedAiResources' in event &&
+        event.preparedAiResources?.includes('translation'))
+    ) {
+      return
+    }
     const context = await this.resolveAutoTranslationContext(event)
     if (!context) return
     const { id, targetLanguages } = context
@@ -110,6 +117,13 @@ export class AiTranslationEventHandlerService {
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   @OnEvent(BusinessEvents.PAGE_UPDATE)
   async handleUpdateArticle(event: ArticleEventPayload) {
+    if (
+      ('skipAiAutoGeneration' in event && event.skipAiAutoGeneration) ||
+      ('preparedAiResources' in event &&
+        event.preparedAiResources?.includes('translation'))
+    ) {
+      return
+    }
     const context = await this.resolveAutoTranslationContext(event)
     if (!context) return
     const { id, article, targetLanguages } = context

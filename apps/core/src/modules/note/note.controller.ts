@@ -798,6 +798,7 @@ export class NoteController {
   ) {
     await this.noteService.updateById(params.id, {
       isPublished: body.isPublished,
+      preparedAiResources: body.preparedAiResources,
     })
     return { success: true }
   }

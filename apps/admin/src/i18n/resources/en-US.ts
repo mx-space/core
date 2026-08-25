@@ -3503,6 +3503,17 @@ export const enUS = {
   'write.header.editPage': 'Edit page',
   'write.header.newPage': 'New page',
   'write.header.publish': 'Publish',
+  'write.publishAi.description':
+    'Selected AI assets are generated while the content is still a draft. It goes public only when all are ready; select none to publish immediately.',
+  'write.publishAi.preparationFailed':
+    'AI asset preparation failed. The content remains a draft.',
+  'write.publishAi.published':
+    'AI assets are ready and the content is published.',
+  'write.publishAi.title': 'Generate before publishing',
+  'write.publishAi.translationRequiresLanguages':
+    'Configure translation target languages first',
+  'write.publishAi.ttsRequiresLexical': 'Narration requires Lexical content',
+  'write.publishAi.unavailable': 'This AI capability is not enabled',
   'write.header.titleNote': 'Write a note',
   'write.header.titlePage': 'Write a page',
   'write.header.titlePost': 'Write a post',

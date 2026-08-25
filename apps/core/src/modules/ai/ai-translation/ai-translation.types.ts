@@ -23,7 +23,13 @@ export type ArticleDocument = PostModel | NoteModel | PageModel
 export type ArticleEventDocument = ArticleDocument
 
 export type ArticleEventPayload =
-  ArticleEventDocument | { data: string } | { id: string }
+  | ArticleEventDocument
+  | { data: string }
+  | {
+      id: string
+      preparedAiResources?: string[]
+      skipAiAutoGeneration?: boolean
+    }
 
 export type GlobalArticle =
   | { document: PostModel; type: CollectionRefTypes.Post }
