@@ -1,3 +1,18 @@
+## [14.5.0](https://github.com/mx-space/core/compare/v14.4.1...v14.5.0) (2026-08-26)
+
+
+### Bug Fixes
+
+* **membership:** isolate Apple sandbox purchases ([6df3a88](https://github.com/mx-space/core/commit/6df3a88aaf15d97c4533064b32126c652028932f))
+* **tts:** retry Vertex empty-audio 200 responses ([41fc406](https://github.com/mx-space/core/commit/41fc4060599ba7b9e6c8ecfa8412999f2a5c211b))
+
+
+### Features
+
+* **ai:** serve premium insights to entitled readers ([a448c57](https://github.com/mx-space/core/commit/a448c576afe76bebab1a3ee91e6f146b4e8f4ff2))
+* **push:** write thinking notifications like homepage musings ([9bcf6f7](https://github.com/mx-space/core/commit/9bcf6f71d3f37c6f8af91586831754c14de6295a))
+* **write:** pre-generate selected AI resources before publish ([e229342](https://github.com/mx-space/core/commit/e229342d4a3edcc6589d9ae91f24d6fc32951804))
+
 ## [14.4.1](https://github.com/mx-space/core/compare/v14.4.0...v14.4.1) (2026-08-25)
 
 
