@@ -3514,6 +3514,25 @@ export const enUS = {
     'Configure translation target languages first',
   'write.publishAi.ttsRequiresLexical': 'Narration requires Lexical content',
   'write.publishAi.unavailable': 'This AI capability is not enabled',
+  'write.publishProcess.cancelled':
+    'Publish task stopped. The content remains a draft.',
+  'write.publishProcess.cancelling': 'Stopping publish task',
+  'write.publishProcess.completed': 'Content published',
+  'write.publishProcess.failed':
+    'AI asset preparation failed. The content remains a draft.',
+  'write.publishProcess.open': 'Open publish progress',
+  'write.publishProcess.preparing': 'Preparing AI assets',
+  'write.publishProcess.publishing': 'AI assets ready. Publishing',
+  'write.publishProcess.queued': 'Queued',
+  'write.publishProcess.started':
+    'AI asset preparation started. You can leave this page.',
+  'write.publishProcess.terminate': 'Stop task',
+  'write.publishProcess.terminateDescription':
+    'This stops unfinished AI tasks. Generated assets remain, and the content will not be published.',
+  'write.publishProcess.terminateTitle': 'Stop this publish task?',
+  'write.publishProcess.title': 'Publish progress',
+  'write.publishProcess.viewProgress': 'View publish progress',
+  'write.publishProcess.viewTask': 'View task details',
   'write.header.titleNote': 'Write a note',
   'write.header.titlePage': 'Write a page',
   'write.header.titlePost': 'Write a post',

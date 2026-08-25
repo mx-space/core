@@ -1,8 +1,9 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { Provider as JotaiProvider } from 'jotai'
+import { Provider as JotaiProvider, useAtomValue } from 'jotai'
 import type { PropsWithChildren } from 'react'
 import { Toaster } from 'sonner'
 
+import { hasPublishProcessesAtom } from '~/features/write/utils/publish-process-state'
 import { jotaiStore } from '~/store/jotai-store'
 import { ModalRoot } from '~/ui/feedback/modal-imperative'
 import { ContextMenuHost } from '~/ui/overlay/context-menu'
@@ -25,23 +26,32 @@ export function AppProviders(props: PropsWithChildren) {
             <ContextMenuHost />
           </I18nProvider>
         </FloatLayerProvider>
-        <Toaster
-          closeButton
-          gap={12}
-          position="bottom-right"
-          theme={isDark ? 'dark' : 'light'}
-          toastOptions={{
-            classNames: {
-              actionButton: 'sonner-action-button',
-              cancelButton: 'sonner-cancel-button',
-              closeButton: 'sonner-close-button',
-              description: 'sonner-description',
-              title: 'sonner-title',
-              toast: 'sonner-toast',
-            },
-          }}
-        />
+        <AppToaster isDark={isDark} />
       </QueryClientProvider>
     </JotaiProvider>
+  )
+}
+
+function AppToaster({ isDark }: { isDark: boolean }) {
+  const hasPublishProcesses = useAtomValue(hasPublishProcessesAtom)
+
+  return (
+    <Toaster
+      closeButton
+      gap={12}
+      offset={hasPublishProcesses ? { bottom: 68, right: 16 } : 16}
+      position="bottom-right"
+      theme={isDark ? 'dark' : 'light'}
+      toastOptions={{
+        classNames: {
+          actionButton: 'sonner-action-button',
+          cancelButton: 'sonner-cancel-button',
+          closeButton: 'sonner-close-button',
+          description: 'sonner-description',
+          title: 'sonner-title',
+          toast: 'sonner-toast',
+        },
+      }}
+    />
   )
 }

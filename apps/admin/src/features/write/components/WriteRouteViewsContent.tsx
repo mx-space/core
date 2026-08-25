@@ -5,6 +5,8 @@ import {
   mxLexicalToMarkdown,
 } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAtomValue } from 'jotai'
+import { selectAtom } from 'jotai/utils'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
 import type { LucideIcon } from 'lucide-react'
@@ -23,6 +25,7 @@ import {
   Hash,
   History,
   Image as ImageIcon,
+  ListChecks,
   Loader2,
   MapPin,
   Pencil,
@@ -112,6 +115,11 @@ import {
   prepareAndPublishPost,
   type PublishAiResource,
 } from '~/features/write/utils/prepare-post-publish'
+import {
+  isPublishProcessActive,
+  openPublishProcessDock,
+  publishProcessesAtom,
+} from '~/features/write/utils/publish-process-state'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
@@ -436,6 +444,28 @@ function WritePage(props: { kind: WriteKind }) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const id = searchParams.get('id') ?? ''
+  const currentPublishProcessAtom = useMemo(
+    () =>
+      selectAtom(
+        publishProcessesAtom,
+        (processes) => {
+          for (let index = processes.length - 1; index >= 0; index -= 1) {
+            const process = processes[index]
+            if (process.refId === id) {
+              return { id: process.id, phase: process.phase }
+            }
+          }
+          return null
+        },
+        (previous, next) =>
+          previous?.id === next?.id && previous?.phase === next?.phase,
+      ),
+    [id],
+  )
+  const currentPublishProcess = useAtomValue(currentPublishProcessAtom)
+  const publishProcessActive = currentPublishProcess
+    ? isPublishProcessActive(currentPublishProcess.phase)
+    : false
   const routeDraftId = searchParams.get('draftId') ?? ''
   const isEditing = Boolean(id)
   const [preferredContentFormat, setPreferredContentFormat] =
@@ -447,6 +477,12 @@ function WritePage(props: { kind: WriteKind }) {
     ...emptyState,
     contentFormat: preferredContentFormat,
   }))
+  useEffect(() => {
+    if (currentPublishProcess?.phase !== 'completed') return
+    setState((previous) =>
+      previous.isPublished ? previous : { ...previous, isPublished: true },
+    )
+  }, [currentPublishProcess?.phase])
   useDocumentTitle(state.title)
   const [asidePanel, setAsidePanel] = useState<
     'agent' | 'meta' | 'drafts' | null
@@ -893,6 +929,7 @@ function WritePage(props: { kind: WriteKind }) {
           id,
           onDraftSaved: (draft: NoteModel | PostModel) => {
             preparedDraftRef.current = draft
+            setState((previous) => ({ ...previous, isPublished: false }))
           },
           resources,
         }
@@ -935,15 +972,17 @@ function WritePage(props: { kind: WriteKind }) {
       setLastSavedFingerprint(latestDraftFingerprintRef.current)
       toast.success(
         wasPrepared
-          ? t('write.publishAi.published')
+          ? t('write.publishProcess.started')
           : isEditing
             ? t('write.toast.saved')
             : t('write.toast.createOk'),
       )
       preparedDraftRef.current = null
-      await queryClient.invalidateQueries({
+      const invalidation = queryClient.invalidateQueries({
         queryKey: adminQueryKeys.write.contentRoot(props.kind),
       })
+      if (wasPrepared) void invalidation
+      else await invalidation
       if (props.kind === 'page') {
         navigate(config.listPath)
         return
@@ -1659,12 +1698,21 @@ function WritePage(props: { kind: WriteKind }) {
                   detailLoading ||
                   draftConflictResolving
                 }
-                title={t('write.header.publish')}
-                type="submit"
+                onClick={
+                  publishProcessActive ? openPublishProcessDock : undefined
+                }
+                title={
+                  publishProcessActive
+                    ? t('write.publishProcess.viewProgress')
+                    : t('write.header.publish')
+                }
+                type={publishProcessActive ? 'button' : 'submit'}
                 variant="primary"
               >
                 {saveMutation.isPending ? (
                   <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : publishProcessActive ? (
+                  <ListChecks aria-hidden="true" className="size-4" />
                 ) : (
                   <Send aria-hidden="true" className="size-4" />
                 )}
@@ -1705,12 +1753,21 @@ function WritePage(props: { kind: WriteKind }) {
                   detailLoading ||
                   draftConflictResolving
                 }
-                title={t('write.header.publish')}
-                type="submit"
+                onClick={
+                  publishProcessActive ? openPublishProcessDock : undefined
+                }
+                title={
+                  publishProcessActive
+                    ? t('write.publishProcess.viewProgress')
+                    : t('write.header.publish')
+                }
+                type={publishProcessActive ? 'button' : 'submit'}
                 variant="primary"
               >
                 {saveMutation.isPending ? (
                   <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                ) : publishProcessActive ? (
+                  <ListChecks aria-hidden="true" className="size-4" />
                 ) : (
                   <Send aria-hidden="true" className="size-4" />
                 )}

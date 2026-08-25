@@ -5,11 +5,17 @@ import { AITaskStatus } from '~/api/tasks'
 import * as tasks from '~/api/tasks'
 import * as notes from '~/data/resources/note.mutations'
 import * as posts from '~/data/resources/post.mutations'
+import { jotaiStore } from '~/store/jotai-store'
 
 import {
+  cancelPublishProcess,
   prepareAndPublishNote,
   prepareAndPublishPost,
 } from './prepare-post-publish'
+import {
+  publishProcessDockOpenAtom,
+  publishProcessesAtom,
+} from './publish-process-state'
 
 vi.mock('~/api/ai', () => ({
   createInsightsTask: vi.fn(),
@@ -19,6 +25,7 @@ vi.mock('~/api/ai', () => ({
 }))
 vi.mock('~/api/tasks', async (importOriginal) => ({
   ...(await importOriginal<typeof import('~/api/tasks')>()),
+  cancelTask: vi.fn(),
   getTask: vi.fn(),
 }))
 vi.mock('~/data/resources/post.mutations', () => ({
@@ -39,6 +46,8 @@ const post = {
 describe('prepareAndPublishPost', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    jotaiStore.set(publishProcessesAtom, [])
+    jotaiStore.set(publishProcessDockOpenAtom, false)
     vi.mocked(posts.savePost).mockResolvedValue(post)
     vi.mocked(posts.publishPost).mockResolvedValue({
       ...post,
@@ -57,13 +66,22 @@ describe('prepareAndPublishPost', () => {
       created: true,
       taskId: 'translation-1',
     })
+    vi.mocked(tasks.cancelTask).mockResolvedValue({ success: true })
     vi.mocked(tasks.getTask).mockResolvedValue({
       id: 'task-1',
       status: AITaskStatus.Completed,
     } as Awaited<ReturnType<typeof tasks.getTask>>)
   })
 
-  it('keeps the post private until every selected AI task completes', async () => {
+  it('hands off immediately and publishes only after every task completes', async () => {
+    const taskResolvers = new Map<
+      string,
+      (task: Awaited<ReturnType<typeof tasks.getTask>>) => void
+    >()
+    vi.mocked(tasks.getTask).mockImplementation(
+      (taskId) => new Promise((resolve) => taskResolvers.set(taskId, resolve)),
+    )
+
     const result = await prepareAndPublishPost({
       config: {
         summaryTargetLanguages: ['en'],
@@ -89,10 +107,29 @@ describe('prepareAndPublishPost', () => {
       refId: 'post-1',
       targetLanguages: ['ja'],
     })
-    expect(posts.publishPost).toHaveBeenCalledWith('post-1', true, {
-      preparedAiResources: ['summary', 'translation'],
-    })
-    expect(result.isPublished).toBe(true)
+    expect(result.isPublished).toBe(false)
+    expect(posts.publishPost).not.toHaveBeenCalled()
+
+    await vi.waitFor(() => expect(taskResolvers.size).toBe(2))
+    taskResolvers.get('summary-1')?.({
+      id: 'summary-1',
+      status: AITaskStatus.Completed,
+    } as Awaited<ReturnType<typeof tasks.getTask>>)
+    await Promise.resolve()
+    expect(posts.publishPost).not.toHaveBeenCalled()
+
+    taskResolvers.get('translation-1')?.({
+      id: 'translation-1',
+      status: AITaskStatus.Completed,
+    } as Awaited<ReturnType<typeof tasks.getTask>>)
+    await vi.waitFor(() =>
+      expect(posts.publishPost).toHaveBeenCalledWith('post-1', true, {
+        preparedAiResources: ['summary', 'translation'],
+      }),
+    )
+    await vi.waitFor(() =>
+      expect(jotaiStore.get(publishProcessesAtom)[0]?.phase).toBe('completed'),
+    )
   })
 
   it('leaves the saved draft unpublished when one AI task fails', async () => {
@@ -102,19 +139,24 @@ describe('prepareAndPublishPost', () => {
       status: AITaskStatus.Failed,
     } as Awaited<ReturnType<typeof tasks.getTask>>)
 
-    await expect(
-      prepareAndPublishPost({
-        data: { categoryId: 'cat-1', text: 'Body', title: 'Post' },
-        id: '',
-        resources: ['summary'],
-      }),
-    ).rejects.toThrow('provider unavailable')
+    const result = await prepareAndPublishPost({
+      data: { categoryId: 'cat-1', text: 'Body', title: 'Post' },
+      id: '',
+      resources: ['summary'],
+    })
 
+    expect(result.isPublished).toBe(false)
+    await vi.waitFor(() =>
+      expect(jotaiStore.get(publishProcessesAtom)[0]).toMatchObject({
+        error: 'provider unavailable',
+        phase: 'failed',
+      }),
+    )
     expect(posts.publishPost).not.toHaveBeenCalled()
   })
 
   it('uses the same private preparation gate for notes', async () => {
-    await prepareAndPublishNote({
+    const result = await prepareAndPublishNote({
       data: { text: 'A note', title: 'Note' },
       id: '',
       resources: ['summary'],
@@ -127,8 +169,36 @@ describe('prepareAndPublishPost', () => {
         skipAiAutoGeneration: true,
       }),
     )
-    expect(notes.publishNote).toHaveBeenCalledWith('post-1', true, {
-      preparedAiResources: ['summary'],
+    expect(result.isPublished).toBe(false)
+    await vi.waitFor(() =>
+      expect(notes.publishNote).toHaveBeenCalledWith('post-1', true, {
+        preparedAiResources: ['summary'],
+      }),
+    )
+  })
+
+  it('cancels known AI tasks and never publishes the draft', async () => {
+    vi.mocked(tasks.getTask).mockResolvedValue({
+      id: 'summary-1',
+      status: AITaskStatus.Running,
+    } as Awaited<ReturnType<typeof tasks.getTask>>)
+
+    await prepareAndPublishPost({
+      data: { categoryId: 'cat-1', text: 'Body', title: 'Post' },
+      id: '',
+      resources: ['summary'],
     })
+    await vi.waitFor(() =>
+      expect(
+        jotaiStore.get(publishProcessesAtom)[0]?.resources[0]?.taskId,
+      ).toBe('summary-1'),
+    )
+
+    const processId = jotaiStore.get(publishProcessesAtom)[0]!.id
+    await cancelPublishProcess(processId)
+
+    expect(tasks.cancelTask).toHaveBeenCalledWith('summary-1')
+    expect(posts.publishPost).not.toHaveBeenCalled()
+    expect(jotaiStore.get(publishProcessesAtom)[0]?.phase).toBe('cancelled')
   })
 })
