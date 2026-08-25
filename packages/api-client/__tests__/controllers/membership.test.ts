@@ -76,4 +76,14 @@ describe('test Membership client', () => {
       provider: 'apple',
     })
   })
+
+  test('POST /membership/apple/confirm acknowledges a test purchase', async () => {
+    mockResponse('/membership/apple/confirm', { status: 'test' }, 'post', {
+      signedTransactionInfo: 'sandbox-jws',
+    })
+
+    await expect(
+      client.membership.confirmApple('sandbox-jws'),
+    ).resolves.toEqual({ status: 'test' })
+  })
 })

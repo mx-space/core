@@ -43,6 +43,7 @@ describe('appleActivatedEvent', () => {
   it('uses originalTransactionId as the subscription key', () => {
     const event = appleActivatedEvent(
       {
+        environment: 'production',
         expiresDate: Date.parse('2026-09-01T00:00:00.000Z'),
         originalTransactionId: 'orig-1',
         productId: 'yohaku.membership.yearly',

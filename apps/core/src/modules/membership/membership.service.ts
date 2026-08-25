@@ -123,6 +123,7 @@ export class MembershipService {
     yearlyProductId: string
   }): Promise<
     | { status: 'none' }
+    | { status: 'test' }
     | {
         currentPeriodEnd: Date
         plan: MembershipPlan
@@ -153,6 +154,10 @@ export class MembershipService {
       throw createAppException(
         AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID,
       )
+    }
+
+    if (input.decoded.environment === 'sandbox') {
+      return { status: 'test' }
     }
 
     const bySub = await this.membershipRepository.findByProviderSubscriptionId(

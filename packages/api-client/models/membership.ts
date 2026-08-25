@@ -46,3 +46,6 @@ export interface MembershipStatusResultActive {
 
 export type MembershipStatusResult =
   MembershipStatusResultNone | MembershipStatusResultActive
+
+export type MembershipAppleConfirmationResult =
+  MembershipStatusResult | { status: 'test' }

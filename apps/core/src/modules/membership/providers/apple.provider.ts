@@ -55,6 +55,8 @@ export class AppleProvider implements PaymentProviderAdapter {
         membershipConfig.appleAppAppleId,
       )
       if (
+        (decoded.environment !== Environment.PRODUCTION &&
+          decoded.environment !== Environment.SANDBOX) ||
         !decoded.transactionId ||
         !decoded.originalTransactionId ||
         !decoded.productId ||
@@ -67,6 +69,10 @@ export class AppleProvider implements PaymentProviderAdapter {
       }
       return {
         appAccountToken: decoded.appAccountToken,
+        environment:
+          decoded.environment === Environment.PRODUCTION
+            ? 'production'
+            : 'sandbox',
         expiresDate: decoded.expiresDate,
         originalTransactionId: decoded.originalTransactionId,
         productId: decoded.productId,
@@ -134,6 +140,13 @@ export class AppleProvider implements PaymentProviderAdapter {
       notificationSignedDate = notification.signedDate
       signedRenewalInfo = notification.data?.signedRenewalInfo
       signedTransactionInfo = notification.data?.signedTransactionInfo
+      if (notification.data?.environment === Environment.SANDBOX) {
+        return {
+          ignored: true,
+          rawType: notificationType,
+          reason: 'sandbox_environment',
+        }
+      }
     } catch (error) {
       this.logger.warn(
         `Apple webhook verification failed: ${
@@ -167,6 +180,7 @@ export class AppleProvider implements PaymentProviderAdapter {
     ).catch(() => null)
     const occurredAt = notificationSignedDate ?? decoded?.signedDate
     if (
+      decoded?.environment !== Environment.PRODUCTION ||
       !decoded?.originalTransactionId ||
       !decoded.expiresDate ||
       !Number.isFinite(occurredAt)

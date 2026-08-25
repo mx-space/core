@@ -9,6 +9,7 @@ const APPLE_ACCOUNT_TOKEN_DOMAIN = 'yohaku-membership:apple-account-token:v1\0'
 
 export interface AppleDecodedTransaction {
   appAccountToken?: string
+  environment: 'production' | 'sandbox'
   expiresDate: number
   originalTransactionId: string
   productId: string

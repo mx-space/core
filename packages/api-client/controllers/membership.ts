@@ -2,6 +2,7 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type {
+  MembershipAppleConfirmationResult,
   MembershipCheckoutResult,
   MembershipPlan,
   MembershipPlansResult,
@@ -47,7 +48,7 @@ export class MembershipController<ResponseWrapper> implements IController {
   }
 
   confirmApple(signedTransactionInfo: string) {
-    return this.proxy.apple.confirm.post<MembershipStatusResult>({
+    return this.proxy.apple.confirm.post<MembershipAppleConfirmationResult>({
       data: { signedTransactionInfo },
     })
   }

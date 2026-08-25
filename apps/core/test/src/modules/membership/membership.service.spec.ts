@@ -498,6 +498,7 @@ describe('MembershipService', () => {
   describe('confirmAppleTransaction', () => {
     const decoded = {
       appAccountToken: appleAccountTokenForReader('reader-1'),
+      environment: 'production' as const,
       expiresDate: now.getTime() + 86_400_000,
       originalTransactionId: 'orig-apple',
       productId: 'yohaku.membership.monthly',
@@ -508,6 +509,27 @@ describe('MembershipService', () => {
       monthlyProductId: 'yohaku.membership.monthly',
       yearlyProductId: 'yohaku.membership.yearly',
     }
+
+    it('acknowledges a sandbox purchase without writing entitlement state', async () => {
+      const { service, membershipRepository, billingWebhookEventRepository } =
+        createService()
+
+      await expect(
+        service.confirmAppleTransaction({
+          decoded: { ...decoded, environment: 'sandbox' },
+          readerId: 'reader-1',
+          ...products,
+        }),
+      ).resolves.toEqual({ status: 'test' })
+
+      expect(
+        membershipRepository.findByProviderSubscriptionId,
+      ).not.toHaveBeenCalled()
+      expect(membershipRepository.findByReaderId).not.toHaveBeenCalled()
+      expect(membershipRepository.create).not.toHaveBeenCalled()
+      expect(membershipRepository.update).not.toHaveBeenCalled()
+      expect(billingWebhookEventRepository.create).not.toHaveBeenCalled()
+    })
 
     it('creates an apple membership for a new reader', async () => {
       const { service, membershipRepository } = createService()

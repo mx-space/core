@@ -19,7 +19,7 @@ export interface VerifiedBillingEvent {
 }
 
 export type IgnoredBillingEventReason =
-  'unsupported_event' | 'missing_reader_metadata'
+  'unsupported_event' | 'missing_reader_metadata' | 'sandbox_environment'
 
 export interface IgnoredBillingEvent {
   ignored: true

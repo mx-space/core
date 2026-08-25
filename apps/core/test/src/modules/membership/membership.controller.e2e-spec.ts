@@ -591,6 +591,7 @@ describe('MembershipController (e2e)', () => {
       })
       verifySignedTransactionMock.mockResolvedValueOnce({
         appAccountToken: appleAccountTokenForReader(appleConfirmReaderId),
+        environment: 'production',
         expiresDate: Date.now() + 86_400_000,
         originalTransactionId: 'orig-e2e',
         productId: 'yohaku.membership.monthly',
@@ -626,6 +627,7 @@ describe('MembershipController (e2e)', () => {
       })
       verifySignedTransactionMock.mockResolvedValueOnce({
         appAccountToken: appleAccountTokenForReader(otherReaderId),
+        environment: 'production',
         expiresDate: Date.now() + 86_400_000,
         originalTransactionId: 'orig-other-reader',
         productId: 'yohaku.membership.monthly',
