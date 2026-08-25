@@ -60,35 +60,53 @@ export class VertexTtsProtocolAdapter implements ITtsProtocolAdapter {
         await readVertexError(response),
       )
     }
-    const payload = (await response.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{
-            inlineData?: { data?: unknown; mimeType?: unknown }
-            inline_data?: { data?: unknown; mime_type?: unknown }
-          }>
-        }
-      }>
-    }
-    const inline = payload.candidates?.[0]?.content?.parts?.[0]
-    const data = inline?.inlineData?.data ?? inline?.inline_data?.data
-    const mimeType =
-      inline?.inlineData?.mimeType ?? inline?.inline_data?.mime_type
-    if (typeof data !== 'string' || !data) {
+    const payload = (await response.json()) as VertexTtsResponse
+    const audio = extractInlineAudio(payload)
+    if (!audio) {
       throw new TtsProtocolHttpError(
         response.status,
         'response contained no audio',
+        true,
       )
     }
-    const pcm = Buffer.from(data, 'base64')
+    const pcm = Buffer.from(audio.data, 'base64')
     return {
       buffer: wrapPcmAsWav(
         pcm,
-        typeof mimeType === 'string'
-          ? mimeType
+        typeof audio.mimeType === 'string'
+          ? audio.mimeType
           : 'audio/pcm;rate=24000;channels=1',
       ),
       mimeType: 'audio/wav',
+    }
+  }
+}
+
+type VertexTtsPart = {
+  inlineData?: { data?: unknown; mimeType?: unknown }
+  inline_data?: { data?: unknown; mime_type?: unknown }
+}
+
+type VertexTtsResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: VertexTtsPart[]
+    }
+  }>
+}
+
+function extractInlineAudio(
+  payload: VertexTtsResponse,
+): { data: string; mimeType?: unknown } | undefined {
+  for (const candidate of payload.candidates ?? []) {
+    for (const part of candidate.content?.parts ?? []) {
+      const data = part.inlineData?.data ?? part.inline_data?.data
+      if (typeof data === 'string' && data) {
+        return {
+          data,
+          mimeType: part.inlineData?.mimeType ?? part.inline_data?.mime_type,
+        }
+      }
     }
   }
 }

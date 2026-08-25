@@ -90,6 +90,109 @@ describe('TtsRuntimeAdapter', () => {
     })
   })
 
+  it('retries a Vertex 200 with no audio and succeeds on the next attempt', async () => {
+    const pcm = Buffer.from([1, 0, 2, 0])
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ candidates: [{ content: { parts: [] } }] }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      inlineData: {
+                        data: pcm.toString('base64'),
+                        mimeType: 'audio/pcm;rate=24000;channels=1',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'vertex',
+      providerType: AIProviderType.GoogleVertex,
+      projectId: 'example-project',
+      apiKey: 'vertex-key',
+      endpoint:
+        'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi',
+      model: 'gemini-3.1-flash-tts-preview',
+      retryDelayMs: 0,
+    })
+    const result = await adapter.generateSpeech({
+      input: '你好',
+      language: 'zh',
+      voice: 'Kore',
+      speed: 1,
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(result.buffer.subarray(44)).toEqual(pcm)
+  })
+
+  it('uses Vertex audio from a later part when the first part has no inline data', async () => {
+    const pcm = Buffer.from([1, 0, 2, 0])
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: '' },
+                  {
+                    inlineData: {
+                      data: pcm.toString('base64'),
+                      mimeType: 'audio/pcm;rate=24000;channels=1',
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const adapter = new TtsRuntimeAdapter({
+      provider: 'vertex',
+      providerType: AIProviderType.GoogleVertex,
+      projectId: 'example-project',
+      apiKey: 'vertex-key',
+      endpoint:
+        'https://aiplatform.googleapis.com/v1/projects/example-project/locations/global/endpoints/openapi',
+      model: 'gemini-3.1-flash-tts-preview',
+    })
+    const result = await adapter.generateSpeech({
+      input: '你好',
+      language: 'zh',
+      voice: 'Kore',
+      speed: 1,
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(result.buffer.subarray(44)).toEqual(pcm)
+  })
+
   it('rejects unsupported provider protocols instead of falling back', () => {
     expect(
       () =>

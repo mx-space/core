@@ -19,11 +19,15 @@ export interface ITtsProtocolAdapter {
 export type TtsProtocolAdapterConfig = TtsRuntimeAdapterConfig
 
 export class TtsProtocolHttpError extends Error {
+  readonly retryable: boolean
+
   constructor(
     readonly status: number,
     body: string,
+    retryable?: boolean,
   ) {
     super(`tts request failed (${status}): ${body.slice(0, 300)}`)
     this.name = 'TtsProtocolHttpError'
+    this.retryable = retryable ?? (status >= 500 || status === 429)
   }
 }

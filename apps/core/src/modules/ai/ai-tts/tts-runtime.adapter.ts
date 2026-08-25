@@ -84,7 +84,7 @@ export class TtsRuntimeAdapter implements ITtsRuntime {
 
 function isRetryable(error: unknown): boolean {
   if (error instanceof TtsProtocolHttpError) {
-    return error.status >= 500 || error.status === 429
+    return error.retryable
   }
   return true
 }
