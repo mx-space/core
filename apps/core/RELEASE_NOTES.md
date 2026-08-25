@@ -1,23 +1,13 @@
 ## TL;DR
 
-The admin editor can now insert file attachments, and local uploads without an explicit cap again respect the 6MB plugin limit.
-
-## Highlights
-
-Authors can attach files from the admin rich editor while writing posts and notes. The file is uploaded with progress, stored as a file object, and rendered in both the editor preview and the published view. Attached files stay linked to the content the same way images do, so they are not swept as unused objects while the post still references them.
-
-Local attachment and image uploads, and replacements under PUT `/files/:type/:name`, again inherit the 6MB multipart limit when no explicit maximum is passed. A recent path that forwarded an undefined size cap overwrote that default, so the server accepted files of any size. Endpoints that set their own limit keep that override; only the unbounded fallback is closed.
+Existing webhook subscriptions are restored after event renaming, and content notifications now arrive without requiring a summary.
 
 ## Changes
 
-### Features
-
-- Insert file attachments in the admin editor; referenced file URLs stay in the content file lifecycle ([ddfcc57](https://github.com/mx-space/core/commit/ddfcc57ed95700cd76ca2e86c9b067a0fc5e1c57))
-
-### Bug Fixes
-
-- Restore the 6MB default upload size for local attachments, images, and PUT `/files` replacements that do not set their own limit ([e4593b0](https://github.com/mx-space/core/commit/e4593b0df4927a0bc631a2143715d161ce99191e))
+- Migrate legacy webhook subscription names to the current event names, restoring deliveries after upgrades ([66621d9](https://github.com/mx-space/core/commit/66621d94b5a71a064523a2f20c8aa768f1fd25ae))
+- Send post, note, and thinking notifications when no summary exists, while preserving title and content-type context ([3b912ea](https://github.com/mx-space/core/commit/3b912ea20c59f79c42d3ee47e8b3c31e89ec9a98))
+- Update remaining user-facing and API references from MX Space to Mix Space ([d95d9c4](https://github.com/mx-space/core/commit/d95d9c48848b618af100438d91a25de20ea64680))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.3.1...v14.4.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.4.0...v14.4.1

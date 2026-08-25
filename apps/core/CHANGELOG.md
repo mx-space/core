@@ -1,3 +1,12 @@
+## [14.4.1](https://github.com/mx-space/core/compare/v14.4.0...v14.4.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* **push:** allow notifications without summaries ([3b912ea](https://github.com/mx-space/core/commit/3b912ea20c59f79c42d3ee47e8b3c31e89ec9a98))
+* update references from "MX Space" to "Mix Space" across the codebase ([d95d9c4](https://github.com/mx-space/core/commit/d95d9c48848b618af100438d91a25de20ea64680))
+* **webhooks:** migrate renamed event subscriptions ([66621d9](https://github.com/mx-space/core/commit/66621d94b5a71a064523a2f20c8aa768f1fd25ae))
+
 ## [14.4.0](https://github.com/mx-space/core/compare/v14.3.1...v14.4.0) (2026-08-24)
 
 
