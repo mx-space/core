@@ -2,6 +2,8 @@
 
 Publishing now waits for chosen AI outputs before going live, entitled readers get AI insights, and thought notifications read like homepage musings.
 
+> **Note**: the `v14.5.0` tag's release pipeline failed on a typecheck error before any image or release asset was published. `v14.5.1` is the first complete release in this series and supersedes it; nothing shipped from `v14.5.0`.
+
 ## Highlights
 
 When you select AI resources for a post — summary, insights, translation, or TTS — it now stays in drafts while each task finishes and then publishes complete, with skip flags preventing duplicate generation. The admin editor runs this as a cancellable background process behind a publish dock, so you can keep editing, watch per-task progress, and abort mid-run if something looks wrong.
@@ -22,7 +24,8 @@ Two reliability fixes round this out: Apple in-app purchases are verified agains
 
 - Apple purchases are validated against the sandbox environment, keeping test transactions out of production membership ([6df3a88](https://github.com/mx-space/core/commit/6df3a88aaf15d97c4533064b32126c652028932f))
 - Vertex TTS responses that return HTTP 200 with no audio are retried instead of producing empty tracks ([41fc406](https://github.com/mx-space/core/commit/41fc4060599ba7b9e6c8ecfa8412999f2a5c211b))
+- Release builds typecheck again after the es-toolkit helper migration ([9eaa226](https://github.com/mx-space/core/commit/9eaa2263015d2156e9573de1c9fd662b38568ab3))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.4.1...v14.5.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.4.1...v14.5.1

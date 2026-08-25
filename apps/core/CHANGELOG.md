@@ -1,3 +1,10 @@
+## [14.5.1](https://github.com/mx-space/core/compare/v14.5.0...v14.5.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* **ai:** type tool-call arguments after isPlainObject guard ([9eaa226](https://github.com/mx-space/core/commit/9eaa2263015d2156e9573de1c9fd662b38568ab3))
+
 ## [14.5.0](https://github.com/mx-space/core/compare/v14.4.1...v14.5.0) (2026-08-26)
 
 
