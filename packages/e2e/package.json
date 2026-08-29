@@ -13,10 +13,10 @@
     "@mx-space/db-schema": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "11.2.1",
+    "@nestjs/testing": "11.2.3",
     "@swc/core": "1.16.1",
     "@testcontainers/postgresql": "^12.1.0",
-    "@types/node": "26.2.0",
+    "@types/node": "26.4.0",
     "@types/pg": "^8.23.1",
     "better-auth": "^1.6.27",
     "drizzle-orm": "^0.45.2",

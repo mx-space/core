@@ -28,7 +28,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "26.2.0",
+    "@types/node": "26.4.0",
     "express": "5.2.1",
     "tsdown": "0.22.14",
     "typescript": "6.0.3",

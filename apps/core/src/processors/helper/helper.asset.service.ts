@@ -44,7 +44,7 @@ export class AssetService {
     // 1. user override
     const userPath = resolveAssetPath(USER_ASSET_DIR, relPath)
     if (existsSync(userPath)) {
-      return await fs.readFile(userPath, options)
+      return await fs.readFile(userPath, options ?? null)
     }
 
     // 2. bundled embed (keys always start with '/')
