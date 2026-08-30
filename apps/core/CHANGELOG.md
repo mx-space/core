@@ -1,3 +1,15 @@
+## [14.6.0](https://github.com/mx-space/core/compare/v14.5.1...v14.6.0) (2026-08-30)
+
+
+### Bug Fixes
+
+* **core:** tease premium article bodies when lexical content is missing ([a3bb701](https://github.com/mx-space/core/commit/a3bb7016a89edc1b7bfeb6ed3f667da34278dffe))
+
+
+### Features
+
+* **core:** stream persistable article bodies as NDJSON ([c5bea4b](https://github.com/mx-space/core/commit/c5bea4bff0125787121c548d73f2165330815cb7))
+
 ## [14.5.1](https://github.com/mx-space/core/compare/v14.5.0...v14.5.1) (2026-08-26)
 
 

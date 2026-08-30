@@ -1,31 +1,28 @@
 ## TL;DR
 
-Publishing now waits for chosen AI outputs before going live, entitled readers get AI insights, and thought notifications read like homepage musings.
-
-> **Note**: the `v14.5.0` tag's release pipeline failed on a typecheck error before any image or release asset was published. `v14.5.1` is the first complete release in this series and supersedes it; nothing shipped from `v14.5.0`.
+Mix Space 14.6 adds streaming batch article-body retrieval, improves premium previews, and ships more reliable inline-code editing.
 
 ## Highlights
 
-When you select AI resources for a post — summary, insights, translation, or TTS — it now stays in drafts while each task finishes and then publishes complete, with skip flags preventing duplicate generation. The admin editor runs this as a cancellable background process behind a publish dock, so you can keep editing, watch per-task progress, and abort mid-run if something looks wrong.
+Clients can now retrieve post and note bodies in batches through a persistence-friendly NDJSON stream. Each line preserves paywall, language, and unchanged-version information, allowing mobile and other consumers to hydrate local content efficiently without losing access-control semantics or downloading bodies that are already current.
 
-AI insights on public pages no longer hit a hard premium wall: the same entitlement check that gates TTS now admits the site owner and active members, serving the cached insights instead of a block. Push notifications for new thoughts take the same shape as homepage musings, with the recently event projected into enriched or plain copy and title, subtitle, and body localized on-device through APNs loc-keys.
-
-Two reliability fixes round this out: Apple in-app purchases are verified against the sandbox environment so reviewer and test transactions can't mint production memberships, and Vertex TTS responses that return HTTP 200 with no audio are now retried instead of shipping silent tracks.
+Premium content previews no longer become blank when a record has no Lexical body. The bundled admin editor also adopts Haklex 0.38.0, placing the caret outside inline-code formatting at the boundary so authors can continue typing normal text without getting trapped in the code style.
 
 ## Changes
 
 ### Features
 
-- Public AI insights now load for the site owner and active members instead of a hard premium block ([a448c57](https://github.com/mx-space/core/commit/a448c576afe76bebab1a3ee91e6f146b4e8f4ff2))
-- Thought push notifications mirror homepage musings, with title, subtitle, and body localized on-device via APNs loc-keys ([9bcf6f7](https://github.com/mx-space/core/commit/9bcf6f71d3f37c6f8af91586831754c14de6295a))
-- Posts and notes stay in drafts while selected summary, insights, translation, and TTS generation finish, then publish once without duplicate generation; the admin editor gains a cancellable publish dock ([e229342](https://github.com/mx-space/core/commit/e229342d4a3edcc6589d9ae91f24d6fc32951804), [5f50b9d](https://github.com/mx-space/core/commit/5f50b9d85ce0862234fcfb9971d04cbd7dd6927c))
+- Added a batch article-body endpoint that streams persistence-ready NDJSON for posts and notes ([c5bea4b](https://github.com/mx-space/core/commit/c5bea4bff0125787121c548d73f2165330815cb7)).
 
 ### Bug Fixes
 
-- Apple purchases are validated against the sandbox environment, keeping test transactions out of production membership ([6df3a88](https://github.com/mx-space/core/commit/6df3a88aaf15d97c4533064b32126c652028932f))
-- Vertex TTS responses that return HTTP 200 with no audio are retried instead of producing empty tracks ([41fc406](https://github.com/mx-space/core/commit/41fc4060599ba7b9e6c8ecfa8412999f2a5c211b))
-- Release builds typecheck again after the es-toolkit helper migration ([9eaa226](https://github.com/mx-space/core/commit/9eaa2263015d2156e9573de1c9fd662b38568ab3))
+- Premium articles now provide teaser content when their Lexical body is unavailable ([a3bb701](https://github.com/mx-space/core/commit/a3bb7016a89edc1b7bfeb6ed3f667da34278dffe)).
+- Inline-code boundaries in the admin editor now place continued input outside the code mark ([de57bd7](https://github.com/mx-space/core/commit/de57bd73d8b29f47eaf74eab59aad3c912065047)).
+
+### Other
+
+- Updated the bundled Haklex editor packages to 0.38.0, including the public file-node key export ([de57bd7](https://github.com/mx-space/core/commit/de57bd73d8b29f47eaf74eab59aad3c912065047)).
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.4.1...v14.5.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.5.1...v14.6.0
