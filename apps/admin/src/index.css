@@ -353,3 +353,23 @@ html.dark [data-sonner-toast].sonner-toast {
 [data-content-layout] [data-panel] {
   transition: none;
 }
+
+@keyframes dock-sweep {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+
+@keyframes dock-mark {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

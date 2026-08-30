@@ -75,6 +75,9 @@ function PopoverContent({
             {...rest}
             className={cn(
               'outline-hidden shadow-md rounded-lg border border-border bg-surface-overlay text-sm text-fg',
+              'origin-[var(--transform-origin)] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,0.61,0.36,1)] motion-reduce:transition-none',
+              'data-[starting-style]:scale-[0.96] data-[starting-style]:opacity-0',
+              'data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[ending-style]:duration-[130ms] data-[ending-style]:ease-[cubic-bezier(0.4,0,1,1)]',
               widthClass[width],
               className,
             )}
