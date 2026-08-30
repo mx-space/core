@@ -68,7 +68,7 @@ export function FilterPopover({
             Clear all
           </button>
         </Popover.Header>
-        <div className="max-h-[60vh] overflow-auto">
+        <div className="max-h-[60svh] overflow-auto">
           <Popover.Body className="space-y-4">
             <TagsSection
               facets={facets}

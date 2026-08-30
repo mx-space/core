@@ -5,8 +5,6 @@ import {
   mxLexicalToMarkdown,
 } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAtomValue } from 'jotai'
-import { selectAtom } from 'jotai/utils'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
 import type { LucideIcon } from 'lucide-react'
@@ -17,7 +15,6 @@ import {
   Bot,
   Braces,
   Bug,
-  Check,
   Clock,
   Copy,
   File as FileIcon,
@@ -25,7 +22,6 @@ import {
   Hash,
   History,
   Image as ImageIcon,
-  ListChecks,
   Loader2,
   MapPin,
   Pencil,
@@ -40,12 +36,7 @@ import {
 } from 'lucide-react'
 import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  useBeforeUnload,
-  useBlocker,
-  useNavigate,
-  useSearchParams,
-} from 'react-router'
+import { useBeforeUnload, useBlocker, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { AiQueryType, writerGenerate } from '~/api/ai'
@@ -54,8 +45,6 @@ import {
   dryRunMarkdownToLexical,
   type MarkdownMigrationDryRunResponse,
   type MarkdownMigrationIssue,
-  type MarkdownToLexicalMigrationDescriptor,
-  migrationDescriptorFromDryRun,
 } from '~/api/content-migrations'
 import type { CreateDraftData } from '~/api/drafts'
 import {
@@ -68,14 +57,14 @@ import {
 } from '~/api/drafts'
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { ApiRequestError } from '~/api/http'
-import type { CreateNoteData } from '~/api/notes'
 import { getNoteById } from '~/api/notes'
 import { getOption } from '~/api/options'
-import type { CreatePageData } from '~/api/pages'
 import { getPageById } from '~/api/pages'
-import type { CreatePostData } from '~/api/posts'
 import { getPostById, getPosts } from '~/api/posts'
+import type { PublishAiResource, PublishTask } from '~/api/publish-jobs'
+import { createPublishJob } from '~/api/publish-jobs'
 import { callBuiltInFunction } from '~/api/system'
+import { AITaskStatus, getTask } from '~/api/tasks'
 import { getTopics } from '~/api/topics'
 import { API_URL, WEB_URL } from '~/constants/env'
 import {
@@ -88,38 +77,30 @@ import {
   useEntity,
   useEntityList,
 } from '~/data/resource/hooks'
+import { serializeListKey } from '~/data/resource/key'
 import type { CategoryEntity } from '~/data/resources/category'
 import { categories as categoriesCollection } from '~/data/resources/category'
 import { notes as notesCollection } from '~/data/resources/note'
-import { saveNote } from '~/data/resources/note.mutations'
+import { publishNote } from '~/data/resources/note.mutations'
 import { pages as pagesCollection } from '~/data/resources/page'
-import { savePage } from '~/data/resources/page.mutations'
 import { posts as postsCollection } from '~/data/resources/post'
-import { savePost } from '~/data/resources/post.mutations'
+import { publishPost } from '~/data/resources/post.mutations'
 import { topics as topicsCollection } from '~/data/resources/topic'
 import { DraftStatusTag } from '~/features/drafts/components/draft-status-tag'
 import type { AIConfig } from '~/features/settings/types/settings'
+import { useTaskDetailSubscription } from '~/features/tasks/hooks/useTaskSubscription'
 import { AgentPanel, useWriteAgent } from '~/features/write/components/agent'
 import { CoverGenerationEntry } from '~/features/write/components/cover-generation/CoverGenerationEntry'
 import { DraftConflictBanner } from '~/features/write/components/DraftConflictBanner'
 import { DraftConflictDialog } from '~/features/write/components/DraftConflictDialog'
 import { DraftHintBanner } from '~/features/write/components/DraftHintBanner'
 import { DraftPreviewBanner } from '~/features/write/components/DraftPreviewBanner'
+import { openPublishProcessDock } from '~/features/write/components/PublishProcessDock'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
 import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGenerationEntry'
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import type { DraftMergeConflict } from '~/features/write/utils/merge-draft-conflict'
 import { mergeDraftConflict } from '~/features/write/utils/merge-draft-conflict'
-import {
-  prepareAndPublishNote,
-  prepareAndPublishPost,
-  type PublishAiResource,
-} from '~/features/write/utils/prepare-post-publish'
-import {
-  isPublishProcessActive,
-  openPublishProcessDock,
-  publishProcessesAtom,
-} from '~/features/write/utils/publish-process-state'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
@@ -184,7 +165,6 @@ interface WriteFormState {
   coordinatesLng: string
   copyright: boolean
   isPremium: boolean
-  isPublished: boolean
   images: NonNullable<DraftModel['images']>
   location: string
   meta: Record<string, unknown>
@@ -244,7 +224,6 @@ const emptyState: WriteFormState = {
   coordinatesLng: '',
   copyright: true,
   isPremium: false,
-  isPublished: true,
   images: [],
   location: '',
   meta: {},
@@ -268,7 +247,6 @@ const emptyState: WriteFormState = {
 }
 
 const PREFERRED_CONTENT_FORMAT_STORAGE_KEY = 'preferred-content-format'
-const PRE_GENERATE_AI_RESOURCES_META_KEY = 'preGenerateAiResources'
 const PUBLISH_AI_RESOURCES: PublishAiResource[] = [
   'summary',
   'insights',
@@ -346,10 +324,6 @@ const POST_META_SCHEMA: MetaFieldsSchema = {
       'Pin order; higher numbers float to the top; set to 0 when pin is off.',
     type: 'number',
   },
-  isPublished: {
-    description: 'Published flag (false means draft).',
-    type: 'boolean',
-  },
 }
 
 const NOTE_META_SCHEMA: MetaFieldsSchema = {
@@ -365,10 +339,6 @@ const NOTE_META_SCHEMA: MetaFieldsSchema = {
     type: 'boolean',
   },
   location: { description: 'Location text (optional).', type: 'string' },
-  isPublished: {
-    description: 'Published flag (false means draft).',
-    type: 'boolean',
-  },
 }
 
 const PAGE_META_SCHEMA: MetaFieldsSchema = {
@@ -425,15 +395,22 @@ function getDraftKindLabel(kind: WriteKind) {
 }
 
 export function PostWritePageContent() {
-  return <WritePage kind="post" />
+  return <WritePageRoute kind="post" />
 }
 
 export function NoteWritePageContent() {
-  return <WritePage kind="note" />
+  return <WritePageRoute kind="note" />
 }
 
 export function PageWritePageContent() {
-  return <WritePage kind="page" />
+  return <WritePageRoute kind="page" />
+}
+
+function WritePageRoute(props: { kind: WriteKind }) {
+  const [searchParams] = useSearchParams()
+  const documentId = searchParams.get('id') || 'new'
+
+  return <WritePage key={`${props.kind}:${documentId}`} kind={props.kind} />
 }
 
 function WritePage(props: { kind: WriteKind }) {
@@ -441,31 +418,8 @@ function WritePage(props: { kind: WriteKind }) {
   const config = getKindConfig(props.kind)
   const Icon = config.icon
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const id = searchParams.get('id') ?? ''
-  const currentPublishProcessAtom = useMemo(
-    () =>
-      selectAtom(
-        publishProcessesAtom,
-        (processes) => {
-          for (let index = processes.length - 1; index >= 0; index -= 1) {
-            const process = processes[index]
-            if (process.refId === id) {
-              return { id: process.id, phase: process.phase }
-            }
-          }
-          return null
-        },
-        (previous, next) =>
-          previous?.id === next?.id && previous?.phase === next?.phase,
-      ),
-    [id],
-  )
-  const currentPublishProcess = useAtomValue(currentPublishProcessAtom)
-  const publishProcessActive = currentPublishProcess
-    ? isPublishProcessActive(currentPublishProcess.phase)
-    : false
   const routeDraftId = searchParams.get('draftId') ?? ''
   const isEditing = Boolean(id)
   const [preferredContentFormat, setPreferredContentFormat] =
@@ -477,12 +431,10 @@ function WritePage(props: { kind: WriteKind }) {
     ...emptyState,
     contentFormat: preferredContentFormat,
   }))
-  useEffect(() => {
-    if (currentPublishProcess?.phase !== 'completed') return
-    setState((previous) =>
-      previous.isPublished ? previous : { ...previous, isPublished: true },
-    )
-  }, [currentPublishProcess?.phase])
+  const [publishAiResources, setPublishAiResources] = useState<
+    PublishAiResource[]
+  >([])
+  const [publishTaskId, setPublishTaskId] = useState<string | null>(null)
   useDocumentTitle(state.title)
   const [asidePanel, setAsidePanel] = useState<
     'agent' | 'meta' | 'drafts' | null
@@ -521,7 +473,6 @@ function WritePage(props: { kind: WriteKind }) {
     useState<MarkdownMigrationSession | null>(null)
   const [migrationDiagnosticsOpen, setMigrationDiagnosticsOpen] =
     useState(false)
-  const preparedDraftRef = useRef<NoteModel | PostModel | null>(null)
   const reconstructedMigrationKeyRef = useRef<string | null>(null)
   const draftRefType = draftRefTypeByKind[props.kind]
 
@@ -618,8 +569,21 @@ function WritePage(props: { kind: WriteKind }) {
         ? pageDetailQuery
         : postDetailQuery
   const detailModel: WriteModel | undefined = storeEntity
+  const isPublished =
+    props.kind === 'page'
+      ? Boolean(detailModel)
+      : Boolean((detailModel as NoteModel | PostModel | undefined)?.isPublished)
   const isDetailLoaded = storeDetailQuery.isSuccess
   const detailLoading = storeDetailQuery.isLoading
+  const handledPublishTaskRef = useRef('')
+  const { socketConnected: publishTaskSocketConnected } =
+    useTaskDetailSubscription(publishTaskId)
+  const publishTaskQuery = useQuery({
+    enabled: Boolean(publishTaskId),
+    queryFn: () => getTask(publishTaskId!) as unknown as Promise<PublishTask>,
+    queryKey: adminQueryKeys.tasks.taskDetail(publishTaskId ?? ''),
+    refetchInterval: () => (publishTaskSocketConnected ? 30_000 : 5_000),
+  })
   const refDraftQuery = useQuery({
     enabled: isEditing,
     queryFn: () => getDraftByRef(draftRefType, id),
@@ -635,22 +599,111 @@ function WritePage(props: { kind: WriteKind }) {
     queryFn: () => getNewDrafts(draftRefType),
     queryKey: adminQueryKeys.drafts.newDraft(draftRefType),
   })
+  const publicationMutation = useMutation({
+    mutationFn: async (published: boolean) => {
+      if (!id || props.kind === 'page') return
+      if (props.kind === 'post') await publishPost(id, published)
+      else await publishNote(id, published)
+    },
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, t('write.toast.saveFailed'))),
+    onSuccess: async (_result, published) => {
+      toast.success(
+        published
+          ? t('write.publishProcess.republished')
+          : t('write.publishProcess.unpublished'),
+      )
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.write.contentRoot(props.kind),
+      })
+    },
+  })
+
+  useEffect(() => {
+    const task = publishTaskQuery.data
+    if (!task || handledPublishTaskRef.current === `${task.id}:${task.status}`)
+      return
+    if (
+      task.status === AITaskStatus.Pending ||
+      task.status === AITaskStatus.Running
+    )
+      return
+    handledPublishTaskRef.current = `${task.id}:${task.status}`
+
+    const syncCommittedResult = () => {
+      if (!task.result) return
+      formSeededKeyRef.current = null
+      if (lastSavedDraftRef.current?.id === task.payload.draftId) {
+        lastSavedDraftRef.current = {
+          ...lastSavedDraftRef.current,
+          active: task.result.newerDraftChanges,
+          publishedVersion: task.result.draftVersion,
+        }
+      }
+      if (!task.result.newerDraftChanges) setDraftId('')
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('id', task.result.articleId)
+      if (!task.result.newerDraftChanges) nextParams.delete('draftId')
+      setSearchParams(nextParams, { replace: true })
+      void Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.write.contentRoot(props.kind),
+        }),
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.drafts.root }),
+      ])
+    }
+
+    if (task.status === AITaskStatus.Completed && task.result) {
+      toast.success(
+        task.payload.operation === 'online-update'
+          ? t('write.publishProcess.onlineUpdated')
+          : task.payload.operation === 'republish'
+            ? t('write.publishProcess.republished')
+            : t('write.publishProcess.firstPublished'),
+      )
+      syncCommittedResult()
+    } else if (task.result?.articleCommitted) {
+      toast.error(t('write.publishProcess.onlineUpdatedWithAiFailure'))
+      syncCommittedResult()
+    } else if (task.status === AITaskStatus.Cancelled) {
+      toast.error(t('write.publishProcess.cancelled'))
+    } else {
+      toast.error(getErrorMessage(task.error, t('write.publishProcess.failed')))
+    }
+    setPublishTaskId(null)
+  }, [
+    props.kind,
+    publishTaskQuery.data,
+    queryClient,
+    searchParams,
+    setSearchParams,
+    t,
+  ])
 
   const categories = categoriesList.items
   const tags = tagsQuery.data ?? []
   const topics = topicsList.items
   const relatedPosts = relatedPostsList.items
+  const activeNewDrafts = useMemo(
+    () => (newDraftsQuery.data ?? []).filter((draft) => draft.active),
+    [newDraftsQuery.data],
+  )
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
     categories.find((category) => category.id === state.categoryId) ??
     categories[0]
   const availableDraft = useMemo(() => {
-    if (refDraftQuery.data) return refDraftQuery.data
+    if (
+      refDraftQuery.data?.active &&
+      (!detailModel ||
+        !draftMatchesModel(props.kind, refDraftQuery.data, detailModel))
+    )
+      return refDraftQuery.data
 
-    return [...(newDraftsQuery.data ?? [])].sort(
+    return [...activeNewDrafts].sort(
       (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
     )[0]
-  }, [newDraftsQuery.data, refDraftQuery.data])
+  }, [activeNewDrafts, detailModel, props.kind, refDraftQuery.data])
   const publishedContent = useMemo(
     () => (detailModel ? getPublishedContent(detailModel) : null),
     [detailModel],
@@ -702,7 +755,9 @@ function WritePage(props: { kind: WriteKind }) {
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       hasUnsavedDraftChanges() &&
-      currentLocation.pathname !== nextLocation.pathname,
+      (currentLocation.pathname !== nextLocation.pathname ||
+        new URLSearchParams(currentLocation.search).get('id') !==
+          new URLSearchParams(nextLocation.search).get('id')),
   )
 
   useEffect(() => {
@@ -740,7 +795,14 @@ function WritePage(props: { kind: WriteKind }) {
     setMarkdownMigration(null)
     setMigrationDiagnosticsOpen(false)
     reconstructedMigrationKeyRef.current = null
-    setState(fromModel(props.kind, detailModel))
+    const modelState = fromModel(props.kind, detailModel)
+    const fingerprint = getDraftFingerprint(props.kind, modelState, id)
+    draftDirtyRef.current = false
+    lastSavedDraftRef.current = null
+    lastSavedDraftFingerprintRef.current = fingerprint
+    latestDraftFingerprintRef.current = fingerprint
+    setLastSavedFingerprint(fingerprint)
+    setState(modelState)
   }, [
     detailModel,
     firstCategoryId,
@@ -754,9 +816,29 @@ function WritePage(props: { kind: WriteKind }) {
     const draft = refDraftQuery.data
     const published = detailModel
     if (!isEditing || routeDraftId || !draft || !published) return null
-    if (!isDraftNewerThanPublished(draft, published)) return null
+    if (!draft.active) return null
+    if (draftMatchesModel(props.kind, draft, published)) return null
     return draft
-  }, [detailModel, isEditing, refDraftQuery.data, routeDraftId])
+  }, [detailModel, isEditing, props.kind, refDraftQuery.data, routeDraftId])
+
+  useEffect(() => {
+    const draft = refDraftQuery.data
+    if (
+      !draft ||
+      !detailModel ||
+      routeDraftId ||
+      !draftMatchesModel(props.kind, draft, detailModel) ||
+      lastSavedDraftRef.current?.id === draft.id
+    )
+      return
+    const modelState = fromModel(props.kind, detailModel)
+    const fingerprint = getDraftFingerprint(props.kind, modelState, id)
+    lastSavedDraftRef.current = { ...draft, active: false }
+    lastSavedDraftFingerprintRef.current = fingerprint
+    latestDraftFingerprintRef.current = fingerprint
+    setLastSavedFingerprint(fingerprint)
+    setDraftId(draft.id)
+  }, [detailModel, id, props.kind, refDraftQuery.data, routeDraftId])
 
   useEffect(() => {
     const draft = routeDraftQuery.data
@@ -880,10 +962,11 @@ function WritePage(props: { kind: WriteKind }) {
     state.contentFormat,
   ])
 
-  const saveMutation = useMutation<WriteModel>({
+  const saveMutation = useMutation<{
+    draft: DraftModel
+    taskId: string
+  }>({
     mutationFn: async () => {
-      preparedDraftRef.current = null
-      let migration: MarkdownToLexicalMigrationDescriptor | undefined
       const requiresMigration =
         isEditing &&
         publishedContent?.contentFormat === 'markdown' &&
@@ -912,86 +995,58 @@ function WritePage(props: { kind: WriteKind }) {
           setMigrationDiagnosticsOpen(true)
           throw new Error(t('write.migration.toast.blocked'))
         }
-        migration = migrationDescriptorFromDryRun(sourceMarkdown, dryRun)
       }
 
-      const resources = getPreGenerateAiResources(state.meta)
-      const isPublishing =
-        props.kind !== 'page' &&
-        state.isPublished &&
-        !Boolean(
-          (detailModel as NoteModel | PostModel | undefined)?.isPublished,
-        )
-
-      if (isPublishing && resources.length > 0) {
-        const common = {
-          config: aiPublishOptionsQuery.data,
-          id,
-          onDraftSaved: (draft: NoteModel | PostModel) => {
-            preparedDraftRef.current = draft
-            setState((previous) => ({ ...previous, isPublished: false }))
-          },
-          resources,
-        }
-        return props.kind === 'post'
-          ? prepareAndPublishPost({
-              ...common,
-              data: buildPostWriteData(state, draftId || undefined, migration),
-            })
-          : prepareAndPublishNote({
-              ...common,
-              data: buildNoteWriteData(state, draftId || undefined, migration),
-            })
+      const data = structuredClone(latestDraftDataRef.current)
+      const currentDraftId = draftId || routeDraftId
+      const baseline = currentDraftId
+        ? lastSavedDraftRef.current?.id === currentDraftId
+          ? lastSavedDraftRef.current
+          : null
+        : null
+      if (currentDraftId && !baseline) {
+        throw new Error(t('write.toast.draftBaselineMissing'))
       }
-
-      return saveWrite(props.kind, id, state, draftId || undefined, migration)
+      const draft = currentDraftId
+        ? await updateDraft(currentDraftId, {
+            ...data,
+            expectedVersion: baseline!.version,
+          })
+        : await createDraft(data)
+      const task = await createPublishJob({
+        aiResources: props.kind === 'page' ? [] : publishAiResources,
+        draftId: draft.id,
+        expectedVersion: draft.version,
+      })
+      return { draft, taskId: task.taskId }
     },
-    onError: (error: unknown) => {
-      const preparedDraft = preparedDraftRef.current
-      if (!preparedDraft) {
-        toast.error(getErrorMessage(error, t('write.toast.saveFailed')))
-        return
-      }
-
-      setState((previous) => ({ ...previous, isPublished: false }))
-      if (!id) {
-        const nextParams = new URLSearchParams(searchParams)
-        nextParams.set('id', preparedDraft.id)
-        setSearchParams(nextParams, { replace: true })
-      }
+    onError: (error: unknown) =>
       toast.error(
-        getErrorMessage(error, t('write.publishAi.preparationFailed')),
-      )
-    },
+        getErrorMessage(error, t('write.publishProcess.acceptFailed')),
+      ),
     onSuccess: async (result) => {
-      const wasPrepared = Boolean(preparedDraftRef.current)
       setMarkdownMigration(null)
       setMigrationDiagnosticsOpen(false)
       draftDirtyRef.current = false
+      lastSavedDraftRef.current = result.draft
+      setDraftId(result.draft.id)
       lastSavedDraftFingerprintRef.current = latestDraftFingerprintRef.current
       setLastSavedFingerprint(latestDraftFingerprintRef.current)
-      toast.success(
-        wasPrepared
-          ? t('write.publishProcess.started')
-          : isEditing
-            ? t('write.toast.saved')
-            : t('write.toast.createOk'),
-      )
-      preparedDraftRef.current = null
-      const invalidation = queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.write.contentRoot(props.kind),
-      })
-      if (wasPrepared) void invalidation
-      else await invalidation
-      if (props.kind === 'page') {
-        navigate(config.listPath)
-        return
-      }
-      if (!isEditing) {
+      setPublishAiResources([])
+      setPublishTaskId(result.taskId)
+      if (searchParams.get('draftId') !== result.draft.id) {
         const nextParams = new URLSearchParams(searchParams)
-        nextParams.set('id', result.id)
+        nextParams.set('draftId', result.draft.id)
         setSearchParams(nextParams, { replace: true })
       }
+      toast.success(t('write.publishProcess.started'))
+      openPublishProcessDock()
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.drafts.root }),
+        queryClient.invalidateQueries({
+          queryKey: adminQueryKeys.tasks.tasksRoot,
+        }),
+      ])
     },
   })
   const buildDraftSaveVariables = (): DraftSaveVariables => ({
@@ -1151,7 +1206,7 @@ function WritePage(props: { kind: WriteKind }) {
     [categories, isEditing, props.kind, state],
   )
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (draftConflictResolving) return
     if (draftConflict) {
@@ -1160,6 +1215,17 @@ function WritePage(props: { kind: WriteKind }) {
     }
     if (validationError) {
       toast.error(validationError)
+      return
+    }
+    if (
+      isPublished &&
+      props.kind !== 'page' &&
+      !(await confirmDialog({
+        confirmText: t('write.publishProcess.updateOnline'),
+        description: t('write.publishProcess.updateOnlineDescription'),
+        title: t('write.publishProcess.updateOnlineTitle'),
+      }))
+    ) {
       return
     }
 
@@ -1461,13 +1527,24 @@ function WritePage(props: { kind: WriteKind }) {
     onError: (error: unknown) =>
       toast.error(getErrorMessage(error, t('drafts.toast.deleteFailed'))),
     onSuccess: async (_result, deletedId: string) => {
+      const deletedCurrent = draftId === deletedId || routeDraftId === deletedId
       if (lastSavedDraftRef.current?.id === deletedId) {
         lastSavedDraftRef.current = null
-        lastSavedDraftFingerprintRef.current = ''
-        setLastSavedFingerprint('')
-        draftDirtyRef.current = true
       }
-      if (draftId === deletedId) {
+      if (deletedCurrent) {
+        const nextState = detailModel
+          ? fromModel(props.kind, detailModel)
+          : { ...emptyState, contentFormat: preferredContentFormat }
+        const fingerprint = getDraftFingerprint(
+          props.kind,
+          nextState,
+          isEditing ? id : undefined,
+        )
+        lastSavedDraftFingerprintRef.current = fingerprint
+        latestDraftFingerprintRef.current = fingerprint
+        setLastSavedFingerprint(fingerprint)
+        draftDirtyRef.current = false
+        setState(nextState)
         setDraftId('')
         const nextParams = new URLSearchParams(searchParams)
         nextParams.delete('draftId')
@@ -1573,20 +1650,26 @@ function WritePage(props: { kind: WriteKind }) {
       .catch(() => toast.error(t('write.toast.copyFailed')))
   }
 
-  const latestDraft = lastSavedDraftRef.current ?? draftMutation.data
+  const latestDraftCandidate = lastSavedDraftRef.current ?? draftMutation.data
+  const latestDraft = latestDraftCandidate?.active
+    ? latestDraftCandidate
+    : undefined
   const draftListHintCount =
-    !isEditing && !routeDraftId ? (newDraftsQuery.data?.length ?? 0) : 0
+    !isEditing && !routeDraftId ? activeNewDrafts.length : 0
   const showDraftListHint = draftListHintCount > 0 && !draftListHintDismissed
   const showRecoveryHint = Boolean(
     recoveryHintDraft && publishedContent && !recoveryHintDismissed,
   )
   const draftKindText = getDraftKindLabel(props.kind)
   const isDirty =
-    hasDraftAutosaveContent && draftFingerprint !== lastSavedFingerprint
+    draftDirtyRef.current &&
+    hasDraftAutosaveContent &&
+    draftFingerprint !== lastSavedFingerprint
   const metaStatus = computeMetaStatus({
     hasConflict: Boolean(draftConflict),
     isDirty,
     isEditing,
+    isPublished,
     isPendingDraftSave: draftMutation.isPending || draftConflictResolving,
     latestDraft,
     publishedUpdatedAt: detailModel
@@ -1695,24 +1778,20 @@ function WritePage(props: { kind: WriteKind }) {
               <WriteHeaderIconButton
                 disabled={
                   saveMutation.isPending ||
+                  draftMutation.isPending ||
                   detailLoading ||
                   draftConflictResolving
                 }
-                onClick={
-                  publishProcessActive ? openPublishProcessDock : undefined
-                }
                 title={
-                  publishProcessActive
-                    ? t('write.publishProcess.viewProgress')
+                  isPublished
+                    ? t('write.publishProcess.updateOnline')
                     : t('write.header.publish')
                 }
-                type={publishProcessActive ? 'button' : 'submit'}
+                type="submit"
                 variant="primary"
               >
                 {saveMutation.isPending ? (
                   <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : publishProcessActive ? (
-                  <ListChecks aria-hidden="true" className="size-4" />
                 ) : (
                   <Send aria-hidden="true" className="size-4" />
                 )}
@@ -1750,24 +1829,20 @@ function WritePage(props: { kind: WriteKind }) {
               <WriteHeaderIconButton
                 disabled={
                   saveMutation.isPending ||
+                  draftMutation.isPending ||
                   detailLoading ||
                   draftConflictResolving
                 }
-                onClick={
-                  publishProcessActive ? openPublishProcessDock : undefined
-                }
                 title={
-                  publishProcessActive
-                    ? t('write.publishProcess.viewProgress')
+                  isPublished
+                    ? t('write.publishProcess.updateOnline')
                     : t('write.header.publish')
                 }
-                type={publishProcessActive ? 'button' : 'submit'}
+                type="submit"
                 variant="primary"
               >
                 {saveMutation.isPending ? (
                   <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-                ) : publishProcessActive ? (
-                  <ListChecks aria-hidden="true" className="size-4" />
                 ) : (
                   <Send aria-hidden="true" className="size-4" />
                 )}
@@ -1828,10 +1903,10 @@ function WritePage(props: { kind: WriteKind }) {
                           label: draftKindText,
                           version: recoveryHintDraft.version,
                         })}
-                        onAction={() => {
-                          setAsidePanel('drafts')
-                          enterDraftPreview(recoveryHintDraft)
-                        }}
+                        onAction={() => enterDraftPreview(recoveryHintDraft)}
+                        onDelete={() =>
+                          void confirmAndDeleteDraft(recoveryHintDraft)
+                        }
                         onDismiss={() => setRecoveryHintDismissed(true)}
                         variant="recovery"
                       />
@@ -1893,7 +1968,7 @@ function WritePage(props: { kind: WriteKind }) {
                         agentVisible={agentVisible}
                         autoFocus={isEditing}
                         content={state.content}
-                        contentClassName="!min-h-[60vh] flex-1 px-0 pt-3 pb-[200px]"
+                        contentClassName="!min-h-[60dvh] flex-1 px-0 pt-3 pb-[200px]"
                         kind={props.kind}
                         key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
                         getMetaFields={getAgentMetaFields}
@@ -1905,7 +1980,7 @@ function WritePage(props: { kind: WriteKind }) {
                         onPinSelection={() => setAsidePanel('agent')}
                         onTextChange={(text) => updateField('text', text)}
                         refId={isEditing ? id : routeDraftId || undefined}
-                        surfaceClassName="flex min-h-[70vh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
+                        surfaceClassName="flex min-h-[70dvh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
                         surfaceStyle={
                           {
                             '--rc-max-width': 'none',
@@ -1916,7 +1991,7 @@ function WritePage(props: { kind: WriteKind }) {
                       <>
                         <CodeMirrorEditor
                           autoFocus={isEditing}
-                          className="min-h-136 rounded-none border-0 bg-transparent px-0 py-6"
+                          className="min-h-136 rounded-none border-0 bg-transparent px-0 py-6 phone:py-3"
                           onChange={(value) => updateField('text', value)}
                           style={{ minHeight: '34rem' }}
                           text={state.text}
@@ -1931,7 +2006,7 @@ function WritePage(props: { kind: WriteKind }) {
           )}
           <ContentLayoutSlot active={draftsPanelOpen} id="drafts">
             <DraftsAsidePanel
-              drafts={[...(newDraftsQuery.data ?? [])].sort(
+              drafts={[...activeNewDrafts].sort(
                 (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
               )}
               deletingDraftId={
@@ -1974,6 +2049,10 @@ function WritePage(props: { kind: WriteKind }) {
                 }
                 onApplyDraft={applyDraft}
                 onGenerateTitleOrSlug={generateTitleOrSlug}
+                onPublishedChange={(published) =>
+                  publicationMutation.mutate(published)
+                }
+                onPublishAiResourcesChange={setPublishAiResources}
                 onSaveDraft={saveDraftNow}
                 postFields={
                   props.kind === 'post' ? (
@@ -1996,8 +2075,10 @@ function WritePage(props: { kind: WriteKind }) {
                       ? `${WEB_URL}${postPublicPath}`
                       : t('write.postPublicPath.fallback')
                 }
+                publicationPending={publicationMutation.isPending}
+                publishAiResources={publishAiResources}
+                published={isPublished}
                 refId={isEditing ? id : undefined}
-                saveResultId={saveMutation.data?.id}
                 state={state}
                 updateField={updateField}
                 writerGeneratePending={writerGenerateMutation.isPending}
@@ -2086,7 +2167,7 @@ function MarkdownMigrationDialog(props: {
 
   return (
     <Modal
-      className="max-h-[min(80vh,44rem)] w-[min(92vw,42rem)]"
+      className="max-h-[min(80svh,44rem)] w-[min(92vw,42rem)]"
       onClose={props.onClose}
       open={props.open}
     >
@@ -2193,11 +2274,15 @@ function ContentSettingsPanel(props: {
   noteFields: ReactNode
   onApplyDraft: (draft: DraftModel) => void
   onGenerateTitleOrSlug: () => void
+  onPublishedChange: (published: boolean) => void
+  onPublishAiResourcesChange: (resources: PublishAiResource[]) => void
   onSaveDraft: () => void
   postFields: ReactNode
+  publicationPending: boolean
+  publishAiResources: PublishAiResource[]
+  published: boolean
   publicPath: string
   refId?: string
-  saveResultId?: string
   state: WriteFormState
   updateField: <TKey extends keyof WriteFormState>(
     key: TKey,
@@ -2206,15 +2291,14 @@ function ContentSettingsPanel(props: {
   writerGeneratePending: boolean
 }) {
   const { t } = useI18n()
-  const preGenerateResources = getPreGenerateAiResources(props.state.meta)
   const togglePreGenerateResource = (
     resource: PublishAiResource,
     checked: boolean,
   ) => {
     const next = checked
-      ? [...new Set([...preGenerateResources, resource])]
-      : preGenerateResources.filter((item) => item !== resource)
-    props.updateField('meta', setPreGenerateAiResources(props.state.meta, next))
+      ? [...new Set([...props.publishAiResources, resource])]
+      : props.publishAiResources.filter((item) => item !== resource)
+    props.onPublishAiResourcesChange(next)
   }
 
   return (
@@ -2225,22 +2309,29 @@ function ContentSettingsPanel(props: {
       >
         <PanelBlock title={t('write.section.publish.title')}>
           <Switch
-            checked={props.state.isPublished}
-            label={t('write.section.path.publishLabel')}
-            onCheckedChange={(checked) =>
-              props.updateField('isPublished', checked)
-            }
+            checked={props.published}
+            disabled={!props.refId || props.publicationPending}
+            label={t(
+              props.published
+                ? 'write.publication.published'
+                : 'write.publication.unpublished',
+            )}
+            onCheckedChange={props.onPublishedChange}
           />
           <div className="mt-4 border-t border-border pt-3">
             <div className="text-sm font-medium text-fg">
               {t('write.publishAi.title')}
             </div>
             <p className="mt-1 text-xs leading-5 text-fg-muted">
-              {t('write.publishAi.description')}
+              {t(
+                props.published
+                  ? 'write.publishAi.descriptionOnline'
+                  : 'write.publishAi.description',
+              )}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {PUBLISH_AI_RESOURCES.map((resource) => {
-                const checked = preGenerateResources.includes(resource)
+                const checked = props.publishAiResources.includes(resource)
                 const unavailableKey = getPreGenerateUnavailableKey(
                   resource,
                   props.aiConfig,
@@ -2280,12 +2371,6 @@ function ContentSettingsPanel(props: {
               })}
             </div>
           </div>
-          {props.saveResultId ? (
-            <div className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
-              <Check aria-hidden="true" className="size-4" />
-              {t('write.section.path.savedId', { id: props.saveResultId })}
-            </div>
-          ) : null}
         </PanelBlock>
 
         <PanelBlock title={t('write.section.draft.title')}>
@@ -2546,6 +2631,7 @@ function computeMetaStatus(input: {
   hasConflict: boolean
   isDirty: boolean
   isEditing: boolean
+  isPublished: boolean
   isPendingDraftSave: boolean
   latestDraft?: DraftModel
   publishedUpdatedAt?: string
@@ -2586,7 +2672,7 @@ function computeMetaStatus(input: {
       }),
     }
   }
-  if (input.isEditing && input.publishedUpdatedAt) {
+  if (input.isEditing && input.isPublished && input.publishedUpdatedAt) {
     return {
       status: 'published',
       text: translate('write.metaStatus.published', {
@@ -3760,7 +3846,7 @@ function PageParseMarkdownDialog(props: {
     <Modal
       onClose={props.onClose}
       open={props.open}
-      popupStyle={{ height: 'min(82vh, 42rem)', width: 'min(92vw, 56rem)' }}
+      popupStyle={{ height: 'min(82svh, 42rem)', width: 'min(92vw, 56rem)' }}
     >
       <ModalHeader title={t('write.parseMd.dialogTitle')} />
       <div className="min-h-0 flex-1 p-4">
@@ -3927,26 +4013,6 @@ function setMetaValue(
   }
 
   return next
-}
-
-function getPreGenerateAiResources(
-  meta: Record<string, unknown>,
-): PublishAiResource[] {
-  const value = meta[PRE_GENERATE_AI_RESOURCES_META_KEY]
-  if (!Array.isArray(value)) return []
-  const selected = new Set(value.filter((item) => typeof item === 'string'))
-  return PUBLISH_AI_RESOURCES.filter((resource) => selected.has(resource))
-}
-
-function setPreGenerateAiResources(
-  meta: Record<string, unknown>,
-  resources: PublishAiResource[],
-) {
-  return setMetaValue(
-    meta,
-    PRE_GENERATE_AI_RESOURCES_META_KEY,
-    resources.length > 0 ? resources : null,
-  )
 }
 
 function getPreGenerateUnavailableKey(
@@ -4288,15 +4354,20 @@ function getPublishedContent(model: WriteModel): PublishedWriteContent {
   }
 }
 
-function isDraftNewerThanPublished(draft: DraftModel, model: WriteModel) {
-  const draftUpdatedAt = Date.parse(draft.updatedAt)
-  const publishedUpdatedAt = Date.parse(model.modifiedAt || model.createdAt)
-
-  if (Number.isNaN(draftUpdatedAt) || Number.isNaN(publishedUpdatedAt)) {
-    return true
+function draftMatchesModel(
+  kind: WriteKind,
+  draft: DraftModel,
+  model: WriteModel,
+) {
+  const modelState = fromModel(kind, model)
+  const draftState = fromDraft(kind, draft, modelState)
+  if (draft.typeSpecificData?.slug === '') {
+    draftState.slug = modelState.slug
   }
-
-  return draftUpdatedAt > publishedUpdatedAt
+  return (
+    getDraftFingerprint(kind, draftState, draft.refId) ===
+    getDraftFingerprint(kind, modelState, draft.refId)
+  )
 }
 
 function fromModel(kind: WriteKind, model: WriteModel) {
@@ -4311,7 +4382,6 @@ function fromModel(kind: WriteKind, model: WriteModel) {
       copyright: post.copyright,
       images: post.images ?? [],
       isPremium: Boolean(post.isPremium),
-      isPublished: post.isPublished ?? true,
       meta,
       pin: Boolean(post.pinAt),
       pinOrder: String(post.pinOrder ?? 1),
@@ -4340,7 +4410,6 @@ function fromModel(kind: WriteKind, model: WriteModel) {
         typeof note.coordinates?.longitude === 'number'
           ? String(note.coordinates.longitude)
           : '',
-      isPublished: note.isPublished,
       images: note.images ?? [],
       location: note.location ?? '',
       meta: asRecord(note.meta),
@@ -4362,7 +4431,6 @@ function fromModel(kind: WriteKind, model: WriteModel) {
     content: page.content ?? '',
     contentFormat: page.contentFormat ?? 'markdown',
     images: page.images ?? [],
-    isPublished: true,
     meta: asRecord(page.meta),
     order: typeof page.order === 'number' ? String(page.order) : '',
     slug: page.slug,
@@ -4405,10 +4473,6 @@ function fromDraft(
         typeof specific.isPremium === 'boolean'
           ? specific.isPremium
           : previous.isPremium,
-      isPublished:
-        typeof specific.isPublished === 'boolean'
-          ? specific.isPublished
-          : previous.isPublished,
       pin: 'pin' in specific ? Boolean(specific.pin) : previous.pin,
       pinOrder:
         typeof specific.pinOrder === 'number'
@@ -4453,10 +4517,6 @@ function fromDraft(
           : typeof specific.coordinates?.longitude === 'number'
             ? String(specific.coordinates.longitude)
             : previous.coordinatesLng,
-      isPublished:
-        typeof specific.isPublished === 'boolean'
-          ? specific.isPublished
-          : previous.isPublished,
       location:
         typeof specific.location === 'string'
           ? specific.location
@@ -4524,128 +4584,35 @@ function resolveDraftPasswordProtected(
   return previous.passwordProtected
 }
 
-function buildPostWriteData(
-  state: WriteFormState,
-  draftId?: string,
-  migration?: MarkdownToLexicalMigrationDescriptor,
-): CreatePostData {
-  const projected = projectWriteState(state)
-  return {
-    categoryId: projected.categoryId,
-    content:
-      projected.contentFormat === 'lexical' ? projected.content : undefined,
-    contentFormat: projected.contentFormat,
-    copyright: projected.copyright,
-    draftId,
-    images:
-      projected.contentFormat === 'lexical'
-        ? undefined
-        : buildWriteImages(projected),
-    isPremium: projected.isPremium,
-    isPublished: projected.isPublished,
-    migration,
-    meta: resolvePaywallMeta(
-      projected.meta,
-      projected.isPremium,
-      Math.max(1, Number(projected.previewBlocks) || 3),
-    ),
-    pin: projected.pin ? new Date().toISOString() : null,
-    pinOrder: projected.pin ? Number(projected.pinOrder) || 1 : null,
-    relatedId: splitCommaList(projected.relatedId),
-    slug: projected.slug,
-    summary: projected.summary || null,
-    tags: projected.tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean),
-    text: projected.text,
-    title: projected.title,
-  }
-}
-
-function buildNoteWriteData(
-  state: WriteFormState,
-  draftId?: string,
-  migration?: MarkdownToLexicalMigrationDescriptor,
-): CreateNoteData {
-  const projected = projectWriteState(state)
-  return {
-    bookmark: projected.bookmark,
-    content:
-      projected.contentFormat === 'lexical' ? projected.content : undefined,
-    contentFormat: projected.contentFormat,
-    coordinates: parseCoordinates(projected),
-    draftId,
-    images:
-      projected.contentFormat === 'lexical'
-        ? undefined
-        : buildWriteImages(projected),
-    isPublished: projected.isPublished,
-    location: projected.location || null,
-    migration,
-    meta: projected.meta,
-    mood: projected.mood || undefined,
-    password: projected.passwordProtected
-      ? projected.password.trim() || undefined
-      : null,
-    publicAt: normalizeFutureDatetimeIso(projected.publicAt),
-    slug: projected.slug || undefined,
-    text: projected.text,
-    title: resolveWriteTitle('note', projected),
-    topicId: projected.topicId || null,
-    weather: projected.weather || undefined,
-  }
-}
-
-function buildPageWriteData(
-  state: WriteFormState,
-  draftId?: string,
-  migration?: MarkdownToLexicalMigrationDescriptor,
-): CreatePageData {
-  const projected = projectWriteState(state)
-  return {
-    content:
-      projected.contentFormat === 'lexical' ? projected.content : undefined,
-    contentFormat: projected.contentFormat,
-    draftId,
-    images:
-      projected.contentFormat === 'lexical'
-        ? undefined
-        : buildWriteImages(projected),
-    meta: projected.meta,
-    migration,
-    order: projected.order ? Number(projected.order) : undefined,
-    slug: projected.slug,
-    subtitle: projected.subtitle,
-    text: projected.text,
-    title: projected.title,
-  }
-}
-
-function saveWrite(
-  kind: WriteKind,
-  id: string,
-  state: WriteFormState,
-  draftId?: string,
-  migration?: MarkdownToLexicalMigrationDescriptor,
-): Promise<WriteModel> {
-  if (kind === 'post') {
-    return savePost(id, buildPostWriteData(state, draftId, migration))
-  }
-
-  if (kind === 'note') {
-    return saveNote(id, buildNoteWriteData(state, draftId, migration))
-  }
-
-  return savePage(id, buildPageWriteData(state, draftId, migration))
-}
-
 function getDraftFingerprint(
   kind: WriteKind,
   state: WriteFormState,
   refId?: string,
 ) {
-  return JSON.stringify(toDraftData(kind, state, refId, { project: false }))
+  const data = toDraftData(kind, state, refId, { project: false })
+  const meta = { ...data.meta }
+  const typeSpecificData: Record<string, unknown> = {
+    ...data.typeSpecificData,
+  }
+
+  delete meta.preGenerateAiResources
+  if (kind === 'post') {
+    typeSpecificData.pin = Boolean(typeSpecificData.pin)
+    for (const key of ['relatedId', 'tags']) {
+      if (Array.isArray(typeSpecificData[key])) {
+        typeSpecificData[key] = [...typeSpecificData[key]].sort()
+      }
+    }
+  }
+
+  return serializeListKey([
+    {
+      ...data,
+      images: data.images?.map((image) => image.src).sort(),
+      meta,
+      typeSpecificData,
+    },
+  ])
 }
 
 function toDraftData(
@@ -4682,7 +4649,6 @@ function toDraftData(
         categoryId: state.categoryId,
         copyright: state.copyright,
         isPremium: state.isPremium,
-        isPublished: state.isPublished,
         pin: state.pin ? new Date().toISOString() : null,
         pinOrder: state.pin ? Number(state.pinOrder) || 1 : undefined,
         relatedId: splitCommaList(state.relatedId),
@@ -4700,7 +4666,6 @@ function toDraftData(
     return {
       ...base,
       typeSpecificData: {
-        isPublished: state.isPublished,
         bookmark: state.bookmark,
         coordinates: parseCoordinates(state),
         location: state.location,
@@ -5009,7 +4974,6 @@ function getWriteAgentMetaFields(kind: WriteKind, state: WriteFormState) {
   if (kind === 'post') {
     return {
       copyright: state.copyright,
-      isPublished: state.isPublished,
       pin: state.pin,
       pinOrder: Number(state.pinOrder) || 0,
       slug: state.slug,
@@ -5022,7 +4986,6 @@ function getWriteAgentMetaFields(kind: WriteKind, state: WriteFormState) {
   if (kind === 'note') {
     return {
       bookmark: state.bookmark,
-      isPublished: state.isPublished,
       location: state.location,
       mood: state.mood,
       slug: state.slug,
@@ -5064,9 +5027,6 @@ function applyWriteAgentMetaUpdates(
     if ('pinOrder' in updates) {
       next.pinOrder = String(Number(updates.pinOrder ?? 0) || 0)
     }
-    if ('isPublished' in updates) {
-      next.isPublished = Boolean(updates.isPublished)
-    }
   }
 
   if (kind === 'note') {
@@ -5075,9 +5035,6 @@ function applyWriteAgentMetaUpdates(
     if ('bookmark' in updates) next.bookmark = Boolean(updates.bookmark)
     if ('location' in updates) {
       next.location = updates.location == null ? '' : String(updates.location)
-    }
-    if ('isPublished' in updates) {
-      next.isPublished = Boolean(updates.isPublished)
     }
   }
 

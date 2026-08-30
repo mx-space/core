@@ -24,7 +24,7 @@ export function ProtectedLayout() {
 
   if (loggedQuery.isLoading) {
     return (
-      <main className="flex h-screen items-center justify-center bg-white text-sm text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
+      <main className="flex h-dvh items-center justify-center bg-white text-sm text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400">
         {t('app.loading.auth')}
       </main>
     )

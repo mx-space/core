@@ -1,5 +1,6 @@
 import { Bug, Check, RotateCcw, Server } from 'lucide-react'
-import { FormEvent, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
 import { Switch } from '~/ui/primitives/switch'
@@ -74,7 +75,7 @@ export function SetupApiRouteViewContent() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-neutral-950 p-4 text-white">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-neutral-950 p-4 text-white">
       <div className="mb-4 flex size-20 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md">
         <Server aria-hidden="true" className="size-10" />
       </div>
@@ -143,7 +144,7 @@ interface SetupInputProps {
 }
 
 function SetupInput(props: SetupInputProps) {
-  const listId = `${props.label.replace(/\s+/g, '-')}-history`
+  const listId = `${props.label.replaceAll(/\s+/g, '-')}-history`
 
   return (
     <div className="mb-4">

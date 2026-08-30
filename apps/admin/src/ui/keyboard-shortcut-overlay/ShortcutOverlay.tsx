@@ -87,7 +87,7 @@ export function ShortcutOverlay(props: ShortcutOverlayProps) {
         aria-labelledby="shortcut-overlay-title"
         aria-modal="true"
         className={cn(
-          'relative flex max-h-[80vh] w-[min(640px,calc(100vw-32px))] flex-col overflow-hidden rounded-xl bg-surface-overlay shadow-lg',
+          'relative flex max-h-[80svh] w-[min(640px,calc(100vw-32px))] flex-col overflow-hidden rounded-xl bg-surface-overlay shadow-lg',
         )}
         data-testid="shortcut-overlay-card"
         role="dialog"

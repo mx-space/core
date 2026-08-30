@@ -46,7 +46,7 @@ export function CompiledCodeModal(props: {
         <Scroll
           className="rounded border border-neutral-200 bg-neutral-950 dark:border-neutral-800"
           orientation="both"
-          viewportClassName="max-h-[70vh]"
+          viewportClassName="max-h-[70svh]"
         >
           <pre className="p-4 font-mono text-xs leading-5 text-neutral-100">
             {query.data || t('snippets.dialog.compiled.empty')}

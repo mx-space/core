@@ -201,7 +201,7 @@ function InsertAfilmoryDialog(props: InsertAfilmoryDialogProps) {
   const noCta = !showList && !showFilter
 
   return (
-    <div className="flex max-h-[85vh] w-full flex-col overflow-hidden">
+    <div className="flex max-h-[85svh] w-full flex-col overflow-hidden">
       <ModalHeader
         subtitle={
           editingUrl ? null : (

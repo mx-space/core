@@ -84,14 +84,14 @@ export function AdminShell(props: PropsWithChildren) {
     <ShellNavProvider open={navOpen} setOpen={setNavOpen}>
       <main
         className={cn(
-          'grid h-screen min-h-0 grid-cols-[minmax(0,1fr)] overflow-hidden bg-surface-page text-fg lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]',
+          'grid h-dvh min-h-0 grid-cols-[minmax(0,1fr)] overflow-hidden bg-surface-page text-fg lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]',
           sidebarTransitionsEnabled &&
             'transition-[grid-template-columns] duration-200 ease-out',
         )}
         data-sidebar-collapsed={sidebar.collapsed ? 'true' : 'false'}
         style={mainStyle}
       >
-        <aside className="relative hidden h-screen min-h-0 flex-col overflow-hidden bg-surface-page lg:flex">
+        <aside className="relative hidden h-dvh min-h-0 flex-col overflow-hidden bg-surface-page lg:flex">
           <FocusScope
             className="flex min-h-0 flex-1 flex-col"
             id={FOCUS_SCOPES.sidebar}
@@ -101,7 +101,7 @@ export function AdminShell(props: PropsWithChildren) {
           <SidebarResizeHandle />
         </aside>
 
-        <section className="relative flex h-screen min-h-0 min-w-0 flex-col bg-background">
+        <section className="relative flex h-dvh min-h-0 min-w-0 flex-col bg-background pb-[env(safe-area-inset-bottom)]">
           <div className="relative min-h-0 flex-1 overflow-hidden">
             {props.children}
           </div>

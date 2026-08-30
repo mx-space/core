@@ -118,7 +118,7 @@ function AddNotesToTopicModal(props: AddNotesToTopicModalProps) {
         />
       </div>
 
-      <Scroll className="max-h-[60vh] min-h-0 flex-1">
+      <Scroll className="max-h-[60svh] min-h-0 flex-1">
         {notesQuery.isLoading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 6 }).map((_, index) => (
@@ -246,7 +246,7 @@ export async function presentAddNotesToTopic(
     { topicId },
     {
       modalProps: {
-        className: 'max-h-[min(84vh,42rem)]',
+        className: 'max-h-[min(84svh,42rem)]',
         popupStyle: { width: 'min(92vw, 34rem)' },
       },
     },

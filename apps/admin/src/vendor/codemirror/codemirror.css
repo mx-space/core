@@ -41,6 +41,13 @@
     @apply !min-w-[3rem];
   }
 
+  @media (max-width: 768px) {
+    & .cm-gutters,
+    & .cm-gutter {
+      @apply !min-w-[1.75rem];
+    }
+  }
+
   /* WYSIWYG Mode Styles */
   &.cm-wysiwyg-mode {
     --wysiwyg-paragraph-gap: 0.9rem;

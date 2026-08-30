@@ -59,7 +59,7 @@ export function CommandPalette({ open, onClose, items }: CommandPaletteProps) {
             ESC
           </kbd>
         </div>
-        <CommandList className="max-h-[50vh] overflow-y-auto px-1 py-1">
+        <CommandList className="max-h-[50svh] overflow-y-auto px-1 py-1">
           <CommandEmpty className="flex flex-col items-center gap-3 px-6 py-10 text-sm text-fg-muted">
             <Search
               aria-hidden="true"

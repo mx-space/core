@@ -207,7 +207,7 @@ export function ParsedPreviewPane(props: ParsedPreviewPaneProps) {
             <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
               {t('markdown.import.preview')}
             </div>
-            <div className="max-h-[50vh] overflow-y-auto rounded border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+            <div className="max-h-[50svh] overflow-y-auto rounded border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
               <MarkdownRender text={props.item.text} />
             </div>
           </div>

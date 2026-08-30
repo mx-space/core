@@ -52,7 +52,7 @@ export function SnippetMetaPopover(props: SnippetMetaPopoverProps) {
           <Popover.Header>
             <span>{t('snippets.editor.action.settings')}</span>
           </Popover.Header>
-          <div className="max-h-[70vh] overflow-auto px-4 py-4">
+          <div className="max-h-[70svh] overflow-auto px-4 py-4">
             <div className="space-y-4">
               <Field label="Path">
                 <div className="text-sm text-fg-muted break-all">

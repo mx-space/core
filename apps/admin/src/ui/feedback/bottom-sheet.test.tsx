@@ -40,12 +40,6 @@ function findScrim(): HTMLElement | null {
   ) as HTMLElement | null
 }
 
-function findCloseButton(): HTMLButtonElement | null {
-  return document.querySelector(
-    'button[aria-label="关闭"]',
-  ) as HTMLButtonElement | null
-}
-
 function findToggleButton(): HTMLButtonElement | null {
   return (
     (document.querySelector(
@@ -89,7 +83,7 @@ describe('BottomSheet', () => {
     expect(document.body.textContent).not.toContain('body')
   })
 
-  it('renders sheet, title and close button when open', () => {
+  it('renders sheet, title and body when open', () => {
     render(
       createElement(BottomSheet, {
         open: true,
@@ -102,23 +96,6 @@ describe('BottomSheet', () => {
     expect(sheet).not.toBeNull()
     expect(sheet!.textContent).toContain('My Sheet')
     expect(sheet!.textContent).toContain('body-content')
-    expect(findCloseButton()).not.toBeNull()
-  })
-
-  it('calls onClose when close button is clicked', () => {
-    const onClose = vi.fn()
-    render(
-      createElement(BottomSheet, {
-        open: true,
-        onClose,
-        title: 'X',
-        children: 'b',
-      }),
-    )
-    act(() => {
-      findCloseButton()!.click()
-    })
-    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('calls onClose when scrim is clicked', () => {

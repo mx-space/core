@@ -148,13 +148,13 @@ function DetailHeroImage(props: {
       type="button"
     >
       <span
-        className="relative flex max-h-[50vh] w-full items-center justify-center"
-        style={{ maxHeight: 'min(50vh, 480px)' }}
+        className="relative flex max-h-[50svh] w-full items-center justify-center"
+        style={{ maxHeight: 'min(50svh, 480px)' }}
       >
         <FileThumbnail
           alt={props.alt}
           thumbhash={props.thumbhash}
-          className="max-h-[50vh] w-full object-contain"
+          className="max-h-[50svh] w-full object-contain"
           dominantColor={props.dominantColor}
           src={props.src}
         />

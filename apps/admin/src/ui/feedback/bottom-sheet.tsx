@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react'
-import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { motion, useMotionValue, useTransform } from 'motion/react'
 import type { ReactNode } from 'react'
 import {
@@ -329,10 +328,19 @@ function useSheetEngine(opts: UseSheetEngineOpts) {
     const m = stateRef.current.metrics
     return cur < m.TY_FULL ? m.TY_FULL + (cur - m.TY_FULL) * RUBBER_UP : cur
   })
+  // At the half detent the sheet keeps its full height and is translated down,
+  // so its lower edge sits off-screen. Pad the scroll body by the same offset
+  // or the end of the content can never be scrolled into view.
+  const offscreenPad = useTransform(
+    visualY,
+    (cur) =>
+      `calc(env(safe-area-inset-bottom) + ${Math.max(0, Math.round(cur))}px)`,
+  )
 
   return {
     mounted,
     bodyRef,
+    offscreenPad,
     visualY,
     scrimOpacity,
     cornerRadius,
@@ -380,8 +388,6 @@ export function BottomSheet(props: BottomSheetProps) {
   if (typeof document === 'undefined') return null
   if (!engine.mounted) return null
 
-  const ToggleIcon = activeSnap === 'half' ? ChevronUp : ChevronDown
-
   return createPortal(
     <PortalLayerScope depth={depth}>
       <div aria-hidden={false} className="fixed inset-0" style={{ zIndex: z }}>
@@ -402,10 +408,11 @@ export function BottomSheet(props: BottomSheetProps) {
         >
           <motion.div
             className={cn(
-              'shadow-lg flex h-full w-full flex-col bg-surface-card pb-[env(safe-area-inset-bottom)] will-change-transform',
+              'shadow-lg flex h-full w-full flex-col bg-surface-card will-change-transform',
               props.className,
             )}
             style={{
+              paddingBottom: engine.offscreenPad,
               y: engine.visualY,
               borderTopLeftRadius: engine.cornerRadius,
               borderTopRightRadius: engine.cornerRadius,
@@ -427,43 +434,25 @@ export function BottomSheet(props: BottomSheetProps) {
             >
               <div className="h-1.5 w-10 rounded-full bg-border-strong" />
             </button>
-            <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4">
-              <h2
-                className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-fg"
-                id={titleId}
-              >
-                {Icon ? (
-                  <Icon aria-hidden="true" className="size-4 shrink-0" />
-                ) : null}
-                {props.title ? (
-                  <span className="truncate">{props.title}</span>
-                ) : null}
-              </h2>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <button
-                  aria-label={
-                    activeSnap === 'half'
-                      ? t('ui.bottomSheet.expand')
-                      : t('ui.bottomSheet.collapse')
-                  }
-                  className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
-                  onClick={toggleSnap}
-                  type="button"
+            {props.title != null || props.headerActions != null ? (
+              <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface-card px-4">
+                <h2
+                  className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-fg"
+                  id={titleId}
                 >
-                  <ToggleIcon aria-hidden="true" className="size-4" />
-                </button>
-                {props.headerActions}
-                <button
-                  aria-label={t('ui.bottomSheet.closeAria')}
-                  className="inline-flex size-9 items-center justify-center rounded-sm text-fg-subtle transition-colors hover:bg-surface-inset hover:text-fg"
-                  onClick={props.onClose}
-                  type="button"
-                >
-                  <X aria-hidden="true" className="size-4" />
-                </button>
+                  {Icon ? (
+                    <Icon aria-hidden="true" className="size-4 shrink-0" />
+                  ) : null}
+                  {props.title ? (
+                    <span className="truncate">{props.title}</span>
+                  ) : null}
+                </h2>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {props.headerActions}
+                </div>
               </div>
-            </div>
-            <div
+            ) : null}
+            <motion.div
               className={cn(
                 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [touch-action:pan-y]',
                 props.bodyClassName,
@@ -475,7 +464,7 @@ export function BottomSheet(props: BottomSheetProps) {
               ref={engine.bodyRef}
             >
               {props.children}
-            </div>
+            </motion.div>
             {props.footer ? (
               <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border px-4 py-3">
                 {props.footer}

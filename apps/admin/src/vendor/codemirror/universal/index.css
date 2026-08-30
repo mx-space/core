@@ -1,7 +1,7 @@
 @reference 'tailwindcss';
 
 .editor-wrapper {
-  height: calc(100vh - 18.8rem);
+  height: calc(100dvh - 18.8rem);
   @apply relative;
 
   > div {

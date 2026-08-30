@@ -155,7 +155,7 @@ export function LoginRouteViewContent() {
 
   return (
     <main
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
+      className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
       style={{
         backgroundImage: `linear-gradient(rgba(10,10,10,.42), rgba(10,10,10,.58)), url(${bgUrl})`,
         backgroundPosition: 'center',

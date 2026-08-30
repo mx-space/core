@@ -88,7 +88,7 @@ function EditorDebugDialog({ editorStateJson }: EditorDebugDialogProps) {
   }
 
   return (
-    <div className="flex max-h-[80vh] w-full flex-col">
+    <div className="flex max-h-[80svh] w-full flex-col">
       <ModalHeader title="调试 · Editor State" />
       <div className="min-h-0 flex-1 overflow-auto bg-surface-inset px-6 py-4">
         <pre className="m-0 whitespace-pre font-mono text-xs leading-relaxed text-fg">
@@ -118,7 +118,7 @@ export function presentEditorDebugDialog(editorStateJson: string) {
     { editorStateJson },
     {
       modalProps: {
-        popupStyle: { width: 'min(92vw, 48rem)', maxHeight: '80vh' },
+        popupStyle: { width: 'min(92vw, 48rem)', maxHeight: '80svh' },
       },
     },
   )

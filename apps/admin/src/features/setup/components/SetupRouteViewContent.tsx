@@ -1,8 +1,8 @@
 import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import type { InitDefaultConfigs } from '~/api/system'
 
+import type { InitDefaultConfigs } from '~/api/system'
 import { checkInit, getInitDefaultConfigs } from '~/api/system'
 import { bgUrl } from '~/constants/env'
 import { useI18n } from '~/i18n'
@@ -48,7 +48,7 @@ export function SetupRouteViewContent() {
 
   return (
     <main
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
+      className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
       style={{
         backgroundImage: `linear-gradient(rgba(10,10,10,.42), rgba(10,10,10,.58)), url(${bgUrl})`,
         backgroundPosition: 'center',
