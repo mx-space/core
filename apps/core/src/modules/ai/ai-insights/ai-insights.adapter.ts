@@ -10,7 +10,10 @@ import { ConfigsService } from '../../configs/configs.service'
 import { EntitlementService } from '../../membership/entitlement.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
-import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import {
+  type ArticleViewer,
+  isArticleVisibleToViewer,
+} from '../ai-article-visibility.util'
 import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
 import {
   emptyUsage,
@@ -97,7 +100,7 @@ export class AiInsightsAdapter implements MultilangAdapter<
     ) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
-    if (!isGlobalArticleVisible(article)) {
+    if (!isArticleVisibleToViewer(article, options ?? {})) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     if (
@@ -127,8 +130,12 @@ export class AiInsightsAdapter implements MultilangAdapter<
 
   async resolveArticle(
     refId: string,
+    viewer?: ArticleViewer,
   ): Promise<MultilangResolvedArticle<ArticleForInsights>> {
-    const { article, sourceLang } = await this.resolveArticleDetailed(refId)
+    const { article, sourceLang } = await this.resolveArticleDetailed(
+      refId,
+      viewer,
+    )
     return { article, text: article.text, sourceLang }
   }
 

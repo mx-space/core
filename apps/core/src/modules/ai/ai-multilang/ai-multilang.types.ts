@@ -1,3 +1,4 @@
+import type { ArticleViewer } from '../ai-article-visibility.util'
 import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 
@@ -30,7 +31,10 @@ export interface MultilangResolvedArticle<TArticle> {
 export interface MultilangAdapter<TArticle, TDoc> {
   readonly feature: MultilangFeature
   assertEnabled: () => Promise<void>
-  resolveArticle: (refId: string) => Promise<MultilangResolvedArticle<TArticle>>
+  resolveArticle: (
+    refId: string,
+    viewer?: ArticleViewer,
+  ) => Promise<MultilangResolvedArticle<TArticle>>
   generate: (
     article: TArticle,
     lang: string,

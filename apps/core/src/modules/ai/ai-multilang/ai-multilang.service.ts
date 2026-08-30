@@ -208,6 +208,7 @@ export class MultilangGenerationService {
 
     const { article, text, sourceLang } = await adapter.resolveArticle(
       payload.refId,
+      { isOwner: true },
     )
     const targets = normalizeTargetLangs(payload.targetLanguages).filter(
       (lang) => lang !== sourceLang,

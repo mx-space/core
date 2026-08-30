@@ -10,7 +10,10 @@ import { DatabaseService } from '~/processors/database/database.service'
 import { ConfigsService } from '../../configs/configs.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
-import { isGlobalArticleVisible } from '../ai-article-visibility.util'
+import {
+  type ArticleViewer,
+  isArticleVisibleToViewer,
+} from '../ai-article-visibility.util'
 import type { GenerationUsage } from '../ai-generation-metrics/ai-generation-metrics.types'
 import {
   emptyUsage,
@@ -71,7 +74,10 @@ export class AiSummaryAdapter implements MultilangAdapter<
     }
   }
 
-  async resolveArticleDetailed(articleId: string): Promise<{
+  async resolveArticleDetailed(
+    articleId: string,
+    viewer: ArticleViewer = {},
+  ): Promise<{
     article: ArticleForSummary
     sourceLang: string
     type: CollectionRefTypes.Post | CollectionRefTypes.Note
@@ -86,9 +92,7 @@ export class AiSummaryAdapter implements MultilangAdapter<
     ) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
-    // Never expose summaries for draft / password-protected / future-dated
-    // content. Public endpoints and background tasks both flow through here.
-    if (!isGlobalArticleVisible(article)) {
+    if (!isArticleVisibleToViewer(article, viewer)) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
     const doc = article.document as { title: string; text: string }
@@ -103,8 +107,12 @@ export class AiSummaryAdapter implements MultilangAdapter<
 
   async resolveArticle(
     refId: string,
+    viewer?: ArticleViewer,
   ): Promise<MultilangResolvedArticle<ArticleForSummary>> {
-    const { article, sourceLang } = await this.resolveArticleDetailed(refId)
+    const { article, sourceLang } = await this.resolveArticleDetailed(
+      refId,
+      viewer,
+    )
     return { article, text: article.text, sourceLang }
   }
 

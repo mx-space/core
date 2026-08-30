@@ -349,6 +349,21 @@ describe('AiSummaryService — summary task pipeline', () => {
     })
   })
 
+  it('generates a draft in an owner task without exposing it to public reads', async () => {
+    const harness = setup()
+    harness.databaseService.findGlobalById.mockResolvedValue({
+      ...visibleArticle,
+      document: { ...visibleArticle.document, isPublished: false },
+    })
+
+    await expect(
+      runSummaryTask(harness, { refId: 'post-1' }),
+    ).resolves.toBeDefined()
+    await expect(
+      harness.service.getSummaryByArticleId('post-1'),
+    ).rejects.toThrow(AppException)
+  })
+
   it('keeps an unrecognized token as its own target instead of collapsing it into zh', async () => {
     const harness = setup()
 

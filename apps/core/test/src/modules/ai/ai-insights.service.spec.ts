@@ -489,6 +489,29 @@ describe('AiInsightsService — insights task target languages', () => {
     )
   })
 
+  it('generates a draft in an owner task without exposing it to public reads', async () => {
+    const harness = setup()
+    harness.databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Draft Post',
+        text: 'Draft text',
+        isPublished: false,
+      },
+    })
+
+    await expect(
+      runInsightsTask(harness, { refId: 'post-1' }),
+    ).resolves.toBeDefined()
+    await expect(
+      harness.service.getOrGenerateInsightsForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+      }),
+    ).rejects.toThrow(AppException)
+  })
+
   it('never translates the base row into its own language', async () => {
     const harness = setup()
 
