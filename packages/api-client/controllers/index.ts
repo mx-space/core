@@ -2,6 +2,7 @@ import { AckController } from './ack'
 import { ActivityController } from './activity'
 import { AggregateController } from './aggregate'
 import { AIController } from './ai'
+import { ArticleController } from './article'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
 import { CompanionController } from './companion'
@@ -35,6 +36,7 @@ export const allControllers = [
   AckController,
   ActivityController,
   AggregateController,
+  ArticleController,
   AIController,
   CategoryController,
   CommentController,
@@ -61,6 +63,7 @@ export const allControllerNames = [
   'ack',
   'activity',
   'aggregate',
+  'article',
   'category',
   'comment',
   'companion',
@@ -90,6 +93,7 @@ export {
   ActivityController,
   AggregateController,
   AIController,
+  ArticleController,
   CategoryController,
   CommentController,
   CompanionController,
@@ -115,3 +119,4 @@ export {
 
 export type { NoteMiddleListOptions, NoteTimelineItem, NoteTopicListOptions }
 export type { PostListOptions }
+export type { StreamArticleBodiesOptions } from './article'
