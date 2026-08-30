@@ -179,6 +179,20 @@ describe('ArticleBodyService.streamBodies', () => {
     })
   })
 
+  it('teases a premium post with no lexical body as an empty locked line', async () => {
+    const { service } = createService({
+      entitled: false,
+      posts: [makePost({ isPremium: true, content: null, text: 'hidden' })],
+    })
+    const lines = await collect(service, [{ id: postId, kind: 'post' }])
+    expect(lines[0]).toMatchObject({
+      content: null,
+      isPremium: true,
+      locked: true,
+      text: '',
+    })
+  })
+
   it('returns the full premium body when the reader is entitled', async () => {
     const { service } = createService({
       entitled: true,

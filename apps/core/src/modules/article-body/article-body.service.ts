@@ -12,9 +12,8 @@ import {
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 import {
-  renderTeaserText,
-  resolveEffectivePreviewBlocks,
-  truncateLexicalContent,
+  getPublicContent,
+  getPublicText,
 } from '~/processors/helper/lexical-truncate.util'
 
 import type { ArticleBodyItem } from './article-body.schema'
@@ -56,15 +55,11 @@ function isNotePubliclyListed(note: NoteRow) {
 }
 
 function applyPaywallTeaser(doc: BodyDoc): BodyDoc {
-  const previewBlocks = resolveEffectivePreviewBlocks(
-    doc.content,
-    doc.meta?.paywall?.previewBlocks,
-  )
-  const content = truncateLexicalContent(doc.content, previewBlocks)
+  const source = { ...doc, isPremium: true }
   return {
     ...doc,
-    content,
-    text: renderTeaserText(content),
+    content: getPublicContent(source),
+    text: getPublicText(source),
   }
 }
 
