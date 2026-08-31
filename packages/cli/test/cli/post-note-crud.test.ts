@@ -94,6 +94,26 @@ const makeApi = (calls: Array<{ path: string; options: unknown }>): ApiService =
           status: 'active',
         } as never
       }
+      if (path === '/posts/123456789012345') {
+        return {
+          data: {
+            id: '123456789012345',
+            is_published: true,
+            title: 'Title',
+          },
+          meta: {},
+        } as never
+      }
+      if (path === '/notes/123456789012346') {
+        return {
+          data: {
+            id: '123456789012346',
+            is_published: true,
+            title: 'Title',
+          },
+          meta: {},
+        } as never
+      }
       return { id: 'resource-id', ok: true, title: 'Title' } as never
     }),
   raw: (path, options) =>
@@ -180,7 +200,7 @@ describe('post command CRUD handlers', () => {
     }
   })
 
-  it('patches a post update payload', async () => {
+  it('publishes a post update payload', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
       updatePost
@@ -213,6 +233,7 @@ describe('post command CRUD handlers', () => {
       '/posts/123456789012345',
       '/drafts/context/post/123456789012345',
       '/drafts',
+      '/publish-jobs',
     ])
     expect(calls[2]).toMatchObject({
       options: { method: 'POST' },
@@ -315,7 +336,7 @@ describe('note command CRUD handlers', () => {
     }
   })
 
-  it('patches a note update payload', async () => {
+  it('publishes a note update payload', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
       updateNote
@@ -350,6 +371,7 @@ describe('note command CRUD handlers', () => {
       '/notes/123456789012346',
       '/drafts/context/note/123456789012346',
       '/drafts',
+      '/publish-jobs',
     ])
     expect(calls[2]).toMatchObject({
       options: { method: 'POST' },

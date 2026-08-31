@@ -6,7 +6,11 @@ import { buildNotePayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
-import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
+import {
+  normalizeData,
+  publishSavedDraft,
+  saveDraftPayload,
+} from '../draft/_shared'
 import { noteWriteOptions, resolveTopicRefs, toNoteFlagInputs } from './_flags'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
@@ -32,9 +36,9 @@ export const update = Command.make(
       const renderer = yield* Renderer
       const current =
         flags.state === undefined
-          ? ((yield* api.request(`/notes/${id}`)) as {
-              isPublished?: boolean
-            })
+          ? normalizeData<{ isPublished?: boolean }>(
+              yield* api.request(`/notes/${id}`),
+            )
           : null
       const saved = yield* saveDraftPayload(api, 'note', resolved, id)
       const response =

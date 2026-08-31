@@ -6,7 +6,11 @@ import { buildPostPayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
-import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
+import {
+  normalizeData,
+  publishSavedDraft,
+  saveDraftPayload,
+} from '../draft/_shared'
 import {
   postWriteOptions,
   resolveCategoryRefs,
@@ -36,9 +40,9 @@ export const update = Command.make(
       const renderer = yield* Renderer
       const current =
         flags.state === undefined
-          ? ((yield* api.request(`/posts/${id}`)) as {
-              isPublished?: boolean
-            })
+          ? normalizeData<{ isPublished?: boolean }>(
+              yield* api.request(`/posts/${id}`),
+            )
           : null
       const saved = yield* saveDraftPayload(api, 'post', resolved, id)
       const response =

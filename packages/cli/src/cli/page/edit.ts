@@ -10,7 +10,11 @@ import { Editor } from '../../services/Editor'
 import { Lexical } from '../../services/Lexical'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
-import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
+import {
+  normalizeData,
+  publishSavedDraft,
+  saveDraftPayload,
+} from '../draft/_shared'
 import { pageWriteOptions, toPageFlagInputs } from './create'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
@@ -62,9 +66,9 @@ const materializeForEditor = (ref: string) =>
     const path = isSnowflakeId(ref)
       ? `/pages/${ref}`
       : `/pages/slug/${encodeURIComponent(ref)}`
-    const page = (yield* api.request(path, {
-      query: { prefer: 'lexical' },
-    })) as PageForEditor
+    const page = normalizeData<PageForEditor>(
+      yield* api.request(path, { query: { prefer: 'lexical' } }),
+    )
     const isLexical = page.contentFormat === 'lexical'
     let innerXml: string
     if (isLexical && page.content) {

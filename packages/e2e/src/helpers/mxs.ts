@@ -174,3 +174,50 @@ export function getPayload(value: unknown): unknown {
   if ('data' in record) return record.data
   return value
 }
+
+export async function waitForMxsPayload(
+  args: readonly string[],
+  env: Record<string, string>,
+  predicate: (payload: unknown) => boolean,
+): Promise<unknown> {
+  const deadline = Date.now() + 30_000
+  let lastOutput = ''
+  while (Date.now() < deadline) {
+    const result = await runMxs(args, env)
+    lastOutput = result.stderr || result.stdout
+    if (result.code === 0) {
+      const payload = getPayload(parseEnvelope(result.stdout).data)
+      if (predicate(payload)) return payload
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+
+  throw new Error(`mxs command timed out: ${args.join(' ')}\n${lastOutput}`)
+}
+
+export async function publishDraftAndWait(
+  draftId: string,
+  env: Record<string, string>,
+): Promise<string> {
+  const published = await runMxs(['--json', 'draft', 'publish', draftId], env)
+  if (published.code !== 0) {
+    throw new Error(published.stderr || published.stdout)
+  }
+
+  const draft = (await waitForMxsPayload(
+    ['--json', 'draft', 'get', draftId],
+    env,
+    (payload) => {
+      if (!payload || typeof payload !== 'object') return false
+      const document = (payload as Record<string, unknown>).document
+      if (!document || typeof document !== 'object') return false
+      const record = document as Record<string, unknown>
+      return Boolean(
+        (record.refId ?? record.ref_id) &&
+        (record.publishedRevisionId ?? record.published_revision_id),
+      )
+    },
+  )) as Record<string, unknown>
+  const document = draft.document as Record<string, unknown>
+  return (document.refId ?? document.ref_id) as string
+}

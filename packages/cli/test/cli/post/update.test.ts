@@ -138,7 +138,10 @@ describe('post update command', () => {
     const http = testHttpLayer({
       [`GET https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
         status: 200,
-        body: { id: SNOWFLAKE, isPublished: true },
+        body: {
+          data: { id: SNOWFLAKE, is_published: true },
+          meta: {},
+        },
       },
       [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
         {

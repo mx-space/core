@@ -10,7 +10,11 @@ import { Editor } from '../../services/Editor'
 import { Lexical } from '../../services/Lexical'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
-import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
+import {
+  normalizeData,
+  publishSavedDraft,
+  saveDraftPayload,
+} from '../draft/_shared'
 import {
   postWriteOptions,
   resolveCategoryRefs,
@@ -39,9 +43,9 @@ const materializeForEditor = (slugOrId: string) =>
     const resolver = yield* Resolver
     const lexical = yield* Lexical
     const path = yield* resolver.resolvePostReadPath(slugOrId)
-    const post = (yield* api.request(path, {
-      query: { prefer: 'lexical' },
-    })) as PostForEditor
+    const post = normalizeData<PostForEditor>(
+      yield* api.request(path, { query: { prefer: 'lexical' } }),
+    )
     const isLexical = post.contentFormat === 'lexical'
     let innerXml: string
     if (isLexical && post.content) {
@@ -114,7 +118,9 @@ export const edit = Command.make(
       const renderer = yield* Renderer
       const resolver = yield* Resolver
       const id = yield* resolver.resolvePostId(slugOrId)
-      const current = (yield* api.request(`/posts/${id}`)) as PostForEditor
+      const current = normalizeData<PostForEditor>(
+        yield* api.request(`/posts/${id}`),
+      )
 
       // Editor round-trip path: no --file and no --content → spawn $EDITOR.
       if (!flags.file && flags.content === undefined) {

@@ -57,34 +57,43 @@ const makeApi = (calls: string[]): ApiService => ({
       if (path === '/publish-jobs') return { id: 'task-1' } as never
       if (path.startsWith('/notes/')) {
         return {
-          id: '123456789012346',
-          title: 'Note',
-          slug: 'note',
-          contentFormat: 'markdown',
-          content: 'note body',
-          isPublished: false,
-          mood: 'calm',
-          weather: 'clear',
+          data: {
+            id: '123456789012346',
+            title: 'Note',
+            slug: 'note',
+            content_format: 'markdown',
+            content: 'note body',
+            is_published: false,
+            mood: 'calm',
+            weather: 'clear',
+          },
+          meta: {},
         } as never
       }
       if (path.startsWith('/pages/')) {
         return {
-          id: '123456789012347',
-          title: 'Page',
-          slug: 'page',
-          contentFormat: 'markdown',
-          content: 'page body',
+          data: {
+            id: '123456789012347',
+            title: 'Page',
+            slug: 'page',
+            content_format: 'markdown',
+            content: 'page body',
+          },
+          meta: {},
         } as never
       }
       return {
-        id: '123456789012345',
-        title: 'Post',
-        slug: 'post',
-        contentFormat: 'markdown',
-        content: 'post body',
-        summary: 'summary',
-        isPublished: true,
-        tags: ['a', 'b'],
+        data: {
+          id: '123456789012345',
+          title: 'Post',
+          slug: 'post',
+          content_format: 'markdown',
+          content: 'post body',
+          summary: 'summary',
+          is_published: true,
+          tags: ['a', 'b'],
+        },
+        meta: {},
       } as never
     }),
   raw: (path) =>
@@ -190,7 +199,16 @@ describe('edit command no-change round trip', () => {
       const exit = await Effect.runPromiseExit(
         editPost
           .handler({ slugOrId: 'post', ...commonPostOptions })
-          .pipe(Effect.provide(buildLayer(calls))),
+          .pipe(
+            Effect.provide(
+              buildLayer(calls, (initial) => {
+                expect(initial).toContain('<title>Post</title>')
+                expect(initial).toContain('<state>publish</state>')
+                expect(initial).toContain('post body')
+                return initial
+              }),
+            ),
+          ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls).toEqual(['/posts/123456789012345', '/posts/post'])
@@ -206,7 +224,16 @@ describe('edit command no-change round trip', () => {
       const exit = await Effect.runPromiseExit(
         editNote
           .handler({ slugOrId: 'note', ...commonNoteOptions })
-          .pipe(Effect.provide(buildLayer(calls))),
+          .pipe(
+            Effect.provide(
+              buildLayer(calls, (initial) => {
+                expect(initial).toContain('<title>Note</title>')
+                expect(initial).toContain('<state>draft</state>')
+                expect(initial).toContain('note body')
+                return initial
+              }),
+            ),
+          ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls).toEqual([
@@ -225,7 +252,15 @@ describe('edit command no-change round trip', () => {
       const exit = await Effect.runPromiseExit(
         editPage
           .handler({ slugOrId: '123456789012347', ...commonPageOptions })
-          .pipe(Effect.provide(buildLayer(calls))),
+          .pipe(
+            Effect.provide(
+              buildLayer(calls, (initial) => {
+                expect(initial).toContain('<title>Page</title>')
+                expect(initial).toContain('page body')
+                return initial
+              }),
+            ),
+          ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(calls).toEqual(['/pages/123456789012347'])

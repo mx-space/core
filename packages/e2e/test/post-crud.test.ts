@@ -6,7 +6,9 @@ import {
   getItems,
   getPayload,
   parseEnvelope,
+  publishDraftAndWait,
   runMxs,
+  waitForMxsPayload,
 } from '../src/helpers/mxs'
 import { seedOwnerAndWriteProfile } from '../src/helpers/seed-auth'
 import { makeTmpHome, type TmpHome } from '../src/helpers/tmp-home'
@@ -67,7 +69,10 @@ describe('mxs post CRUD against real core', () => {
       env(),
     )
     expect(created.code, created.stderr || created.stdout).toBe(0)
-    const id = extractId(parseEnvelope(created.stdout).data)
+    const id = await publishDraftAndWait(
+      extractId(parseEnvelope(created.stdout).data),
+      env(),
+    )
 
     const listed = await runMxs(['--json', 'post', 'list'], env())
     expect(listed.code, listed.stderr || listed.stdout).toBe(0)
@@ -89,9 +94,13 @@ describe('mxs post CRUD against real core', () => {
     )
     expect(updated.code, updated.stderr || updated.stdout).toBe(0)
 
-    const revised = await runMxs(['--json', 'post', 'get', id], env())
-    expect(revised.code, revised.stderr || revised.stdout).toBe(0)
-    expect(getPayload(parseEnvelope(revised.stdout).data)).toMatchObject({
+    const revised = await waitForMxsPayload(
+      ['--json', 'post', 'get', id],
+      env(),
+      (payload) =>
+        (payload as Record<string, unknown>)?.title === 'hello revised',
+    )
+    expect(revised).toMatchObject({
       title: 'hello revised',
     })
 

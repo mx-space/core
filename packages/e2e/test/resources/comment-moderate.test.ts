@@ -5,6 +5,7 @@ import {
   extractId,
   getItems,
   parseEnvelope,
+  publishDraftAndWait,
   runMxs,
 } from '../../src/helpers/mxs'
 import { seedOwnerAndWriteProfile } from '../../src/helpers/seed-auth'
@@ -68,7 +69,10 @@ describe('mxs comment moderation against real core', () => {
         `post create failed: ${postResult.stderr || postResult.stdout}`,
       )
     }
-    postId = extractId(parseEnvelope(postResult.stdout).data)
+    postId = await publishDraftAndWait(
+      extractId(parseEnvelope(postResult.stdout).data),
+      backend.backendEnv(tmpHome.path),
+    )
   }, 90_000)
 
   afterAll(async () => {

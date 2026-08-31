@@ -94,8 +94,11 @@ export const unwrapData = <T>(res: unknown): T => {
   return res as T
 }
 
+export const normalizeData = <T>(value: unknown): T =>
+  camelizeDeep(unwrapData(value)) as T
+
 export const normalizeDraftRow = (row: unknown): DraftRow | null => {
-  const normalized = camelizeDeep(unwrapData(row))
+  const normalized = normalizeData(row)
   if (!normalized || typeof normalized !== 'object') return null
   const branch = normalized as Partial<DraftRow>
   return branch.id && branch.document && branch.headRevision
@@ -104,7 +107,7 @@ export const normalizeDraftRow = (row: unknown): DraftRow | null => {
 }
 
 export const normalizeVersionContext = (value: unknown): VersionContext =>
-  camelizeDeep(unwrapData(value)) as VersionContext
+  normalizeData(value)
 
 const mergeRevisionPatch = (
   base: RevisionSnapshot,

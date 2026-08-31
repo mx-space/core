@@ -10,7 +10,11 @@ import { Editor } from '../../services/Editor'
 import { Lexical } from '../../services/Lexical'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
-import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
+import {
+  normalizeData,
+  publishSavedDraft,
+  saveDraftPayload,
+} from '../draft/_shared'
 import { noteWriteOptions, resolveTopicRefs, toNoteFlagInputs } from './_flags'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
@@ -35,9 +39,9 @@ const materializeForEditor = (slugOrId: string) =>
     const resolver = yield* Resolver
     const lexical = yield* Lexical
     const id = yield* resolver.resolveNoteId(slugOrId)
-    const note = (yield* api.request(`/notes/${id}`, {
-      query: { prefer: 'lexical' },
-    })) as NoteForEditor
+    const note = normalizeData<NoteForEditor>(
+      yield* api.request(`/notes/${id}`, { query: { prefer: 'lexical' } }),
+    )
     let inner: string
     if (note.contentFormat === 'lexical' && note.content) {
       const state = JSON.parse(note.content)
@@ -90,7 +94,9 @@ export const edit = Command.make(
       const renderer = yield* Renderer
       const resolver = yield* Resolver
       const id = yield* resolver.resolveNoteId(slugOrId)
-      const current = (yield* api.request(`/notes/${id}`)) as NoteForEditor
+      const current = normalizeData<NoteForEditor>(
+        yield* api.request(`/notes/${id}`),
+      )
 
       if (!flags.file && flags.content === undefined) {
         const xml = yield* materializeForEditor(slugOrId)
