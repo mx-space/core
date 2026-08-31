@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { cn } from '~/utils/cn'
 
 const TOGGLE_ROOT_CLASS =
-  'outline-hidden relative inline-flex h-5 min-w-9 items-center rounded-full bg-surface-inset px-0.5 transition-colors data-[disabled]:cursor-not-allowed data-[checked]:bg-accent data-[disabled]:opacity-50 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15'
+  'outline-hidden relative inline-flex h-5 min-w-9 items-center rounded-full bg-border-strong px-0.5 transition-colors data-[disabled]:cursor-not-allowed data-[checked]:bg-accent data-[disabled]:opacity-50 data-[focus-visible]:outline-hidden data-[focus-visible]:ring-[3px] data-[focus-visible]:ring-accent/15'
 
 const TOGGLE_THUMB_CLASS =
   'shadow-xs block size-4 translate-x-0 rounded-full bg-white transition-transform data-[checked]:translate-x-4'
