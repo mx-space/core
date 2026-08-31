@@ -304,6 +304,32 @@ export function extractDocumentContext(rootChildren: any[]): string {
     .join('\n\n')
 }
 
+const CONTENT_IDENTITY_KEYS = [
+  'title',
+  'text',
+  'subtitle',
+  'contentFormat',
+  'content',
+  'summary',
+  'tags',
+] as const
+
+type ContentIdentity = Pick<ContentDoc, (typeof CONTENT_IDENTITY_KEYS)[number]>
+
+export function contentIdentityChanged(
+  current: ContentIdentity,
+  patch: Partial<Record<(typeof CONTENT_IDENTITY_KEYS)[number], unknown>>,
+): boolean {
+  const next = { ...current } as ContentIdentity
+  for (const key of CONTENT_IDENTITY_KEYS) {
+    const value = patch[key]
+    if (value !== undefined) {
+      ;(next as Record<string, unknown>)[key] = value
+    }
+  }
+  return computeContentHash(next, '') !== computeContentHash(current, '')
+}
+
 export function computeContentHash(
   doc: ContentDoc,
   sourceLang: string,

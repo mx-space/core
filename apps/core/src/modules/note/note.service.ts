@@ -22,7 +22,7 @@ import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import type { EntityId } from '~/shared/id/entity-id'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { isNoteSecret } from '~/utils/biz.util'
-import { isLexical } from '~/utils/content.util'
+import { contentIdentityChanged, isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { normalizeSlug } from '~/utils/slug.util'
 import { getLessThanNow } from '~/utils/time.util'
@@ -395,14 +395,12 @@ export class NoteService {
     }
 
     const hasFieldChanged = (
-      ['title', 'text', 'mood', 'weather', 'meta', 'topicId', 'slug'] as const
+      ['mood', 'weather', 'meta', 'topicId', 'slug'] as const
     ).some((key) => {
       if (key === 'slug' && hasSlugInput) return normalizedSlug !== oldDoc.slug
       return isNotNil(data[key]) && data[key] !== oldDoc[key]
     })
-    const hasContentChanged = ['title', 'text'].some((key) =>
-      isNotNil(data[key as keyof NoteModel]),
-    )
+    const hasContentChanged = contentIdentityChanged(oldDoc, data)
 
     const patch = omit(data, [...NOTE_PROTECTED_KEYS, 'slug'] as const)
     const userSuppliedCreatedAt = data.createdAt ?? (data as any).created

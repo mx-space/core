@@ -4,7 +4,6 @@ import {
   OnApplicationBootstrap,
 } from '@nestjs/common'
 import { ModuleRef } from '@nestjs/core'
-import { isNotNil } from 'es-toolkit'
 import { debounce, omit } from 'es-toolkit/compat'
 import slugify from 'slugify'
 
@@ -25,7 +24,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { isLexical } from '~/utils/content.util'
+import { contentIdentityChanged, isLexical } from '~/utils/content.util'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getLessThanNow } from '~/utils/time.util'
 
@@ -396,7 +395,7 @@ export class PostService implements OnApplicationBootstrap {
       if (!category) throw createAppException(AppErrorCode.CATEGORY_NOT_FOUND)
     }
 
-    if ([data.text, data.title, data.slug].some(isNotNil)) {
+    if (contentIdentityChanged(oldDocument, data)) {
       data.modifiedAt = new Date()
     }
 
