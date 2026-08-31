@@ -69,10 +69,7 @@ export type NoteModel = NoteRow & {
 
 export type NoteCreateDocument = Omit<Partial<NoteModel>, 'nid' | 'text'> &
   Pick<NoteModel, 'text'> & {
-    draftId?: string
     created?: Date | string | number
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
   }
 
 export const NOTE_PROTECTED_KEYS = [

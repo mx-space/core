@@ -11,7 +11,15 @@ import {
 import { and, eq } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { aiTranslations, drafts, notes, pages, posts } from '~/database/schema'
+import {
+  aiTranslations,
+  contentDocuments,
+  contentRevisions,
+  drafts,
+  notes,
+  pages,
+  posts,
+} from '~/database/schema'
 import type { ArticleContent } from '~/modules/ai/ai-translation/ai-translation.types'
 import { buildSourceMetaHashes } from '~/modules/ai/ai-translation/translation-meta'
 import { DraftRefType } from '~/modules/draft/draft.enum'
@@ -40,7 +48,7 @@ type PagePatch = Partial<typeof pages.$inferInsert>
 interface CommitCommon {
   refId: string
   descriptor: MarkdownToLexicalMigrationDescriptor
-  draftId?: string
+  branchId?: string
   source: Omit<ArticleContent, 'meta'> & {
     content: string
     contentFormat: ContentFormat.Lexical
@@ -148,17 +156,17 @@ export class ContentMigrationCommitService {
       )
     }
 
-    const draftPreconditions = input.descriptor.preconditions.filter(
-      (item) => item.kind === 'draft',
+    const branchPreconditions = input.descriptor.preconditions.filter(
+      (item) => item.kind === 'branch',
     )
     if (
-      (input.draftId &&
-        (draftPreconditions.length !== 1 ||
-          draftPreconditions[0].id !== input.draftId)) ||
-      (!input.draftId && draftPreconditions.length > 0)
+      (input.branchId &&
+        (branchPreconditions.length !== 1 ||
+          branchPreconditions[0].id !== input.branchId)) ||
+      (!input.branchId && branchPreconditions.length > 0)
     ) {
       throw new BadRequestException(
-        'Migration draft precondition does not match the submitted draft',
+        'Migration branch precondition does not match the submitted branch',
       )
     }
   }
@@ -285,37 +293,48 @@ export class ContentMigrationCommitService {
         )
       }
 
-      const draftPrecondition = input.descriptor.preconditions.find(
-        (item) => item.kind === 'draft',
+      const branchPrecondition = input.descriptor.preconditions.find(
+        (item) => item.kind === 'branch',
       )
-      let lockedDraft: typeof drafts.$inferSelect | undefined
-      if (input.draftId && draftPrecondition) {
+      if (input.branchId && branchPrecondition) {
         const [draft] = await tx
-          .select()
+          .select({
+            branch: drafts,
+            document: contentDocuments,
+            revision: contentRevisions,
+          })
           .from(drafts)
-          .where(eq(drafts.id, parseEntityId(input.draftId)))
+          .innerJoin(
+            contentDocuments,
+            eq(contentDocuments.id, drafts.documentId),
+          )
+          .innerJoin(
+            contentRevisions,
+            eq(contentRevisions.id, drafts.headRevisionId),
+          )
+          .where(eq(drafts.id, parseEntityId(input.branchId)))
           .limit(1)
           .for('update')
         if (
           !draft ||
-          draft.refType !== input.refType ||
-          String(draft.refId) !== input.refId
+          draft.document.refType !== input.refType ||
+          String(draft.document.refId) !== input.refId
         ) {
           throw new ConflictException(
             'Draft no longer belongs to the source document',
           )
         }
         const draftHash =
-          draft.contentFormat === ContentFormat.Lexical && draft.content
-            ? sha256(draft.content)
-            : analyzeMigrationMarkdown(draft.text, input).sourceHash
+          draft.revision.contentFormat === ContentFormat.Lexical &&
+          draft.revision.content
+            ? sha256(draft.revision.content)
+            : analyzeMigrationMarkdown(draft.revision.text, input).sourceHash
         if (
-          draft.version !== draftPrecondition.version ||
-          draftHash !== draftPrecondition.hash
+          draft.branch.headRevisionId !== branchPrecondition.headRevisionId ||
+          draftHash !== branchPrecondition.hash
         ) {
           throw new ConflictException('Draft changed after the migration check')
         }
-        lockedDraft = draft
       }
 
       const translationRows = await tx
@@ -414,53 +433,6 @@ export class ContentMigrationCommitService {
           new Date())
 
       await this.updateSource(tx, input, modifiedAt)
-      if (lockedDraft) {
-        const draftChanged =
-          lockedDraft.title !== input.source.title ||
-          lockedDraft.text !== input.source.text ||
-          lockedDraft.content !== input.source.content ||
-          lockedDraft.contentFormat !== ContentFormat.Lexical
-        const nextVersion = draftChanged
-          ? lockedDraft.version + 1
-          : lockedDraft.version
-        const history = draftChanged
-          ? [
-              {
-                version: lockedDraft.version,
-                title: lockedDraft.title,
-                text:
-                  lockedDraft.contentFormat === ContentFormat.Markdown
-                    ? lockedDraft.text
-                    : undefined,
-                contentFormat: lockedDraft.contentFormat,
-                content: lockedDraft.content ?? undefined,
-                typeSpecificData: lockedDraft.typeSpecificData
-                  ? JSON.stringify(lockedDraft.typeSpecificData)
-                  : undefined,
-                savedAt: lockedDraft.updatedAt ?? lockedDraft.createdAt,
-                isFullSnapshot: true,
-              },
-              ...((lockedDraft.history ?? []) as unknown[]),
-            ].slice(0, 100)
-          : lockedDraft.history
-        await tx
-          .update(drafts)
-          .set({
-            ...(draftChanged
-              ? {
-                  title: input.source.title,
-                  text: input.source.text,
-                  content: input.source.content,
-                  contentFormat: ContentFormat.Lexical,
-                  history,
-                  version: nextVersion,
-                }
-              : {}),
-            publishedVersion: nextVersion,
-            updatedAt: new Date(),
-          })
-          .where(eq(drafts.id, lockedDraft.id))
-      }
     })
   }
 }

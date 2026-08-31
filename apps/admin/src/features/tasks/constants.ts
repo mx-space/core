@@ -107,12 +107,14 @@ export const scopeOptionKeys: Array<{
 }> = [
   { labelKey: 'tasks.filter.allScope', value: '' },
   { labelKey: 'tasks.scope.ai', value: 'ai' },
+  { labelKey: 'tasks.scope.content', value: 'content' },
   { labelKey: 'tasks.scope.enrichment', value: 'enrichment' },
   { labelKey: 'tasks.scope.cron', value: 'cron' },
 ]
 
 export const scopeLabelKeys: Record<TaskScope, TranslationKey> = {
   ai: 'tasks.scope.ai',
+  content: 'tasks.scope.content',
   enrichment: 'tasks.scope.enrichment',
   cron: 'tasks.scope.cron',
 }

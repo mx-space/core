@@ -1,12 +1,12 @@
 import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
 
-import { openAdminEdit } from '../../domain/admin-link'
+import { openAdminDraftEdit } from '../../domain/admin-link'
 import type { PageFlagInputs } from '../../domain/payload'
 import { buildPagePayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
-import { extractId } from '../post/_flags'
+import { saveDraftPayload } from '../draft/_shared'
 
 const title = Options.optional(Options.text('title'))
 const slug = Options.optional(Options.text('slug'))
@@ -73,14 +73,10 @@ export const create = Command.make('create', pageWriteOptions, (opts) =>
     const built = yield* buildPagePayload(flags)
     const api = yield* Api
     const renderer = yield* Renderer
-    const res = yield* api.request('/pages', {
-      method: 'POST',
-      body: built.payload,
-    })
-    yield* renderer.emitSuccess(opts.silent ? { ok: true } : res)
-    if (opts.open) {
-      const id = extractId(res)
-      if (id) yield* openAdminEdit('pages', id)
+    const saved = yield* saveDraftPayload(api, 'page', built.payload)
+    yield* renderer.emitSuccess(opts.silent ? { ok: true } : saved.response)
+    if (opts.open && saved.draft.id) {
+      yield* openAdminDraftEdit('pages', saved.draft.id)
     }
   }),
-)
+).pipe(Command.withDescription('create a page draft'))

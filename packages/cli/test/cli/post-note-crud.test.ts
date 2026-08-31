@@ -57,6 +57,43 @@ const makeApi = (calls: Array<{ path: string; options: unknown }>): ApiService =
   request: (path, options) =>
     Effect.sync(() => {
       calls.push({ path, options })
+      if (path.startsWith('/drafts/context/')) {
+        const [, , , refType, refId] = path.split('/')
+        return {
+          branches: [],
+          document: {
+            id: 'document-1',
+            publishedRevisionId: 'published-1',
+            refId,
+            refType,
+          },
+          publishedRevision: {
+            content: null,
+            contentFormat: 'markdown',
+            id: 'published-1',
+            images: [],
+            meta: null,
+            text: 'Body',
+            title: 'Title',
+            typeSpecificData: {},
+          },
+        } as never
+      }
+      if (path === '/drafts') {
+        return {
+          document: {
+            id: 'document-1',
+            publishedRevisionId: 'published-1',
+            refId: 'resource-id',
+            refType: 'post',
+          },
+          headRevision: { id: 'revision-2' },
+          headRevisionId: 'revision-2',
+          id: 'branch-1',
+          relationToPublished: 'ancestor',
+          status: 'active',
+        } as never
+      }
       return { id: 'resource-id', ok: true, title: 'Title' } as never
     }),
   raw: (path, options) =>
@@ -172,13 +209,20 @@ describe('post command CRUD handlers', () => {
         ),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
-    expect(calls[0]).toMatchObject({
-      path: '/posts/123456789012345',
-      options: { method: 'PATCH' },
+    expect(calls.map((call) => call.path)).toEqual([
+      '/posts/123456789012345',
+      '/drafts/context/post/123456789012345',
+      '/drafts',
+    ])
+    expect(calls[2]).toMatchObject({
+      options: { method: 'POST' },
     })
-    expect((calls[0]!.options as { body: Record<string, unknown> }).body).toMatchObject({
+    expect(
+      (calls[2]!.options as { body: { data: Record<string, unknown> } }).body
+        .data,
+    ).toMatchObject({
       title: 'Updated',
-      categoryId: 'cat-id',
+      typeSpecificData: { categoryId: 'cat-id' },
     })
   })
 })
@@ -302,13 +346,20 @@ describe('note command CRUD handlers', () => {
         ),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
-    expect(calls[0]).toMatchObject({
-      path: '/notes/123456789012346',
-      options: { method: 'PATCH' },
+    expect(calls.map((call) => call.path)).toEqual([
+      '/notes/123456789012346',
+      '/drafts/context/note/123456789012346',
+      '/drafts',
+    ])
+    expect(calls[2]).toMatchObject({
+      options: { method: 'POST' },
     })
-    expect((calls[0]!.options as { body: Record<string, unknown> }).body).toMatchObject({
+    expect(
+      (calls[2]!.options as { body: { data: Record<string, unknown> } }).body
+        .data,
+    ).toMatchObject({
       title: 'Updated note',
-      topicId: 'topic-id',
+      typeSpecificData: { topicId: 'topic-id' },
     })
   })
 })

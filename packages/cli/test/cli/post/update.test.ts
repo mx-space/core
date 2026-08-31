@@ -136,9 +136,52 @@ describe('post update command', () => {
     writeFileSync(file, draftEnvelope)
 
     const http = testHttpLayer({
-      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
+      [`GET https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
         status: 200,
-        body: { id: SNOWFLAKE },
+        body: { id: SNOWFLAKE, isPublished: true },
+      },
+      [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
+        {
+          status: 200,
+          body: {
+            branches: [],
+            document: {
+              id: 'document-1',
+              published_revision_id: 'published-1',
+              ref_id: SNOWFLAKE,
+              ref_type: 'post',
+            },
+            published_revision: {
+              content: null,
+              content_format: 'markdown',
+              id: 'published-1',
+              images: [],
+              meta: null,
+              text: 'online',
+              title: 'online',
+              type_specific_data: { slug: 'online' },
+            },
+          },
+        },
+      'POST https://blog.example.com/api/v2/drafts': {
+        status: 200,
+        body: {
+          document: {
+            id: 'document-1',
+            published_revision_id: 'published-1',
+            ref_id: SNOWFLAKE,
+            ref_type: 'post',
+          },
+          head_revision: { id: 'revision-2' },
+          head_revision_id: 'revision-2',
+          id: 'branch-1',
+          relation_to_published: 'ancestor',
+          status: 'active',
+        },
+      },
+      'POST https://blog.example.com/api/v2/publish-jobs': {
+        status: 200,
+        body: { id: 'task-1' },
       },
     })
     const spy = vi
@@ -151,19 +194,46 @@ describe('post update command', () => {
         file: some(file),
       })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const body = http.recorder.calls[0]?.body as Record<string, unknown>
-      expect(body.title).toBe('t')
-      expect('isPublished' in body).toBe(false)
+      const publish = http.recorder.calls.find((call) =>
+        call.url.endsWith('/publish-jobs'),
+      )
+      expect(publish?.body).toMatchObject({
+        branchId: 'branch-1',
+        revisionId: 'revision-2',
+      })
     } finally {
       spy.mockRestore()
     }
   })
 
-  it('still honors an explicit --state flag', async () => {
+  it('an explicit draft state saves a branch without changing online state', async () => {
     const http = testHttpLayer({
-      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
+      [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
+        {
+          status: 200,
+          body: {
+            branches: [],
+            document: {
+              id: 'document-1',
+              published_revision_id: 'published-1',
+              ref_id: SNOWFLAKE,
+              ref_type: 'post',
+            },
+            published_revision: {
+              content: null,
+              content_format: 'markdown',
+              id: 'published-1',
+              images: [],
+              meta: null,
+              text: 'online',
+              title: 'online',
+              type_specific_data: { slug: 'online' },
+            },
+          },
+        },
+      'POST https://blog.example.com/api/v2/drafts': {
         status: 200,
-        body: { id: SNOWFLAKE },
+        body: { id: 'branch-1' },
       },
     })
     const spy = vi
@@ -177,8 +247,14 @@ describe('post update command', () => {
         state: some('draft' as const),
       })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const body = http.recorder.calls[0]?.body as Record<string, unknown>
-      expect(body.isPublished).toBe(false)
+      expect(
+        http.recorder.calls.some((call) => call.url.endsWith('/publish-jobs')),
+      ).toBe(false)
+      const body = http.recorder.calls.find((call) =>
+        call.url.endsWith('/drafts'),
+      )?.body as { data: Record<string, unknown> }
+      expect(body.data.title).toBe('t2')
+      expect(body.data).not.toHaveProperty('isPublished')
     } finally {
       spy.mockRestore()
     }

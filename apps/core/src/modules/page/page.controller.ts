@@ -1,17 +1,7 @@
-import {
-  Body,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Patch, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
@@ -30,14 +20,8 @@ import { EntityIdDto } from '~/shared/dto/id.dto'
 import { BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
-import {
-  PageDetailQueryDto,
-  PageDto,
-  PageReorderDto,
-  PartialPageDto,
-} from './page.schema'
+import { PageDetailQueryDto, PageReorderDto } from './page.schema'
 import { PageService } from './page.service'
-import type { PageModel } from './page.types'
 
 @ApiController('pages')
 export class PageController {
@@ -165,28 +149,6 @@ export class PageController {
     }
 
     return this.buildPageDetailResponse(page, lang, 'detail')
-  }
-
-  @Post('/')
-  @Auth()
-  @HTTPDecorators.Idempotence()
-  create(@Body() body: PageDto) {
-    return this.pageService.create(body as unknown as PageModel)
-  }
-
-  @Put('/:id')
-  @Auth()
-  async modify(@Body() body: PageDto, @Param() params: EntityIdDto) {
-    const { id } = params
-    await this.pageService.updateById(id, body as unknown as PageModel)
-    return this.pageService.findById(id)
-  }
-
-  @Patch('/:id')
-  @Auth()
-  async patch(@Body() body: PartialPageDto, @Param() params: EntityIdDto) {
-    const { id } = params
-    await this.pageService.updateById(id, body as unknown as Partial<PageModel>)
   }
 
   @Patch('/reorder')

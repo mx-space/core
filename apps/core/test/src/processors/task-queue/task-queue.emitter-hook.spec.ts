@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { TaskQueueService } from '~/processors/task-queue/task-queue.service'
+import { TaskStatus } from '~/processors/task-queue/task-queue.types'
 
 /**
  * Step-6 smoke: createTask must emit exactly one 'created' phase carrying the
@@ -24,7 +25,11 @@ describe('TaskQueueService — createTask emitter hook', () => {
 
     const dedupHit = opts.dedupHit
     const redis = {
-      get: vi.fn().mockResolvedValue(dedupHit?.existingId ?? null),
+      eval: vi.fn(async (...args: unknown[]) =>
+        dedupHit ? dedupHit.existingId : args[3],
+      ),
+      exists: vi.fn().mockResolvedValue(1),
+      expire: vi.fn().mockResolvedValue(1),
       hgetall: vi.fn().mockResolvedValue(
         dedupHit
           ? {
@@ -115,4 +120,33 @@ describe('TaskQueueService — createTask emitter hook', () => {
     expect(result).toEqual({ taskId: 'existing-1', created: false })
     expect(emitter.emitCreated).not.toHaveBeenCalled()
   })
+
+  it.each([TaskStatus.Completed, TaskStatus.Failed])(
+    'emits terminal status and result atomically: %s',
+    async (status) => {
+      const { service, emitter } = buildHarness()
+      const result = { articleCommitted: true }
+      vi.spyOn(service, 'getTask').mockResolvedValue({
+        id: 'publish-1',
+        type: 'content:publish',
+        status,
+        payload: {},
+        scope: 'content',
+        createdAt: 1,
+        completedAt: 2,
+        result,
+        logs: [],
+        retryCount: 0,
+      })
+
+      await service.updateStatus('publish-1', status)
+
+      expect(emitter.emitStatus).not.toHaveBeenCalled()
+      expect(emitter.emitResult).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'publish-1' }),
+        expect.objectContaining({ status }),
+        result,
+      )
+    },
+  )
 })

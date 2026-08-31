@@ -970,37 +970,12 @@ export const AISchema = section('AI settings', {
   enableSummary: field.toggle(z.boolean().optional(), 'Allow AI summary', {
     description: 'Whether to allow calling AI to generate summaries',
   }),
-  enableAutoGenerateSummaryOnCreate: field.toggle(
-    z.boolean().optional(),
-    'Auto-generate summary on article creation',
-    { description: 'Requires enableSummary to also be enabled' },
-  ),
-  enableAutoGenerateSummaryOnUpdate: field.toggle(
-    z.boolean().optional(),
-    'Regenerate summary on article update',
-    {
-      description:
-        'Regenerates only for languages whose source-text hash has changed; requires enableSummary to also be enabled',
-    },
-  ),
   summaryTargetLanguages: field.array(
     z.array(z.string()).optional(),
     'AI summary target languages',
     {
       description:
         'Target languages for auto-generated summaries, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["zh", "en", "ja"]',
-    },
-  ),
-  summaryMinTextLength: field.number(
-    z.preprocess(
-      (val) =>
-        val === '' || val === null || val === undefined ? val : Number(val),
-      z.number().int().min(0).optional(),
-    ),
-    'Minimum text length for summary auto-generation',
-    {
-      description:
-        'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 100',
     },
   ),
   translationModel: field.plain(
@@ -1085,16 +1060,6 @@ export const AISchema = section('AI settings', {
   enableInsights: field.toggle(z.boolean().optional(), 'Allow AI Insights', {
     description: 'Master switch',
   }),
-  enableAutoGenerateInsightsOnCreate: field.toggle(
-    z.boolean().optional(),
-    'Auto-generate Insights on article creation',
-    { description: 'Requires enableInsights to also be enabled' },
-  ),
-  enableAutoGenerateInsightsOnUpdate: field.toggle(
-    z.boolean().optional(),
-    'Regenerate Insights on article update',
-    { description: 'Triggers only when the source-text hash changes' },
-  ),
   enableAutoTranslateInsights: field.toggle(
     z.boolean().optional(),
     'Auto-translate Insights after generation',
@@ -1109,18 +1074,6 @@ export const AISchema = section('AI settings', {
     {
       description:
         'ISO 639-1 list; the source language is automatically excluded',
-    },
-  ),
-  insightsMinTextLength: field.number(
-    z.preprocess(
-      (val) =>
-        val === '' || val === null || val === undefined ? val : Number(val),
-      z.number().int().min(0).optional(),
-    ),
-    'Minimum text length for Insights auto-generation',
-    {
-      description:
-        'Skips automatic hooks (OnCreate/OnUpdate) when the body has fewer characters than this; only affects automatic triggers. 0 means no limit. Default 300',
     },
   ),
   imageGeneration: AIImageGenerationFeatureSchema.optional(),

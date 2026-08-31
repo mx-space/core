@@ -87,7 +87,6 @@ export class MultilangGenerationService {
           options.onCost,
         )
         const contentMd5 = md5(text)
-        await adapter.deleteStaleTranslations(options.refId, contentMd5)
         const doc = await adapter.persistBase({
           refId: options.refId,
           lang: options.lang,

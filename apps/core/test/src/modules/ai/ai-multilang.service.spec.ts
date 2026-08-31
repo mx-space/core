@@ -83,7 +83,6 @@ const createHarness = (overrides?: {
       docs.set(doc.id, doc)
       return doc
     }),
-    deleteStaleTranslations: vi.fn(async () => 0),
     emitGenerated: vi.fn(),
     readDoc: (doc) => doc,
     ...overrides?.adapter,
@@ -180,7 +179,7 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
     )
   })
 
-  it('invalidates stale translations when the base regenerates', async () => {
+  it('keeps existing translations when the base regenerates', async () => {
     const { adapter, context, service } = createHarness()
 
     await service.executeMultilangTask(
@@ -189,10 +188,6 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
       context as any,
     )
 
-    expect(adapter.deleteStaleTranslations).toHaveBeenCalledWith(
-      'post-1',
-      expect.any(String),
-    )
     expect(adapter.emitGenerated).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'base-zh' }),
       expect.objectContaining({ refId: 'post-1', sourceLang: 'zh' }),

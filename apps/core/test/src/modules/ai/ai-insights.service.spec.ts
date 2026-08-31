@@ -51,10 +51,6 @@ const createService = () => {
     }),
   }
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = {
-    createInsightsTask: vi.fn(),
-    createInsightsTranslationTask: vi.fn(),
-  }
   const eventEmitter = { emit: vi.fn() }
   const entitlementService = {
     isPremiumLocked: vi.fn(
@@ -95,13 +91,11 @@ const createService = () => {
     adapter,
     multilang,
     taskProcessor as any,
-    aiTaskService as any,
     generationMetrics as any,
   )
   return {
     aiInFlightService,
     aiService,
-    aiTaskService,
     configService,
     databaseService,
     entitlementService,
@@ -333,69 +327,6 @@ describe('AiInsightsService', () => {
     ).resolves.toBeNull()
   })
 
-  it('does not block background insight regeneration for a premium post', async () => {
-    const {
-      aiTaskService,
-      configService,
-      databaseService,
-      repository,
-      service,
-    } = createService()
-    configService.get.mockResolvedValue({
-      enableInsights: true,
-      enableAutoGenerateInsightsOnUpdate: true,
-      insightsMinTextLength: 0,
-    })
-    databaseService.findGlobalById.mockResolvedValue({
-      type: CollectionRefTypes.Post,
-      document: {
-        id: 'post-1',
-        title: 'Premium Post',
-        text: 'Long enough premium text',
-        isPublished: true,
-        isPremium: true,
-      },
-    })
-    repository.findSourceForRef.mockResolvedValue(null)
-
-    await service.handleUpdateArticle({ id: 'post-1' })
-
-    expect(aiTaskService.createInsightsTask).toHaveBeenCalledWith({
-      refId: 'post-1',
-    })
-  })
-
-  it('creates an initial insights task on update when no source insight exists', async () => {
-    const {
-      aiTaskService,
-      configService,
-      databaseService,
-      repository,
-      service,
-    } = createService()
-    configService.get.mockResolvedValue({
-      enableInsights: true,
-      enableAutoGenerateInsightsOnUpdate: true,
-      insightsMinTextLength: 0,
-    })
-    databaseService.findGlobalById.mockResolvedValue({
-      type: CollectionRefTypes.Post,
-      document: {
-        id: 'post-1',
-        title: 'Published Post',
-        text: 'Long enough text',
-        isPublished: true,
-      },
-    })
-    repository.findSourceForRef.mockResolvedValue(null)
-
-    await service.handleUpdateArticle({ id: 'post-1' })
-
-    expect(aiTaskService.createInsightsTask).toHaveBeenCalledWith({
-      refId: 'post-1',
-    })
-  })
-
   it('looks up the base row by the resolved source language', async () => {
     const { databaseService, repository, service } = createService()
     databaseService.findGlobalById.mockResolvedValue({
@@ -445,7 +376,6 @@ describe('AiInsightsService — insights task target languages', () => {
     })
     harness.repository.findSourceForRef.mockResolvedValue(null)
     harness.repository.findByRefAndLang.mockResolvedValue(null)
-    harness.repository.deleteTranslationsWithDifferentHash.mockResolvedValue(0)
     harness.repository.upsert.mockImplementation(async (input: any) => ({
       ...row,
       ...input,
@@ -477,9 +407,6 @@ describe('AiInsightsService — insights task target languages', () => {
     expect(upserts).toContainEqual(
       expect.objectContaining({ lang: 'en', isTranslation: true }),
     )
-    expect(
-      harness.aiTaskService.createInsightsTranslationTask,
-    ).not.toHaveBeenCalled()
     expect(ctx.setResult).toHaveBeenCalledWith(
       expect.objectContaining({
         insightsId: 'insights-1',

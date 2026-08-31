@@ -27,7 +27,7 @@ pnpm dev
 pnpm build            # production build → dist/
 pnpm test             # vitest (happy-dom)
 pnpm typecheck        # tsc --noEmit
-pnpm lint             # oxlint
+pnpm lint             # eslint
 ```
 
 For the full stack, run the core server alongside (`pnpm dev` at the repo root), then bridge the production-served admin to the local dev server via `http://localhost:2333/proxy/qaqdmin/dev-proxy`.

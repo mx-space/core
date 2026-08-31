@@ -162,18 +162,12 @@ export namespace MxServerOptions {
     writerModel?: AIModelAssignment
     commentReviewModel?: AIModelAssignment
     enableSummary: boolean
-    enableAutoGenerateSummaryOnCreate: boolean
-    enableAutoGenerateSummaryOnUpdate: boolean
     summaryTargetLanguages: string[]
-    summaryMinTextLength?: number
     insightsModel?: AIModelAssignment
     insightsTranslationModel?: AIModelAssignment
     enableInsights?: boolean
-    enableAutoGenerateInsightsOnCreate?: boolean
-    enableAutoGenerateInsightsOnUpdate?: boolean
     enableAutoTranslateInsights?: boolean
     insightsTargetLanguages?: string[]
-    insightsMinTextLength?: number
   }
 
   export interface ModelInfo {

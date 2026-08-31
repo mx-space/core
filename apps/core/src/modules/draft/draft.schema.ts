@@ -8,55 +8,54 @@ import {
   zPaginationSize,
   zSortOrder,
 } from '~/common/zod'
-import {
-  validateLexicalCreateContentPair,
-  validateLexicalPartialContentPair,
-} from '~/shared/schema'
+import { validateLexicalCreateContentPair } from '~/shared/schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import { DraftRefType } from './draft.enum'
 
 const ImageModelSchema = z.object({
-  src: z.string(),
   alt: z.string().optional(),
+  src: z.string(),
 })
 
-const DraftBaseSchema = z.object({
-  refType: z.enum(DraftRefType),
+export const DraftWriteDataSchema = z
+  .object({
+    content: z.string().optional(),
+    contentFormat: z
+      .enum([ContentFormat.Markdown, ContentFormat.Lexical])
+      .default(ContentFormat.Markdown),
+    images: z.array(ImageModelSchema).nullable().optional(),
+    meta: z.record(z.string(), z.unknown()).nullable().optional(),
+    text: z.string().default(''),
+    title: z.string().default(''),
+    typeSpecificData: z.record(z.string(), z.unknown()).nullable().optional(),
+  })
+  .superRefine(validateLexicalCreateContentPair)
+
+export const CreateDraftSchema = z.object({
+  baseRevisionId: zEntityId.nullable().optional(),
+  data: DraftWriteDataSchema,
   refId: zEntityId.optional(),
-  title: z.string().optional(),
-  text: z.string().optional(),
-  contentFormat: z
-    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
-    .default(ContentFormat.Markdown)
-    .optional(),
-  content: z.string().optional(),
-  images: z.array(ImageModelSchema).optional(),
-  meta: z.record(z.string(), z.any()).optional().nullable().default(null),
-  typeSpecificData: z.record(z.string(), z.any()).optional(),
+  refType: z.enum(DraftRefType),
 })
-
-export const CreateDraftSchema = DraftBaseSchema.superRefine(
-  validateLexicalCreateContentPair,
-)
 
 export class CreateDraftDto extends createZodDto(CreateDraftSchema) {}
 
-export const UpdateDraftSchema = DraftBaseSchema.partial()
-  .extend({
-    expectedVersion: z.number().int().min(1),
-  })
-  .superRefine(validateLexicalPartialContentPair)
+export const UpdateDraftSchema = z.object({
+  data: DraftWriteDataSchema,
+  expectedHeadRevisionId: zEntityId,
+})
 
 export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
 
 export const DraftPagerSchema = z.object({
-  size: zPaginationSize,
+  hasRef: zCoerceBoolean.optional(),
   page: zPaginationPage,
+  refType: z.enum(DraftRefType).optional(),
+  search: z.string().optional(),
+  size: zPaginationSize,
   sortBy: z.string().optional(),
   sortOrder: zSortOrder,
-  refType: z.enum(DraftRefType).optional(),
-  hasRef: zCoerceBoolean.optional(),
 })
 
 export class DraftPagerDto extends createZodDto(DraftPagerSchema) {}
@@ -75,18 +74,11 @@ export class DraftRefTypeAndIdDto extends createZodDto(
   DraftRefTypeAndIdSchema,
 ) {}
 
-export const RestoreVersionSchema = z.object({
-  version: z.preprocess(
-    (val) => Number.parseInt(val as string, 10),
-    z.number().int().min(1),
-  ),
+export const RevisionComparisonSchema = z.object({
+  leftId: zEntityId,
+  rightId: zEntityId,
 })
 
-export class RestoreVersionDto extends createZodDto(RestoreVersionSchema) {}
-
-export type CreateDraftInput = z.infer<typeof CreateDraftSchema>
-export type UpdateDraftInput = z.infer<typeof UpdateDraftSchema>
-export type DraftPagerInput = z.infer<typeof DraftPagerSchema>
-export type DraftRefTypeInput = z.infer<typeof DraftRefTypeSchema>
-export type DraftRefTypeAndIdInput = z.infer<typeof DraftRefTypeAndIdSchema>
-export type RestoreVersionInput = z.infer<typeof RestoreVersionSchema>
+export class RevisionComparisonDto extends createZodDto(
+  RevisionComparisonSchema,
+) {}

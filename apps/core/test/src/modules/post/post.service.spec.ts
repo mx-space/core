@@ -57,8 +57,6 @@ const createService = () => {
     }),
   }
   const draftService = {
-    linkToPublished: vi.fn(),
-    markAsPublished: vi.fn(),
     deleteByRef: vi.fn(),
   }
   const moduleRef = {
@@ -151,7 +149,7 @@ describe('PostService', () => {
   })
 
   it('delegates a staged migration to the atomic commit boundary', async () => {
-    const { contentMigrationCommitService, draftService, repository, service } =
+    const { contentMigrationCommitService, repository, service } =
       createService()
     repository.findById.mockResolvedValue(createPost())
     repository.findBySlug.mockResolvedValue(createPost())
@@ -185,7 +183,6 @@ describe('PostService', () => {
       }),
     )
     expect(repository.update).not.toHaveBeenCalled()
-    expect(draftService.markAsPublished).not.toHaveBeenCalled()
   })
 
   it('creates posts through the PG repository after category and slug validation', async () => {
@@ -223,29 +220,6 @@ describe('PostService', () => {
     ).rejects.toThrow(AppException)
 
     expect(repository.create).not.toHaveBeenCalled()
-  })
-
-  it('links a draft to the created post and removes draft file references', async () => {
-    const { draftService, fileReferenceService, repository, service } =
-      createService()
-    repository.findBySlug.mockResolvedValue(null)
-    repository.create.mockResolvedValue(createPost({ id: 'post-2' as any }))
-
-    await service.create({
-      title: 'Post',
-      text: 'body',
-      categoryId: 'cat-1',
-      draftId: 'draft-1',
-    } as any)
-
-    expect(
-      fileReferenceService.removeReferencesForDocument,
-    ).toHaveBeenCalledWith('draft-1', FileReferenceType.Draft)
-    expect(draftService.linkToPublished).toHaveBeenCalledWith(
-      'draft-1',
-      'post-2',
-    )
-    expect(draftService.markAsPublished).toHaveBeenCalledWith('draft-1')
   })
 
   it('tracks old public paths when slug changes', async () => {
@@ -314,7 +288,7 @@ describe('PostService', () => {
     expect(eventManager.emit).not.toHaveBeenCalled()
   })
 
-  it('emits POST_CREATE to visitors when a post flips to published', async () => {
+  it('emits POST_REPUBLISH when a post returns online', async () => {
     vi.useFakeTimers()
     const { eventManager, repository, service } = createService()
     repository.findById.mockResolvedValue(createPost({ isPublished: true }))
@@ -324,45 +298,13 @@ describe('PostService', () => {
     vi.useRealTimers()
 
     expect(eventManager.emit).toHaveBeenCalledWith(
-      BusinessEvents.POST_CREATE,
+      BusinessEvents.POST_REPUBLISH,
       { id: 'post-1' },
       { scope: EventScope.TO_SYSTEM_VISITOR },
     )
   })
 
-  it('marks a prepared publish so automatic AI hooks do not run again', async () => {
-    vi.useFakeTimers()
-    const { eventManager, repository, service } = createService()
-    repository.findById.mockResolvedValue(createPost({ isPublished: true }))
-
-    service.afterUpdatePost('post-1', false, true)
-    await vi.advanceTimersByTimeAsync(1100)
-    vi.useRealTimers()
-
-    expect(eventManager.emit).toHaveBeenCalledWith(
-      BusinessEvents.POST_CREATE,
-      { id: 'post-1', skipAiAutoGeneration: true },
-      { scope: EventScope.TO_SYSTEM_VISITOR },
-    )
-  })
-
-  it('reports which AI assets were prepared before publishing', async () => {
-    vi.useFakeTimers()
-    const { eventManager, repository, service } = createService()
-    repository.findById.mockResolvedValue(createPost({ isPublished: true }))
-
-    service.afterUpdatePost('post-1', false, undefined, ['summary', 'tts'])
-    await vi.advanceTimersByTimeAsync(1100)
-    vi.useRealTimers()
-
-    expect(eventManager.emit).toHaveBeenCalledWith(
-      BusinessEvents.POST_CREATE,
-      { id: 'post-1', preparedAiResources: ['summary', 'tts'] },
-      { scope: EventScope.TO_SYSTEM_VISITOR },
-    )
-  })
-
-  it('emits POST_DELETE to visitors when a post flips back to draft', async () => {
+  it('emits POST_UNPUBLISH without permanent-delete semantics', async () => {
     vi.useFakeTimers()
     const { eventManager, repository, service } = createService()
     repository.findById.mockResolvedValue(createPost({ isPublished: false }))
@@ -372,7 +314,7 @@ describe('PostService', () => {
     vi.useRealTimers()
 
     expect(eventManager.emit).toHaveBeenCalledWith(
-      BusinessEvents.POST_DELETE,
+      BusinessEvents.POST_UNPUBLISH,
       { id: 'post-1' },
       { scope: EventScope.TO_SYSTEM_VISITOR },
     )

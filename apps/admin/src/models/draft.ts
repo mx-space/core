@@ -6,31 +6,71 @@ export enum DraftRefType {
   Page = 'page',
 }
 
-export interface DraftHistoryModel {
-  version: number
-  title: string
+export type RevisionRelation = 'same' | 'ancestor' | 'descendant' | 'diverged'
+
+export interface RevisionSnapshot {
+  content: string | null
+  contentFormat: 'lexical' | 'markdown'
+  images: Image[] | null
+  meta: Record<string, unknown> | null
   text: string
-  contentFormat?: 'markdown' | 'lexical'
-  content?: string
-  typeSpecificData?: Record<string, any>
-  savedAt: string
+  title: string
+  typeSpecificData: TypeSpecificData | null
+}
+
+export interface ContentRevision extends RevisionSnapshot {
+  createdAt: string
+  documentId: string
+  id: string
+  parentRevisionId: string | null
+}
+
+export interface ContentDocument {
+  createdAt: string
+  id: string
+  publishedRevisionId: string | null
+  refId: string | null
+  refType: DraftRefType
+  updatedAt: string | null
 }
 
 export interface DraftModel {
-  id: string
-  refType: DraftRefType
-  refId?: string
-  title: string
-  text: string
-  contentFormat?: 'markdown' | 'lexical'
-  content?: string
-  images?: Image[]
-  meta?: Record<string, any>
-  typeSpecificData?: Record<string, any>
-  version: number
-  updatedAt: string
+  baseRevision: ContentRevision
+  baseRevisionId: string
+  commonAncestorRevisionId: string | null
   createdAt: string
-  history: DraftHistoryModel[]
+  document: ContentDocument
+  documentId: string
+  headRevision: ContentRevision
+  headRevisionId: string
+  id: string
+  publishedRevision: ContentRevision | null
+  relationToPublished: RevisionRelation | null
+  status: 'active' | 'archived'
+  updatedAt: string | null
+}
+
+export interface VersionContext {
+  branches: DraftModel[]
+  document: ContentDocument
+  publishedRevision: ContentRevision | null
+  versionTree: VersionTreeNode[]
+}
+
+export interface VersionTreeNode {
+  branchBaseIds: string[]
+  branchHeadIds: string[]
+  collapsedRevisionCount: number
+  parentNodeId: string | null
+  publishedAt: string | null
+  revision: ContentRevision
+}
+
+export interface RevisionComparison {
+  commonAncestorRevisionId: string | null
+  left: ContentRevision
+  relation: RevisionRelation
+  right: ContentRevision
 }
 
 export interface DraftResponse {
@@ -38,53 +78,39 @@ export interface DraftResponse {
   pagination: Pager
 }
 
-export interface DraftHistoryListItem {
-  version: number
-  title: string
-  savedAt: string
-  /** 是否为全量快照，false 表示增量 diff */
-  isFullSnapshot: boolean
-  /** 指向最近的全量快照版本（用于无 diff 的去重） */
-  refVersion?: number
-  /** 当前版本基于哪个全量快照 */
-  baseVersion?: number
-}
-
-// Type-specific data interfaces
 export interface PostSpecificData {
-  slug?: string
   categoryId?: string
   copyright?: boolean
-  tags?: string[]
-  summary?: string | null
-  pin?: string | null
+  isPremium?: boolean
+  pin?: boolean | string | null
   pinOrder?: number
   relatedId?: string[]
-  isPublished?: boolean
-  isPremium?: boolean
+  slug?: string
+  summary?: string | null
+  tags?: string[]
 }
 
 export interface NoteSpecificData {
-  mood?: string
-  weather?: string
-  password?: string | null
-  passwordProtected?: boolean
-  publicAt?: string | null
   bookmark?: boolean
-  location?: string
   coordinates?: {
     latitude: number
     longitude: number
   } | null
+  location?: string
+  mood?: string
+  password?: string | null
+  publicAt?: string | null
+  slug?: string
   topicId?: string | null
-  isPublished?: boolean
+  weather?: string
 }
 
 export interface PageSpecificData {
+  order?: number
   slug?: string
   subtitle?: string | null
-  order?: number
 }
 
-export type TypeSpecificData =
-  PostSpecificData | NoteSpecificData | PageSpecificData
+export type TypeSpecificData = PostSpecificData &
+  NoteSpecificData &
+  PageSpecificData

@@ -15,11 +15,9 @@ import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-mi
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import {
   validateLexicalCreateContentPair,
-  validateLexicalPartialContentPair,
   WriteBaseSchema,
 } from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
-import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Post schema for API validation
@@ -41,13 +39,6 @@ const PostBaseSchema = WriteBaseSchema.extend({
   relatedId: z.array(zEntityId).optional(),
   images: ImageArraySchema.optional(),
   isPremium: z.boolean().optional(),
-  /** ID of the associated draft; marked as published when this post is published */
-  draftId: zEntityId.optional(),
-  /** Admin-controlled publish flow already prepared the selected AI assets. */
-  skipAiAutoGeneration: z.boolean().optional(),
-  preparedAiResources: z
-    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
-    .optional(),
   migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
@@ -61,16 +52,10 @@ export class PostDto extends createZodDto(PostSchema) {}
  * Partial post schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialPostSchema = PostBaseSchema.extend({
-  contentFormat: z
-    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
-    .optional(),
-  meta: z.record(z.string(), z.any()).optional().nullable(),
-  copyright: z.boolean().optional(),
-  isPublished: z.boolean().optional(),
+export const PartialPostSchema = z.object({
+  categoryId: zEntityId.optional(),
+  pinAt: zPinDate,
 })
-  .partial()
-  .superRefine(validateLexicalPartialContentPair)
 
 export class PartialPostDto extends createZodDto(PartialPostSchema) {}
 

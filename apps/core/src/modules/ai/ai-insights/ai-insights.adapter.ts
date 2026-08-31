@@ -324,13 +324,6 @@ export class AiInsightsAdapter implements MultilangAdapter<
     )!
   }
 
-  async deleteStaleTranslations(refId: string, hash: string) {
-    return this.aiInsightsRepository.deleteTranslationsWithDifferentHash(
-      refId,
-      hash,
-    )
-  }
-
   emitGenerated(
     doc: AIInsightsModel,
     event: { refId: string; sourceLang: string; sourceHash: string },

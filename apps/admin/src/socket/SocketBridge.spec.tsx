@@ -457,8 +457,8 @@ describe('handleTaskUpdate — phase routing', () => {
       patch: {
         status: AITaskStatus.Completed,
         completedAt: 99,
-        result: { ok: 1 },
       },
+      result: { ok: 1 },
     })
 
     const detail = queryClient.getQueryData<AITask>(
@@ -470,6 +470,7 @@ describe('handleTaskUpdate — phase routing', () => {
       adminQueryKeys.tasks.tasks(TASKS_PARAMS),
     )
     expect(list?.data[0].completedAt).toBe(99)
+    expect(list?.data[0].result).toEqual({ ok: 1 })
   })
 
   it('wholesale-replaces the parent group subTaskStats on a child emit', () => {

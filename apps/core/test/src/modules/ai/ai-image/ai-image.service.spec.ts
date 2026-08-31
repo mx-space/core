@@ -400,7 +400,10 @@ describe('AiImageService image generation task handler', () => {
         findGlobalById: vi.fn().mockResolvedValue(articleFixture()),
       }
       const draftRepository = {
-        findById: vi.fn().mockResolvedValue({
+        findBranchById: vi.fn().mockResolvedValue({
+          headRevisionId: 'revision-1',
+        }),
+        findRevisionById: vi.fn().mockResolvedValue({
           title: 'The draft title',
           text: 'The draft body',
         }),
@@ -436,7 +439,10 @@ describe('AiImageService image generation task handler', () => {
         createContext(),
       )
 
-      expect(draftRepository.findById).toHaveBeenCalledWith('draft-1')
+      expect(draftRepository.findBranchById).toHaveBeenCalledWith('draft-1')
+      expect(draftRepository.findRevisionById).toHaveBeenCalledWith(
+        'revision-1',
+      )
       expect(databaseService.findGlobalById).not.toHaveBeenCalled()
       expect(JSON.stringify(generateStructured.mock.calls[0])).toContain(
         'The draft title',

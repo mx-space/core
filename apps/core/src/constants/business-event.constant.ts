@@ -16,10 +16,14 @@ export enum BusinessEvents {
 
   POST_CREATE = 'post.create',
   POST_UPDATE = 'post.update',
+  POST_UNPUBLISH = 'post.unpublish',
+  POST_REPUBLISH = 'post.republish',
   POST_DELETE = 'post.delete',
 
   NOTE_CREATE = 'note.create',
   NOTE_UPDATE = 'note.update',
+  NOTE_UNPUBLISH = 'note.unpublish',
+  NOTE_REPUBLISH = 'note.republish',
   NOTE_DELETE = 'note.delete',
 
   PAGE_CREATE = 'page.create',

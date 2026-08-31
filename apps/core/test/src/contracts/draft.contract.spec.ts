@@ -7,121 +7,121 @@ import { DraftService } from '~/modules/draft/draft.service'
 import {
   assertLowercaseRefType,
   assertNoLegacyKeys,
-  assertPgTimestamps,
 } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
 import { authPassHeader } from '../../mock/guard/auth.guard'
 
-const fixtureDraft = (overrides: Record<string, unknown> = {}) => ({
-  id: '7000000000000000030',
-  title: 'WIP',
-  text: 'draft body',
+const createdAt = new Date('2026-08-31T00:00:00.000Z')
+const document = {
+  createdAt,
+  id: '7000000000000000020',
+  publishedRevisionId: '7000000000000000021',
+  refId: '7000000000000000010',
+  refType: 'post',
+  updatedAt: createdAt,
+}
+const revision = (id = '7000000000000000021') => ({
   content: null,
   contentFormat: 'markdown',
-  refType: 'post',
-  refId: '7000000000000000010',
-  hasRef: true,
-  version: 1,
-  publishedVersion: 0,
-  history: [],
+  createdAt,
+  documentId: document.id,
+  id,
+  images: [],
   meta: null,
-  typeSpecificData: null,
-  createdAt: new Date('2024-03-01T00:00:00.000Z'),
-  modifiedAt: null,
-  ...overrides,
+  parentRevisionId: null,
+  text: 'Body',
+  title: 'Title',
+  typeSpecificData: { slug: 'title' },
 })
+const branch = {
+  baseRevision: revision(),
+  baseRevisionId: '7000000000000000021',
+  commonAncestorRevisionId: '7000000000000000021',
+  createdAt,
+  document,
+  documentId: document.id,
+  headRevision: revision('7000000000000000031'),
+  headRevisionId: '7000000000000000031',
+  id: '7000000000000000030',
+  publishedRevision: revision(),
+  relationToPublished: 'ancestor',
+  status: 'active',
+  updatedAt: createdAt,
+}
 
-const draftServiceProvider = {
+const provider = {
   provide: DraftService,
   useValue: {
-    async list() {
-      return {
-        data: [fixtureDraft()],
-        pagination: {
-          total: 1,
-          currentPage: 1,
-          totalPage: 1,
-          size: 10,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      }
-    },
-    async count() {
-      return 1
-    },
-    async findById(id: string) {
-      return fixtureDraft({ id })
-    },
-    async findByRef() {
-      return fixtureDraft()
-    },
-    async findNewDrafts() {
-      return [fixtureDraft({ refId: null, hasRef: false })]
-    },
-    async getHistory() {
-      return [{ version: 1, savedAt: new Date('2024-03-02T00:00:00.000Z') }]
-    },
+    compare: async () => ({
+      commonAncestorRevisionId: revision().id,
+      left: revision(),
+      relation: 'same',
+      right: revision(),
+    }),
+    findById: async () => branch,
+    findNewDrafts: async () => [branch],
+    findRevisionById: async () => revision(),
+    getBranchRevisions: async () => [revision()],
+    getContext: async () => ({
+      branches: [branch],
+      document,
+      publishedRevision: revision(),
+    }),
+    list: async () => ({
+      data: [branch],
+      pagination: { currentPage: 1, size: 10, total: 1, totalPage: 1 },
+    }),
   },
 }
 
-describe('DraftController contract (e2e)', () => {
+describe('DraftController tree contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [DraftController],
-    providers: [draftServiceProvider],
+    providers: [provider],
   })
 
-  test('GET /drafts list — no legacy keys, lowercase ref_type', async () => {
+  test('GET /drafts returns branch and immutable head revision', async () => {
     const res = await proxy.app.inject({
+      headers: authPassHeader,
       method: 'GET',
       url: `${apiRoutePrefix}/drafts`,
-      headers: authPassHeader,
     })
+
     expect(res.statusCode).toBe(200)
     const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data[0]).toMatchObject({
+      document: { published_revision_id: revision().id },
+      head_revision: { id: branch.headRevisionId },
+      head_revision_id: branch.headRevisionId,
+    })
     assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data[0])
     assertLowercaseRefType(body)
   })
 
-  test('GET /drafts/:id detail — no legacy keys, lowercase ref_type', async () => {
+  test('GET /drafts/context/:refType/:refId returns every branch', async () => {
     const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/drafts/7000000000000000030`,
       headers: authPassHeader,
+      method: 'GET',
+      url: `${apiRoutePrefix}/drafts/context/post/${document.refId}`,
     })
+
     expect(res.statusCode).toBe(200)
-    const body = res.json()
-    assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data)
-    assertLowercaseRefType(body)
+    expect(res.json().data).toMatchObject({
+      branches: [{ id: branch.id }],
+      published_revision: { id: revision().id },
+    })
   })
 
-  test('GET /drafts/by-ref/:refType/:refId — bound draft, lowercase ref_type', async () => {
+  test('GET /drafts/:id/revisions exposes branch ancestry', async () => {
     const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/drafts/by-ref/post/7000000000000000010`,
       headers: authPassHeader,
+      method: 'GET',
+      url: `${apiRoutePrefix}/drafts/${branch.id}/revisions`,
     })
-    expect(res.statusCode).toBe(200)
-    const body = res.json()
-    assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data)
-    assertLowercaseRefType(body)
-  })
 
-  test('GET /drafts/by-ref/:refType/new — unbound drafts list, lowercase ref_type', async () => {
-    const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/drafts/by-ref/post/new`,
-      headers: authPassHeader,
-    })
     expect(res.statusCode).toBe(200)
-    const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
-    assertNoLegacyKeys(body)
-    assertPgTimestamps(body.data[0])
-    assertLowercaseRefType(body)
+    expect(res.json().data).toEqual([
+      expect.objectContaining({ id: revision().id }),
+    ])
   })
 })

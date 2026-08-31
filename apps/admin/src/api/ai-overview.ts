@@ -39,6 +39,7 @@ interface AssetBase {
   generationMetrics?: GenerationMetrics | null
   id: string
   lang: string
+  stale?: boolean
 }
 
 export interface SummaryAsset extends AssetBase {

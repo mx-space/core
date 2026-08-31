@@ -1,12 +1,12 @@
 import { postJson } from './http'
 
-export type MigrationMemberKind = 'draft' | 'source' | 'translation'
+export type MigrationMemberKind = 'branch' | 'source' | 'translation'
 
 export interface MigrationMemberPrecondition {
   hash: string
   id: string
   kind: MigrationMemberKind
-  version?: number
+  headRevisionId?: string
 }
 
 export interface MarkdownMigrationIssue {
@@ -77,7 +77,7 @@ export interface MarkdownToLexicalMigrationDescriptor {
 }
 
 export function dryRunMarkdownToLexical(data: {
-  draftId?: string
+  branchId?: string
   profile: 'yohaku-v1'
   refId: string
   refType: 'note' | 'page' | 'post'

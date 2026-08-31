@@ -24,7 +24,6 @@ export default ({ mode }) => {
 
   return defineConfig({
     plugins: [
-      // mkcert(),
       esToolkitCompatShim(),
       codeInspectorPlugin({ bundler: 'vite' }),
       adminRoutes({ viewsDir: resolve(__dirname, 'src/views') }),
@@ -103,7 +102,6 @@ export default ({ mode }) => {
             if (haklexChunk) return haklexChunk
 
             if (normalized.includes('/monaco-editor/')) return 'editor-monaco'
-            if (normalized.includes('/@antv/')) return 'vendor-charts'
           },
         },
       },

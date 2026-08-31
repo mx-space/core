@@ -5,11 +5,9 @@ import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
 import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-migration/content-migration.schema'
 import {
   validateLexicalCreateContentPair,
-  validateLexicalPartialContentPair,
   WriteBaseSchema,
 } from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
-import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Page schema for API validation
@@ -23,8 +21,6 @@ const PageBaseSchema = WriteBaseSchema.extend({
     z.number().int().min(0).default(1),
   ),
   images: ImageArraySchema.optional(),
-  /** ID of the associated draft; marked as published when this page is published */
-  draftId: zEntityId.optional(),
   migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
@@ -33,26 +29,6 @@ export const PageSchema = PageBaseSchema.superRefine(
 )
 
 export class PageDto extends createZodDto(PageSchema) {}
-
-/**
- * Partial page schema for PATCH operations
- * Override fields with .default() to prevent defaults from being applied during partial updates
- */
-export const PartialPageSchema = PageBaseSchema.extend({
-  contentFormat: z
-    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
-    .optional(),
-  meta: z.record(z.string(), z.any()).optional().nullable(),
-  order: z.preprocess(
-    (val) =>
-      typeof val === 'string' ? Number.parseInt(val, 10) : (val as number),
-    z.number().int().min(0).optional(),
-  ),
-})
-  .partial()
-  .superRefine(validateLexicalPartialContentPair)
-
-export class PartialPageDto extends createZodDto(PartialPageSchema) {}
 
 /**
  * Page reorder sequence item schema
@@ -82,6 +58,5 @@ export class PageDetailQueryDto extends createZodDto(PageDetailQuerySchema) {}
 
 // Type exports
 export type PageInput = z.infer<typeof PageSchema>
-export type PartialPageInput = z.infer<typeof PartialPageSchema>
 export type PageReorderSeqInput = z.infer<typeof PageReorderSeqSchema>
 export type PageReorderInput = z.infer<typeof PageReorderSchema>

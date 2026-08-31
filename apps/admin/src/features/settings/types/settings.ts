@@ -41,17 +41,12 @@ export interface AIModelAssignment {
 export interface AIConfig {
   version?: 2
   commentReviewModel?: AIModelAssignment | null
-  enableAutoGenerateInsightsOnCreate?: boolean
-  enableAutoGenerateInsightsOnUpdate?: boolean
-  enableAutoGenerateSummaryOnCreate?: boolean
-  enableAutoGenerateSummaryOnUpdate?: boolean
   enableAutoGenerateTranslation?: boolean
   enableAutoTranslateInsights?: boolean
   enableInsights?: boolean
   enableSummary?: boolean
   enableTranslation?: boolean
   enableTranslationReview?: boolean
-  insightsMinTextLength?: number
   insightsModel?: AIModelAssignment | null
   insightsTargetLanguages?: string[]
   insightsTranslationModel?: AIModelAssignment | null
@@ -63,7 +58,6 @@ export interface AIConfig {
     model?: AIModelAssignment | null
   }
   providers?: AIProviderConfig[]
-  summaryMinTextLength?: number
   summaryModel?: AIModelAssignment | null
   summaryTargetLanguages?: string[]
   translationModel?: AIModelAssignment | null

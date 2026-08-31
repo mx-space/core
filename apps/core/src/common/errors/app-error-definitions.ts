@@ -417,17 +417,27 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'Draft not found',
     details: (p) => (p?.id ? { id: p.id } : undefined),
   },
-  [AppErrorCode.DRAFT_HISTORY_NOT_FOUND]: {
+  [AppErrorCode.CONTENT_REVISION_NOT_FOUND]: {
     status: 404,
-    message: 'Draft history not found',
+    message: 'Content revision not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
   },
-  [AppErrorCode.DRAFT_VERSION_CONFLICT]: {
+  [AppErrorCode.DRAFT_HEAD_CONFLICT]: {
     status: 409,
-    message: 'Draft was updated elsewhere',
+    message: 'The same draft was updated elsewhere',
     details: (p) => ({
-      actualVersion: p.actualVersion,
-      expectedVersion: p.expectedVersion,
-      id: p.id,
+      actualHeadRevisionId: p.actualHeadRevisionId,
+      branchId: p.branchId,
+      expectedHeadRevisionId: p.expectedHeadRevisionId,
+    }),
+  },
+  [AppErrorCode.PUBLISHED_REVISION_CHANGED]: {
+    status: 409,
+    message: 'The online revision changed',
+    details: (p) => ({
+      actualPublishedRevisionId: p.actualPublishedRevisionId,
+      documentId: p.documentId,
+      expectedPublishedRevisionId: p.expectedPublishedRevisionId,
     }),
   },
 

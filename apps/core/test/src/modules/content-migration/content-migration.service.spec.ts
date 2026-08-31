@@ -191,17 +191,21 @@ describe('ContentMigrationService', () => {
     const { service } = createService({
       draft: {
         id: '300',
-        refId: '999',
-        refType: DraftRefType.Post,
-        text: 'Draft',
-        content: null,
-        contentFormat: 'markdown',
-        version: 4,
+        document: {
+          refId: '999',
+          refType: DraftRefType.Post,
+        },
+        headRevision: {
+          text: 'Draft',
+          content: null,
+          contentFormat: 'markdown',
+        },
+        headRevisionId: 'revision-300',
       },
     })
 
     await expect(
-      service.dryRunMarkdownToLexical({ ...request, draftId: '300' }),
+      service.dryRunMarkdownToLexical({ ...request, branchId: '300' }),
     ).rejects.toBeInstanceOf(BadRequestException)
   })
 })

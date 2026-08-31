@@ -64,7 +64,6 @@ export interface MultilangAdapter<TArticle, TDoc> {
     sourceId: string
     sourceLang: string
   }) => Promise<TDoc>
-  deleteStaleTranslations: (refId: string, hash: string) => Promise<unknown>
   emitGenerated: (
     doc: TDoc,
     event: { refId: string; sourceLang: string; sourceHash: string },

@@ -17,6 +17,44 @@ const makeApi = (calls: string[]): ApiService => ({
   request: (path) =>
     Effect.sync(() => {
       calls.push(path)
+      if (path.startsWith('/drafts/context/')) {
+        const [, , , refType, refId] = path.split('/')
+        return {
+          branches: [],
+          document: {
+            id: 'document-1',
+            publishedRevisionId: 'published-1',
+            refId,
+            refType,
+          },
+          publishedRevision: {
+            content: null,
+            contentFormat: 'markdown',
+            id: 'published-1',
+            images: [],
+            meta: null,
+            text: 'body',
+            title: 'Title',
+            typeSpecificData: {},
+          },
+        } as never
+      }
+      if (path === '/drafts') {
+        return {
+          document: {
+            id: 'document-1',
+            publishedRevisionId: 'published-1',
+            refId: '123456789012345',
+            refType: 'post',
+          },
+          headRevision: { id: 'revision-2' },
+          headRevisionId: 'revision-2',
+          id: 'branch-1',
+          relationToPublished: 'ancestor',
+          status: 'active',
+        } as never
+      }
+      if (path === '/publish-jobs') return { id: 'task-1' } as never
       if (path.startsWith('/notes/')) {
         return {
           id: '123456789012346',
@@ -155,7 +193,7 @@ describe('edit command no-change round trip', () => {
           .pipe(Effect.provide(buildLayer(calls))),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls).toEqual(['/posts/post'])
+      expect(calls).toEqual(['/posts/123456789012345', '/posts/post'])
     } finally {
       stderr.mockRestore()
     }
@@ -171,7 +209,10 @@ describe('edit command no-change round trip', () => {
           .pipe(Effect.provide(buildLayer(calls))),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls).toEqual(['/notes/123456789012346'])
+      expect(calls).toEqual([
+        '/notes/123456789012346',
+        '/notes/123456789012346',
+      ])
     } finally {
       stderr.mockRestore()
     }
@@ -224,7 +265,12 @@ changed body
           ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
-      expect(calls).toEqual(['/posts/post', '/posts/123456789012345'])
+      expect(calls).toEqual([
+        '/posts/123456789012345',
+        '/posts/post',
+        '/drafts/context/post/123456789012345',
+        '/drafts',
+      ])
     } finally {
       stdout.mockRestore()
     }
@@ -266,6 +312,9 @@ changed note body
       expect(calls).toEqual([
         '/notes/123456789012346',
         '/notes/123456789012346',
+        '/drafts/context/note/123456789012346',
+        '/drafts',
+        '/publish-jobs',
       ])
     } finally {
       stdout.mockRestore()
@@ -305,7 +354,9 @@ changed page body
       expect(calls).toEqual([
         '/pages/slug/page',
         '/pages/slug/page',
-        '/pages/123456789012347',
+        '/drafts/context/page/123456789012347',
+        '/drafts',
+        '/publish-jobs',
       ])
     } finally {
       stdout.mockRestore()

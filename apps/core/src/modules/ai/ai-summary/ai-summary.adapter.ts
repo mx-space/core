@@ -306,13 +306,6 @@ export class AiSummaryAdapter implements MultilangAdapter<
     )!
   }
 
-  async deleteStaleTranslations(refId: string, hash: string) {
-    return this.aiSummaryRepository.deleteTranslationsWithDifferentHash(
-      refId,
-      hash,
-    )
-  }
-
   emitGenerated(
     doc: AISummaryModel,
     event: { refId: string; sourceLang: string; sourceHash: string },

@@ -13,7 +13,7 @@ export const publish = Command.make('publish', { slugOrId }, ({ slugOrId }) =>
     const api = yield* Api
     const renderer = yield* Renderer
     const id = yield* resolver.resolvePostId(slugOrId)
-    const res = yield* api.request(`/posts/${id}`, {
+    const res = yield* api.request(`/posts/${id}/publish`, {
       method: 'PATCH',
       body: { isPublished: true },
     })

@@ -9,10 +9,9 @@ import {
 } from '../utils/rich-diff'
 
 export function RichDraftDiffPanel(props: {
+  comparisonLabel?: string
   currentContent: string
-  currentVersion: number
   selectedContent: string
-  selectedVersion: number
 }) {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -64,8 +63,8 @@ export function RichDraftDiffPanel(props: {
         <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
           {t('drafts.diff.rich.title')}
         </h3>
-        <span className="shrink-0 text-xs tabular-nums text-neutral-500">
-          v{props.selectedVersion} → v{props.currentVersion}
+        <span className="shrink-0 text-xs text-neutral-500">
+          {props.comparisonLabel ?? t('drafts.history.direction')}
         </span>
       </div>
       <Scroll

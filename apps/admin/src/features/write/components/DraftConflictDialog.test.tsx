@@ -38,13 +38,13 @@ describe('DraftConflictDialog', () => {
             onKeepLocal,
             onUseRemote,
             open: true,
-            remoteVersion: 7,
           }),
         ),
       )
     })
 
-    expect(document.body.textContent).toContain('v7')
+    expect(document.body.textContent).not.toContain('v7')
+    expect(document.body.textContent).toContain('2')
 
     act(() => {
       document

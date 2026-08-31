@@ -9,6 +9,7 @@ export interface AssetRow {
   lang: string
   metrics?: GenerationMetrics | null
   preview: string
+  stale: boolean
 }
 
 const ORDER: AiOverviewCapability[] = [
@@ -29,6 +30,7 @@ export function buildAssetRows(detail: AiOverviewDetail): AssetRow[] {
       lang: row.lang,
       metrics: row.generationMetrics,
       preview: row.summary,
+      stale: Boolean(row.stale),
     })),
     insights: assets.insights.map((row) => ({
       anchorKey: `insights:${row.lang}`,
@@ -38,6 +40,7 @@ export function buildAssetRows(detail: AiOverviewDetail): AssetRow[] {
       lang: row.lang,
       metrics: row.generationMetrics,
       preview: firstLine(row.content),
+      stale: Boolean(row.stale),
     })),
     translation: assets.translation.map((row) => ({
       anchorKey: `translation:${row.lang}`,
@@ -47,6 +50,7 @@ export function buildAssetRows(detail: AiOverviewDetail): AssetRow[] {
       lang: row.lang,
       metrics: row.generationMetrics,
       preview: `${row.sourceLang} → ${row.lang}`,
+      stale: Boolean(row.stale),
     })),
     tts: assets.tts.map((row) => ({
       anchorKey: `tts:${row.lang}`,
@@ -56,6 +60,7 @@ export function buildAssetRows(detail: AiOverviewDetail): AssetRow[] {
       lang: row.lang,
       metrics: row.generationMetrics,
       preview: formatTtsPreview(row.charCount, row.durationMs),
+      stale: Boolean(row.stale),
     })),
   }
 

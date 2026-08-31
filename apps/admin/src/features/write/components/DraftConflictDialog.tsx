@@ -10,7 +10,6 @@ interface DraftConflictDialogProps {
   onKeepLocal: () => void
   onUseRemote: () => void
   open: boolean
-  remoteVersion: number
 }
 
 export function DraftConflictDialog(props: DraftConflictDialogProps) {
@@ -30,7 +29,6 @@ export function DraftConflictDialog(props: DraftConflictDialogProps) {
         <p>
           {t('write.conflict.message', {
             count: props.conflictCount,
-            version: props.remoteVersion,
           })}
         </p>
         <p>{t('write.conflict.dialog.guidance')}</p>

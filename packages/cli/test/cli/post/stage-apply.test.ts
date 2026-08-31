@@ -137,9 +137,32 @@ describe('post stage / apply', () => {
     writeFileSync(file, envelope)
 
     const http = testHttpLayer({
+      [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
+        {
+          status: 200,
+          body: {
+            branches: [],
+            document: {
+              id: 'document-1',
+              published_revision_id: 'published-1',
+              ref_id: SNOWFLAKE,
+              ref_type: 'post',
+            },
+            published_revision: {
+              id: 'published-1',
+              title: 'online',
+              text: 'online body',
+              content: null,
+              content_format: 'markdown',
+              images: [],
+              meta: null,
+              type_specific_data: { slug: 'online' },
+            },
+          },
+        },
       'POST https://blog.example.com/api/v2/drafts': {
         status: 200,
-        body: { id: 'draft-1', version: 2 },
+        body: { id: 'branch-1' },
       },
     })
     const spy = vi
@@ -152,16 +175,19 @@ describe('post stage / apply', () => {
         file: some(file),
       })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const body = http.recorder.calls[0]?.body as Record<string, unknown>
+      const body = http.recorder.calls.find((call) => call.method === 'POST')
+        ?.body as Record<string, unknown>
       expect(body.refType).toBe('post')
       expect(body.refId).toBe(SNOWFLAKE)
-      expect(body.title).toBe('t2')
-      expect(typeof body.content).toBe('string')
-      const tsd = body.typeSpecificData as Record<string, unknown>
+      expect(body.baseRevisionId).toBe('published-1')
+      const data = body.data as Record<string, unknown>
+      expect(data.title).toBe('t2')
+      expect(typeof data.content).toBe('string')
+      const tsd = data.typeSpecificData as Record<string, unknown>
       expect(tsd.slug).toBe('s2')
       // publish state never travels through staging
       expect(tsd.isPublished).toBeUndefined()
-      expect(body.isPublished).toBeUndefined()
+      expect(data.isPublished).toBeUndefined()
     } finally {
       spy.mockRestore()
     }
@@ -180,32 +206,39 @@ describe('post stage / apply', () => {
     expect(http.recorder.calls.length).toBe(0)
   })
 
-  it('apply → reads the staged draft and PATCHes the post with draftId', async () => {
+  it('apply → publishes the only changed branch explicitly', async () => {
     const http = testHttpLayer({
-      [`GET https://blog.example.com/api/v2/drafts/by-ref/post/${SNOWFLAKE}`]:
+      [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
         {
           status: 200,
           body: {
-            data: {
-              id: 'draft-1',
-              title: 't2',
-              text: 'staged body',
-              content: '{"root":{}}',
-              content_format: 'lexical',
-              meta: { skill_ids: ['skill-1'] },
-              type_specific_data: {
-                slug: 's2',
-                category_id: 'category-1',
-                tags: ['tag-1'],
+            branches: [
+              {
+                document: {
+                  id: 'document-1',
+                  published_revision_id: 'published-1',
+                  ref_id: SNOWFLAKE,
+                  ref_type: 'post',
+                },
+                head_revision: { id: 'revision-2' },
+                head_revision_id: 'revision-2',
+                id: 'branch-1',
+                relation_to_published: 'ancestor',
+                status: 'active',
               },
-              version: 2,
-              published_version: 1,
+            ],
+            document: {
+              id: 'document-1',
+              published_revision_id: 'published-1',
+              ref_id: SNOWFLAKE,
+              ref_type: 'post',
             },
+            published_revision: { id: 'published-1' },
           },
         },
-      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
+      'POST https://blog.example.com/api/v2/publish-jobs': {
         status: 200,
-        body: { id: SNOWFLAKE },
+        body: { id: 'publish-task-1' },
       },
     })
     const spy = vi
@@ -214,18 +247,16 @@ describe('post stage / apply', () => {
     try {
       const program = apply.handler({ slugOrId: SNOWFLAKE })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const patch = http.recorder.calls.find((c) => c.method === 'PATCH')
-      const body = patch?.body as Record<string, unknown>
-      expect(body.draftId).toBe('draft-1')
-      expect(body.title).toBe('t2')
-      expect(body.content).toBe('{"root":{}}')
-      expect(body.contentFormat).toBe('lexical')
-      expect(body.slug).toBe('s2')
-      expect(body.category_id).toBe('category-1')
-      expect(body.tags).toEqual(['tag-1'])
-      expect(body.meta).toEqual({ skillIds: ['skill-1'] })
-      // apply never touches publish state either
-      expect(body.isPublished).toBeUndefined()
+      const publish = http.recorder.calls.find(
+        (call) => call.url.endsWith('/publish-jobs'),
+      )
+      expect(publish?.body).toEqual({
+        aiResources: [],
+        branchId: 'branch-1',
+        confirmDiverged: false,
+        expectedPublishedRevisionId: 'published-1',
+        revisionId: 'revision-2',
+      })
     } finally {
       spy.mockRestore()
     }
@@ -233,10 +264,19 @@ describe('post stage / apply', () => {
 
   it('apply with no staged draft fails with Generic', async () => {
     const http = testHttpLayer({
-      [`GET https://blog.example.com/api/v2/drafts/by-ref/post/${SNOWFLAKE}`]:
+      [`GET https://blog.example.com/api/v2/drafts/context/post/${SNOWFLAKE}`]:
         {
           status: 200,
-          body: { data: null },
+          body: {
+            branches: [],
+            document: {
+              id: 'document-1',
+              published_revision_id: 'published-1',
+              ref_id: SNOWFLAKE,
+              ref_type: 'post',
+            },
+            published_revision: { id: 'published-1' },
+          },
         },
     })
     const program = apply.handler({ slugOrId: SNOWFLAKE })
@@ -245,7 +285,7 @@ describe('post stage / apply', () => {
     )
     expect(err._tag).toBe('Generic')
     expect(
-      http.recorder.calls.some((c) => c.method === 'PATCH'),
+      http.recorder.calls.some((c) => c.url.endsWith('/publish-jobs')),
     ).toBe(false)
   })
 })

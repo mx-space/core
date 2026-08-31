@@ -6,6 +6,7 @@ import { buildPostPayload } from '../../domain/payload'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
+import { saveDraftPayload } from '../draft/_shared'
 import {
   postWriteOptions,
   resolveCategoryRefs,
@@ -13,15 +14,6 @@ import {
 } from './_flags'
 
 const slugOrId = Args.text({ name: 'slugOrId' })
-
-/** Draft-native fields; everything else rides along in `typeSpecificData`. */
-const DRAFT_CORE_KEYS = new Set([
-  'title',
-  'text',
-  'content',
-  'contentFormat',
-  'meta',
-])
 
 export const stage = Command.make(
   'stage',
@@ -47,27 +39,12 @@ export const stage = Command.make(
         )
       }
 
-      const draftBody: Record<string, unknown> = {}
-      const typeSpecificData: Record<string, unknown> = {}
-      for (const [key, value] of Object.entries(payload)) {
-        if (DRAFT_CORE_KEYS.has(key)) draftBody[key] = value
-        else typeSpecificData[key] = value
-      }
-      if (Object.keys(typeSpecificData).length > 0) {
-        draftBody.typeSpecificData = typeSpecificData
-      }
-
       const resolver = yield* Resolver
       const id = yield* resolver.resolvePostId(slugOrId)
       const api = yield* Api
       const renderer = yield* Renderer
-      // POST /drafts upserts: the server updates the existing draft for this
-      // ref (one draft per post, with internal version history).
-      const res = yield* api.request(`/drafts`, {
-        method: 'POST',
-        body: { refType: 'post', refId: id, ...draftBody },
-      })
-      yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
+      const { response } = yield* saveDraftPayload(api, 'post', payload, id)
+      yield* renderer.emitSuccess(rest.silent ? { ok: true } : response)
     }),
 ).pipe(
   Command.withDescription(

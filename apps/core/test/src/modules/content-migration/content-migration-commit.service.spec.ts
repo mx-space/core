@@ -11,7 +11,9 @@ import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 interface FakeState {
-  draft: Record<string, any> | null
+  branch: Record<string, any> | null
+  document: Record<string, any> | null
+  revision: Record<string, any> | null
   source: Record<string, any>
   translations: Array<Record<string, any>>
 }
@@ -40,14 +42,21 @@ function createTransactionalDatabase(initial: FakeState) {
               table === posts
                 ? [working.source]
                 : table === drafts
-                  ? working.draft
-                    ? [working.draft]
+                  ? working.branch && working.document && working.revision
+                    ? [
+                        {
+                          branch: working.branch,
+                          document: working.document,
+                          revision: working.revision,
+                        },
+                      ]
                     : []
                   : table === aiTranslations
                     ? working.translations
                     : []
             const builder = {
               for: async () => structuredClone(rows),
+              innerJoin: () => builder,
               limit: () => builder,
               where: () => builder,
             }
@@ -59,8 +68,6 @@ function createTransactionalDatabase(initial: FakeState) {
             where: async () => {
               if (table === posts) {
                 Object.assign(working.source, patch)
-              } else if (table === drafts && working.draft) {
-                Object.assign(working.draft, patch)
               } else if (table === aiTranslations) {
                 Object.assign(
                   working.translations[translationUpdateIndex++],
@@ -121,23 +128,25 @@ function translation(id: string, lang: string, text: string) {
   }
 }
 
-function draftRow() {
+function branchRows() {
   return {
-    id: '300',
-    refId: '100',
-    refType: DraftRefType.Post,
-    title: 'Post',
-    text: sourceMarkdown,
-    content: null,
-    contentFormat: ContentFormat.Markdown,
-    images: null,
-    meta: null,
-    typeSpecificData: null,
-    history: [],
-    version: 4,
-    publishedVersion: 3,
-    createdAt: new Date('2026-01-01T00:00:00Z'),
-    updatedAt: new Date('2026-01-03T00:00:00Z'),
+    branch: {
+      documentId: '400',
+      headRevisionId: '500',
+      id: '300',
+    },
+    document: {
+      id: '400',
+      refId: '100',
+      refType: DraftRefType.Post,
+    },
+    revision: {
+      content: null,
+      contentFormat: ContentFormat.Markdown,
+      id: '500',
+      text: sourceMarkdown,
+      title: 'Post',
+    },
   }
 }
 
@@ -163,10 +172,10 @@ function buildCommitInput(
   ]
   if (includeDraft) {
     preconditions.push({
-      kind: 'draft',
+      kind: 'branch',
       id: '300' as any,
       hash: analyzeMigrationMarkdown(sourceMarkdown, ref).sourceHash,
-      version: 4,
+      headRevisionId: '500' as any,
     })
   }
 
@@ -182,7 +191,7 @@ function buildCommitInput(
   return {
     ...ref,
     descriptor,
-    draftId: includeDraft ? '300' : undefined,
+    branchId: includeDraft ? '300' : undefined,
     patch: {
       title: 'Post',
       text: mxLexicalToMarkdown(content),
@@ -203,11 +212,12 @@ function buildCommitInput(
 }
 
 describe('ContentMigrationCommitService', () => {
-  it('atomically migrates source, draft, and translations with aligned block IDs', async () => {
+  it('atomically migrates source and translations without mutating the revision', async () => {
     const translations = [translation('200', 'zh', '你好\n\n世界')]
+    const rows = branchRows()
     const database = createTransactionalDatabase({
       source: sourceRow(),
-      draft: draftRow(),
+      ...rows,
       translations,
     })
     const service = new ContentMigrationCommitService(
@@ -223,11 +233,7 @@ describe('ContentMigrationCommitService', () => {
       ContentFormat.Lexical,
     )
     expect(database.state.translations[0].sourceBlockSnapshots).toHaveLength(2)
-    expect(database.state.draft).toMatchObject({
-      contentFormat: ContentFormat.Lexical,
-      publishedVersion: 5,
-      version: 5,
-    })
+    expect(database.state.revision).toEqual(rows.revision)
 
     const sourceBlocks = JSON.parse(database.state.source.content).root.children
     const translationBlocks = JSON.parse(database.state.translations[0].content)
@@ -245,7 +251,9 @@ describe('ContentMigrationCommitService', () => {
     const input = buildCommitInput(originalTranslations, false)
     const database = createTransactionalDatabase({
       source: sourceRow(),
-      draft: null,
+      branch: null,
+      document: null,
+      revision: null,
       translations: [
         originalTranslations[0],
         { ...originalTranslations[1], text: 'changed after dry-run' },

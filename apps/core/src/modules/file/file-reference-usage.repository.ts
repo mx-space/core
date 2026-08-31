@@ -8,8 +8,7 @@ import {
   aiTranslations,
   aiTtsBlocks,
   comments,
-  draftHistories,
-  drafts,
+  contentRevisions,
   links,
   metaPresets,
   notes,
@@ -124,12 +123,8 @@ export class FileReferenceUsageRepository {
           WHERE concat_ws(E'\n', item.text, item.content, item.images::text, item.meta::text) ~ candidate.pattern
         )
         OR EXISTS (
-          SELECT 1 FROM ${drafts} AS item
-          WHERE concat_ws(E'\n', item.text, item.content, item.images::text, item.meta::text, item.type_specific_data::text, item.history::text) ~ candidate.pattern
-        )
-        OR EXISTS (
-          SELECT 1 FROM ${draftHistories} AS item
-          WHERE concat_ws(E'\n', item.text, item.content, item.type_specific_data::text) ~ candidate.pattern
+          SELECT 1 FROM ${contentRevisions} AS item
+          WHERE concat_ws(E'\n', item.text, item.content, item.images::text, item.meta::text, item.type_specific_data::text) ~ candidate.pattern
         )
         OR EXISTS (
           SELECT 1 FROM ${snippets} AS item
@@ -213,8 +208,7 @@ export class FileReferenceUsageRepository {
       postRows,
       noteRows,
       pageRows,
-      draftRows,
-      draftHistoryRows,
+      revisionRows,
       snippetRows,
       topicRows,
       recentlyRows,
@@ -262,23 +256,14 @@ export class FileReferenceUsageRepository {
         .from(pages),
       this.db
         .select({
-          id: drafts.id,
-          text: drafts.text,
-          content: drafts.content,
-          images: drafts.images,
-          meta: drafts.meta,
-          typeSpecificData: drafts.typeSpecificData,
-          history: drafts.history,
+          id: contentRevisions.id,
+          text: contentRevisions.text,
+          content: contentRevisions.content,
+          images: contentRevisions.images,
+          meta: contentRevisions.meta,
+          typeSpecificData: contentRevisions.typeSpecificData,
         })
-        .from(drafts),
-      this.db
-        .select({
-          id: draftHistories.id,
-          text: draftHistories.text,
-          content: draftHistories.content,
-          typeSpecificData: draftHistories.typeSpecificData,
-        })
-        .from(draftHistories),
+        .from(contentRevisions),
       this.db
         .select({
           id: snippets.id,
@@ -394,8 +379,7 @@ export class FileReferenceUsageRepository {
     append('post', postRows)
     append('note', noteRows)
     append('page', pageRows)
-    append('draft', draftRows)
-    append('draft_history', draftHistoryRows)
+    append('content_revision', revisionRows)
     for (const { id, type, ...fields } of snippetRows) {
       sources.push({
         sourceType: type === 'skill' ? 'skill' : 'snippet',

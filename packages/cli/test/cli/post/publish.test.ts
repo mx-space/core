@@ -89,9 +89,9 @@ const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
 const SNOWFLAKE = '123456789012345'
 
 describe('post publish / unpublish', () => {
-  it('publish snowflake → PATCH /posts/<id> { isPublished: true }', async () => {
+  it('publish snowflake → PATCH /posts/<id>/publish', async () => {
     const http = testHttpLayer({
-      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
+      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}/publish`]: {
         status: 200,
         body: { id: SNOWFLAKE, isPublished: true },
       },
@@ -111,7 +111,7 @@ describe('post publish / unpublish', () => {
 
   it('unpublish snowflake → PATCH with isPublished: false', async () => {
     const http = testHttpLayer({
-      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}`]: {
+      [`PATCH https://blog.example.com/api/v2/posts/${SNOWFLAKE}/publish`]: {
         status: 200,
         body: { id: SNOWFLAKE, isPublished: false },
       },
@@ -138,7 +138,7 @@ describe('post publish / unpublish', () => {
         status: 200,
         body: { id: 'post-1' },
       },
-      'PATCH https://blog.example.com/api/v2/posts/post-1': {
+      'PATCH https://blog.example.com/api/v2/posts/post-1/publish': {
         status: 200,
         body: { id: 'post-1', isPublished: true },
       },
@@ -151,7 +151,7 @@ describe('post publish / unpublish', () => {
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       const patch = http.recorder.calls.find((c) => c.method === 'PATCH')
       expect(patch?.url).toBe(
-        'https://blog.example.com/api/v2/posts/post-1',
+        'https://blog.example.com/api/v2/posts/post-1/publish',
       )
     } finally {
       spy.mockRestore()

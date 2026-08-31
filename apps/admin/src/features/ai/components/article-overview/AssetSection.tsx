@@ -62,6 +62,11 @@ export function AssetSection(props: AssetSectionProps) {
             <span className="min-w-0 flex-1 truncate text-xs text-fg-muted">
               {row.preview}
             </span>
+            {row.stale ? (
+              <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-300">
+                {t('ai.overview.asset.stale')}
+              </span>
+            ) : null}
             {row.metrics?.costTotalUsd ? (
               <span className="shrink-0 tabular-nums text-xs text-fg-subtle">
                 ${row.metrics.costTotalUsd.toFixed(4)}

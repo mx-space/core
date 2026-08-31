@@ -89,7 +89,6 @@ function createService(runtime: PiRuntimeAdapter) {
     }),
   }
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = { createSummaryTask: vi.fn() }
   const generationMetrics = createAiGenerationMetricsMock()
 
   repository.findByHash.mockResolvedValue(null)
@@ -130,7 +129,6 @@ function createService(runtime: PiRuntimeAdapter) {
     adapter,
     multilang,
     taskProcessor as any,
-    aiTaskService as any,
     generationMetrics as any,
   )
   return {

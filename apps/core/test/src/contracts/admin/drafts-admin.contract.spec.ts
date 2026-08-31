@@ -1,130 +1,89 @@
-/**
- * Admin field-presence contract for /drafts endpoints.
- *
- * Dashboard drafts list/edit/history (`apps/admin/src/views/drafts/*`,
- * `apps/admin/src/api/drafts.ts`) reads `draft.id`, `draft.ref_type`,
- * `draft.ref_id`, `draft.title`, `draft.text`, `draft.content`,
- * `draft.content_format`, `draft.version`, `draft.created_at`,
- * `draft.updated_at`, `draft.history`, `draft.type_specific_data`.
- *
- * Drafts use `updated_at` (not `modified_at`) as the mutation timestamp,
- * so this spec does not invoke `assertPgTimestamps`.
- */
 import { describe, expect, test } from 'vitest'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { DraftController } from '~/modules/draft/draft.controller'
 import { DraftService } from '~/modules/draft/draft.service'
 
-import {
-  assertHasKeys,
-  assertLowercaseRefType,
-  assertNoLegacyKeys,
-} from '../../../helper/api-shape'
+import { assertHasKeys, assertHasKeysDeep } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
 import { authPassHeader } from '../../../mock/guard/auth.guard'
 
-const fixtureDraft = (overrides: Record<string, unknown> = {}) => ({
-  id: '7000000000000000030',
-  refType: 'post',
-  refId: '7000000000000000010',
-  title: 'WIP',
-  text: 'draft body',
-  content: null,
-  contentFormat: 'markdown',
-  images: [],
-  meta: null,
-  typeSpecificData: { categoryId: '7000000000000000900' },
-  history: [],
-  version: 1,
-  publishedVersion: 0,
-  createdAt: new Date('2024-03-01T00:00:00.000Z'),
-  updatedAt: new Date('2024-03-02T00:00:00.000Z'),
-  ...overrides,
-})
-
-const draftServiceProvider = {
-  provide: DraftService,
-  useValue: {
-    async list() {
-      return {
-        data: [fixtureDraft()],
-        pagination: {
-          total: 1,
-          currentPage: 1,
-          totalPage: 1,
-          size: 10,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      }
-    },
-    async count() {
-      return 1
-    },
-    async findById(id: string) {
-      return fixtureDraft({ id })
-    },
-    async findByRef() {
-      return fixtureDraft()
-    },
-    async findNewDrafts() {
-      return [fixtureDraft({ refId: null })]
-    },
-    async getHistory() {
-      return []
-    },
-    async getHistoryVersion() {
-      return fixtureDraft()
-    },
+const fixture = {
+  baseRevision: { id: '7000000000000000001' },
+  baseRevisionId: '7000000000000000001',
+  commonAncestorRevisionId: '7000000000000000001',
+  createdAt: new Date('2026-08-31T00:00:00Z'),
+  document: {
+    id: '7000000000000000002',
+    publishedRevisionId: '7000000000000000001',
+    refId: '7000000000000000003',
+    refType: 'post',
   },
+  documentId: '7000000000000000002',
+  headRevision: {
+    content: null,
+    contentFormat: 'markdown',
+    id: '7000000000000000004',
+    images: [],
+    meta: null,
+    text: 'Body',
+    title: 'Title',
+    typeSpecificData: { slug: 'title' },
+  },
+  headRevisionId: '7000000000000000004',
+  id: '7000000000000000005',
+  publishedRevision: { id: '7000000000000000001' },
+  relationToPublished: 'ancestor',
+  status: 'active',
+  updatedAt: new Date('2026-08-31T00:01:00Z'),
 }
 
-const DRAFT_REQUIRED_KEYS = [
-  'id',
-  'ref_type',
-  'ref_id',
-  'title',
-  'text',
-  'content',
-  'content_format',
-  'version',
-  'history',
-  'type_specific_data',
-  'created_at',
-  'updated_at',
-]
-
-describe('DraftController admin contract (e2e)', () => {
+describe('DraftController Admin branch contract (e2e)', () => {
   const proxy = createE2EApp({
     controllers: [DraftController],
-    providers: [draftServiceProvider],
+    providers: [
+      {
+        provide: DraftService,
+        useValue: {
+          findById: async () => fixture,
+          list: async () => ({
+            data: [fixture],
+            pagination: { currentPage: 1, size: 10, total: 1, totalPage: 1 },
+          }),
+        },
+      },
+    ],
   })
 
-  test('GET /drafts (admin list) — required field-presence', async () => {
+  test.each([
+    `${apiRoutePrefix}/drafts`,
+    `${apiRoutePrefix}/drafts/${fixture.id}`,
+  ])('%s exposes the fields consumed by Admin', async (url) => {
     const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/drafts`,
       headers: authPassHeader,
+      method: 'GET',
+      url,
     })
     expect(res.statusCode).toBe(200)
-    const body = res.json()
-    expect(Array.isArray(body.data)).toBe(true)
-    assertNoLegacyKeys(body)
-    assertLowercaseRefType(body)
-    assertHasKeys(body.data[0], DRAFT_REQUIRED_KEYS)
-  })
-
-  test('GET /drafts/:id (admin detail) — required field-presence', async () => {
-    const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/drafts/7000000000000000030`,
-      headers: authPassHeader,
-    })
-    expect(res.statusCode).toBe(200)
-    const body = res.json()
-    assertNoLegacyKeys(body)
-    assertLowercaseRefType(body)
-    assertHasKeys(body.data, DRAFT_REQUIRED_KEYS)
+    const raw = res.json().data
+    const item = Array.isArray(raw) ? raw[0] : raw
+    assertHasKeys(item, [
+      'id',
+      'document_id',
+      'base_revision_id',
+      'head_revision_id',
+      'status',
+      'relation_to_published',
+      'created_at',
+      'updated_at',
+    ])
+    assertHasKeysDeep(item, [
+      'document.ref_type',
+      'document.published_revision_id',
+      'head_revision.title',
+      'head_revision.text',
+      'head_revision.content_format',
+      'head_revision.type_specific_data',
+    ])
   })
 })

@@ -22,6 +22,7 @@ import { TaskQueueEmitter } from './task-queue.emitter'
 import {
   LUA_ACQUIRE_TASK,
   LUA_CANCEL_PENDING,
+  LUA_CLAIM_DEDUP,
   LUA_RECOVER_STALE,
   LUA_UPDATE_STATUS,
 } from './task-queue.lua'
@@ -160,24 +161,23 @@ export class TaskQueueService implements OnModuleDestroy {
   ): Promise<{ taskId: string; created: boolean }> {
     const { type, payload, dedupKey, groupId, scope } = options
     const payloadHash = this.computeDedupHash(type, dedupKey)
+    const taskId = this.generateTaskId()
 
     if (dedupKey) {
       const dedupRedisKey = this.getKey(TASK_QUEUE_KEYS.dedup(payloadHash))
-      const existingTaskId = await this.redis.get(dedupRedisKey)
-
-      if (existingTaskId) {
-        const existingTask = await this.getTask(existingTaskId)
-        if (
-          existingTask &&
-          (existingTask.status === TaskStatus.Pending ||
-            existingTask.status === TaskStatus.Running)
-        ) {
-          return { taskId: existingTaskId, created: false }
-        }
+      const owner = await this.redis.eval(
+        LUA_CLAIM_DEDUP,
+        1,
+        dedupRedisKey,
+        taskId,
+        this.getKey(TASK_QUEUE_KEYS.task('')),
+        TASK_QUEUE_TTL.dedup,
+      )
+      if (owner !== taskId) {
+        return { taskId: String(owner), created: false }
       }
     }
 
-    const taskId = this.generateTaskId()
     const now = Date.now()
 
     const taskData: TaskRedis = {
@@ -230,11 +230,6 @@ export class TaskQueueService implements OnModuleDestroy {
       const indexGroup = this.getKey(TASK_QUEUE_KEYS.indexByGroup(groupId))
       pipeline.zadd(indexGroup, now, taskId)
       pipeline.expire(indexGroup, TASK_QUEUE_TTL.taskDefault)
-    }
-
-    if (dedupKey) {
-      const dedupRedisKey = this.getKey(TASK_QUEUE_KEYS.dedup(payloadHash))
-      pipeline.set(dedupRedisKey, taskId, 'EX', TASK_QUEUE_TTL.dedup)
     }
 
     await pipeline.exec()
@@ -862,9 +857,16 @@ export class TaskQueueService implements OnModuleDestroy {
     // Forward totalCost only when present (pre-spec-2 hashes lack it; zero is
     // treated as "no spend yet" and elided to keep the wire patch small).
     if (fresh.totalCost !== undefined) statusPatch.totalCost = fresh.totalCost
-    this.emitter.emitStatus(meta, statusPatch)
+    const isTerminal = isTerminalStatus(status)
+    const hasResult =
+      isTerminal && fresh.result !== undefined && fresh.result !== null
+    if (hasResult) {
+      this.emitter.emitResult(meta, statusPatch, fresh.result)
+    } else {
+      this.emitter.emitStatus(meta, statusPatch)
+    }
 
-    if (!isTerminalStatus(status)) {
+    if (!isTerminal) {
       // Non-terminal status changes (e.g. Running re-emit) — no child→parent
       // recompute, no throttle cleanup yet.
       return
@@ -873,14 +875,7 @@ export class TaskQueueService implements OnModuleDestroy {
     // Always release throttle state when a task reaches a terminal status.
     this.emitter.dispose(taskId)
 
-    const shouldEmitResult =
-      (status === TaskStatus.Completed ||
-        status === TaskStatus.PartialFailed) &&
-      fresh.result !== undefined &&
-      fresh.result !== null
-    if (shouldEmitResult) {
-      this.emitter.emitResult(meta, statusPatch, fresh.result)
-    } else if (
+    if (
       status === TaskStatus.Completed &&
       (fresh.result === undefined || fresh.result === null)
     ) {

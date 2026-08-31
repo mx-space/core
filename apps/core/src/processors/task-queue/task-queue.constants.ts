@@ -24,7 +24,9 @@ export const TASK_QUEUE_TTL = {
   taskDefault: 72 * 60 * 60,
   taskCompleted: 24 * 60 * 60,
   lock: 30,
-  dedup: 5 * 60,
+  // Active publish jobs can outlive five minutes. Keep their dedup ownership
+  // for the task lifetime; terminal tasks are already allowed to be replaced.
+  dedup: 72 * 60 * 60,
 } as const
 
 /** TTL in milliseconds */

@@ -1,19 +1,9 @@
-import {
-  Body,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Patch, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
@@ -54,7 +44,6 @@ import {
   CategoryAndSlugDto,
   PartialPostDto,
   PostDetailQueryDto,
-  PostDto,
   PostPagerDto,
   SetPostPublishStatusDto,
 } from './post.schema'
@@ -512,28 +501,6 @@ export class PostController {
     if (paywall) metaBuilder.paywall(paywall)
 
     return withMeta(postData, metaBuilder.build())
-  }
-
-  @Post('/')
-  @Auth()
-  @HTTPDecorators.Idempotence()
-  async create(@Body() body: PostDto) {
-    const created = await this.postService.create({
-      ...(body as unknown as PostModel),
-      modifiedAt: null,
-      slug: body.slug,
-    })
-    return created
-  }
-
-  @Put('/:id')
-  @Auth()
-  async update(@Param() params: EntityIdDto, @Body() body: PostDto) {
-    const updated = await this.postService.updateById(
-      params.id,
-      body as unknown as PostModel,
-    )
-    return updated
   }
 
   @Patch('/:id')

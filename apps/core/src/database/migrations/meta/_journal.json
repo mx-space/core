@@ -246,6 +246,13 @@
       "when": 1787596646000,
       "tag": "0034_webhook_event_names",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1788177600000,
+      "tag": "0035_tree_content_revisions",
+      "breakpoints": true
     }
   ]
 }

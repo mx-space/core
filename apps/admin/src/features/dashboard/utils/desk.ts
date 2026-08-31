@@ -28,10 +28,10 @@ export function buildWritingItems(
   const draftItems = drafts.map<DeskWritingItem>((draft) => ({
     id: draft.id,
     kind: 'draft',
-    refType: draft.refType,
-    title: draft.title,
+    refType: draft.document.refType,
+    title: draft.headRevision.title,
     to: getEditPathForDraft(draft),
-    updatedAt: draft.updatedAt,
+    updatedAt: draft.updatedAt ?? draft.createdAt,
   }))
   const scheduledItems = scheduledNotes.map<DeskWritingItem>((note) => ({
     id: note.id,

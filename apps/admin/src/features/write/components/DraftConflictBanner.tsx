@@ -7,7 +7,6 @@ interface DraftConflictBannerProps {
   conflictCount: number
   onKeepLocal: () => void
   onUseRemote: () => void
-  remoteVersion: number
 }
 
 export function DraftConflictBanner(props: DraftConflictBannerProps) {
@@ -25,7 +24,6 @@ export function DraftConflictBanner(props: DraftConflictBannerProps) {
       <span className="min-w-64 flex-1 text-sm">
         {t('write.conflict.message', {
           count: props.conflictCount,
-          version: props.remoteVersion,
         })}
       </span>
       <div className="flex shrink-0 items-center gap-1">

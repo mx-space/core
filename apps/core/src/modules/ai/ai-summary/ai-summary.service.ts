@@ -18,7 +18,6 @@ import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generati
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { resolveTargetLanguages } from '../ai-language.util'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
-import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   AITaskType,
   type SummaryTaskPayload,
@@ -41,7 +40,6 @@ export class AiSummaryService implements OnModuleInit {
     private readonly adapter: AiSummaryAdapter,
     private readonly multilang: MultilangGenerationService,
     private readonly taskProcessor: TaskQueueProcessor,
-    private readonly aiTaskService: AiTaskService,
     private readonly generationMetrics: AiGenerationMetricsService,
   ) {
     this.logger = new Logger(AiSummaryService.name)
@@ -411,132 +409,5 @@ export class AiSummaryService implements OnModuleInit {
   @OnEvent(BusinessEvents.PAGE_DELETE)
   async handleDeleteArticle(event: { id: string }) {
     await this.deleteSummaryByArticleId(event.id)
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleCreateArticle(event: {
-    id: string
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  }) {
-    if (
-      event.skipAiAutoGeneration ||
-      event.preparedAiResources?.includes('summary')
-    ) {
-      return
-    }
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableSummary ||
-      !aiConfig.enableAutoGenerateSummaryOnCreate
-    ) {
-      return
-    }
-    const targetLanguages = resolveTargetLanguages(
-      undefined,
-      aiConfig.summaryTargetLanguages,
-    )
-    if (!targetLanguages.length) {
-      return
-    }
-
-    const minLen = aiConfig.summaryMinTextLength ?? 0
-    if (minLen > 0) {
-      try {
-        const { article } = await this.adapter.resolveArticleDetailed(event.id)
-        if ((article.text?.length ?? 0) < minLen) {
-          this.logger.debug(
-            `AI auto summary skipped (text below threshold ${minLen}): article=${event.id}`,
-          )
-          return
-        }
-      } catch {
-        return
-      }
-    }
-
-    this.logger.log(`AI auto summary task created: article=${event.id}`)
-    await this.aiTaskService.createSummaryTask({
-      refId: event.id,
-      targetLanguages,
-    })
-  }
-
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleUpdateArticle(event: {
-    id: string
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  }) {
-    if (
-      event.skipAiAutoGeneration ||
-      event.preparedAiResources?.includes('summary')
-    ) {
-      return
-    }
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableSummary ||
-      !aiConfig.enableAutoGenerateSummaryOnUpdate
-    ) {
-      return
-    }
-
-    const id = event.id
-    let article: { text: string; title: string }
-    try {
-      const resolved = await this.adapter.resolveArticleDetailed(id)
-      article = resolved.article
-    } catch {
-      return
-    }
-
-    const minLen = aiConfig.summaryMinTextLength ?? 0
-    if (minLen > 0 && (article.text?.length ?? 0) < minLen) {
-      this.logger.debug(
-        `AI auto summary skipped (text below threshold ${minLen}): article=${id}`,
-      )
-      return
-    }
-
-    const existingSummaries = this.toSummaryDocs(
-      await this.aiSummaryRepository.listForRef(id),
-    )
-    if (!existingSummaries.length) {
-      const targetLanguages = resolveTargetLanguages(
-        undefined,
-        aiConfig.summaryTargetLanguages,
-      )
-      if (!targetLanguages.length) {
-        return
-      }
-
-      this.logger.log(
-        `AI auto summary task created (update init): article=${id}`,
-      )
-      await this.aiTaskService.createSummaryTask({
-        refId: id,
-        targetLanguages,
-      })
-      return
-    }
-
-    const newHash = this.multilang.computeContentHash(article.text)
-    const outdatedLanguages = existingSummaries
-      .filter((s) => s.hash !== newHash)
-      .map((s) => s.lang)
-      .filter(Boolean) as string[]
-
-    if (!outdatedLanguages.length) {
-      return
-    }
-
-    this.logger.log(`AI auto summary task created (update): article=${id}`)
-    await this.aiTaskService.createSummaryTask({
-      refId: id,
-      targetLanguages: outdatedLanguages,
-    })
   }
 }

@@ -1,7 +1,7 @@
 import { mxLexicalToMarkdown } from '@mx-space/editor'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 
-import type { CreateDraftData } from '~/api/drafts'
+import type { DraftWriteData } from '~/api/drafts'
 import type { DraftModel, TypeSpecificData } from '~/models/draft'
 
 export type DraftMergeConflictKind =
@@ -18,7 +18,7 @@ export interface DraftMergeConflict {
 export interface DraftMergeResult {
   autoMergedChanges: number
   conflicts: DraftMergeConflict[]
-  data: CreateDraftData
+  data: DraftWriteData
 }
 
 interface MergeContext {
@@ -380,23 +380,22 @@ function mergeLexicalContent(
   return JSON.stringify(mergedState)
 }
 
-function draftToData(draft: DraftModel): CreateDraftData {
+function draftToData(draft: DraftModel): DraftWriteData {
+  const revision = draft.headRevision
   return {
-    content: draft.content,
-    contentFormat: draft.contentFormat,
-    images: draft.images,
-    meta: draft.meta,
-    refId: draft.refId,
-    refType: draft.refType,
-    text: draft.text,
-    title: draft.title,
-    typeSpecificData: draft.typeSpecificData as TypeSpecificData,
+    content: revision.content ?? undefined,
+    contentFormat: revision.contentFormat,
+    images: revision.images,
+    meta: revision.meta,
+    text: revision.text,
+    title: revision.title,
+    typeSpecificData: revision.typeSpecificData as TypeSpecificData,
   }
 }
 
 export function mergeDraftConflict(input: {
   base: DraftModel
-  local: CreateDraftData
+  local: DraftWriteData
   remote: DraftModel
 }): DraftMergeResult {
   const context: MergeContext = { autoMergedChanges: 0, conflicts: [] }
@@ -409,7 +408,7 @@ export function mergeDraftConflict(input: {
     'contentFormat',
     context,
   )
-  const data: CreateDraftData = {
+  const data: DraftWriteData = {
     contentFormat,
     images: mergeValue(
       base.images,
@@ -425,8 +424,7 @@ export function mergeDraftConflict(input: {
       'meta',
       context,
     ) as Record<string, unknown> | undefined,
-    refId: input.remote.refId,
-    refType: input.remote.refType,
+    text: '',
     title: mergeValue(
       base.title,
       input.local.title,

@@ -116,7 +116,7 @@ const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
 describe('note create command', () => {
   it('defaults title to 无题 when omitted', async () => {
     const http = testHttpLayer({
-      'POST https://blog.example.com/api/v2/notes': {
+      'POST https://blog.example.com/api/v2/drafts': {
         status: 200,
         body: { id: 'n1' },
       },
@@ -131,8 +131,10 @@ describe('note create command', () => {
         format: some('lexical'),
       })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const body = http.recorder.calls[0]?.body as Record<string, unknown>
-      expect(body.title).toBe('无题')
+      const body = http.recorder.calls[0]?.body as {
+        data: Record<string, unknown>
+      }
+      expect(body.data.title).toBe('无题')
     } finally {
       spy.mockRestore()
     }
@@ -140,7 +142,7 @@ describe('note create command', () => {
 
   it('parses coords "lat,lng" into payload.coordinates', async () => {
     const http = testHttpLayer({
-      'POST https://blog.example.com/api/v2/notes': {
+      'POST https://blog.example.com/api/v2/drafts': {
         status: 200,
         body: { id: 'n1' },
       },
@@ -156,8 +158,13 @@ describe('note create command', () => {
         coords: some('30.5,114.3'),
       })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
-      const body = http.recorder.calls[0]?.body as Record<string, unknown>
-      expect(body.coordinates).toEqual({ latitude: 30.5, longitude: 114.3 })
+      const body = http.recorder.calls[0]?.body as {
+        data: { typeSpecificData: Record<string, unknown> }
+      }
+      expect(body.data.typeSpecificData.coordinates).toEqual({
+        latitude: 30.5,
+        longitude: 114.3,
+      })
     } finally {
       spy.mockRestore()
     }

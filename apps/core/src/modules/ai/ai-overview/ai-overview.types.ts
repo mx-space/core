@@ -39,6 +39,7 @@ export interface SummaryAsset {
   sourceLang: string | null
   createdAt: Date
   generationMetrics?: GenerationMetricsDto | null
+  stale: boolean
 }
 
 export interface InsightsAsset {
@@ -49,6 +50,7 @@ export interface InsightsAsset {
   sourceLang: string | null
   createdAt: Date
   generationMetrics?: GenerationMetricsDto | null
+  stale: boolean
 }
 
 export interface TranslationAsset {
@@ -59,6 +61,7 @@ export interface TranslationAsset {
   createdAt: Date
   updatedAt: Date | null
   generationMetrics?: GenerationMetricsDto | null
+  stale: boolean
 }
 
 export interface TtsAsset {
@@ -70,6 +73,7 @@ export interface TtsAsset {
   createdAt: Date
   updatedAt: Date | null
   generationMetrics?: GenerationMetricsDto | null
+  stale: boolean
 }
 
 export interface CostBucket {

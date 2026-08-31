@@ -243,22 +243,6 @@ export function AIConfigEditor(props: {
           title={t('settings.ai.section.summary')}
           toggleLabel={t('settings.ai.switch.enableSummary')}
         >
-          <Switch
-            checked={Boolean(props.value.enableAutoGenerateSummaryOnCreate)}
-            disabled={!props.value.enableSummary}
-            label={t('settings.ai.switch.enableAutoSummaryCreate')}
-            onCheckedChange={(enableAutoGenerateSummaryOnCreate) =>
-              updateConfig({ enableAutoGenerateSummaryOnCreate })
-            }
-          />
-          <Switch
-            checked={Boolean(props.value.enableAutoGenerateSummaryOnUpdate)}
-            disabled={!props.value.enableSummary}
-            label={t('settings.ai.switch.enableAutoSummaryUpdate')}
-            onCheckedChange={(enableAutoGenerateSummaryOnUpdate) =>
-              updateConfig({ enableAutoGenerateSummaryOnUpdate })
-            }
-          />
           <AITextListField
             disabled={!props.value.enableSummary}
             label={t('settings.ai.switch.summaryTargetLanguages')}
@@ -266,18 +250,6 @@ export function AIConfigEditor(props: {
               updateConfig({ summaryTargetLanguages })
             }
             value={props.value.summaryTargetLanguages ?? []}
-          />
-          <TextInput
-            disabled={!props.value.enableSummary}
-            inputMode="numeric"
-            label={t('settings.ai.switch.summaryMinTextLength')}
-            onChange={(value) =>
-              updateConfig({
-                summaryMinTextLength: value.trim() ? Number(value) : 0,
-              })
-            }
-            type="number"
-            value={String(props.value.summaryMinTextLength ?? 0)}
           />
         </FeatureSection>
 
@@ -309,22 +281,6 @@ export function AIConfigEditor(props: {
           toggleLabel={t('settings.ai.switch.enableInsights')}
         >
           <Switch
-            checked={Boolean(props.value.enableAutoGenerateInsightsOnCreate)}
-            disabled={!props.value.enableInsights}
-            label={t('settings.ai.switch.enableAutoInsightsCreate')}
-            onCheckedChange={(enableAutoGenerateInsightsOnCreate) =>
-              updateConfig({ enableAutoGenerateInsightsOnCreate })
-            }
-          />
-          <Switch
-            checked={Boolean(props.value.enableAutoGenerateInsightsOnUpdate)}
-            disabled={!props.value.enableInsights}
-            label={t('settings.ai.switch.enableAutoInsightsUpdate')}
-            onCheckedChange={(enableAutoGenerateInsightsOnUpdate) =>
-              updateConfig({ enableAutoGenerateInsightsOnUpdate })
-            }
-          />
-          <Switch
             checked={Boolean(props.value.enableAutoTranslateInsights)}
             disabled={!props.value.enableInsights}
             label={t('settings.ai.switch.enableAutoTranslateInsights')}
@@ -339,18 +295,6 @@ export function AIConfigEditor(props: {
               updateConfig({ insightsTargetLanguages })
             }
             value={props.value.insightsTargetLanguages ?? []}
-          />
-          <TextInput
-            disabled={!props.value.enableInsights}
-            inputMode="numeric"
-            label={t('settings.ai.switch.insightsMinTextLength')}
-            onChange={(value) =>
-              updateConfig({
-                insightsMinTextLength: value.trim() ? Number(value) : 0,
-              })
-            }
-            type="number"
-            value={String(props.value.insightsMinTextLength ?? 0)}
           />
         </FeatureSection>
 

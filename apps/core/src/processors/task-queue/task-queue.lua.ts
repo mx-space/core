@@ -209,3 +209,29 @@ redis.call('EXPIRE', KEYS[1] .. ':logs', 86400)
 
 return 1
 `
+
+/**
+ * Atomically claim a dedup key unless it still belongs to an active task.
+ *
+ * KEYS[1] = dedup key
+ * ARGV[1] = candidate task id
+ * ARGV[2] = task hash key prefix
+ * ARGV[3] = dedup TTL (seconds)
+ *
+ * Returns the task id that owns the key.
+ */
+export const LUA_CLAIM_DEDUP = `
+local existingId = redis.call('GET', KEYS[1])
+if existingId then
+  local status = redis.call('HGET', ARGV[2] .. existingId, 'status')
+  if status == 'pending' or status == 'running' then
+    return existingId
+  end
+end
+
+redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
+local candidateTaskKey = ARGV[2] .. ARGV[1]
+redis.call('HSET', candidateTaskKey, 'status', 'pending')
+redis.call('EXPIRE', candidateTaskKey, 60)
+return ARGV[1]
+`

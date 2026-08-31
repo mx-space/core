@@ -1,26 +1,11 @@
-import type { Image, PaginateResult } from '~/models/base'
+import type { PaginateResult } from '~/models/base'
 import type { PageModel } from '~/models/page'
 
-import type { MarkdownToLexicalMigrationDescriptor } from './content-migrations'
-import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
+import { deleteJson, getJson, patchJson } from './http'
 
 export interface GetPagesParams {
   page?: number
   size?: number
-}
-
-export interface CreatePageData {
-  content?: string
-  contentFormat?: 'lexical' | 'markdown'
-  draftId?: string
-  images?: Image[]
-  meta?: Record<string, unknown>
-  migration?: MarkdownToLexicalMigrationDescriptor
-  order?: number
-  slug: string
-  subtitle?: string
-  text: string
-  title: string
 }
 
 export function getPages(params: GetPagesParams = {}) {
@@ -32,14 +17,6 @@ export function getPages(params: GetPagesParams = {}) {
 
 export function getPageById(id: string) {
   return getJson<PageModel>(`/pages/${id}`)
-}
-
-export function createPage(data: CreatePageData) {
-  return postJson<PageModel, CreatePageData>('/pages', data)
-}
-
-export function updatePage(id: string, data: Partial<CreatePageData>) {
-  return putJson<PageModel, Partial<CreatePageData>>(`/pages/${id}`, data)
 }
 
 export function deletePage(id: string) {

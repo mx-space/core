@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CreateDraftData } from '~/api/drafts'
-import type { DraftModel } from '~/models/draft'
+import type { DraftWriteData } from '~/api/drafts'
+import type { DraftModel, RevisionSnapshot } from '~/models/draft'
 import { DraftRefType } from '~/models/draft'
 
 import { mergeDraftConflict } from './merge-draft-conflict'
@@ -40,30 +40,57 @@ const lexical = (...children: ReturnType<typeof paragraph>[]) =>
     },
   })
 
-const createDraft = (overrides: Partial<DraftModel> = {}): DraftModel => ({
-  id: 'draft-1',
-  contentFormat: 'markdown',
-  createdAt: '2026-01-01T00:00:00.000Z',
-  history: [],
-  refId: 'post-1',
-  refType: DraftRefType.Post,
-  text: 'base text',
-  title: 'Base title',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-  version: 1,
-  ...overrides,
-})
+const createdAt = '2026-01-01T00:00:00.000Z'
+const createDraft = (
+  overrides: Partial<RevisionSnapshot> & { version?: number } = {},
+): DraftModel => {
+  const { version = 1, ...snapshot } = overrides
+  const revision = {
+    content: null,
+    contentFormat: 'markdown' as const,
+    createdAt,
+    documentId: 'document-1',
+    id: `revision-${version}`,
+    images: null,
+    meta: null,
+    parentRevisionId: version === 1 ? null : 'revision-1',
+    text: 'base text',
+    title: 'Base title',
+    typeSpecificData: null,
+    ...snapshot,
+  }
+  return {
+    baseRevision: revision,
+    baseRevisionId: 'revision-1',
+    commonAncestorRevisionId: 'revision-1',
+    createdAt,
+    document: {
+      createdAt,
+      id: 'document-1',
+      publishedRevisionId: 'revision-1',
+      refId: 'post-1',
+      refType: DraftRefType.Post,
+      updatedAt: createdAt,
+    },
+    documentId: 'document-1',
+    headRevision: revision,
+    headRevisionId: revision.id,
+    id: 'draft-1',
+    publishedRevision: null,
+    relationToPublished: version === 1 ? 'same' : 'ancestor',
+    status: 'active',
+    updatedAt: createdAt,
+  }
+}
 
-const toLocal = (draft: DraftModel): CreateDraftData => ({
-  content: draft.content,
-  contentFormat: draft.contentFormat,
-  images: draft.images,
-  meta: draft.meta,
-  refId: draft.refId,
-  refType: draft.refType,
-  text: draft.text,
-  title: draft.title,
-  typeSpecificData: draft.typeSpecificData,
+const toLocal = (draft: DraftModel): DraftWriteData => ({
+  content: draft.headRevision.content ?? undefined,
+  contentFormat: draft.headRevision.contentFormat,
+  images: draft.headRevision.images,
+  meta: draft.headRevision.meta,
+  text: draft.headRevision.text,
+  title: draft.headRevision.title,
+  typeSpecificData: draft.headRevision.typeSpecificData,
 })
 
 describe('mergeDraftConflict', () => {

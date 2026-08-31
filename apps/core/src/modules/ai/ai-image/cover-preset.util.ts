@@ -63,13 +63,16 @@ export async function resolveCoverSubject(
   }
 
   const draft = input.draftId
-    ? await deps.draftRepository.findById(input.draftId)
+    ? await deps.draftRepository.findBranchById(input.draftId)
     : null
-  if (draft && (draft.title || draft.text)) {
+  const revision = draft
+    ? await deps.draftRepository.findRevisionById(draft.headRevisionId)
+    : null
+  if (revision && (revision.title || revision.text)) {
     return {
-      title: draft.title || inline.title,
+      title: revision.title || inline.title,
       summary:
-        draft.text?.slice(0, COVER_ARTICLE_SUMMARY_MAX_LENGTH) ||
+        revision.text.slice(0, COVER_ARTICLE_SUMMARY_MAX_LENGTH) ||
         inline.summary,
     }
   }

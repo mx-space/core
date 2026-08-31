@@ -30,7 +30,7 @@ export function DraftDetailRoute() {
     staleTime: initialDraft ? 30_000 : 0,
   })
 
-  useDocumentTitle(draftQuery.data?.title)
+  useDocumentTitle(draftQuery.data?.headRevision.title)
 
   if (!id || !draftQuery.data) return <DraftDetailEmpty />
 

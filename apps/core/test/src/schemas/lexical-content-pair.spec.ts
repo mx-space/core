@@ -5,7 +5,7 @@ import {
   CreateDraftSchema,
   UpdateDraftSchema,
 } from '~/modules/draft/draft.schema'
-import { NoteSchema, PartialNoteSchema } from '~/modules/note/note.schema'
+import { NoteSchema } from '~/modules/note/note.schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 const lexicalContent = JSON.stringify({
@@ -34,40 +34,26 @@ describe('lexical content/text pair validation', () => {
     ).toThrow(/content is required/)
   })
 
-  it('rejects lexical partial updates when content and text are not paired', () => {
-    expect(() =>
-      PartialNoteSchema.parse({
-        content: lexicalContent,
-        contentFormat: ContentFormat.Lexical,
-      }),
-    ).toThrow(/content and text must be submitted together/)
-  })
-
-  it('allows markdown partial updates with text only', () => {
-    expect(() =>
-      PartialNoteSchema.parse({
-        contentFormat: ContentFormat.Markdown,
-        text: '# markdown',
-      }),
-    ).not.toThrow()
-  })
-
   it('applies the same lexical pair rule to draft create and update', () => {
     expect(() =>
       CreateDraftSchema.parse({
-        content: lexicalContent,
-        contentFormat: ContentFormat.Lexical,
+        data: {
+          content: lexicalContent,
+          contentFormat: ContentFormat.Lexical,
+          text: '',
+        },
         refType: DraftRefType.Note,
-        text: '',
       }),
     ).not.toThrow()
 
     expect(() =>
       UpdateDraftSchema.parse({
-        content: lexicalContent,
-        contentFormat: ContentFormat.Lexical,
-        expectedVersion: 1,
+        data: {
+          contentFormat: ContentFormat.Lexical,
+          text: 'projection',
+        },
+        expectedHeadRevisionId: '7000000000000000001',
       }),
-    ).toThrow(/content and text must be submitted together/)
+    ).toThrow(/content is required/)
   })
 })

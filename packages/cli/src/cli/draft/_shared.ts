@@ -1,9 +1,14 @@
-/** Draft-native fields; everything else rides along in `typeSpecificData`. */
+import { Effect } from 'effect'
+
+import { Generic } from '../../domain/errors'
+import type { ApiService } from '../../services/Api'
+
 const DRAFT_CORE_KEYS = new Set([
   'title',
   'text',
   'content',
   'contentFormat',
+  'images',
   'meta',
 ])
 
@@ -15,16 +20,40 @@ export const REF_TYPE_TO_RESOURCE: Record<DraftRefType, string> = {
   page: 'pages',
 }
 
+export interface RevisionSnapshot {
+  content: string | null
+  contentFormat: string
+  images: unknown[] | null
+  meta: Record<string, unknown> | null
+  text: string
+  title: string
+  typeSpecificData: Record<string, unknown> | null
+}
+
+export interface ContentRevision extends RevisionSnapshot {
+  id: string
+}
+
+export interface ContentDocument {
+  id: string
+  publishedRevisionId: string | null
+  refId: string | null
+  refType: DraftRefType
+}
+
 export interface DraftRow {
-  id?: string
-  refType?: DraftRefType
-  refId?: string | null
-  title?: string
-  text?: string
-  content?: string | null
-  contentFormat?: string
-  meta?: Record<string, unknown> | null
-  typeSpecificData?: Record<string, unknown> | string | null
+  document: ContentDocument
+  headRevision: ContentRevision
+  headRevisionId: string
+  id: string
+  relationToPublished: 'same' | 'ancestor' | 'descendant' | 'diverged' | null
+  status: 'active' | 'archived'
+}
+
+export interface VersionContext {
+  branches: DraftRow[]
+  document: ContentDocument
+  publishedRevision: ContentRevision | null
 }
 
 export const splitDraftBody = (
@@ -42,26 +71,7 @@ export const splitDraftBody = (
   return draftBody
 }
 
-export const parseTypeSpecificData = (
-  raw: DraftRow['typeSpecificData'],
-): Record<string, unknown> => {
-  if (!raw) return {}
-  if (typeof raw === 'object') return raw
-  try {
-    const parsed = JSON.parse(raw)
-    return typeof parsed === 'object' && parsed !== null ? parsed : {}
-  } catch {
-    return {}
-  }
-}
-
-/**
- * The response interceptor snake_cases keys at every depth, but the request
- * pipe only camelizes the body's top level — nested subtrees (like `meta`)
- * must be restored before being sent back, or `skillIds` round-trips into a
- * stored `skill_ids`. Best-effort inverse: keys that legitimately contained
- * underscores were already mangled by the response side.
- */
+/** The server serializes response keys to snake_case; normalize back. */
 export const camelizeDeep = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(camelizeDeep)
   if (value && typeof value === 'object') {
@@ -75,25 +85,6 @@ export const camelizeDeep = (value: unknown): unknown => {
   return value
 }
 
-/** The server serializes response keys to snake_case; normalize back. */
-export const normalizeDraftRow = (row: unknown): DraftRow => {
-  if (!row || typeof row !== 'object') return {}
-  const r = row as Record<string, unknown>
-  const pick = <T>(camel: string, snake: string): T | undefined =>
-    (r[camel] ?? r[snake]) as T | undefined
-  return {
-    id: pick('id', 'id'),
-    refType: pick('refType', 'ref_type'),
-    refId: pick('refId', 'ref_id'),
-    title: pick('title', 'title'),
-    text: pick('text', 'text'),
-    content: pick('content', 'content'),
-    contentFormat: pick('contentFormat', 'content_format'),
-    meta: pick('meta', 'meta'),
-    typeSpecificData: pick('typeSpecificData', 'type_specific_data'),
-  }
-}
-
 /** Single-object responses may arrive wrapped in an outer `data` envelope. */
 export const unwrapData = <T>(res: unknown): T => {
   if (res && typeof res === 'object' && 'data' in res) {
@@ -102,3 +93,81 @@ export const unwrapData = <T>(res: unknown): T => {
   }
   return res as T
 }
+
+export const normalizeDraftRow = (row: unknown): DraftRow | null => {
+  const normalized = camelizeDeep(unwrapData(row))
+  if (!normalized || typeof normalized !== 'object') return null
+  const branch = normalized as Partial<DraftRow>
+  return branch.id && branch.document && branch.headRevision
+    ? (branch as DraftRow)
+    : null
+}
+
+export const normalizeVersionContext = (value: unknown): VersionContext =>
+  camelizeDeep(unwrapData(value)) as VersionContext
+
+const mergeRevisionPatch = (
+  base: RevisionSnapshot,
+  patch: Record<string, unknown>,
+): RevisionSnapshot => ({
+  ...base,
+  ...patch,
+  typeSpecificData: {
+    ...base.typeSpecificData,
+    ...(patch.typeSpecificData as Record<string, unknown> | undefined),
+  },
+})
+
+export const saveDraftPayload = (
+  api: ApiService,
+  refType: DraftRefType,
+  payload: Record<string, unknown>,
+  refId?: string,
+) =>
+  Effect.gen(function* () {
+    const patch = splitDraftBody(payload)
+    if (!refId) {
+      const response = yield* api.request('/drafts', {
+        method: 'POST',
+        body: { data: patch, refType },
+      })
+      return { draft: normalizeDraftRow(response)!, response }
+    }
+
+    const context = normalizeVersionContext(
+      yield* api.request(
+        `/drafts/context/${refType}/${encodeURIComponent(refId)}`,
+      ),
+    )
+    if (!context.publishedRevision) {
+      return yield* Effect.fail(
+        new Generic({
+          message: `published revision not found for ${refType} ${refId}`,
+        }),
+      )
+    }
+    const response = yield* api.request('/drafts', {
+      method: 'POST',
+      body: {
+        baseRevisionId: context.publishedRevision.id,
+        data: mergeRevisionPatch(context.publishedRevision, patch),
+        refId,
+        refType,
+      },
+    })
+    return { draft: normalizeDraftRow(response)!, response }
+  })
+
+export const publishSavedDraft = (api: ApiService, draft: DraftRow) =>
+  api.request('/publish-jobs', {
+    method: 'POST',
+    body: {
+      aiResources: [],
+      branchId: draft.id,
+      confirmDiverged:
+        draft.relationToPublished === 'descendant' ||
+        draft.relationToPublished === 'diverged',
+      expectedPublishedRevisionId: draft.document.publishedRevisionId,
+      revisionId: draft.headRevisionId,
+    },
+  })

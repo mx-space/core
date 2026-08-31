@@ -310,6 +310,7 @@ export class SearchService {
   // ───────────────────────────────────────────────────── upsert / delete ──
 
   @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.POST_REPUBLISH)
   @OnEvent(BusinessEvents.POST_UPDATE)
   async onPostCreate(post: { id: string }) {
     this.sourceLangCache.delete(post.id)
@@ -317,6 +318,7 @@ export class SearchService {
   }
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
+  @OnEvent(BusinessEvents.NOTE_REPUBLISH)
   @OnEvent(BusinessEvents.NOTE_UPDATE)
   async onNoteCreate(note: { id: string }) {
     this.sourceLangCache.delete(note.id)
@@ -330,12 +332,14 @@ export class SearchService {
     await this.upsertSearchDocument('page', page.id)
   }
 
+  @OnEvent(BusinessEvents.POST_UNPUBLISH)
   @OnEvent(BusinessEvents.POST_DELETE)
   async onPostDelete({ id }: { id: string }) {
     this.sourceLangCache.delete(id)
     await this.searchRepository.deleteByRef('post', id)
   }
 
+  @OnEvent(BusinessEvents.NOTE_UNPUBLISH)
   @OnEvent(BusinessEvents.NOTE_DELETE)
   async onNoteDelete({ id }: { id: string }) {
     this.sourceLangCache.delete(id)

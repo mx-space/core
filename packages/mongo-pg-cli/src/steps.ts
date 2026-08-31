@@ -9,7 +9,6 @@ import {
   authIdMap,
   categories,
   comments,
-  drafts,
   fileReferences,
   links,
   notes,
@@ -836,56 +835,6 @@ export const stepComments: MigrationStep = {
   },
 }
 
-export const stepDrafts: MigrationStep = {
-  name: 'drafts',
-  dependsOn: ['posts', 'notes', 'pages'],
-  async allocate(ctx) {
-    await allocateForCollection(ctx, 'drafts')
-  },
-  async load(ctx) {
-    const resolver = createResolver(ctx, 'drafts')
-    const docs = await collect<any>(ctx, 'drafts')
-    const rows = docs
-      .map((d) => {
-        const refTarget = normalizeContentRefType(d.refType)
-        const refCollection = refTarget?.collection ?? (d.refType as string)
-        const refType = refTarget?.refType ?? (d.refType as string)
-        // Drafts always carry a refType in source data; an orphan refId
-        // (parent post/note/page deleted) leaves the draft unattachable.
-        // Drop rather than persist with `ref_id = NULL` so the relation
-        // is intact end-to-end.
-        const refId = resolver.ref(refCollection, d.refId, 'refId', true)
-        if (!refId) return null
-        return {
-          id: resolver.self(d._id),
-          refType: refType as CollectionRefTypes,
-          refId,
-          title: d.title ?? '',
-          text: d.text ?? '',
-          content: d.content ?? null,
-          contentFormat: d.contentFormat ?? 'markdown',
-          images: d.images ?? null,
-          meta: normalizeLegacyJsonbObject(
-            ctx,
-            'drafts',
-            d._id,
-            'meta',
-            d.meta,
-          ),
-          typeSpecificData: d.typeSpecificData ?? null,
-          history: d.history ?? [],
-          version: d.version ?? 1,
-          publishedVersion: d.publishedVersion ?? null,
-          createdAt: dateOrNull(d.created) ?? new Date(),
-          updatedAt: dateOrNull(d.updated),
-        }
-      })
-      .filter((r): r is NonNullable<typeof r> => r !== null)
-    await upsert(ctx, drafts, rows)
-    recordLoad(ctx, 'drafts', rows.length)
-  },
-}
-
 export const stepSimpleCollections: MigrationStep[] = [
   {
     name: 'options',
@@ -1050,7 +999,7 @@ export const stepSimpleCollections: MigrationStep[] = [
 
 export const stepFileReferences: MigrationStep = {
   name: 'file_references',
-  dependsOn: ['posts', 'notes', 'pages', 'drafts'],
+  dependsOn: ['posts', 'notes', 'pages'],
   async allocate(ctx) {
     await allocateForCollection(ctx, 'file_references')
   },
@@ -1064,8 +1013,6 @@ export const stepFileReferences: MigrationStep = {
       notes: { collection: 'notes', refType: 'note' },
       page: { collection: 'pages', refType: 'page' },
       pages: { collection: 'pages', refType: 'page' },
-      draft: { collection: 'drafts', refType: 'draft' },
-      drafts: { collection: 'drafts', refType: 'draft' },
       comment: { collection: 'comments', refType: 'comment' },
       comments: { collection: 'comments', refType: 'comment' },
     }
@@ -1073,6 +1020,7 @@ export const stepFileReferences: MigrationStep = {
       .map((d) => {
         const refTarget = d.refType ? refMap[d.refType] : null
         // Standalone files (no refType) are valid; an orphan link is not.
+        if (d.refType && !refTarget) return null
         let refId: string | null = null
         if (refTarget) {
           refId = resolver.ref(refTarget.collection, d.refId, 'refId', true)
@@ -1415,7 +1363,6 @@ export const ALL_STEPS: MigrationStep[] = [
   stepPages,
   stepRecentlies,
   stepComments,
-  stepDrafts,
   ...stepSimpleCollections,
   stepFileReferences,
   stepPolls,

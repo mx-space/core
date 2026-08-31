@@ -1,14 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, GitCompare, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { toast } from 'sonner'
 
-import {
-  getDraftHistory,
-  getDraftHistoryVersion,
-  restoreDraftVersion,
-} from '~/api/drafts'
+import { getDraftRevisions } from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { DraftModel } from '~/models/draft'
@@ -20,10 +15,12 @@ import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
-import { draftsQueryKey, refTypeMeta } from '../constants'
+import { refTypeMeta } from '../constants'
 import { buildVersionItems, computeDiffStats } from '../utils/draft-diff'
-import { getEditPathForDraft } from '../utils/draft-edit-path'
-import { getErrorMessage } from '../utils/errors'
+import {
+  getEditPathForDraft,
+  getEditPathForRevision,
+} from '../utils/draft-edit-path'
 import { DraftDetailEmpty } from './DraftDetailEmpty'
 import { DraftDiffPreview } from './DraftDiffPreview'
 import { VersionRow } from './VersionRow'
@@ -36,64 +33,47 @@ export function DraftDetail(props: {
 }) {
   const { t } = useI18n()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const historyQuery = useQuery({
+  const revisionsQuery = useQuery({
     enabled: Boolean(props.draft.id),
-    queryFn: () => getDraftHistory(props.draft.id),
+    queryFn: () => getDraftRevisions(props.draft.id),
     queryKey: adminQueryKeys.drafts.history(props.draft.id),
   })
-  const meta = refTypeMeta[props.draft.refType]
-  const editPath = getEditPathForDraft(props.draft)
+  const meta = refTypeMeta[props.draft.document.refType]
   const versionItems = useMemo(
-    () => buildVersionItems(props.draft, historyQuery.data),
-    [historyQuery.data, props.draft],
+    () => buildVersionItems(props.draft.headRevisionId, revisionsQuery.data),
+    [props.draft.headRevisionId, revisionsQuery.data],
   )
-  const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
+  const [selectedRevisionId, setSelectedRevisionId] = useState<string | null>(
+    null,
+  )
   const versionsScopeId = `draft-versions-${props.draft.id}`
 
   useScopeArrowNav({
     itemSelector: '[data-scope-item="row"]',
-    onItemFocus: (el) => {
-      const id = el.getAttribute('data-id')
-      if (id) setSelectedVersion(Number(id))
+    onItemFocus: (element) => {
+      const revisionId = element.getAttribute('data-id')
+      if (revisionId) setSelectedRevisionId(revisionId)
     },
     scopeId: versionsScopeId,
   })
 
   useEffect(() => {
-    const previousVersion = versionItems.find((item) => !item.isCurrent)
-    setSelectedVersion(previousVersion?.version ?? null)
+    setSelectedRevisionId(
+      versionItems.find((item) => !item.isCurrent)?.id ??
+        versionItems[0]?.id ??
+        null,
+    )
   }, [props.draft.id, versionItems])
 
-  const selectedVersionItem = versionItems.find(
-    (item) => item.version === selectedVersion,
+  const selectedItem = versionItems.find(
+    (item) => item.id === selectedRevisionId,
   )
-  const selectedVersionQuery = useQuery({
-    enabled: selectedVersion != null && selectedVersion !== props.draft.version,
-    queryFn: () => getDraftHistoryVersion(props.draft.id, selectedVersion!),
-    queryKey: adminQueryKeys.drafts.historyVersion({
-      id: props.draft.id,
-      version: selectedVersion,
-    }),
-  })
-  const selectedVersionDraft =
-    selectedVersion === props.draft.version
-      ? props.draft
-      : selectedVersionQuery.data
-  const diffStats =
-    selectedVersionDraft && selectedVersion !== null
-      ? computeDiffStats(selectedVersionDraft, props.draft)
-      : null
-  const restoreMutation = useMutation({
-    mutationFn: (version: number) =>
-      restoreDraftVersion(props.draft.id, version),
-    onError: (error: unknown) =>
-      toast.error(getErrorMessage(error, t('drafts.history.restoreFailed'))),
-    onSuccess: async () => {
-      toast.success(t('drafts.history.restoreSuccess'))
-      await queryClient.invalidateQueries({ queryKey: draftsQueryKey })
-    },
-  })
+  const selectedRevision = revisionsQuery.data?.find(
+    (revision) => revision.id === selectedRevisionId,
+  )
+  const diffStats = selectedRevision
+    ? computeDiffStats(selectedRevision, props.draft.headRevision)
+    : null
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -116,13 +96,14 @@ export function DraftDetail(props: {
           </Button>
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold text-neutral-950 dark:text-neutral-50">
-              {props.draft.title || t('drafts.row.untitled')}
+              {props.draft.headRevision.title || t('drafts.row.untitled')}
             </h2>
             <div className="mt-0.5 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
               <span>{t(meta.labelKey)}</span>
-              <span>v{props.draft.version}</span>
-              <time dateTime={props.draft.updatedAt}>
-                {relativeTimeFromNow(props.draft.updatedAt)}
+              <time dateTime={props.draft.updatedAt ?? props.draft.createdAt}>
+                {relativeTimeFromNow(
+                  props.draft.updatedAt ?? props.draft.createdAt,
+                )}
               </time>
             </div>
           </div>
@@ -130,7 +111,7 @@ export function DraftDetail(props: {
         <div className="flex shrink-0 items-center gap-2">
           <Button
             className="h-8 px-2.5"
-            onClick={() => navigate(editPath)}
+            onClick={() => navigate(getEditPathForDraft(props.draft))}
             type="button"
             variant="subtle"
           >
@@ -155,12 +136,9 @@ export function DraftDetail(props: {
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">
-        {historyQuery.isLoading ? (
+        {revisionsQuery.isLoading ? (
           <div className="flex h-full items-center justify-center">
-            <Loader2
-              aria-hidden="true"
-              className="size-5 animate-spin text-neutral-400"
-            />
+            <Loader2 className="size-5 animate-spin text-neutral-400" />
           </div>
         ) : versionItems.length === 0 ? (
           <DraftDetailEmpty />
@@ -181,14 +159,16 @@ export function DraftDetail(props: {
                 {versionItems.map((item) => (
                   <VersionRow
                     diffStats={
-                      item.version === selectedVersion ? diffStats : null
+                      item.id === selectedRevisionId ? diffStats : null
                     }
                     item={item}
-                    key={item.version}
-                    onRestore={() => restoreMutation.mutate(item.version)}
-                    onSelect={() => setSelectedVersion(item.version)}
-                    restorePending={restoreMutation.isPending}
-                    selected={selectedVersion === item.version}
+                    key={item.id}
+                    onRestore={() =>
+                      navigate(getEditPathForRevision(props.draft, item.id))
+                    }
+                    onSelect={() => setSelectedRevisionId(item.id)}
+                    restorePending={false}
+                    selected={selectedRevisionId === item.id}
                   />
                 ))}
               </Scroll>
@@ -197,15 +177,11 @@ export function DraftDetail(props: {
             <div className="flex min-h-0 flex-col bg-neutral-50 dark:bg-neutral-950">
               <div className="flex h-10 shrink-0 items-center justify-between border-b border-neutral-200 px-4 dark:border-neutral-800">
                 <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                  {selectedVersionItem ? (
+                  {selectedItem ? (
                     <>
-                      <span>v{selectedVersionItem.version}</span>
+                      <span>{relativeTimeFromNow(selectedItem.savedAt)}</span>
                       <span className="text-neutral-400">→</span>
-                      <span>
-                        {t('drafts.history.current', {
-                          version: props.draft.version,
-                        })}
-                      </span>
+                      <span>{t('drafts.history.current')}</span>
                     </>
                   ) : (
                     <span>{t('drafts.history.pickVersion')}</span>
@@ -222,20 +198,12 @@ export function DraftDetail(props: {
                   </span>
                 ) : null}
               </div>
-
               <Scroll className="flex-1" innerClassName="p-4">
-                {selectedVersionQuery.isLoading ? (
-                  <div className="flex h-full items-center justify-center">
-                    <Loader2
-                      aria-hidden="true"
-                      className="size-5 animate-spin text-neutral-400"
-                    />
-                  </div>
-                ) : selectedVersionDraft ? (
+                {selectedRevision ? (
                   <DraftDiffPreview
-                    currentDraft={props.draft}
+                    currentDraft={props.draft.headRevision}
                     diffStats={diffStats}
-                    selectedDraft={selectedVersionDraft}
+                    selectedDraft={selectedRevision}
                   />
                 ) : (
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">

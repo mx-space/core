@@ -12,5 +12,6 @@ import { ContentMigrationService } from './content-migration.service'
   imports: [AiModule, DraftModule, NoteModule, PageModule, PostModule],
   controllers: [ContentMigrationController],
   providers: [ContentMigrationService],
+  exports: [ContentMigrationService],
 })
 export class ContentMigrationModule {}

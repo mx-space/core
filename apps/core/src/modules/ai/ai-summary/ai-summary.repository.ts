@@ -274,23 +274,6 @@ export class AiSummaryRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async deleteTranslationsWithDifferentHash(
-    refId: EntityId | string,
-    hash: string,
-  ): Promise<number> {
-    const result = await this.db
-      .delete(aiSummaries)
-      .where(
-        and(
-          eq(aiSummaries.refId, parseEntityId(refId)),
-          eq(aiSummaries.isTranslation, true),
-          sql`${aiSummaries.hash} <> ${hash}`,
-        )!,
-      )
-      .returning({ id: aiSummaries.id })
-    return result.length
-  }
-
   async updateSummary(
     id: EntityId | string,
     summary: string,

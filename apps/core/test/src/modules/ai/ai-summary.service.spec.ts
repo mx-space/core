@@ -39,7 +39,6 @@ const createService = () => {
   }
   const eventEmitter = { emit: vi.fn() }
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = { createSummaryTask: vi.fn() }
   const generationMetrics = {
     attachLatest: vi.fn(async (_type: string, items: unknown[]) =>
       items.map((item) => ({
@@ -69,13 +68,11 @@ const createService = () => {
     adapter,
     multilang,
     taskProcessor as any,
-    aiTaskService as any,
     generationMetrics as any,
   )
   return {
     aiInFlightService,
     aiService,
-    aiTaskService,
     configService,
     databaseService,
     eventEmitter,
@@ -250,43 +247,6 @@ describe('AiSummaryService', () => {
       },
     ])
   })
-
-  it('creates an initial summary task on update when no summaries exist', async () => {
-    const {
-      aiTaskService,
-      configService,
-      databaseService,
-      repository,
-      service,
-    } = createService()
-    configService.get.mockResolvedValue({
-      enableSummary: true,
-      enableAutoGenerateSummaryOnUpdate: true,
-      summaryTargetLanguages: ['en', 'ja'],
-      summaryMinTextLength: 0,
-    })
-    databaseService.findGlobalById.mockResolvedValue(visibleArticle)
-    repository.listForRef.mockResolvedValue([])
-
-    await service.handleUpdateArticle({ id: 'post-1' })
-
-    expect(aiTaskService.createSummaryTask).toHaveBeenCalledWith({
-      refId: 'post-1',
-      targetLanguages: ['en', 'ja'],
-    })
-  })
-
-  it('does not auto-generate a summary that was prepared before publishing', async () => {
-    const { aiTaskService, configService, service } = createService()
-
-    await service.handleCreateArticle({
-      id: 'post-1',
-      preparedAiResources: ['summary'],
-    })
-
-    expect(configService.get).not.toHaveBeenCalled()
-    expect(aiTaskService.createSummaryTask).not.toHaveBeenCalled()
-  })
 })
 
 describe('AiSummaryService — summary task pipeline', () => {
@@ -301,7 +261,6 @@ describe('AiSummaryService — summary task pipeline', () => {
     harness.aiService.getSummaryModel.mockResolvedValue(summaryRuntime())
     harness.repository.findBaseForRef.mockResolvedValue(null)
     harness.repository.findByRefAndLang.mockResolvedValue(null)
-    harness.repository.deleteTranslationsWithDifferentHash.mockResolvedValue(0)
     harness.repository.upsert.mockImplementation(async (input: any) => ({
       id: input.isTranslation ? `summary-${input.lang}` : 'summary-base',
       refId: input.refId,

@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -209,14 +210,38 @@ export const recentlies = pgTable(
   ],
 )
 
-export const drafts = pgTable(
-  'drafts',
+export const contentDocuments = pgTable(
+  'content_documents',
   {
     id: pkText(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     refType: text('ref_type').notNull(),
     refId: refText('ref_id'),
+    publishedRevisionId: refText('published_revision_id').references(
+      (): AnyPgColumn => contentRevisions.id,
+      { onDelete: 'set null' },
+    ),
+  },
+  (table) => [
+    uniqueIndex('content_documents_ref_uniq')
+      .on(table.refType, table.refId)
+      .where(sql`${table.refId} is not null`),
+  ],
+)
+
+export const contentRevisions = pgTable(
+  'content_revisions',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    parentRevisionId: refText('parent_revision_id').references(
+      (): AnyPgColumn => contentRevisions.id,
+      { onDelete: 'restrict' },
+    ),
+    createdAt: createdAt(),
     title: text('title').notNull().default(''),
     text: text('text').notNull().default(''),
     content: text('content'),
@@ -227,51 +252,60 @@ export const drafts = pgTable(
       string,
       unknown
     > | null>(),
-    history: jsonb('history').$type<unknown[] | null>(),
-    version: integer('version').notNull().default(1),
-    publishedVersion: integer('published_version'),
   },
   (table) => [
-    uniqueIndex('drafts_ref_uniq')
-      .on(table.refType, table.refId)
-      .where(sql`${table.refId} is not null`)
-      .concurrently(),
-    index('drafts_ref_idx')
-      .on(table.refType, table.refId)
-      .where(sql`${table.refId} is not null`),
+    index('content_revisions_document_idx').on(table.documentId),
+    index('content_revisions_parent_idx').on(table.parentRevisionId),
+  ],
+)
+
+export const drafts = pgTable(
+  'drafts',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    baseRevisionId: refText('base_revision_id')
+      .notNull()
+      .references(() => contentRevisions.id, { onDelete: 'restrict' }),
+    headRevisionId: refText('head_revision_id')
+      .notNull()
+      .references(() => contentRevisions.id, { onDelete: 'restrict' }),
+    status: text('status').notNull().default('active'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    check(
+      'drafts_status_check',
+      sql`${table.status} in ('active', 'archived')`,
+    ),
+    index('drafts_document_status_idx').on(table.documentId, table.status),
     index('drafts_updated_at_idx').on(table.updatedAt),
   ],
 )
 
-/**
- * Optional separate-table form for draft history. Only populated when
- * indexed lookup across drafts is required (Phase 0 deferred).
- */
-export const draftHistories = pgTable(
-  'draft_histories',
+export const contentPublicationEvents = pgTable(
+  'content_publication_events',
   {
     id: pkText(),
-    draftId: refText('draft_id')
+    documentId: refText('document_id')
       .notNull()
-      .references(() => drafts.id, { onDelete: 'cascade' }),
-    version: integer('version').notNull(),
-    title: text('title').notNull(),
-    text: text('text'),
-    content: text('content'),
-    contentFormat: text('content_format').notNull(),
-    typeSpecificData: jsonb('type_specific_data').$type<Record<
-      string,
-      unknown
-    > | null>(),
-    savedAt: tsCol('saved_at').notNull(),
-    isFullSnapshot: boolean('is_full_snapshot').notNull(),
-    refVersion: integer('ref_version'),
-    baseVersion: integer('base_version'),
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    revisionId: refText('revision_id')
+      .notNull()
+      .references(() => contentRevisions.id, { onDelete: 'restrict' }),
+    previousRevisionId: refText('previous_revision_id').references(
+      () => contentRevisions.id,
+      { onDelete: 'restrict' },
+    ),
+    createdAt: createdAt(),
   },
   (table) => [
-    uniqueIndex('draft_histories_draft_version_uniq').on(
-      table.draftId,
-      table.version,
+    index('content_publication_events_document_idx').on(
+      table.documentId,
+      table.createdAt,
     ),
   ],
 )

@@ -123,15 +123,16 @@ export class ContentMigrationService {
     }
 
     const [draft, translationRows] = await Promise.all([
-      dto.draftId ? this.draftService.findById(dto.draftId) : null,
+      dto.branchId ? this.draftService.findById(dto.branchId) : null,
       this.aiTranslationRepository.listByRefId(dto.refId),
     ])
-    if (dto.draftId && !draft) {
+    if (dto.branchId && !draft) {
       throw new NotFoundException('Draft not found')
     }
     if (
       draft &&
-      (draft.refType !== dto.refType || String(draft.refId) !== dto.refId)
+      (draft.document.refType !== dto.refType ||
+        String(draft.document.refId) !== dto.refId)
     ) {
       throw new BadRequestException('Draft does not belong to this document')
     }
@@ -153,17 +154,18 @@ export class ContentMigrationService {
     })
 
     if (draft) {
-      const draftResult = analyzeMxMarkdown(draft.text ?? '', {
+      const draftResult = analyzeMxMarkdown(draft.headRevision.text, {
         profile: 'yohaku-v1',
       })
       preconditions.push({
-        kind: 'draft',
+        kind: 'branch',
         id: String(draft.id),
         hash:
-          draft.contentFormat === ContentFormat.Lexical && draft.content
-            ? sha256(draft.content)
+          draft.headRevision.contentFormat === ContentFormat.Lexical &&
+          draft.headRevision.content
+            ? sha256(draft.headRevision.content)
             : draftResult.sourceHash,
-        version: draft.version,
+        headRevisionId: draft.headRevisionId,
       })
     }
 

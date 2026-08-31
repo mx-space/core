@@ -84,12 +84,10 @@ function createService(runtime: PiRuntimeAdapter) {
     }),
   }
   const taskProcessor = { registerHandler: vi.fn() }
-  const aiTaskService = {}
   const eventEmitter = { emit: vi.fn() }
   const generationMetrics = createAiGenerationMetricsMock()
 
   repository.findByRefAndLang.mockResolvedValue(null)
-  repository.deleteTranslationsWithDifferentHash = vi.fn(async () => 0) as any
   repository.upsert.mockImplementation(async (input: any) => ({
     id: 'insights-1',
     refId: input.refId,
@@ -133,7 +131,6 @@ function createService(runtime: PiRuntimeAdapter) {
     adapter,
     multilang,
     taskProcessor as any,
-    aiTaskService as any,
     generationMetrics as any,
   )
   return { service, generationMetrics, inflightEvents }

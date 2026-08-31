@@ -1,15 +1,16 @@
 import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
 
-import { openAdminEdit } from '../../domain/admin-link'
+import { openAdminDraftEdit } from '../../domain/admin-link'
 import { coerceMeta, parseEnvelope } from '../../domain/envelope'
 import { ValidationXml } from '../../domain/errors'
 import { buildPostPayload } from '../../domain/payload'
-import { Api } from '../../services/Api'
+import { Api, type ApiService } from '../../services/Api'
 import { Editor } from '../../services/Editor'
 import { Lexical } from '../../services/Lexical'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
+import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
 import {
   postWriteOptions,
   resolveCategoryRefs,
@@ -80,6 +81,28 @@ const metaFromEnvelope = (
   return overlay
 }
 
+const submitPostPayload = (
+  api: ApiService,
+  id: string,
+  payload: Record<string, unknown>,
+  publishedFallback: boolean,
+) =>
+  Effect.gen(function* () {
+    const shouldPublish =
+      typeof payload.isPublished === 'boolean'
+        ? payload.isPublished
+        : publishedFallback
+    const draftPayload = { ...payload }
+    delete draftPayload.isPublished
+    const saved = yield* saveDraftPayload(api, 'post', draftPayload, id)
+    return {
+      ...saved,
+      response: shouldPublish
+        ? yield* publishSavedDraft(api, saved.draft)
+        : saved.response,
+    }
+  })
+
 export const edit = Command.make(
   'edit',
   { slugOrId, ...postWriteOptions },
@@ -90,6 +113,8 @@ export const edit = Command.make(
       const editor = yield* Editor
       const renderer = yield* Renderer
       const resolver = yield* Resolver
+      const id = yield* resolver.resolvePostId(slugOrId)
+      const current = (yield* api.request(`/posts/${id}`)) as PostForEditor
 
       // Editor round-trip path: no --file and no --content → spawn $EDITOR.
       if (!flags.file && flags.content === undefined) {
@@ -116,25 +141,31 @@ export const edit = Command.make(
         })
         const payload = { ...built.payload, ...metaFromEnvelope(parsed.meta) }
         const resolved = yield* resolveCategoryRefs(payload)
-        const id = yield* resolver.resolvePostId(slugOrId)
-        const res = yield* api.request(`/posts/${id}`, {
-          method: 'PUT',
-          body: resolved,
-        })
-        yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
-        if (rest.open) yield* openAdminEdit('posts', id)
+        const saved = yield* submitPostPayload(
+          api,
+          id,
+          resolved,
+          current.isPublished !== false,
+        )
+        yield* renderer.emitSuccess(rest.silent ? { ok: true } : saved.response)
+        if (rest.open && saved.draft.id) {
+          yield* openAdminDraftEdit('posts', saved.draft.id, id)
+        }
         return
       }
 
       // Non-interactive path: build from flags / file.
       const built = yield* buildPostPayload(flags)
       const resolved = yield* resolveCategoryRefs(built.payload)
-      const id = yield* resolver.resolvePostId(slugOrId)
-      const res = yield* api.request(`/posts/${id}`, {
-        method: 'PUT',
-        body: resolved,
-      })
-      yield* renderer.emitSuccess(rest.silent ? { ok: true } : res)
-      if (rest.open) yield* openAdminEdit('posts', id)
+      const saved = yield* submitPostPayload(
+        api,
+        id,
+        resolved,
+        current.isPublished !== false,
+      )
+      yield* renderer.emitSuccess(rest.silent ? { ok: true } : saved.response)
+      if (rest.open && saved.draft.id) {
+        yield* openAdminDraftEdit('posts', saved.draft.id, id)
+      }
     }),
 ).pipe(Command.withDescription('edit a post via $EDITOR or flags'))

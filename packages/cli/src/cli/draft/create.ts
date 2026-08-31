@@ -37,7 +37,7 @@ export const create = Command.make('create', postWriteOptions, (opts) =>
     const renderer = yield* Renderer
     const res = yield* api.request('/drafts', {
       method: 'POST',
-      body: { refType: 'post', ...body },
+      body: { data: body, refType: 'post' },
     })
     const id = extractId(res)
     yield* renderer.emitSuccess(opts.silent ? { ok: true, id } : res)

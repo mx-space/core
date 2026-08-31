@@ -1,11 +1,4 @@
-import type { CreatePostData } from '~/api/posts'
-import {
-  createPost,
-  deletePost,
-  getPostById,
-  patchPost,
-  updatePost,
-} from '~/api/posts'
+import { deletePost, getPostById, patchPostPublish } from '~/api/posts'
 import { createTransaction } from '~/data/resource/transaction'
 import type { PostModel } from '~/models/post'
 
@@ -20,29 +13,18 @@ async function ensurePostHydrated(id: string): Promise<void> {
 export async function publishPost(
   id: string,
   isPublished: boolean,
-  options?: {
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  },
-): Promise<PostModel | void> {
+): Promise<PostModel> {
   await ensurePostHydrated(id)
-  if (options?.skipAiAutoGeneration || options?.preparedAiResources?.length) {
-    const tx = createTransaction()
-    tx.update(posts, id, (draft) => {
-      draft.isPublished = isPublished
-    })
-    return tx.commit(async () => {
-      await patchPost(id, {
-        isPublished,
-        preparedAiResources: options.preparedAiResources,
-        skipAiAutoGeneration: options.skipAiAutoGeneration,
-      })
-      return posts.get(id)
-    })
-  }
-  return posts.update(id, (draft) => {
+  const tx = createTransaction()
+  tx.update(posts, id, (draft) => {
     draft.isPublished = isPublished
   })
+  const result = await tx.commit(async () => {
+    await patchPostPublish(id, isPublished)
+    return getPostById(id)
+  })
+  posts.hydrate([result])
+  return result
 }
 
 export async function pinPost(
@@ -91,46 +73,4 @@ export function removePosts(ids: string[]): Promise<BatchRemoveResult> {
       successCount: fulfilledKeys.length,
     }
   })
-}
-
-function toOptimisticPostPatch(data: CreatePostData): Partial<PostModel> {
-  const patch: Partial<PostModel> = {
-    categoryId: data.categoryId,
-    contentFormat: data.contentFormat,
-    copyright: data.copyright,
-    isPremium: data.isPremium,
-    isPublished: data.isPublished,
-    meta: data.meta,
-    pinAt: data.pin,
-    pinOrder: data.pinOrder,
-    slug: data.slug,
-    summary: data.summary,
-    tags: data.tags,
-    text: data.text,
-    title: data.title,
-  }
-  if (data.content !== undefined) patch.content = data.content
-  if (data.images !== undefined) patch.images = data.images
-  return patch
-}
-
-export async function savePost(
-  id: string,
-  data: CreatePostData,
-): Promise<PostModel> {
-  if (!id) {
-    const result = await createPost(data)
-    posts.upsert(result)
-    return result
-  }
-
-  await ensurePostHydrated(id)
-  const patch = toOptimisticPostPatch(data)
-  const tx = createTransaction()
-  tx.update(posts, id, (draft) => {
-    Object.assign(draft, patch)
-  })
-  const result = await tx.commit(() => updatePost(id, data))
-  posts.hydrate([result])
-  return result
 }

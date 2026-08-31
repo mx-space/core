@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { ArticleTypeEnum } from '~/constants/article.constant'
+import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import type { NoteRepository, NoteRow } from '~/modules/note/note.repository'
@@ -58,8 +59,6 @@ const createService = () => {
   }
   const commentService = { deleteForRef: vi.fn() }
   const draftService = {
-    linkToPublished: vi.fn(),
-    markAsPublished: vi.fn(),
     deleteByRef: vi.fn(),
   }
   const enrichmentService = { scheduleDocPrefetch: vi.fn() }
@@ -80,6 +79,7 @@ const createService = () => {
   return {
     commentService,
     draftService,
+    eventManager,
     fileReferenceService,
     repository,
     service,
@@ -110,28 +110,6 @@ describe('NoteService', () => {
     )
   })
 
-  it('links a draft to the created note and removes draft file references', async () => {
-    const { draftService, fileReferenceService, repository, service } =
-      createService()
-    repository.findBySlug.mockResolvedValue(null)
-    repository.create.mockResolvedValue(createNote())
-
-    await service.create({
-      title: 'Note',
-      text: 'body',
-      draftId: 'draft-1',
-    } as any)
-
-    expect(
-      fileReferenceService.removeReferencesForDocument,
-    ).toHaveBeenCalledWith('draft-1', FileReferenceType.Draft)
-    expect(draftService.linkToPublished).toHaveBeenCalledWith(
-      'draft-1',
-      'note-1',
-    )
-    expect(draftService.markAsPublished).toHaveBeenCalledWith('draft-1')
-  })
-
   it('tracks SEO path changes when slug changes', async () => {
     const { repository, service, slugTrackerService } = createService()
     repository.findById.mockResolvedValue(createNote({ slug: 'old-note' }))
@@ -148,6 +126,24 @@ describe('NoteService', () => {
     expect(repository.update).toHaveBeenCalledWith(
       'note-1',
       expect.objectContaining({ slug: 'new-note' }),
+    )
+  })
+
+  it('emits NOTE_UNPUBLISH without permanent-delete semantics', async () => {
+    vi.useFakeTimers()
+    const { eventManager, service } = createService()
+
+    ;(service as any).broadcastNoteUpdateEvent(
+      createNote({ isPublished: false }),
+      true,
+    )
+    await vi.advanceTimersByTimeAsync(1100)
+    vi.useRealTimers()
+
+    expect(eventManager.emit).toHaveBeenCalledWith(
+      BusinessEvents.NOTE_UNPUBLISH,
+      { id: 'note-1' },
+      { scope: EventScope.TO_SYSTEM_VISITOR },
     )
   })
 

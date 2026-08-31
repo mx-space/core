@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import type { DiffRendererInstance } from '../types/drafts'
 
 import { useI18n } from '~/i18n'
 import { Scroll } from '~/ui/primitives/scroll'
 
+import type { DiffRendererInstance } from '../types/drafts'
 import { ensureDiffHighlighter } from '../utils/diff-highlighter'
 
 export function MarkdownDraftDiffPanel(props: {
+  comparisonLabel?: string
+  currentLabel?: string
   currentText: string
-  currentVersion: number
+  selectedLabel?: string
   selectedText: string
-  selectedVersion: number
 }) {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -44,11 +45,11 @@ export function MarkdownDraftDiffPanel(props: {
           containerWrapper: containerRef.current,
           newFile: {
             contents: props.currentText,
-            name: `v${props.currentVersion}.md`,
+            name: `${props.currentLabel ?? t('drafts.history.currentFile')}.md`,
           },
           oldFile: {
             contents: props.selectedText,
-            name: `v${props.selectedVersion}.md`,
+            name: `${props.selectedLabel ?? t('drafts.history.historyFile')}.md`,
           },
         })
         diffInstance = nextDiffInstance
@@ -68,9 +69,10 @@ export function MarkdownDraftDiffPanel(props: {
     }
   }, [
     props.currentText,
-    props.currentVersion,
+    props.currentLabel,
     props.selectedText,
-    props.selectedVersion,
+    props.selectedLabel,
+    t,
   ])
 
   return (
@@ -79,8 +81,8 @@ export function MarkdownDraftDiffPanel(props: {
         <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
           {t('drafts.diff.markdown.title')}
         </h3>
-        <span className="shrink-0 text-xs tabular-nums text-neutral-500">
-          v{props.selectedVersion} → v{props.currentVersion}
+        <span className="shrink-0 text-xs text-neutral-500">
+          {props.comparisonLabel ?? t('drafts.history.direction')}
         </span>
       </div>
       <Scroll

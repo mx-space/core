@@ -1,17 +1,17 @@
 import { GitCompare } from 'lucide-react'
-import type { DraftModel } from '~/models/draft'
-import type { DraftDiffStats } from '../types/drafts'
 
 import { useI18n } from '~/i18n'
+import type { RevisionSnapshot } from '~/models/draft'
 
+import type { DraftDiffStats } from '../types/drafts'
 import { getDraftTextForDiff } from '../utils/draft-diff'
 import { MarkdownDraftDiffPanel } from './MarkdownDraftDiffPanel'
 import { RichDraftDiffPanel } from './RichDraftDiffPanel'
 
 export function DraftDiffPreview(props: {
-  currentDraft: DraftModel
+  currentDraft: RevisionSnapshot
   diffStats: DraftDiffStats | null
-  selectedDraft: DraftModel
+  selectedDraft: RevisionSnapshot
 }) {
   const { t } = useI18n()
   if (
@@ -22,10 +22,9 @@ export function DraftDiffPreview(props: {
   ) {
     return (
       <RichDraftDiffPanel
+        comparisonLabel={t('drafts.history.direction')}
         currentContent={props.currentDraft.content}
-        currentVersion={props.currentDraft.version}
         selectedContent={props.selectedDraft.content}
-        selectedVersion={props.selectedDraft.version}
       />
     )
   }
@@ -46,10 +45,11 @@ export function DraftDiffPreview(props: {
 
   return (
     <MarkdownDraftDiffPanel
+      comparisonLabel={t('drafts.history.direction')}
+      currentLabel={t('drafts.history.currentFile')}
       currentText={currentText}
-      currentVersion={props.currentDraft.version}
+      selectedLabel={t('drafts.history.historyFile')}
       selectedText={selectedText}
-      selectedVersion={props.selectedDraft.version}
     />
   )
 }

@@ -1,13 +1,4 @@
-import {
-  Body,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -22,7 +13,7 @@ import {
   DraftPagerDto,
   DraftRefTypeAndIdDto,
   DraftRefTypeDto,
-  RestoreVersionDto,
+  RevisionComparisonDto,
   UpdateDraftDto,
 } from './draft.schema'
 import { DraftService } from './draft.service'
@@ -40,26 +31,13 @@ export class DraftController {
   @Get('/')
   @Auth()
   async list(@Query() query: DraftPagerDto) {
-    const { page, size, refType, hasRef } = query
-
-    const filter: Record<string, any> = {}
-    if (refType) filter.refType = refType
-    if (hasRef !== undefined) filter.hasRef = hasRef
-
-    const result = await this.draftService.list(page, size, filter)
-    const data = result.data.map((d) => {
-      if (typeof d.typeSpecificData === 'string') {
-        try {
-          ;(d as any).typeSpecificData = JSON.parse(d.typeSpecificData)
-        } catch {
-          // keep raw payload
-        }
-      }
-      return d
+    const result = await this.draftService.list(query.page, query.size, {
+      hasRef: query.hasRef,
+      refType: query.refType,
+      search: query.search,
     })
-
     return withMeta(
-      data,
+      result.data,
       new MetaObjectBuilder()
         .view('card')
         .pagination({
@@ -72,19 +50,31 @@ export class DraftController {
     )
   }
 
-  @Get('/by-ref/:refType/new')
+  @Get('/context/:refType/:refId')
+  @Auth()
+  context(@Param() params: DraftRefTypeAndIdDto) {
+    return this.draftService.getContext(
+      params.refType as DraftRefType,
+      params.refId,
+    )
+  }
+
+  @Get('/new/:refType')
   @Auth()
   getNewDrafts(@Param() params: DraftRefTypeDto) {
     return this.draftService.findNewDrafts(params.refType as DraftRefType)
   }
 
-  @Get('/by-ref/:refType/:refId')
+  @Get('/compare/:leftId/:rightId')
   @Auth()
-  getByRef(@Param() params: DraftRefTypeAndIdDto) {
-    return this.draftService.findByRef(
-      params.refType as DraftRefType,
-      params.refId,
-    )
+  compare(@Param() params: RevisionComparisonDto) {
+    return this.draftService.compare(params.leftId, params.rightId)
+  }
+
+  @Get('/revisions/:id')
+  @Auth()
+  revision(@Param() params: EntityIdDto) {
+    return this.draftService.findRevisionById(params.id)
   }
 
   @Get('/:id')
@@ -95,6 +85,12 @@ export class DraftController {
       throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id: params.id })
     }
     return draft
+  }
+
+  @Get('/:id/revisions')
+  @Auth()
+  revisions(@Param() params: EntityIdDto) {
+    return this.draftService.getBranchRevisions(params.id)
   }
 
   @Put('/:id')
@@ -108,30 +104,5 @@ export class DraftController {
   async delete(@Param() params: EntityIdDto) {
     await this.draftService.delete(params.id)
     return { success: true }
-  }
-
-  @Get('/:id/history')
-  @Auth()
-  getHistory(@Param() params: EntityIdDto) {
-    return this.draftService.getHistory(params.id)
-  }
-
-  @Get('/:id/history/:version')
-  @Auth()
-  getHistoryVersion(
-    @Param() params: EntityIdDto,
-    @Param() versionParams: RestoreVersionDto,
-  ) {
-    return this.draftService.getHistoryVersion(params.id, versionParams.version)
-  }
-
-  @Post('/:id/restore/:version')
-  @HttpCode(200)
-  @Auth()
-  restore(
-    @Param() params: EntityIdDto,
-    @Param() versionParams: RestoreVersionDto,
-  ) {
-    return this.draftService.restoreVersion(params.id, versionParams.version)
   }
 }

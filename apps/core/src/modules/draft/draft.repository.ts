@@ -1,8 +1,24 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { drafts } from '~/database/schema'
+import {
+  contentDocuments,
+  contentPublicationEvents,
+  contentRevisions,
+  drafts,
+} from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
@@ -13,30 +29,53 @@ import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
-  DraftCreateInput,
-  DraftHistoryEntry,
+  ContentDocumentRow,
+  ContentPublicationEventRow,
+  ContentRevisionRow,
+  DraftBranchRow,
+  DraftBranchStatus,
   DraftListFilter,
-  DraftPatchInput,
   DraftRefType,
-  DraftRow,
+  RevisionSnapshot,
 } from './draft.types'
+import { sameRevisionContent } from './draft-content'
 
-const mapRow = (row: typeof drafts.$inferSelect): DraftRow => ({
-  id: toEntityId(row.id) as EntityId,
+const mapDocument = (
+  row: typeof contentDocuments.$inferSelect,
+): ContentDocumentRow => ({
+  ...row,
+  id: toEntityId(row.id)!,
+  publishedRevisionId: toEntityId(row.publishedRevisionId),
+  refId: toEntityId(row.refId),
   refType: row.refType as DraftRefType,
-  refId: row.refId ? (toEntityId(row.refId) as EntityId) : null,
-  title: row.title,
-  text: row.text,
-  content: row.content,
-  contentFormat: row.contentFormat,
-  images: row.images,
-  meta: row.meta,
-  typeSpecificData: row.typeSpecificData,
-  history: (row.history ?? []) as DraftHistoryEntry[],
-  version: row.version,
-  publishedVersion: row.publishedVersion,
-  createdAt: row.createdAt,
-  updatedAt: row.updatedAt,
+})
+
+const mapRevision = (
+  row: typeof contentRevisions.$inferSelect,
+): ContentRevisionRow => ({
+  ...row,
+  documentId: toEntityId(row.documentId)!,
+  id: toEntityId(row.id)!,
+  parentRevisionId: toEntityId(row.parentRevisionId),
+})
+
+const mapPublicationEvent = (
+  row: typeof contentPublicationEvents.$inferSelect,
+): ContentPublicationEventRow => ({
+  ...row,
+  documentId: toEntityId(row.documentId)!,
+  id: toEntityId(row.id)!,
+  previousRevisionId: toEntityId(row.previousRevisionId),
+  revisionId: toEntityId(row.revisionId)!,
+})
+
+const mapBranch = (row: typeof drafts.$inferSelect): DraftBranchRow => ({
+  ...row,
+  baseRevisionId: toEntityId(row.baseRevisionId)!,
+  documentId: toEntityId(row.documentId)!,
+  headRevisionId: toEntityId(row.headRevisionId)!,
+  id: toEntityId(row.id)!,
+  status: row.status as DraftBranchStatus,
 })
 
 @Injectable()
@@ -52,26 +91,35 @@ export class DraftRepository extends BaseRepository {
     page = 1,
     size = 10,
     filter: DraftListFilter = {},
-  ): Promise<PaginationResult<DraftRow>> {
+  ): Promise<PaginationResult<DraftBranchRow>> {
     page = Math.max(1, page)
     size = Math.min(50, Math.max(1, size))
-    const offset = (page - 1) * size
     const where = this.buildFilter(filter)
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select({ branch: drafts })
         .from(drafts)
+        .innerJoin(contentDocuments, eq(contentDocuments.id, drafts.documentId))
+        .innerJoin(
+          contentRevisions,
+          eq(contentRevisions.id, drafts.headRevisionId),
+        )
         .where(where)
         .orderBy(desc(drafts.updatedAt), desc(drafts.createdAt))
         .limit(size)
-        .offset(offset),
+        .offset((page - 1) * size),
       this.db
         .select({ count: sql<number>`count(*)::int` })
         .from(drafts)
+        .innerJoin(contentDocuments, eq(contentDocuments.id, drafts.documentId))
+        .innerJoin(
+          contentRevisions,
+          eq(contentRevisions.id, drafts.headRevisionId),
+        )
         .where(where),
     ])
     return {
-      data: rows.map(mapRow),
+      data: rows.map(({ branch }) => mapBranch(branch)),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }
@@ -80,172 +128,408 @@ export class DraftRepository extends BaseRepository {
     const [row] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(drafts)
+      .innerJoin(contentDocuments, eq(contentDocuments.id, drafts.documentId))
+      .innerJoin(
+        contentRevisions,
+        eq(contentRevisions.id, drafts.headRevisionId),
+      )
       .where(this.buildFilter(filter))
     return Number(row?.count ?? 0)
   }
 
-  async findById(id: EntityId | string): Promise<DraftRow | null> {
-    const idBig = parseEntityId(id)
+  async findDocumentById(
+    id: EntityId | string,
+  ): Promise<ContentDocumentRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(contentDocuments)
+      .where(eq(contentDocuments.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapDocument(row) : null
+  }
+
+  async findDocumentByRef(
+    refType: DraftRefType,
+    refId: EntityId | string,
+  ): Promise<ContentDocumentRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(contentDocuments)
+      .where(
+        and(
+          eq(contentDocuments.refType, refType),
+          eq(contentDocuments.refId, parseEntityId(refId)),
+        ),
+      )
+      .limit(1)
+    return row ? mapDocument(row) : null
+  }
+
+  async findRevisionById(
+    id: EntityId | string,
+  ): Promise<ContentRevisionRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(contentRevisions)
+      .where(eq(contentRevisions.id, parseEntityId(id)))
+      .limit(1)
+    return row ? mapRevision(row) : null
+  }
+
+  async findRevisionsByIds(
+    ids: Array<EntityId | string>,
+  ): Promise<ContentRevisionRow[]> {
+    if (!ids.length) return []
+    const rows = await this.db
+      .select()
+      .from(contentRevisions)
+      .where(inArray(contentRevisions.id, ids.map(parseEntityId)))
+    return rows.map(mapRevision)
+  }
+
+  async findRevisionsByDocument(
+    documentId: EntityId | string,
+  ): Promise<ContentRevisionRow[]> {
+    const rows = await this.db
+      .select()
+      .from(contentRevisions)
+      .where(eq(contentRevisions.documentId, parseEntityId(documentId)))
+      .orderBy(asc(contentRevisions.createdAt))
+    return rows.map(mapRevision)
+  }
+
+  async findPublicationEventsByDocument(
+    documentId: EntityId | string,
+  ): Promise<ContentPublicationEventRow[]> {
+    const rows = await this.db
+      .select()
+      .from(contentPublicationEvents)
+      .where(eq(contentPublicationEvents.documentId, parseEntityId(documentId)))
+      .orderBy(asc(contentPublicationEvents.createdAt))
+    return rows.map(mapPublicationEvent)
+  }
+
+  async findBranchById(id: EntityId | string): Promise<DraftBranchRow | null> {
     const [row] = await this.db
       .select()
       .from(drafts)
-      .where(eq(drafts.id, idBig))
+      .where(eq(drafts.id, parseEntityId(id)))
       .limit(1)
-    return row ? mapRow(row) : null
+    return row ? mapBranch(row) : null
   }
 
-  async findByRef(
-    refType: DraftRefType,
-    refId: EntityId | string,
-  ): Promise<DraftRow | null> {
-    const [row] = await this.db
+  async findBranchesByDocument(
+    documentId: EntityId | string,
+    status: DraftBranchStatus = 'active',
+  ): Promise<DraftBranchRow[]> {
+    const rows = await this.db
       .select()
       .from(drafts)
       .where(
         and(
-          eq(drafts.refType, refType),
-          eq(drafts.refId, parseEntityId(refId)),
-        )!,
+          eq(drafts.documentId, parseEntityId(documentId)),
+          eq(drafts.status, status),
+        ),
       )
-      .limit(1)
-    return row ? mapRow(row) : null
+      .orderBy(desc(drafts.updatedAt), desc(drafts.createdAt))
+    return rows.map(mapBranch)
   }
 
-  async linkToPublished(
-    draftId: EntityId | string,
-    publishedId: EntityId | string,
+  async createDocumentWithRoot(
     refType: DraftRefType,
-  ): Promise<DraftRow | null> {
-    const [row] = await this.db
-      .update(drafts)
-      .set({
-        refType,
-        refId: parseEntityId(publishedId),
-        updatedAt: new Date(),
-      })
-      .where(eq(drafts.id, parseEntityId(draftId)))
-      .returning()
-    return row ? mapRow(row) : null
-  }
-
-  async create(input: DraftCreateInput): Promise<DraftRow> {
-    const id = this.snowflake.nextId()
-    const [row] = await this.db
-      .insert(drafts)
-      .values({
-        id,
-        refType: input.refType,
-        refId: input.refId ? parseEntityId(input.refId) : null,
-        title: input.title ?? '',
-        text: input.text ?? '',
-        content: input.content ?? null,
-        contentFormat: input.contentFormat,
-        images: input.images ?? null,
-        meta: input.meta ?? null,
-        typeSpecificData: input.typeSpecificData ?? null,
-        history: [],
-        version: 1,
-      })
-      .returning()
-    return mapRow(row)
-  }
-
-  async update(
-    id: EntityId | string,
-    patch: DraftPatchInput,
-    expectedVersion?: number,
-  ): Promise<DraftRow | null> {
-    const idBig = parseEntityId(id)
-    const update: Partial<typeof drafts.$inferInsert> = {
-      updatedAt: new Date(),
-    }
-    if (patch.refType !== undefined) update.refType = patch.refType
-    if (patch.refId !== undefined)
-      update.refId = patch.refId ? parseEntityId(patch.refId) : null
-    if (patch.title !== undefined) update.title = patch.title
-    if (patch.text !== undefined) update.text = patch.text
-    if (patch.content !== undefined) update.content = patch.content
-    if (patch.contentFormat !== undefined)
-      update.contentFormat = patch.contentFormat
-    if (patch.images !== undefined) update.images = patch.images
-    if (patch.meta !== undefined) update.meta = patch.meta
-    if (patch.typeSpecificData !== undefined)
-      update.typeSpecificData = patch.typeSpecificData
-    if (patch.version !== undefined) update.version = patch.version
-    if (patch.publishedVersion !== undefined)
-      update.publishedVersion = patch.publishedVersion
-    if (patch.history !== undefined)
-      update.history = patch.history as unknown as null
-    const [row] = await this.db
-      .update(drafts)
-      .set(update)
-      .where(
-        expectedVersion === undefined
-          ? eq(drafts.id, idBig)
-          : and(eq(drafts.id, idBig), eq(drafts.version, expectedVersion)),
-      )
-      .returning()
-    return row ? mapRow(row) : null
-  }
-
-  async appendHistoryAndBumpVersion(
-    id: EntityId | string,
-    entry: DraftHistoryEntry,
-    nextVersion: number,
-  ): Promise<DraftRow | null> {
-    const idBig = parseEntityId(id)
+    refId: EntityId | string | null,
+    snapshot: RevisionSnapshot,
+    published: boolean,
+  ): Promise<{
+    document: ContentDocumentRow
+    revision: ContentRevisionRow
+  }> {
     return this.db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(drafts)
-        .where(eq(drafts.id, idBig))
-        .limit(1)
-      if (!existing) return null
-      const history = ((existing.history as DraftHistoryEntry[] | null) ??
-        []) as DraftHistoryEntry[]
-      history.push(entry)
-      const [row] = await tx
-        .update(drafts)
-        .set({
-          history: history as unknown as null,
-          version: nextVersion,
-          updatedAt: new Date(),
+      const documentId = this.snowflake.nextId()
+      const revisionId = this.snowflake.nextId()
+      const [document] = await tx
+        .insert(contentDocuments)
+        .values({
+          id: documentId,
+          refId: refId ? parseEntityId(refId) : null,
+          refType,
         })
-        .where(eq(drafts.id, idBig))
         .returning()
-      return row ? mapRow(row) : null
+      const [revision] = await tx
+        .insert(contentRevisions)
+        .values({
+          ...snapshot,
+          documentId,
+          id: revisionId,
+          parentRevisionId: null,
+        })
+        .returning()
+      if (published) {
+        const [updated] = await tx
+          .update(contentDocuments)
+          .set({ publishedRevisionId: revisionId, updatedAt: new Date() })
+          .where(eq(contentDocuments.id, documentId))
+          .returning()
+        return {
+          document: mapDocument(updated),
+          revision: mapRevision(revision),
+        }
+      }
+      return {
+        document: mapDocument(document),
+        revision: mapRevision(revision),
+      }
     })
   }
 
-  async deleteById(id: EntityId | string): Promise<DraftRow | null> {
-    const idBig = parseEntityId(id)
+  async createBranch(
+    documentId: EntityId | string,
+    baseRevisionId: EntityId | string,
+    snapshot: RevisionSnapshot,
+    reuseBase: boolean,
+  ): Promise<{ branch: DraftBranchRow; headRevision: ContentRevisionRow }> {
+    return this.db.transaction(async (tx) => {
+      const documentIdValue = parseEntityId(documentId)
+      const baseId = parseEntityId(baseRevisionId)
+      const [base] = await tx
+        .select()
+        .from(contentRevisions)
+        .where(
+          and(
+            eq(contentRevisions.id, baseId),
+            eq(contentRevisions.documentId, documentIdValue),
+          ),
+        )
+        .limit(1)
+      if (!base) throw new Error('INVALID_BASE_REVISION')
+
+      let head = base
+      if (!reuseBase) {
+        ;[head] = await tx
+          .insert(contentRevisions)
+          .values({
+            ...snapshot,
+            documentId: documentIdValue,
+            id: this.snowflake.nextId(),
+            parentRevisionId: baseId,
+          })
+          .returning()
+      }
+      const [branch] = await tx
+        .insert(drafts)
+        .values({
+          baseRevisionId: baseId,
+          documentId: documentIdValue,
+          headRevisionId: head.id,
+          id: this.snowflake.nextId(),
+          status: 'active',
+        })
+        .returning()
+      return { branch: mapBranch(branch), headRevision: mapRevision(head) }
+    })
+  }
+
+  async saveBranch(
+    branchId: EntityId | string,
+    expectedHeadRevisionId: EntityId | string,
+    snapshot: RevisionSnapshot,
+  ): Promise<
+    | { branch: DraftBranchRow; headRevision: ContentRevisionRow; kind: 'ok' }
+    | { actualHeadRevisionId: EntityId; kind: 'conflict' }
+    | { kind: 'missing' }
+  > {
+    return this.db.transaction(async (tx) => {
+      const branchIdValue = parseEntityId(branchId)
+      const expectedHeadId = parseEntityId(expectedHeadRevisionId)
+      const [branch] = await tx
+        .select()
+        .from(drafts)
+        .where(eq(drafts.id, branchIdValue))
+        .for('update')
+        .limit(1)
+      if (!branch || branch.status !== 'active') return { kind: 'missing' }
+      if (branch.headRevisionId !== expectedHeadId) {
+        return {
+          actualHeadRevisionId: toEntityId(branch.headRevisionId)!,
+          kind: 'conflict',
+        }
+      }
+      const [head] = await tx
+        .select()
+        .from(contentRevisions)
+        .where(eq(contentRevisions.id, expectedHeadId))
+        .limit(1)
+      if (!head) return { kind: 'missing' }
+
+      if (sameRevisionContent(mapRevision(head), snapshot)) {
+        return {
+          branch: mapBranch(branch),
+          headRevision: mapRevision(head),
+          kind: 'ok',
+        }
+      }
+
+      const [revision] = await tx
+        .insert(contentRevisions)
+        .values({
+          ...snapshot,
+          documentId: branch.documentId,
+          id: this.snowflake.nextId(),
+          parentRevisionId: expectedHeadId,
+        })
+        .returning()
+      const [updated] = await tx
+        .update(drafts)
+        .set({ headRevisionId: revision.id, updatedAt: new Date() })
+        .where(
+          and(
+            eq(drafts.id, branchIdValue),
+            eq(drafts.headRevisionId, expectedHeadId),
+          ),
+        )
+        .returning()
+      if (!updated) {
+        throw new Error('DRAFT_HEAD_CAS_FAILED')
+      }
+      return {
+        branch: mapBranch(updated),
+        headRevision: mapRevision(revision),
+        kind: 'ok',
+      }
+    })
+  }
+
+  async archiveBranch(id: EntityId | string): Promise<DraftBranchRow | null> {
     const [row] = await this.db
-      .delete(drafts)
-      .where(eq(drafts.id, idBig))
+      .update(drafts)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(eq(drafts.id, parseEntityId(id)))
       .returning()
-    return row ? mapRow(row) : null
+    return row ? mapBranch(row) : null
+  }
+
+  async linkDocument(
+    documentId: EntityId | string,
+    refId: EntityId | string,
+  ): Promise<ContentDocumentRow | null> {
+    const [row] = await this.db
+      .update(contentDocuments)
+      .set({ refId: parseEntityId(refId), updatedAt: new Date() })
+      .where(eq(contentDocuments.id, parseEntityId(documentId)))
+      .returning()
+    return row ? mapDocument(row) : null
+  }
+
+  async recordPublication(
+    documentId: EntityId | string,
+    revisionId: EntityId | string,
+    expectedPublishedRevisionId: EntityId | string | null,
+  ): Promise<
+    | { document: ContentDocumentRow; kind: 'ok' }
+    | { actualPublishedRevisionId: EntityId | null; kind: 'conflict' }
+    | { kind: 'missing' }
+  > {
+    return this.db.transaction(async (tx) => {
+      const documentIdValue = parseEntityId(documentId)
+      const revisionIdValue = parseEntityId(revisionId)
+      const [document] = await tx
+        .select()
+        .from(contentDocuments)
+        .where(eq(contentDocuments.id, documentIdValue))
+        .for('update')
+        .limit(1)
+      if (!document) return { kind: 'missing' }
+      const expected = expectedPublishedRevisionId
+        ? parseEntityId(expectedPublishedRevisionId)
+        : null
+      if (document.publishedRevisionId !== expected) {
+        return {
+          actualPublishedRevisionId: toEntityId(document.publishedRevisionId),
+          kind: 'conflict',
+        }
+      }
+      const [revision] = await tx
+        .select({ id: contentRevisions.id })
+        .from(contentRevisions)
+        .where(
+          and(
+            eq(contentRevisions.id, revisionIdValue),
+            eq(contentRevisions.documentId, documentIdValue),
+          ),
+        )
+        .limit(1)
+      if (!revision) return { kind: 'missing' }
+
+      const [updated] = await tx
+        .update(contentDocuments)
+        .set({
+          publishedRevisionId: revisionIdValue,
+          updatedAt: new Date(),
+        })
+        .where(eq(contentDocuments.id, documentIdValue))
+        .returning()
+      await tx.insert(contentPublicationEvents).values({
+        documentId: documentIdValue,
+        id: this.snowflake.nextId(),
+        previousRevisionId: document.publishedRevisionId,
+        revisionId: revisionIdValue,
+      })
+      return { document: mapDocument(updated), kind: 'ok' }
+    })
+  }
+
+  async findAncestryIds(revisionId: EntityId | string): Promise<EntityId[]> {
+    const result = await this.db.execute<{ id: string }>(sql`
+      WITH RECURSIVE ancestry AS (
+        SELECT id, parent_revision_id
+        FROM content_revisions
+        WHERE id = ${parseEntityId(revisionId)}
+        UNION ALL
+        SELECT revision.id, revision.parent_revision_id
+        FROM content_revisions revision
+        INNER JOIN ancestry ON ancestry.parent_revision_id = revision.id
+      )
+      SELECT id FROM ancestry
+    `)
+    return result.rows.map(({ id }) => toEntityId(id)!)
+  }
+
+  async deleteDocumentByRef(
+    refType: DraftRefType,
+    refId: EntityId | string,
+  ): Promise<void> {
+    await this.db
+      .delete(contentDocuments)
+      .where(
+        and(
+          eq(contentDocuments.refType, refType),
+          eq(contentDocuments.refId, parseEntityId(refId)),
+        ),
+      )
   }
 
   private buildFilter(filter: DraftListFilter): SQL | undefined {
-    const filters: SQL[] = []
-    if (filter.refType) filters.push(eq(drafts.refType, filter.refType))
+    const conditions: SQL[] = [eq(drafts.status, filter.status ?? 'active')]
+    if (filter.refType) {
+      conditions.push(eq(contentDocuments.refType, filter.refType))
+    }
     if (filter.hasRef !== undefined) {
-      filters.push(
+      conditions.push(
         filter.hasRef
-          ? sql`${drafts.refId} is not null`
-          : sql`${drafts.refId} is null`,
+          ? sql`${contentDocuments.refId} is not null`
+          : isNull(contentDocuments.refId),
       )
     }
     if (filter.search) {
       const pattern = `%${filter.search}%`
-      filters.push(
+      conditions.push(
         or(
-          ilike(drafts.title, pattern),
-          ilike(drafts.text, pattern),
-          ilike(drafts.content, pattern),
+          ilike(contentRevisions.title, pattern),
+          ilike(contentRevisions.text, pattern),
+          ilike(contentRevisions.content, pattern),
         )!,
       )
     }
-    return filters.length > 0 ? and(...filters) : undefined
+    return conditions.length ? and(...conditions) : undefined
   }
 }

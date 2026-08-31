@@ -6,10 +6,10 @@ import type {
 } from '@mx-space/editor'
 
 export interface MigrationMemberPrecondition {
-  kind: 'source' | 'draft' | 'translation'
+  kind: 'source' | 'branch' | 'translation'
   id: string
   hash: string
-  version?: number
+  headRevisionId?: string
 }
 
 export interface ExistingLexicalConversionResult {

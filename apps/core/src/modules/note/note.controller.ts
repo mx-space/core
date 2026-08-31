@@ -1,17 +1,7 @@
-import {
-  Body,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common'
+import { Body, Delete, Get, Param, Patch, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { IpRecord } from '~/common/decorators/ip.decorator'
 import { IpLocation } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
@@ -47,7 +37,6 @@ import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
   ListQueryDto,
   NidType,
-  NoteDto,
   NotePasswordQueryDto,
   NoteQueryDto,
   NoteSlugDateParamsDto,
@@ -579,20 +568,6 @@ export class NoteController {
     return withMeta(listData, metaBuilder.build())
   }
 
-  @Post('/')
-  @HTTPDecorators.Idempotence()
-  @Auth()
-  create(@Body() body: NoteDto) {
-    return this.noteService.create(body as unknown as NoteModel)
-  }
-
-  @Put('/:id')
-  @Auth()
-  async modify(@Body() body: NoteDto, @Param() params: EntityIdDto) {
-    await this.noteService.updateById(params.id, body as unknown as NoteModel)
-    return this.noteService.findOneByIdOrNid(params.id)
-  }
-
   @Patch('/:id')
   @Auth()
   async patch(@Body() body: PartialNoteDto, @Param() params: EntityIdDto) {
@@ -798,7 +773,6 @@ export class NoteController {
   ) {
     await this.noteService.updateById(params.id, {
       isPublished: body.isPublished,
-      preparedAiResources: body.preparedAiResources,
     })
     return { success: true }
   }

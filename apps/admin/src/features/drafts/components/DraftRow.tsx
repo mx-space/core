@@ -20,9 +20,9 @@ export function DraftRow(props: {
   selected: boolean
 }) {
   const { t } = useI18n()
-  const meta = refTypeMeta[props.draft.refType]
+  const meta = refTypeMeta[props.draft.document.refType]
   const Icon = meta.icon
-  const title = props.draft.title || t('drafts.row.untitled')
+  const title = props.draft.headRevision.title || t('drafts.row.untitled')
 
   const menuItems = () => buildMenuItemsFromActions(props.actions, props.draft)
 
@@ -62,19 +62,18 @@ export function DraftRow(props: {
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="truncate text-sm font-medium text-fg">{title}</h3>
-            <span className="text-xs tabular-nums text-fg-subtle">
-              v{props.draft.version}
-            </span>
           </div>
           <div className="mt-1 flex flex-wrap gap-2 text-xs text-fg-muted">
             <span>
-              {props.draft.refId
+              {props.draft.document.refId
                 ? t('drafts.row.editing')
                 : t('drafts.row.creating')}
             </span>
-            <span>{props.draft.contentFormat ?? 'markdown'}</span>
-            <time dateTime={props.draft.updatedAt}>
-              {relativeTimeFromNow(props.draft.updatedAt)}
+            <span>{props.draft.headRevision.contentFormat}</span>
+            <time dateTime={props.draft.updatedAt ?? props.draft.createdAt}>
+              {relativeTimeFromNow(
+                props.draft.updatedAt ?? props.draft.createdAt,
+              )}
             </time>
           </div>
         </div>

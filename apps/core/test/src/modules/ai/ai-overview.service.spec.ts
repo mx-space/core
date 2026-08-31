@@ -77,6 +77,9 @@ function createService(
   const taskQueueService = {
     getTasks: vi.fn(async () => ({ data: overrides.tasks ?? [], total: 0 })),
   }
+  const multilang = {
+    computeContentHash: vi.fn((text: string) => `hash:${text}`),
+  }
 
   const service = new AiOverviewService(
     repository as unknown as AiOverviewRepository,
@@ -84,6 +87,7 @@ function createService(
     configService as never,
     generationMetrics as never,
     taskQueueService as never,
+    multilang as never,
   )
 
   return {
@@ -93,6 +97,7 @@ function createService(
     databaseService,
     generationMetrics,
     taskQueueService,
+    multilang,
   }
 }
 
@@ -196,6 +201,41 @@ describe('AiOverviewService.getOverviewGrouped', () => {
 })
 
 describe('AiOverviewService.getArticleOverview', () => {
+  it('marks generated resources whose source no longer matches the article', async () => {
+    const { service } = createService({
+      documents: { '300': { text: 'current body' } as never },
+      repository: {
+        summaryAssets: vi.fn(async () => [
+          {
+            id: 's1',
+            hash: 'hash:older body',
+            lang: 'zh',
+            summary: 'old summary',
+            isTranslation: false,
+            sourceLang: 'zh',
+            createdAt: new Date(),
+          },
+        ]),
+        insightsAssets: vi.fn(async () => [
+          {
+            id: 'i1',
+            hash: 'hash:current body',
+            lang: 'zh',
+            content: 'current insights',
+            isTranslation: false,
+            sourceLang: 'zh',
+            createdAt: new Date(),
+          },
+        ]),
+      } as never,
+    })
+
+    const detail = await service.getArticleOverview('300')
+
+    expect(detail.assets.summary[0].stale).toBe(true)
+    expect(detail.assets.insights[0].stale).toBe(false)
+  })
+
   it('sums cost per resource type and across all of them', async () => {
     const { service } = createService({
       models: ['gpt-5-mini'],

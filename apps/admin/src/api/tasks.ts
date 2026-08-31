@@ -1,6 +1,6 @@
 import { deleteJson, getJson, requestJson } from './http'
 
-export type TaskScope = 'ai' | 'cron' | 'enrichment'
+export type TaskScope = 'ai' | 'content' | 'cron' | 'enrichment'
 
 export enum AITaskType {
   Summary = 'ai:summary',

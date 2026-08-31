@@ -14,11 +14,9 @@ import { MarkdownToLexicalMigrationDescriptorSchema } from '~/modules/content-mi
 import { createPagerSchema } from '~/shared/dto/pager.dto'
 import {
   validateLexicalCreateContentPair,
-  validateLexicalPartialContentPair,
   WriteBaseSchema,
 } from '~/shared/schema'
 import { ImageArraySchema } from '~/shared/schema/image.schema'
-import { ContentFormat } from '~/shared/types/content-format.type'
 
 /**
  * Coordinate schema
@@ -58,12 +56,6 @@ const NoteBaseSchema = WriteBaseSchema.extend({
   location: z.string().optional().nullable(),
   topicId: zEntityId.optional().nullable(),
   images: ImageArraySchema.optional().default([]),
-  /** ID of the associated draft; marked as published when this note is published */
-  draftId: zEntityId.optional(),
-  skipAiAutoGeneration: z.boolean().optional(),
-  preparedAiResources: z
-    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
-    .optional(),
   migration: MarkdownToLexicalMigrationDescriptorSchema.optional(),
 })
 
@@ -77,21 +69,12 @@ export class NoteDto extends createZodDto(NoteSchema) {}
  * Partial note schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
  */
-export const PartialNoteSchema = NoteBaseSchema.extend({
-  title: z
-    .string()
-    .transform((val) => (val.length === 0 ? 'Untitled' : val))
-    .optional(),
-  contentFormat: z
-    .enum([ContentFormat.Markdown, ContentFormat.Lexical])
-    .optional(),
-  meta: z.record(z.string(), z.any()).optional().nullable(),
-  isPublished: z.boolean().optional(),
+export const PartialNoteSchema = z.object({
   bookmark: z.boolean().optional(),
-  images: ImageArraySchema.optional(),
+  mood: z.string().nullable().optional(),
+  topicId: zEntityId.nullable().optional(),
+  weather: z.string().nullable().optional(),
 })
-  .partial()
-  .superRefine(validateLexicalPartialContentPair)
 
 export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
 
@@ -163,9 +146,6 @@ export class NoteSlugDateParamsDto extends createZodDto(
  */
 export const SetNotePublishStatusSchema = z.object({
   isPublished: z.boolean(),
-  preparedAiResources: z
-    .array(z.enum(['summary', 'insights', 'translation', 'tts']))
-    .optional(),
 })
 
 export class SetNotePublishStatusDto extends createZodDto(

@@ -13,11 +13,8 @@ export interface DraftDiffStats {
 }
 
 export interface VersionItem {
-  baseVersion?: number
+  id: string
   isCurrent: boolean
-  isFullSnapshot?: boolean
-  refVersion?: number
   savedAt: string
   title: string
-  version: number
 }

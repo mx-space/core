@@ -125,7 +125,7 @@ export function DraftsRouteViewContent() {
       const title =
         targets.length === 1
           ? t('drafts.detail.confirmDelete', {
-              title: targets[0].title || t('drafts.row.untitled'),
+              title: targets[0].headRevision.title || t('drafts.row.untitled'),
             })
           : t('drafts.list.confirmBatchDelete', { count: targets.length })
       const confirmed = await confirmDialog({ destructive: true, title })

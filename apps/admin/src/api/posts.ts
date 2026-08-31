@@ -1,8 +1,7 @@
-import type { Image, PaginateResult } from '~/models/base'
+import type { PaginateResult } from '~/models/base'
 import type { PostModel } from '~/models/post'
 
-import type { MarkdownToLexicalMigrationDescriptor } from './content-migrations'
-import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
+import { deleteJson, getJson, patchJson } from './http'
 
 export type PostSortKey = 'createdAt' | 'modifiedAt' | 'pinAt'
 export type PostSortOrder = 'asc' | 'desc'
@@ -21,27 +20,9 @@ export interface SearchPostsParams {
   size: number
 }
 
-export interface CreatePostData {
-  categoryId: string
-  content?: string
-  contentFormat?: 'lexical' | 'markdown'
-  copyright?: boolean
-  draftId?: string
-  images?: Image[]
-  isPremium?: boolean
-  isPublished?: boolean
-  migration?: MarkdownToLexicalMigrationDescriptor
-  meta?: Record<string, unknown>
-  pin?: null | string
-  pinOrder?: null | number
-  preparedAiResources?: string[]
-  relatedId?: string[]
-  skipAiAutoGeneration?: boolean
-  slug?: string
-  summary?: null | string
-  tags?: string[]
-  text: string
-  title: string
+export interface PatchPostData {
+  categoryId?: string
+  pinAt?: null | string
 }
 
 export function getPosts(params: GetPostsParams) {
@@ -66,28 +47,15 @@ export function getPostById(id: string) {
   return getJson<PostModel>(`/posts/${id}`)
 }
 
-export function createPost(data: CreatePostData) {
-  return postJson<PostModel, CreatePostData>('/posts', data)
+export function patchPost(id: string, data: PatchPostData) {
+  return patchJson<PostModel, PatchPostData>(`/posts/${id}`, data)
 }
 
-export function updatePost(id: string, data: Partial<CreatePostData>) {
-  return putJson<PostModel, Partial<CreatePostData>>(`/posts/${id}`, data)
-}
-
-export function patchPost(
-  id: string,
-  data: Partial<PostModel> & {
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  },
-) {
-  return patchJson<
-    PostModel,
-    Partial<PostModel> & {
-      preparedAiResources?: string[]
-      skipAiAutoGeneration?: boolean
-    }
-  >(`/posts/${id}`, data)
+export function patchPostPublish(id: string, isPublished: boolean) {
+  return patchJson<PostModel, { isPublished: boolean }>(
+    `/posts/${id}/publish`,
+    { isPublished },
+  )
 }
 
 export function deletePost(id: string) {

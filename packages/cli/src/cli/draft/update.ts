@@ -10,7 +10,7 @@ import {
   resolveCategoryRefs,
   toPostFlagInputs,
 } from '../post/_flags'
-import { splitDraftBody } from './_shared'
+import { normalizeDraftRow, splitDraftBody } from './_shared'
 
 const id = Args.text({ name: 'id' })
 
@@ -37,14 +37,28 @@ export const update = Command.make(
 
       const api = yield* Api
       const renderer = yield* Renderer
+      const current = normalizeDraftRow(
+        yield* api.request(`/drafts/${encodeURIComponent(id)}`),
+      )
+      if (!current) {
+        return yield* Effect.fail(
+          new ValidationFailed({ message: `draft not found: ${id}` }),
+        )
+      }
       const res = yield* api.request(`/drafts/${encodeURIComponent(id)}`, {
         method: 'PUT',
-        body,
+        body: {
+          data: {
+            ...current.headRevision,
+            ...body,
+            typeSpecificData: {
+              ...current.headRevision.typeSpecificData,
+              ...(body.typeSpecificData as Record<string, unknown>),
+            },
+          },
+          expectedHeadRevisionId: current.headRevisionId,
+        },
       })
       yield* renderer.emitSuccess(rest.silent ? { ok: true, id } : res)
     }),
-).pipe(
-  Command.withDescription(
-    'update a draft (bumps its version and records history on content change)',
-  ),
-)
+).pipe(Command.withDescription('append a revision to one draft branch'))

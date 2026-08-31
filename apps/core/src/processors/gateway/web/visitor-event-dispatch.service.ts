@@ -156,6 +156,16 @@ export class VisitorEventDispatchService implements OnModuleInit {
     })
   }
 
+  @OnVisitorEvent(BusinessEvents.POST_UNPUBLISH)
+  onPostUnpublish(payload: { id: string }) {
+    this.onPostDelete(payload)
+  }
+
+  @OnVisitorEvent(BusinessEvents.POST_REPUBLISH)
+  onPostRepublish(payload: { id: string }) {
+    return this.onPostCreate(payload)
+  }
+
   // --- Note ---
 
   @OnVisitorEvent(BusinessEvents.NOTE_CREATE)
@@ -199,6 +209,16 @@ export class VisitorEventDispatchService implements OnModuleInit {
     this.webGateway.broadcast(BusinessEvents.NOTE_DELETE, payload.id, {
       rooms: [buildArticleRoomName(payload.id)],
     })
+  }
+
+  @OnVisitorEvent(BusinessEvents.NOTE_UNPUBLISH)
+  onNoteUnpublish(payload: { id: string }) {
+    this.onNoteDelete(payload)
+  }
+
+  @OnVisitorEvent(BusinessEvents.NOTE_REPUBLISH)
+  onNoteRepublish(payload: { id: string }) {
+    return this.onNoteCreate(payload)
   }
 
   // --- Page ---

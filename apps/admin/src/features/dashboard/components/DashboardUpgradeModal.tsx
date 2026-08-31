@@ -55,7 +55,7 @@ function DashboardUpgradeModal() {
   }, [output])
 
   return (
-    <div className="flex h-[min(82vh,42rem)] w-full flex-col">
+    <div className="flex h-[min(82svh,42rem)] w-full flex-col">
       <ModalHeader
         actions={
           running ? (
@@ -88,7 +88,7 @@ export function presentDashboardUpgrade() {
     {},
     {
       modalProps: {
-        className: 'h-[min(82vh,42rem)]',
+        className: 'h-[min(82svh,42rem)]',
         popupStyle: { width: 'min(92vw, 46rem)' },
       },
     },

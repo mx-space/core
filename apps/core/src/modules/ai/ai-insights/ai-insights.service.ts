@@ -16,7 +16,6 @@ import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
-import { AiTaskService } from '../ai-task/ai-task.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiInsightsAdapter } from './ai-insights.adapter'
@@ -36,7 +35,6 @@ export class AiInsightsService implements OnModuleInit {
     private readonly adapter: AiInsightsAdapter,
     private readonly multilang: MultilangGenerationService,
     private readonly taskProcessor: TaskQueueProcessor,
-    private readonly aiTaskService: AiTaskService,
     private readonly generationMetrics: AiGenerationMetricsService,
   ) {}
 
@@ -311,98 +309,5 @@ export class AiInsightsService implements OnModuleInit {
   @OnEvent(BusinessEvents.PAGE_DELETE)
   async handleDeleteArticle(event: { id: string }) {
     await this.deleteInsightsByArticleId(event.id)
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  async handleCreateArticle(event: {
-    id: string
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  }) {
-    if (
-      event.skipAiAutoGeneration ||
-      event.preparedAiResources?.includes('insights')
-    ) {
-      return
-    }
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableInsights ||
-      !aiConfig.enableAutoGenerateInsightsOnCreate
-    ) {
-      return
-    }
-
-    const minLen = aiConfig.insightsMinTextLength ?? 0
-    if (minLen > 0) {
-      try {
-        const { article } = await this.adapter.resolveArticleDetailed(event.id)
-        if ((article.text?.length ?? 0) < minLen) {
-          this.logger.debug(
-            `AI auto insights skipped (text below threshold ${minLen}): article=${event.id}`,
-          )
-          return
-        }
-      } catch {
-        return
-      }
-    }
-
-    this.logger.log(`AI auto insights task created: article=${event.id}`)
-    await this.aiTaskService.createInsightsTask({ refId: event.id })
-  }
-
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  async handleUpdateArticle(event: {
-    id: string
-    preparedAiResources?: string[]
-    skipAiAutoGeneration?: boolean
-  }) {
-    if (
-      event.skipAiAutoGeneration ||
-      event.preparedAiResources?.includes('insights')
-    ) {
-      return
-    }
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableInsights ||
-      !aiConfig.enableAutoGenerateInsightsOnUpdate
-    ) {
-      return
-    }
-    let article: { text: string }
-    let sourceLang: string
-    try {
-      const resolved = await this.adapter.resolveArticleDetailed(event.id)
-      article = resolved.article
-      sourceLang = resolved.sourceLang
-    } catch {
-      return
-    }
-    const minLen = aiConfig.insightsMinTextLength ?? 0
-    if (minLen > 0 && (article.text?.length ?? 0) < minLen) {
-      this.logger.debug(
-        `AI auto insights skipped (text below threshold ${minLen}): article=${event.id}`,
-      )
-      return
-    }
-    const newHash = this.multilang.computeContentHash(article.text)
-    const existing = await this.adapter.findBase(event.id, sourceLang)
-    if (!existing) {
-      this.logger.log(
-        `AI auto insights task created (update init): article=${event.id}`,
-      )
-      await this.aiTaskService.createInsightsTask({ refId: event.id })
-      return
-    }
-    const stale = existing.hash !== newHash
-    if (!stale) return
-    this.logger.log(
-      `AI auto insights task created (update): article=${event.id}`,
-    )
-    await this.aiTaskService.createInsightsTask({ refId: event.id })
   }
 }

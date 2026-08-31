@@ -116,11 +116,16 @@ export type AppErrorPayloadMap = {
 
   // draft
   [AppErrorCode.DRAFT_NOT_FOUND]: WithId
-  [AppErrorCode.DRAFT_HISTORY_NOT_FOUND]: undefined
-  [AppErrorCode.DRAFT_VERSION_CONFLICT]: {
-    actualVersion: number
-    expectedVersion: number
-    id: string
+  [AppErrorCode.CONTENT_REVISION_NOT_FOUND]: WithId
+  [AppErrorCode.DRAFT_HEAD_CONFLICT]: {
+    actualHeadRevisionId: string
+    branchId: string
+    expectedHeadRevisionId: string
+  }
+  [AppErrorCode.PUBLISHED_REVISION_CHANGED]: {
+    actualPublishedRevisionId: string | null
+    documentId: string
+    expectedPublishedRevisionId: string | null
   }
 
   // document / helper

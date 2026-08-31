@@ -5,14 +5,8 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { resolveTargetLanguages } from '../ai-language.util'
-import { AiTaskService } from '../ai-task/ai-task.service'
-import { AiTranslationRepository } from './ai-translation.repository'
 import { AiTranslationService } from './ai-translation.service'
-import type {
-  ArticleDocument,
-  ArticleEventPayload,
-} from './ai-translation.types'
+import type { ArticleEventPayload } from './ai-translation.types'
 import { TranslationEntryService } from './translation-entry.service'
 
 interface CategoryEventPayload {
@@ -44,8 +38,6 @@ export class AiTranslationEventHandlerService {
     private readonly aiTranslationService: AiTranslationService,
     private readonly configService: ConfigsService,
     private readonly databaseService: DatabaseService,
-    private readonly aiTaskService: AiTaskService,
-    private readonly aiTranslationRepository: AiTranslationRepository,
     private readonly translationEntryService: TranslationEntryService,
   ) {}
 
@@ -56,118 +48,6 @@ export class AiTranslationEventHandlerService {
     const id = this.aiTranslationService.extractIdFromEvent(event)
     if (!id) return
     await this.aiTranslationService.deleteTranslationsByRefId(id)
-  }
-
-  private async resolveAutoTranslationContext(event: ArticleEventPayload) {
-    const aiConfig = await this.configService.get('ai')
-
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return null
-    }
-
-    const id = this.aiTranslationService.extractIdFromEvent(event)
-    if (!id) return null
-
-    const article = await this.databaseService.findGlobalById(id)
-    if (!article || !this.aiTranslationService.isArticleVisible(article)) {
-      return null
-    }
-
-    const targetLanguages = resolveTargetLanguages(
-      undefined,
-      aiConfig.translationTargetLanguages,
-    )
-    if (!targetLanguages.length) {
-      return null
-    }
-
-    return { id, article, targetLanguages }
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.PAGE_CREATE)
-  async handleCreateArticle(event: ArticleEventPayload) {
-    if (
-      ('skipAiAutoGeneration' in event && event.skipAiAutoGeneration) ||
-      ('preparedAiResources' in event &&
-        event.preparedAiResources?.includes('translation'))
-    ) {
-      return
-    }
-    const context = await this.resolveAutoTranslationContext(event)
-    if (!context) return
-    const { id, targetLanguages } = context
-
-    await this.aiTranslationService.cancelActiveTranslationTasks(id)
-
-    this.logger.log(
-      `AI auto translation task created: article=${id} targets=${targetLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages,
-    })
-  }
-
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  @OnEvent(BusinessEvents.PAGE_UPDATE)
-  async handleUpdateArticle(event: ArticleEventPayload) {
-    if (
-      ('skipAiAutoGeneration' in event && event.skipAiAutoGeneration) ||
-      ('preparedAiResources' in event &&
-        event.preparedAiResources?.includes('translation'))
-    ) {
-      return
-    }
-    const context = await this.resolveAutoTranslationContext(event)
-    if (!context) return
-    const { id, article, targetLanguages } = context
-
-    const existingTranslations =
-      await this.aiTranslationRepository.listByRefId(id)
-    if (!existingTranslations.length) {
-      await this.aiTranslationService.cancelActiveTranslationTasks(id)
-      this.logger.log(
-        `AI auto translation task created (update init): article=${id} targets=${targetLanguages.join(',')}`,
-      )
-      await this.aiTaskService.createTranslationTask({
-        refId: id,
-        targetLanguages,
-      })
-      return
-    }
-
-    const document = article.document as ArticleDocument
-    const sourceLang =
-      this.aiTranslationService.getMetaLang(document) ||
-      existingTranslations[0]?.sourceLang ||
-      'unknown'
-    const newHash = this.aiTranslationService.computeContentHash(
-      this.aiTranslationService.toArticleContent(document),
-      sourceLang,
-    )
-
-    const outdatedLanguages = existingTranslations
-      .filter((t) => t.hash !== newHash)
-      .map((t) => t.lang)
-
-    if (!outdatedLanguages.length) {
-      return
-    }
-
-    await this.aiTranslationService.cancelActiveTranslationTasks(id)
-    this.logger.log(
-      `AI auto translation task created (update): article=${id} targets=${outdatedLanguages.join(',')}`,
-    )
-    await this.aiTaskService.createTranslationTask({
-      refId: id,
-      targetLanguages: outdatedLanguages,
-    })
   }
 
   // === Translation Entry: Category ===

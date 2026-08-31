@@ -30,7 +30,7 @@ function UpdateReleaseModal(props: UpdateReleaseModalProps) {
   const details = releaseQuery.data
 
   return (
-    <div className="flex max-h-[min(86vh,42rem)] w-full flex-col">
+    <div className="flex max-h-[min(86svh,42rem)] w-full flex-col">
       <ModalHeader
         title={props.release.title || t('dashboard.release.fallbackTitle')}
       />
@@ -96,7 +96,7 @@ export function presentUpdateRelease(release: ReleaseModalState) {
     { release },
     {
       modalProps: {
-        className: 'max-h-[min(86vh,42rem)]',
+        className: 'max-h-[min(86svh,42rem)]',
         popupStyle: { width: 'min(92vw, 40rem)' },
       },
     },

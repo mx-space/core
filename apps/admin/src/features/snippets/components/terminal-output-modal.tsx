@@ -1,17 +1,16 @@
-import { Loader2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { EventSourcePolyfill } from 'event-source-polyfill'
-import { toast } from 'sonner'
+import '@xterm/xterm/css/xterm.css'
 
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
+import { EventSourcePolyfill } from 'event-source-polyfill'
+import { Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 
 import { useI18n } from '~/i18n'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present } from '~/ui/feedback/modal-imperative'
 import { cn } from '~/utils/cn'
-
-import '@xterm/xterm/css/xterm.css'
 
 interface TerminalOutputModalProps {
   onFinish?: () => void
@@ -87,7 +86,7 @@ function TerminalOutputModal(props: TerminalOutputModalProps) {
   }, [props.onFinish, props.url])
 
   return (
-    <div className="flex h-[min(82vh,42rem)] w-full flex-col">
+    <div className="flex h-[min(82svh,42rem)] w-full flex-col">
       <ModalHeader
         actions={
           connecting || running ? (
@@ -130,7 +129,7 @@ function TerminalOutputModal(props: TerminalOutputModalProps) {
 export function presentTerminalOutput(options: TerminalOutputModalProps) {
   return present<TerminalOutputModalProps>(TerminalOutputModal, options, {
     modalProps: {
-      className: 'h-[min(82vh,42rem)]',
+      className: 'h-[min(82svh,42rem)]',
       popupStyle: { width: 'min(92vw, 48rem)' },
     },
   })

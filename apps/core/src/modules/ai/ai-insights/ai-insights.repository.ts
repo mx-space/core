@@ -257,23 +257,6 @@ export class AiInsightsRepository extends BaseRepository {
     return result.length > 0
   }
 
-  async deleteTranslationsWithDifferentHash(
-    refId: EntityId | string,
-    hash: string,
-  ): Promise<number> {
-    const result = await this.db
-      .delete(aiInsights)
-      .where(
-        and(
-          eq(aiInsights.refId, parseEntityId(refId)),
-          eq(aiInsights.isTranslation, true),
-          sql`${aiInsights.hash} <> ${hash}`,
-        )!,
-      )
-      .returning({ id: aiInsights.id })
-    return result.length
-  }
-
   async updateContent(
     id: EntityId | string,
     content: string,

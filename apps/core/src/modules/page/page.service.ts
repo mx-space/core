@@ -45,12 +45,6 @@ export class PageService {
     return this.pageRepository
   }
 
-  private normalizeMeta(meta: unknown) {
-    if (meta === undefined) return undefined
-    if (meta === null) return null
-    return meta as Record<string, unknown>
-  }
-
   async list(page = 1, size = 10) {
     return this.pageRepository.list(page, size)
   }
@@ -79,10 +73,9 @@ export class PageService {
     return this.pageRepository.findManyByIds(ids)
   }
 
-  public async create(doc: PageModel & { draftId?: string }) {
+  public async create(doc: PageModel) {
     this.lexicalService.normalizeContentForStorage(doc)
 
-    const { draftId } = doc
     const count = await this.pageRepository.count()
     if (count >= 10) {
       throw createAppException(AppErrorCode.MAX_COUNT_LIMIT)
@@ -98,18 +91,9 @@ export class PageService {
       content: doc.content,
       contentFormat: doc.contentFormat ?? ContentFormat.Markdown,
       images: doc.images as unknown[],
-      meta: this.normalizeMeta(doc.meta) as Record<string, unknown> | null,
+      meta: doc.meta,
       order: doc.order,
     })
-
-    if (draftId) {
-      await this.fileReferenceService.removeReferencesForDocument(
-        draftId,
-        FileReferenceType.Draft,
-      )
-      await this.draftService.linkToPublished(draftId, res.id)
-      await this.draftService.markAsPublished(draftId)
-    }
 
     scheduleManager.schedule(async () => {
       await this.fileReferenceService.activateReferences(
@@ -146,13 +130,13 @@ export class PageService {
   public async updateById(
     id: string,
     doc: Partial<PageModel> & {
-      draftId?: string
       migration?: MarkdownToLexicalMigrationDescriptor
+      migrationBranchId?: string
     },
   ) {
     this.lexicalService.normalizeContentForStorage(doc)
 
-    const { draftId, migration } = doc
+    const { migration, migrationBranchId } = doc
 
     const oldDoc = await this.findById(id)
     if (!oldDoc) {
@@ -197,10 +181,7 @@ export class PageService {
       content: patch.content,
       contentFormat: patch.contentFormat,
       images: patch.images as unknown[] | undefined,
-      meta:
-        patch.meta !== undefined
-          ? (this.normalizeMeta(patch.meta) as Record<string, unknown> | null)
-          : undefined,
+      meta: patch.meta,
       order: patch.order,
     }
     let newDoc
@@ -214,7 +195,7 @@ export class PageService {
         refType: DraftRefType.Page,
         refId: id,
         descriptor: migration,
-        draftId,
+        branchId: migrationBranchId,
         patch: repositoryPatch,
         source: {
           title: repositoryPatch.title ?? oldDoc.title,
@@ -238,10 +219,6 @@ export class PageService {
 
     if (!newDoc) {
       throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
-    }
-
-    if (draftId && !migration) {
-      await this.draftService.markAsPublished(draftId)
     }
 
     scheduleManager.schedule(async () => {

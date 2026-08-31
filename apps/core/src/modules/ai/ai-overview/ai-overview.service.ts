@@ -9,11 +9,17 @@ import {
   type RefArticleInfo,
 } from '~/processors/database/database.service'
 import { TaskQueueService, TaskStatus } from '~/processors/task-queue'
+import { computeContentHash } from '~/utils/content.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
-import { readArticleMetaLang } from '../ai-translation/article-content.util'
+import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
+import type { ArticleDocument } from '../ai-translation/ai-translation.types'
+import {
+  readArticleMetaLang,
+  toArticleContent,
+} from '../ai-translation/article-content.util'
 import { AiOverviewRepository } from './ai-overview.repository'
 import type { GetOverviewGroupedQueryInput } from './ai-overview.schema'
 import type {
@@ -40,6 +46,7 @@ export class AiOverviewService {
     private readonly configService: ConfigsService,
     private readonly generationMetrics: AiGenerationMetricsService,
     private readonly taskQueueService: TaskQueueService,
+    private readonly multilang: MultilangGenerationService,
   ) {}
 
   async getOverviewGrouped(query: GetOverviewGroupedQueryInput) {
@@ -145,6 +152,44 @@ export class AiOverviewService {
         this.findActiveTasks(refId),
       ])
 
+    const document = found.document as MetaBearing &
+      ArticleDocument & { modifiedAt?: Date | null }
+    const articleHash = this.multilang.computeContentHash(document.text ?? '')
+    const translationRevisions = new Map(
+      translation.map((row) => [row.lang, row.updatedAt ?? row.createdAt]),
+    )
+    const assets: AiOverviewDetail['assets'] = {
+      summary: summary.map(({ hash, ...asset }) => ({
+        ...asset,
+        stale: hash !== articleHash,
+      })),
+      insights: insights.map(({ hash, ...asset }) => ({
+        ...asset,
+        stale: hash !== articleHash,
+      })),
+      translation: translation.map(({ hash, ...asset }) => ({
+        ...asset,
+        stale:
+          hash !==
+          computeContentHash(toArticleContent(document), asset.sourceLang),
+      })),
+      tts: tts.map(({ sourceModifiedAt, ...asset }) => {
+        const sourceAt = asset.isTranslation
+          ? translationRevisions.get(asset.lang)
+          : document.modifiedAt
+        const generatedAt = asset.updatedAt ?? asset.createdAt
+        return {
+          ...asset,
+          stale: Boolean(
+            (document.modifiedAt &&
+              sourceModifiedAt &&
+              document.modifiedAt > sourceModifiedAt) ||
+            (sourceAt && sourceAt > generatedAt),
+          ),
+        }
+      }),
+    }
+
     const coverage: ArticleCoverage = buildArticleCoverage({
       type: found.type,
       metaLang: normaliseMetaLang(found.document as MetaBearing),
@@ -160,7 +205,7 @@ export class AiOverviewService {
       article,
       coverage,
       activeTasks,
-      assets: { summary, insights, translation, tts },
+      assets,
       cost,
     }
   }

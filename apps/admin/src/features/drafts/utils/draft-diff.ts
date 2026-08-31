@@ -1,49 +1,34 @@
-import type { DraftHistoryListItem, DraftModel } from '~/models/draft'
+import type { ContentRevision, RevisionSnapshot } from '~/models/draft'
+
 import type { DraftDiffStats, VersionItem } from '../types/drafts'
 
 export function buildVersionItems(
-  draft: DraftModel,
-  history: DraftHistoryListItem[] | undefined,
+  headRevisionId: string,
+  revisions: ContentRevision[] | undefined,
 ): VersionItem[] {
-  const currentSavedAt = draft.updatedAt || draft.createdAt
-  const currentItem: VersionItem = {
-    isCurrent: true,
-    savedAt: currentSavedAt,
-    title: draft.title,
-    version: draft.version,
-  }
-  const historyItems = (history ?? [])
-    .filter((item) => item.version !== draft.version)
-    .map((item) => ({
-      baseVersion: item.baseVersion,
-      isCurrent: false,
-      isFullSnapshot: item.isFullSnapshot,
-      refVersion: item.refVersion,
-      savedAt: item.savedAt,
-      title: item.title,
-      version: item.version,
-    }))
-
-  return [currentItem, ...historyItems].sort((a, b) => b.version - a.version)
+  return (revisions ?? []).map((revision) => ({
+    id: revision.id,
+    isCurrent: revision.id === headRevisionId,
+    savedAt: revision.createdAt,
+    title: revision.title,
+  }))
 }
 
 export function computeDiffStats(
-  selectedDraft: DraftModel,
-  currentDraft: DraftModel,
+  selected: RevisionSnapshot,
+  current: RevisionSnapshot,
 ): DraftDiffStats {
-  const selectedText = getDraftTextForDiff(selectedDraft)
-  const currentText = getDraftTextForDiff(currentDraft)
-
+  const selectedText = getDraftTextForDiff(selected)
+  const currentText = getDraftTextForDiff(current)
   return {
     delta: currentText.length - selectedText.length,
     isSame: selectedText === currentText,
   }
 }
 
-export function getDraftTextForDiff(draft: DraftModel) {
-  if (draft.contentFormat === 'lexical' && draft.content) {
-    return draft.text || draft.content
+export function getDraftTextForDiff(revision: RevisionSnapshot) {
+  if (revision.contentFormat === 'lexical' && revision.content) {
+    return revision.text || revision.content
   }
-
-  return draft.text || draft.content || ''
+  return revision.text || revision.content || ''
 }

@@ -347,6 +347,8 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
   if (!isTaskUpdatePayload(payload)) return
 
   const { id, groupId, phase, patch, log, stream, scope } = payload
+  const taskPatch =
+    phase === 'result' ? { ...patch, result: payload.result } : patch
 
   if (phase === 'stream') {
     window.dispatchEvent(
@@ -397,24 +399,24 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
   } else {
     queryClient.setQueryData<AITask | undefined>(
       adminQueryKeys.tasks.taskDetail(id),
-      (prev) => (prev ? applyTaskPatch(prev, patch, log) : prev),
+      (prev) => (prev ? applyTaskPatch(prev, taskPatch, log) : prev),
     )
     if (
       (phase === 'started' || phase === 'status' || phase === 'result') &&
-      patch
+      taskPatch
     ) {
       for (const [key, data] of queryClient.getQueriesData({
         queryKey: adminQueryKeys.tasks.tasksRoot,
       })) {
         if (!data) continue
-        const next = upsertTaskInList(data, id, patch)
+        const next = upsertTaskInList(data, id, taskPatch)
         if (next !== data) queryClient.setQueryData(key, next)
       }
     }
   }
 
-  if (groupId && patch?.subTaskStats) {
-    const { subTaskStats } = patch
+  if (groupId && taskPatch?.subTaskStats) {
+    const { subTaskStats } = taskPatch
     queryClient.setQueryData<AITask | undefined>(
       adminQueryKeys.tasks.taskDetail(groupId),
       (prev) => (prev ? { ...prev, subTaskStats } : prev),
@@ -424,7 +426,11 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
   // A finished AI task changes an article's coverage and cost, so the overview
   // board would otherwise show stale figures until a manual refresh. Only
   // active queries refetch, which is the open article plus its list page.
-  if (scope === 'ai' && patch?.status && isTerminalTaskStatus(patch.status)) {
+  if (
+    scope === 'ai' &&
+    taskPatch?.status &&
+    isTerminalTaskStatus(taskPatch.status)
+  ) {
     void queryClient.invalidateQueries({
       queryKey: adminQueryKeys.ai.overviewRoot,
     })
@@ -448,7 +454,7 @@ export function handleTaskUpdate(queryClient: QueryClient, payload: unknown) {
           return next
         }
         if (idx < 0) return prev
-        const merged = applyTaskPatch(prev[idx], patch, log)
+        const merged = applyTaskPatch(prev[idx], taskPatch, log)
         if (merged === prev[idx]) return prev
         const next = prev.slice()
         next[idx] = merged

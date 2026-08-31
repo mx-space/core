@@ -5,10 +5,10 @@ import { zEntityId } from '~/common/zod'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 
 export const MigrationMemberPreconditionSchema = z.object({
-  kind: z.enum(['source', 'draft', 'translation']),
+  kind: z.enum(['source', 'branch', 'translation']),
   id: zEntityId,
   hash: z.string().min(1).max(128),
-  version: z.number().int().positive().optional(),
+  headRevisionId: zEntityId.optional(),
 })
 
 export const MarkdownToLexicalMigrationDescriptorSchema = z.object({
@@ -26,7 +26,7 @@ export type MarkdownToLexicalMigrationDescriptor = z.infer<
 export const MarkdownToLexicalDryRunSchema = z.object({
   refType: z.enum(DraftRefType),
   refId: zEntityId,
-  draftId: zEntityId.optional(),
+  branchId: zEntityId.optional(),
   sourceText: z.string().max(2_000_000),
   profile: z.literal('yohaku-v1'),
 })

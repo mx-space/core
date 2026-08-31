@@ -106,10 +106,13 @@ export class AiOverviewRepository extends BaseRepository {
     }
   }
 
-  async summaryAssets(refId: string): Promise<SummaryAsset[]> {
+  async summaryAssets(
+    refId: string,
+  ): Promise<Array<Omit<SummaryAsset, 'stale'> & { hash: string }>> {
     const rows = await this.db
       .select({
         id: aiSummaries.id,
+        hash: aiSummaries.hash,
         lang: aiSummaries.lang,
         summary: aiSummaries.summary,
         isTranslation: aiSummaries.isTranslation,
@@ -121,6 +124,7 @@ export class AiOverviewRepository extends BaseRepository {
       .orderBy(desc(aiSummaries.createdAt))
     return rows.map((row) => ({
       id: String(toEntityId(row.id)),
+      hash: row.hash,
       lang: row.lang ?? DEFAULT_SUMMARY_LANG,
       summary: row.summary,
       isTranslation: row.isTranslation,
@@ -129,10 +133,13 @@ export class AiOverviewRepository extends BaseRepository {
     }))
   }
 
-  async insightsAssets(refId: string): Promise<InsightsAsset[]> {
+  async insightsAssets(
+    refId: string,
+  ): Promise<Array<Omit<InsightsAsset, 'stale'> & { hash: string }>> {
     const rows = await this.db
       .select({
         id: aiInsights.id,
+        hash: aiInsights.hash,
         lang: aiInsights.lang,
         content: aiInsights.content,
         isTranslation: aiInsights.isTranslation,
@@ -144,6 +151,7 @@ export class AiOverviewRepository extends BaseRepository {
       .orderBy(desc(aiInsights.createdAt))
     return rows.map((row) => ({
       id: String(toEntityId(row.id)),
+      hash: row.hash,
       lang: row.lang,
       content: row.content,
       isTranslation: row.isTranslation,
@@ -157,10 +165,13 @@ export class AiOverviewRepository extends BaseRepository {
    * read-only and links out to `/ai/translation/:refId` for editing, so the
    * column is deliberately absent from this projection.
    */
-  async translationAssets(refId: string): Promise<TranslationAsset[]> {
+  async translationAssets(
+    refId: string,
+  ): Promise<Array<Omit<TranslationAsset, 'stale'> & { hash: string }>> {
     const rows = await this.db
       .select({
         id: aiTranslations.id,
+        hash: aiTranslations.hash,
         lang: aiTranslations.lang,
         sourceLang: aiTranslations.sourceLang,
         aiModel: aiTranslations.aiModel,
@@ -172,6 +183,7 @@ export class AiOverviewRepository extends BaseRepository {
       .orderBy(desc(aiTranslations.createdAt))
     return rows.map((row) => ({
       id: String(toEntityId(row.id)),
+      hash: row.hash,
       lang: row.lang,
       sourceLang: row.sourceLang,
       aiModel: row.aiModel,
@@ -180,12 +192,17 @@ export class AiOverviewRepository extends BaseRepository {
     }))
   }
 
-  async ttsAssets(refId: string): Promise<TtsAsset[]> {
+  async ttsAssets(
+    refId: string,
+  ): Promise<
+    Array<Omit<TtsAsset, 'stale'> & { sourceModifiedAt: Date | null }>
+  > {
     const rows = await this.db
       .select({
         id: aiTts.id,
         lang: aiTts.lang,
         isTranslation: aiTts.isTranslation,
+        sourceModifiedAt: aiTts.sourceModifiedAt,
         charCount: aiTts.charCount,
         totalDurationMs: aiTts.totalDurationMs,
         createdAt: aiTts.createdAt,
@@ -198,6 +215,7 @@ export class AiOverviewRepository extends BaseRepository {
       id: String(toEntityId(row.id)),
       lang: row.lang,
       isTranslation: row.isTranslation,
+      sourceModifiedAt: row.sourceModifiedAt,
       charCount: row.charCount,
       durationMs: row.totalDurationMs,
       createdAt: row.createdAt,
