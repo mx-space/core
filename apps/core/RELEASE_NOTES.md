@@ -1,28 +1,30 @@
 ## TL;DR
 
-Mix Space 14.6 adds streaming batch article-body retrieval, improves premium previews, and ships more reliable inline-code editing.
+Mix Space 14.6.1 introduces revision-tree publishing, branch-aware drafts, explicit comparisons, and durable background publish jobs in Admin.
 
 ## Highlights
 
-Clients can now retrieve post and note bodies in batches through a persistence-friendly NDJSON stream. Each line preserves paywall, language, and unchanged-version information, allowing mobile and other consumers to hydrate local content efficiently without losing access-control semantics or downloading bodies that are already current.
+Editing and publishing now use immutable revisions instead of a single mutable draft line. Authors can continue from the current online article, a historical publication, or another draft branch without unrelated work blocking saves or publication. Admin keeps the online revision visible, groups drafts by their actual base, and provides clear compare, continue, publish, delete, and history actions without unbounded tree indentation.
 
-Premium content previews no longer become blank when a record has no Lexical body. The bundled admin editor also adopts Haklex 0.38.0, placing the caret outside inline-code formatting at the boundary so authors can continue typing normal text without getting trapped in the code style.
+Publish preparation is now a server-backed job bound to a frozen revision. AI resource selections belong to that job, publication waits for the selected tasks to finish, and unrelated online resources are preserved. Draft recovery also distinguishes ordinary branch divergence from a true same-branch concurrent edit.
 
 ## Changes
 
-### Features
-
-- Added a batch article-body endpoint that streams persistence-ready NDJSON for posts and notes ([c5bea4b](https://github.com/mx-space/core/commit/c5bea4bff0125787121c548d73f2165330815cb7)).
-
 ### Bug Fixes
 
-- Premium articles now provide teaser content when their Lexical body is unavailable ([a3bb701](https://github.com/mx-space/core/commit/a3bb7016a89edc1b7bfeb6ed3f667da34278dffe)).
-- Inline-code boundaries in the admin editor now place continued input outside the code mark ([de57bd7](https://github.com/mx-space/core/commit/de57bd73d8b29f47eaf74eab59aad3c912065047)).
+- Corrected Admin mobile viewport height and bottom-sheet bounds ([c55f97b](https://github.com/mx-space/core/commit/c55f97b05)).
 
 ### Other
 
-- Updated the bundled Haklex editor packages to 0.38.0, including the public file-node key export ([de57bd7](https://github.com/mx-space/core/commit/de57bd73d8b29f47eaf74eab59aad3c912065047)).
+- Rebuilt content editing around immutable documents, revisions, branches, publication events, and revision-bound publish jobs ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
+- Added branch-aware Admin recovery, diff, publication confirmation, process tracking, and version-history interfaces ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
+- Updated first-party CLI content commands to use the new branch and revision contracts ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
+
+## Upgrade Notes
+
+- Run the standard `pnpm migrate` release step before boot. It applies the single `0035_tree_content_revisions` schema migration and then converts legacy draft data automatically.
+- Deploy Core together with the bundled Admin. External clients using the former linear draft/version endpoints must adopt the document, revision, branch, and publish-job APIs.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.5.1...v14.6.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.6.0...v14.6.1

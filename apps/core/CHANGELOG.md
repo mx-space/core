@@ -1,3 +1,5 @@
+## [14.6.1](https://github.com/mx-space/core/compare/v14.6.0...v14.6.1) (2026-08-31)
+
 ## [14.6.0](https://github.com/mx-space/core/compare/v14.5.1...v14.6.0) (2026-08-30)
 
 
