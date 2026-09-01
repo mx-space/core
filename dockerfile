@@ -43,6 +43,9 @@ COPY --from=builder /app/out .
 
 RUN npm i sharp -g
 RUN npm i sharp
+# Nest 12 WsAdapter loads `ws` at runtime via createRequire(import.meta.url).
+# The production image only copies the Vite bundle, so install it next to sharp.
+RUN npm i ws@8.21.3
 
 COPY --chmod=755 docker-entrypoint.sh .
 

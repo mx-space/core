@@ -74,7 +74,7 @@ export default defineConfig(({ command }) => {
             entryFileNames: '[name].mjs',
             chunkFileNames: 'chunks/[name]-[hash].mjs',
           },
-          external: ['sharp'],
+          external: ['sharp', 'ws'],
         },
       },
     }),

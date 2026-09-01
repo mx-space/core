@@ -68,10 +68,15 @@ export async function createE2EBackend(): Promise<E2EBackend> {
     testingModule.createNestApplication<NestFastifyApplication>(fastifyApp)
   const { requestCaseNormalizationPipeInstance } =
     await import('~/common/pipes/case-normalization.pipe')
+  const { createWsAdapter } =
+    await import('~/processors/gateway/ws/ws-adapter.factory')
   app.useGlobalPipes(
     requestCaseNormalizationPipeInstance,
     pipes.standardSchemaValidationPipeInstance,
   )
+  // Nest 12 SocketModule exits if no IoAdapter is installed and no adapter
+  // was set. Match production bootstrap; do not pull in platform-socket.io.
+  app.useWebSocketAdapter(createWsAdapter(app))
 
   await app.init()
   await app.getHttpAdapter().getInstance().ready()
