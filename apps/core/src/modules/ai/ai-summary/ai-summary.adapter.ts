@@ -32,7 +32,7 @@ import {
   runtimeUsageToGenerationUsage,
 } from '../runtime/pi-runtime.adapter'
 import { AiSummaryRepository } from './ai-summary.repository'
-import type { type AISummaryModel, AiSummaryRow } from './ai-summary.types'
+import type { AISummaryModel, AiSummaryRow } from './ai-summary.types'
 
 export interface ArticleForSummary {
   title: string

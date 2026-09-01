@@ -15,7 +15,7 @@ import type { BasicPagerInput } from '~/shared/dto/pager.dto'
 import { isPrivateIp } from '~/utils/ssrf.util'
 
 import { WebhookRepository } from './webhook.repository'
-import type { type WebhookModel, WebhookRow } from './webhook.types'
+import type { WebhookModel, WebhookRow } from './webhook.types'
 
 const ACCEPT_EVENTS = new Set(Object.values(BusinessEvents))
 

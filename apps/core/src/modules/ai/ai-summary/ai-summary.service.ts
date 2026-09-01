@@ -27,7 +27,7 @@ import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiSummaryAdapter } from './ai-summary.adapter'
 import { AiSummaryRepository } from './ai-summary.repository'
 import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
-import type { type AISummaryModel, AiSummaryRow } from './ai-summary.types'
+import type { AISummaryModel, AiSummaryRow } from './ai-summary.types'
 
 @Injectable()
 export class AiSummaryService implements OnModuleInit {
