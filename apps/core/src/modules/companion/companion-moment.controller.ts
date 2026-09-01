@@ -16,7 +16,10 @@ import {
 } from './companion-device.decorator'
 import type { CompanionDevicePrincipal } from './companion-device.guard'
 import { CompanionMomentService } from './companion-moment.service'
-import { CompanionMomentRequestV1Dto } from './companion-presence.dto'
+import {
+  CompanionMomentRequestV1Dto,
+  CompanionMomentRequestV1Schema,
+} from './companion-presence.dto'
 import { companionPresenceFastifyErrorHandler } from './companion-presence.fastify'
 import { CompanionPresenceExceptionFilter } from './companion-presence.filter'
 import {
@@ -39,7 +42,8 @@ export class CompanionMomentController {
   @CompanionDeviceAuth('companion:moment:write')
   async publish(
     @CurrentCompanionDevice() principal: CompanionDevicePrincipal,
-    @Body() request: CompanionMomentRequestV1Dto,
+    @Body({ schema: CompanionMomentRequestV1Schema })
+    request: CompanionMomentRequestV1Dto,
   ) {
     const data = await this.momentService.publish(principal, request)
     return withMeta(

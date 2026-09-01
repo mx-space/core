@@ -3,7 +3,10 @@ import { Body, HttpCode, Post } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 
-import { MarkdownToLexicalDryRunDto } from './content-migration.schema'
+import {
+  MarkdownToLexicalDryRunDto,
+  MarkdownToLexicalDryRunSchema,
+} from './content-migration.schema'
 import { ContentMigrationService } from './content-migration.service'
 
 @ApiController('content-migrations')
@@ -15,7 +18,10 @@ export class ContentMigrationController {
   @Post('/markdown-to-lexical/dry-run')
   @HttpCode(200)
   @Auth()
-  dryRunMarkdownToLexical(@Body() body: MarkdownToLexicalDryRunDto) {
+  dryRunMarkdownToLexical(
+    @Body({ schema: MarkdownToLexicalDryRunSchema })
+    body: MarkdownToLexicalDryRunDto,
+  ) {
     return this.contentMigrationService.dryRunMarkdownToLexical(body)
   }
 }

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zHexColor, zStrictUrl } from '~/common/zod'
@@ -12,7 +11,7 @@ export const ImageSchema = z.object({
   thumbhash: z.string().optional(),
 })
 
-export class ImageDto extends createZodDto(ImageSchema) {}
+export type ImageDto = z.infer<typeof ImageSchema>
 
 export type ImageInput = z.infer<typeof ImageSchema>
 

@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 
-import { extendedZodValidationPipeInstance } from '~/common/zod'
+import { standardSchemaValidationPipeInstance } from '~/common/zod'
 import { VALIDATION_PIPE_INJECTION } from '~/constants/system.constant'
 
 import { OwnerModule } from '../owner/owner.module'
@@ -14,7 +14,7 @@ import { OptionsRepository } from './options.repository'
     OptionsRepository,
     {
       provide: VALIDATION_PIPE_INJECTION,
-      useValue: extendedZodValidationPipeInstance,
+      useValue: standardSchemaValidationPipeInstance,
     },
   ],
   imports: [OwnerModule],

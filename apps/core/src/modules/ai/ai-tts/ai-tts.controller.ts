@@ -8,16 +8,20 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   CreateTtsTaskDto,
+  CreateTtsTaskSchema,
   DiscoverTtsVoicesQueryDto,
+  DiscoverTtsVoicesQuerySchema,
   GetTtsGroupedQueryDto,
+  GetTtsGroupedQuerySchema,
   GetTtsQueryDto,
+  GetTtsQuerySchema,
 } from './ai-tts.schema'
 import { AiTtsService } from './ai-tts.service'
 import { AiTtsViews } from './ai-tts.views'
@@ -35,13 +39,16 @@ export class AiTtsController {
 
   @Get('/voices')
   @Auth()
-  discoverVoices(@Query() query: DiscoverTtsVoicesQueryDto) {
+  discoverVoices(
+    @Query({ schema: DiscoverTtsVoicesQuerySchema })
+    query: DiscoverTtsVoicesQueryDto,
+  ) {
     return this.voiceCatalogService.discover(query)
   }
 
   @Post('/task')
   @Auth()
-  createTask(@Body() body: CreateTtsTaskDto) {
+  createTask(@Body({ schema: CreateTtsTaskSchema }) body: CreateTtsTaskDto) {
     return this.taskService.createTtsTask({
       refId: body.refId,
       langs: body.langs?.length
@@ -53,7 +60,7 @@ export class AiTtsController {
 
   @Get('/ref/:id')
   @Auth()
-  async getByRefId(@Param() params: EntityIdDto) {
+  async getByRefId(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     const { article, rows } = await this.queryService.getNarrationsByRefId(
       params.id,
     )
@@ -62,7 +69,9 @@ export class AiTtsController {
 
   @Get('/grouped')
   @Auth()
-  async listGrouped(@Query() query: GetTtsGroupedQueryDto) {
+  async listGrouped(
+    @Query({ schema: GetTtsGroupedQuerySchema }) query: GetTtsGroupedQueryDto,
+  ) {
     const result = await this.queryService.getAllNarrationsGrouped(query)
     return withMeta(
       result.data.map((group) => ({
@@ -75,7 +84,7 @@ export class AiTtsController {
 
   @Get('/')
   @Auth()
-  async list(@Query() query: BasicPagerDto) {
+  async list(@Query({ schema: BasicPagerSchema }) query: BasicPagerDto) {
     const result = await this.queryService.list(query)
     return withMeta(
       z.array(AiTtsViews.listItem).parse(result.data),
@@ -88,14 +97,14 @@ export class AiTtsController {
 
   @Delete('/:id')
   @Auth()
-  delete(@Param() params: EntityIdDto) {
+  delete(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.service.deleteById(params.id)
   }
 
   @Get('/article/:id')
   async getArticleTts(
-    @Param() params: EntityIdDto,
-    @Query() query: GetTtsQueryDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Query({ schema: GetTtsQuerySchema }) query: GetTtsQueryDto,
     @HasAdminAccess() isAuthenticated?: boolean,
     @CurrentReaderId() readerId?: string,
   ) {

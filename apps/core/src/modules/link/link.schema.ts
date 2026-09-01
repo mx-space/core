@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEmail, zHttpsUrl, zMaxLengthString } from '~/common/zod'
@@ -32,7 +31,7 @@ export const LinkSchema = z.object({
     .optional(),
 })
 
-export class LinkSchemaDto extends createZodDto(LinkSchema) {}
+export type LinkSchemaDto = z.infer<typeof LinkSchema>
 
 /**
  * Link DTO with author field (for guest submissions)
@@ -41,14 +40,14 @@ export const LinkWithAuthorSchema = LinkSchema.extend({
   author: zMaxLengthString(20, 'Your name is too long'),
 })
 
-export class LinkDto extends createZodDto(LinkWithAuthorSchema) {}
+export type LinkDto = z.infer<typeof LinkWithAuthorSchema>
 
 /**
  * Partial link schema for PATCH operations
  */
 export const PartialLinkSchema = LinkSchema.partial()
 
-export class PartialLinkDto extends createZodDto(PartialLinkSchema) {}
+export type PartialLinkDto = z.infer<typeof PartialLinkSchema>
 
 /**
  * Audit reason schema
@@ -58,7 +57,7 @@ export const AuditReasonSchema = z.object({
   state: z.enum(LinkState),
 })
 
-export class AuditReasonDto extends createZodDto(AuditReasonSchema) {}
+export type AuditReasonDto = z.infer<typeof AuditReasonSchema>
 
 /**
  * Link list pager — basic pager plus optional `state` filter.
@@ -67,7 +66,7 @@ export const LinkPagerSchema = BasicPagerSchema.extend({
   state: z.coerce.number().int().optional(),
 })
 
-export class LinkPagerDto extends createZodDto(LinkPagerSchema) {}
+export type LinkPagerDto = z.infer<typeof LinkPagerSchema>
 
 // Type exports
 export type LinkInput = z.infer<typeof LinkSchema>

@@ -24,11 +24,16 @@ import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
   AggregateQueryDto,
+  AggregateQuerySchema,
   LatestQueryDto,
+  LatestQuerySchema,
   ReadAndLikeCountDocumentType,
   ReadAndLikeCountTypeDto,
+  ReadAndLikeCountTypeSchema,
   TimelineQueryDto,
+  TimelineQuerySchema,
   TopQueryDto,
+  TopQuerySchema,
 } from './aggregate.schema'
 import { AggregateService } from './aggregate.service'
 import { resolveSeo } from './resolve-seo.util'
@@ -190,7 +195,10 @@ export class AggregateController {
     ttl: 10 * 60,
     withQuery: true,
   })
-  async aggregate(@Query() query: AggregateQueryDto, @Lang() lang?: string) {
+  async aggregate(
+    @Query({ schema: AggregateQuerySchema }) query: AggregateQueryDto,
+    @Lang() lang?: string,
+  ) {
     const { theme } = query
 
     const [
@@ -255,7 +263,7 @@ export class AggregateController {
 
   @Get('/top')
   async top(
-    @Query() query: TopQueryDto,
+    @Query({ schema: TopQuerySchema }) query: TopQueryDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
@@ -286,7 +294,10 @@ export class AggregateController {
   }
 
   @Get('/latest')
-  async getLatest(@Query() query: LatestQueryDto, @Lang() lang?: string) {
+  async getLatest(
+    @Query({ schema: LatestQuerySchema }) query: LatestQueryDto,
+    @Lang() lang?: string,
+  ) {
     const { limit = 5, types, combined = false } = query
     const result = await this.aggregateService.getLatest(limit, types, combined)
 
@@ -318,7 +329,10 @@ export class AggregateController {
   }
 
   @Get('/timeline')
-  async getTimeline(@Query() query: TimelineQueryDto, @Lang() lang?: string) {
+  async getTimeline(
+    @Query({ schema: TimelineQuerySchema }) query: TimelineQueryDto,
+    @Lang() lang?: string,
+  ) {
     const { sort = 1, type, year } = query
     const data = await this.aggregateService.getTimeline(year, type, sort)
 
@@ -391,7 +405,10 @@ export class AggregateController {
   }
 
   @Get('/count_read_and_like')
-  async getAllReadAndLikeCount(@Query() query: ReadAndLikeCountTypeDto) {
+  async getAllReadAndLikeCount(
+    @Query({ schema: ReadAndLikeCountTypeSchema })
+    query: ReadAndLikeCountTypeDto,
+  ) {
     const { type = ReadAndLikeCountDocumentType.All } = query
     return await this.aggregateService.getAllReadAndLikeCount(type)
   }

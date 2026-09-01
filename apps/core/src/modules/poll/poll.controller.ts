@@ -4,7 +4,14 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 
-import { BatchPollQueryDto, PollIdDto, SubmitPollDto } from './poll.dto'
+import {
+  BatchPollQueryDto,
+  BatchPollQuerySchema,
+  PollIdDto,
+  PollIdParam,
+  SubmitPollDto,
+  SubmitPollSchema,
+} from './poll.dto'
 import { PollService } from './poll.service'
 
 @ApiController('polls')
@@ -13,7 +20,7 @@ export class PollController {
 
   @Get('/')
   async batch(
-    @Query() query: BatchPollQueryDto,
+    @Query({ schema: BatchPollQuerySchema }) query: BatchPollQueryDto,
     @IpLocation() ipLocation: IpRecord,
     @CurrentReaderId() readerId?: string,
   ) {
@@ -27,7 +34,7 @@ export class PollController {
 
   @Get('/:pollId')
   async getOne(
-    @Param() params: PollIdDto,
+    @Param({ schema: PollIdParam }) params: PollIdDto,
     @IpLocation() ipLocation: IpRecord,
     @CurrentReaderId() readerId?: string,
   ) {
@@ -42,8 +49,8 @@ export class PollController {
   @Post('/:pollId/vote')
   @HttpCode(200)
   async vote(
-    @Param() params: PollIdDto,
-    @Body() body: SubmitPollDto,
+    @Param({ schema: PollIdParam }) params: PollIdDto,
+    @Body({ schema: SubmitPollSchema }) body: SubmitPollDto,
     @IpLocation() ipLocation: IpRecord,
     @CurrentReaderId() readerId?: string,
   ) {

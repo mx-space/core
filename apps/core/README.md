@@ -26,11 +26,11 @@ Core ships only the API. Pair it with one of:
 
 | Component  | Technology                                |
 |------------|-------------------------------------------|
-| Runtime    | Node.js >= 22 + TypeScript 6              |
-| Framework  | NestJS 11 + Fastify                       |
+| Runtime    | Node.js >= 22.12 + TypeScript 6           |
+| Framework  | NestJS 12 + Fastify                       |
 | Database   | PostgreSQL 16 (Drizzle ORM)               |
 | Cache      | Redis (ioredis)                           |
-| Validation | Zod 4 (nestjs-zod)                        |
+| Validation | Zod 4 (Nest Standard Schema pipe)         |
 | WebSocket  | Socket.IO + Redis Emitter                 |
 | AI         | OpenAI SDK, Anthropic SDK                 |
 | Editor     | Lexical (`@haklex/rich-headless`)         |

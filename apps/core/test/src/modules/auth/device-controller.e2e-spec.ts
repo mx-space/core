@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { requestCaseNormalizationPipeInstance } from '~/common/pipes/case-normalization.pipe'
-import { extendedZodValidationPipeInstance } from '~/common/zod'
+import { standardSchemaValidationPipeInstance } from '~/common/zod'
 import { AuthInstanceInjectKey } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { DeviceController } from '~/modules/auth/device.controller'
@@ -75,7 +75,7 @@ describe('DeviceController (e2e)', () => {
     app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
     app.useGlobalPipes(
       requestCaseNormalizationPipeInstance,
-      extendedZodValidationPipeInstance,
+      standardSchemaValidationPipeInstance,
     )
     await app.init()
     await app.getHttpAdapter().getInstance().ready()

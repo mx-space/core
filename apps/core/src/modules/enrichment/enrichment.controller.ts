@@ -24,14 +24,23 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { EnrichmentRepository } from './enrichment.repository'
 import {
   AdminCaptureListQueryDto,
+  AdminCaptureListQuerySchema,
   AdminListQueryDto,
+  AdminListQuerySchema,
   AdminProbeBodyDto,
+  AdminProbeBodySchema,
   EnrichmentSearchQueryDto,
+  EnrichmentSearchQuerySchema,
   ResolveQueryDto,
+  ResolveQuerySchema,
 } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
-import type { EnrichmentResult, ProviderMeta } from './enrichment.types'
-import { ProviderDisabledError, TokenMissingError } from './enrichment.types'
+import {
+  EnrichmentResult,
+  ProviderDisabledError,
+  ProviderMeta,
+  TokenMissingError,
+} from './enrichment.types'
 import { EnrichmentCaptureRepository } from './enrichment-capture.repository'
 import { EnrichmentOriginGuard } from './enrichment-origin.guard'
 import { CaptureStorageService } from './providers/open-graph/capture-storage.service'
@@ -57,7 +66,7 @@ export class EnrichmentController {
   @Throttle(PUBLIC_RESOLVE_THROTTLE)
   @UseGuards(EnrichmentOriginGuard)
   async resolve(
-    @Query() query: ResolveQueryDto,
+    @Query({ schema: ResolveQuerySchema }) query: ResolveQueryDto,
     @Lang() lang: string | undefined,
     @Res({ passthrough: true }) res: any,
   ): Promise<EnrichmentResult | undefined> {
@@ -88,7 +97,8 @@ export class EnrichmentController {
   @Throttle(SEARCH_THROTTLE)
   async search(
     @Param('provider') provider: string,
-    @Query() query: EnrichmentSearchQueryDto,
+    @Query({ schema: EnrichmentSearchQuerySchema })
+    query: EnrichmentSearchQueryDto,
     @Lang() lang: string | undefined,
     @Res({ passthrough: true }) res: any,
   ): Promise<EnrichmentResult[] | undefined> {
@@ -134,7 +144,9 @@ export class EnrichmentController {
 
   @Get('admin/list')
   @Auth()
-  async list(@Query() query: AdminListQueryDto) {
+  async list(
+    @Query({ schema: AdminListQuerySchema }) query: AdminListQueryDto,
+  ) {
     const result = await this.enrichmentService.list(query.page, query.size, {
       onlyFailed: query.onlyFailed,
       locale: query.locale,
@@ -210,7 +222,10 @@ export class EnrichmentController {
 
   @Get('admin/captures')
   @Auth()
-  async listCaptures(@Query() query: AdminCaptureListQueryDto) {
+  async listCaptures(
+    @Query({ schema: AdminCaptureListQuerySchema })
+    query: AdminCaptureListQueryDto,
+  ) {
     const result = await this.captureRepository.listJoined(
       query.page,
       query.size,
@@ -281,7 +296,7 @@ export class EnrichmentController {
   @Auth()
   @Throttle(ADMIN_PROBE_THROTTLE)
   @HttpCode(200)
-  probe(@Body() body: AdminProbeBodyDto) {
+  probe(@Body({ schema: AdminProbeBodySchema }) body: AdminProbeBodyDto) {
     return this.enrichmentService.probe(body.url, body.useCache === true)
   }
 

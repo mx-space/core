@@ -1,4 +1,4 @@
-import { createZodDto } from 'nestjs-zod'
+import type { z } from 'zod'
 
 import {
   CompanionMomentRequestV1Schema,
@@ -6,14 +6,20 @@ import {
   CompanionPresenceRequestV2Schema,
 } from './companion.schema'
 
-export class CompanionMomentRequestV1Dto extends createZodDto(
+export {
   CompanionMomentRequestV1Schema,
-) {}
-
-export class CompanionPresenceRequestV2Dto extends createZodDto(
-  CompanionPresenceRequestV2Schema,
-) {}
-
-export class CompanionPresenceClearRequestV2Dto extends createZodDto(
   CompanionPresenceClearRequestV2Schema,
-) {}
+  CompanionPresenceRequestV2Schema,
+}
+
+export type CompanionMomentRequestV1Dto = z.infer<
+  typeof CompanionMomentRequestV1Schema
+>
+
+export type CompanionPresenceRequestV2Dto = z.infer<
+  typeof CompanionPresenceRequestV2Schema
+>
+
+export type CompanionPresenceClearRequestV2Dto = z.infer<
+  typeof CompanionPresenceClearRequestV2Schema
+>

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zNonEmptyString } from '~/common/zod'
@@ -8,9 +7,7 @@ export const ServerlessReferenceSchema = z.object({
   name: zNonEmptyString,
 })
 
-export class ServerlessReferenceDto extends createZodDto(
-  ServerlessReferenceSchema,
-) {}
+export type ServerlessReferenceDto = z.infer<typeof ServerlessReferenceSchema>
 
 export const ServerlessLogQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -18,9 +15,7 @@ export const ServerlessLogQuerySchema = z.object({
   status: z.enum(['success', 'error']).optional(),
 })
 
-export class ServerlessLogQueryDto extends createZodDto(
-  ServerlessLogQuerySchema,
-) {}
+export type ServerlessLogQueryDto = z.infer<typeof ServerlessLogQuerySchema>
 
 // Type exports
 export type ServerlessReferenceInput = z.infer<typeof ServerlessReferenceSchema>

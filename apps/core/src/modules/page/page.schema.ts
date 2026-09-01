@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceInt, zEntityId, zNonEmptyString, zPrefer } from '~/common/zod'
@@ -28,7 +27,7 @@ export const PageSchema = PageBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export class PageDto extends createZodDto(PageSchema) {}
+export type PageDto = z.infer<typeof PageSchema>
 
 /**
  * Page reorder sequence item schema
@@ -45,7 +44,7 @@ export const PageReorderSchema = z.object({
   seq: z.array(PageReorderSeqSchema),
 })
 
-export class PageReorderDto extends createZodDto(PageReorderSchema) {}
+export type PageReorderDto = z.infer<typeof PageReorderSchema>
 
 /**
  * Page detail query schema
@@ -54,7 +53,7 @@ export const PageDetailQuerySchema = z.object({
   prefer: zPrefer,
 })
 
-export class PageDetailQueryDto extends createZodDto(PageDetailQuerySchema) {}
+export type PageDetailQueryDto = z.infer<typeof PageDetailQuerySchema>
 
 // Type exports
 export type PageInput = z.infer<typeof PageSchema>

@@ -1,21 +1,18 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 export const GetTranslationQuerySchema = z.object({
   lang: z.string(),
 })
 
-export class GetTranslationQueryDto extends createZodDto(
-  GetTranslationQuerySchema,
-) {}
+export type GetTranslationQueryDto = z.infer<typeof GetTranslationQuerySchema>
 
 export const GetTranslationStreamQuerySchema = z.object({
   lang: z.string(),
 })
 
-export class GetTranslationStreamQueryDto extends createZodDto(
-  GetTranslationStreamQuerySchema,
-) {}
+export type GetTranslationStreamQueryDto = z.infer<
+  typeof GetTranslationStreamQuerySchema
+>
 
 export const UpdateTranslationSchema = z.object({
   title: z.string().optional(),
@@ -29,9 +26,7 @@ export const UpdateTranslationSchema = z.object({
     .transform((content) => content ?? undefined),
 })
 
-export class UpdateTranslationDto extends createZodDto(
-  UpdateTranslationSchema,
-) {}
+export type UpdateTranslationDto = z.infer<typeof UpdateTranslationSchema>
 
 export const GetTranslationsGroupedQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -39,9 +34,9 @@ export const GetTranslationsGroupedQuerySchema = z.object({
   search: z.string().optional(),
 })
 
-export class GetTranslationsGroupedQueryDto extends createZodDto(
-  GetTranslationsGroupedQuerySchema,
-) {}
+export type GetTranslationsGroupedQueryDto = z.infer<
+  typeof GetTranslationsGroupedQuerySchema
+>
 
 export type GetTranslationsGroupedQueryInput = z.infer<
   typeof GetTranslationsGroupedQuerySchema

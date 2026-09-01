@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { MAX_LANGS_PER_TASK } from '../ai.constants'
@@ -12,9 +11,7 @@ export const CreateSummaryTaskSchema = z.object({
   force: z.boolean().optional(),
 })
 
-export class CreateSummaryTaskDto extends createZodDto(
-  CreateSummaryTaskSchema,
-) {}
+export type CreateSummaryTaskDto = z.infer<typeof CreateSummaryTaskSchema>
 
 export const CreateSummaryTranslationTaskSchema = z.object({
   refId: z.string(),
@@ -22,9 +19,9 @@ export const CreateSummaryTranslationTaskSchema = z.object({
   force: z.boolean().optional(),
 })
 
-export class CreateSummaryTranslationTaskDto extends createZodDto(
-  CreateSummaryTranslationTaskSchema,
-) {}
+export type CreateSummaryTranslationTaskDto = z.infer<
+  typeof CreateSummaryTranslationTaskSchema
+>
 
 export const CreateTranslationTaskSchema = z.object({
   refId: z.string(),
@@ -35,26 +32,26 @@ export const CreateTranslationTaskSchema = z.object({
   force: z.boolean().optional(),
 })
 
-export class CreateTranslationTaskDto extends createZodDto(
-  CreateTranslationTaskSchema,
-) {}
+export type CreateTranslationTaskDto = z.infer<
+  typeof CreateTranslationTaskSchema
+>
 
 export const CreateTranslationBatchTaskSchema = z.object({
   refIds: z.array(z.string()).min(1).max(100),
   targetLanguages: z.array(z.string()).optional(),
 })
 
-export class CreateTranslationBatchTaskDto extends createZodDto(
-  CreateTranslationBatchTaskSchema,
-) {}
+export type CreateTranslationBatchTaskDto = z.infer<
+  typeof CreateTranslationBatchTaskSchema
+>
 
 export const CreateTranslationAllTaskSchema = z.object({
   targetLanguages: z.array(z.string()).optional(),
 })
 
-export class CreateTranslationAllTaskDto extends createZodDto(
-  CreateTranslationAllTaskSchema,
-) {}
+export type CreateTranslationAllTaskDto = z.infer<
+  typeof CreateTranslationAllTaskSchema
+>
 
 export type CreateSummaryTaskInput = z.infer<typeof CreateSummaryTaskSchema>
 export type CreateTranslationTaskInput = z.infer<

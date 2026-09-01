@@ -70,7 +70,7 @@ export async function createE2EBackend(): Promise<E2EBackend> {
     await import('~/common/pipes/case-normalization.pipe')
   app.useGlobalPipes(
     requestCaseNormalizationPipeInstance,
-    pipes.extendedZodValidationPipeInstance,
+    pipes.standardSchemaValidationPipeInstance,
   )
 
   await app.init()

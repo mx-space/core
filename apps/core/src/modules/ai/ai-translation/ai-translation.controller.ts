@@ -17,18 +17,25 @@ import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
   CreateTranslationAllTaskDto,
+  CreateTranslationAllTaskSchema,
   CreateTranslationBatchTaskDto,
+  CreateTranslationBatchTaskSchema,
   CreateTranslationTaskDto,
+  CreateTranslationTaskSchema,
 } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import {
   GetTranslationQueryDto,
+  GetTranslationQuerySchema,
   GetTranslationsGroupedQueryDto,
+  GetTranslationsGroupedQuerySchema,
   GetTranslationStreamQueryDto,
+  GetTranslationStreamQuerySchema,
   UpdateTranslationDto,
+  UpdateTranslationSchema,
 } from './ai-translation.schema'
 import { AiTranslationService } from './ai-translation.service'
 
@@ -41,31 +48,45 @@ export class AiTranslationController {
 
   @Post('/task')
   @Auth()
-  createTranslationTask(@Body() body: CreateTranslationTaskDto) {
+  createTranslationTask(
+    @Body({ schema: CreateTranslationTaskSchema })
+    body: CreateTranslationTaskDto,
+  ) {
     return this.taskService.createTranslationTask(body)
   }
 
   @Post('/task/batch')
   @Auth()
-  createTranslationBatchTask(@Body() body: CreateTranslationBatchTaskDto) {
+  createTranslationBatchTask(
+    @Body({ schema: CreateTranslationBatchTaskSchema })
+    body: CreateTranslationBatchTaskDto,
+  ) {
     return this.taskService.createTranslationBatchTask(body)
   }
 
   @Post('/task/all')
   @Auth()
-  createTranslationAllTask(@Body() body: CreateTranslationAllTaskDto) {
+  createTranslationAllTask(
+    @Body({ schema: CreateTranslationAllTaskSchema })
+    body: CreateTranslationAllTaskDto,
+  ) {
     return this.taskService.createTranslationAllTask(body)
   }
 
   @Get('/ref/:id')
   @Auth()
-  getTranslationsByRefId(@Param() params: EntityIdDto) {
+  getTranslationsByRefId(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+  ) {
     return this.service.getTranslationsByRefId(params.id)
   }
 
   @Get('/grouped')
   @Auth()
-  async getTranslationsGrouped(@Query() query: GetTranslationsGroupedQueryDto) {
+  async getTranslationsGrouped(
+    @Query({ schema: GetTranslationsGroupedQuerySchema })
+    query: GetTranslationsGroupedQueryDto,
+  ) {
     const result = await this.service.getAllTranslationsGrouped(query)
     return withMeta(
       result.data,
@@ -76,36 +97,39 @@ export class AiTranslationController {
   @Patch('/:id')
   @Auth()
   updateTranslation(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateTranslationDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: UpdateTranslationSchema }) body: UpdateTranslationDto,
   ) {
     return this.service.updateTranslation(params.id, body)
   }
 
   @Delete('/:id')
   @Auth()
-  deleteTranslation(@Param() params: EntityIdDto) {
+  deleteTranslation(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.service.deleteTranslation(params.id)
   }
 
   @Get('/article/:id')
   getArticleTranslation(
-    @Param() params: EntityIdDto,
-    @Query() query: GetTranslationQueryDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Query({ schema: GetTranslationQuerySchema }) query: GetTranslationQueryDto,
   ) {
     return this.service.getTranslationForArticle(params.id, query.lang)
   }
 
   @Get('/article/:id/languages')
-  getAvailableLanguages(@Param() params: EntityIdDto) {
+  getAvailableLanguages(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+  ) {
     return this.service.getAvailableLanguagesForArticle(params.id)
   }
 
   @Get('/article/:id/generate')
   @HTTPDecorators.RawResponse
   async streamArticleTranslation(
-    @Param() params: EntityIdDto,
-    @Query() query: GetTranslationStreamQueryDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Query({ schema: GetTranslationStreamQuerySchema })
+    query: GetTranslationStreamQueryDto,
     @Res() reply: FastifyReply,
   ) {
     initSse(reply)

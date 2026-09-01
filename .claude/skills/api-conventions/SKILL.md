@@ -59,7 +59,7 @@ Pagination belongs in `meta`, never merged into `data`. Build it with `MetaObjec
 
 ```typescript
 @Get('/')
-async list(@Query() query: PagerDto) {
+async list(@Query({ schema: BasicPagerSchema }) query: BasicPagerInput) {
   const result = await this.postRepository.list({
     page: query.page,
     size: query.size,
@@ -86,7 +86,7 @@ export class LinkControllerCrud extends BasePgCrudFactory({
   repository: LinkRepository,
 }) {
   @Get('/')
-  async gets(@Query() pager: PagerDto) {
+  async gets(@Query({ schema: BasicPagerSchema }) pager: BasicPagerInput) {
     const { size = 10, page = 1 } = pager
     return this.repository.list(page, size)
   }
@@ -96,23 +96,23 @@ export class LinkControllerCrud extends BasePgCrudFactory({
 ## Parameter Validation
 
 ```typescript
-// Path parameters — use EntityIdDto for Snowflake entity IDs
+// Path parameters — attach EntityIdSchema for Snowflake entity IDs
 @Get('/:id')
-async get(@Param() params: EntityIdDto) {
+async get(@Param({ schema: EntityIdSchema }) params: EntityIdInput) {
   return this.service.findById(params.id)
 }
 
 // For integer IDs or entity IDs (e.g. notes with nid)
 @Get('/:id')
-async get(@Param() params: IntIdOrEntityIdDto) {}
+async get(@Param({ schema: IntIdOrEntityIdSchema }) params: IntIdOrEntityIdInput) {}
 
 // Query parameters
 @Get('/')
-async list(@Query() query: PagerDto) {}
+async list(@Query({ schema: BasicPagerSchema }) query: BasicPagerInput) {}
 
 // Request body
 @Post('/')
-async create(@Body() body: CreateDto) {}
+async create(@Body({ schema: CreateSchema }) body: CreateInput) {}
 ```
 
 ## HTTP Methods

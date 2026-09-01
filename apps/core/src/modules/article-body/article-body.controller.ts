@@ -8,7 +8,7 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { applyNdjsonHeaders, subscribeNdjson } from '~/utils/ndjson.util'
 
-import { ArticleBodiesDto } from './article-body.schema'
+import { ArticleBodiesDto, ArticleBodiesSchema } from './article-body.schema'
 import { ArticleBodyService } from './article-body.service'
 
 @ApiController('articles')
@@ -19,7 +19,7 @@ export class ArticleBodyController {
   @HTTPDecorators.RawResponse
   @HTTPDecorators.SkipLogging
   async streamBodies(
-    @Body() body: ArticleBodiesDto,
+    @Body({ schema: ArticleBodiesSchema }) body: ArticleBodiesDto,
     @Lang() lang: string | undefined,
     @HasAdminAccess() isOwner: boolean,
     @CurrentReaderId() readerId: string | undefined,

@@ -9,11 +9,16 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import type { CategoryModel } from '../category/category.types'
 import type { MarkdownYAMLProperty } from './markdown.interface'
-import { DataListDto, ExportMarkdownQueryDto } from './markdown.schema'
+import {
+  DataListDto,
+  DataListSchema,
+  ExportMarkdownQueryDto,
+  ExportMarkdownQuerySchema,
+} from './markdown.schema'
 import { MarkdownService } from './markdown.service'
 
 @ApiController('markdown')
@@ -22,7 +27,7 @@ export class MarkdownController {
 
   @Post('/import')
   @Auth()
-  async importArticle(@Body() body: DataListDto) {
+  async importArticle(@Body({ schema: DataListSchema }) body: DataListDto) {
     switch (body.type) {
       case ArticleTypeEnum.Post: {
         return await this.service.insertPostsToDb(body.data)
@@ -37,7 +42,9 @@ export class MarkdownController {
   @Auth()
   @HTTPDecorators.RawResponse
   @Header('Content-Type', 'application/zip')
-  async exportArticleToMarkdown(@Query() query: ExportMarkdownQueryDto) {
+  async exportArticleToMarkdown(
+    @Query({ schema: ExportMarkdownQuerySchema }) query: ExportMarkdownQueryDto,
+  ) {
     const { showTitle, slug, yaml, withMetaJson } = query
     const allArticles = await this.service.extractAllArticle()
     const { notes, pages, posts } = allArticles
@@ -153,7 +160,9 @@ export class MarkdownController {
 
   @Get('/render/structure/:id')
   @CacheTTL(60 * 60)
-  async getRenderedMarkdownHtmlStructure(@Param() params: EntityIdDto) {
+  async getRenderedMarkdownHtmlStructure(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+  ) {
     const { id } = params
     const { html, document } = await this.service.renderArticle(id)
 

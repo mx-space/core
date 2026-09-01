@@ -10,7 +10,6 @@ import {
   Query,
   Req,
 } from '@nestjs/common'
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { DEMO_MODE } from '~/app.config'
@@ -39,33 +38,33 @@ import { appleAccountTokenForReader } from './providers/apple-transaction'
 import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 
-const CheckoutSchema = z.object({
+export const CheckoutSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
   returnPath: z.string().max(2048).optional(),
 })
-class CheckoutDto extends createZodDto(CheckoutSchema) {}
+type CheckoutDto = z.infer<typeof CheckoutSchema>
 
-const ManualGrantSchema = z.object({
+export const ManualGrantSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
   expiresAt: z.coerce.date(),
 })
-class ManualGrantDto extends createZodDto(ManualGrantSchema) {}
+type ManualGrantDto = z.infer<typeof ManualGrantSchema>
 
-const MembersListQuerySchema = z.object({
+export const MembersListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   size: z.coerce.number().int().positive().max(100).default(20),
 })
-class MembersListQueryDto extends createZodDto(MembersListQuerySchema) {}
+type MembersListQueryDto = z.infer<typeof MembersListQuerySchema>
 
-const ReaderIdParamSchema = z.object({
+export const ReaderIdParamSchema = z.object({
   readerId: z.string().min(1),
 })
-class ReaderIdParamDto extends createZodDto(ReaderIdParamSchema) {}
+type ReaderIdParamDto = z.infer<typeof ReaderIdParamSchema>
 
-const AppleConfirmSchema = z.object({
+export const AppleConfirmSchema = z.object({
   signedTransactionInfo: z.string().min(1),
 })
-class AppleConfirmDto extends createZodDto(AppleConfirmSchema) {}
+type AppleConfirmDto = z.infer<typeof AppleConfirmSchema>
 
 const assertNotDemoMode = () => {
   if (DEMO_MODE) {
@@ -85,7 +84,10 @@ export class MembershipController {
   @ReaderAuth()
   @Post('/checkout')
   @HttpCode(200)
-  async checkout(@Body() body: CheckoutDto, @CurrentUser() user: SessionUser) {
+  async checkout(
+    @Body({ schema: CheckoutSchema }) body: CheckoutDto,
+    @CurrentUser() user: SessionUser,
+  ) {
     assertNotDemoMode()
 
     const membershipConfig = await this.configsService.get('membership')
@@ -158,7 +160,7 @@ export class MembershipController {
   @Post('/apple/confirm')
   @HttpCode(200)
   async confirmApple(
-    @Body() body: AppleConfirmDto,
+    @Body({ schema: AppleConfirmSchema }) body: AppleConfirmDto,
     @CurrentUser() user: SessionUser,
   ) {
     assertNotDemoMode()
@@ -255,7 +257,9 @@ export class MembershipController {
 
   @Auth()
   @Get('/members')
-  async members(@Query() query: MembersListQueryDto) {
+  async members(
+    @Query({ schema: MembersListQuerySchema }) query: MembersListQueryDto,
+  ) {
     const result = await this.membershipService.listMembers(
       query.page,
       query.size,
@@ -268,7 +272,10 @@ export class MembershipController {
 
   @Auth()
   @Put('/members/:readerId')
-  async grant(@Param() params: ReaderIdParamDto, @Body() body: ManualGrantDto) {
+  async grant(
+    @Param({ schema: ReaderIdParamSchema }) params: ReaderIdParamDto,
+    @Body({ schema: ManualGrantSchema }) body: ManualGrantDto,
+  ) {
     return this.membershipService.grantManual(params.readerId, {
       plan: body.plan,
       expiresAt: body.expiresAt,
@@ -277,7 +284,9 @@ export class MembershipController {
 
   @Auth()
   @Delete('/members/:readerId')
-  async revoke(@Param() params: ReaderIdParamDto) {
+  async revoke(
+    @Param({ schema: ReaderIdParamSchema }) params: ReaderIdParamDto,
+  ) {
     return this.membershipService.revokeManual(params.readerId)
   }
 }

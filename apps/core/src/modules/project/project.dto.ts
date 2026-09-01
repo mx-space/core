@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zAllowedUrl } from '~/common/zod'
@@ -18,8 +17,8 @@ export const ProjectCreateSchema = z.object({
 
 export const ProjectPatchSchema = ProjectCreateSchema.partial()
 
-export class ProjectCreateDto extends createZodDto(ProjectCreateSchema) {}
-export class ProjectPatchDto extends createZodDto(ProjectPatchSchema) {}
+export type ProjectCreateDto = z.infer<typeof ProjectCreateSchema>
+export type ProjectPatchDto = z.infer<typeof ProjectPatchSchema>
 
 export type ProjectCreateInput = z.infer<typeof ProjectCreateSchema>
 export type ProjectPatchInput = z.infer<typeof ProjectPatchSchema>

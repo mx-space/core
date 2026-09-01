@@ -7,7 +7,7 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 
 import { AuthService } from '../auth/auth.service'
 import { ConfigsService } from '../configs/configs.service'
-import { OwnerPatchDto } from './owner.schema'
+import { OwnerPatchDto, OwnerPatchSchema } from './owner.schema'
 import { OwnerService } from './owner.service'
 
 @ApiController(['owner', 'user'])
@@ -25,7 +25,7 @@ export class OwnerController {
 
   @Patch()
   @Auth()
-  async patchOwner(@Body() body: OwnerPatchDto) {
+  async patchOwner(@Body({ schema: OwnerPatchSchema }) body: OwnerPatchDto) {
     return this.ownerService.patchOwnerData(body)
   }
 

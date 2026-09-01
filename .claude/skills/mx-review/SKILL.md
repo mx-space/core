@@ -16,7 +16,7 @@ Review code for project conventions. Target: `$ARGUMENTS`
 - [ ] Paginated endpoints return `PaginationResult<T>` from repository (no special decorator needed)
 - [ ] Authenticated endpoints use `@Auth()` decorator
 - [ ] Uses correct HTTP methods (GET/POST/PUT/DELETE)
-- [ ] Parameter validation uses DTOs (e.g., `EntityIdDto` for path params)
+- [ ] Parameter validation uses `@Body/@Query/@Param({ schema })` with Zod schemas
 - [ ] Return values follow response conventions (arrays auto-wrapped, objects returned directly)
 
 ### 2. Service Conventions
@@ -38,8 +38,8 @@ Review code for project conventions. Target: `$ARGUMENTS`
 ### 4. Schema (DTO) Conventions
 
 - [ ] Uses Zod instead of class-validator
-- [ ] Uses `createZodDto()` to create DTO classes
-- [ ] Provides Partial DTO for update operations
+- [ ] Request params use `@Body/@Query/@Param({ schema })` (no `createZodDto` / nestjs-zod)
+- [ ] Provides a partial schema for update operations
 - [ ] Uses project custom validators (e.g., `zEntityId`, `zNonEmptyString`, `zCoerceInt`)
 
 ### 5. Database Schema Conventions
@@ -96,11 +96,15 @@ class CreateDto {
   name: string
 }
 
+// Also wrong — nestjs-zod is removed
+import { createZodDto } from 'nestjs-zod'
+class CreateDto extends createZodDto(Schema) {}
+
 // Correct
 import { z } from 'zod'
-import { createZodDto } from 'nestjs-zod'
-const Schema = z.object({ name: z.string() })
-class CreateDto extends createZodDto(Schema) {}
+export const Schema = z.object({ name: z.string() })
+export type CreateInput = z.infer<typeof Schema>
+// @Body({ schema: Schema }) body: CreateInput
 ```
 
 ### Issue 2: Response not following conventions
@@ -136,7 +140,7 @@ async get(@Param('id') id: string) {}
 
 // Correct - validated entity ID
 @Get('/:id')
-async get(@Param() params: EntityIdDto) {
+async get(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
   return this.service.findById(params.id)
 }
 ```

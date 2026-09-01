@@ -1,31 +1,30 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common'
-import { createZodDto } from 'nestjs-zod'
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { z } from 'zod'
 
-const QuerySchema = z.object({
+export const QuerySchema = z.object({
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
 
-class QueryDto extends createZodDto(QuerySchema) {}
+type QueryDto = z.infer<typeof QuerySchema>
 
-const BodySchema = z.object({
+export const BodySchema = z.object({
   newName: z.string(),
   socialIds: z.record(z.string(), z.string()).optional(),
 })
 
-class BodyDto extends createZodDto(BodySchema) {}
+type BodyDto = z.infer<typeof BodySchema>
 
 @Controller('case-test')
 class CaseTestController {
   @Get('/echo')
-  echoQuery(@Query() query: QueryDto) {
+  echoQuery(@Query({ schema: QuerySchema }) query: QueryDto) {
     return { sortBy: query.sortBy ?? null, sortOrder: query.sortOrder }
   }
 
   @Post('/echo')
-  echoBody(@Body() body: BodyDto) {
+  echoBody(@Body({ schema: BodySchema }) body: BodyDto) {
     return body
   }
 }
@@ -65,5 +64,32 @@ describe('request case normalization', () => {
       new_name: 'a',
       social_ids: { github_user: 'u' },
     })
+  })
+
+  test('validation failure keeps the 422 VALIDATION_FAILED envelope', async () => {
+    const res = await proxy.app.inject({
+      method: 'POST',
+      url: '/case-test/echo',
+      payload: {},
+    })
+    expect(res.statusCode).toBe(422)
+    const body = res.json()
+    expect(body.error.code).toBe('VALIDATION_FAILED')
+    expect(body.error.message).toBe(
+      'newName: Invalid input: expected string, received undefined',
+    )
+    expect(body.error.details.errors[0]).toMatchObject({
+      field: 'newName',
+      path: ['newName'],
+      message: expect.stringContaining('expected string'),
+    })
+    expect(body.error.details.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: ['newName'],
+          message: expect.any(String),
+        }),
+      ]),
+    )
   })
 })

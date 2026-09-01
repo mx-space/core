@@ -6,7 +6,7 @@ import { AuthTestingGuard } from 'test/mock/guard/auth.guard'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { AuthGuard } from '~/common/guards/auth.guard'
 import { requestCaseNormalizationPipeInstance } from '~/common/pipes/case-normalization.pipe'
-import { extendedZodValidationPipeInstance } from '~/common/zod'
+import { standardSchemaValidationPipeInstance } from '~/common/zod'
 
 export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
   let nextModule: TestingModule
@@ -23,7 +23,7 @@ export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
     nextModule.createNestApplication<NestFastifyApplication>(fastifyApp)
   app.useGlobalPipes(
     requestCaseNormalizationPipeInstance,
-    extendedZodValidationPipeInstance,
+    standardSchemaValidationPipeInstance,
   )
 
   await app.init()

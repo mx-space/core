@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -13,7 +12,7 @@ export const AckSchema = z.object({
   payload: z.any(),
 })
 
-export class AckDto extends createZodDto(AckSchema) {}
+export type AckDto = z.infer<typeof AckSchema>
 
 export const AckReadPayloadSchema = z.object({
   type: z.enum(ArticleTypeEnum),

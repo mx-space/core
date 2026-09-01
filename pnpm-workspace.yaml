@@ -105,6 +105,16 @@ publicHoistPattern:
   - "*webpack*"
   - "*@codemirror*"
 strictPeerDependencies: false
+# Nest 12 peers that have not cut a v12 major yet. Do not rewrite the logger
+# or add @nestjs/observe in this upgrade; keep @nestjs/throttler 6.5.0.
+packageExtensions:
+  "@innei/pretty-logger-nestjs":
+    peerDependencies:
+      "@nestjs/common": ">=11.0.0 <13.0.0"
+  "@nestjs/throttler":
+    peerDependencies:
+      "@nestjs/common": ">=10.0.0 <13.0.0"
+      "@nestjs/core": ">=10.0.0 <13.0.0"
 minimumReleaseAgeExclude:
   - "@haklex/*"
   - "@mx-space/*"

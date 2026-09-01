@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 export enum AiQueryType {
@@ -31,7 +30,7 @@ export const GenerateAiSchema = z
     },
   )
 
-export class GenerateAiDto extends createZodDto(GenerateAiSchema) {}
+export type GenerateAiDto = z.infer<typeof GenerateAiSchema>
 
 // Type exports
 export type GenerateAiInput = z.infer<typeof GenerateAiSchema>

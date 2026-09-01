@@ -19,8 +19,8 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
@@ -28,11 +28,17 @@ import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
   CreateInsightsTaskDto,
+  CreateInsightsTaskSchema,
   CreateInsightsTranslationTaskDto,
+  CreateInsightsTranslationTaskSchema,
   GetInsightsGroupedQueryDto,
+  GetInsightsGroupedQuerySchema,
   GetInsightsQueryDto,
+  GetInsightsQuerySchema,
   GetInsightsStreamQueryDto,
+  GetInsightsStreamQuerySchema,
   UpdateInsightsDto,
+  UpdateInsightsSchema,
 } from './ai-insights.schema'
 import { AiInsightsService } from './ai-insights.service'
 
@@ -45,14 +51,17 @@ export class AiInsightsController {
 
   @Post('/task')
   @Auth()
-  createInsightsTask(@Body() body: CreateInsightsTaskDto) {
+  createInsightsTask(
+    @Body({ schema: CreateInsightsTaskSchema }) body: CreateInsightsTaskDto,
+  ) {
     return this.taskService.createInsightsTask(body)
   }
 
   @Post('/task/translate')
   @Auth()
   async createInsightsTranslationTask(
-    @Body() body: CreateInsightsTranslationTaskDto,
+    @Body({ schema: CreateInsightsTranslationTaskSchema })
+    body: CreateInsightsTranslationTaskDto,
   ) {
     const source = await this.service.findSourceInsightsForArticle(body.refId)
     if (!source) {
@@ -74,13 +83,13 @@ export class AiInsightsController {
 
   @Get('/ref/:id')
   @Auth()
-  getInsightsByRefId(@Param() params: EntityIdDto) {
+  getInsightsByRefId(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.service.getInsightsByRefId(params.id)
   }
 
   @Get('/')
   @Auth()
-  async getInsights(@Query() query: BasicPagerDto) {
+  async getInsights(@Query({ schema: BasicPagerSchema }) query: BasicPagerDto) {
     const result = await this.service.getAllInsights(query)
     return withMeta(
       result.data,
@@ -93,7 +102,10 @@ export class AiInsightsController {
 
   @Get('/grouped')
   @Auth()
-  async getInsightsGrouped(@Query() query: GetInsightsGroupedQueryDto) {
+  async getInsightsGrouped(
+    @Query({ schema: GetInsightsGroupedQuerySchema })
+    query: GetInsightsGroupedQueryDto,
+  ) {
     const result = await this.service.getAllInsightsGrouped(query)
     return withMeta(
       result.data,
@@ -104,22 +116,22 @@ export class AiInsightsController {
   @Patch('/:id')
   @Auth()
   updateInsights(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateInsightsDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: UpdateInsightsSchema }) body: UpdateInsightsDto,
   ) {
     return this.service.updateInsightsInDb(params.id, body.content)
   }
 
   @Delete('/:id')
   @Auth()
-  deleteInsights(@Param() params: EntityIdDto) {
+  deleteInsights(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.service.deleteInsightsInDb(params.id)
   }
 
   @Get('/article/:id')
   getArticleInsights(
-    @Param() params: EntityIdDto,
-    @Query() query: GetInsightsQueryDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Query({ schema: GetInsightsQuerySchema }) query: GetInsightsQueryDto,
     @HasAdminAccess() isOwner?: boolean,
     @CurrentReaderId() readerId?: string,
   ) {
@@ -134,8 +146,9 @@ export class AiInsightsController {
   @Get('/article/:id/generate')
   @HTTPDecorators.RawResponse
   async generateArticleInsights(
-    @Param() params: EntityIdDto,
-    @Query() query: GetInsightsStreamQueryDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Query({ schema: GetInsightsStreamQuerySchema })
+    query: GetInsightsStreamQueryDto,
     @Res() reply: FastifyReply,
     @HasAdminAccess() isOwner?: boolean,
     @CurrentReaderId() readerId?: string,

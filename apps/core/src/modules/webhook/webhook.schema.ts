@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zStrictUrl } from '~/common/zod'
@@ -12,11 +11,11 @@ export const WebhookSchema = z.object({
   scope: z.enum(EventScope),
 })
 
-export class WebhookDto extends createZodDto(WebhookSchema) {}
+export type WebhookDto = z.infer<typeof WebhookSchema>
 
 export const PartialWebhookSchema = WebhookSchema.partial()
 
-export class WebhookDtoPartial extends createZodDto(PartialWebhookSchema) {}
+export type WebhookDtoPartial = z.infer<typeof PartialWebhookSchema>
 
 // Type exports
 export type WebhookInput = z.infer<typeof WebhookSchema>

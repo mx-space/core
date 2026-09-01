@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import {
@@ -63,7 +62,7 @@ export const NoteSchema = NoteBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export class NoteDto extends createZodDto(NoteSchema) {}
+export type NoteDto = z.infer<typeof NoteSchema>
 
 /**
  * Partial note schema for PATCH operations
@@ -76,7 +75,7 @@ export const PartialNoteSchema = z.object({
   weather: z.string().nullable().optional(),
 })
 
-export class PartialNoteDto extends createZodDto(PartialNoteSchema) {}
+export type PartialNoteDto = z.infer<typeof PartialNoteSchema>
 
 /**
  * Note query schema for pagination
@@ -92,7 +91,7 @@ export const NoteQuerySchema = createPagerSchema([
   withSummary: zCoerceBoolean.optional(),
 })
 
-export class NoteQueryDto extends createZodDto(NoteQuerySchema) {}
+export type NoteQueryDto = z.infer<typeof NoteQuerySchema>
 
 /**
  * Note password query schema
@@ -104,9 +103,7 @@ export const NotePasswordQuerySchema = z.object({
   prefer: zPrefer,
 })
 
-export class NotePasswordQueryDto extends createZodDto(
-  NotePasswordQuerySchema,
-) {}
+export type NotePasswordQueryDto = z.infer<typeof NotePasswordQuerySchema>
 
 /**
  * List query schema
@@ -116,7 +113,7 @@ export const ListQuerySchema = z.object({
   lang: zLang,
 })
 
-export class ListQueryDto extends createZodDto(ListQuerySchema) {}
+export type ListQueryDto = z.infer<typeof ListQuerySchema>
 
 /**
  * Nid type schema
@@ -128,7 +125,7 @@ export const NidTypeSchema = z.object({
   ),
 })
 
-export class NidType extends createZodDto(NidTypeSchema) {}
+export type NidType = z.infer<typeof NidTypeSchema>
 
 export const NoteSlugDateParamsSchema = z.object({
   year: zCoerceInt.min(1970),
@@ -137,9 +134,7 @@ export const NoteSlugDateParamsSchema = z.object({
   slug: zNonEmptyString,
 })
 
-export class NoteSlugDateParamsDto extends createZodDto(
-  NoteSlugDateParamsSchema,
-) {}
+export type NoteSlugDateParamsDto = z.infer<typeof NoteSlugDateParamsSchema>
 
 /**
  * Set note publish status schema
@@ -148,9 +143,7 @@ export const SetNotePublishStatusSchema = z.object({
   isPublished: z.boolean(),
 })
 
-export class SetNotePublishStatusDto extends createZodDto(
-  SetNotePublishStatusSchema,
-) {}
+export type SetNotePublishStatusDto = z.infer<typeof SetNotePublishStatusSchema>
 
 /**
  * Note topic pager schema (extends pager with lang support)
@@ -165,7 +158,7 @@ export const NoteTopicPagerSchema = createPagerSchema([
   lang: zLang,
 })
 
-export class NoteTopicPagerDto extends createZodDto(NoteTopicPagerSchema) {}
+export type NoteTopicPagerDto = z.infer<typeof NoteTopicPagerSchema>
 
 // Type exports
 export type CoordinateInput = z.infer<typeof CoordinateSchema>

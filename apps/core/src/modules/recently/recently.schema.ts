@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -34,16 +33,16 @@ export const RecentlySchema = z.object({
   metadata: RecentlyMetadataSchema.nullable().optional(),
 })
 
-export class RecentlyDto extends createZodDto(RecentlySchema) {}
+export type RecentlyDto = z.infer<typeof RecentlySchema>
 
 export const RecentlyRefCandidatesQuerySchema = z.object({
   search: z.string().trim().max(120).optional(),
   size: z.coerce.number().int().min(1).max(20).default(12),
 })
 
-export class RecentlyRefCandidatesQueryDto extends createZodDto(
-  RecentlyRefCandidatesQuerySchema,
-) {}
+export type RecentlyRefCandidatesQueryDto = z.infer<
+  typeof RecentlyRefCandidatesQuerySchema
+>
 
 export const RecentlyAttitudeSchema = z.object({
   attitude: z.preprocess(
@@ -52,7 +51,7 @@ export const RecentlyAttitudeSchema = z.object({
   ),
 })
 
-export class RecentlyAttitudeDto extends createZodDto(RecentlyAttitudeSchema) {}
+export type RecentlyAttitudeDto = z.infer<typeof RecentlyAttitudeSchema>
 
 export type RecentlyInput = z.infer<typeof RecentlySchema>
 export type RecentlyAttitudeInput = z.infer<typeof RecentlyAttitudeSchema>

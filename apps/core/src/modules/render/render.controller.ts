@@ -20,11 +20,14 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
-import { MarkdownPreviewDto } from '../markdown/markdown.schema'
+import {
+  MarkdownPreviewDto,
+  MarkdownPreviewSchema,
+} from '../markdown/markdown.schema'
 import { MarkdownService } from '../markdown/markdown.service'
 import type { NoteModel } from '../note/note.types'
 import { OwnerService } from '../owner/owner.service'
@@ -44,7 +47,7 @@ export class RenderEjsController {
   @Header('content-type', 'text/html')
   @CacheTTL(60 * 60)
   async renderArticle(
-    @Param() params: EntityIdDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @Query('theme') theme: string,
   ) {
     const { id } = params
@@ -121,7 +124,7 @@ export class RenderEjsController {
   @Auth()
   @Header('content-type', 'text/html')
   async markdownPreview(
-    @Body() body: MarkdownPreviewDto,
+    @Body({ schema: MarkdownPreviewSchema }) body: MarkdownPreviewDto,
     @Query('theme') theme: string,
   ) {
     const { md, title } = body

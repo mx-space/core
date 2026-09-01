@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import {
@@ -46,7 +45,7 @@ export const PostSchema = PostBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export class PostDto extends createZodDto(PostSchema) {}
+export type PostDto = z.infer<typeof PostSchema>
 
 /**
  * Partial post schema for PATCH operations
@@ -57,7 +56,7 @@ export const PartialPostSchema = z.object({
   pinAt: zPinDate,
 })
 
-export class PartialPostDto extends createZodDto(PartialPostSchema) {}
+export type PartialPostDto = z.infer<typeof PartialPostSchema>
 
 /**
  * Category and slug params schema
@@ -72,7 +71,7 @@ export const CategoryAndSlugSchema = z.object({
   }, z.string()),
 })
 
-export class CategoryAndSlugDto extends createZodDto(CategoryAndSlugSchema) {}
+export type CategoryAndSlugDto = z.infer<typeof CategoryAndSlugSchema>
 
 /**
  * Post detail query schema
@@ -82,7 +81,7 @@ export const PostDetailQuerySchema = z.object({
   prefer: zPrefer,
 })
 
-export class PostDetailQueryDto extends createZodDto(PostDetailQuerySchema) {}
+export type PostDetailQueryDto = z.infer<typeof PostDetailQuerySchema>
 
 /**
  * Post pager schema
@@ -103,7 +102,7 @@ export const PostPagerSchema = createPagerSchema([
   lang: zLang,
 })
 
-export class PostPagerDto extends createZodDto(PostPagerSchema) {}
+export type PostPagerDto = z.infer<typeof PostPagerSchema>
 
 /**
  * Set post publish status schema
@@ -112,9 +111,7 @@ export const SetPostPublishStatusSchema = z.object({
   isPublished: z.boolean(),
 })
 
-export class SetPostPublishStatusDto extends createZodDto(
-  SetPostPublishStatusSchema,
-) {}
+export type SetPostPublishStatusDto = z.infer<typeof SetPostPublishStatusSchema>
 
 // Type exports
 export type PostInput = z.infer<typeof PostSchema>

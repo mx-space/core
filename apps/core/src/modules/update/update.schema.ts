@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 /**
@@ -8,7 +7,7 @@ export const UpdateAdminSchema = z.object({
   force: z.boolean().optional(),
 })
 
-export class UpdateAdminDto extends createZodDto(UpdateAdminSchema) {}
+export type UpdateAdminDto = z.infer<typeof UpdateAdminSchema>
 
 // Type exports
 export type UpdateAdminInput = z.infer<typeof UpdateAdminSchema>

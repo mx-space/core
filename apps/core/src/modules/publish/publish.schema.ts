@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -18,4 +17,4 @@ export const CreatePublishJobSchema = z.object({
   revisionId: zEntityId,
 })
 
-export class CreatePublishJobDto extends createZodDto(CreatePublishJobSchema) {}
+export type CreatePublishJobDto = z.infer<typeof CreatePublishJobSchema>

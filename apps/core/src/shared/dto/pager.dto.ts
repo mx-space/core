@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceInt, zEntityId, zSortOrder } from '~/common/zod'
@@ -16,7 +15,7 @@ export const BasicPagerSchema = z.object({
   view: z.string().optional(),
 })
 
-export class BasicPagerDto extends createZodDto(BasicPagerSchema) {}
+export type BasicPagerDto = z.infer<typeof BasicPagerSchema>
 
 export type BasicPagerInput = z.infer<typeof BasicPagerSchema>
 
@@ -43,6 +42,6 @@ export const OffsetSchema = z.object({
   size: zCoerceInt.max(50).optional(),
 })
 
-export class OffsetDto extends createZodDto(OffsetSchema) {}
+export type OffsetDto = z.infer<typeof OffsetSchema>
 
 export type OffsetInput = z.infer<typeof OffsetSchema>

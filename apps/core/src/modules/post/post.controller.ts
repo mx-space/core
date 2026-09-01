@@ -4,8 +4,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
-import type { IpRecord } from '~/common/decorators/ip.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
+import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -32,7 +31,7 @@ import {
   resolveEffectivePreviewBlocks,
   truncateLexicalContent,
 } from '~/processors/helper/lexical-truncate.util'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
@@ -42,10 +41,15 @@ import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
   CategoryAndSlugDto,
+  CategoryAndSlugSchema,
   PartialPostDto,
+  PartialPostSchema,
   PostDetailQueryDto,
+  PostDetailQuerySchema,
   PostPagerDto,
+  PostPagerSchema,
   SetPostPublishStatusDto,
+  SetPostPublishStatusSchema,
 } from './post.schema'
 import { PostService } from './post.service'
 import type { PostModel } from './post.types'
@@ -124,7 +128,7 @@ export class PostController {
 
   @Get('/')
   async getPaginate(
-    @Query() query: PostPagerDto,
+    @Query({ schema: PostPagerSchema }) query: PostPagerDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
@@ -269,7 +273,7 @@ export class PostController {
   @Get('/:id')
   @BypassCaseTransform(['meta'])
   async getById(
-    @Param() params: EntityIdDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
     @CurrentReaderId() readerId?: string,
@@ -356,8 +360,8 @@ export class PostController {
   @Get('/:category/:slug')
   @BypassCaseTransform(['meta'])
   async getByCateAndSlug(
-    @Param() params: CategoryAndSlugDto,
-    @Query() query: PostDetailQueryDto,
+    @Param({ schema: CategoryAndSlugSchema }) params: CategoryAndSlugDto,
+    @Query({ schema: PostDetailQuerySchema }) query: PostDetailQueryDto,
     @IpLocation() { ip }: IpRecord,
     @HasAdminAccess() isAuthenticated?: boolean,
     @Lang() lang?: string,
@@ -505,7 +509,10 @@ export class PostController {
 
   @Patch('/:id')
   @Auth()
-  async patch(@Param() params: EntityIdDto, @Body() body: PartialPostDto) {
+  async patch(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: PartialPostSchema }) body: PartialPostDto,
+  ) {
     await this.postService.updateById(
       params.id,
       body as unknown as Partial<PostModel>,
@@ -514,7 +521,7 @@ export class PostController {
 
   @Delete('/:id')
   @Auth()
-  async deletePost(@Param() params: EntityIdDto) {
+  async deletePost(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     const { id } = params
     await this.postService.deletePost(id)
   }
@@ -522,8 +529,8 @@ export class PostController {
   @Patch('/:id/publish')
   @Auth()
   async setPublishStatus(
-    @Param() params: EntityIdDto,
-    @Body() body: SetPostPublishStatusDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: SetPostPublishStatusSchema }) body: SetPostPublishStatusDto,
   ) {
     await this.postService.updateById(params.id, {
       isPublished: body.isPublished,

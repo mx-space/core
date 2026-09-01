@@ -6,13 +6,16 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import {
   BatchUnsubscribeDto,
+  BatchUnsubscribeSchema,
   CancelSubscribeDto,
+  CancelSubscribeSchema,
   SubscribeDto,
+  SubscribeSchema,
 } from './subscribe.schema'
 import { SubscribeService } from './subscribe.service'
 
@@ -34,7 +37,7 @@ export class SubscribeController {
 
   @Get('/')
   @Auth()
-  async list(@Query() query: BasicPagerDto) {
+  async list(@Query({ schema: BasicPagerSchema }) query: BasicPagerDto) {
     const { page = 1, size = 10 } = query
     const result = await this.service.list(page, size)
     return withMeta(
@@ -44,7 +47,7 @@ export class SubscribeController {
   }
 
   @Post('/')
-  async subscribe(@Body() body: SubscribeDto) {
+  async subscribe(@Body({ schema: SubscribeSchema }) body: SubscribeDto) {
     if (!(await this.service.checkEnable())) {
       throw createAppException(AppErrorCode.SUBSCRIBE_NOT_ENABLED)
     }
@@ -62,7 +65,9 @@ export class SubscribeController {
 
   @Get('/unsubscribe')
   @HTTPDecorators.RawResponse
-  async unsubscribe(@Query() query: CancelSubscribeDto) {
+  async unsubscribe(
+    @Query({ schema: CancelSubscribeSchema }) query: CancelSubscribeDto,
+  ) {
     const { email, cancelToken } = query
 
     const result = await this.service.unsubscribe(email, cancelToken)
@@ -74,7 +79,9 @@ export class SubscribeController {
 
   @Delete('/unsubscribe/batch')
   @Auth()
-  async unsubscribeBatch(@Body() body: BatchUnsubscribeDto) {
+  async unsubscribeBatch(
+    @Body({ schema: BatchUnsubscribeSchema }) body: BatchUnsubscribeDto,
+  ) {
     const { emails, all } = body
     const deletedCount = await this.service.unsubscribeBatch(emails, all)
     return { deletedCount }

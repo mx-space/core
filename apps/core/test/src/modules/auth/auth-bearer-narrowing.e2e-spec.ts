@@ -6,7 +6,7 @@ import { vi } from 'vitest'
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
 import { CurrentUser } from '~/common/decorators/current-user.decorator'
 import { AuthGuard } from '~/common/guards/auth.guard'
-import { extendedZodValidationPipeInstance } from '~/common/zod'
+import { standardSchemaValidationPipeInstance } from '~/common/zod'
 import { AuthService } from '~/modules/auth/auth.service'
 import type { SessionUser } from '~/modules/auth/auth.types'
 
@@ -93,7 +93,7 @@ describe('apiKey Bearer narrowing (e2e)', () => {
       imports: [BearerNarrowingTestModule],
     }).compile()
     app = moduleRef.createNestApplication<NestFastifyApplication>(fastifyApp)
-    app.useGlobalPipes(extendedZodValidationPipeInstance)
+    app.useGlobalPipes(standardSchemaValidationPipeInstance)
     await app.init()
     await app.getHttpAdapter().getInstance().ready()
   })
