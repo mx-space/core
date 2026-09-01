@@ -20,12 +20,17 @@ import {
   BYPASS_CASE_TRANSFORM_METADATA,
   RESPONSE_PASSTHROUGH_METADATA,
 } from '~/constants/system.constant'
+import { isHttpExecutionContext } from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    if (!isHttpExecutionContext(context)) {
+      return next.handle()
+    }
+
     const http = context.switchToHttp()
     if (!http.getRequest()) {
       return next.handle()

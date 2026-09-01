@@ -3,14 +3,17 @@ import { ForbiddenException, Injectable } from '@nestjs/common'
 
 import { isDev } from '~/global/env.global'
 import { AuthService } from '~/modules/auth/auth.service'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class SpiderGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    if (isDev) {
+    if (!isHttpExecutionContext(context) || isDev) {
       return true
     }
 

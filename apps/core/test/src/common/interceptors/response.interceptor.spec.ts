@@ -26,9 +26,11 @@ const createResponse = (): FakeResponse => {
 const createContext = (options: {
   hasRequest?: boolean
   response?: FakeResponse
+  type?: string
 }): ExecutionContext => {
-  const { hasRequest = true, response } = options
+  const { hasRequest = true, response, type = 'http' } = options
   return {
+    getType: () => type,
     getHandler: () => () => void 0,
     getClass: () => class {},
     switchToHttp: () => ({
@@ -131,6 +133,17 @@ describe('ResponseInterceptor', () => {
     const result = await run(
       make(),
       createContext({ hasRequest: false }),
+      value,
+    )
+
+    expect(result).toBe(value)
+  })
+
+  test('does not wrap websocket handler results in the HTTP envelope', async () => {
+    const value = { event: 'ack', payload: { ok: true }, id: 'p1' }
+    const result = await run(
+      make(),
+      createContext({ type: 'ws', hasRequest: true }),
       value,
     )
 

@@ -9,7 +9,10 @@ import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
 
 import { HTTP_REQUEST_TIME } from '~/constants/meta.constant'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -21,6 +24,10 @@ export class LoggingInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> {
+    if (!isHttpExecutionContext(context)) {
+      return next.handle()
+    }
+
     const request = getNestExecutionContextRequest(context)
     const content = `${request.method} ${request.url}`
     this.logger.debug(`${pc.dim('→')} ${content}`)

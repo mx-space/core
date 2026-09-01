@@ -15,7 +15,10 @@ import { RedisKeys } from '~/constants/cache.constant'
 import * as SYSTEM from '~/constants/system.constant'
 import { AnalyzeService } from '~/modules/analyze/analyze.service'
 import { RedisService } from '~/processors/redis/redis.service'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 import { getIp } from '~/utils/ip.util'
 import { getRedisKey } from '~/utils/redis.util'
 import { scheduleManager } from '~/utils/schedule.util'
@@ -41,6 +44,10 @@ export class AnalyzeInterceptor implements NestInterceptor {
     next: CallHandler<any>,
   ): Promise<Observable<any>> {
     const call$ = next.handle()
+    if (!isHttpExecutionContext(context)) {
+      return call$
+    }
+
     const request = getNestExecutionContextRequest(context)
     if (!request) {
       return call$

@@ -14,7 +14,10 @@ import { API_CACHE_PREFIX } from '~/constants/cache.constant'
 import * as META from '~/constants/meta.constant'
 import { isTest } from '~/global/env.global'
 import { CacheService } from '~/processors/redis/cache.service'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 import { hashString } from '~/utils/tool.util'
 
 @Injectable()
@@ -33,7 +36,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const call$ = next.handle()
 
-    if (REDIS.disableApiCache || isTest) {
+    if (!isHttpExecutionContext(context) || REDIS.disableApiCache || isTest) {
       return call$
     }
 

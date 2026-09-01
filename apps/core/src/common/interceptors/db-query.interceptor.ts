@@ -4,12 +4,20 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import qs from 'qs'
+
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 
 @Injectable()
 export class DbQueryInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>) {
+    if (!isHttpExecutionContext(context)) {
+      return next.handle()
+    }
+
     const request = getNestExecutionContextRequest(context)
     const query = request.query as any
 

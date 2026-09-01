@@ -7,6 +7,7 @@ import {
   isWsEnvelope,
   type WsEnvelope,
 } from '@mx-space/ws-client/protocol'
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter'
 import {
   FastifyAdapter,
@@ -17,7 +18,11 @@ import IORedis, { type Redis } from 'ioredis'
 import { expect, type Mock, vi } from 'vitest'
 import WebSocket from 'ws'
 
+import { RolesGuard } from '~/common/guards/roles.guard'
+import { IdempotenceInterceptor } from '~/common/interceptors/idempotence.interceptor'
+import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { AuthService } from '~/modules/auth/auth.service'
+import { ConfigsService } from '~/modules/configs/configs.service'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -39,6 +44,7 @@ export interface RedisConn {
 const REDIS_QUIT_GRACE_MS = 50
 
 export interface AuthServiceStub {
+  getSessionUser: Mock
   getSessionUserFromHeaders: Mock
   verifyApiKey: Mock
   isOwnerReaderId: Mock
@@ -57,6 +63,10 @@ function buildFakeRedisService(client: Redis) {
 
 function createAuthServiceStub(): AuthServiceStub {
   return {
+    getSessionUser: vi.fn(async (req?: { headers?: unknown }) => {
+      void req!.headers
+      return null
+    }),
     getSessionUserFromHeaders: vi.fn(async () => null),
     verifyApiKey: vi.fn(async () => null),
     isOwnerReaderId: vi.fn(async () => false),
@@ -97,6 +107,10 @@ export async function createGatewayApp(
       RoomSubsService,
       RedisService,
       AuthService,
+      { provide: ConfigsService, useValue: {} },
+      { provide: APP_GUARD, useClass: RolesGuard },
+      { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
+      { provide: APP_INTERCEPTOR, useClass: IdempotenceInterceptor },
     ],
   })
     .overrideProvider(RedisService)

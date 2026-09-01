@@ -34,6 +34,7 @@ const createReply = (): FakeReply => {
 
 const createContext = (request: any, reply: FakeReply): ExecutionContext =>
   ({
+    getType: () => 'http',
     getHandler: () => function handler() {},
     getClass: () => class {},
     switchToHttp: () => ({
