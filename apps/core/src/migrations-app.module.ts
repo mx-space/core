@@ -1,8 +1,8 @@
-import { LoggerModule } from '@innei/pretty-logger-nestjs'
 import { Global, Module } from '@nestjs/common'
 
 import { AppMigrationsModule } from './database/app-migrations/app-migrations.module'
 import { postgresProviders } from './processors/database/postgres.provider'
+import { PrettyLoggerModule } from './processors/logger/pretty-logger.module'
 
 /**
  * Global sub-module that surfaces the PG pool/db tokens to anything in the
@@ -32,6 +32,6 @@ class MigrationsDatabaseModule {}
  * background tasks finish the work — do NOT widen this module's imports.
  */
 @Module({
-  imports: [LoggerModule, MigrationsDatabaseModule, AppMigrationsModule],
+  imports: [PrettyLoggerModule, MigrationsDatabaseModule, AppMigrationsModule],
 })
 export class MigrationsAppModule {}
