@@ -13,14 +13,14 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import {
-  GenerateEntriesDto,
+  type GenerateEntriesDto,
   GenerateEntriesSchema,
-  QueryEntriesDto,
+  type QueryEntriesDto,
   QueryEntriesSchema,
-  UpdateEntryDto,
+  type UpdateEntryDto,
   UpdateEntrySchema,
 } from './translation-entry.schema'
 import { TranslationEntryService } from './translation-entry.service'

@@ -17,7 +17,7 @@ import { TranslationEntryRepository } from './ai-translation.repository'
 import {
   type TranslationEntryKeyPath,
   type TranslationEntryKeyType,
-  TranslationEntryModel,
+  type TranslationEntryModel,
 } from './translation-entry.types'
 
 interface CollectedValue {

@@ -17,7 +17,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { EventBusEvents } from '~/constants/event-bus.constant'
-import { StringIdDto, StringIdSchema } from '~/shared/dto/id.dto'
+import { type StringIdDto, StringIdSchema } from '~/shared/dto/id.dto'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { AuthInstanceInjectKey } from './auth.constant'

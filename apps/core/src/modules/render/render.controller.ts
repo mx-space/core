@@ -20,12 +20,12 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { getShortDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import {
-  MarkdownPreviewDto,
+  type MarkdownPreviewDto,
   MarkdownPreviewSchema,
 } from '../markdown/markdown.schema'
 import { MarkdownService } from '../markdown/markdown.service'

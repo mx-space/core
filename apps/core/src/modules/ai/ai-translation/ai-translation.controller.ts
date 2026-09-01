@@ -16,25 +16,25 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
-  CreateTranslationAllTaskDto,
+  type CreateTranslationAllTaskDto,
   CreateTranslationAllTaskSchema,
-  CreateTranslationBatchTaskDto,
+  type CreateTranslationBatchTaskDto,
   CreateTranslationBatchTaskSchema,
-  CreateTranslationTaskDto,
+  type CreateTranslationTaskDto,
   CreateTranslationTaskSchema,
 } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import {
-  GetTranslationQueryDto,
+  type GetTranslationQueryDto,
   GetTranslationQuerySchema,
-  GetTranslationsGroupedQueryDto,
+  type GetTranslationsGroupedQueryDto,
   GetTranslationsGroupedQuerySchema,
-  GetTranslationStreamQueryDto,
+  type GetTranslationStreamQueryDto,
   GetTranslationStreamQuerySchema,
-  UpdateTranslationDto,
+  type UpdateTranslationDto,
   UpdateTranslationSchema,
 } from './ai-translation.schema'
 import { AiTranslationService } from './ai-translation.service'

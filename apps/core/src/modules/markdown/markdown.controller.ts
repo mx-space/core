@@ -9,14 +9,14 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { ArticleTypeEnum } from '~/constants/article.constant'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import type { CategoryModel } from '../category/category.types'
 import type { MarkdownYAMLProperty } from './markdown.interface'
 import {
-  DataListDto,
+  type DataListDto,
   DataListSchema,
-  ExportMarkdownQueryDto,
+  type ExportMarkdownQueryDto,
   ExportMarkdownQuerySchema,
 } from './markdown.schema'
 import { MarkdownService } from './markdown.service'

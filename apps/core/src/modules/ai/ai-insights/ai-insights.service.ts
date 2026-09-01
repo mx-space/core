@@ -21,8 +21,7 @@ import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiInsightsAdapter } from './ai-insights.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
-import type { AiInsightsRow } from './ai-insights.types'
-import { AIInsightsModel } from './ai-insights.types'
+import type { type AIInsightsModel, AiInsightsRow } from './ai-insights.types'
 
 @Injectable()
 export class AiInsightsService implements OnModuleInit {

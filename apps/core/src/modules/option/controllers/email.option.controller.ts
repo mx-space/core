@@ -5,9 +5,9 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 
 import { OptionController } from '../option.decorator'
 import {
-  EmailTemplateBodyDto,
+  type EmailTemplateBodyDto,
   EmailTemplateBodySchema,
-  EmailTemplateTypeDto,
+  type EmailTemplateTypeDto,
   EmailTemplateTypeSchema,
 } from '../option.schema'
 

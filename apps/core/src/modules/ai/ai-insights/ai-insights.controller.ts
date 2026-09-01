@@ -19,25 +19,25 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
-  CreateInsightsTaskDto,
+  type CreateInsightsTaskDto,
   CreateInsightsTaskSchema,
-  CreateInsightsTranslationTaskDto,
+  type CreateInsightsTranslationTaskDto,
   CreateInsightsTranslationTaskSchema,
-  GetInsightsGroupedQueryDto,
+  type GetInsightsGroupedQueryDto,
   GetInsightsGroupedQuerySchema,
-  GetInsightsQueryDto,
+  type GetInsightsQueryDto,
   GetInsightsQuerySchema,
-  GetInsightsStreamQueryDto,
+  type GetInsightsStreamQueryDto,
   GetInsightsStreamQuerySchema,
-  UpdateInsightsDto,
+  type UpdateInsightsDto,
   UpdateInsightsSchema,
 } from './ai-insights.schema'
 import { AiInsightsService } from './ai-insights.service'

@@ -7,7 +7,7 @@ import { HttpCache } from '~/common/decorators/cache.decorator'
 
 import { AuthService } from '../auth/auth.service'
 import { ConfigsService } from '../configs/configs.service'
-import { OwnerPatchDto, OwnerPatchSchema } from './owner.schema'
+import { type OwnerPatchDto, OwnerPatchSchema } from './owner.schema'
 import { OwnerService } from './owner.service'
 
 @ApiController(['owner', 'user'])

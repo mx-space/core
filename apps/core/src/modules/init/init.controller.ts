@@ -17,9 +17,9 @@ import { isZipMinetype } from '~/utils/mine.util'
 
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
-import { ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
+import { type ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
 import { InitGuard } from './init.guard'
-import { InitOwnerCreateDto, InitOwnerCreateSchema } from './init.schema'
+import { type InitOwnerCreateDto, InitOwnerCreateSchema } from './init.schema'
 import { InitService } from './init.service'
 
 @ApiController('/init')

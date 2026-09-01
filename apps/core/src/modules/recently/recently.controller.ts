@@ -12,16 +12,16 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { OffsetDto, OffsetSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type OffsetDto, OffsetSchema } from '~/shared/dto/pager.dto'
 
 import {
-  RecentlyAttitudeDto,
+  type RecentlyAttitudeDto,
   RecentlyAttitudeSchema,
-  RecentlyDto,
-  RecentlyRefCandidatesQueryDto,
+  type RecentlyDto,
+  type RecentlyRefCandidatesQueryDto,
   RecentlyRefCandidatesQuerySchema,
   RecentlySchema,
 } from './recently.schema'

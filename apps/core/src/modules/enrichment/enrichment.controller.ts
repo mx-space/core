@@ -23,22 +23,22 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { EnrichmentRepository } from './enrichment.repository'
 import {
-  AdminCaptureListQueryDto,
+  type AdminCaptureListQueryDto,
   AdminCaptureListQuerySchema,
-  AdminListQueryDto,
+  type AdminListQueryDto,
   AdminListQuerySchema,
-  AdminProbeBodyDto,
+  type AdminProbeBodyDto,
   AdminProbeBodySchema,
-  EnrichmentSearchQueryDto,
+  type EnrichmentSearchQueryDto,
   EnrichmentSearchQuerySchema,
-  ResolveQueryDto,
+  type ResolveQueryDto,
   ResolveQuerySchema,
 } from './enrichment.schema'
 import { EnrichmentService } from './enrichment.service'
 import {
-  EnrichmentResult,
+  type EnrichmentResult,
   ProviderDisabledError,
-  ProviderMeta,
+  type ProviderMeta,
   TokenMissingError,
 } from './enrichment.types'
 import { EnrichmentCaptureRepository } from './enrichment-capture.repository'

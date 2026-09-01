@@ -8,7 +8,10 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { applyNdjsonHeaders, subscribeNdjson } from '~/utils/ndjson.util'
 
-import { ArticleBodiesDto, ArticleBodiesSchema } from './article-body.schema'
+import {
+  type ArticleBodiesDto,
+  ArticleBodiesSchema,
+} from './article-body.schema'
 import { ArticleBodyService } from './article-body.service'
 
 @ApiController('articles')

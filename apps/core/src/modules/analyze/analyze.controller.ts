@@ -10,8 +10,8 @@ import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
 import {
-  AnalyzeDto,
-  AnalyzePagerDto,
+  type AnalyzeDto,
+  type AnalyzePagerDto,
   AnalyzePagerSchema,
   AnalyzeSchema,
 } from './analyze.schema'

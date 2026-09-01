@@ -17,7 +17,7 @@ import {
 import type { CompanionDevicePrincipal } from './companion-device.guard'
 import { CompanionMomentService } from './companion-moment.service'
 import {
-  CompanionMomentRequestV1Dto,
+  type CompanionMomentRequestV1Dto,
   CompanionMomentRequestV1Schema,
 } from './companion-presence.dto'
 import { companionPresenceFastifyErrorHandler } from './companion-presence.fastify'

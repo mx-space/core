@@ -23,16 +23,16 @@ import { NoteService } from '../note/note.service'
 import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
-  AggregateQueryDto,
+  type AggregateQueryDto,
   AggregateQuerySchema,
-  LatestQueryDto,
+  type LatestQueryDto,
   LatestQuerySchema,
   ReadAndLikeCountDocumentType,
-  ReadAndLikeCountTypeDto,
+  type ReadAndLikeCountTypeDto,
   ReadAndLikeCountTypeSchema,
-  TimelineQueryDto,
+  type TimelineQueryDto,
   TimelineQuerySchema,
-  TopQueryDto,
+  type TopQueryDto,
   TopQuerySchema,
 } from './aggregate.schema'
 import { AggregateService } from './aggregate.service'

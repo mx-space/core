@@ -31,7 +31,7 @@ import {
 } from './search.constants'
 import { SearchRepository } from './search.repository'
 import {
-  SearchDocumentModel,
+  type SearchDocumentModel,
   type SearchDocumentRefType,
   type SearchDocumentRow,
 } from './search-document.types'

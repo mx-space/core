@@ -12,11 +12,11 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { SessionUser } from '~/modules/auth/auth.types'
 
 import {
-  ClaimCompanionPairingDto,
+  type ClaimCompanionPairingDto,
   ClaimCompanionPairingSchema,
-  CompanionDeviceIdParamDto,
+  type CompanionDeviceIdParamDto,
   CompanionDeviceIdParamSchema,
-  CreateCompanionPairingDto,
+  type CreateCompanionPairingDto,
   CreateCompanionPairingSchema,
 } from './companion-device.schema'
 import { CompanionDeviceService } from './companion-device.service'

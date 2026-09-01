@@ -15,17 +15,17 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import {
   PartialWebhookSchema,
-  WebhookDto,
-  WebhookDtoPartial,
+  type WebhookDto,
+  type WebhookDtoPartial,
   WebhookSchema,
 } from './webhook.schema'
 import { WebhookService } from './webhook.service'
-import { WebhookModel } from './webhook.types'
+import { type WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()

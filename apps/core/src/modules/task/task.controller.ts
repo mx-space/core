@@ -6,12 +6,12 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TaskQueueService } from '~/processors/task-queue'
-import { StringIdDto, StringIdSchema } from '~/shared/dto/id.dto'
+import { type StringIdDto, StringIdSchema } from '~/shared/dto/id.dto'
 
 import {
-  DeleteTasksQueryDto,
+  type DeleteTasksQueryDto,
   DeleteTasksQuerySchema,
-  GetTasksQueryDto,
+  type GetTasksQueryDto,
   GetTasksQuerySchema,
 } from './task.dto'
 

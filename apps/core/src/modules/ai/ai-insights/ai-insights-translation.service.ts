@@ -18,7 +18,7 @@ import {
 } from '../ai-task/ai-task.types'
 import { AiInsightsAdapter } from './ai-insights.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
-import { AIInsightsModel } from './ai-insights.types'
+import { type AIInsightsModel } from './ai-insights.types'
 
 @Injectable()
 export class AiInsightsTranslationService implements OnModuleInit {

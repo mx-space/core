@@ -12,13 +12,13 @@ import { AIProviderType } from '../ai.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
 import {
-  DraftImagePromptDto,
+  type DraftImagePromptDto,
   DraftImagePromptSchema,
   type GenerateImageDto,
   type GenerateImageInput,
   GenerateImageSchema,
 } from './ai-image.dto'
-import { AiImageViews, ImageModelView } from './ai-image.views'
+import { AiImageViews, type ImageModelView } from './ai-image.views'
 import { resolveCoverPreset, resolveCoverSubject } from './cover-preset.util'
 import { getImageCatalog } from './image-catalog'
 

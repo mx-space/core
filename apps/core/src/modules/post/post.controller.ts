@@ -4,7 +4,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -31,7 +31,7 @@ import {
   resolveEffectivePreviewBlocks,
   truncateLexicalContent,
 } from '~/processors/helper/lexical-truncate.util'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
@@ -40,15 +40,15 @@ import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
-  CategoryAndSlugDto,
+  type CategoryAndSlugDto,
   CategoryAndSlugSchema,
-  PartialPostDto,
+  type PartialPostDto,
   PartialPostSchema,
-  PostDetailQueryDto,
+  type PostDetailQueryDto,
   PostDetailQuerySchema,
-  PostPagerDto,
+  type PostPagerDto,
   PostPagerSchema,
-  SetPostPublishStatusDto,
+  type SetPostPublishStatusDto,
   SetPostPublishStatusSchema,
 } from './post.schema'
 import { PostService } from './post.service'

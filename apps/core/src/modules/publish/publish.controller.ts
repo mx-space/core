@@ -3,7 +3,10 @@ import { Body, Post } from '@nestjs/common'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 
-import { CreatePublishJobDto, CreatePublishJobSchema } from './publish.schema'
+import {
+  type CreatePublishJobDto,
+  CreatePublishJobSchema,
+} from './publish.schema'
 import { PublishService } from './publish.service'
 
 @ApiController('publish-jobs')

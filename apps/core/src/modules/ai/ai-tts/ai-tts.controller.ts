@@ -8,19 +8,19 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { parseLanguageCode } from '../ai-language.util'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
-  CreateTtsTaskDto,
+  type CreateTtsTaskDto,
   CreateTtsTaskSchema,
-  DiscoverTtsVoicesQueryDto,
+  type DiscoverTtsVoicesQueryDto,
   DiscoverTtsVoicesQuerySchema,
-  GetTtsGroupedQueryDto,
+  type GetTtsGroupedQueryDto,
   GetTtsGroupedQuerySchema,
-  GetTtsQueryDto,
+  type GetTtsQueryDto,
   GetTtsQuerySchema,
 } from './ai-tts.schema'
 import { AiTtsService } from './ai-tts.service'

@@ -4,7 +4,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 
 import {
-  MarkdownToLexicalDryRunDto,
+  type MarkdownToLexicalDryRunDto,
   MarkdownToLexicalDryRunSchema,
 } from './content-migration.schema'
 import { ContentMigrationService } from './content-migration.service'

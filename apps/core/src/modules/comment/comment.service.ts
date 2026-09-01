@@ -14,7 +14,7 @@ import { FileReferenceService } from '../file/file-reference.service'
 import { FileDeletionReason } from '../file/file-reference.types'
 import { OwnerService } from '../owner/owner.service'
 import { ReaderService } from '../reader/reader.service'
-import { ReaderModel } from '../reader/reader.types'
+import { type ReaderModel } from '../reader/reader.types'
 import { CommentState } from './comment.enum'
 import { CommentRepository } from './comment.repository'
 import type {

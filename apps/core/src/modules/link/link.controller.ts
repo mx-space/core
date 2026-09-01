@@ -7,16 +7,16 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { OK_DATA, withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { LinkRepository } from './link.repository'
 import {
-  AuditReasonDto,
+  type AuditReasonDto,
   AuditReasonSchema,
-  LinkDto,
-  LinkPagerDto,
+  type LinkDto,
+  type LinkPagerDto,
   LinkPagerSchema,
   LinkWithAuthorSchema,
 } from './link.schema'

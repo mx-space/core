@@ -4,7 +4,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 
 import {
-  PushActivationRequestDto,
+  type PushActivationRequestDto,
   PushActivationRequestSchema,
 } from './push.schema'
 import { PushService } from './push.service'

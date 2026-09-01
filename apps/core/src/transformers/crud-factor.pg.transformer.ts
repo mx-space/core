@@ -18,8 +18,8 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import type { EntityId } from '~/shared/id/entity-id'
 
 export type ClassType<T> = new (...args: any[]) => T

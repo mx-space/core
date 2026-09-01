@@ -17,27 +17,27 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import {
-  CreateSummaryTaskDto,
+  type CreateSummaryTaskDto,
   CreateSummaryTaskSchema,
-  CreateSummaryTranslationTaskDto,
+  type CreateSummaryTranslationTaskDto,
   CreateSummaryTranslationTaskSchema,
 } from '~/modules/ai/ai-task/ai-task.dto'
 import { AiTaskService } from '~/modules/ai/ai-task/ai-task.service'
 import { PostMetaBuilder } from '~/modules/post/post-meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { parseLanguageCode } from '../ai-language.util'
 import {
-  GetSummariesGroupedQueryDto,
+  type GetSummariesGroupedQueryDto,
   GetSummariesGroupedQuerySchema,
-  GetSummaryQueryDto,
+  type GetSummaryQueryDto,
   GetSummaryQuerySchema,
-  GetSummaryStreamQueryDto,
+  type GetSummaryStreamQueryDto,
   GetSummaryStreamQuerySchema,
-  UpdateSummaryDto,
+  type UpdateSummaryDto,
   UpdateSummarySchema,
 } from './ai-summary.schema'
 import { AiSummaryService } from './ai-summary.service'

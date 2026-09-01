@@ -7,7 +7,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { AiSlugBackfillService } from './ai-slug-backfill.service'
 import {
   AiQueryType,
-  GenerateAiDto,
+  type GenerateAiDto,
   GenerateAiSchema,
 } from './ai-writer.schema'
 import { AiWriterService } from './ai-writer.service'

@@ -27,7 +27,7 @@ import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
@@ -36,17 +36,17 @@ import {
 import { S3Uploader } from '~/utils/s3.util'
 
 import {
-  BatchOrphanDeleteDto,
+  type BatchOrphanDeleteDto,
   BatchOrphanDeleteSchema,
-  CommentUploadsListQueryDto,
+  type CommentUploadsListQueryDto,
   CommentUploadsListQuerySchema,
-  FileQueryDto,
+  type FileQueryDto,
   FileQuerySchema,
-  FileUploadDto,
+  type FileUploadDto,
   FileUploadSchema,
-  ReconcileFileReferencesDto,
+  type ReconcileFileReferencesDto,
   ReconcileFileReferencesSchema,
-  RenameFileQueryDto,
+  type RenameFileQueryDto,
   RenameFileQuerySchema,
 } from './file.schema'
 import { FileService } from './file.service'

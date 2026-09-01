@@ -23,11 +23,11 @@ import {
   applyTranslationEntriesInPlace,
   type EntryRule,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { TopicRepository } from './topic.repository'
-import { TopicSlugParamsDto, TopicSlugParamsSchema } from './topic.schema'
+import { type TopicSlugParamsDto, TopicSlugParamsSchema } from './topic.schema'
 import type { TopicCreateInput, TopicPatchInput } from './topic.types'
 
 const TOPIC_ENTRY_RULES: ReadonlyArray<EntryRule> = [

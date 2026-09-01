@@ -2,7 +2,7 @@ import { Body, Delete, Get, Param, Patch, Query } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -24,7 +24,7 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { truncateAtBoundary } from '~/utils/text-summary.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai/ai.constants'
@@ -34,21 +34,21 @@ import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
-  ListQueryDto,
+  type ListQueryDto,
   ListQuerySchema,
-  NidType,
+  type NidType,
   NidTypeSchema,
-  NotePasswordQueryDto,
+  type NotePasswordQueryDto,
   NotePasswordQuerySchema,
-  NoteQueryDto,
+  type NoteQueryDto,
   NoteQuerySchema,
-  NoteSlugDateParamsDto,
+  type NoteSlugDateParamsDto,
   NoteSlugDateParamsSchema,
-  NoteTopicPagerDto,
+  type NoteTopicPagerDto,
   NoteTopicPagerSchema,
-  PartialNoteDto,
+  type PartialNoteDto,
   PartialNoteSchema,
-  SetNotePublishStatusDto,
+  type SetNotePublishStatusDto,
   SetNotePublishStatusSchema,
 } from './note.schema'
 import { NoteService } from './note.service'

@@ -14,7 +14,7 @@ import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
 import { isSemVer } from '~/utils/validator.util'
 
-import { UpdateAdminDto, UpdateAdminSchema } from './update.schema'
+import { type UpdateAdminDto, UpdateAdminSchema } from './update.schema'
 import { UpdateService } from './update.service'
 
 @ApiController('update')

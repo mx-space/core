@@ -9,15 +9,18 @@ import { OK_DATA } from '~/common/response/envelope.types'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
-import { RegistryModelsQueryDto, RegistryModelsQuerySchema } from './ai.schema'
+import {
+  type RegistryModelsQueryDto,
+  RegistryModelsQuerySchema,
+} from './ai.schema'
 import { AiService } from './ai.service'
-import { AIProviderCapability, AIProviderType } from './ai.types'
-import { AiViews, RegistryModelView } from './ai.views'
+import { type AIProviderCapability, AIProviderType } from './ai.types'
+import { AiViews, type RegistryModelView } from './ai.views'
 import {
   createModelRuntime,
   createRuntimeForModelList,
-  IModelRuntime,
-  ModelInfo,
+  type IModelRuntime,
+  type ModelInfo,
 } from './runtime'
 
 const REGISTRY_CACHE_TTL_MS = 5 * 60 * 1000

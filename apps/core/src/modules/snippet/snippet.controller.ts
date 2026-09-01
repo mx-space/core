@@ -12,17 +12,17 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import {
-  SnippetByPathDto,
+  type SnippetByPathDto,
   SnippetByPathSchema,
-  SnippetDto,
-  SnippetListDto,
+  type SnippetDto,
+  type SnippetListDto,
   SnippetListSchema,
-  SnippetMoreDto,
+  type SnippetMoreDto,
   SnippetMoreSchema,
-  SnippetMoveDto,
+  type SnippetMoveDto,
   SnippetMoveSchema,
   SnippetSchema,
 } from './snippet.schema'

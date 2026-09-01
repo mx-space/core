@@ -19,21 +19,21 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { applyRawCorsHeaders } from '~/utils/sse.util'
 
 import {
-  AppendMessagesDto,
+  type AppendMessagesDto,
   AppendMessagesSchema,
-  ChatProxyDto,
+  type ChatProxyDto,
   ChatProxySchema,
-  CreateConversationDto,
+  type CreateConversationDto,
   CreateConversationSchema,
-  ListConversationsQueryDto,
+  type ListConversationsQueryDto,
   ListConversationsQuerySchema,
-  ReplaceMessagesDto,
+  type ReplaceMessagesDto,
   ReplaceMessagesSchema,
-  UpdateConversationDto,
+  type UpdateConversationDto,
   UpdateConversationSchema,
 } from './ai-agent.schema'
 import { AiAgentChatService } from './ai-agent-chat.service'

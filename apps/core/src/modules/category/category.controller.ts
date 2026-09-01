@@ -28,20 +28,20 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import type { PostService } from '../post/post.service'
 import { CategoryType } from './category.enum'
 import {
-  CategoryDto,
+  type CategoryDto,
   CategorySchema,
-  MultiCategoriesQueryDto,
+  type MultiCategoriesQueryDto,
   MultiCategoriesQuerySchema,
-  MultiQueryTagAndCategoryDto,
+  type MultiQueryTagAndCategoryDto,
   MultiQueryTagAndCategorySchema,
-  PartialCategoryDto,
+  type PartialCategoryDto,
   PartialCategorySchema,
-  SlugOrIdDto,
+  type SlugOrIdDto,
   SlugOrIdSchema,
 } from './category.schema'
 import { CategoryService } from './category.service'

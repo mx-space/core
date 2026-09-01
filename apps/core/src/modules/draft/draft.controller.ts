@@ -5,21 +5,21 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import { DraftRefType } from './draft.enum'
 import {
-  CreateDraftDto,
+  type CreateDraftDto,
   CreateDraftSchema,
-  DraftPagerDto,
+  type DraftPagerDto,
   DraftPagerSchema,
-  DraftRefTypeAndIdDto,
+  type DraftRefTypeAndIdDto,
   DraftRefTypeAndIdSchema,
-  DraftRefTypeDto,
+  type DraftRefTypeDto,
   DraftRefTypeSchema,
-  RevisionComparisonDto,
+  type RevisionComparisonDto,
   RevisionComparisonSchema,
-  UpdateDraftDto,
+  type UpdateDraftDto,
   UpdateDraftSchema,
 } from './draft.schema'
 import { DraftService } from './draft.service'

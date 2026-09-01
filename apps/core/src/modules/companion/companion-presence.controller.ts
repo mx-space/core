@@ -29,9 +29,9 @@ import {
 } from './companion-device.decorator'
 import type { CompanionDevicePrincipal } from './companion-device.guard'
 import {
-  CompanionPresenceClearRequestV2Dto,
+  type CompanionPresenceClearRequestV2Dto,
   CompanionPresenceClearRequestV2Schema,
-  CompanionPresenceRequestV2Dto,
+  type CompanionPresenceRequestV2Dto,
   CompanionPresenceRequestV2Schema,
 } from './companion-presence.dto'
 import { companionPresenceFastifyErrorHandler } from './companion-presence.fastify'

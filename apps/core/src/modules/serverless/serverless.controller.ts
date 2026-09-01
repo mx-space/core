@@ -17,14 +17,14 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import sandboxTypeDeclaration from '~/utils/sandbox/sandbox-type-declaration.runtime.d.ts?raw'
 
 import { createMockedContextResponse } from './mock-response.util'
 import {
-  ServerlessLogQueryDto,
+  type ServerlessLogQueryDto,
   ServerlessLogQuerySchema,
-  ServerlessReferenceDto,
+  type ServerlessReferenceDto,
   ServerlessReferenceSchema,
 } from './serverless.schema'
 import { ServerlessService } from './serverless.service'

@@ -62,7 +62,7 @@ import type {
   ArticleEventDocument,
   ArticleEventPayload,
 } from './ai-translation.types'
-import { AITranslationModel } from './ai-translation.types-model'
+import { type AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
 import { LexicalPartialTranslationBuilder } from './lexical-partial-translation.builder'
 import { TranslationConsistencyService } from './translation-consistency.service'

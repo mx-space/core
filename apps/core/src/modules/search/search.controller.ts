@@ -7,12 +7,12 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import {
-  SearchAdminListDto,
+  type SearchAdminListDto,
   SearchAdminListSchema,
-  SearchDto,
-  SearchRebuildQueryDto,
+  type SearchDto,
+  type SearchRebuildQueryDto,
   SearchRebuildQuerySchema,
-  SearchRebuildRefParamDto,
+  type SearchRebuildRefParamDto,
   SearchRebuildRefParamSchema,
   SearchSchema,
 } from '~/modules/search/search.schema'

@@ -32,8 +32,7 @@ import {
   runtimeUsageToGenerationUsage,
 } from '../runtime/pi-runtime.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
-import type { AiInsightsRow } from './ai-insights.types'
-import { AIInsightsModel } from './ai-insights.types'
+import type { type AIInsightsModel, AiInsightsRow } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
 
 export interface ArticleForInsights {

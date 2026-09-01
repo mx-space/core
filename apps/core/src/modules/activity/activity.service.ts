@@ -28,7 +28,7 @@ import type { NoteModel } from '../note/note.types'
 import type { PostService } from '../post/post.service'
 import type { PostModel } from '../post/post.types'
 import { ReaderService } from '../reader/reader.service'
-import { ReaderModel } from '../reader/reader.types'
+import { type ReaderModel } from '../reader/reader.types'
 import { Activity } from './activity.constant'
 import type {
   ActivityLikePayload,

@@ -5,11 +5,11 @@ import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 
 import {
-  BatchPollQueryDto,
+  type BatchPollQueryDto,
   BatchPollQuerySchema,
-  PollIdDto,
+  type PollIdDto,
   PollIdParam,
-  SubmitPollDto,
+  type SubmitPollDto,
   SubmitPollSchema,
 } from './poll.dto'
 import { PollService } from './poll.service'

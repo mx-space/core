@@ -6,15 +6,15 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { SubscribeTypeToBitMap } from './subscribe.constant'
 import {
-  BatchUnsubscribeDto,
+  type BatchUnsubscribeDto,
   BatchUnsubscribeSchema,
-  CancelSubscribeDto,
+  type CancelSubscribeDto,
   CancelSubscribeSchema,
-  SubscribeDto,
+  type SubscribeDto,
   SubscribeSchema,
 } from './subscribe.schema'
 import { SubscribeService } from './subscribe.service'

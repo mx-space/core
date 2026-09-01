@@ -6,7 +6,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import {
   isExplicitSuccessEnvelope,
@@ -19,29 +19,29 @@ import {
   applyArticleTranslationInPlace,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import {
-  ActivityDeleteDto,
+  type ActivityDeleteDto,
   ActivityDeleteSchema,
-  ActivityNotificationDto,
+  type ActivityNotificationDto,
   ActivityNotificationSchema,
-  ActivityQueryDto,
+  type ActivityQueryDto,
   ActivityQuerySchema,
-  ActivityRangeDto,
+  type ActivityRangeDto,
   ActivityRangeSchema,
-  ActivityTopReadingsDto,
+  type ActivityTopReadingsDto,
   ActivityTopReadingsSchema,
-  ActivityTypeParamsDto,
+  type ActivityTypeParamsDto,
   ActivityTypeParamsSchema,
-  GetPresenceQueryDto,
+  type GetPresenceQueryDto,
   GetPresenceQuerySchema,
-  LikeBodyDto,
+  type LikeBodyDto,
   LikeBodySchema,
-  UpdatePresenceDto,
+  type UpdatePresenceDto,
   UpdatePresenceSchema,
 } from './activity.schema'
 import { ActivityService } from './activity.service'

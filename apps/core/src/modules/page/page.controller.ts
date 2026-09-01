@@ -16,14 +16,14 @@ import {
   buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
-  PageDetailQueryDto,
+  type PageDetailQueryDto,
   PageDetailQuerySchema,
-  PageReorderDto,
+  type PageReorderDto,
   PageReorderSchema,
 } from './page.schema'
 import { PageService } from './page.service'

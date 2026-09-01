@@ -11,16 +11,16 @@ import {
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import {
-  CreateMetaPresetDto,
+  type CreateMetaPresetDto,
   CreateMetaPresetSchema,
-  QueryMetaPresetDto,
+  type QueryMetaPresetDto,
   QueryMetaPresetSchema,
-  UpdateMetaPresetDto,
+  type UpdateMetaPresetDto,
   UpdateMetaPresetSchema,
-  UpdateOrderDto,
+  type UpdateOrderDto,
   UpdateOrderSchema,
 } from './meta-preset.schema'
 import { MetaPresetService } from './meta-preset.service'

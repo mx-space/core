@@ -10,7 +10,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { isLexical } from '~/utils/content.util'
 import { AsyncQueue } from '~/utils/queue.util'
 

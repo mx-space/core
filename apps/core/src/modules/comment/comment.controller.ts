@@ -19,7 +19,7 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { IpLocation, IpRecord } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -27,8 +27,8 @@ import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
-import { BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { ConfigsService } from '../configs/configs.service'
 import { EntitlementService } from '../membership/entitlement.service'
@@ -38,30 +38,30 @@ import { CommentLifecycleService } from './comment.lifecycle.service'
 import {
   AnonymousCommentSchema,
   AnonymousReplyCommentSchema,
-  BatchCommentDeleteDto,
+  type BatchCommentDeleteDto,
   BatchCommentDeleteSchema,
-  BatchCommentStateDto,
+  type BatchCommentStateDto,
   BatchCommentStateSchema,
-  CommentAdminPagerDto,
+  type CommentAdminPagerDto,
   CommentAdminPagerSchema,
-  CommentAuthorActivityQueryDto,
+  type CommentAuthorActivityQueryDto,
   CommentAuthorActivityQuerySchema,
-  CommentDto,
-  CommentRefTypesDto,
+  type CommentDto,
+  type CommentRefTypesDto,
   CommentRefTypesSchema,
-  CommentSourceCandidatesQueryDto,
+  type CommentSourceCandidatesQueryDto,
   CommentSourceCandidatesQuerySchema,
-  CommentStatePatchDto,
+  type CommentStatePatchDto,
   CommentStatePatchSchema,
-  CommentTabCountsQueryDto,
+  type CommentTabCountsQueryDto,
   CommentTabCountsQuerySchema,
-  EditCommentDto,
+  type EditCommentDto,
   EditCommentSchema,
-  ReaderCommentDto,
+  type ReaderCommentDto,
   ReaderCommentSchema,
-  ReaderReplyCommentDto,
+  type ReaderReplyCommentDto,
   ReaderReplyCommentSchema,
-  ReplyCommentDto,
+  type ReplyCommentDto,
 } from './comment.schema'
 import { CommentService } from './comment.service'
 import type {

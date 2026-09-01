@@ -9,7 +9,7 @@ import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 
 import {
-  AckDto,
+  type AckDto,
   AckEventType,
   AckReadPayloadSchema,
   AckSchema,
