@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { SubscribeTypeToBitMap } from './subscribe.constant'
@@ -10,14 +9,14 @@ export const SubscribeSchema = z.object({
   types: z.array(z.enum(subscribeTypeKeys as [string, ...string[]])),
 })
 
-export class SubscribeDto extends createZodDto(SubscribeSchema) {}
+export type SubscribeDto = z.infer<typeof SubscribeSchema>
 
 export const CancelSubscribeSchema = z.object({
   email: z.string().email(),
   cancelToken: z.string(),
 })
 
-export class CancelSubscribeDto extends createZodDto(CancelSubscribeSchema) {}
+export type CancelSubscribeDto = z.infer<typeof CancelSubscribeSchema>
 
 export const BatchUnsubscribeSchema = z
   .object({
@@ -31,7 +30,7 @@ export const BatchUnsubscribeSchema = z
     },
   )
 
-export class BatchUnsubscribeDto extends createZodDto(BatchUnsubscribeSchema) {}
+export type BatchUnsubscribeDto = z.infer<typeof BatchUnsubscribeSchema>
 
 // Type exports
 export type SubscribeInput = z.infer<typeof SubscribeSchema>

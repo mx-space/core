@@ -7,12 +7,19 @@ import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { OK_DATA, withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
 import { scheduleManager } from '~/utils/schedule.util'
 
 import { LinkRepository } from './link.repository'
-import { AuditReasonDto, LinkDto, LinkPagerDto } from './link.schema'
+import {
+  type AuditReasonDto,
+  AuditReasonSchema,
+  type LinkDto,
+  type LinkPagerDto,
+  LinkPagerSchema,
+  LinkWithAuthorSchema,
+} from './link.schema'
 import { LinkService } from './link.service'
 import { LinkState } from './link.types'
 
@@ -24,7 +31,7 @@ export class LinkControllerCrud extends BasePgCrudFactory({
 }) {
   @Get('/')
   async gets(
-    @Query() pager: LinkPagerDto,
+    @Query({ schema: LinkPagerSchema }) pager: LinkPagerDto,
     @HasAdminAccess() hasAdminAccess: boolean,
   ) {
     const { size = 10, page = 1, state } = pager
@@ -71,7 +78,7 @@ export class LinkController {
     expired: 20,
     errorMessage: 'Oh, you have already submitted this friend link',
   })
-  async applyForLink(@Body() body: LinkDto) {
+  async applyForLink(@Body({ schema: LinkWithAuthorSchema }) body: LinkDto) {
     if (!(await this.linkService.canApplyLink())) {
       throw createAppException(AppErrorCode.LINK_APPLY_DISABLED)
     }
@@ -98,8 +105,8 @@ export class LinkController {
   @Auth()
   @HttpCode(200)
   async sendReasonByEmail(
-    @Param() params: EntityIdDto,
-    @Body() body: AuditReasonDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: AuditReasonSchema }) body: AuditReasonDto,
   ) {
     const { id } = params
     const { reason, state } = body

@@ -105,6 +105,12 @@ publicHoistPattern:
   - "*webpack*"
   - "*@codemirror*"
 strictPeerDependencies: false
+# Nest 12 peers that have not cut a v12 major yet. Keep @nestjs/throttler 6.5.0.
+packageExtensions:
+  "@nestjs/throttler":
+    peerDependencies:
+      "@nestjs/common": ">=10.0.0 <13.0.0"
+      "@nestjs/core": ">=10.0.0 <13.0.0"
 minimumReleaseAgeExclude:
   - "@haklex/*"
   - "@mx-space/*"
@@ -151,3 +157,4 @@ minimumReleaseAgeExclude:
   - zod-compiler@1.26.0
   - '@earendil-works/pi-telemetry@0.84.4'
   - typebox@1.3.20
+  - '@innei/pretty-logger-nestjs@1.0.0-beta.0 || 1.0.0-beta.1'

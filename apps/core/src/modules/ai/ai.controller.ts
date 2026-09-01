@@ -9,14 +9,19 @@ import { OK_DATA } from '~/common/response/envelope.types'
 
 import { ConfigsService } from '../configs/configs.service'
 import { AI_PROMPTS } from './ai.prompts'
-import { RegistryModelsQueryDto } from './ai.schema'
+import {
+  type RegistryModelsQueryDto,
+  RegistryModelsQuerySchema,
+} from './ai.schema'
 import { AiService } from './ai.service'
-import type { AIProviderCapability } from './ai.types'
-import { AIProviderType } from './ai.types'
-import type { RegistryModelView } from './ai.views'
-import { AiViews } from './ai.views'
-import type { IModelRuntime, ModelInfo } from './runtime'
-import { createModelRuntime, createRuntimeForModelList } from './runtime'
+import { type AIProviderCapability, AIProviderType } from './ai.types'
+import { AiViews, type RegistryModelView } from './ai.views'
+import {
+  createModelRuntime,
+  createRuntimeForModelList,
+  type IModelRuntime,
+  type ModelInfo,
+} from './runtime'
 
 const REGISTRY_CACHE_TTL_MS = 5 * 60 * 1000
 
@@ -371,7 +376,7 @@ export class AiController {
   @Get('/registry/models')
   @Auth()
   async getRegistryModels(
-    @Query() query: RegistryModelsQueryDto,
+    @Query({ schema: RegistryModelsQuerySchema }) query: RegistryModelsQueryDto,
   ): Promise<RegistryModelView[]> {
     const { providerId } = query
     const now = Date.now()

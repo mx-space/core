@@ -3,12 +3,19 @@ import { Injectable } from '@nestjs/common'
 import { ThrottlerGuard } from '@nestjs/throttler'
 
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
-import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
+import {
+  getNestExecutionContextRequest,
+  isHttpExecutionContext,
+} from '~/transformers/get-req.transformer'
 import { getIp } from '~/utils/ip.util'
 
 @Injectable()
 export class ExtendThrottlerGuard extends ThrottlerGuard {
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
+    if (!isHttpExecutionContext(context)) {
+      return true
+    }
+
     const req = getNestExecutionContextRequest(context)
 
     if (req.user) {

@@ -253,7 +253,6 @@ export class <Name>Service {
 ### 4. Schema / DTOs (`<name>.schema.ts`)
 
 ```typescript
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zNonEmptyString } from '~/common/zod'
@@ -263,22 +262,17 @@ export const <Name>Schema = z.object({
   // Add other fields...
 })
 
-export class <Name>Dto extends createZodDto(<Name>Schema) {}
-
 export const Partial<Name>Schema = <Name>Schema.partial()
 
-export class Partial<Name>Dto extends createZodDto(Partial<Name>Schema) {}
-
-// Type exports
 export type <Name>Input = z.infer<typeof <Name>Schema>
 export type Partial<Name>Input = z.infer<typeof Partial<Name>Schema>
 ```
 
-**ID validation**: Use `EntityIdDto` from `~/shared/dto/id.dto` for route params:
+**ID validation**: Use `EntityIdSchema` from `~/shared/dto/id.dto` for route params:
 
 ```typescript
-import { EntityIdDto } from '~/shared/dto/id.dto'
-// In controller: @Param() params: EntityIdDto
+import { EntityIdSchema, type EntityIdDto } from '~/shared/dto/id.dto'
+// In controller: @Param({ schema: EntityIdSchema }) params: EntityIdDto
 // Access: params.id  (validated Snowflake string)
 ```
 
@@ -302,18 +296,23 @@ import { Body, Delete, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/co
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { EntityIdSchema, type EntityIdDto } from '~/shared/dto/id.dto'
+import { BasicPagerSchema, type BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { <Name>Service } from './<name>.service'
-import { <Name>Dto, Partial<Name>Dto } from './<name>.schema'
+import {
+  <Name>Schema,
+  Partial<Name>Schema,
+  type <Name>Input,
+  type Partial<Name>Input,
+} from './<name>.schema'
 
 @ApiController('<name>s')
 export class <Name>Controller {
   constructor(private readonly <name>Service: <Name>Service) {}
 
   @Get('/')
-  async getPaginate(@Query() query: PagerDto) {
+  async getPaginate(@Query({ schema: BasicPagerSchema }) query: BasicPagerDto) {
     const { page, size } = query
     return this.<name>Service.repository.list(page, size)
   }
@@ -324,27 +323,30 @@ export class <Name>Controller {
   }
 
   @Get('/:id')
-  async getById(@Param() params: EntityIdDto) {
+  async getById(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.<name>Service.repository.findById(params.id)
   }
 
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  async create(@Body() body: <Name>Dto) {
+  async create(@Body({ schema: <Name>Schema }) body: <Name>Input) {
     return this.<name>Service.repository.create(body)
   }
 
   @Put('/:id')
   @Auth()
-  async update(@Param() params: EntityIdDto, @Body() body: <Name>Dto) {
+  async update(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: <Name>Schema }) body: <Name>Input,
+  ) {
     return this.<name>Service.repository.update(params.id, body)
   }
 
   @Delete('/:id')
   @Auth()
   @HttpCode(204)
-  async delete(@Param() params: EntityIdDto) {
+  async delete(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     await this.<name>Service.repository.deleteById(params.id)
   }
 }
@@ -356,7 +358,7 @@ export class <Name>Controller {
 import { Get, Query } from '@nestjs/common'
 
 import { BasePgCrudFactory } from '~/transformers/crud-factor.pg.transformer'
-import { PagerDto } from '~/shared/dto/pager.dto'
+import { BasicPagerSchema, type BasicPagerDto } from '~/shared/dto/pager.dto'
 
 import { <Name>Repository } from './<name>.repository'
 
@@ -435,11 +437,11 @@ This creates a new numbered SQL file in `apps/core/src/database/migrations/`.
 ## Project Conventions
 
 - Use `@ApiController()` instead of `@Controller()` — adds `/api/v2` prefix in production
-- IDs are **Snowflake strings** (not MongoDB ObjectIds). Validate with `zEntityId` / `EntityIdDto`
+- IDs are **Snowflake strings** (not MongoDB ObjectIds). Validate with `zEntityId` / `EntityIdSchema`
 - Schema defined in `database/schema/` using Drizzle `pgTable()`
 - Repositories extend `BaseRepository` and inject `PG_DB_TOKEN` + `SnowflakeService`
 - Use Zod schemas for request validation, not class-validator
 - Use `@Auth()` decorator for authenticated endpoints
-- Use `@HTTPDecorators.Paginator` or `PagerDto` for paginated endpoints
+- Use `@HTTPDecorators.Paginator` or `BasicPagerSchema` for paginated endpoints
 - Use `@HTTPDecorators.Idempotence()` for POST endpoints to prevent duplicates
 - Response keys are auto-converted to snake_case by `JSONTransformInterceptor`

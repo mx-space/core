@@ -12,12 +12,13 @@ import { AIProviderType } from '../ai.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
 import {
-  DraftImagePromptDto,
+  type DraftImagePromptDto,
+  DraftImagePromptSchema,
   type GenerateImageDto,
   type GenerateImageInput,
+  GenerateImageSchema,
 } from './ai-image.dto'
-import type { ImageModelView } from './ai-image.views'
-import { AiImageViews } from './ai-image.views'
+import { AiImageViews, type ImageModelView } from './ai-image.views'
 import { resolveCoverPreset, resolveCoverSubject } from './cover-preset.util'
 import { getImageCatalog } from './image-catalog'
 
@@ -34,7 +35,9 @@ export class AiImageController {
   @Post('draft-prompt')
   @HttpCode(200)
   @Auth()
-  async draftPrompt(@Body() body: DraftImagePromptDto) {
+  async draftPrompt(
+    @Body({ schema: DraftImagePromptSchema }) body: DraftImagePromptDto,
+  ) {
     const preset = resolveCoverPreset(body.presetId)
     const article = await resolveCoverSubject(
       {
@@ -56,7 +59,9 @@ export class AiImageController {
   @Post('generate')
   @HttpCode(200)
   @Auth()
-  async generate(@Body() body: GenerateImageDto) {
+  async generate(
+    @Body({ schema: GenerateImageSchema }) body: GenerateImageDto,
+  ) {
     let aspectRatio = body.aspectRatio
     if (body.presetId) {
       const preset = resolveCoverPreset(body.presetId)

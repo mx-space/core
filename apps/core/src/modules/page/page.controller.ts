@@ -16,11 +16,16 @@ import {
   buildArticleTranslationMeta,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { EnrichmentService } from '../enrichment/enrichment.service'
-import { PageDetailQueryDto, PageReorderDto } from './page.schema'
+import {
+  type PageDetailQueryDto,
+  PageDetailQuerySchema,
+  type PageReorderDto,
+  PageReorderSchema,
+} from './page.schema'
 import { PageService } from './page.service'
 
 @ApiController('pages')
@@ -32,7 +37,10 @@ export class PageController {
   ) {}
 
   @Get('/')
-  async getPagesSummary(@Query() query: BasicPagerDto, @Lang() lang?: string) {
+  async getPagesSummary(
+    @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
+    @Lang() lang?: string,
+  ) {
     const { size, page } = query
     const result = await this.pageService.listPaginated(page, size)
 
@@ -125,7 +133,10 @@ export class PageController {
 
   @Get('/:id')
   @Auth()
-  async getPageById(@Param() params: EntityIdDto, @Lang() lang?: string) {
+  async getPageById(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Lang() lang?: string,
+  ) {
     const page = await this.pageService.findById(params.id)
     if (!page) {
       throw createAppException(AppErrorCode.PAGE_NOT_FOUND, { id: params.id })
@@ -137,7 +148,7 @@ export class PageController {
   @Get('/slug/:slug')
   async getPageBySlug(
     @Param('slug') slug: string,
-    @Query() query: PageDetailQueryDto,
+    @Query({ schema: PageDetailQuerySchema }) query: PageDetailQueryDto,
     @Lang() lang?: string,
   ) {
     if (typeof slug !== 'string') {
@@ -153,7 +164,7 @@ export class PageController {
 
   @Patch('/reorder')
   @Auth()
-  async reorder(@Body() body: PageReorderDto) {
+  async reorder(@Body({ schema: PageReorderSchema }) body: PageReorderDto) {
     const { seq } = body
     const orders = seq.map(($) => $.order)
     const uniq = new Set(orders)
@@ -169,7 +180,7 @@ export class PageController {
 
   @Delete('/:id')
   @Auth()
-  async deletePage(@Param() params: EntityIdDto) {
+  async deletePage(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     await this.pageService.deleteById(params.id)
   }
 }

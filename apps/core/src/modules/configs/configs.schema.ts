@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zAllowedUrl } from '~/common/zod'
@@ -27,7 +26,6 @@ export const SeoSchema = section('SEO', {
     'Per-locale SEO overrides',
   ),
 })
-export class SeoDto extends createZodDto(SeoSchema) {}
 export type SeoConfig = z.infer<typeof SeoSchema>
 
 // ==================== URL ====================
@@ -37,7 +35,6 @@ export const UrlSchema = section('Site URLs', {
   serverUrl: field.halfGrid(zAllowedUrl.optional(), 'API URL'),
   wsUrl: field.halfGrid(zAllowedUrl.optional(), 'Gateway URL'),
 })
-export class UrlDto extends createZodDto(UrlSchema) {}
 export type UrlConfig = z.infer<typeof UrlSchema>
 
 // ==================== Mail Options ====================
@@ -122,7 +119,6 @@ export const MailOptionsSchema = section('Email notifications', {
     },
   ),
 })
-export class MailOptionsDto extends createZodDto(MailOptionsSchema) {}
 export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>
 
 // ==================== Comment Options ====================
@@ -191,7 +187,6 @@ export const CommentOptionsSchema = section('Comment settings', {
     'Publicly display comment location',
   ),
 })
-export class CommentOptionsDto extends createZodDto(CommentOptionsSchema) {}
 export type CommentOptionsConfig = z.infer<typeof CommentOptionsSchema>
 
 // ==================== S3 Storage Options ====================
@@ -216,7 +211,6 @@ export const BackupOptionsSchema = section('Backup', {
     .halfGrid(nullableStorageText(), 'Region')
     .transform((value) => value || 'auto'),
 })
-export class BackupOptionsDto extends createZodDto(BackupOptionsSchema) {}
 export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 
 // ==================== Image Storage Options ====================
@@ -250,9 +244,6 @@ export const ImageStorageOptionsSchema = section('Image storage', {
     },
   ),
 })
-export class ImageStorageOptionsDto extends createZodDto(
-  ImageStorageOptionsSchema,
-) {}
 export type ImageStorageOptionsConfig = z.infer<
   typeof ImageStorageOptionsSchema
 >
@@ -323,9 +314,6 @@ export const ImageGenerationOptionsSchema = section('AI image generation', {
     { 'ui:options': { halfGrid: true } },
   ),
 })
-export class ImageGenerationOptionsDto extends createZodDto(
-  ImageGenerationOptionsSchema,
-) {}
 export type ImageGenerationOptionsConfig = z.infer<
   typeof ImageGenerationOptionsSchema
 >
@@ -377,7 +365,6 @@ export const TtsOptionsSchema = section('AI text to speech', {
     { 'ui:options': { halfGrid: true } },
   ),
 })
-export class TtsOptionsDto extends createZodDto(TtsOptionsSchema) {}
 export type TtsOptionsConfig = z.infer<typeof TtsOptionsSchema>
 
 // ==================== Comment Upload Options ====================
@@ -489,9 +476,6 @@ export const CommentUploadOptionsSchema = section('Comment image uploads', {
       'Defaults to image/jpeg, image/png, image/webp, image/gif. Changes take effect immediately',
   }),
 })
-export class CommentUploadOptionsDto extends createZodDto(
-  CommentUploadOptionsSchema,
-) {}
 export type CommentUploadOptionsConfig = z.infer<
   typeof CommentUploadOptionsSchema
 >
@@ -526,9 +510,6 @@ export const FileUploadOptionsSchema = section('File upload settings', {
     },
   ),
 })
-export class FileUploadOptionsDto extends createZodDto(
-  FileUploadOptionsSchema,
-) {}
 export type FileUploadOptionsConfig = z.infer<typeof FileUploadOptionsSchema>
 
 // ==================== Baidu Search Options ====================
@@ -536,9 +517,6 @@ export const BaiduSearchOptionsSchema = section('Baidu push settings', {
   enable: field.toggle(z.boolean().optional(), 'Enable push'),
   token: field.password(z.string().min(1).optional(), 'Token'),
 })
-export class BaiduSearchOptionsDto extends createZodDto(
-  BaiduSearchOptionsSchema,
-) {}
 export type BaiduSearchOptionsConfig = z.infer<typeof BaiduSearchOptionsSchema>
 
 // ==================== Bing Search Options ====================
@@ -546,9 +524,6 @@ export const BingSearchOptionsSchema = section('Bing push settings', {
   enable: field.toggle(z.boolean().optional(), 'Enable push'),
   token: field.password(z.string().optional(), 'Bing API key'),
 })
-export class BingSearchOptionsDto extends createZodDto(
-  BingSearchOptionsSchema,
-) {}
 export type BingSearchOptionsConfig = z.infer<typeof BingSearchOptionsSchema>
 
 // ==================== Admin Extra ====================
@@ -566,7 +541,6 @@ export const AdminExtraSchema = section('Admin extras', {
     description: 'Location lookup for diary entries',
   }),
 })
-export class AdminExtraDto extends createZodDto(AdminExtraSchema) {}
 export type AdminExtraConfig = z.infer<typeof AdminExtraSchema>
 
 // ==================== Friend Link Options ====================
@@ -591,9 +565,6 @@ export const FriendLinkOptionsSchema = section('Friend link settings', {
     },
   ),
 })
-export class FriendLinkOptionsDto extends createZodDto(
-  FriendLinkOptionsSchema,
-) {}
 export type FriendLinkOptionsConfig = z.infer<typeof FriendLinkOptionsSchema>
 
 // ==================== Bark Options ====================
@@ -616,7 +587,6 @@ export const BarkOptionsSchema = section('Bark notifications', {
     },
   ),
 })
-export class BarkOptionsDto extends createZodDto(BarkOptionsSchema) {}
 export type BarkOptionsConfig = z.infer<typeof BarkOptionsSchema>
 
 // ==================== Feature List ====================
@@ -626,7 +596,6 @@ export const FeatureListSchema = section('Feature toggles', {
     'Enable email subscription',
   ),
 })
-export class FeatureListDto extends createZodDto(FeatureListSchema) {}
 export type FeatureListConfig = z.infer<typeof FeatureListSchema>
 
 // ==================== Third Party Service Integration ====================
@@ -798,9 +767,6 @@ export const ThirdPartyServiceIntegrationSchema = section(
     polygon: PolygonIntegrationSchema.optional(),
   },
 )
-export class ThirdPartyServiceIntegrationDto extends createZodDto(
-  ThirdPartyServiceIntegrationSchema,
-) {}
 export type ThirdPartyServiceIntegrationConfig = z.infer<
   typeof ThirdPartyServiceIntegrationSchema
 >
@@ -820,7 +786,6 @@ export const AuthSecuritySchema = section(
   },
   { 'ui:options': { type: 'hidden' } },
 )
-export class AuthSecurityDto extends createZodDto(AuthSecuritySchema) {}
 export type AuthSecurityConfig = z.infer<typeof AuthSecuritySchema>
 
 // ==================== AI Provider Config ====================
@@ -1079,7 +1044,6 @@ export const AISchema = section('AI settings', {
   imageGeneration: AIImageGenerationFeatureSchema.optional(),
   tts: AITtsFeatureSchema.optional(),
 })
-export class AIDto extends createZodDto(AISchema) {}
 export type AIConfig = z.infer<typeof AISchema>
 
 // ==================== Membership ====================
@@ -1133,7 +1097,6 @@ export const MembershipSchema = section('Membership', {
   ),
   appleAppAppleId: field.plain(z.string().optional(), 'Apple app Apple ID'),
 })
-export class MembershipDto extends createZodDto(MembershipSchema) {}
 export type MembershipConfig = z.infer<typeof MembershipSchema>
 
 // ==================== OAuth ====================
@@ -1154,7 +1117,6 @@ export const OAuthSchema = section(
   },
   { 'ui:options': { type: 'hidden' } },
 )
-export class OAuthDto extends createZodDto(OAuthSchema) {}
 export type OAuthConfig = z.infer<typeof OAuthSchema>
 
 // ==================== Config Schema Mapping ====================

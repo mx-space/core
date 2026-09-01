@@ -27,16 +27,21 @@ export class ConfigVersionService {
   public async bump(scope: ConfigVersionScope) {
     const client = this.redisService.getClient()
     if (!this.redisService.isReady()) {
-      this.logger.warn(this.formatLog('Skip config version bump', scope))
+      this.logger.warn('Skip config version bump', {
+        scope,
+        redisStatus: this.redisService.getStatus(),
+      })
       return 0
     }
 
     try {
       return await client.incr(this.getRedisVersionKey(scope))
     } catch (error) {
-      this.logger.error(
-        this.formatLog('Config version bump failed', scope, error),
-      )
+      this.logger.error('Config version bump failed', {
+        scope,
+        redisStatus: this.redisService.getStatus(),
+        error: error instanceof Error ? error.message : String(error),
+      })
       return 0
     }
   }
@@ -53,9 +58,11 @@ export class ConfigVersionService {
 
       return Number.parseInt(value || '', 10) || fallback
     } catch (error) {
-      this.logger.error(
-        this.formatLog('Config version read failed', scope, error),
-      )
+      this.logger.error('Config version read failed', {
+        scope,
+        redisStatus: this.redisService.getStatus(),
+        error: error instanceof Error ? error.message : String(error),
+      })
       return fallback
     }
   }
@@ -91,31 +98,13 @@ export class ConfigVersionService {
         {} as Record<T[number], number>,
       )
     } catch (error) {
-      this.logger.error(
-        JSON.stringify({
-          module: ConfigVersionService.name,
-          message: 'Config versions read failed',
-          scopes,
-          redisStatus: this.redisService.getStatus(),
-          error: error instanceof Error ? error.message : String(error),
-        }),
-      )
+      this.logger.error('Config versions read failed', {
+        scopes,
+        redisStatus: this.redisService.getStatus(),
+        error: error instanceof Error ? error.message : String(error),
+      })
 
       return fallbackMap()
     }
-  }
-
-  private formatLog(
-    message: string,
-    scope: ConfigVersionScope,
-    error?: unknown,
-  ) {
-    return JSON.stringify({
-      module: ConfigVersionService.name,
-      message,
-      scope,
-      redisStatus: this.redisService.getStatus(),
-      error: error instanceof Error ? error.message : undefined,
-    })
   }
 }

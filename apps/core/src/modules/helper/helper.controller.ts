@@ -10,7 +10,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import { ImageService } from '~/processors/helper/helper.image.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { isLexical } from '~/utils/content.util'
 import { AsyncQueue } from '~/utils/queue.util'
 
@@ -29,7 +29,7 @@ export class HelperController {
   @Get('/url-builder/:id')
   @HTTPDecorators.RawResponse
   async builderById(
-    @Param() params: EntityIdDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @Query('redirect') redirect: boolean,
     @Res() res: FastifyReply,
   ) {

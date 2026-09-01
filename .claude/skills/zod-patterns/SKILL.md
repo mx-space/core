@@ -8,9 +8,12 @@ user-invocable: false
 
 ## Basic Pattern
 
+Nest 12 validates request parameters with `StandardSchemaValidationPipe` and
+`@Body` / `@Query` / `@Param({ schema })`. Keep Zod schemas; infer types from
+them. Do not introduce `createZodDto` or `nestjs-zod`.
+
 ```typescript
 import { z } from 'zod'
-import { createZodDto } from 'nestjs-zod'
 
 // Define Schema
 export const MySchema = z.object({
@@ -19,11 +22,26 @@ export const MySchema = z.object({
   age: z.number().int().positive().optional(),
 })
 
-// Create DTO class
-export class MyDto extends createZodDto(MySchema) {}
+export type MyInput = z.infer<typeof MySchema>
 
-// Partial DTO for updates
-export class PartialMyDto extends createZodDto(MySchema.partial()) {}
+// Partial schema for updates
+export const PartialMySchema = MySchema.partial()
+export type PartialMyInput = z.infer<typeof PartialMySchema>
+```
+
+Controller wiring:
+
+```typescript
+@Post('/')
+async create(@Body({ schema: MySchema }) body: MyInput) {
+  return this.service.create(body)
+}
+
+@Patch('/:id')
+async patch(
+  @Param({ schema: EntityIdSchema }) params: EntityIdInput,
+  @Body({ schema: PartialMySchema }) body: PartialMyInput,
+) {}
 ```
 
 ## Project Custom Validators
@@ -82,9 +100,9 @@ const Schema = z.object({
   relatedIds: z.array(zEntityId), // Array of entity IDs
 })
 
-// For DTOs used in path params:
-import { EntityIdDto } from '~/shared/dto/id.dto'
-// EntityIdDto = { id: zEntityId }
+// For path params:
+import { EntityIdSchema, type EntityIdDto } from '~/shared/dto/id.dto'
+// @Param({ schema: EntityIdSchema }) params: EntityIdDto
 ```
 
 ## Extending Base Schemas

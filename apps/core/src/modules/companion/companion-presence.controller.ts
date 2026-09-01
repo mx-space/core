@@ -29,8 +29,10 @@ import {
 } from './companion-device.decorator'
 import type { CompanionDevicePrincipal } from './companion-device.guard'
 import {
-  CompanionPresenceClearRequestV2Dto,
-  CompanionPresenceRequestV2Dto,
+  type CompanionPresenceClearRequestV2Dto,
+  CompanionPresenceClearRequestV2Schema,
+  type CompanionPresenceRequestV2Dto,
+  CompanionPresenceRequestV2Schema,
 } from './companion-presence.dto'
 import { companionPresenceFastifyErrorHandler } from './companion-presence.fastify'
 import { CompanionPresenceExceptionFilter } from './companion-presence.filter'
@@ -79,7 +81,8 @@ export class CompanionPresenceController {
   @CompanionDeviceAuth('companion:presence:write')
   async putPresence(
     @CurrentCompanionDevice() principal: CompanionDevicePrincipal,
-    @Body() request: CompanionPresenceRequestV2Dto,
+    @Body({ schema: CompanionPresenceRequestV2Schema })
+    request: CompanionPresenceRequestV2Dto,
   ) {
     assertBoundDevice(principal, request.meta.deviceId)
     await this.rateLimiter.consume(principal.deviceId)
@@ -101,7 +104,8 @@ export class CompanionPresenceController {
   @CompanionDeviceAuth('companion:presence:write')
   async clearPresence(
     @CurrentCompanionDevice() principal: CompanionDevicePrincipal,
-    @Body() request: CompanionPresenceClearRequestV2Dto,
+    @Body({ schema: CompanionPresenceClearRequestV2Schema })
+    request: CompanionPresenceClearRequestV2Dto,
   ) {
     assertBoundDevice(principal, request.meta.deviceId)
     await this.rateLimiter.consume(principal.deviceId)

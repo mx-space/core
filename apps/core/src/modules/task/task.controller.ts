@@ -6,9 +6,14 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TaskQueueService } from '~/processors/task-queue'
-import { StringIdDto } from '~/shared/dto/id.dto'
+import { type StringIdDto, StringIdSchema } from '~/shared/dto/id.dto'
 
-import { DeleteTasksQueryDto, GetTasksQueryDto } from './task.dto'
+import {
+  type DeleteTasksQueryDto,
+  DeleteTasksQuerySchema,
+  type GetTasksQueryDto,
+  GetTasksQuerySchema,
+} from './task.dto'
 
 @ApiController('tasks')
 @Auth()
@@ -16,7 +21,9 @@ export class TaskController {
   constructor(private readonly taskQueueService: TaskQueueService) {}
 
   @Get('/')
-  async getTasks(@Query() query: GetTasksQueryDto) {
+  async getTasks(
+    @Query({ schema: GetTasksQuerySchema }) query: GetTasksQueryDto,
+  ) {
     const result = await this.taskQueueService.getTasks(query)
     return withMeta(
       result.data,
@@ -32,12 +39,16 @@ export class TaskController {
   }
 
   @Get('/group/:id')
-  async getTasksByGroupId(@Param() params: StringIdDto) {
+  async getTasksByGroupId(
+    @Param({ schema: StringIdSchema }) params: StringIdDto,
+  ) {
     return this.taskQueueService.getTasksByGroupId(params.id)
   }
 
   @Delete('/group/:id')
-  async cancelTasksByGroupId(@Param() params: StringIdDto) {
+  async cancelTasksByGroupId(
+    @Param({ schema: StringIdSchema }) params: StringIdDto,
+  ) {
     const cancelled = await this.taskQueueService.cancelTasksByGroupId(
       params.id,
     )
@@ -45,7 +56,7 @@ export class TaskController {
   }
 
   @Get('/:id')
-  async getTask(@Param() params: StringIdDto) {
+  async getTask(@Param({ schema: StringIdSchema }) params: StringIdDto) {
     const task = await this.taskQueueService.getTask(params.id)
     if (!task) {
       throw createAppException(AppErrorCode.TASK_NOT_FOUND, { id: params.id })
@@ -55,25 +66,27 @@ export class TaskController {
 
   @Post('/:id/cancel')
   @HttpCode(200)
-  async cancelTask(@Param() params: StringIdDto) {
+  async cancelTask(@Param({ schema: StringIdSchema }) params: StringIdDto) {
     await this.taskQueueService.cancelTask(params.id)
     return { success: true }
   }
 
   @Post('/:id/retry')
   @HttpCode(200)
-  async retryTask(@Param() params: StringIdDto) {
+  async retryTask(@Param({ schema: StringIdSchema }) params: StringIdDto) {
     return this.taskQueueService.retryTask(params.id)
   }
 
   @Delete('/:id')
-  async deleteTask(@Param() params: StringIdDto) {
+  async deleteTask(@Param({ schema: StringIdSchema }) params: StringIdDto) {
     await this.taskQueueService.deleteTask(params.id)
     return { success: true }
   }
 
   @Delete('/')
-  async deleteTasks(@Query() query: DeleteTasksQueryDto) {
+  async deleteTasks(
+    @Query({ schema: DeleteTasksQuerySchema }) query: DeleteTasksQueryDto,
+  ) {
     const deleted = await this.taskQueueService.deleteTasks(query)
     return { deleted }
   }

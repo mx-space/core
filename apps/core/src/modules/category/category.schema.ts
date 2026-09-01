@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceBoolean, zEntityId, zNonEmptyString } from '~/common/zod'
@@ -14,14 +13,14 @@ export const CategorySchema = z.object({
   slug: zNonEmptyString.optional(),
 })
 
-export class CategoryDto extends createZodDto(CategorySchema) {}
+export type CategoryDto = z.infer<typeof CategorySchema>
 
 /**
  * Partial category schema for PATCH operations
  */
 export const PartialCategorySchema = CategorySchema.partial()
 
-export class PartialCategoryDto extends createZodDto(PartialCategorySchema) {}
+export type PartialCategoryDto = z.infer<typeof PartialCategorySchema>
 
 /**
  * Slug or ID query schema
@@ -30,7 +29,7 @@ export const SlugOrIdSchema = z.object({
   query: zNonEmptyString.optional(),
 })
 
-export class SlugOrIdDto extends createZodDto(SlugOrIdSchema) {}
+export type SlugOrIdDto = z.infer<typeof SlugOrIdSchema>
 
 /**
  * Multi query tag and category schema
@@ -47,9 +46,9 @@ export const MultiQueryTagAndCategorySchema = z.object({
     .optional(),
 })
 
-export class MultiQueryTagAndCategoryDto extends createZodDto(
-  MultiQueryTagAndCategorySchema,
-) {}
+export type MultiQueryTagAndCategoryDto = z.infer<
+  typeof MultiQueryTagAndCategorySchema
+>
 
 /**
  * Multi categories query schema
@@ -84,9 +83,7 @@ export const MultiCategoriesQuerySchema = z.object({
     .optional(),
 })
 
-export class MultiCategoriesQueryDto extends createZodDto(
-  MultiCategoriesQuerySchema,
-) {}
+export type MultiCategoriesQueryDto = z.infer<typeof MultiCategoriesQuerySchema>
 
 // Type exports
 export type CategoryInput = z.infer<typeof CategorySchema>

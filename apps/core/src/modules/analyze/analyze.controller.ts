@@ -9,7 +9,12 @@ import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 import { getRedisKey } from '~/utils/redis.util'
 import { getTodayEarly, getWeekStart } from '~/utils/time.util'
 
-import { AnalyzeDto, AnalyzePagerDto } from './analyze.schema'
+import {
+  type AnalyzeDto,
+  type AnalyzePagerDto,
+  AnalyzePagerSchema,
+  AnalyzeSchema,
+} from './analyze.schema'
 import { AnalyzeService } from './analyze.service'
 import { AnalyzeSampleService } from './sample/analyze-sample.service'
 
@@ -52,7 +57,7 @@ export class AnalyzeController {
 
   @Get('/')
   @SampleResponse(AnalyzeSampleService, 'list')
-  getAnalyze(@Query() query: AnalyzePagerDto) {
+  getAnalyze(@Query({ schema: AnalyzePagerSchema }) query: AnalyzePagerDto) {
     const { from, to = new Date(), page = 1, size = 50 } = query
     return this.service.getRangeAnalyzeData(from, to, {
       limit: Math.trunc(size),
@@ -61,7 +66,9 @@ export class AnalyzeController {
   }
 
   @Get('/today')
-  getAnalyzeToday(@Query() query: AnalyzePagerDto) {
+  getAnalyzeToday(
+    @Query({ schema: AnalyzePagerSchema }) query: AnalyzePagerDto,
+  ) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const todayEarly = getTodayEarly(today)
@@ -72,7 +79,9 @@ export class AnalyzeController {
   }
 
   @Get('/week')
-  getAnalyzeWeek(@Query() query: AnalyzePagerDto) {
+  getAnalyzeWeek(
+    @Query({ schema: AnalyzePagerSchema }) query: AnalyzePagerDto,
+  ) {
     const { page = 1, size = 50 } = query
     const today = new Date()
     const weekStart = getWeekStart(today)
@@ -182,7 +191,7 @@ export class AnalyzeController {
 
   @Get('/traffic-source')
   @SampleResponse(AnalyzeSampleService, 'trafficSource')
-  getTrafficSource(@Query() query: AnalyzeDto) {
+  getTrafficSource(@Query({ schema: AnalyzeSchema }) query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeTrafficSource,
@@ -195,7 +204,7 @@ export class AnalyzeController {
 
   @Get('/device')
   @SampleResponse(AnalyzeSampleService, 'device')
-  getDeviceDistribution(@Query() query: AnalyzeDto) {
+  getDeviceDistribution(@Query({ schema: AnalyzeSchema }) query: AnalyzeDto) {
     const { from, to } = query
     const cacheKey = getRedisKey(
       RedisKeys.AnalyzeDeviceDistribution,
@@ -208,7 +217,7 @@ export class AnalyzeController {
 
   @Delete('/')
   @HttpCode(204)
-  async clearAnalyze(@Query() query: AnalyzeDto) {
+  async clearAnalyze(@Query({ schema: AnalyzeSchema }) query: AnalyzeDto) {
     const { from = new Date('2020-01-01'), to = new Date() } = query
     await this.service.cleanAnalyzeRange({ from, to })
   }

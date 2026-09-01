@@ -4,9 +4,12 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
-import { GetOverviewGroupedQueryDto } from './ai-overview.schema'
+import {
+  type GetOverviewGroupedQueryDto,
+  GetOverviewGroupedQuerySchema,
+} from './ai-overview.schema'
 import { AiOverviewService } from './ai-overview.service'
 
 @ApiController('ai/overview')
@@ -15,7 +18,10 @@ export class AiOverviewController {
 
   @Get('/grouped')
   @Auth()
-  async getOverviewGrouped(@Query() query: GetOverviewGroupedQueryDto) {
+  async getOverviewGrouped(
+    @Query({ schema: GetOverviewGroupedQuerySchema })
+    query: GetOverviewGroupedQueryDto,
+  ) {
     const result = await this.service.getOverviewGrouped(query)
     return withMeta(
       result.data,
@@ -25,7 +31,7 @@ export class AiOverviewController {
 
   @Get('/article/:id')
   @Auth()
-  getArticleOverview(@Param() params: EntityIdDto) {
+  getArticleOverview(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.service.getArticleOverview(params.id)
   }
 }

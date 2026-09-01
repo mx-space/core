@@ -13,7 +13,7 @@ import { AppModule } from './app.module'
 import { fastifyApp } from './common/adapters/fastify.adapter'
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor'
 import { requestCaseNormalizationPipeInstance } from './common/pipes/case-normalization.pipe'
-import { extendedZodValidationPipeInstance } from './common/zod'
+import { standardSchemaValidationPipeInstance } from './common/zod'
 import { AppMigrationsService } from './database/app-migrations/app-migrations.service'
 import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
@@ -81,7 +81,7 @@ export async function bootstrap() {
 
   app.useGlobalPipes(
     requestCaseNormalizationPipeInstance,
-    extendedZodValidationPipeInstance,
+    standardSchemaValidationPipeInstance,
   )
   app.useWebSocketAdapter(createWsAdapter(app))
 

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -31,6 +30,6 @@ export const MarkdownToLexicalDryRunSchema = z.object({
   profile: z.literal('yohaku-v1'),
 })
 
-export class MarkdownToLexicalDryRunDto extends createZodDto(
-  MarkdownToLexicalDryRunSchema,
-) {}
+export type MarkdownToLexicalDryRunDto = z.infer<
+  typeof MarkdownToLexicalDryRunSchema
+>

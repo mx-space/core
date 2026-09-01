@@ -28,16 +28,21 @@ import {
   type EntryRule,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import type { PostService } from '../post/post.service'
 import { CategoryType } from './category.enum'
 import {
-  CategoryDto,
-  MultiCategoriesQueryDto,
-  MultiQueryTagAndCategoryDto,
-  PartialCategoryDto,
-  SlugOrIdDto,
+  type CategoryDto,
+  CategorySchema,
+  type MultiCategoriesQueryDto,
+  MultiCategoriesQuerySchema,
+  type MultiQueryTagAndCategoryDto,
+  MultiQueryTagAndCategorySchema,
+  type PartialCategoryDto,
+  PartialCategorySchema,
+  type SlugOrIdDto,
+  SlugOrIdSchema,
 } from './category.schema'
 import { CategoryService } from './category.service'
 
@@ -57,7 +62,8 @@ export class CategoryController {
 
   @Get('/')
   async getCategories(
-    @Query() query: MultiCategoriesQueryDto,
+    @Query({ schema: MultiCategoriesQuerySchema })
+    query: MultiCategoriesQueryDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
@@ -215,8 +221,9 @@ export class CategoryController {
 
   @Get('/:query')
   async getCategoryById(
-    @Param() { query }: SlugOrIdDto,
-    @Query() { tag }: MultiQueryTagAndCategoryDto,
+    @Param({ schema: SlugOrIdSchema }) { query }: SlugOrIdDto,
+    @Query({ schema: MultiQueryTagAndCategorySchema })
+    { tag }: MultiQueryTagAndCategoryDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
   ) {
@@ -331,14 +338,17 @@ export class CategoryController {
   @Post('/')
   @Auth()
   @HTTPDecorators.Idempotence()
-  create(@Body() body: CategoryDto) {
+  create(@Body({ schema: CategorySchema }) body: CategoryDto) {
     const { name, slug } = body
     return this.categoryService.create(name, slug!)
   }
 
   @Put('/:id')
   @Auth()
-  async modify(@Param() params: EntityIdDto, @Body() body: CategoryDto) {
+  async modify(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: CategorySchema }) body: CategoryDto,
+  ) {
     const { type, slug, name } = body
     const { id } = params
     await this.categoryService.update(id, { slug, type, name })
@@ -348,14 +358,17 @@ export class CategoryController {
   @Patch('/:id')
   @HttpCode(204)
   @Auth()
-  async patch(@Param() params: EntityIdDto, @Body() body: PartialCategoryDto) {
+  async patch(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: PartialCategorySchema }) body: PartialCategoryDto,
+  ) {
     const { id } = params
     await this.categoryService.update(id, body)
   }
 
   @Delete('/:id')
   @Auth()
-  deleteCategory(@Param() params: EntityIdDto) {
+  deleteCategory(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.categoryService.deleteById(params.id)
   }
 }

@@ -1,10 +1,8 @@
 export const RESPONSE_PASSTHROUGH_METADATA = '__responsePassthrough__'
 export const RESPONSE_V2_METADATA = '__responseV2__'
 export const BYPASS_CASE_TRANSFORM_METADATA = '__bypassCaseTransform__'
-// @nestjs/schedule
-
-// ESM requires explicit extension for deep imports under Node (e.g. Node 24+).
-export { SCHEDULE_CRON_OPTIONS } from '@nestjs/schedule/dist/schedule.constants.js'
+// @nestjs/schedule v12 no longer exports this deep path; keep the token string.
+export const SCHEDULE_CRON_OPTIONS = 'SCHEDULE_CRON_OPTIONS'
 
 export const DB_CONNECTION_TOKEN = '__db_connection_token__'
 

@@ -8,7 +8,12 @@ import { BusinessEvents } from '~/constants/business-event.constant'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 
-import { AckDto, AckEventType, AckReadPayloadSchema } from './ack.schema'
+import {
+  type AckDto,
+  AckEventType,
+  AckReadPayloadSchema,
+  AckSchema,
+} from './ack.schema'
 
 @ApiController('ack')
 export class AckController {
@@ -20,7 +25,10 @@ export class AckController {
   @Post('/')
   @HttpCode(200)
   @HTTPDecorators.RawResponse
-  async ack(@Body() body: AckDto, @Res() res: FastifyReply) {
+  async ack(
+    @Body({ schema: AckSchema }) body: AckDto,
+    @Res() res: FastifyReply,
+  ) {
     const { type, payload } = body
 
     switch (type) {

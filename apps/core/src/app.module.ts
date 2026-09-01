@@ -1,4 +1,3 @@
-import { LoggerModule } from '@innei/pretty-logger-nestjs'
 import type {
   DynamicModule,
   MiddlewareConsumer,
@@ -77,13 +76,14 @@ import { AgentBrowserModule } from './processors/agent-browser/agent-browser.mod
 import { DatabaseModule } from './processors/database/database.module'
 import { GatewayModule } from './processors/gateway/gateway.module'
 import { HelperModule } from './processors/helper/helper.module'
+import { PrettyLoggerModule } from './processors/logger/pretty-logger.module'
 import { RedisModule } from './processors/redis/redis.module'
 import { TaskQueueModule } from './processors/task-queue/task-queue.module'
 import { SampleResponseInterceptor } from './shared/sample/sample-response.interceptor'
 
 @Module({
   imports: [
-    LoggerModule,
+    PrettyLoggerModule,
     DatabaseModule,
     AppMigrationsModule,
     RedisModule,

@@ -17,13 +17,15 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import sandboxTypeDeclaration from '~/utils/sandbox/sandbox-type-declaration.runtime.d.ts?raw'
 
 import { createMockedContextResponse } from './mock-response.util'
 import {
-  ServerlessLogQueryDto,
-  ServerlessReferenceDto,
+  type ServerlessLogQueryDto,
+  ServerlessLogQuerySchema,
+  type ServerlessReferenceDto,
+  ServerlessReferenceSchema,
 } from './serverless.schema'
 import { ServerlessService } from './serverless.service'
 
@@ -42,8 +44,8 @@ export class ServerlessController {
   @Get('/logs/:id')
   @Auth()
   async getInvocationLogs(
-    @Param() param: EntityIdDto,
-    @Query() query: ServerlessLogQueryDto,
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+    @Query({ schema: ServerlessLogQuerySchema }) query: ServerlessLogQueryDto,
   ) {
     const { id } = param
     const { page, size, status } = query
@@ -57,7 +59,7 @@ export class ServerlessController {
   @Get('/compiled/:id')
   @Auth()
   @HTTPDecorators.RawResponse
-  async getCompiledCode(@Param() param: EntityIdDto) {
+  async getCompiledCode(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
     const snippet = await this.serverlessService.repository.findById(param.id)
     if (!snippet) {
       throw new NotFoundException('Snippet not found')
@@ -84,7 +86,7 @@ export class ServerlessController {
   })
   @HTTPDecorators.RawResponse
   async runServerlessFunctionWildcard(
-    @Param() param: ServerlessReferenceDto,
+    @Param({ schema: ServerlessReferenceSchema }) param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
 
     @Request() req: FastifyRequest,
@@ -102,7 +104,7 @@ export class ServerlessController {
   })
   @HTTPDecorators.RawResponse
   async runServerlessFunction(
-    @Param() param: ServerlessReferenceDto,
+    @Param({ schema: ServerlessReferenceSchema }) param: ServerlessReferenceDto,
     @HasAdminAccess() hasAdminAccess: boolean,
 
     @Request() req: FastifyRequest,

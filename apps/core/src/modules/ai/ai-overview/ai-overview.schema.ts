@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -16,9 +15,9 @@ export const GetOverviewGroupedQuerySchema = z.object({
   type: z.enum(OVERVIEW_ARTICLE_TYPES).optional(),
 })
 
-export class GetOverviewGroupedQueryDto extends createZodDto(
-  GetOverviewGroupedQuerySchema,
-) {}
+export type GetOverviewGroupedQueryDto = z.infer<
+  typeof GetOverviewGroupedQuerySchema
+>
 
 export type GetOverviewGroupedQueryInput = z.infer<
   typeof GetOverviewGroupedQuerySchema

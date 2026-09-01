@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -15,6 +14,6 @@ export const ArticleBodiesSchema = z.object({
   items: z.array(ArticleBodyItemSchema).min(1).max(ARTICLE_BODY_BATCH_LIMIT),
 })
 
-export class ArticleBodiesDto extends createZodDto(ArticleBodiesSchema) {}
+export type ArticleBodiesDto = z.infer<typeof ArticleBodiesSchema>
 
 export type ArticleBodyItem = z.infer<typeof ArticleBodyItemSchema>

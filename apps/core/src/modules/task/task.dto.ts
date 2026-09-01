@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import {
@@ -30,7 +29,7 @@ export const GetTasksQuerySchema = z.object({
   includeSubTasks: zOptionalBoolean,
 })
 
-export class GetTasksQueryDto extends createZodDto(GetTasksQuerySchema) {}
+export type GetTasksQueryDto = z.infer<typeof GetTasksQuerySchema>
 
 export const DeleteTasksQuerySchema = z.object({
   scope: z.string().optional(),
@@ -46,4 +45,4 @@ export const DeleteTasksQuerySchema = z.object({
   before: zCoercePositiveInt,
 })
 
-export class DeleteTasksQueryDto extends createZodDto(DeleteTasksQuerySchema) {}
+export type DeleteTasksQueryDto = z.infer<typeof DeleteTasksQuerySchema>

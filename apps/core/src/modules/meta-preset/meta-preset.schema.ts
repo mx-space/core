@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceBoolean, zEntityId, zNonEmptyString } from '~/common/zod'
@@ -34,24 +33,24 @@ export const CreateMetaPresetSchema = z.object({
   enabled: z.boolean().optional(),
 })
 
-export class CreateMetaPresetDto extends createZodDto(CreateMetaPresetSchema) {}
+export type CreateMetaPresetDto = z.infer<typeof CreateMetaPresetSchema>
 
 export const UpdateMetaPresetSchema = CreateMetaPresetSchema.partial()
 
-export class UpdateMetaPresetDto extends createZodDto(UpdateMetaPresetSchema) {}
+export type UpdateMetaPresetDto = z.infer<typeof UpdateMetaPresetSchema>
 
 export const QueryMetaPresetSchema = z.object({
   scope: z.enum(MetaPresetScope).optional(),
   enabledOnly: zCoerceBoolean.optional(),
 })
 
-export class QueryMetaPresetDto extends createZodDto(QueryMetaPresetSchema) {}
+export type QueryMetaPresetDto = z.infer<typeof QueryMetaPresetSchema>
 
 export const UpdateOrderSchema = z.object({
   ids: z.array(zEntityId),
 })
 
-export class UpdateOrderDto extends createZodDto(UpdateOrderSchema) {}
+export type UpdateOrderDto = z.infer<typeof UpdateOrderSchema>
 
 export type CreateMetaPresetInput = z.infer<typeof CreateMetaPresetSchema>
 export type UpdateMetaPresetInput = z.infer<typeof UpdateMetaPresetSchema>

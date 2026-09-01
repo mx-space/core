@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 export const DraftImagePromptSchema = z
@@ -17,7 +16,7 @@ export const DraftImagePromptSchema = z
     },
   )
 
-export class DraftImagePromptDto extends createZodDto(DraftImagePromptSchema) {}
+export type DraftImagePromptDto = z.infer<typeof DraftImagePromptSchema>
 
 export const GenerateImageSchema = z
   .object({
@@ -48,6 +47,6 @@ export const GenerateImageSchema = z
     },
   )
 
-export class GenerateImageDto extends createZodDto(GenerateImageSchema) {}
+export type GenerateImageDto = z.infer<typeof GenerateImageSchema>
 
 export type GenerateImageInput = z.infer<typeof GenerateImageSchema>

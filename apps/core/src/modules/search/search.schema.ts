@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zNonEmptyString } from '~/common/zod'
@@ -21,7 +20,7 @@ export const SearchSchema = BasicPagerSchema.extend({
   lang: langField,
 })
 
-export class SearchDto extends createZodDto(SearchSchema) {}
+export type SearchDto = z.infer<typeof SearchSchema>
 
 export const SearchRebuildQuerySchema = z.object({
   force: z
@@ -35,18 +34,16 @@ export const SearchRebuildQuerySchema = z.object({
     .optional(),
 })
 
-export class SearchRebuildQueryDto extends createZodDto(
-  SearchRebuildQuerySchema,
-) {}
+export type SearchRebuildQueryDto = z.infer<typeof SearchRebuildQuerySchema>
 
 export const SearchRebuildRefParamSchema = z.object({
   refType: z.enum(['post', 'note', 'page']),
   refId: zNonEmptyString,
 })
 
-export class SearchRebuildRefParamDto extends createZodDto(
-  SearchRebuildRefParamSchema,
-) {}
+export type SearchRebuildRefParamDto = z.infer<
+  typeof SearchRebuildRefParamSchema
+>
 
 export const SearchAdminListSchema = BasicPagerSchema.extend({
   refType: z.enum(['post', 'note', 'page']).optional(),
@@ -54,7 +51,7 @@ export const SearchAdminListSchema = BasicPagerSchema.extend({
   keyword: z.string().trim().min(1).optional(),
 })
 
-export class SearchAdminListDto extends createZodDto(SearchAdminListSchema) {}
+export type SearchAdminListDto = z.infer<typeof SearchAdminListSchema>
 
 // Type exports
 export type SearchInput = z.infer<typeof SearchSchema>

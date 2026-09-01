@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zAllowedUrl } from '~/common/zod'
@@ -31,7 +30,7 @@ export const PageProxyDebugSchema = z.object({
   __local: z.boolean().default(false).optional(),
 })
 
-export class PageProxyDebugDto extends createZodDto(PageProxyDebugSchema) {}
+export type PageProxyDebugDto = z.infer<typeof PageProxyDebugSchema>
 
 // Type exports
 export type PageProxyDebugInput = z.infer<typeof PageProxyDebugSchema>

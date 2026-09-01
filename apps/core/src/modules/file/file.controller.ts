@@ -27,7 +27,7 @@ import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import {
   generateFilename,
   generateFilePath,
@@ -36,13 +36,18 @@ import {
 import { S3Uploader } from '~/utils/s3.util'
 
 import {
-  BatchOrphanDeleteDto,
-  CommentUploadsListQueryDto,
-  FileQueryDto,
+  type BatchOrphanDeleteDto,
+  BatchOrphanDeleteSchema,
+  type CommentUploadsListQueryDto,
+  CommentUploadsListQuerySchema,
+  type FileQueryDto,
   FileQuerySchema,
-  FileUploadDto,
-  ReconcileFileReferencesDto,
-  RenameFileQueryDto,
+  type FileUploadDto,
+  FileUploadSchema,
+  type ReconcileFileReferencesDto,
+  ReconcileFileReferencesSchema,
+  type RenameFileQueryDto,
+  RenameFileQuerySchema,
 } from './file.schema'
 import { FileService } from './file.service'
 import { FileReferenceService } from './file-reference.service'
@@ -62,19 +67,26 @@ export class FileController {
   @Post('/references/reconcile')
   @HttpCode(200)
   @Auth()
-  async reconcileFileReferences(@Body() body: ReconcileFileReferencesDto) {
+  async reconcileFileReferences(
+    @Body({ schema: ReconcileFileReferencesSchema })
+    body: ReconcileFileReferencesDto,
+  ) {
     return this.fileReferenceReconciliationService.reconcile(body)
   }
 
   @Delete('/orphans/batch')
   @Auth()
-  async batchDeleteOrphans(@Body() body: BatchOrphanDeleteDto) {
+  async batchDeleteOrphans(
+    @Body({ schema: BatchOrphanDeleteSchema }) body: BatchOrphanDeleteDto,
+  ) {
     return this.fileReferenceService.batchDeleteOrphans(body)
   }
 
   @Get('/orphans/list')
   @Auth()
-  async getOrphanFiles(@Query() query: BasicPagerDto) {
+  async getOrphanFiles(
+    @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
+  ) {
     const { page = 1, size = 20 } = query
     const { data: files, pagination } =
       await this.fileReferenceService.listOrphanFiles(page, size)
@@ -114,7 +126,10 @@ export class FileController {
 
   @Get('/comment-uploads/list')
   @Auth()
-  async getCommentUploads(@Query() query: CommentUploadsListQueryDto) {
+  async getCommentUploads(
+    @Query({ schema: CommentUploadsListQuerySchema })
+    query: CommentUploadsListQueryDto,
+  ) {
     const { page, size, status, readerId, refId } = query
     const { files, total } = await this.fileReferenceService.listReaderUploads({
       page,
@@ -166,8 +181,8 @@ export class FileController {
   @Get('/:type')
   @Auth()
   async getTypes(
-    @Query() query: BasicPagerDto,
-    @Param() params: FileUploadDto,
+    @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
+    @Param({ schema: FileUploadSchema }) params: FileUploadDto,
   ) {
     const { type = 'file' } = params
     const dir = await this.service.getDir(type)
@@ -229,7 +244,10 @@ export class FileController {
 
   @Post('/upload')
   @Auth()
-  async upload(@Query() query: FileUploadDto, @Req() req: FastifyRequest) {
+  async upload(
+    @Query({ schema: FileUploadSchema }) query: FileUploadDto,
+    @Req() req: FastifyRequest,
+  ) {
     const { type = 'file' } = query
 
     const uploadConfig = await this.configsService.get('fileUploadOptions')
@@ -365,7 +383,10 @@ export class FileController {
 
   @Put('/:type/:name')
   @Auth()
-  async update(@Param() params: FileQueryDto, @Req() req: FastifyRequest) {
+  async update(
+    @Param({ schema: FileQuerySchema }) params: FileQueryDto,
+    @Req() req: FastifyRequest,
+  ) {
     const { type, name } = params
     const file = await this.uploadService.getAndValidMultipartField(req)
     await this.service.updateFile(type, name, file.file)
@@ -375,7 +396,7 @@ export class FileController {
 
   @Delete('/:type/:name')
   @Auth()
-  async delete(@Param() params: FileQueryDto) {
+  async delete(@Param({ schema: FileQuerySchema }) params: FileQueryDto) {
     const { type, name } = params
     await this.service.deleteFile(type, name)
   }
@@ -383,8 +404,8 @@ export class FileController {
   @Auth()
   @Patch('/:type/:name/rename')
   async rename(
-    @Param() params: FileQueryDto,
-    @Query() query: RenameFileQueryDto,
+    @Param({ schema: FileQuerySchema }) params: FileQueryDto,
+    @Query({ schema: RenameFileQuerySchema }) query: RenameFileQueryDto,
   ) {
     const { type, name } = params
     const { newName } = query

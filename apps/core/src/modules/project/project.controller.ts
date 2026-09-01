@@ -15,10 +15,15 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
-import { ProjectCreateDto, ProjectPatchDto } from './project.dto'
+import {
+  type ProjectCreateDto,
+  ProjectCreateSchema,
+  type ProjectPatchDto,
+  ProjectPatchSchema,
+} from './project.dto'
 import { ProjectRepository } from './project.repository'
 
 @ApiController('projects')
@@ -28,7 +33,7 @@ export class ProjectController {
   ) {}
 
   @Get('/')
-  async gets(@Query() pager: BasicPagerDto) {
+  async gets(@Query({ schema: BasicPagerSchema }) pager: BasicPagerDto) {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)
@@ -44,7 +49,7 @@ export class ProjectController {
   }
 
   @Get('/:id')
-  async get(@Param() param: EntityIdDto) {
+  async get(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
     const row = await this.repository.findById(param.id)
     if (!row) {
       throw createAppException(AppErrorCode.PROJECT_NOT_FOUND, { id: param.id })
@@ -54,13 +59,16 @@ export class ProjectController {
 
   @Post('/')
   @Auth()
-  async create(@Body() body: ProjectCreateDto) {
+  async create(@Body({ schema: ProjectCreateSchema }) body: ProjectCreateDto) {
     return this.repository.create(body)
   }
 
   @Patch('/:id')
   @Auth()
-  async patch(@Body() body: ProjectPatchDto, @Param() param: EntityIdDto) {
+  async patch(
+    @Body({ schema: ProjectPatchSchema }) body: ProjectPatchDto,
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+  ) {
     const updated = await this.repository.update(param.id, body)
     if (!updated) {
       throw createAppException(AppErrorCode.PROJECT_NOT_FOUND, { id: param.id })
@@ -70,13 +78,16 @@ export class ProjectController {
 
   @Put('/:id')
   @Auth()
-  async update(@Body() body: ProjectPatchDto, @Param() param: EntityIdDto) {
+  async update(
+    @Body({ schema: ProjectPatchSchema }) body: ProjectPatchDto,
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+  ) {
     return this.patch(body, param)
   }
 
   @Delete('/:id')
   @Auth()
-  async delete(@Param() param: EntityIdDto) {
+  async delete(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
     const removed = await this.repository.deleteById(param.id)
     if (!removed) {
       throw createAppException(AppErrorCode.PROJECT_NOT_FOUND, { id: param.id })

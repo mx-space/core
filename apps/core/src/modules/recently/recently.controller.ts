@@ -12,16 +12,18 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import type { IpRecord } from '~/common/decorators/ip.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { OffsetDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type OffsetDto, OffsetSchema } from '~/shared/dto/pager.dto'
 
 import {
-  RecentlyAttitudeDto,
-  RecentlyDto,
-  RecentlyRefCandidatesQueryDto,
+  type RecentlyAttitudeDto,
+  RecentlyAttitudeSchema,
+  type RecentlyDto,
+  type RecentlyRefCandidatesQueryDto,
+  RecentlyRefCandidatesQuerySchema,
+  RecentlySchema,
 } from './recently.schema'
 import { RecentlyService } from './recently.service'
 import type { RecentlyCreateModel } from './recently.types'
@@ -41,7 +43,7 @@ export class RecentlyController {
   }
 
   @Get('/')
-  async getList(@Query() query: OffsetDto) {
+  async getList(@Query({ schema: OffsetSchema }) query: OffsetDto) {
     const { before, after, size } = query
 
     if (before && after) {
@@ -55,25 +57,28 @@ export class RecentlyController {
 
   @Get('/ref-candidates')
   @Auth()
-  getRefCandidates(@Query() query: RecentlyRefCandidatesQueryDto) {
+  getRefCandidates(
+    @Query({ schema: RecentlyRefCandidatesQuerySchema })
+    query: RecentlyRefCandidatesQueryDto,
+  ) {
     return this.recentlyService.getRefCandidates(query.search ?? '', query.size)
   }
 
   @Get('/:id')
-  getOne(@Param() { id }: EntityIdDto) {
+  getOne(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     return this.recentlyService.getOne(id)
   }
 
   @Post('/')
   @HTTPDecorators.Idempotence()
   @Auth()
-  create(@Body() body: RecentlyDto) {
+  create(@Body({ schema: RecentlySchema }) body: RecentlyDto) {
     return this.recentlyService.create(body as unknown as RecentlyCreateModel)
   }
 
   @Delete('/:id')
   @Auth()
-  async del(@Param() { id }: EntityIdDto) {
+  async del(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     const res = await this.recentlyService.delete(id)
     if (!res) {
       throw createAppException(AppErrorCode.RECENTLY_NOT_FOUND, { id })
@@ -82,7 +87,10 @@ export class RecentlyController {
 
   @Put('/:id')
   @Auth()
-  async update(@Param() { id }: EntityIdDto, @Body() body: RecentlyDto) {
+  async update(
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+    @Body({ schema: RecentlySchema }) body: RecentlyDto,
+  ) {
     const res = await this.recentlyService.update(
       id,
       body as unknown as RecentlyCreateModel,
@@ -96,8 +104,9 @@ export class RecentlyController {
   @Post('/attitude/:id')
   @HttpCode(200)
   async attitudePost(
-    @Param() { id }: EntityIdDto,
-    @Query() { attitude }: RecentlyAttitudeDto,
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+    @Query({ schema: RecentlyAttitudeSchema })
+    { attitude }: RecentlyAttitudeDto,
     @IpLocation() { ip }: IpRecord,
   ) {
     return this.attitude({ id }, { attitude }, { ip } as IpRecord)
@@ -109,8 +118,9 @@ export class RecentlyController {
    */
   @Get('/attitude/:id')
   async attitude(
-    @Param() { id }: EntityIdDto,
-    @Query() { attitude }: RecentlyAttitudeDto,
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+    @Query({ schema: RecentlyAttitudeSchema })
+    { attitude }: RecentlyAttitudeDto,
     @IpLocation() { ip }: IpRecord,
   ) {
     const result = await this.recentlyService.updateAttitude({

@@ -17,9 +17,9 @@ import { isZipMinetype } from '~/utils/mine.util'
 
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
-import { ConfigKeyDto } from '../option/option.schema'
+import { type ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
 import { InitGuard } from './init.guard'
-import { InitOwnerCreateDto } from './init.schema'
+import { type InitOwnerCreateDto, InitOwnerCreateSchema } from './init.schema'
 import { InitService } from './init.service'
 
 @ApiController('/init')
@@ -56,7 +56,7 @@ export class InitController {
 
   @Patch('/configs/:key')
   async patch(
-    @Param() params: ConfigKeyDto,
+    @Param({ schema: ConfigKeySchema }) params: ConfigKeyDto,
     @Body() body: Record<string, any>,
   ) {
     await this.assertNotInitialized()
@@ -67,7 +67,9 @@ export class InitController {
   }
 
   @Post('/owner')
-  async createOwner(@Body() body: InitOwnerCreateDto) {
+  async createOwner(
+    @Body({ schema: InitOwnerCreateSchema }) body: InitOwnerCreateDto,
+  ) {
     await this.assertNotInitialized()
     return this.initService.createOwner(body)
   }

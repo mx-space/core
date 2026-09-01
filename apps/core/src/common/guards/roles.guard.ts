@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { isHttpExecutionContext } from '~/transformers/get-req.transformer'
 
 import { AuthGuard } from './auth.guard'
 
@@ -16,6 +17,10 @@ export class RolesGuard extends AuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (!isHttpExecutionContext(context)) {
+      return true
+    }
+
     const request = this.getRequest(context)
     let hasAdminAccess = false
     try {

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { BasicPagerSchema } from '~/shared/dto/pager.dto'
@@ -23,7 +22,7 @@ export const AnalyzeSchema = z.object({
     .optional(),
 })
 
-export class AnalyzeDto extends createZodDto(AnalyzeSchema) {}
+export type AnalyzeDto = z.infer<typeof AnalyzeSchema>
 
 /**
  * Analyze schema with a capped pager (size ≤ 100) so caller-supplied
@@ -34,7 +33,7 @@ export const AnalyzePagerSchema = AnalyzeSchema.merge(BasicPagerSchema).extend({
   size: BasicPagerSchema.shape.size.default(50),
 })
 
-export class AnalyzePagerDto extends createZodDto(AnalyzePagerSchema) {}
+export type AnalyzePagerDto = z.infer<typeof AnalyzePagerSchema>
 
 // Type exports
 export type AnalyzeInput = z.infer<typeof AnalyzeSchema>

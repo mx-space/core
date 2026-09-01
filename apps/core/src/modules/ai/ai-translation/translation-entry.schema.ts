@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 const validKeyPaths = [
@@ -17,7 +16,7 @@ export const GenerateEntriesSchema = z
   })
   .default({})
 
-export class GenerateEntriesDto extends createZodDto(GenerateEntriesSchema) {}
+export type GenerateEntriesDto = z.infer<typeof GenerateEntriesSchema>
 
 export const QueryEntriesSchema = z.object({
   keyPath: z.enum(validKeyPaths).optional(),
@@ -26,10 +25,10 @@ export const QueryEntriesSchema = z.object({
   size: z.coerce.number().int().min(1).max(50).default(20),
 })
 
-export class QueryEntriesDto extends createZodDto(QueryEntriesSchema) {}
+export type QueryEntriesDto = z.infer<typeof QueryEntriesSchema>
 
 export const UpdateEntrySchema = z.object({
   translatedText: z.string().min(1),
 })
 
-export class UpdateEntryDto extends createZodDto(UpdateEntrySchema) {}
+export type UpdateEntryDto = z.infer<typeof UpdateEntrySchema>

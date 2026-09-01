@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zSlug } from '~/common/zod'
@@ -12,4 +11,4 @@ export const TopicSlugParamsSchema = z.object({
   }, zSlug),
 })
 
-export class TopicSlugParamsDto extends createZodDto(TopicSlugParamsSchema) {}
+export type TopicSlugParamsDto = z.infer<typeof TopicSlugParamsSchema>

@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 const RelayOriginSchema = z
@@ -45,6 +44,6 @@ export const PushActivationResponseSchema = z.object({
   bindingId: z.string().min(1),
 })
 
-export class PushActivationRequestDto extends createZodDto(
-  PushActivationRequestSchema,
-) {}
+export type PushActivationRequestDto = z.infer<
+  typeof PushActivationRequestSchema
+>

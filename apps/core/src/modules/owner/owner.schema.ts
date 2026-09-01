@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zAllowedUrl, zNonEmptyString } from '~/common/zod'
@@ -12,6 +11,6 @@ export const OwnerPatchSchema = z.object({
   socialIds: z.record(z.string(), z.any()).optional(),
 })
 
-export class OwnerPatchDto extends createZodDto(OwnerPatchSchema) {}
+export type OwnerPatchDto = z.infer<typeof OwnerPatchSchema>
 
 export type OwnerPatchInput = z.infer<typeof OwnerPatchSchema>

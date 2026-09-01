@@ -6,8 +6,7 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HttpCache } from '~/common/decorators/cache.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import type { IpRecord } from '~/common/decorators/ip.decorator'
-import { IpLocation } from '~/common/decorators/ip.decorator'
+import { IpLocation, type IpRecord } from '~/common/decorators/ip.decorator'
 import { Lang } from '~/common/decorators/lang.decorator'
 import {
   isExplicitSuccessEnvelope,
@@ -20,21 +19,30 @@ import {
   applyArticleTranslationInPlace,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { SampleResponse } from '~/shared/sample/sample-response.decorator'
 
 import { ReaderService } from '../reader/reader.service'
 import { Activity } from './activity.constant'
 import {
-  ActivityDeleteDto,
-  ActivityNotificationDto,
-  ActivityQueryDto,
-  ActivityRangeDto,
-  ActivityTopReadingsDto,
-  ActivityTypeParamsDto,
-  GetPresenceQueryDto,
-  LikeBodyDto,
-  UpdatePresenceDto,
+  type ActivityDeleteDto,
+  ActivityDeleteSchema,
+  type ActivityNotificationDto,
+  ActivityNotificationSchema,
+  type ActivityQueryDto,
+  ActivityQuerySchema,
+  type ActivityRangeDto,
+  ActivityRangeSchema,
+  type ActivityTopReadingsDto,
+  ActivityTopReadingsSchema,
+  type ActivityTypeParamsDto,
+  ActivityTypeParamsSchema,
+  type GetPresenceQueryDto,
+  GetPresenceQuerySchema,
+  type LikeBodyDto,
+  LikeBodySchema,
+  type UpdatePresenceDto,
+  UpdatePresenceSchema,
 } from './activity.schema'
 import { ActivityService } from './activity.service'
 import { toPublicPresenceReader } from './activity.util'
@@ -67,7 +75,7 @@ export class ActivityController {
   @Post('/like')
   @HttpCode(200)
   async thumbsUpArticle(
-    @Body() body: LikeBodyDto,
+    @Body({ schema: LikeBodySchema }) body: LikeBodyDto,
     @IpLocation() location: IpRecord,
   ) {
     const { ip } = location
@@ -83,7 +91,7 @@ export class ActivityController {
 
   @Get('/likes')
   @Auth()
-  getLikeActivities(@Query() pager: BasicPagerDto) {
+  getLikeActivities(@Query({ schema: BasicPagerSchema }) pager: BasicPagerDto) {
     const { page, size } = pager
     return this.service.getLikeActivities(page, size)
   }
@@ -91,7 +99,7 @@ export class ActivityController {
   @Get('/')
   @Auth()
   @SampleResponse(ActivitySampleService, 'list')
-  activities(@Query() pager: ActivityQueryDto) {
+  activities(@Query({ schema: ActivityQuerySchema }) pager: ActivityQueryDto) {
     const { page, size, type } = pager
 
     switch (type) {
@@ -108,7 +116,7 @@ export class ActivityController {
   @Post('/presence/update')
   @HttpCode(200)
   async updatePresence(
-    @Body() body: UpdatePresenceDto,
+    @Body({ schema: UpdatePresenceSchema }) body: UpdatePresenceDto,
     @IpLocation() location: IpRecord,
   ) {
     await this.service.updatePresence(body, location.ip)
@@ -120,7 +128,9 @@ export class ActivityController {
   // `presence` is keyed by visitor identity and `readers` by reader id; the
   // snake_case pass would mangle mixed-case id keys and break client lookups.
   @BypassCaseTransform(['presence', 'readers'])
-  async getPresence(@Query() query: GetPresenceQueryDto) {
+  async getPresence(
+    @Query({ schema: GetPresenceQuerySchema }) query: GetPresenceQueryDto,
+  ) {
     const roomPresence = await this.service.getRoomPresence(query.roomName)
 
     const readerIds = roomPresence
@@ -141,8 +151,8 @@ export class ActivityController {
   @Delete('/:type')
   @Auth()
   deletePresence(
-    @Param() params: ActivityTypeParamsDto,
-    @Body() body: ActivityDeleteDto,
+    @Param({ schema: ActivityTypeParamsSchema }) params: ActivityTypeParamsDto,
+    @Body({ schema: ActivityDeleteSchema }) body: ActivityDeleteDto,
   ) {
     return this.service.deleteActivityByType(
       params.type,
@@ -220,7 +230,7 @@ export class ActivityController {
   @HttpCache({ ttl: 300, force: true, withQuery: true })
   @SampleResponse(ActivitySampleService, 'topReadings')
   async getTopReadings(
-    @Query() query: ActivityTopReadingsDto,
+    @Query({ schema: ActivityTopReadingsSchema }) query: ActivityTopReadingsDto,
     @Lang() lang?: string,
   ) {
     const top = query.top ?? 5
@@ -233,7 +243,7 @@ export class ActivityController {
   @Get('/reading/rank')
   @SampleResponse(ActivitySampleService, 'readingRank')
   async getReadingRangeRank(
-    @Query() query: ActivityRangeDto,
+    @Query({ schema: ActivityRangeSchema }) query: ActivityRangeDto,
     @Lang() lang?: string,
   ) {
     const startAt = query.start ? new Date(query.start) : undefined
@@ -425,7 +435,8 @@ export class ActivityController {
   @HTTPDecorators.SkipLogging
   @Get('/recent/notification')
   async getNotification(
-    @Query() query: ActivityNotificationDto,
+    @Query({ schema: ActivityNotificationSchema })
+    query: ActivityNotificationDto,
     @Lang() lang?: string,
   ) {
     const fromDate = new Date(query.from)

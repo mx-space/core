@@ -14,7 +14,7 @@ import { resolveAdminAssetRoot } from '~/constants/path.constant'
 import { isDev } from '~/global/env.global'
 import { isSemVer } from '~/utils/validator.util'
 
-import { UpdateAdminDto } from './update.schema'
+import { type UpdateAdminDto, UpdateAdminSchema } from './update.schema'
 import { UpdateService } from './update.service'
 
 @ApiController('update')
@@ -26,7 +26,7 @@ export class UpdateController {
   @HTTPDecorators.Idempotence()
   @HTTPDecorators.RawResponse
   async updateDashboard(
-    @Query() query: UpdateAdminDto,
+    @Query({ schema: UpdateAdminSchema }) query: UpdateAdminDto,
   ): Promise<Observable<string>> {
     const { force = false } = query
 

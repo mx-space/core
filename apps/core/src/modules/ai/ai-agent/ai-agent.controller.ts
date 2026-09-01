@@ -19,16 +19,22 @@ import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
-import { EntityIdDto } from '~/shared/dto/id.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { applyRawCorsHeaders } from '~/utils/sse.util'
 
 import {
-  AppendMessagesDto,
-  ChatProxyDto,
-  CreateConversationDto,
-  ListConversationsQueryDto,
-  ReplaceMessagesDto,
-  UpdateConversationDto,
+  type AppendMessagesDto,
+  AppendMessagesSchema,
+  type ChatProxyDto,
+  ChatProxySchema,
+  type CreateConversationDto,
+  CreateConversationSchema,
+  type ListConversationsQueryDto,
+  ListConversationsQuerySchema,
+  type ReplaceMessagesDto,
+  ReplaceMessagesSchema,
+  type UpdateConversationDto,
+  UpdateConversationSchema,
 } from './ai-agent.schema'
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
@@ -47,7 +53,7 @@ export class AiAgentController {
   @Auth()
   @HTTPDecorators.RawResponse
   async chatProxy(
-    @Body() body: ChatProxyDto,
+    @Body({ schema: ChatProxySchema }) body: ChatProxyDto,
     @Req() request: FastifyRequest,
     @Res() reply: FastifyReply,
   ) {
@@ -113,28 +119,33 @@ export class AiAgentController {
   @Post('/conversations')
   @Auth()
   @BypassCaseTransform(['data.messages[]'])
-  createConversation(@Body() body: CreateConversationDto) {
+  createConversation(
+    @Body({ schema: CreateConversationSchema }) body: CreateConversationDto,
+  ) {
     return this.conversationService.create(body)
   }
 
   @Get('/conversations')
   @Auth()
-  listConversations(@Query() query: ListConversationsQueryDto) {
+  listConversations(
+    @Query({ schema: ListConversationsQuerySchema })
+    query: ListConversationsQueryDto,
+  ) {
     return this.conversationService.listBySession(query.sessionId)
   }
 
   @Get('/conversations/:id')
   @Auth()
   @BypassCaseTransform(['data.messages[]'])
-  getConversation(@Param() params: EntityIdDto) {
+  getConversation(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.conversationService.getById(params.id)
   }
 
   @Patch('/conversations/:id')
   @Auth()
   updateConversation(
-    @Param() params: EntityIdDto,
-    @Body() body: UpdateConversationDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: UpdateConversationSchema }) body: UpdateConversationDto,
   ) {
     return this.conversationService.updateById(params.id, body)
   }
@@ -142,8 +153,8 @@ export class AiAgentController {
   @Patch('/conversations/:id/messages')
   @Auth()
   appendMessages(
-    @Param() params: EntityIdDto,
-    @Body() body: AppendMessagesDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: AppendMessagesSchema }) body: AppendMessagesDto,
   ) {
     return this.conversationService.appendMessages(params.id, body.messages)
   }
@@ -151,22 +162,24 @@ export class AiAgentController {
   @Put('/conversations/:id/messages')
   @Auth()
   replaceMessages(
-    @Param() params: EntityIdDto,
-    @Body() body: ReplaceMessagesDto,
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: ReplaceMessagesSchema }) body: ReplaceMessagesDto,
   ) {
     return this.conversationService.replaceMessages(params.id, body.messages)
   }
 
   @Delete('/conversations/:id')
   @Auth()
-  deleteConversation(@Param() params: EntityIdDto) {
+  deleteConversation(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
     return this.conversationService.deleteById(params.id)
   }
 
   @Post('/conversations/:id/title')
   @HttpCode(200)
   @Auth()
-  generateConversationTitle(@Param() params: EntityIdDto) {
+  generateConversationTitle(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+  ) {
     return this.conversationService.generateAndPersistTitle(params.id)
   }
 }

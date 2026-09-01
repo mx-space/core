@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import {
@@ -48,14 +47,14 @@ export const CompanionDeviceIdParamSchema = z
   })
   .strict()
 
-export class CreateCompanionPairingDto extends createZodDto(
-  CreateCompanionPairingSchema,
-) {}
+export type CreateCompanionPairingDto = z.infer<
+  typeof CreateCompanionPairingSchema
+>
 
-export class ClaimCompanionPairingDto extends createZodDto(
-  ClaimCompanionPairingSchema,
-) {}
+export type ClaimCompanionPairingDto = z.infer<
+  typeof ClaimCompanionPairingSchema
+>
 
-export class CompanionDeviceIdParamDto extends createZodDto(
-  CompanionDeviceIdParamSchema,
-) {}
+export type CompanionDeviceIdParamDto = z.infer<
+  typeof CompanionDeviceIdParamSchema
+>

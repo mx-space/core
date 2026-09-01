@@ -1,5 +1,4 @@
 import { UnprocessableEntityException } from '@nestjs/common'
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
@@ -9,13 +8,13 @@ export const EntityIdSchema = z.object({
   id: zEntityId,
 })
 
-export class EntityIdDto extends createZodDto(EntityIdSchema) {}
+export type EntityIdDto = z.infer<typeof EntityIdSchema>
 
 export const StringIdSchema = z.object({
   id: z.string(),
 })
 
-export class StringIdDto extends createZodDto(StringIdSchema) {}
+export type StringIdDto = z.infer<typeof StringIdSchema>
 
 export const IntIdOrEntityIdSchema = z.object({
   id: z.preprocess(
@@ -38,7 +37,7 @@ export const IntIdOrEntityIdSchema = z.object({
   ),
 })
 
-export class IntIdOrEntityIdDto extends createZodDto(IntIdOrEntityIdSchema) {}
+export type IntIdOrEntityIdDto = z.infer<typeof IntIdOrEntityIdSchema>
 
 export type EntityIdInput = z.infer<typeof EntityIdSchema>
 export type IntIdOrEntityIdInput = z.infer<typeof IntIdOrEntityIdSchema>

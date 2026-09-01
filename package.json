@@ -2,7 +2,7 @@
   "private": true,
   "packageManager": "pnpm@11.24.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core#readme",

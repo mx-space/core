@@ -35,20 +35,25 @@ export class RedisService {
       : new IORedis({ host: REDIS.host, port: REDIS.port, ...sharedOptions })
 
     this.redisClient.on('error', (err) => {
-      this.logger.error(
-        this.formatStateLog('Redis connection error', {
-          error: err.message,
-        }),
-      )
+      this.logger.error('Redis connection error', {
+        error: err.message,
+        redisStatus: this.getStatus(),
+      })
     })
     this.redisClient.on('ready', () => {
-      this.logger.log(this.formatStateLog('Redis connection ready'))
+      this.logger.log('Redis connection ready', {
+        redisStatus: this.getStatus(),
+      })
     })
     this.redisClient.on('reconnecting', () => {
-      this.logger.warn(this.formatStateLog('Redis reconnecting'))
+      this.logger.warn('Redis reconnecting', {
+        redisStatus: this.getStatus(),
+      })
     })
     this.redisClient.on('close', () => {
-      this.logger.warn(this.formatStateLog('Redis connection closed'))
+      this.logger.warn('Redis connection closed', {
+        redisStatus: this.getStatus(),
+      })
     })
   }
 
@@ -107,18 +112,6 @@ export class RedisService {
         "Stream isn't writeable and enableOfflineQueue options is false",
       )
     )
-  }
-
-  public formatStateLog(
-    message: string,
-    extra?: Record<string, string | number | boolean | null | undefined>,
-  ) {
-    return JSON.stringify({
-      module: RedisService.name,
-      message,
-      redisStatus: this.getStatus(),
-      ...extra,
-    })
   }
 
   /**

@@ -9,7 +9,6 @@ import {
   Query,
 } from '@nestjs/common'
 import { sample } from 'es-toolkit/compat'
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -17,8 +16,8 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { SayRepository } from './say.repository'
 
@@ -28,8 +27,9 @@ export const SayCreateSchema = z.object({
   author: z.string().nullable().optional(),
 })
 
-class SayCreateBodyDto extends createZodDto(SayCreateSchema) {}
-class SayPatchBodyDto extends createZodDto(SayCreateSchema.partial()) {}
+type SayCreateBodyDto = z.infer<typeof SayCreateSchema>
+export const SayPatchBodySchema = SayCreateSchema.partial()
+type SayPatchBodyDto = z.infer<typeof SayPatchBodySchema>
 
 @ApiController('says')
 export class SayController {
@@ -38,7 +38,7 @@ export class SayController {
   ) {}
 
   @Get('/')
-  async gets(@Query() pager: BasicPagerDto) {
+  async gets(@Query({ schema: BasicPagerSchema }) pager: BasicPagerDto) {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)
@@ -60,7 +60,7 @@ export class SayController {
   }
 
   @Get('/:id')
-  async getOne(@Param() { id }: EntityIdDto) {
+  async getOne(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     const row = await this.repository.findById(id)
     if (!row) {
       throw createAppException(AppErrorCode.NOT_FOUND, { id })
@@ -70,13 +70,16 @@ export class SayController {
 
   @Post('/')
   @Auth()
-  async create(@Body() body: SayCreateBodyDto) {
+  async create(@Body({ schema: SayCreateSchema }) body: SayCreateBodyDto) {
     return this.repository.create(body)
   }
 
   @Put('/:id')
   @Auth()
-  async update(@Param() { id }: EntityIdDto, @Body() body: SayPatchBodyDto) {
+  async update(
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+    @Body({ schema: SayPatchBodySchema }) body: SayPatchBodyDto,
+  ) {
     const row = await this.repository.update(id, body)
     if (!row) {
       throw createAppException(AppErrorCode.NOT_FOUND, { id })
@@ -86,7 +89,7 @@ export class SayController {
 
   @Delete('/:id')
   @Auth()
-  async remove(@Param() { id }: EntityIdDto) {
+  async remove(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     const row = await this.repository.deleteById(id)
     if (!row) {
       throw createAppException(AppErrorCode.NOT_FOUND, { id })

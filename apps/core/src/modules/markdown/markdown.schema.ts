@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { zCoerceBoolean } from '~/common/zod'
@@ -21,7 +20,7 @@ export const MetaSchema = z.object({
   slug: z.string(),
 })
 
-export class MetaDto extends createZodDto(MetaSchema) {}
+export type MetaDto = z.infer<typeof MetaSchema>
 
 /**
  * Datatype schema
@@ -31,7 +30,7 @@ export const DatatypeSchema = z.object({
   text: z.string(),
 })
 
-export class DatatypeDto extends createZodDto(DatatypeSchema) {}
+export type DatatypeDto = z.infer<typeof DatatypeSchema>
 
 /**
  * Data list schema
@@ -44,7 +43,7 @@ export const DataListSchema = z.object({
   data: z.array(DatatypeSchema),
 })
 
-export class DataListDto extends createZodDto(DataListSchema) {}
+export type DataListDto = z.infer<typeof DataListSchema>
 
 /**
  * Export markdown query schema
@@ -56,9 +55,7 @@ export const ExportMarkdownQuerySchema = z.object({
   withMetaJson: zCoerceBoolean.optional(),
 })
 
-export class ExportMarkdownQueryDto extends createZodDto(
-  ExportMarkdownQuerySchema,
-) {}
+export type ExportMarkdownQueryDto = z.infer<typeof ExportMarkdownQuerySchema>
 
 /**
  * Markdown preview schema
@@ -68,7 +65,7 @@ export const MarkdownPreviewSchema = z.object({
   md: z.string(),
 })
 
-export class MarkdownPreviewDto extends createZodDto(MarkdownPreviewSchema) {}
+export type MarkdownPreviewDto = z.infer<typeof MarkdownPreviewSchema>
 
 // Type exports
 export type MetaInput = z.infer<typeof MetaSchema>

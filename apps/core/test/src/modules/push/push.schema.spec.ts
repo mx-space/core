@@ -72,7 +72,6 @@ describe('PushActivationRequestSchema', () => {
 describe('push schema surface', () => {
   it('no longer exports reader-scoped preference or status contracts', () => {
     expect(Object.keys(pushSchema).sort()).toEqual([
-      'PushActivationRequestDto',
       'PushActivationRequestSchema',
       'PushActivationResponseSchema',
     ])

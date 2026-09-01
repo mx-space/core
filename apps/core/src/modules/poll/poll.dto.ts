@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 const PollIdSchema = z
@@ -15,15 +14,15 @@ const OptionIdSchema = z
   .max(64)
   .regex(/^o_[\da-z]+$/i)
 
-const PollIdParam = z.object({ pollId: PollIdSchema })
-export class PollIdDto extends createZodDto(PollIdParam) {}
+export const PollIdParam = z.object({ pollId: PollIdSchema })
+export type PollIdDto = z.infer<typeof PollIdParam>
 
-const SubmitPollSchema = z.object({
+export const SubmitPollSchema = z.object({
   optionIds: z.array(OptionIdSchema).min(1).max(20),
 })
-export class SubmitPollDto extends createZodDto(SubmitPollSchema) {}
+export type SubmitPollDto = z.infer<typeof SubmitPollSchema>
 
-const BatchPollQuerySchema = z.object({
+export const BatchPollQuerySchema = z.object({
   ids: z
     .string()
     .min(3)
@@ -35,4 +34,4 @@ const BatchPollQuerySchema = z.object({
     )
     .pipe(z.array(PollIdSchema).min(1).max(50)),
 })
-export class BatchPollQueryDto extends createZodDto(BatchPollQuerySchema) {}
+export type BatchPollQueryDto = z.infer<typeof BatchPollQuerySchema>

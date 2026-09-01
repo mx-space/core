@@ -23,11 +23,23 @@ function createMockContext() {
     raw: { headers: {} },
   }
   const context = {
+    getType: () => 'http',
     switchToHttp: () => ({
       getRequest: () => request,
     }),
   } as unknown as ExecutionContext
   return { context, request }
+}
+
+function createWsMockContext() {
+  const client = {}
+  const context = {
+    getType: () => 'ws',
+    switchToHttp: () => ({
+      getRequest: () => client,
+    }),
+  } as unknown as ExecutionContext
+  return { context, client }
 }
 
 const ownerUser: SessionUser = {
@@ -58,6 +70,12 @@ describe('RolesGuard', () => {
     const { context } = createMockContext()
     const result = await guard.canActivate(context)
     expect(result).toBe(true)
+  })
+
+  it('skips websocket contexts without reading HTTP request.raw', async () => {
+    const { context } = createWsMockContext()
+    await expect(guard.canActivate(context)).resolves.toBe(true)
+    expect(authService.getSessionUser).not.toHaveBeenCalled()
   })
 
   it('should set isAuthenticated=true when owner session exists', async () => {

@@ -7,10 +7,14 @@ import { Lang } from '~/common/decorators/lang.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import {
-  SearchAdminListDto,
-  SearchDto,
-  SearchRebuildQueryDto,
-  SearchRebuildRefParamDto,
+  type SearchAdminListDto,
+  SearchAdminListSchema,
+  type SearchDto,
+  type SearchRebuildQueryDto,
+  SearchRebuildQuerySchema,
+  type SearchRebuildRefParamDto,
+  SearchRebuildRefParamSchema,
+  SearchSchema,
 } from '~/modules/search/search.schema'
 import {
   applyTranslationEntriesInPlace,
@@ -57,7 +61,10 @@ export class SearchController {
 
   @HttpCache.disable
   @Get()
-  async search(@Query() query: SearchDto, @Lang() lang?: string) {
+  async search(
+    @Query({ schema: SearchSchema }) query: SearchDto,
+    @Lang() lang?: string,
+  ) {
     const result = await this.searchService.search(query)
     if (lang) {
       const entryMaps = await this.batchCategoryEntryTranslations(
@@ -80,7 +87,9 @@ export class SearchController {
   @Post('/rebuild')
   @HttpCode(200)
   @Auth()
-  rebuild(@Query() query: SearchRebuildQueryDto) {
+  rebuild(
+    @Query({ schema: SearchRebuildQuerySchema }) query: SearchRebuildQueryDto,
+  ) {
     return this.searchService.rebuildSearchDocuments({
       force: query.force ?? false,
     })
@@ -89,21 +98,26 @@ export class SearchController {
   @Post('/rebuild/:refType/:refId')
   @HttpCode(200)
   @Auth()
-  rebuildOne(@Param() params: SearchRebuildRefParamDto) {
+  rebuildOne(
+    @Param({ schema: SearchRebuildRefParamSchema })
+    params: SearchRebuildRefParamDto,
+  ) {
     return this.searchService.rebuildSingleRef(params.refType, params.refId)
   }
 
   @Get('/admin/documents')
   @Auth()
   @HttpCache.disable
-  adminListDocuments(@Query() query: SearchAdminListDto) {
+  adminListDocuments(
+    @Query({ schema: SearchAdminListSchema }) query: SearchAdminListDto,
+  ) {
     return this.searchService.adminListDocuments(query)
   }
 
   @Get('/:type')
   @HttpCache.disable
   async searchByType(
-    @Query() query: SearchDto,
+    @Query({ schema: SearchSchema }) query: SearchDto,
     @Param('type') type: string,
     @Lang() lang?: string,
   ) {

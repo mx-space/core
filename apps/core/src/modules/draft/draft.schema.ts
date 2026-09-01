@@ -1,4 +1,3 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import {
@@ -39,14 +38,14 @@ export const CreateDraftSchema = z.object({
   refType: z.enum(DraftRefType),
 })
 
-export class CreateDraftDto extends createZodDto(CreateDraftSchema) {}
+export type CreateDraftDto = z.infer<typeof CreateDraftSchema>
 
 export const UpdateDraftSchema = z.object({
   data: DraftWriteDataSchema,
   expectedHeadRevisionId: zEntityId,
 })
 
-export class UpdateDraftDto extends createZodDto(UpdateDraftSchema) {}
+export type UpdateDraftDto = z.infer<typeof UpdateDraftSchema>
 
 export const DraftPagerSchema = z.object({
   hasRef: zCoerceBoolean.optional(),
@@ -58,27 +57,23 @@ export const DraftPagerSchema = z.object({
   sortOrder: zSortOrder,
 })
 
-export class DraftPagerDto extends createZodDto(DraftPagerSchema) {}
+export type DraftPagerDto = z.infer<typeof DraftPagerSchema>
 
 export const DraftRefTypeSchema = z.object({
   refType: z.enum(DraftRefType),
 })
 
-export class DraftRefTypeDto extends createZodDto(DraftRefTypeSchema) {}
+export type DraftRefTypeDto = z.infer<typeof DraftRefTypeSchema>
 
 export const DraftRefTypeAndIdSchema = DraftRefTypeSchema.extend({
   refId: zEntityId,
 })
 
-export class DraftRefTypeAndIdDto extends createZodDto(
-  DraftRefTypeAndIdSchema,
-) {}
+export type DraftRefTypeAndIdDto = z.infer<typeof DraftRefTypeAndIdSchema>
 
 export const RevisionComparisonSchema = z.object({
   leftId: zEntityId,
   rightId: zEntityId,
 })
 
-export class RevisionComparisonDto extends createZodDto(
-  RevisionComparisonSchema,
-) {}
+export type RevisionComparisonDto = z.infer<typeof RevisionComparisonSchema>

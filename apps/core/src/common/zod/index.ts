@@ -29,9 +29,10 @@ export {
   zUniqueStringArray,
 } from './primitives'
 export {
-  ExtendedZodValidationPipe,
-  extendedZodValidationPipeInstance,
+  createValidationException,
+  formatValidationMessage,
+  standardIssuePath,
+  standardSchemaValidationPipeInstance,
 } from './validation.pipe'
 export { zEntityId, zEntityIdOrInt } from '~/shared/id/entity-id'
-export { createZodDto } from 'nestjs-zod'
 export { z } from 'zod'

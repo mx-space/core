@@ -8,6 +8,7 @@ import { ModuleRef, Reflector } from '@nestjs/core'
 import { from, type Observable } from 'rxjs'
 
 import { isDev } from '~/global/env.global'
+import { isHttpExecutionContext } from '~/transformers/get-req.transformer'
 
 import {
   SAMPLE_RESPONSE_METADATA,
@@ -36,7 +37,7 @@ export class SampleResponseInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    if (!isDev) return next.handle()
+    if (!isHttpExecutionContext(context) || !isDev) return next.handle()
 
     const target = this.reflector.get<SampleResponseTarget | undefined>(
       SAMPLE_RESPONSE_METADATA,

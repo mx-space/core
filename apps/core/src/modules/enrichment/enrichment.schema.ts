@@ -1,10 +1,9 @@
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 export const ResolveQuerySchema = z.object({
   url: z.string().url(),
 })
-export class ResolveQueryDto extends createZodDto(ResolveQuerySchema) {}
+export type ResolveQueryDto = z.infer<typeof ResolveQuerySchema>
 
 export const EnrichmentSearchParamsSchema = z.object({
   provider: z.string().trim().min(1).max(64),
@@ -13,9 +12,9 @@ export const EnrichmentSearchQuerySchema = z.object({
   query: z.string().trim().min(1).max(100),
   size: z.coerce.number().int().min(1).max(20).default(8),
 })
-export class EnrichmentSearchQueryDto extends createZodDto(
-  EnrichmentSearchQuerySchema,
-) {}
+export type EnrichmentSearchQueryDto = z.infer<
+  typeof EnrichmentSearchQuerySchema
+>
 
 export const AdminListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -30,7 +29,7 @@ export const AdminListQuerySchema = z.object({
     .optional()
     .transform((v) => (v === undefined ? undefined : v)),
 })
-export class AdminListQueryDto extends createZodDto(AdminListQuerySchema) {}
+export type AdminListQueryDto = z.infer<typeof AdminListQuerySchema>
 
 export const AdminCaptureListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -38,12 +37,12 @@ export const AdminCaptureListQuerySchema = z.object({
   sort: z.enum(['last_accessed', 'created', 'bytes']).default('last_accessed'),
   order: z.enum(['asc', 'desc']).default('desc'),
 })
-export class AdminCaptureListQueryDto extends createZodDto(
-  AdminCaptureListQuerySchema,
-) {}
+export type AdminCaptureListQueryDto = z.infer<
+  typeof AdminCaptureListQuerySchema
+>
 
 export const AdminProbeBodySchema = z.object({
   url: z.string().min(1),
   useCache: z.boolean().optional().default(false),
 })
-export class AdminProbeBodyDto extends createZodDto(AdminProbeBodySchema) {}
+export type AdminProbeBodyDto = z.infer<typeof AdminProbeBodySchema>

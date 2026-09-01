@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { DatabaseService } from '~/processors/database/database.service'
 
 import type { ArticleDocument } from './ai-translation.types'
-import { AITranslationModel } from './ai-translation.types-model'
+import { type AITranslationModel } from './ai-translation.types-model'
 import { BaseTranslationService } from './base-translation.service'
 import { type TranslationSourceSnapshot } from './translation-consistency.types'
 

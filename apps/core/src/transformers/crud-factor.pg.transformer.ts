@@ -18,8 +18,8 @@ import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { EventScope } from '~/constants/business-event.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import type { EntityId } from '~/shared/id/entity-id'
 
 export type ClassType<T> = new (...args: any[]) => T
@@ -90,12 +90,12 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     }
 
     @Get('/:id')
-    async get(@Param() param: EntityIdDto) {
+    async get(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
       return this.repo.findById(param.id)
     }
 
     @Get('/')
-    async gets(@Query() pager: BasicPagerDto) {
+    async gets(@Query({ schema: BasicPagerSchema }) pager: BasicPagerDto) {
       const size = pager.size ?? 10
       const page = pager.page ?? 1
       return this.repo.list(page, size, {})
@@ -119,7 +119,10 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
 
     @Put('/:id')
     @Auth()
-    async update(@Body() body: Dto, @Param() param: EntityIdDto) {
+    async update(
+      @Body() body: Dto,
+      @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+    ) {
       const res = await this.repo.update(param.id, body)
       this.eventManager.broadcast(`${eventNamePrefix}update` as any, res, {
         scope: EventScope.TO_SYSTEM_VISITOR,
@@ -130,14 +133,17 @@ export function BasePgCrudFactory<TRepo extends PgCrudRepository<any>>({
     @Patch('/:id')
     @Auth()
     @HttpCode(204)
-    async patch(@Body() body: PDto, @Param() param: EntityIdDto) {
+    async patch(
+      @Body() body: PDto,
+      @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+    ) {
       await this.update(body as any, param)
     }
 
     @Delete('/:id')
     @Auth()
     @HttpCode(204)
-    async delete(@Param() param: EntityIdDto) {
+    async delete(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
       await this.repo.deleteById(param.id)
       await this.eventManager.broadcast(
         `${eventNamePrefix}delete` as any,

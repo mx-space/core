@@ -1,5 +1,4 @@
 import { isNil } from 'es-toolkit/compat'
-import { createZodDto } from 'nestjs-zod'
 import qs from 'qs'
 import { z } from 'zod'
 
@@ -69,18 +68,18 @@ export const SnippetSchema = BaseSchema.extend({
   enable: z.boolean().optional(),
 })
 
-export class SnippetDto extends createZodDto(SnippetSchema) {}
+export type SnippetDto = z.infer<typeof SnippetSchema>
 
 export const PartialSnippetSchema = SnippetSchema.partial()
 
-export class PartialSnippetDto extends createZodDto(PartialSnippetSchema) {}
+export type PartialSnippetDto = z.infer<typeof PartialSnippetSchema>
 
 export const SnippetMoreSchema = z.object({
   snippets: z.array(SnippetSchema),
   packages: z.array(z.string()).optional(),
 })
 
-export class SnippetMoreDto extends createZodDto(SnippetMoreSchema) {}
+export type SnippetMoreDto = z.infer<typeof SnippetMoreSchema>
 
 export const SnippetListSchema = BasicPagerSchema.extend({
   prefix: z.string().default('').optional(),
@@ -89,7 +88,7 @@ export const SnippetListSchema = BasicPagerSchema.extend({
   type: z.enum(SnippetType).optional(),
 })
 
-export class SnippetListDto extends createZodDto(SnippetListSchema) {}
+export type SnippetListDto = z.infer<typeof SnippetListSchema>
 
 // Type exports
 export type SnippetInput = z.infer<typeof SnippetSchema>
@@ -102,7 +101,7 @@ export const SnippetByPathSchema = z.object({
   recursive: z.coerce.boolean().default(false).optional(),
 })
 
-export class SnippetByPathDto extends createZodDto(SnippetByPathSchema) {}
+export type SnippetByPathDto = z.infer<typeof SnippetByPathSchema>
 
 export const SnippetMoveSchema = z.object({
   from: SnippetPathSchema,
@@ -110,4 +109,4 @@ export const SnippetMoveSchema = z.object({
   recursive: z.boolean().default(false).optional(),
 })
 
-export class SnippetMoveDto extends createZodDto(SnippetMoveSchema) {}
+export type SnippetMoveDto = z.infer<typeof SnippetMoveSchema>

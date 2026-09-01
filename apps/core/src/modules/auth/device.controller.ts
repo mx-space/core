@@ -11,7 +11,6 @@ import {
 import { SkipThrottle } from '@nestjs/throttler'
 import ejs from 'ejs'
 import type { FastifyReply } from 'fastify'
-import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 import { API_VERSION } from '~/app.config'
@@ -26,12 +25,12 @@ import { AuthInstanceInjectKey } from './auth.constant'
 import type { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
 
-const DeviceVerifyBodySchema = z.object({
+export const DeviceVerifyBodySchema = z.object({
   userCode: z.string().min(1),
   action: z.enum(['approve', 'deny']),
 })
 
-export class DeviceVerifyDto extends createZodDto(DeviceVerifyBodySchema) {}
+export type DeviceVerifyDto = z.infer<typeof DeviceVerifyBodySchema>
 
 const deviceBasePath = isDev ? '/device' : `/api/v${API_VERSION}/device`
 const adminLoginPath = '/proxy/qaqdmin/#/login'
@@ -139,7 +138,7 @@ export class DeviceController {
   @HttpCode(200)
   @HTTPDecorators.RawResponse
   async verify(
-    @Body() body: DeviceVerifyDto,
+    @Body({ schema: DeviceVerifyBodySchema }) body: DeviceVerifyDto,
     @RequestHeaders('cookie') cookie: string | undefined,
   ) {
     const headers = new Headers()

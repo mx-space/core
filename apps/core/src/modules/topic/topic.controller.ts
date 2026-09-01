@@ -23,11 +23,11 @@ import {
   applyTranslationEntriesInPlace,
   type EntryRule,
 } from '~/processors/helper/helper.translation.service'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
 import { TopicRepository } from './topic.repository'
-import { TopicSlugParamsDto } from './topic.schema'
+import { type TopicSlugParamsDto, TopicSlugParamsSchema } from './topic.schema'
 import type { TopicCreateInput, TopicPatchInput } from './topic.types'
 
 const TOPIC_ENTRY_RULES: ReadonlyArray<EntryRule> = [
@@ -83,7 +83,7 @@ export class TopicBaseController {
 
   @Get('/slug/:slug')
   async getTopicByTopic(
-    @Param() { slug }: TopicSlugParamsDto,
+    @Param({ schema: TopicSlugParamsSchema }) { slug }: TopicSlugParamsDto,
     @Lang() lang?: string,
   ) {
     slug = slugify(slug)
@@ -111,7 +111,10 @@ export class TopicBaseController {
   }
 
   @Get('/:id')
-  async get(@Param() param: EntityIdDto, @Lang() lang?: string) {
+  async get(
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+    @Lang() lang?: string,
+  ) {
     const data = await this.repository.findById(param.id)
     if (!data) {
       throw createAppException(AppErrorCode.TOPIC_NOT_FOUND, { id: param.id })
@@ -136,7 +139,7 @@ export class TopicBaseController {
   }
 
   @Get('/')
-  async gets(@Query() pager: BasicPagerDto) {
+  async gets(@Query({ schema: BasicPagerSchema }) pager: BasicPagerDto) {
     const size = pager.size ?? 10
     const page = pager.page ?? 1
     const result = await this.repository.list(page, size)
@@ -163,21 +166,27 @@ export class TopicBaseController {
 
   @Put('/:id')
   @Auth()
-  update(@Body() body: TopicCreateInput, @Param() param: EntityIdDto) {
+  update(
+    @Body() body: TopicCreateInput,
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+  ) {
     return this.repository.update(param.id, body)
   }
 
   @Patch('/:id')
   @Auth()
   @HttpCode(204)
-  async patch(@Body() body: TopicPatchInput, @Param() param: EntityIdDto) {
+  async patch(
+    @Body() body: TopicPatchInput,
+    @Param({ schema: EntityIdSchema }) param: EntityIdDto,
+  ) {
     await this.repository.update(param.id, body)
   }
 
   @Delete('/:id')
   @Auth()
   @HttpCode(204)
-  async delete(@Param() param: EntityIdDto) {
+  async delete(@Param({ schema: EntityIdSchema }) param: EntityIdDto) {
     await this.repository.deleteById(param.id)
   }
 }

@@ -12,9 +12,12 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import type { SessionUser } from '~/modules/auth/auth.types'
 
 import {
-  ClaimCompanionPairingDto,
-  CompanionDeviceIdParamDto,
-  CreateCompanionPairingDto,
+  type ClaimCompanionPairingDto,
+  ClaimCompanionPairingSchema,
+  type CompanionDeviceIdParamDto,
+  CompanionDeviceIdParamSchema,
+  type CreateCompanionPairingDto,
+  CreateCompanionPairingSchema,
 } from './companion-device.schema'
 import { CompanionDeviceService } from './companion-device.service'
 
@@ -28,13 +31,17 @@ export class CompanionDeviceController {
   @Auth()
   createPairing(
     @CurrentUser() owner: SessionUser,
-    @Body() body: CreateCompanionPairingDto,
+    @Body({ schema: CreateCompanionPairingSchema })
+    body: CreateCompanionPairingDto,
   ) {
     return this.deviceService.createPairing(owner.id, body.scopes)
   }
 
   @Post('/pairings/claim')
-  claimPairing(@Body() body: ClaimCompanionPairingDto) {
+  claimPairing(
+    @Body({ schema: ClaimCompanionPairingSchema })
+    body: ClaimCompanionPairingDto,
+  ) {
     return this.deviceService.claimPairing(body.pairingCode, body.deviceName)
   }
 
@@ -49,7 +56,8 @@ export class CompanionDeviceController {
   @Auth()
   revokeDevice(
     @CurrentUser() owner: SessionUser,
-    @Param() params: CompanionDeviceIdParamDto,
+    @Param({ schema: CompanionDeviceIdParamSchema })
+    params: CompanionDeviceIdParamDto,
   ) {
     return this.deviceService.revokeDevice(owner.id, params.id)
   }

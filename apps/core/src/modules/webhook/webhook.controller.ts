@@ -15,12 +15,17 @@ import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { EntityIdDto } from '~/shared/dto/id.dto'
-import { BasicPagerDto } from '~/shared/dto/pager.dto'
+import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
+import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 
-import { WebhookDto, WebhookDtoPartial } from './webhook.schema'
+import {
+  PartialWebhookSchema,
+  type WebhookDto,
+  type WebhookDtoPartial,
+  WebhookSchema,
+} from './webhook.schema'
 import { WebhookService } from './webhook.service'
-import { WebhookModel } from './webhook.types'
+import { type WebhookModel } from './webhook.types'
 
 @ApiController('/webhooks')
 @Auth()
@@ -28,7 +33,7 @@ export class WebhookController {
   constructor(private readonly service: WebhookService) {}
 
   @Post('/')
-  create(@Body() body: WebhookDto) {
+  create(@Body({ schema: WebhookSchema }) body: WebhookDto) {
     body.events = this.service.transformEvents(body.events)
 
     return this.service.createWebhook(body as unknown as WebhookModel)
@@ -45,21 +50,24 @@ export class WebhookController {
   }
 
   @Patch('/:id')
-  update(@Body() body: WebhookDtoPartial, @Param() { id }: EntityIdDto) {
+  update(
+    @Body({ schema: PartialWebhookSchema }) body: WebhookDtoPartial,
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+  ) {
     if (body.events) body.events = this.service.transformEvents(body.events)
 
     return this.service.updateWebhook(id, body)
   }
 
   @Delete('/:id')
-  delete(@Param() { id }: EntityIdDto) {
+  delete(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     return this.service.deleteWebhook(id)
   }
 
   @Get('/:id')
   async getEventsByHookId(
-    @Param() { id }: EntityIdDto,
-    @Query() query: BasicPagerDto,
+    @Param({ schema: EntityIdSchema }) { id }: EntityIdDto,
+    @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
   ) {
     const result = await this.service.getEventsByHookId(id, query)
     return withMeta(
@@ -71,12 +79,12 @@ export class WebhookController {
   @Post('/redispatch/:id')
   @HttpCode(200)
   @HTTPDecorators.Idempotence()
-  redispatch(@Param() { id }: EntityIdDto) {
+  redispatch(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     return this.service.redispatch(id)
   }
 
   @Delete('/clear/:id')
-  clear(@Param() { id }: EntityIdDto) {
+  clear(@Param({ schema: EntityIdSchema }) { id }: EntityIdDto) {
     return this.service.clearDispatchEvents(id)
   }
 }
