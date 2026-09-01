@@ -78,7 +78,7 @@ overrides:
   sharp: 0.35.4
   tar@<=7.5.17: 7.5.22
 
-packageExtensionsChecksum: sha256-wkWvCT6oNbdvah4durLueOP6pH4KOGW4WyRLs8P9+fQ=
+packageExtensionsChecksum: sha256-gDwxkGbKamzkwKMTPk01xwitLPwTc5VxPRKkVZiNVH0=
 
 importers:
 
@@ -551,8 +551,8 @@ importers:
         specifier: 0.4.0
         version: 0.4.0
       '@innei/pretty-logger-nestjs':
-        specifier: 0.4.2
-        version: 0.4.2(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))
+        specifier: 1.0.0-beta.1
+        version: 1.0.0-beta.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))
       '@lexical/code-core':
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
@@ -3558,10 +3558,10 @@ packages:
   '@innei/pretty-logger-core@0.4.2':
     resolution: {integrity: sha512-4ysURRiI9w8juTgqJYRQqsJh+NXY0fcYCqqGHLLdmn+M1D3nzifwMN3AyUD/4MmWrQaFNp9GX2XHMD4l8451GA==}
 
-  '@innei/pretty-logger-nestjs@0.4.2':
-    resolution: {integrity: sha512-kp+SM9FN/SK1md1jjy+1gi1itztjiH6Yc1MpgtR6lQLPm3YUpJdEn/VgKnT6M3aImjKD3K8GKo0BhR27tYpF6Q==}
+  '@innei/pretty-logger-nestjs@1.0.0-beta.1':
+    resolution: {integrity: sha512-b2m+0pB9kU/YyqPeDdgixtLXlGn/jn6bx7LajjtdiVJokgdhthhkFblyW/oCMApOPGrP+dxSqSXKrl3NgXNhcg==}
     peerDependencies:
-      '@nestjs/common': '>=10'
+      '@nestjs/common': ^12
 
   '@innei/react-tweet@3.4.3':
     resolution: {integrity: sha512-qX+dg+x6KyCBl358LxJPdCKpJtYpBiNFreMDLnyqajSgOA26hmBm7UqdTM7bnaOXeEPTD/rzmQvVikg7rVS3hw==}
@@ -14842,7 +14842,7 @@ snapshots:
       picocolors: 1.1.1
       std-env: 3.10.0
 
-  '@innei/pretty-logger-nestjs@0.4.2(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))':
+  '@innei/pretty-logger-nestjs@1.0.0-beta.1(@nestjs/common@12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))':
     dependencies:
       '@innei/pretty-logger-core': 0.4.2
       '@nestjs/common': 12.0.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0)
@@ -18278,7 +18278,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 26.4.0
 
   buffer@5.7.1:
     dependencies:
@@ -20241,7 +20241,7 @@ snapshots:
 
   happy-dom@20.11.12:
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 26.4.0
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4

@@ -72,7 +72,7 @@
     "@haklex/rich-headless": "0.38.0",
     "@innei/message-engine": "0.2.0",
     "@innei/next-async": "0.4.0",
-    "@innei/pretty-logger-nestjs": "0.4.2",
+    "@innei/pretty-logger-nestjs": "1.0.0-beta.1",
     "@lexical/code-core": "^0.49.0",
     "@lexical/extension": "^0.49.0",
     "@lexical/headless": "^0.49.0",
