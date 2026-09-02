@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import type { ReaderModel } from '~/api/readers'
 
+import type { ReaderModel } from '~/api/readers'
 import { getReader } from '~/api/readers'
 import { adminQueryKeys } from '~/query/keys'
 

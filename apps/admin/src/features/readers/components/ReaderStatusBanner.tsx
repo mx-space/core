@@ -1,6 +1,6 @@
 import { ShieldAlert } from 'lucide-react'
-import type { ReaderModel } from '~/api/readers'
 
+import type { ReaderModel } from '~/api/readers'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { parseDate, relativeTimeFromNow } from '~/utils/time'

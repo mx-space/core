@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
 import { EntitlementService } from './entitlement.service'
+import { GithubSponsorsService } from './github-sponsors.service'
 import { MembershipController } from './membership.controller'
 import { MembershipRepository } from './membership.repository'
 import { MembershipService } from './membership.service'
@@ -13,6 +14,7 @@ import { PaymentProviderRegistry } from './providers/provider.registry'
   controllers: [MembershipController],
   providers: [
     MembershipService,
+    GithubSponsorsService,
     EntitlementService,
     MembershipRepository,
     BillingWebhookEventRepository,

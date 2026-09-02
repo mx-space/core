@@ -1,5 +1,4 @@
 import type { ReaderRoleFilter, ReaderStats } from '~/api/readers'
-
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
 
@@ -21,7 +20,7 @@ export function ReadersTabBar(props: ReadersTabBarProps) {
   const { t } = useI18n()
 
   return (
-    <div className="flex flex-wrap gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+    <div className="flex flex-wrap gap-2 border-b border-neutral-200 px-4 py-2 dark:border-neutral-800">
       {ROLE_TABS.map((tab) => {
         const active = props.role === tab.value
         const count = props.stats?.[STAT_KEY[tab.value]]

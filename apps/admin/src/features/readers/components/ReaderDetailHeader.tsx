@@ -43,7 +43,7 @@ export function ReaderDetailHeader(props: {
       <img
         alt=""
         className={cn(
-          'size-10 shrink-0 rounded-full object-cover ring-1 ring-neutral-200 dark:ring-neutral-700',
+          'size-8 shrink-0 rounded-full object-cover ring-1 ring-neutral-200 dark:ring-neutral-700',
           banned && 'grayscale',
         )}
         src={reader.image || avatarFallback(reader)}
@@ -69,7 +69,7 @@ export function ReaderDetailHeader(props: {
             </Badge>
           ) : null}
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-500 dark:text-neutral-400">
           {reader.handle ? (
             <span className="truncate">@{reader.handle}</span>
           ) : null}

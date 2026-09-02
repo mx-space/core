@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { memberships, readers } from '~/database/schema'
+import { accounts, memberships, readers } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
@@ -93,6 +93,52 @@ export class MembershipRepository extends BaseRepository {
       .where(eq(readers.id, readerId))
       .limit(1)
     return !!row
+  }
+
+  async findReadersByGithubAccountIds(accountIds: string[]): Promise<
+    Map<
+      string,
+      {
+        id: string
+        name: string | null
+        handle: string | null
+        membership: MembershipRow | null
+      }
+    >
+  > {
+    const result = new Map<
+      string,
+      {
+        id: string
+        name: string | null
+        handle: string | null
+        membership: MembershipRow | null
+      }
+    >()
+    if (accountIds.length === 0) return result
+    const rows = await this.db
+      .select({
+        accountId: accounts.accountId,
+        reader: { id: readers.id, name: readers.name, handle: readers.handle },
+        membership: memberships,
+      })
+      .from(accounts)
+      .innerJoin(readers, eq(accounts.userId, readers.id))
+      .leftJoin(memberships, eq(memberships.readerId, readers.id))
+      .where(
+        and(
+          eq(accounts.providerId, 'github'),
+          inArray(accounts.accountId, accountIds),
+        ),
+      )
+    for (const row of rows) {
+      if (!row.accountId) continue
+      result.set(row.accountId, {
+        ...row.reader,
+        membership: row.membership ? mapRow(row.membership) : null,
+      })
+    }
+    return result
   }
 
   async findByReaderIds(readerIds: string[]): Promise<MembershipRow[]> {

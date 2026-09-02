@@ -25,6 +25,7 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import type { SessionUser } from '../auth/auth.types'
 import { ConfigsService } from '../configs/configs.service'
+import { GithubSponsorsService } from './github-sponsors.service'
 import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
@@ -61,6 +62,27 @@ export const ReaderIdParamSchema = z.object({
 })
 type ReaderIdParamDto = z.infer<typeof ReaderIdParamSchema>
 
+export const SponsorsListQuerySchema = z.object({
+  refresh: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+})
+type SponsorsListQueryDto = z.infer<typeof SponsorsListQuerySchema>
+
+export const SponsorImportSchema = z.object({
+  grants: z
+    .array(
+      z.object({
+        readerId: z.string().min(1),
+        months: z.number().int().positive().max(120),
+      }),
+    )
+    .min(1)
+    .max(500),
+})
+type SponsorImportDto = z.infer<typeof SponsorImportSchema>
+
 export const AppleConfirmSchema = z.object({
   signedTransactionInfo: z.string().min(1),
 })
@@ -79,6 +101,7 @@ export class MembershipController {
     private readonly configsService: ConfigsService,
     private readonly providers: PaymentProviderRegistry,
     private readonly appleProvider: AppleProvider,
+    private readonly githubSponsorsService: GithubSponsorsService,
   ) {}
 
   @ReaderAuth()
@@ -288,5 +311,23 @@ export class MembershipController {
     @Param({ schema: ReaderIdParamSchema }) params: ReaderIdParamDto,
   ) {
     return this.membershipService.revokeManual(params.readerId)
+  }
+
+  @Auth()
+  @Get('/sponsors/github')
+  async githubSponsors(
+    @Query({ schema: SponsorsListQuerySchema }) query: SponsorsListQueryDto,
+  ) {
+    return this.githubSponsorsService.list(query.refresh)
+  }
+
+  @Auth()
+  @Post('/sponsors/github/import')
+  @HttpCode(200)
+  async importGithubSponsors(
+    @Body({ schema: SponsorImportSchema }) body: SponsorImportDto,
+  ) {
+    assertNotDemoMode()
+    return this.githubSponsorsService.importGrants(body.grants)
   }
 }

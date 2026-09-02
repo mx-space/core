@@ -19,6 +19,7 @@ import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
+import { GithubSponsorsService } from '~/modules/membership/github-sponsors.service'
 import { MembershipController } from '~/modules/membership/membership.controller'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
@@ -30,6 +31,40 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { createE2EApp } from '../../../helper/create-e2e-app'
+
+vi.mock('octokit', () => ({
+  Octokit: class {
+    graphql = async () => ({
+      viewer: {
+        sponsorshipsAsMaintainer: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [
+            {
+              createdAt: '2025-01-01T00:00:00.000Z',
+              isActive: true,
+              tier: { name: '$5 a month', monthlyPriceInDollars: 5 },
+              sponsorEntity: {
+                databaseId: 4242,
+                login: 'sponsor-registered',
+                avatarUrl: 'https://avatars.example/4242',
+              },
+            },
+            {
+              createdAt: '2024-01-01T00:00:00.000Z',
+              isActive: false,
+              tier: null,
+              sponsorEntity: {
+                databaseId: 9999,
+                login: 'sponsor-unknown',
+                avatarUrl: 'https://avatars.example/9999',
+              },
+            },
+          ],
+        },
+      },
+    })
+  },
+}))
 
 const snowflake = new SnowflakeService()
 
@@ -98,6 +133,8 @@ const configsServiceMock = {
   get: vi.fn(async (key: string) => {
     if (key === 'membership') return membershipConfig
     if (key === 'url') return urlConfig
+    if (key === 'thirdPartyServiceIntegration')
+      return { github: { token: 'gh-token' } }
     return {}
   }),
 }
@@ -195,6 +232,7 @@ const membershipModule: ModuleMetadata = {
     MembershipRepository,
     BillingWebhookEventRepository,
     EntitlementService,
+    GithubSponsorsService,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: DodoProvider, useValue: dodoProviderMock },
     { provide: AppleProvider, useValue: appleProviderMock },
@@ -956,6 +994,87 @@ describe('MembershipController (e2e)', () => {
       expect(res.json()).toMatchObject({
         error: { code: 'READER_NOT_FOUND' },
       })
+    })
+  })
+
+  describe('GitHub sponsors import', () => {
+    beforeAll(async () => {
+      await proxy.app
+        .get<AppDatabase>(PG_DB_TOKEN)
+        .insert(schema.accounts)
+        .values({
+          id: 'acc-github-other',
+          userId: otherReaderId,
+          accountId: '4242',
+          providerId: 'github',
+          providerAccountId: '4242',
+        })
+    })
+
+    it('lists sponsors matched against github-linked readers', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/sponsors/github',
+        headers: { 'test-token': '1' },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const rows = res.json().data
+      expect(rows).toHaveLength(2)
+      expect(rows[0]).toMatchObject({
+        github_id: '4242',
+        login: 'sponsor-registered',
+        reader: { id: otherReaderId },
+      })
+      expect(rows[1]).toMatchObject({ github_id: '9999', reader: null })
+    })
+
+    it('grants months to selected readers and reports skips', async () => {
+      const before = await proxy.app
+        .get(MembershipRepository)
+        .findByReaderId(otherReaderId)
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/sponsors/github/import',
+        headers: { 'test-token': '1', 'content-type': 'application/json' },
+        payload: {
+          grants: [
+            { readerId: otherReaderId, months: 3 },
+            { readerId: liveSubReaderId, months: 3 },
+          ],
+        },
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data).toMatchObject({
+        granted: 1,
+        skipped: [{ reader_id: liveSubReaderId }],
+      })
+
+      const after = await proxy.app
+        .get(MembershipRepository)
+        .findByReaderId(otherReaderId)
+      const expectedBase =
+        before &&
+        before.status === 'active' &&
+        before.currentPeriodEnd > new Date()
+          ? before.currentPeriodEnd
+          : new Date()
+      const expected = new Date(expectedBase)
+      expected.setUTCMonth(expected.getUTCMonth() + 3)
+      expect(after?.provider).toBe('manual')
+      expect(
+        Math.abs(after!.currentPeriodEnd.getTime() - expected.getTime()),
+      ).toBeLessThan(5000)
+    })
+
+    it('rejects callers without the owner test-token header', async () => {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: '/membership/sponsors/github',
+      })
+      expect(res.statusCode).toBe(401)
     })
   })
 })

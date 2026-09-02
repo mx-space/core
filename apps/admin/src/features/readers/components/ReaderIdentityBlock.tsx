@@ -1,9 +1,9 @@
 import { Check, Copy } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { ReaderModel } from '~/api/readers'
-import type { ReactNode } from 'react'
 
+import type { ReaderModel } from '~/api/readers'
 import { useI18n } from '~/i18n'
 
 function KeyValueRow(props: { label: string; children: ReactNode }) {

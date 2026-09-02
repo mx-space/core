@@ -1,7 +1,6 @@
 import type { ReaderModel } from '~/api/readers'
-import type { TranslationKey } from '~/i18n/types'
-
 import { useI18n } from '~/i18n'
+import type { TranslationKey } from '~/i18n/types'
 import { parseDate, relativeTimeFromNow } from '~/utils/time'
 
 function ActivityRow(props: { label: string; value: string | null }) {

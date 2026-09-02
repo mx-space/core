@@ -138,3 +138,38 @@ export interface BillingWebhookEventRow {
   processedAt: Date | null
   receivedAt: Date
 }
+
+export interface GithubSponsorRow {
+  githubId: string
+  login: string
+  avatarUrl: string
+  tierName: string | null
+  monthlyPrice: number | null
+  isActive: boolean
+  sponsoredAt: Date
+  reader: {
+    id: string
+    name: string | null
+    handle: string | null
+    membership: MembershipRow | null
+  } | null
+}
+
+export interface SponsorGrantResult {
+  granted: number
+  skipped: { readerId: string; reason: string }[]
+}
+
+export function resolveGrantExtension(
+  existing: MembershipRow | null,
+  months: number,
+  now: Date = new Date(),
+): { plan: MembershipPlan; expiresAt: Date } {
+  const base =
+    existing && existing.status === 'active' && existing.currentPeriodEnd > now
+      ? existing.currentPeriodEnd
+      : now
+  const expiresAt = new Date(base)
+  expiresAt.setUTCMonth(expiresAt.getUTCMonth() + months)
+  return { plan: months >= 12 ? 'yearly' : 'monthly', expiresAt }
+}

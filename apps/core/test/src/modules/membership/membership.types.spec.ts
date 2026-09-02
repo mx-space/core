@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  type MembershipRow,
   resolveAppleIapAvailability,
+  resolveGrantExtension,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from '~/modules/membership/membership.types'
@@ -166,4 +168,52 @@ describe('resolveAppleIapAvailability', () => {
       ).toEqual({ enabled: false })
     },
   )
+})
+
+describe('resolveGrantExtension', () => {
+  const now = new Date('2026-01-01T00:00:00.000Z')
+  const row = (overrides: Partial<MembershipRow>): MembershipRow => ({
+    id: 'm' as any,
+    readerId: 'r',
+    provider: 'manual',
+    providerCustomerId: null,
+    providerSubscriptionId: null,
+    plan: 'monthly',
+    status: 'active',
+    currentPeriodEnd: now,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  })
+
+  it('starts from now when no membership', () => {
+    const r = resolveGrantExtension(null, 3, now)
+    expect(r.plan).toBe('monthly')
+    expect(r.expiresAt.toISOString()).toBe('2026-04-01T00:00:00.000Z')
+  })
+
+  it('extends an unexpired active membership from its period end', () => {
+    const end = new Date('2026-06-01T00:00:00.000Z')
+    const r = resolveGrantExtension(row({ currentPeriodEnd: end }), 12, now)
+    expect(r.plan).toBe('yearly')
+    expect(r.expiresAt.toISOString()).toBe('2027-06-01T00:00:00.000Z')
+  })
+
+  it('starts from now when expired or cancelled', () => {
+    const past = new Date('2025-06-01T00:00:00.000Z')
+    expect(
+      resolveGrantExtension(
+        row({ currentPeriodEnd: past }),
+        1,
+        now,
+      ).expiresAt.toISOString(),
+    ).toBe('2026-02-01T00:00:00.000Z')
+    expect(
+      resolveGrantExtension(
+        row({ status: 'cancelled', currentPeriodEnd: new Date('2027-01-01') }),
+        1,
+        now,
+      ).expiresAt.toISOString(),
+    ).toBe('2026-02-01T00:00:00.000Z')
+  })
 })

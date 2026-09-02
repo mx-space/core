@@ -1,6 +1,6 @@
 import type { PaginateResult } from '~/models/base'
 
-import { deleteJson, getJson, patchJson, putJson } from './http'
+import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export type ReaderRole = 'reader' | 'owner'
 export type ReaderRoleFilter = 'all' | 'owner' | 'reader'
@@ -102,4 +102,40 @@ export function grantMembership(
 
 export function revokeMembership(readerId: string) {
   return deleteJson<ReaderMembership>(`/membership/members/${readerId}`)
+}
+
+export interface GithubSponsorModel {
+  githubId: string
+  login: string
+  avatarUrl: string
+  tierName: string | null
+  monthlyPrice: number | null
+  isActive: boolean
+  sponsoredAt: string
+  reader: {
+    id: string
+    name: string | null
+    handle: string | null
+    membership: ReaderMembership | null
+  } | null
+}
+
+export interface SponsorImportResult {
+  granted: number
+  skipped: { readerId: string; reason: string }[]
+}
+
+export function getGithubSponsors(refresh = false) {
+  return getJson<GithubSponsorModel[]>('/membership/sponsors/github', {
+    refresh: refresh ? 'true' : undefined,
+  })
+}
+
+export function importGithubSponsors(
+  grants: { readerId: string; months: number }[],
+) {
+  return postJson<SponsorImportResult, { grants: typeof grants }>(
+    '/membership/sponsors/github/import',
+    { grants },
+  )
 }

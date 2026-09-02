@@ -1,3 +1,5 @@
+import { Heart } from 'lucide-react'
+
 import type {
   ReaderMembershipStatusFilter,
   ReaderModel,
@@ -5,6 +7,7 @@ import type {
   ReaderStats,
 } from '~/api/readers'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { ContentListRefreshButton } from '~/features/_shared/components/content-list-toolbar'
 import { useI18n } from '~/i18n'
 import type { Pager } from '~/models/base'
 import { FocusScope } from '~/ui/focus-scope'
@@ -13,12 +16,16 @@ import { useListKeyboard } from '~/ui/list-actions'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
+import { presentSponsorsImportModal } from './modals/SponsorsImportModal'
 import { ReaderListRow } from './ReaderListRow'
 import { ReadersListEmpty } from './ReadersListEmpty'
 import { ReadersListSkeleton } from './ReadersListSkeleton'
 import { ReadersPaginationFooter } from './ReadersPaginationFooter'
 import { ReadersTabBar } from './ReadersTabBar'
 import { ReadersToolbar } from './ReadersToolbar'
+
+const HEADER_ICON_BUTTON_CLASS =
+  'outline-hidden inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-[var(--color-primary-shallow)] dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-neutral-100'
 
 const FOCUS_SCOPE_ID = 'readers-list'
 
@@ -93,6 +100,22 @@ export function ReadersListPanel(props: ReadersListPanelProps) {
             </span>
           </h2>
         </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            aria-label={t('readers.sponsors.import.button')}
+            className={HEADER_ICON_BUTTON_CLASS}
+            onClick={() => void presentSponsorsImportModal()}
+            title={t('readers.sponsors.import.button')}
+            type="button"
+          >
+            <Heart aria-hidden="true" className="size-3.5" />
+          </button>
+          <ContentListRefreshButton
+            isFetching={props.isFetching}
+            label={t('readers.refresh')}
+            onRefresh={props.onRefresh}
+          />
+        </div>
       </div>
 
       <ReadersTabBar
@@ -102,10 +125,8 @@ export function ReadersListPanel(props: ReadersListPanelProps) {
       />
 
       <ReadersToolbar
-        isFetching={props.isFetching}
         membershipStatus={props.membershipStatus}
         onMembershipStatusChange={props.onMembershipStatusChange}
-        onRefresh={props.onRefresh}
         onSearchChange={props.onSearchChange}
         search={props.search}
       />

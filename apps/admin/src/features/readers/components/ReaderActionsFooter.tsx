@@ -1,11 +1,11 @@
 import { Ban, ShieldCheck, UserMinus, UserStar } from 'lucide-react'
-import type { ReaderModel } from '~/api/readers'
-import type { useReaderMutations } from '../hooks/useReaderMutations'
 
+import type { ReaderModel } from '~/api/readers'
 import { useI18n } from '~/i18n'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { Button } from '~/ui/primitives/button'
 
+import type { useReaderMutations } from '../hooks/useReaderMutations'
 import { presentBanReaderModal } from './modals/BanReaderModal'
 
 export function ReaderActionsFooter(props: {

@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Pager } from '~/models/base'
 
+import type { Pager } from '~/models/base'
 import { cn } from '~/utils/cn'
 
 interface ReadersPaginationFooterProps {
