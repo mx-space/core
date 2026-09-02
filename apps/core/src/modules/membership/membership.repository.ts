@@ -18,6 +18,7 @@ import type {
   MembershipProvider,
   MembershipRow,
   MembershipStatus,
+  SponsorReaderMatch,
 } from './membership.types'
 
 const mapRow = (row: typeof memberships.$inferSelect): MembershipRow => ({
@@ -32,6 +33,29 @@ const mapRow = (row: typeof memberships.$inferSelect): MembershipRow => ({
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 })
+
+const readerMatchColumns = {
+  reader: { id: readers.id, name: readers.name, handle: readers.handle },
+  membership: memberships,
+}
+
+const collectReaderMatches = (
+  rows: {
+    key: string | null
+    reader: { id: string; name: string | null; handle: string | null }
+    membership: typeof memberships.$inferSelect | null
+  }[],
+  result: Map<string, SponsorReaderMatch>,
+) => {
+  for (const row of rows) {
+    if (!row.key) continue
+    result.set(row.key, {
+      ...row.reader,
+      membership: row.membership ? mapRow(row.membership) : null,
+    })
+  }
+  return result
+}
 
 @Injectable()
 export class MembershipRepository extends BaseRepository {
@@ -95,33 +119,13 @@ export class MembershipRepository extends BaseRepository {
     return !!row
   }
 
-  async findReadersByGithubAccountIds(accountIds: string[]): Promise<
-    Map<
-      string,
-      {
-        id: string
-        name: string | null
-        handle: string | null
-        membership: MembershipRow | null
-      }
-    >
-  > {
-    const result = new Map<
-      string,
-      {
-        id: string
-        name: string | null
-        handle: string | null
-        membership: MembershipRow | null
-      }
-    >()
+  async findReadersByGithubAccountIds(
+    accountIds: string[],
+  ): Promise<Map<string, SponsorReaderMatch>> {
+    const result = new Map<string, SponsorReaderMatch>()
     if (accountIds.length === 0) return result
     const rows = await this.db
-      .select({
-        accountId: accounts.accountId,
-        reader: { id: readers.id, name: readers.name, handle: readers.handle },
-        membership: memberships,
-      })
+      .select({ key: accounts.accountId, ...readerMatchColumns })
       .from(accounts)
       .innerJoin(readers, eq(accounts.userId, readers.id))
       .leftJoin(memberships, eq(memberships.readerId, readers.id))
@@ -131,14 +135,36 @@ export class MembershipRepository extends BaseRepository {
           inArray(accounts.accountId, accountIds),
         ),
       )
-    for (const row of rows) {
-      if (!row.accountId) continue
-      result.set(row.accountId, {
-        ...row.reader,
-        membership: row.membership ? mapRow(row.membership) : null,
+    return collectReaderMatches(rows, result)
+  }
+
+  async findReadersByEmails(
+    emails: string[],
+  ): Promise<Map<string, SponsorReaderMatch>> {
+    const result = new Map<string, SponsorReaderMatch>()
+    if (emails.length === 0) return result
+    const rows = await this.db
+      .select({
+        key: sql<string>`lower(${readers.email})`,
+        ...readerMatchColumns,
       })
-    }
-    return result
+      .from(readers)
+      .leftJoin(memberships, eq(memberships.readerId, readers.id))
+      .where(inArray(sql`lower(${readers.email})`, emails))
+    return collectReaderMatches(rows, result)
+  }
+
+  async findReadersByHandles(
+    handles: string[],
+  ): Promise<Map<string, SponsorReaderMatch>> {
+    const result = new Map<string, SponsorReaderMatch>()
+    if (handles.length === 0) return result
+    const rows = await this.db
+      .select({ key: readers.handle, ...readerMatchColumns })
+      .from(readers)
+      .leftJoin(memberships, eq(memberships.readerId, readers.id))
+      .where(inArray(readers.handle, handles))
+    return collectReaderMatches(rows, result)
   }
 
   async findByReaderIds(readerIds: string[]): Promise<MembershipRow[]> {

@@ -8,8 +8,11 @@ import { MembershipService } from './membership.service'
 import {
   type GithubSponsorRow,
   resolveGrantExtension,
+  type SponsorCsvPreviewRow,
   type SponsorGrantResult,
+  type SponsorReaderMatch,
 } from './membership.types'
+import { parseSponsorsCsv } from './sponsors-csv'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 
@@ -74,7 +77,7 @@ interface SponsorsQueryResult {
 type RawSponsor = Omit<GithubSponsorRow, 'reader'>
 
 @Injectable()
-export class GithubSponsorsService {
+export class SponsorsService {
   private cache: { fetchedAt: number; sponsors: RawSponsor[] } | null = null
 
   constructor(
@@ -93,6 +96,30 @@ export class GithubSponsorsService {
       ...s,
       reader: readers.get(s.githubId) ?? null,
     }))
+  }
+
+  async previewCsv(csv: string): Promise<SponsorCsvPreviewRow[]> {
+    let rows
+    try {
+      rows = parseSponsorsCsv(csv)
+    } catch (error) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: error instanceof Error ? error.message : String(error),
+      })
+    }
+    const pick = (key: 'githubId' | 'email' | 'handle') =>
+      rows.map((r) => r[key]).filter((v): v is string => v !== null)
+    const [byGithub, byEmail, byHandle] = await Promise.all([
+      this.membershipRepository.findReadersByGithubAccountIds(pick('githubId')),
+      this.membershipRepository.findReadersByEmails(pick('email')),
+      this.membershipRepository.findReadersByHandles(pick('handle')),
+    ])
+    const resolve = (row: (typeof rows)[number]): SponsorReaderMatch | null =>
+      (row.githubId && byGithub.get(row.githubId)) ||
+      (row.email && byEmail.get(row.email)) ||
+      (row.handle && byHandle.get(row.handle)) ||
+      null
+    return rows.map((row) => ({ ...row, reader: resolve(row) }))
   }
 
   async importGrants(

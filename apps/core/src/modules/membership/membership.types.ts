@@ -1,5 +1,7 @@
 import type { EntityId } from '~/shared/id/entity-id'
 
+import type { SponsorCsvRow } from './sponsors-csv'
+
 export type MembershipProvider =
   'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual' | 'apple'
 
@@ -139,6 +141,13 @@ export interface BillingWebhookEventRow {
   receivedAt: Date
 }
 
+export interface SponsorReaderMatch {
+  id: string
+  name: string | null
+  handle: string | null
+  membership: MembershipRow | null
+}
+
 export interface GithubSponsorRow {
   githubId: string
   login: string
@@ -147,12 +156,11 @@ export interface GithubSponsorRow {
   monthlyPrice: number | null
   isActive: boolean
   sponsoredAt: Date
-  reader: {
-    id: string
-    name: string | null
-    handle: string | null
-    membership: MembershipRow | null
-  } | null
+  reader: SponsorReaderMatch | null
+}
+
+export interface SponsorCsvPreviewRow extends SponsorCsvRow {
+  reader: SponsorReaderMatch | null
 }
 
 export interface SponsorGrantResult {

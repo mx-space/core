@@ -1,5 +1,6 @@
 import * as schema from '@mx-space/db-schema/schema'
 import type { ModuleMetadata } from '@nestjs/common'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
@@ -19,7 +20,6 @@ import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
-import { GithubSponsorsService } from '~/modules/membership/github-sponsors.service'
 import { MembershipController } from '~/modules/membership/membership.controller'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { MembershipService } from '~/modules/membership/membership.service'
@@ -27,6 +27,7 @@ import { AppleProvider } from '~/modules/membership/providers/apple.provider'
 import { appleAccountTokenForReader } from '~/modules/membership/providers/apple-transaction'
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
 import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
+import { SponsorsService } from '~/modules/membership/sponsors.service'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -232,7 +233,7 @@ const membershipModule: ModuleMetadata = {
     MembershipRepository,
     BillingWebhookEventRepository,
     EntitlementService,
-    GithubSponsorsService,
+    SponsorsService,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: DodoProvider, useValue: dodoProviderMock },
     { provide: AppleProvider, useValue: appleProviderMock },
@@ -1036,7 +1037,7 @@ describe('MembershipController (e2e)', () => {
 
       const res = await proxy.app.inject({
         method: 'POST',
-        url: '/membership/sponsors/github/import',
+        url: '/membership/sponsors/import',
         headers: { 'test-token': '1', 'content-type': 'application/json' },
         payload: {
           grants: [
@@ -1075,6 +1076,63 @@ describe('MembershipController (e2e)', () => {
         url: '/membership/sponsors/github',
       })
       expect(res.statusCode).toBe(401)
+    })
+  })
+
+  describe('sponsors CSV preview', () => {
+    beforeAll(async () => {
+      await proxy.app
+        .get<AppDatabase>(PG_DB_TOKEN)
+        .update(schema.readers)
+        .set({ email: 'Expired-Reader@Example.com', handle: 'expired-handle' })
+        .where(eq(schema.readers.id, expiredReaderId))
+    })
+
+    it('matches rows by github id, email or handle and keeps unmatched rows', async () => {
+      const csv = [
+        'github_id,email,handle,months,note',
+        '4242,,,12,"tier, $5"',
+        ',expired-reader@example.com,,,',
+        ',,expired-handle,3,',
+        '9999,nobody@example.com,,1,',
+      ].join('\n')
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/sponsors/csv/preview',
+        headers: { 'test-token': '1', 'content-type': 'application/json' },
+        payload: { csv },
+      })
+
+      expect(res.statusCode).toBe(200)
+      const rows = res.json().data
+      expect(rows).toHaveLength(4)
+      expect(rows[0]).toMatchObject({
+        line: 2,
+        github_id: '4242',
+        months: 12,
+        note: 'tier, $5',
+        reader: { id: otherReaderId },
+      })
+      expect(rows[1]).toMatchObject({
+        email: 'expired-reader@example.com',
+        reader: { id: expiredReaderId },
+      })
+      expect(rows[2]).toMatchObject({
+        handle: 'expired-handle',
+        months: 3,
+        reader: { id: expiredReaderId },
+      })
+      expect(rows[3]).toMatchObject({ github_id: '9999', reader: null })
+    })
+
+    it('rejects a CSV without identity columns', async () => {
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/sponsors/csv/preview',
+        headers: { 'test-token': '1', 'content-type': 'application/json' },
+        payload: { csv: 'months,note\n1,x' },
+      })
+      expect(res.statusCode).toBe(400)
     })
   })
 })

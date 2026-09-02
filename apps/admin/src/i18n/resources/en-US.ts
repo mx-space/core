@@ -1722,8 +1722,8 @@ export const enUS = {
   'readers.toast.transferred': 'Owner transferred',
   'readers.toast.unbanFailed': 'Failed to unban reader',
   'readers.toast.unbanned': 'Reader unbanned',
-  'readers.sponsors.import.button': 'Import GitHub Sponsors',
-  'readers.sponsors.import.title': 'Import GitHub Sponsors',
+  'readers.sponsors.import.button': 'Import Sponsors',
+  'readers.sponsors.import.title': 'Import Sponsors',
   'readers.sponsors.import.subtitle':
     'Grant membership to registered sponsors; unregistered ones are skipped',
   'readers.sponsors.import.defaultMonths': 'Months for all',
@@ -1736,6 +1736,19 @@ export const enUS = {
   'readers.sponsors.import.empty': 'No sponsors found',
   'readers.sponsors.import.loadFailed': 'Failed to load sponsors',
   'readers.sponsors.import.selectAll': 'Select all registered',
+  'readers.sponsors.import.source.github': 'GitHub API',
+  'readers.sponsors.import.source.csv': 'CSV',
+  'readers.sponsors.import.github.hint': 'Requires a GitHub token in settings',
+  'readers.sponsors.import.csv.placeholder':
+    'github_id,email,handle,months,note\n12345,,,12,@foo · $5 tier',
+  'readers.sponsors.import.csv.hint':
+    'Needs at least one of github_id / email / handle; blank months use the default',
+  'readers.sponsors.import.csv.chooseFile': 'Choose file',
+  'readers.sponsors.import.csv.copyPrompt': 'Copy AI prompt',
+  'readers.sponsors.import.csv.promptCopied':
+    'Copied. Hand it to an AI to generate sponsors.csv',
+  'readers.sponsors.import.csv.preview': 'Preview',
+  'readers.sponsors.import.csv.empty': 'Paste or choose a CSV, then preview',
   'readers.toast.sponsorsImported': 'Imported {granted}, skipped {skipped}',
   'readers.toast.sponsorsImportFailed': 'Failed to import sponsors',
   'readers.transferOwner.desc': 'Transfer site ownership to {name}?',

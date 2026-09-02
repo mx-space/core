@@ -1680,8 +1680,8 @@ export const zhCN = {
   'readers.toast.transferred': '已转让站长',
   'readers.toast.unbanFailed': '解封读者失败',
   'readers.toast.unbanned': '已解封读者',
-  'readers.sponsors.import.button': '导入 GitHub Sponsors',
-  'readers.sponsors.import.title': '导入 GitHub Sponsors',
+  'readers.sponsors.import.button': '导入 Sponsors',
+  'readers.sponsors.import.title': '导入 Sponsors',
   'readers.sponsors.import.subtitle':
     '为已注册的 sponsor 赠送会员，未注册者跳过',
   'readers.sponsors.import.defaultMonths': '统一月数',
@@ -1694,6 +1694,19 @@ export const zhCN = {
   'readers.sponsors.import.empty': '未找到 sponsor',
   'readers.sponsors.import.loadFailed': '加载 sponsor 失败',
   'readers.sponsors.import.selectAll': '全选已注册',
+  'readers.sponsors.import.source.github': 'GitHub API',
+  'readers.sponsors.import.source.csv': 'CSV',
+  'readers.sponsors.import.github.hint': '需在设置中配置 GitHub token',
+  'readers.sponsors.import.csv.placeholder':
+    'github_id,email,handle,months,note\n12345,,,12,@foo · $5 tier',
+  'readers.sponsors.import.csv.hint':
+    '至少含 github_id / email / handle 之一列，months 留空则用统一月数',
+  'readers.sponsors.import.csv.chooseFile': '选择文件',
+  'readers.sponsors.import.csv.copyPrompt': '复制 AI prompt',
+  'readers.sponsors.import.csv.promptCopied':
+    '已复制，交给 AI 即可生成 sponsors.csv',
+  'readers.sponsors.import.csv.preview': '预览',
+  'readers.sponsors.import.csv.empty': '粘贴或选择 CSV 后预览',
   'readers.toast.sponsorsImported': '已导入 {granted} 人，跳过 {skipped} 人',
   'readers.toast.sponsorsImportFailed': '导入 sponsor 失败',
   'readers.transferOwner.desc': '确定将站长身份转让给 {name}？',

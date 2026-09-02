@@ -25,7 +25,6 @@ import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import type { SessionUser } from '../auth/auth.types'
 import { ConfigsService } from '../configs/configs.service'
-import { GithubSponsorsService } from './github-sponsors.service'
 import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
@@ -38,6 +37,7 @@ import { AppleProvider } from './providers/apple.provider'
 import { appleAccountTokenForReader } from './providers/apple-transaction'
 import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
+import { SponsorsService } from './sponsors.service'
 
 export const CheckoutSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
@@ -70,6 +70,14 @@ export const SponsorsListQuerySchema = z.object({
 })
 type SponsorsListQueryDto = z.infer<typeof SponsorsListQuerySchema>
 
+export const SponsorsCsvPreviewSchema = z.object({
+  csv: z
+    .string()
+    .min(1)
+    .max(1024 * 1024),
+})
+type SponsorsCsvPreviewDto = z.infer<typeof SponsorsCsvPreviewSchema>
+
 export const SponsorImportSchema = z.object({
   grants: z
     .array(
@@ -101,7 +109,7 @@ export class MembershipController {
     private readonly configsService: ConfigsService,
     private readonly providers: PaymentProviderRegistry,
     private readonly appleProvider: AppleProvider,
-    private readonly githubSponsorsService: GithubSponsorsService,
+    private readonly sponsorsService: SponsorsService,
   ) {}
 
   @ReaderAuth()
@@ -318,16 +326,25 @@ export class MembershipController {
   async githubSponsors(
     @Query({ schema: SponsorsListQuerySchema }) query: SponsorsListQueryDto,
   ) {
-    return this.githubSponsorsService.list(query.refresh)
+    return this.sponsorsService.list(query.refresh)
   }
 
   @Auth()
-  @Post('/sponsors/github/import')
+  @Post('/sponsors/csv/preview')
   @HttpCode(200)
-  async importGithubSponsors(
+  async previewSponsorsCsv(
+    @Body({ schema: SponsorsCsvPreviewSchema }) body: SponsorsCsvPreviewDto,
+  ) {
+    return this.sponsorsService.previewCsv(body.csv)
+  }
+
+  @Auth()
+  @Post('/sponsors/import')
+  @HttpCode(200)
+  async importSponsors(
     @Body({ schema: SponsorImportSchema }) body: SponsorImportDto,
   ) {
     assertNotDemoMode()
-    return this.githubSponsorsService.importGrants(body.grants)
+    return this.sponsorsService.importGrants(body.grants)
   }
 }

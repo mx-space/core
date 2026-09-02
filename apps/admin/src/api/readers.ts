@@ -104,6 +104,13 @@ export function revokeMembership(readerId: string) {
   return deleteJson<ReaderMembership>(`/membership/members/${readerId}`)
 }
 
+export interface SponsorReaderMatch {
+  id: string
+  name: string | null
+  handle: string | null
+  membership: ReaderMembership | null
+}
+
 export interface GithubSponsorModel {
   githubId: string
   login: string
@@ -112,12 +119,17 @@ export interface GithubSponsorModel {
   monthlyPrice: number | null
   isActive: boolean
   sponsoredAt: string
-  reader: {
-    id: string
-    name: string | null
-    handle: string | null
-    membership: ReaderMembership | null
-  } | null
+  reader: SponsorReaderMatch | null
+}
+
+export interface SponsorCsvPreviewRow {
+  line: number
+  githubId: string | null
+  email: string | null
+  handle: string | null
+  months: number | null
+  note: string | null
+  reader: SponsorReaderMatch | null
 }
 
 export interface SponsorImportResult {
@@ -131,11 +143,16 @@ export function getGithubSponsors(refresh = false) {
   })
 }
 
-export function importGithubSponsors(
-  grants: { readerId: string; months: number }[],
-) {
+export function previewSponsorsCsv(csv: string) {
+  return postJson<SponsorCsvPreviewRow[], { csv: string }>(
+    '/membership/sponsors/csv/preview',
+    { csv },
+  )
+}
+
+export function importSponsors(grants: { readerId: string; months: number }[]) {
   return postJson<SponsorImportResult, { grants: typeof grants }>(
-    '/membership/sponsors/github/import',
+    '/membership/sponsors/import',
     { grants },
   )
 }
