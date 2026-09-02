@@ -1,30 +1,32 @@
 ## TL;DR
 
-Mix Space 14.6.1 introduces revision-tree publishing, branch-aware drafts, explicit comparisons, and durable background publish jobs in Admin.
+Import GitHub sponsors as memberships in one click, runtime moves to NestJS 12, and republishing no longer bumps modification time spuriously.
 
 ## Highlights
 
-Editing and publishing now use immutable revisions instead of a single mutable draft line. Authors can continue from the current online article, a historical publication, or another draft branch without unrelated work blocking saves or publication. Admin keeps the online revision visible, groups drafts by their actual base, and provides clear compare, continue, publish, delete, and history actions without unbounded tree indentation.
+**GitHub sponsor import.** The admin Readers page now has an import modal that lists your GitHub sponsors matched against readers who linked a GitHub account, and grants each of them a chosen number of months of membership. Readers with an active manual grant get the new period appended to their current end date instead of overwritten, so existing sponsors never lose time.
 
-Publish preparation is now a server-backed job bound to a frozen revision. AI resource selections belong to that job, publication waits for the selected tasks to finish, and unrelated online resources are preserved. Draft recovery also distinguishes ordinary branch divergence from a true same-branch concurrent edit.
+**NestJS 12 runtime.** The server has been upgraded from NestJS 11 to 12 and the `nestjs-zod` layer replaced with Nest's native Standard Schema validation. Request validation, the `422 VALIDATION_FAILED` error envelope, WebSocket handshakes, and the migration runner all behave as before. Docker images bundle the required Node version; source installs now need Node 22.12 or newer.
+
+**Accurate modification time.** Republishing a post or note previously refreshed `modifiedAt` even when only editor block IDs or unrelated metadata changed. The server now hashes title, body, summary, tags, and format, and only bumps the timestamp when that content identity actually differs.
 
 ## Changes
 
-### Bug Fixes
+### Features
+- Import GitHub sponsors as manual memberships via `GET`/`POST /membership/sponsors/github` and the admin Readers import modal ([50c6f23](https://github.com/mx-space/core/commit/50c6f23c817b7a659903cb03d93720af3589aca5))
+- Upgrade to NestJS 12 with Standard Schema validation; `nestjs-zod` removed ([#2814](https://github.com/mx-space/core/pull/2814))
 
-- Corrected Admin mobile viewport height and bottom-sheet bounds ([c55f97b](https://github.com/mx-space/core/commit/c55f97b05)).
+### Bug Fixes
+- `modifiedAt` only changes when title, body, summary, tags, or format change ([e61633f](https://github.com/mx-space/core/commit/e61633f9843c78bccf14126d84ba700d657eecdb))
+- WebSocket gateway no longer runs HTTP guards and interceptors on socket messages, restoring `ping` and `room.join` acks ([#2814](https://github.com/mx-space/core/pull/2814))
 
 ### Other
-
-- Rebuilt content editing around immutable documents, revisions, branches, publication events, and revision-bound publish jobs ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
-- Added branch-aware Admin recovery, diff, publication confirmation, process tracking, and version-history interfaces ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
-- Updated first-party CLI content commands to use the new branch and revision contracts ([16627f3](https://github.com/mx-space/core/commit/16627f3d1)).
+- Admin dashboard bumped to 8.4.23: Readers list actions moved into the header, tighter detail header spacing.
 
 ## Upgrade Notes
 
-- Run the standard `pnpm migrate` release step before boot. It applies the single `0035_tree_content_revisions` schema migration and then converts legacy draft data automatically.
-- Deploy Core together with the bundled Admin. External clients using the former linear draft/version endpoints must adopt the document, revision, branch, and publish-job APIs.
+- Source and CLI installs require Node 22.12+. Docker deployments need no action.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.6.0...v14.6.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.6.1...v14.7.0

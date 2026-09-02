@@ -1,3 +1,16 @@
+## [14.7.0](https://github.com/mx-space/core/compare/v14.6.1...v14.7.0) (2026-09-02)
+
+
+### Bug Fixes
+
+* **core:** bump modifiedAt only when content identity changes ([e61633f](https://github.com/mx-space/core/commit/e61633f9843c78bccf14126d84ba700d657eecdb))
+
+
+### Features
+
+* **core:** upgrade NestJS 11 to 12 and replace nestjs-zod with Standard Schema validation ([2d32f21](https://github.com/mx-space/core/commit/2d32f21f8)) ([#2814](https://github.com/mx-space/core/pull/2814))
+* **membership:** import GitHub sponsors as manual memberships ([50c6f23](https://github.com/mx-space/core/commit/50c6f23c817b7a659903cb03d93720af3589aca5))
+
 ## [14.6.1](https://github.com/mx-space/core/compare/v14.6.0...v14.6.1) (2026-08-31)
 
 ## [14.6.0](https://github.com/mx-space/core/compare/v14.5.1...v14.6.0) (2026-08-30)
