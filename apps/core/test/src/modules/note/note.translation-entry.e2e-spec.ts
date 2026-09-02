@@ -7,6 +7,7 @@ import { TranslationEntryService } from '~/modules/ai/ai-translation/translation
 describe('note translation-entry collection', () => {
   it('collects note mood and weather dictionary values without Mongoose models', async () => {
     const entryRepository = createPgRepositoryMock<TranslationEntryRepository>()
+    entryRepository.listDistinctPostTags.mockResolvedValue([])
     const noteService = {
       findDistinctMoodsAndWeathers: vi.fn().mockResolvedValue({
         moods: ['开心'],
