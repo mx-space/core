@@ -342,9 +342,10 @@ export class ReviewDemoService implements OnModuleInit {
       comments += rows.length
       if (rows.length < RESET_BATCH_SIZE) break
     }
-    const pollVotes = await this.pollVoteRepository.deleteByFingerprint(
-      `r:${reader.id}`,
-    )
+    const [pollVotes] = await Promise.all([
+      this.pollVoteRepository.deleteByFingerprint(`r:${reader.id}`),
+      this.commentRepository.clearBlockedReaders(reader.id),
+    ])
     await this.readerRepository.update(reader.id, {
       name: REVIEW_DEMO_NAME,
       displayUsername: REVIEW_DEMO_NAME,

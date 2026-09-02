@@ -163,6 +163,7 @@ function createHarness(options?: {
     softDeleteComment: vi.fn(),
   }
   const commentRepository = {
+    clearBlockedReaders: vi.fn(),
     paginatedFind: vi.fn().mockResolvedValue({ data: [] }),
   }
   const pollVoteRepository = {
@@ -717,6 +718,7 @@ describe('ReviewDemoService', () => {
     expect(pollVoteRepository.deleteByFingerprint).toHaveBeenCalledWith(
       `r:${DEMO_ID}`,
     )
+    expect(commentRepository.clearBlockedReaders).toHaveBeenCalledWith(DEMO_ID)
     expect(readerRepository.update).toHaveBeenCalledWith(DEMO_ID, {
       name: REVIEW_DEMO_NAME,
       displayUsername: REVIEW_DEMO_NAME,

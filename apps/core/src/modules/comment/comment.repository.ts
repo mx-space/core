@@ -117,6 +117,12 @@ export class CommentRepository extends BaseRepository {
     return rows.map((row) => row.id)
   }
 
+  async clearBlockedReaders(blockerId: string): Promise<void> {
+    await this.db
+      .delete(readerBlocks)
+      .where(eq(readerBlocks.blockerId, blockerId))
+  }
+
   async findByIdWithRelations(
     id: EntityId | string,
   ): Promise<CommentRowWithRelations | null> {
