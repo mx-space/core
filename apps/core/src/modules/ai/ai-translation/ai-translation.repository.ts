@@ -425,6 +425,13 @@ export class TranslationEntryRepository extends BaseRepository {
     super(db)
   }
 
+  async listDistinctPostTags(): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ tag: sql<string>`unnest(${posts.tags})` })
+      .from(posts)
+    return rows.map((row) => row.tag).filter(Boolean)
+  }
+
   async listByBatch(
     lang: string,
     lookups: Array<{

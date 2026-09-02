@@ -72,10 +72,17 @@ const ALL_TRANSLATABLE_FIELDS: readonly ArticleTranslatableField[] = [
   'text',
   'subtitle',
   'summary',
-  'tags',
   'content',
   'contentFormat',
 ]
+
+export type TagGlossaryPair = { source: string; translated: string }
+
+export function buildTagGlossary(maps: EntryMaps): TagGlossaryPair[] {
+  const dictMap = maps.dictMaps.get('post.tag')
+  if (!dictMap) return []
+  return [...dictMap].map(([source, translated]) => ({ source, translated }))
+}
 
 export function buildArticleTranslationMeta(
   result: TranslationResult,
@@ -240,7 +247,7 @@ export class TranslationService {
         text: translation.text,
         subtitle: translation.subtitle ?? originalData.subtitle,
         summary: translation.summary ?? originalData.summary,
-        tags: translation.tags ?? originalData.tags,
+        tags: originalData.tags,
         isTranslated: true,
         sourceLang: translation.sourceLang,
         translationMeta: {
@@ -352,7 +359,6 @@ export class TranslationService {
       'text',
       'subtitle',
       'summary',
-      'tags',
       'content',
       'translationMeta',
     ]
@@ -405,7 +411,7 @@ export class TranslationService {
                 text: translation.text,
                 subtitle: translation.subtitle ?? article.subtitle,
                 summary: translation.summary ?? article.summary,
-                tags: translation.tags ?? article.tags,
+                tags: article.tags,
                 content: translation.content ?? undefined,
                 contentFormat: translation.contentFormat ?? undefined,
                 isTranslated: true,

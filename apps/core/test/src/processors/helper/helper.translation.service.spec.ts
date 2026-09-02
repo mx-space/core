@@ -11,6 +11,7 @@ import {
   applyArticleTranslationInPlace,
   applyTranslationEntriesInPlace,
   buildArticleTranslationMeta,
+  buildTagGlossary,
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 
@@ -152,7 +153,7 @@ describe('TranslationService', () => {
         text: 'Translated Content',
         subtitle: 'Translated Subtitle',
         summary: 'Translated Summary',
-        tags: ['translated-tag'],
+        tags: ['tag1', 'tag2'],
         isTranslated: true,
         sourceLang: 'zh',
         translationMeta: {
@@ -410,7 +411,7 @@ describe('TranslationService', () => {
       expect(translated.text).toBe('Translated Text 1')
       expect((translated as any).subtitle).toBe('Translated Subtitle 1')
       expect(translated.summary).toBe('Translated Summary 1')
-      expect(translated.tags).toEqual(['translated-a'])
+      expect(translated.tags).toBeUndefined()
       expect(translated.translationMeta).toEqual({
         sourceLang: 'zh',
         targetLang: 'en',
@@ -450,7 +451,7 @@ describe('TranslationService', () => {
       const translated = result.get('1')!
       expect((translated as any).subtitle).toBe('Subtitle 1')
       expect(translated.summary).toBe('Summary 1')
-      expect(translated.tags).toEqual(['a'])
+      expect(translated.tags).toBeUndefined()
     })
 
     it('should return original data when service throws error', async () => {
@@ -884,7 +885,7 @@ describe('applyArticleTranslationInPlace', () => {
     expect(target.text).toBe('Original Text')
   })
 
-  it('translated result overwrites all seven fields by default', () => {
+  it('translated result overwrites all fields except tags by default', () => {
     const target: any = {
       title: 'O',
       text: 'O',
@@ -901,7 +902,7 @@ describe('applyArticleTranslationInPlace', () => {
     expect(target.text).toBe('Translated Text')
     expect(target.subtitle).toBe('Translated Subtitle')
     expect(target.summary).toBe('Translated Summary')
-    expect(target.tags).toEqual(['tag-en'])
+    expect(target.tags).toEqual(['orig'])
     expect(target.content).toBe('Translated Content')
     expect(target.contentFormat).toBe('markdown')
   })
@@ -1053,5 +1054,25 @@ describe('applyTranslationEntriesInPlace', () => {
 
     expect(target.topic.name).toBe('NewName')
     expect(target.mood).toBe('Fröhlich')
+  })
+})
+
+describe('buildTagGlossary', () => {
+  it('returns source/translated pairs from the post.tag dictionary map', () => {
+    const maps = {
+      entityMaps: new Map(),
+      dictMaps: new Map([
+        ['post.tag' as const, new Map([['机器学习', 'Machine Learning']])],
+      ]),
+    }
+    expect(buildTagGlossary(maps)).toEqual([
+      { source: '机器学习', translated: 'Machine Learning' },
+    ])
+  })
+
+  it('returns an empty list when no post.tag map is present', () => {
+    expect(
+      buildTagGlossary({ entityMaps: new Map(), dictMaps: new Map() }),
+    ).toEqual([])
   })
 })

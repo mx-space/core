@@ -3,6 +3,7 @@ export type TranslationEntryKeyPath =
   | 'note.title'
   | 'note.mood'
   | 'note.weather'
+  | 'post.tag'
   | 'topic.name'
   | 'topic.description'
   | 'topic.introduce'

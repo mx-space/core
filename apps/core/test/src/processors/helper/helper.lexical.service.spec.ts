@@ -1018,6 +1018,35 @@ describe('LexicalService', () => {
       expect(updatedBlock.text).toContain('Afternoon')
       expect(originalBlock.fingerprint).not.toBe(updatedBlock.fingerprint)
     })
+
+    it('changes the fingerprint when an image caption or gallery alt changes', () => {
+      const image = (caption: string) => ({
+        type: 'image',
+        version: 1,
+        src: 'https://example.com/a.png',
+        altText: 'alt',
+        caption,
+        $: { blockId: 'img0001' },
+      })
+      const gallery = (alt: string) => ({
+        type: 'gallery',
+        version: 1,
+        images: [{ src: 'https://example.com/1.png', alt }],
+        $: { blockId: 'gal0001' },
+      })
+
+      const [img1, gal1] = service.extractRootBlocks(
+        makeEditorState([image('图一'), gallery('第一张')]),
+      )
+      const [img2, gal2] = service.extractRootBlocks(
+        makeEditorState([image('图二'), gallery('第二张')]),
+      )
+
+      expect(img1.text).toContain('图一')
+      expect(img1.fingerprint).not.toBe(img2.fingerprint)
+      expect(gal1.text).toContain('第一张')
+      expect(gal1.fingerprint).not.toBe(gal2.fingerprint)
+    })
   })
 
   // ── Error handling ──

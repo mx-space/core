@@ -12,7 +12,6 @@ import {
 import { TranslationReviewerService } from '../reviewer.service'
 import {
   decodeTags,
-  encodeTags,
   META_SUBTITLE_KEY,
   META_SUMMARY_KEY,
   META_TAGS_KEY,
@@ -219,9 +218,6 @@ export class MarkdownTranslationStrategy
     }
     if (initial.summary) {
       fullTranslations[META_SUMMARY_KEY] = initial.summary
-    }
-    if (initial.tags?.length) {
-      fullTranslations[META_TAGS_KEY] = encodeTags(initial.tags)
     }
     for (const paragraph of paragraphs) {
       fullTranslations[paragraph.id] = paragraph.text

@@ -37,6 +37,7 @@ Do not merely polish or rewrite the source language. The returned natural-langua
 - DO NOT translate segment IDs or keys
 - If title/subtitle/summary/tags keys are present in segments, translate them too
 - For __tags__, preserve the ||| delimiter between tags
+- Segments tagged property.caption / property.altText / property.alt are short figure captions or alt text: translate as captions, keep filenames and product names unchanged
 - Some segment values may be group objects with this shape:
   {"type":"text.group","segments":[{"id":"t_0","text":"part A"},{"id":"t_1","text":"part B"}]}
 - For a group object:

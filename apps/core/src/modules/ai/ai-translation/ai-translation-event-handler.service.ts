@@ -30,6 +30,10 @@ interface NoteDocumentLike {
   weather?: unknown
 }
 
+interface PostDocumentLike {
+  tags?: unknown
+}
+
 @Injectable()
 export class AiTranslationEventHandlerService {
   private readonly logger = new Logger(AiTranslationEventHandlerService.name)
@@ -207,6 +211,38 @@ export class AiTranslationEventHandlerService {
     } catch (err: any) {
       this.logger.error(`Note entry generation failed: ${err.message}`)
     }
+  }
+
+  @OnEvent(BusinessEvents.POST_CREATE)
+  @OnEvent(BusinessEvents.POST_UPDATE)
+  @OnEvent(BusinessEvents.POST_REPUBLISH)
+  async handlePostTagEntry(event: { id: string }) {
+    if (!(await this.isAutoEntryEnabled())) return
+    if (!event.id) return
+    const post = await this.databaseService.findGlobalById(event.id)
+    if (!post) return
+    const values = this.collectPostTagValues(post.document)
+    if (!values.length) return
+    try {
+      await this.translationEntryService.generateForValues(values)
+    } catch (err: any) {
+      this.logger.error(`Post tag entry generation failed: ${err.message}`)
+    }
+  }
+
+  private collectPostTagValues(
+    doc: unknown,
+  ): Parameters<TranslationEntryService['generateForValues']>[0] {
+    const tags = (doc as PostDocumentLike).tags
+    if (!Array.isArray(tags)) return []
+    return tags
+      .filter((tag): tag is string => typeof tag === 'string' && !!tag.trim())
+      .map((tag) => ({
+        keyPath: 'post.tag' as const,
+        keyType: 'dict' as const,
+        lookupKey: TranslationEntryService.hashSourceText(tag),
+        sourceText: tag,
+      }))
   }
 
   // === Helpers ===

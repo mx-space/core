@@ -22,6 +22,7 @@ import {
   applyTranslationEntriesInPlace,
   type ArticleTranslationInput,
   buildArticleTranslationMeta,
+  buildTagGlossary,
   type EntryMaps,
   type EntryRule,
   TranslationService,
@@ -111,19 +112,36 @@ export class PostController {
     return effectiveN
   }
 
-  private async batchCategoryEntryTranslations(
+  private async batchEntryTranslations(
     lang: string,
-    posts: Array<{ category?: { id: unknown } | null } | null | undefined>,
+    posts: Array<
+      | { category?: { id: unknown } | null; tags?: string[] | null }
+      | null
+      | undefined
+    >,
   ): Promise<EntryMaps> {
     const categoryIds = new Set<string>()
+    const tags = new Set<string>()
     for (const post of posts) {
       if (post?.category?.id) categoryIds.add(String(post.category.id))
+      for (const tag of post?.tags ?? []) tags.add(tag)
     }
     return this.translationEntryService.getTranslationsBatch(lang, {
       entityLookups: categoryIds.size
         ? [{ keyPath: 'category.name', lookupKeys: categoryIds }]
         : [],
+      dictLookups: tags.size
+        ? [{ keyPath: 'post.tag', sourceTexts: tags }]
+        : [],
     })
+  }
+
+  private applyTagGlossary(
+    metaBuilder: MetaObjectBuilder<any>,
+    entryMaps: EntryMaps,
+  ) {
+    const tags = buildTagGlossary(entryMaps)
+    if (tags.length) metaBuilder.glossary({ tags })
   }
 
   @Get('/')
@@ -178,7 +196,7 @@ export class PostController {
           targetLang: lang,
           fields: ['title', 'text', 'content', 'contentFormat'],
         }),
-        this.batchCategoryEntryTranslations(lang ?? '', res.data),
+        this.batchEntryTranslations(lang ?? '', res.data),
       ])
 
     for (const doc of res.data) {
@@ -226,6 +244,7 @@ export class PostController {
     if (translationMeta.size > 0) {
       metaBuilder.translation(translationMeta)
     }
+    if (lang) this.applyTagGlossary(metaBuilder, entryMaps)
 
     return withMeta(res.data, metaBuilder.build())
   }
@@ -300,7 +319,7 @@ export class PostController {
           tags: doc.tags,
         },
       }),
-      this.batchCategoryEntryTranslations(lang ?? '', [doc]),
+      this.batchEntryTranslations(lang ?? '', [doc]),
     ])
 
     applyArticleTranslationInPlace(
@@ -349,6 +368,7 @@ export class PostController {
       ],
     ])
     metaBuilder.translation(translationMap)
+    if (lang) this.applyTagGlossary(metaBuilder, entryMaps)
 
     if (skills.length > 0) metaBuilder.skills(skills)
 
@@ -414,7 +434,7 @@ export class PostController {
         },
       }),
       this.translationService.getCachedTitles(relatedIds, lang),
-      this.batchCategoryEntryTranslations(lang ?? '', [postDocument]),
+      this.batchEntryTranslations(lang ?? '', [postDocument]),
       this.aiInsightsService
         .hasInsightsInLang(postDocument.id, insightsLang)
         .catch(() => false),
@@ -499,6 +519,7 @@ export class PostController {
       ],
     ])
     metaBuilder.translation(translationMap)
+    if (lang) this.applyTagGlossary(metaBuilder, entryMaps)
 
     if (skills.length > 0) metaBuilder.skills(skills)
 

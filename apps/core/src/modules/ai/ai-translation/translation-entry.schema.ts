@@ -7,6 +7,7 @@ const validKeyPaths = [
   'topic.description',
   'note.mood',
   'note.weather',
+  'post.tag',
 ] as const
 
 export const GenerateEntriesSchema = z
