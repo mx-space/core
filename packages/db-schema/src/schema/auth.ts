@@ -2,10 +2,12 @@
 import { sql } from 'drizzle-orm'
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
@@ -37,6 +39,29 @@ export const readers = pgTable(
       .on(table.username)
       .where(sql`${table.username} is not null`),
     index('readers_role_idx').on(table.role),
+  ],
+)
+
+export const readerBlocks = pgTable(
+  'reader_blocks',
+  {
+    blockerId: text('blocker_id')
+      .notNull()
+      .references(() => readers.id, { onDelete: 'cascade' }),
+    blockedReaderId: text('blocked_reader_id')
+      .notNull()
+      .references(() => readers.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.blockerId, table.blockedReaderId],
+      name: 'reader_blocks_pk',
+    }),
+    check(
+      'reader_blocks_no_self_check',
+      sql`${table.blockerId} <> ${table.blockedReaderId}`,
+    ),
   ],
 )
 

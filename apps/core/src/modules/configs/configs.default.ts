@@ -35,7 +35,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     retryCount: 3,
   },
   commentOptions: {
-    antiSpam: false,
+    antiSpam: true,
     aiReview: false,
     aiReviewType: 'binary',
     aiReviewThreshold: 5,

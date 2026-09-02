@@ -6,6 +6,34 @@ import {
 } from '@/helper/comment-service-fixture'
 
 describe('CommentService thread queries', () => {
+  it('applies a signed-in reader’s block list to roots and replies', async () => {
+    const { repository, service } = createCommentServiceFixture()
+    repository.findBlockedReaderIds.mockResolvedValue(['blocked-reader'])
+    repository.findRootThreadsByRef.mockResolvedValue({
+      data: [],
+      pagination: { page: 1, size: 10, total: 0, totalPages: 0 },
+    })
+    repository.findVisibleRepliesForRoots.mockResolvedValue([])
+
+    await service.getCommentsByRefId('post-1', {
+      commentShouldAudit: false,
+      isAuthenticated: false,
+      page: 1,
+      readerId: 'reader-1',
+      size: 10,
+    })
+
+    expect(repository.findBlockedReaderIds).toHaveBeenCalledWith('reader-1')
+    expect(repository.findRootThreadsByRef).toHaveBeenCalledWith(
+      'post-1',
+      expect.objectContaining({ blockedReaderIds: ['blocked-reader'] }),
+    )
+    expect(repository.findVisibleRepliesForRoots).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({ blockedReaderIds: ['blocked-reader'] }),
+    )
+  })
+
   it('attaches PG ref summaries to comment rows in admin lists', async () => {
     const { service } = createCommentServiceFixture()
 

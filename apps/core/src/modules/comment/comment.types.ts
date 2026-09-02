@@ -141,6 +141,7 @@ export interface CommentSourceCandidate {
 export type CommentRootSort = 'pinned' | 'newest' | 'oldest'
 
 export interface CommentPublicFilterOptions {
+  blockedReaderIds?: string[]
   isAuthenticated: boolean
   commentShouldAudit: boolean
   hasAnchor?: boolean

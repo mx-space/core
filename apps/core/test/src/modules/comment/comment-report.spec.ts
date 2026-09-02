@@ -13,13 +13,14 @@ describe('CommentService.reportComment', () => {
     },
   }
   const eventManager = { broadcast: vi.fn().mockResolvedValue(undefined) }
-  const commentRepository = { findById: vi.fn() }
+  const commentRepository = { blockReader: vi.fn(), findById: vi.fn() }
   let service: CommentService
 
   beforeEach(() => {
     redisStore.clear()
     eventManager.broadcast.mockClear()
     commentRepository.findById.mockReset()
+    commentRepository.blockReader.mockReset()
     service = new CommentService(
       commentRepository as any,
       {} as any,
@@ -52,5 +53,25 @@ describe('CommentService.reportComment', () => {
       service.reportComment('missing', { ip: '1.1.1.1' }),
     ).rejects.toBeInstanceOf(AppException)
     expect(eventManager.broadcast).not.toHaveBeenCalled()
+  })
+
+  it('reports and persists a reader block', async () => {
+    commentRepository.findById.mockResolvedValue({
+      id: 'c1',
+      readerId: 'author-1',
+      text: 'hello',
+    })
+
+    await expect(
+      service.reportAndBlockComment('c1', {
+        ip: '1.1.1.1',
+        readerId: 'reader-1',
+      }),
+    ).resolves.toEqual({ blockedReaderId: 'author-1', notified: true })
+    expect(commentRepository.blockReader).toHaveBeenCalledWith(
+      'reader-1',
+      'author-1',
+    )
+    expect(eventManager.broadcast).toHaveBeenCalledTimes(1)
   })
 })

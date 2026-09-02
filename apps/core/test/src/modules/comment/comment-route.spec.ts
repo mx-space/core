@@ -47,6 +47,12 @@ describe('CommentController routes', () => {
     expect(Reflect.getMetadata(METHOD_METADATA, prototype.reportComment)).toBe(
       RequestMethod.POST,
     )
+    expect(
+      Reflect.getMetadata(PATH_METADATA, prototype.reportAndBlockComment),
+    ).toBe('/:id/report-and-block')
+    expect(
+      Reflect.getMetadata(METHOD_METADATA, prototype.reportAndBlockComment),
+    ).toBe(RequestMethod.POST)
 
     const names = Object.getOwnPropertyNames(prototype)
     expect(names.indexOf('getMyComments')).toBeLessThan(

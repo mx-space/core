@@ -269,6 +269,7 @@ export class CommentController {
     @Query('sort') sort: string | undefined,
     @Query('around') around: string | undefined,
     @HasAdminAccess() hasAdminAccess: boolean,
+    @CurrentReaderId() readerId: string | undefined,
   ) {
     const { id } = params
     const { page = 1, size = 10 } = query
@@ -289,6 +290,7 @@ export class CommentController {
       hasAnchor: hasAnchor === 'true',
       sort: resolvedSort,
       around,
+      readerId,
     })
 
     const readerIds = this.commentService.collectThreadReaderIds(comments.data)
@@ -311,6 +313,7 @@ export class CommentController {
     @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
     @Query('cursor') cursor: string,
     @HasAdminAccess() hasAdminAccess: boolean,
+    @CurrentReaderId() readerId: string | undefined,
   ) {
     const { size = 10 } = query
     const configs = await this.configsService.get('commentOptions')
@@ -320,6 +323,7 @@ export class CommentController {
       size,
       isAuthenticated: hasAdminAccess,
       commentShouldAudit: configs.commentShouldAudit,
+      readerId,
     })
     return {
       replies: result.replies,
@@ -382,6 +386,23 @@ export class CommentController {
       this.lifecycleService.afterReportComment(params.id)
     }
     return { ok: true }
+  }
+
+  @Post('/:id/report-and-block')
+  @ReaderAuth()
+  async reportAndBlockComment(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @CurrentReaderId() readerId: string,
+    @IpLocation() ipLocation: IpRecord,
+  ) {
+    const result = await this.commentService.reportAndBlockComment(params.id, {
+      ip: ipLocation.ip,
+      readerId,
+    })
+    if (result.notified) {
+      this.lifecycleService.afterReportComment(params.id)
+    }
+    return { blockedReaderId: result.blockedReaderId, ok: true }
   }
 
   @Post('/guest/:id')

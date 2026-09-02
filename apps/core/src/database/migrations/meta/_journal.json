@@ -253,6 +253,13 @@
       "when": 1788177600000,
       "tag": "0035_tree_content_revisions",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788360246000,
+      "tag": "0036_reader_blocks",
+      "breakpoints": true
     }
   ]
 }

@@ -577,6 +577,28 @@ export class CommentService {
     return { notified: true }
   }
 
+  async reportAndBlockComment(
+    id: string,
+    reporter: { ip?: string; readerId: string },
+  ): Promise<{ blockedReaderId: string; notified: boolean }> {
+    const comment = await this.commentRepository.findById(id)
+    if (!comment) {
+      throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })
+    }
+    if (!comment.readerId || comment.readerId === reporter.readerId) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: 'This comment author cannot be blocked.',
+      })
+    }
+
+    const { notified } = await this.reportComment(id, reporter)
+    await this.commentRepository.blockReader(
+      reporter.readerId,
+      comment.readerId,
+    )
+    return { blockedReaderId: comment.readerId, notified }
+  }
+
   /**
    * Translate the legacy numeric `state` parameter to its `tab` equivalent
    * when callers pass `state` without `tab` (spec §6.2). Emits a one-shot
@@ -858,6 +880,7 @@ export class CommentService {
       hasAnchor = false,
       sort = 'pinned',
       around,
+      readerId,
     }: {
       page: number
       size: number
@@ -866,9 +889,14 @@ export class CommentService {
       hasAnchor?: boolean
       sort?: 'pinned' | 'newest' | 'oldest'
       around?: string
+      readerId?: string | null
     },
   ) {
+    const blockedReaderIds = readerId
+      ? await this.commentRepository.findBlockedReaderIds(readerId)
+      : []
     const result = await this.commentRepository.findRootThreadsByRef(refId, {
+      blockedReaderIds,
       page,
       size,
       isAuthenticated,
@@ -882,6 +910,7 @@ export class CommentService {
     const replies = await this.commentRepository.findVisibleRepliesForRoots(
       rootIds,
       {
+        blockedReaderIds,
         isAuthenticated,
         commentShouldAudit,
       },
@@ -925,16 +954,22 @@ export class CommentService {
       size = COMMENT_THREAD_BATCH_SIZE,
       isAuthenticated,
       commentShouldAudit,
+      readerId,
     }: {
       cursor?: string
       size?: number
       isAuthenticated: boolean
       commentShouldAudit: boolean
+      readerId?: string | null
     },
   ) {
+    const blockedReaderIds = readerId
+      ? await this.commentRepository.findBlockedReaderIds(readerId)
+      : []
     const replies = await this.commentRepository.findVisibleRepliesForRoot(
       rootCommentId,
       {
+        blockedReaderIds,
         isAuthenticated,
         commentShouldAudit,
       },

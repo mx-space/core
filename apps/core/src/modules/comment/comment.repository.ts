@@ -7,15 +7,17 @@ import {
   gte,
   ilike,
   inArray,
+  isNull,
   lte,
   ne,
+  notInArray,
   or,
   type SQL,
   sql,
 } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { comments } from '~/database/schema'
+import { comments, readerBlocks } from '~/database/schema'
 import {
   BaseRepository,
   type PaginationResult,
@@ -98,6 +100,21 @@ export class CommentRepository extends BaseRepository {
       .where(eq(comments.id, idBig))
       .limit(1)
     return row ? mapBase(row) : null
+  }
+
+  async blockReader(blockerId: string, blockedReaderId: string): Promise<void> {
+    await this.db
+      .insert(readerBlocks)
+      .values({ blockerId, blockedReaderId })
+      .onConflictDoNothing()
+  }
+
+  async findBlockedReaderIds(blockerId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: readerBlocks.blockedReaderId })
+      .from(readerBlocks)
+      .where(eq(readerBlocks.blockerId, blockerId))
+    return rows.map((row) => row.id)
   }
 
   async findByIdWithRelations(
@@ -970,6 +987,7 @@ export class CommentRepository extends BaseRepository {
   }
 
   private buildPublicThreadFilters({
+    blockedReaderIds = [],
     isAuthenticated,
     commentShouldAudit,
     hasAnchor,
@@ -987,6 +1005,14 @@ export class CommentRepository extends BaseRepository {
     }
     if (hasAnchor) {
       filters.push(sql`${comments.anchor} is not null`)
+    }
+    if (blockedReaderIds.length > 0) {
+      filters.push(
+        or(
+          isNull(comments.readerId),
+          notInArray(comments.readerId, blockedReaderIds),
+        ) as SQL,
+      )
     }
     return filters
   }
