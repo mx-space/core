@@ -1,3 +1,16 @@
+## [14.8.0](https://github.com/mx-space/core/compare/v14.7.0...v14.8.0) (2026-09-02)
+
+
+### Bug Fixes
+
+* **core:** mock listDistinctPostTags in note translation-entry spec ([eea2ecd](https://github.com/mx-space/core/commit/eea2ecddf9be634dbfc5058e8c4ea310b806e46b))
+
+
+### Features
+
+* **membership:** import sponsors from CSV alongside GitHub API ([2caa5ef](https://github.com/mx-space/core/commit/2caa5efe88650241b3f929779849a6b65767bffb))
+* **translation:** glossary-based tag translation + Lexical image caption translation ([#2816](https://github.com/mx-space/core/issues/2816)) ([e7104fd](https://github.com/mx-space/core/commit/e7104fd89df96c13efbbd4d3fb1751f61a37a394)), closes [#2815](https://github.com/mx-space/core/issues/2815)
+
 ## [14.7.0](https://github.com/mx-space/core/compare/v14.6.1...v14.7.0) (2026-09-02)
 
 
