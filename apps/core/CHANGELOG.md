@@ -1,3 +1,10 @@
+## [14.9.0](https://github.com/mx-space/core/compare/v14.8.0...v14.9.0) (2026-09-03)
+
+
+### Features
+
+* **comment:** add report and block moderation flow ([24d53f0](https://github.com/mx-space/core/commit/24d53f0778da9ed018d6f7496bd3274c4d9ccee8))
+
 ## [14.8.0](https://github.com/mx-space/core/compare/v14.7.0...v14.8.0) (2026-09-02)
 
 

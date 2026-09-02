@@ -1,24 +1,19 @@
 ## TL;DR
 
-Sponsor import now accepts CSV as well as the GitHub API, and article translations keep tags and image captions in the glossary.
+Readers can now report and block abusive commenters, while public comment feeds automatically hide blocked accounts and enable spam filtering.
 
 ## Highlights
 
-You can now import GitHub Sponsors from a CSV file as well as from the GitHub API. The admin import modal has a source switch: keep the API path, or choose CSV to paste rows or upload a file with github_id, email, handle, months, and note. Each row is matched to an existing reader by GitHub account id, email, or handle. The CSV tab can copy an AI prompt that pulls sponsors via GraphQL and writes the file.
+Signed-in readers can report a comment and block its author in one action. The report continues through the existing moderation notification path, while the new block relationship is stored per reader so comments from that account no longer appear in public threads.
 
-Translated articles no longer rewrite tags on each post. The original tag stays on the article, and localized names come from translation entries in the glossary, so one tag translation covers every article that uses it. Image and gallery captions, plus alt text, now join the Lexical translation walk, so captions and alt attributes are translated with the body instead of being left in the source language.
+This release also enables the existing spam-filter pipeline for current installations during the database migration. The change keeps moderation in the shared comment API, so supported clients receive the same filtered thread behavior without duplicating policy locally.
 
 ## Changes
 
 ### Features
 
-- Import GitHub Sponsors from CSV (paste or file) in addition to the GitHub API; rows match readers by GitHub id, email, or handle ([2caa5ef](https://github.com/mx-space/core/commit/2caa5efe88650241b3f929779849a6b65767bffb))
-- Translate tags through glossary entries instead of per-article AI, and include image and gallery captions plus alt text in Lexical translation ([#2816](https://github.com/mx-space/core/pull/2816))
-
-## Upgrade Notes
-
-- `POST /membership/sponsors/github/import` is now `POST /membership/sponsors/import`. Bundled admin already uses the new path; update any custom scripts that called the old route.
+- Add the combined comment report-and-block flow with persistent per-reader feed filtering ([24d53f0](https://github.com/mx-space/core/commit/24d53f0778da9ed018d6f7496bd3274c4d9ccee8))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.7.0...v14.8.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.8.0...v14.9.0
