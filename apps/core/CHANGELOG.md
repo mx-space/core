@@ -1,3 +1,10 @@
+## [14.9.1](https://github.com/mx-space/core/compare/v14.9.0...v14.9.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **auth:** reset review demo reader blocks ([864ab66](https://github.com/mx-space/core/commit/864ab664525e0022d43bc4a5de8f6e7acfe60920))
+
 ## [14.9.0](https://github.com/mx-space/core/compare/v14.8.0...v14.9.0) (2026-09-03)
 
 
