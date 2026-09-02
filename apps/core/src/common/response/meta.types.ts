@@ -26,6 +26,14 @@ export const EntryTranslationSchema = z
   })
   .strict()
 
+export const GlossaryMetaSchema = z
+  .object({
+    tags: z
+      .array(z.object({ source: z.string(), translated: z.string() }))
+      .optional(),
+  })
+  .strict()
+
 export const InteractionMetaSchema = z
   .object({
     isLiked: z.boolean().optional(),
@@ -144,6 +152,7 @@ export const BaseResponseMetaSchema = z.object({
     .union([InteractionMetaSchema, z.record(z.string(), InteractionMetaSchema)])
     .optional(),
   enrichments: z.record(z.string().url(), EnrichmentEntrySchema).optional(),
+  glossary: GlossaryMetaSchema.optional(),
 })
 
 export const PostResponseMetaSchema = BaseResponseMetaSchema.extend({
@@ -174,6 +183,7 @@ export type Pagination = z.infer<typeof PaginationSchema>
 export type ArticleTranslation = z.infer<typeof ArticleTranslationSchema>
 export type EntryTranslation = z.infer<typeof EntryTranslationSchema>
 export type InteractionMeta = z.infer<typeof InteractionMetaSchema>
+export type GlossaryMeta = z.infer<typeof GlossaryMetaSchema>
 export type EnrichmentEntry = z.infer<typeof EnrichmentEntrySchema>
 export type RelatedRef = z.infer<typeof RelatedRefSchema>
 export type ArticleRefMap = Record<string, RelatedRef>

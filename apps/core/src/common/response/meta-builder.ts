@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import type {
   EnrichmentEntry,
   EntryTranslation,
+  GlossaryMeta,
   InteractionMeta,
 } from './meta.types'
 import { BaseResponseMetaSchema } from './meta.types'
@@ -62,6 +63,11 @@ export class MetaObjectBuilder<
   interaction(value: InteractionMeta | Map<string, InteractionMeta>): this {
     ;(this.meta as Record<string, unknown>).interaction =
       value instanceof Map ? Object.fromEntries(value) : value
+    return this
+  }
+
+  glossary(value: GlossaryMeta): this {
+    ;(this.meta as Record<string, unknown>).glossary = value
     return this
   }
 

@@ -1453,4 +1453,108 @@ describe('lexical-translation-parser', () => {
       expect(propertySegments[0].rootIndex).toBe(1)
     })
   })
+
+  describe('image and gallery caption translation', () => {
+    const imageNode = (payload: {
+      caption?: string
+      altText?: string
+      blockId?: string
+    }) => ({
+      type: 'image',
+      version: 1,
+      src: 'https://example.com/a.png',
+      altText: payload.altText ?? '',
+      width: 800,
+      height: 600,
+      caption: payload.caption,
+      ...(payload.blockId && { $: { blockId: payload.blockId } }),
+    })
+
+    it('parses image → caption + altText property segments, nothing else', () => {
+      const json = makeEditorState([
+        paragraph(textNode('intro')),
+        imageNode({
+          caption: '图一：ChimeraX 渲染',
+          altText: '蛋白质结构',
+          blockId: 'img-block',
+        }),
+      ])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+
+      expect(segments).toHaveLength(1)
+      expect(propertySegments).toHaveLength(2)
+      const [caption, alt] = propertySegments
+      expect(caption.text).toBe('图一：ChimeraX 渲染')
+      expect(caption.property).toBe('caption')
+      expect(caption.blockId).toBe('img-block')
+      expect(caption.rootIndex).toBe(1)
+      expect(alt.text).toBe('蛋白质结构')
+      expect(alt.property).toBe('altText')
+    })
+
+    it('skips empty caption and altText', () => {
+      const json = makeEditorState([imageNode({ caption: '   ', altText: '' })])
+      const { segments, propertySegments } = parseLexicalForTranslation(json)
+      expect(segments).toHaveLength(0)
+      expect(propertySegments).toHaveLength(0)
+    })
+
+    it('round-trip: translated caption written back, src preserved', () => {
+      const json = makeEditorState([
+        imageNode({ caption: '图一', altText: '结构' }),
+      ])
+      const result = parseLexicalForTranslation(json)
+      const translations = new Map<string, string>()
+      for (const prop of result.propertySegments) {
+        translations.set(
+          prop.id,
+          prop.property === 'caption' ? 'Figure 1' : 'Structure',
+        )
+      }
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      const node = restored.root.children[0]
+      expect(node.caption).toBe('Figure 1')
+      expect(node.altText).toBe('Structure')
+      expect(node.src).toBe('https://example.com/a.png')
+      expect(node.width).toBe(800)
+    })
+
+    it('parses gallery → one alt segment per image with alt', () => {
+      const json = makeEditorState([
+        {
+          type: 'gallery',
+          version: 1,
+          layout: 'grid',
+          images: [
+            { src: 'https://example.com/1.png', alt: '第一张' },
+            { src: 'https://example.com/2.png' },
+            { src: 'https://example.com/3.png', alt: '第三张' },
+          ],
+          $: { blockId: 'gal-block' },
+        },
+      ])
+      const result = parseLexicalForTranslation(json)
+      expect(result.segments).toHaveLength(0)
+      expect(result.propertySegments.map((p) => p.text)).toEqual([
+        '第一张',
+        '第三张',
+      ])
+      expect(result.propertySegments[0].property).toBe('alt')
+      expect(result.propertySegments[0].blockId).toBe('gal-block')
+
+      const translations = new Map(
+        result.propertySegments.map((p, i) => [p.id, `Image ${i + 1}`]),
+      )
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      expect(restored.root.children[0].images.map((i: any) => i.alt)).toEqual([
+        'Image 1',
+        undefined,
+        'Image 2',
+      ])
+    })
+  })
 })

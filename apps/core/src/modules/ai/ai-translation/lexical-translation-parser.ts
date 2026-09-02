@@ -146,6 +146,47 @@ function extractPollSegments(
   }
 }
 
+function pushStringProperty(
+  holder: any,
+  property: string,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  const value = holder?.[property]
+  if (typeof value !== 'string' || !value.trim()) return
+  propertySegments.push({
+    id: `p_${counter.p++}`,
+    text: value,
+    node: holder,
+    property,
+    blockId: ctx.blockId,
+    rootIndex: ctx.rootIndex,
+  })
+}
+
+function extractImageSegments(
+  node: any,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  pushStringProperty(node, 'caption', propertySegments, counter, ctx)
+  pushStringProperty(node, 'altText', propertySegments, counter, ctx)
+}
+
+function extractGallerySegments(
+  node: any,
+  propertySegments: PropertySegment[],
+  counter: { t: number; p: number },
+  ctx: BlockContext,
+): void {
+  if (!Array.isArray(node.images)) return
+  for (const image of node.images) {
+    pushStringProperty(image, 'alt', propertySegments, counter, ctx)
+  }
+}
+
 // Registry for node types whose translatable text lives in an opaque payload
 // rather than children/whitelisted properties. `extract` replaces the normal
 // walk for that node; `restore` runs over the whole tree after translations
@@ -174,6 +215,8 @@ const COMPLEX_NODE_EXTRACTORS: Record<string, ComplexNodeExtractor> = {
   },
   [LEXICAL_CONTEXT_MERMAID_TYPE]: { extract: extractMermaidSegments },
   poll: { extract: extractPollSegments },
+  image: { extract: extractImageSegments },
+  gallery: { extract: extractGallerySegments },
 }
 
 function walkNode(

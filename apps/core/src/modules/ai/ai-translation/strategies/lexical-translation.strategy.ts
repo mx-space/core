@@ -20,7 +20,6 @@ import {
 import { TranslationReviewerService } from '../reviewer.service'
 import {
   decodeTags,
-  encodeTags,
   isMetaFieldUnchanged,
   META_SUBTITLE_KEY,
   META_SUMMARY_KEY,
@@ -443,21 +442,6 @@ export class LexicalTranslationStrategy
       removedMetaKeys.add(META_SUMMARY_KEY)
     }
 
-    if (content.tags?.length) {
-      const encodedTags = encodeTags(content.tags)
-      if (!isMetaFieldUnchanged(oldMetaHashes, 'tags', encodedTags)) {
-        metaUnits.push({
-          id: META_TAGS_KEY,
-          payload: encodedTags,
-          meta: 'meta.tags',
-        })
-      } else if (existing.tags?.length) {
-        allTranslations.set(META_TAGS_KEY, encodeTags(existing.tags))
-      }
-    } else if (oldMetaHashes?.tags || existing.tags?.length) {
-      removedMetaKeys.add(META_TAGS_KEY)
-    }
-
     const totalEntries = contentUnits.length + metaUnits.length
 
     this.logger.log(
@@ -728,14 +712,6 @@ export class LexicalTranslationStrategy
         meta: 'meta.summary',
       })
     }
-    if (content.tags?.length) {
-      units.push({
-        id: META_TAGS_KEY,
-        payload: encodeTags(content.tags),
-        meta: 'meta.tags',
-      })
-    }
-
     return units
   }
 

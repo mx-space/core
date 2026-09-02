@@ -141,6 +141,22 @@ export class LexicalService {
       segments.push(node.diagram)
     }
 
+    if (node.type === 'image') {
+      for (const field of ['caption', 'altText']) {
+        if (typeof node[field] === 'string' && node[field].trim()) {
+          segments.push(node[field])
+        }
+      }
+    }
+
+    if (node.type === 'gallery' && Array.isArray(node.images)) {
+      for (const image of node.images) {
+        if (typeof image?.alt === 'string' && image.alt.trim()) {
+          segments.push(image.alt)
+        }
+      }
+    }
+
     if (node.type === 'poll') {
       if (typeof node.question === 'string' && node.question.trim()) {
         segments.push(node.question)

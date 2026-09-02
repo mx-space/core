@@ -261,6 +261,16 @@ export class TranslationEntryService {
       })
     }
 
+    const tags = await this.entryRepository.listDistinctPostTags()
+    for (const tag of tags) {
+      values.push({
+        keyPath: 'post.tag',
+        keyType: 'dict',
+        lookupKey: TranslationEntryService.hashSourceText(tag),
+        sourceText: tag,
+      })
+    }
+
     return values
   }
 
@@ -525,7 +535,11 @@ export class TranslationEntryService {
   }
 
   private isDictKeyPath(keyPath: TranslationEntryKeyPath): boolean {
-    return keyPath === 'note.mood' || keyPath === 'note.weather'
+    return (
+      keyPath === 'note.mood' ||
+      keyPath === 'note.weather' ||
+      keyPath === 'post.tag'
+    )
   }
 
   private async getCachedDictTranslations(

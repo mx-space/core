@@ -24,6 +24,7 @@ import { TranslationEntryService } from '~/modules/ai/ai-translation/translation
 import {
   applyArticleTranslationInPlace,
   applyTranslationEntriesInPlace,
+  buildTagGlossary,
   type EntryMaps,
   type EntryRule,
   TranslationService,
@@ -59,6 +60,26 @@ export class CategoryController {
     private readonly translationService: TranslationService,
     private readonly translationEntryService: TranslationEntryService,
   ) {}
+
+  private batchTagGlossary(
+    lang: string,
+    tags: Iterable<string>,
+  ): Promise<EntryMaps> {
+    const sourceTexts = new Set([...tags].filter(Boolean))
+    return this.translationEntryService.getTranslationsBatch(lang, {
+      dictLookups: sourceTexts.size
+        ? [{ keyPath: 'post.tag', sourceTexts }]
+        : [],
+    })
+  }
+
+  private applyTagGlossary(
+    metaBuilder: MetaObjectBuilder<any>,
+    entryMaps: EntryMaps,
+  ) {
+    const tags = buildTagGlossary(entryMaps)
+    if (tags.length) metaBuilder.glossary({ tags })
+  }
 
   @Get('/')
   async getCategories(
@@ -199,24 +220,32 @@ export class CategoryController {
             publishedOnly: !isAuthenticated,
           })
 
+    const listMetaBuilder = new MetaObjectBuilder().view('card')
+
     if (lang && Array.isArray(result) && result.length) {
-      const entryMaps = await this.translationEntryService.getTranslationsBatch(
-        lang,
-        {
-          entityLookups: [
-            {
-              keyPath: 'category.name',
-              lookupKeys: new Set(result.map((cat: any) => String(cat.id))),
-            },
-          ],
-        },
-      )
-      for (const cat of result as any[]) {
-        applyTranslationEntriesInPlace(cat, entryMaps, CATEGORY_NAME_RULES)
+      if (type === CategoryType.Tag) {
+        const entryMaps = await this.batchTagGlossary(
+          lang,
+          result.map((tag: any) => tag.name),
+        )
+        this.applyTagGlossary(listMetaBuilder, entryMaps)
+      } else {
+        const entryMaps =
+          await this.translationEntryService.getTranslationsBatch(lang, {
+            entityLookups: [
+              {
+                keyPath: 'category.name',
+                lookupKeys: new Set(result.map((cat: any) => String(cat.id))),
+              },
+            ],
+          })
+        for (const cat of result as any[]) {
+          applyTranslationEntriesInPlace(cat, entryMaps, CATEGORY_NAME_RULES)
+        }
       }
     }
 
-    return withMeta(result, new MetaObjectBuilder().view('card').build())
+    return withMeta(result, listMetaBuilder.build())
   }
 
   @Get('/:query')
@@ -260,6 +289,11 @@ export class CategoryController {
           }
         }
         if (titleMeta.size > 0) tagMetaBuilder.translation(titleMeta)
+        const entryMaps = await this.batchTagGlossary(lang, [
+          query,
+          ...data.flatMap((post: any) => post.tags ?? []),
+        ])
+        this.applyTagGlossary(tagMetaBuilder, entryMaps)
       }
       return withMeta({ tag: query, data }, tagMetaBuilder.build())
     }
@@ -299,6 +333,10 @@ export class CategoryController {
         modifiedAt: post.modifiedAt ?? null,
       }))
 
+      const tagNames = new Set<string>([
+        ...(tagsSum ?? []).map((item: any) => item.name),
+        ...children.flatMap((post: any) => post.tags ?? []),
+      ])
       const [entryMaps, { results, meta: titleMeta }] = await Promise.all([
         this.translationEntryService.getTranslationsBatch(lang, {
           entityLookups: [
@@ -307,6 +345,9 @@ export class CategoryController {
               lookupKeys: new Set([String(res.id)]),
             },
           ],
+          dictLookups: tagNames.size
+            ? [{ keyPath: 'post.tag', sourceTexts: tagNames }]
+            : [],
         }),
         articles.length
           ? this.translationService.collectArticleTranslations({
@@ -330,6 +371,7 @@ export class CategoryController {
       }
 
       if (titleMeta.size > 0) metaBuilder.translation(titleMeta)
+      this.applyTagGlossary(metaBuilder, entryMaps)
     }
 
     return withMeta({ ...res, count, children, tagsSum }, metaBuilder.build())

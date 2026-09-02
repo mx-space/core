@@ -6,6 +6,7 @@ import { TranslationEntryService } from '~/modules/ai/ai-translation/translation
 
 const createService = () => {
   const repository = createPgRepositoryMock<TranslationEntryRepository>()
+  repository.listDistinctPostTags.mockResolvedValue([])
   const categoryService = { findAllCategory: vi.fn().mockResolvedValue([]) }
   const noteService = {
     findRecent: vi.fn().mockResolvedValue([]),
@@ -98,6 +99,32 @@ describe('TranslationEntryService', () => {
       .map((v: any) => v.sourceText)
     expect(moods.sort()).toEqual(['happy', 'sad'])
     expect(weathers).toEqual(['sunny'])
+  })
+
+  it('seeds post.tag dictionary entries from distinct post tags', async () => {
+    const { repository, service } = createService()
+    repository.listDistinctPostTags.mockResolvedValue(['机器学习', 'Rust'])
+
+    const values = await service.collectSourceValues()
+
+    const tags = values.filter((v) => v.keyPath === 'post.tag')
+    expect(tags.map((v) => v.sourceText)).toEqual(['机器学习', 'Rust'])
+    expect(tags.every((v) => v.keyType === 'dict')).toBe(true)
+    expect(tags[0].lookupKey).toBe(
+      TranslationEntryService.hashSourceText('机器学习'),
+    )
+  })
+
+  it('serves post.tag translations from the dictionary cache', async () => {
+    const { redis, repository, service } = createService()
+    redis.hmget.mockResolvedValue(['Machine Learning'])
+
+    const result = await service.getTranslationsForDict('post.tag', 'en', [
+      '机器学习',
+    ])
+
+    expect(repository.listByBatch).not.toHaveBeenCalled()
+    expect(result.get('机器学习')).toBe('Machine Learning')
   })
 
   it('updates dictionary cache after PG dictionary entry updates', async () => {

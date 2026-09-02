@@ -103,12 +103,22 @@ export interface TtsMeta {
   updatedAt?: string | null
 }
 
+export interface TagGlossaryPair {
+  source: string
+  translated: string
+}
+
+export interface GlossaryMeta {
+  tags?: TagGlossaryPair[]
+}
+
 export interface BaseResponseMeta {
   pagination?: PaginationMeta
   view?: string
   translation?: EntryTranslation | Record<string, EntryTranslation>
   interaction?: InteractionMeta | Record<string, InteractionMeta>
   enrichments?: Record<string, EnrichmentResult>
+  glossary?: GlossaryMeta
 }
 
 export interface PostResponseMeta extends BaseResponseMeta {
