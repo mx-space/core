@@ -46,6 +46,31 @@ describe('NoteRepository', () => {
     expect(second.nid).toBe(2)
   })
 
+  it('returns only the newest visible note identity, excluding drafts, passwords and future publications', async () => {
+    expect(await repository.getLatestVisibleId()).toBeNull()
+    const visible = await repository.create({
+      title: 'Visible',
+      text: 'large body '.repeat(10000),
+      contentFormat: ContentFormat.Markdown,
+      createdAt: new Date('2020-01-01'),
+    })
+    for (const hidden of [
+      { isPublished: false },
+      { password: 'secret' },
+      { publicAt: new Date('2999-01-01') },
+    ]) {
+      await repository.create({
+        contentFormat: ContentFormat.Markdown,
+        createdAt: new Date('2026-01-01'),
+        ...hidden,
+      })
+    }
+    expect(await repository.getLatestVisibleId()).toEqual({
+      id: visible.id,
+      nid: visible.nid,
+    })
+  })
+
   it('continues after the existing max nid once the identity sequence is aligned', async () => {
     await db.insert(notes).values({
       id: snowflake.nextId(),

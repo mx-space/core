@@ -201,23 +201,13 @@ export class AggregateController {
   ) {
     const { theme } = query
 
-    const [
-      user,
-      url,
-      seo,
-      commentOptions,
-      latestNoteId,
-      themeConfig,
-      aiConfig,
-    ] = await Promise.all([
+    const [user, config, latestNoteId, themeConfig] = await Promise.all([
       this.ownerService.getOwner(),
-      this.configsService.get('url'),
-      this.configsService.get('seo'),
-      this.configsService.get('commentOptions'),
+      this.configsService.getConfig(),
       this.noteService.getLatestNoteId(),
       this.getThemeConfig(theme, lang),
-      this.configsService.get('ai'),
     ])
+    const { url, seo, commentOptions, ai: aiConfig } = config
 
     return {
       user,
@@ -244,10 +234,9 @@ export class AggregateController {
     withQuery: true,
   })
   async site(@Lang() lang?: string) {
-    const [user, url, seo] = await Promise.all([
+    const [user, { url, seo }] = await Promise.all([
       this.ownerService.getOwner(),
-      this.configsService.get('url'),
-      this.configsService.get('seo'),
+      this.configsService.getConfig(),
     ])
 
     return {

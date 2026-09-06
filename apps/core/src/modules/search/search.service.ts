@@ -687,8 +687,8 @@ export class SearchService {
         candidateLimit,
       ),
       this.searchByText(keyword, refType, lang, hasAdminAccess, candidateLimit),
-      this.searchByRegex(
-        keywordRegexes,
+      this.searchRepository.findByKeywordFragments(
+        keyword,
         refType,
         lang,
         hasAdminAccess,
@@ -759,25 +759,6 @@ export class SearchService {
       limit,
     )
     return docs.filter((doc) => this.isVisible(doc, hasAdminAccess))
-  }
-
-  private async searchByRegex(
-    keywordRegexes: RegExp[],
-    refType: SearchDocumentRefType | undefined,
-    lang: string,
-    hasAdminAccess: boolean,
-    limit: number,
-  ) {
-    if (!keywordRegexes.length) return []
-    const candidates = await this.searchRepository.findAll(refType, lang)
-    return candidates
-      .filter((doc) => this.isVisible(doc, hasAdminAccess))
-      .filter((doc) =>
-        keywordRegexes.some(
-          (regex) => regex.test(doc.title) || regex.test(doc.searchText),
-        ),
-      )
-      .slice(0, limit)
   }
 
   private async getTermDocumentFrequency(
@@ -851,23 +832,19 @@ export class SearchService {
     }
 
     const now = new Date()
-    const [posts, notes, pages] = await Promise.all([
-      idsByType.post.length
-        ? (await this.postService.findManyByIds(idsByType.post)).filter(
-            (post) => hasAdminAccess || post.isPublished !== false,
-          )
-        : [],
-      idsByType.note.length
-        ? (await this.noteService.findManyByIds(idsByType.note)).filter(
-            (note) =>
-              hasAdminAccess ||
-              (note.isPublished && (!note.publicAt || note.publicAt <= now)),
-          )
-        : [],
-      idsByType.page.length
-        ? this.pageService.findManyByIds(idsByType.page)
-        : [],
+    const [postRows, noteRows, pages] = await Promise.all([
+      this.postService.findManyByIds(idsByType.post),
+      this.noteService.findManyByIds(idsByType.note),
+      this.pageService.findManyByIds(idsByType.page),
     ])
+    const posts = postRows.filter(
+      (post) => hasAdminAccess || post.isPublished !== false,
+    )
+    const notes = noteRows.filter(
+      (note) =>
+        hasAdminAccess ||
+        (note.isPublished && (!note.publicAt || note.publicAt <= now)),
+    )
 
     const map = new Map<string, any>()
     for (const post of posts) {

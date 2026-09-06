@@ -81,8 +81,11 @@ export async function buildGroupedWithOrphans<TItem>(
     pages: candidateArticles.pages,
   })
 
-  const candidateIds = searchableRefIds
-    ? Object.keys(candidateMap).filter((id) => searchableRefIds.includes(id))
+  const searchableRefSet = searchableRefIds
+    ? new Set(searchableRefIds)
+    : undefined
+  const candidateIds = searchableRefSet
+    ? Object.keys(candidateMap).filter((id) => searchableRefSet.has(id))
     : Object.keys(candidateMap)
 
   const orphanIds = candidateIds

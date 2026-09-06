@@ -817,9 +817,14 @@ export class NoteRepository extends BaseRepository {
     await this.update(id, { images })
   }
 
-  async getLatestVisible(): Promise<NoteRow | null> {
-    const [row] = await this.findRecent(1, { visibleOnly: true })
-    return row ?? null
+  async getLatestVisibleId(): Promise<Pick<NoteRow, 'id' | 'nid'> | null> {
+    const [row] = await this.db
+      .select({ id: notes.id, nid: notes.nid })
+      .from(notes)
+      .where(this.visibleClause())
+      .orderBy(createdAtDescNullsLast)
+      .limit(1)
+    return row ? { id: toEntityId(row.id) as EntityId, nid: row.nid } : null
   }
 
   async findLatestVisiblePair(): Promise<{

@@ -20,11 +20,15 @@ process.title = `Mix Space (${cluster.isPrimary ? 'master' : 'worker'}) - ${
 export async function startMain() {
   initializeApp()
 
+  const importStartedAt = performance.now()
   const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
     import('./bootstrap'),
     import('./app.config.js'),
     import('./cluster'),
   ])
+  logger.log(
+    `Startup imports: ${Math.round(performance.now() - importStartedAt)}ms`,
+  )
 
   if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
     logger.debug(process.argv)

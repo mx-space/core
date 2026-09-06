@@ -30,12 +30,15 @@ const Origin: false | string[] = Array.isArray(CROSS_DOMAIN.allowedOrigins)
   : false
 
 export async function bootstrap() {
+  const startedAt = performance.now()
   const isInit = await checkInit()
+  const checkedAt = performance.now()
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(isInit),
     fastifyApp,
   )
+  const createdAt = performance.now()
 
   // Replace NestJS built-in logger with our custom Logger
   app.useLogger(app.get(Logger))
@@ -92,6 +95,9 @@ export async function bootstrap() {
   if (isDev && !isTest) {
     await app.get(AppMigrationsService).run()
   }
+  const migratedAt = performance.now()
+  await app.init()
+  const initializedAt = performance.now()
 
   await app.listen(
     {
@@ -99,6 +105,13 @@ export async function bootstrap() {
       port: +PORT,
     },
     async () => {
+      logger.info(
+        `Startup phases: database=${Math.round(checkedAt - startedAt)}ms ` +
+          `container=${Math.round(createdAt - checkedAt)}ms ` +
+          `setup/migrations=${Math.round(migratedAt - createdAt)}ms ` +
+          `app.init=${Math.round(initializedAt - migratedAt)}ms ` +
+          `listen=${Math.round(performance.now() - initializedAt)}ms`,
+      )
       logger.info('ENV:', process.env.NODE_ENV)
       const url = await app.getUrl()
       const pid = process.pid

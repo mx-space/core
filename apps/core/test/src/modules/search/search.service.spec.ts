@@ -105,6 +105,7 @@ const makeService = ({
     findByTerms: vi.fn().mockResolvedValue([]),
     findByKeyword: vi.fn().mockResolvedValue([]),
     findAll: vi.fn().mockResolvedValue([]),
+    findByKeywordFragments: vi.fn().mockResolvedValue([]),
     findAdminRows: vi.fn().mockResolvedValue({
       data: [],
       pagination: {
@@ -154,6 +155,45 @@ const makeService = ({
 describe('SearchService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('loads article types concurrently while retaining public visibility and hit order', async () => {
+    const { service, postService, noteService, pageService } = makeService()
+    const post = Promise.withResolvers<any[]>()
+    const note = Promise.withResolvers<any[]>()
+    const page = Promise.withResolvers<any[]>()
+    postService.findManyByIds.mockReturnValue(post.promise)
+    noteService.findManyByIds.mockReturnValue(note.promise)
+    pageService.findManyByIds.mockReturnValue(page.promise)
+    const hits = [
+      { refType: 'page', refId: 'page-1' },
+      { refType: 'post', refId: 'post-1' },
+      { refType: 'post', refId: 'draft' },
+      { refType: 'note', refId: 'future' },
+      { refType: 'note', refId: 'note-1' },
+    ].map((hit) => ({ ...hit, title: 'hit', searchText: '', lang: 'zh' }))
+    const pending = (service as any).loadSearchResultData(hits, false, [], [])
+    try {
+      expect(postService.findManyByIds).toHaveBeenCalled()
+      expect(noteService.findManyByIds).toHaveBeenCalled()
+      expect(pageService.findManyByIds).toHaveBeenCalled()
+    } finally {
+      post.resolve([
+        { id: 'post-1', isPublished: true },
+        { id: 'draft', isPublished: false },
+      ])
+      note.resolve([
+        { id: 'future', isPublished: true, publicAt: new Date('2999-01-01') },
+        { id: 'note-1', isPublished: true },
+      ])
+      page.resolve([{ id: 'page-1' }])
+    }
+    const result = await pending
+    expect(result.map((row: any) => row.id)).toEqual([
+      'page-1',
+      'post-1',
+      'note-1',
+    ])
   })
 
   it('upserts a post search document with resolved sourceLang', async () => {

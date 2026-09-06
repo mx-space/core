@@ -183,8 +183,8 @@ export class CategoryService implements OnApplicationBootstrap {
     const category = await this.categoryRepository.findById(id)
     if (!category) throw createAppException(AppErrorCode.NO_CONTENT_MODIFIABLE)
 
-    const postsInCategory = await this.findPostsInCategory(category.id)
-    if (postsInCategory.length > 0) {
+    const postCount = await this.postService.countByCategoryId(category.id)
+    if (postCount > 0) {
       throw createAppException(AppErrorCode.CATEGORY_HAS_POSTS)
     }
     const deleted = await this.categoryRepository.deleteById(category.id)

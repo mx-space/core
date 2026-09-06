@@ -210,6 +210,54 @@ export class SearchRepository extends BaseRepository {
     return rows.map(mapRow)
   }
 
+  async findByKeywordFragments(
+    keyword: string,
+    refType: SearchDocumentRefType | undefined,
+    lang: string,
+    hasAdminAccess: boolean,
+    limit: number,
+  ): Promise<SearchDocumentRow[]> {
+    const fragments = [...new Set(keyword.trim().split(/\s+/).filter(Boolean))]
+    if (!fragments.length) return []
+    const filters: SQL[] = [
+      eq(searchDocuments.lang, lang),
+      or(
+        // PostgreSQL's ***= prefix treats all input as literal text, including regex syntax.
+        ...fragments.flatMap((fragment) => [
+          sql`${searchDocuments.title} ~* ${'***=' + fragment}`,
+          sql`${searchDocuments.searchText} ~* ${'***=' + fragment}`,
+        ]),
+      )!,
+    ]
+    if (refType) filters.push(eq(searchDocuments.refType, refType))
+    if (!hasAdminAccess) {
+      // Match SearchService.isVisible before limiting, including page/post rules.
+      filters.push(
+        or(
+          eq(searchDocuments.refType, 'page'),
+          and(
+            eq(searchDocuments.refType, 'post'),
+            eq(searchDocuments.isPublished, true),
+          ),
+          and(
+            eq(searchDocuments.refType, 'note'),
+            ...visibilityFilters('note'),
+          ),
+        )!,
+      )
+    }
+    const rows = await this.db
+      .select()
+      .from(searchDocuments)
+      .where(and(...filters))
+      .orderBy(
+        desc(searchDocuments.modifiedAt),
+        desc(searchDocuments.createdAt),
+      )
+      .limit(limit)
+    return rows.map(mapRow)
+  }
+
   async deleteAll(): Promise<number> {
     const result = await this.db
       .delete(searchDocuments)

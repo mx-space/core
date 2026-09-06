@@ -1,11 +1,11 @@
-import { Pool } from 'pg'
-
-import { SearchRepository } from '~/modules/search/search.repository'
-import { SnowflakeService } from '~/shared/id/snowflake.service'
+import type { Pool } from 'pg'
 import {
   createPgTestDatabase,
   type PgTestDatabase,
 } from 'test/helper/pg-verify-url'
+
+import { SearchRepository } from '~/modules/search/search.repository'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 const baseDoc = (overrides: Record<string, any> = {}) => ({
   refType: 'post' as const,
@@ -155,5 +155,79 @@ describe('SearchRepository', () => {
     })
     expect(filtered.data).toHaveLength(1)
     expect(filtered.data[0].title).toBe('English news')
+  })
+
+  it('matches any literal fragment in title or body, with language, type and ordered limit', async () => {
+    const titles = [
+      'HELLO first',
+      'hello second',
+      '中文标题',
+      '100%_\\.*',
+      'unrelated',
+    ]
+    for (const [index, title] of titles.entries()) {
+      await repo.upsert(
+        baseDoc({
+          refId: String(100 + index),
+          title,
+          searchText: index === 4 ? 'body-only Needle' : '正文',
+          modifiedAt: new Date(Date.UTC(2026, 0, 5 - index)),
+        }),
+      )
+    }
+    await repo.upsert(baseDoc({ refId: '200', lang: 'en', title: 'hello' }))
+    await repo.upsert(
+      baseDoc({ refId: '201', refType: 'page', title: 'hello' }),
+    )
+
+    const find = (keyword: string, limit = 10) =>
+      repo.findByKeywordFragments(keyword, 'post', 'zh', false, limit)
+    expect((await find('hello 中文', 3)).map((row) => row.title)).toEqual(
+      titles.slice(0, 3),
+    )
+    expect((await find('hello', 1)).map((row) => row.title)).toEqual([
+      'HELLO first',
+    ])
+    expect((await find('needle')).map((row) => row.refId)).toEqual(['104'])
+    expect((await find('%_\\.*')).map((row) => row.refId)).toEqual(['103'])
+    expect(await find('   ')).toEqual([])
+  })
+
+  it('filters private notes and drafts before limiting, while preserving page and admin access', async () => {
+    const docs = [
+      { refType: 'note', hasPassword: true },
+      { refType: 'note', publicAt: new Date('2999-01-01') },
+      { refType: 'note', isPublished: false },
+      { refType: 'post', isPublished: false },
+      { refType: 'page', isPublished: false, hasPassword: true },
+      { refType: 'post', hasPassword: true, publicAt: new Date('2999-01-01') },
+      { refType: 'note', publicAt: new Date('2020-01-01') },
+    ]
+    for (const [index, doc] of docs.entries()) {
+      await repo.upsert(
+        baseDoc({
+          ...doc,
+          refId: String(300 + index),
+          title: 'match',
+          modifiedAt: new Date(Date.UTC(2026, 0, 10 - index)),
+        }),
+      )
+    }
+    const visible = await repo.findByKeywordFragments(
+      'match',
+      undefined,
+      'zh',
+      false,
+      3,
+    )
+    expect(visible.map((row) => row.refId)).toEqual(['304', '305', '306'])
+    expect(
+      (await repo.findByKeywordFragments('match', 'note', 'zh', false, 1)).map(
+        (row) => row.refId,
+      ),
+    ).toEqual(['306'])
+    expect(
+      await repo.findByKeywordFragments('match', undefined, 'zh', true, 10),
+    ).toHaveLength(7)
   })
 })

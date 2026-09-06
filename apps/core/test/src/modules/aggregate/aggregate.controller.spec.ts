@@ -123,15 +123,12 @@ const createController = (
   const controller = new AggregateController(
     aggregateService as any,
     {
-      get: vi.fn(async (key: string) => {
-        if (key === 'url')
-          return { webUrl: 'https://x.test', adminUrl: 'admin' }
-        if (key === 'seo') return { title: 'site', description: 'd' }
-        if (key === 'commentOptions')
-          return { disableComment: false, allowGuestComment: true }
-        if (key === 'ai') return { enableSummary: true }
-        return {}
-      }),
+      getConfig: vi.fn(async () => ({
+        url: { webUrl: 'https://x.test', adminUrl: 'admin' },
+        seo: { title: 'site', description: 'd' },
+        commentOptions: { disableComment: false, allowGuestComment: true },
+        ai: { enableSummary: true },
+      })),
     } as any,
     {} as any,
     {
@@ -161,9 +158,8 @@ describe('AggregateController', () => {
     const controller = new AggregateController(
       {} as any,
       {
-        get: vi.fn(async (key: string) => {
-          if (key === 'url') throw new Error('url config unavailable')
-          return {}
+        getConfig: vi.fn(async () => {
+          throw new Error('url config unavailable')
         }),
       } as any,
       {} as any,
@@ -200,13 +196,12 @@ describe('AggregateController.aggregate theme fallback', () => {
       controller: new AggregateController(
         {} as any,
         {
-          get: vi.fn(async (key: string) => {
-            if (key === 'url') return { webUrl: 'https://x.test' }
-            if (key === 'seo') return { title: 's', description: 'd' }
-            if (key === 'commentOptions') return {}
-            if (key === 'ai') return {}
-            return {}
-          }),
+          getConfig: vi.fn(async () => ({
+            url: { webUrl: 'https://x.test' },
+            seo: { title: 's', description: 'd' },
+            commentOptions: {},
+            ai: {},
+          })),
         } as any,
         {} as any,
         { getLatestNoteId: vi.fn(async () => 1) } as any,
@@ -323,13 +318,12 @@ describe('AggregateController seo resolution', () => {
     new AggregateController(
       {} as any,
       {
-        get: vi.fn(async (key: string) => {
-          if (key === 'url') return { webUrl: 'https://x.test' }
-          if (key === 'seo') return seoWithI18n
-          if (key === 'commentOptions') return {}
-          if (key === 'ai') return {}
-          return {}
-        }),
+        getConfig: vi.fn(async () => ({
+          url: { webUrl: 'https://x.test' },
+          seo: seoWithI18n,
+          commentOptions: {},
+          ai: {},
+        })),
       } as any,
       {} as any,
       { getLatestNoteId: vi.fn(async () => 1) } as any,

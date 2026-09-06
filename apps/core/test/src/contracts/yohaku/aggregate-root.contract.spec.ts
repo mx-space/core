@@ -66,13 +66,13 @@ const ownerSvcProvider = {
 const configsSvcProvider = {
   provide: ConfigsService,
   useValue: {
-    async get(key: string) {
-      if (key === 'url') return { webUrl: 'https://x.test', adminUrl: 'admin' }
-      if (key === 'seo') return { title: 'site', description: 'd' }
-      if (key === 'commentOptions')
-        return { disableComment: false, allowGuestComment: true }
-      if (key === 'ai') return { enableSummary: true }
-      return {}
+    async getConfig() {
+      return {
+        url: { webUrl: 'https://x.test', adminUrl: 'admin' },
+        seo: { title: 'site', description: 'd' },
+        commentOptions: { disableComment: false, allowGuestComment: true },
+        ai: { enableSummary: true },
+      }
     },
   },
 }
