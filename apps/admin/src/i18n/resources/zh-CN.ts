@@ -1,4 +1,19 @@
 export const zhCN = {
+  'write.agent.dynamic.replace': '上传新版本并替换',
+  'write.agent.dynamic.updated': '已更新草稿',
+  'write.agent.dynamic.versionHint':
+    '采用后仅替换草稿中的原组件，重新发布后才在线上生效。',
+  'write.agent.dynamic.targetChanged': '原组件已修改，请重新读取后生成新版本。',
+  'write.agent.dynamic.preview': '交互预览',
+  'write.agent.dynamic.publish': '上传并插入文章',
+  'write.agent.dynamic.uploading': '正在上传…',
+  'write.agent.dynamic.inserted': '已插入文章',
+  'write.agent.dynamic.hint': '预览并继续对话修改，满意后再上传并插入。',
+  'write.agent.dynamic.source': '查看源码',
+  'write.agent.dynamic.busy': '正在上传另一个组件，请稍后重试。',
+  'write.agent.dynamic.contextChanged':
+    '会话或编辑器状态已改变，请在当前会话中重试。',
+  'write.agent.dynamic.invalidDraft': '组件草稿无效。',
   'tasks.action.cancel': '取消任务',
   'tasks.action.clearCompleted': '清理已完成',
   'tasks.action.continueTts': '继续生成',

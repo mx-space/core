@@ -63,6 +63,10 @@ export function getSnippetById(id: string) {
   return getJson<SnippetModel>(`/snippets/${id}`)
 }
 
+export function getSnippetByPath(path: string) {
+  return getJson<SnippetModel | null>('/snippets/by-path', { path })
+}
+
 export function createSnippet(data: CreateSnippetData) {
   return postJson<SnippetModel, CreateSnippetData>('/snippets', data)
 }

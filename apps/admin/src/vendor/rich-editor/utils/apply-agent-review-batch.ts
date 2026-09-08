@@ -3,7 +3,7 @@ import { blockIdState } from '@haklex/rich-editor'
 import type { LexicalEditor, LexicalNode } from 'lexical'
 import { $getRoot, $getState, $parseSerializedNode, $setState } from 'lexical'
 
-function $findBlockByBlockId(blockId: string): LexicalNode | null {
+export function $findBlockByBlockId(blockId: string): LexicalNode | null {
   const root = $getRoot()
   for (const child of root.getChildren()) {
     if ($getState(child, blockIdState) === blockId) {

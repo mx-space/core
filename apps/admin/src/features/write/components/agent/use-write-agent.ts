@@ -1,6 +1,7 @@
 import type {
   AgentOperation,
   AgentStore,
+  AgentToolConfig,
   LLMProvider,
   ToolCallGroupItem,
 } from '@haklex/rich-agent-core'
@@ -17,11 +18,13 @@ import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import type { AgentLoopHandle } from '~/vendor/rich-editor/types'
+import { buildDynamicTools } from '~/vendor/rich-editor/utils/dynamic-tools'
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
 import type { AbortSignalRef } from './llm-provider'
 import { createSseLlmProvider } from './llm-provider'
+import { createDynamicPublisher } from './publish-dynamic-component'
 import type { SelectedAgentModel, UserChatBubble } from './types'
 
 export interface WriteAgentController {
@@ -50,6 +53,8 @@ export interface WriteAgentController {
   rejectBatch: (batchId: string) => void
   reapplyBatch: (batchId: string) => void
   reapplyToolGroup: (items: ToolCallGroupItem[]) => void
+  dynamicTools: AgentToolConfig[]
+  publishDynamic: (item: ToolCallGroupItem) => Promise<void>
 }
 
 function isSelectedAgentModelAvailable(
@@ -137,6 +142,14 @@ export function useWriteAgent(opts: {
 
   const agentLoopRef = useRef<AgentLoopHandle | null>(null)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
+  const dynamicTools = useMemo(
+    () => buildDynamicTools(() => lexicalEditorRef.current),
+    [],
+  )
+  const publishDynamic = useMemo(
+    () => createDynamicPublisher(store, () => lexicalEditorRef.current),
+    [store],
+  )
   const [agentReady, setAgentReady] = useState(false)
 
   const onAgentLoopReady = (loop: AgentLoopHandle | null) => {
@@ -333,6 +346,8 @@ export function useWriteAgent(opts: {
     onAgentLoopReady,
     onEditorReady,
     provider,
+    dynamicTools,
+    publishDynamic,
     providerGroups,
     reapplyBatch,
     reapplyToolGroup,

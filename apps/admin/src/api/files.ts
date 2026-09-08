@@ -95,13 +95,15 @@ export function getFilesByType(type: FileType) {
   return getJson<FileItem[]>(`/files/${type}`)
 }
 
-export function uploadFile(file: File, type?: FileType) {
+export function uploadFile(file: File, type?: FileType, immutable = false) {
   const formData = new FormData()
   formData.append('file', file)
 
-  const query = type ? `?type=${encodeURIComponent(type)}` : ''
+  const query = new URLSearchParams()
+  if (type) query.set('type', type)
+  if (immutable) query.set('immutable', 'true')
 
-  return requestJson<UploadResponse>(`/files/upload${query}`, {
+  return requestJson<UploadResponse>(`/files/upload?${query}`, {
     body: formData,
     method: 'POST',
   })

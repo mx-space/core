@@ -1,6 +1,24 @@
 import type { TranslationKey } from '../types'
 
 export const enUS = {
+  'write.agent.dynamic.replace': 'Upload new version and replace',
+  'write.agent.dynamic.updated': 'Draft updated',
+  'write.agent.dynamic.versionHint':
+    'Adoption replaces the original component in this draft. Publish again to update the live article.',
+  'write.agent.dynamic.targetChanged':
+    'The original component changed. Read it again to create a new version.',
+  'write.agent.dynamic.preview': 'Preview',
+  'write.agent.dynamic.publish': 'Upload and insert',
+  'write.agent.dynamic.uploading': 'Uploading…',
+  'write.agent.dynamic.inserted': 'Inserted into article',
+  'write.agent.dynamic.hint':
+    'Preview and request changes in chat, then upload and insert when ready.',
+  'write.agent.dynamic.source': 'View source',
+  'write.agent.dynamic.busy':
+    'Another component is being uploaded. Please retry shortly.',
+  'write.agent.dynamic.contextChanged':
+    'The conversation or editor state changed. Please retry in the current conversation.',
+  'write.agent.dynamic.invalidDraft': 'Invalid component draft.',
   'tasks.action.cancel': 'Cancel task',
   'tasks.action.clearCompleted': 'Clear completed',
   'tasks.action.continueTts': 'Continue generation',

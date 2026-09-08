@@ -8,6 +8,7 @@ import { useI18n } from '~/i18n'
 import { Scroll } from '~/ui/primitives/scroll'
 
 import { getAgentBubbleKey } from './agent-operations'
+import { DynamicComponentCard } from './DynamicComponentCard'
 import { AgentMessageItem } from './messages'
 
 interface MessageListProps {
@@ -17,6 +18,7 @@ interface MessageListProps {
   onRejectBatch: (batchId: string) => void
   onReapplyBatch: (batchId: string) => void
   onReapplyToolGroup: (items: ToolCallGroupItem[]) => void
+  onPublishDynamic: (item: ToolCallGroupItem) => Promise<void>
 }
 
 export function MessageList(props: MessageListProps) {
@@ -70,16 +72,27 @@ export function MessageList(props: MessageListProps) {
       ) : (
         <div className="space-y-3">
           {orderedBubbles.map(({ bubble, index }) => (
-            <AgentMessageItem
-              key={getAgentBubbleKey(bubble, index)}
-              actionsLocked={actionsLocked}
-              bubble={bubble}
-              getBatch={getBatch}
-              onAcceptBatch={props.onAcceptBatch}
-              onRejectBatch={props.onRejectBatch}
-              onReapplyBatch={props.onReapplyBatch}
-              onReapplyToolGroup={props.onReapplyToolGroup}
-            />
+            <div key={getAgentBubbleKey(bubble, index)} className="space-y-2">
+              <AgentMessageItem
+                actionsLocked={actionsLocked}
+                bubble={bubble}
+                getBatch={getBatch}
+                onAcceptBatch={props.onAcceptBatch}
+                onRejectBatch={props.onRejectBatch}
+                onReapplyBatch={props.onReapplyBatch}
+                onReapplyToolGroup={props.onReapplyToolGroup}
+              />
+              {bubble.type === 'tool_call_group'
+                ? bubble.items.map((item) => (
+                    <DynamicComponentCard
+                      key={item.id}
+                      item={item}
+                      disabled={actionsLocked || props.isHydrating}
+                      onPublish={props.onPublishDynamic}
+                    />
+                  ))
+                : null}
+            </div>
           ))}
         </div>
       )}

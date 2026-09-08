@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -378,6 +379,9 @@ export class FileController {
       type,
       originalFilename: file.filename,
       contentType,
+      objectKey: query.immutable
+        ? `versions/${randomUUID()}${path.extname(file.filename)}`
+        : undefined,
     })
   }
 

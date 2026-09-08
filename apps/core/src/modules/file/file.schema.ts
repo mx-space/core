@@ -18,9 +18,14 @@ export type FileQueryDto = z.infer<typeof FileQuerySchema>
 /**
  * File upload schema
  */
-export const FileUploadSchema = z.object({
-  type: z.enum(FileTypeEnum).optional(),
-})
+export const FileUploadSchema = z
+  .object({
+    type: z.enum(FileTypeEnum).optional(),
+    immutable: z.literal('true').optional(),
+  })
+  .refine((value) => !value.immutable || !value.type || value.type === 'file', {
+    message: 'Immutable uploads require type=file',
+  })
 
 export type FileUploadDto = z.infer<typeof FileUploadSchema>
 

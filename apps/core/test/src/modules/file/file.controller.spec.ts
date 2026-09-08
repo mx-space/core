@@ -104,6 +104,53 @@ describe('FileController', () => {
     })
   })
 
+  it('allocates separate version keys even with a fixed naming template', async () => {
+    const stored = new Map<string, string>()
+    const uploadBuffer = vi.fn(
+      async (buffer: Buffer, options: { objectKey: string }) => {
+        stored.set(options.objectKey, buffer.toString())
+        return { url: `https://files.example/${options.objectKey}` }
+      },
+    )
+    const getAndValidMultipartField = vi
+      .fn()
+      .mockResolvedValueOnce({
+        filename: 'widget.js',
+        file: Readable.from([Buffer.from('version one')]),
+      })
+      .mockResolvedValueOnce({
+        filename: 'widget.js',
+        file: Readable.from([Buffer.from('version two')]),
+      })
+    const controller = new FileController(
+      { uploadBuffer } as any,
+      { getAndValidMultipartField } as any,
+      {} as any,
+      {} as any,
+      {
+        get: async (key: string) =>
+          key === 'fileUploadOptions'
+            ? { enableCustomNaming: true, filenameTemplate: 'fixed.js' }
+            : { enable: false },
+      } as any,
+    )
+    const first = await controller.upload(
+      { type: 'file', immutable: 'true' },
+      {} as any,
+    )
+    const second = await controller.upload(
+      { type: 'file', immutable: 'true' },
+      {} as any,
+    )
+    expect(first.url).not.toBe(second.url)
+    expect([...stored.values()]).toEqual(['version one', 'version two'])
+    expect(
+      [...stored.keys()].every(
+        (key) => key.startsWith('versions/') && key.endsWith('.js'),
+      ),
+    ).toBe(true)
+  })
+
   it('propagates the storage-not-configured error thrown by service.uploadBuffer', async () => {
     const uploadBuffer = vi
       .fn()

@@ -5118,6 +5118,7 @@ function RichWriteSurface(props: {
         : []),
     ],
     tools: [
+      ...agent.dynamicTools,
       ...(props.metaFieldsSchema &&
       props.getMetaFields &&
       props.onMetaFieldsUpdate

@@ -417,10 +417,13 @@ export function useAgentSessionManager({
         })
           .then((conversation) => {
             if (epoch !== sessionEpochRef.current) return
+            activeSessionIdRef.current = conversation.id
             setActiveSessionId(conversation.id)
             isCreatingSessionRef.current = false
             isPendingCreationRef.current = false
             setSessions((current) => [toSessionMeta(conversation), ...current])
+            // Tool results may arrive while conversation creation is in flight.
+            syncMessages(conversation.id)
           })
           .catch(() => {
             isCreatingSessionRef.current = false
@@ -431,7 +434,7 @@ export function useAgentSessionManager({
 
       scheduleMessagesSync(activeSessionIdRef.current)
     })
-  }, [scheduleMessagesSync, store])
+  }, [scheduleMessagesSync, store, syncMessages])
 
   useEffect(() => {
     const previousSessionId = prevSessionIdRef.current

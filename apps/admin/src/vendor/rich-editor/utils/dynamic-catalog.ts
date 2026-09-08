@@ -1,9 +1,12 @@
 import type { ChatMessage } from '@haklex/rich-agent-core'
 import { useEffect, useState } from 'react'
 
+import { createSnippet, getSnippetByPath, updateSnippet } from '~/api/snippets'
 import { API_URL } from '~/constants/env'
+import { SnippetType } from '~/models/snippet'
 
 export interface DynamicCatalogEntry {
+  parentUrl?: string
   description: string
   initialHeight: number
   name: string
@@ -26,6 +29,40 @@ export function getDynamicCatalogUrl(): string {
 }
 
 const catalogUrls = new Set<string>()
+
+export async function registerDynamicComponent(
+  entry: DynamicCatalogEntry,
+): Promise<void> {
+  const snippet = await getSnippetByPath(CATALOG_SNIPPET_PATH)
+  const catalog: DynamicCatalog = snippet
+    ? JSON.parse(snippet.raw)
+    : { version: 1, components: [] }
+  if (
+    !Array.isArray(catalog.components) ||
+    typeof catalog.version !== 'number'
+  ) {
+    throw new Error('Invalid dynamic component catalog')
+  }
+  if (!catalog.components.some((item) => item.url === entry.url)) {
+    catalog.components.push(entry)
+    const raw = JSON.stringify(catalog, null, 2)
+    if (snippet)
+      await updateSnippet(snippet.id, {
+        raw,
+        path: snippet.path,
+        type: snippet.type,
+      })
+    else
+      await createSnippet({
+        path: CATALOG_SNIPPET_PATH,
+        type: SnippetType.JSON,
+        raw,
+        private: false,
+      })
+  }
+  catalogUrls.add(entry.url)
+  cachedCatalogPromise = Promise.resolve(catalog)
+}
 
 export function isAllowedDynamicUrl(url: string): boolean {
   // primary allowlist: exact membership in the fetched catalog (covers S3/CDN
