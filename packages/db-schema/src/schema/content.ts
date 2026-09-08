@@ -8,6 +8,7 @@ import {
   jsonb,
   pgTable,
   text,
+  unique,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
@@ -283,6 +284,35 @@ export const drafts = pgTable(
     ),
     index('drafts_document_status_idx').on(table.documentId, table.status),
     index('drafts_updated_at_idx').on(table.updatedAt),
+  ],
+)
+
+export const contentDocumentShares = pgTable(
+  'content_document_shares',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    token: text('token').notNull(),
+    mode: text('mode').notNull(),
+    revisionId: refText('revision_id').references(() => contentRevisions.id, {
+      onDelete: 'restrict',
+    }),
+    draftId: refText('draft_id').references(() => drafts.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (table) => [
+    unique('content_document_shares_document_uniq').on(table.documentId),
+    unique('content_document_shares_token_uniq').on(table.token),
+    check(
+      'content_document_shares_target_check',
+      sql`(${table.mode} = 'pinned' and ${table.revisionId} is not null and ${table.draftId} is null)
+        or (${table.mode} = 'follow' and ${table.draftId} is not null and ${table.revisionId} is null)`,
+    ),
   ],
 )
 

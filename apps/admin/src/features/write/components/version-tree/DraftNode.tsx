@@ -11,12 +11,14 @@ import { cn } from '~/utils/cn'
 import { ChangeSummary, TitleChangeLine } from './ChangeSummary'
 import type { DraftActionHandlers } from './DraftActions'
 import { DraftActions } from './DraftActions'
+import { ShareMark } from './RevisionLine'
 
 export function DraftNode(props: {
   deleting: boolean
   draft: DraftModel
   handlers: DraftActionHandlers
   node: VersionTreeNode
+  shared: boolean
 }) {
   const { format, t } = useI18n()
 
@@ -34,6 +36,7 @@ export function DraftNode(props: {
         type="button"
       >
         <span className="flex min-w-0 items-center gap-1.5">
+          {props.shared ? <ShareMark /> : null}
           <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
             {t('write.versionTree.currentEditing')}
           </span>

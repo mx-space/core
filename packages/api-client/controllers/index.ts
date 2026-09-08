@@ -6,6 +6,7 @@ import { ArticleController } from './article'
 import { CategoryController } from './category'
 import { CommentController } from './comment'
 import { CompanionController } from './companion'
+import { DraftController } from './draft'
 import { EnrichmentController } from './enrichment'
 import { LinkController } from './link'
 import { MembershipController } from './membership'
@@ -41,6 +42,7 @@ export const allControllers = [
   CategoryController,
   CommentController,
   CompanionController,
+  DraftController,
   EnrichmentController,
   LinkController,
   MembershipController,
@@ -67,6 +69,7 @@ export const allControllerNames = [
   'category',
   'comment',
   'companion',
+  'draft',
   'enrichment',
   'link',
   'membership',
@@ -97,6 +100,7 @@ export {
   CategoryController,
   CommentController,
   CompanionController,
+  DraftController,
   EnrichmentController,
   LinkController,
   MembershipController,

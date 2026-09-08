@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto'
+
 import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
@@ -8,16 +10,22 @@ import type { EntityId } from '~/shared/id/entity-id'
 
 import { DraftRefType } from './draft.enum'
 import { DraftRepository } from './draft.repository'
-import type { CreateDraftDto, UpdateDraftDto } from './draft.schema'
+import type {
+  CreateDraftDto,
+  SetDraftShareDto,
+  UpdateDraftDto,
+} from './draft.schema'
 import type {
   ContentDocumentRow,
   ContentPublicationEventRow,
   ContentRevisionRow,
+  DocumentShareRow,
   DraftBranchRow,
   DraftBranchView,
   DraftListFilter,
   RevisionComparison,
   RevisionSnapshot,
+  SharedRevisionSnapshot,
   VersionContext,
   VersionTreeNode,
 } from './draft.types'
@@ -338,6 +346,89 @@ export class DraftService {
       left,
       relation,
       right,
+    }
+  }
+
+  getShare(documentId: string): Promise<DocumentShareRow | null> {
+    return this.draftRepository.findShareByDocument(documentId)
+  }
+
+  async setShare(
+    documentId: string,
+    dto: SetDraftShareDto,
+  ): Promise<DocumentShareRow> {
+    const document = await this.draftRepository.findDocumentById(documentId)
+    if (!document) {
+      throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id: documentId })
+    }
+    if (dto.mode === 'pinned') {
+      const revision = await this.draftRepository.findRevisionById(
+        dto.revisionId,
+      )
+      if (!revision || revision.documentId !== document.id) {
+        throw createAppException(AppErrorCode.CONTENT_REVISION_NOT_FOUND, {
+          id: dto.revisionId,
+        })
+      }
+    } else {
+      const branch = await this.draftRepository.findBranchById(dto.draftId)
+      if (
+        !branch ||
+        branch.documentId !== document.id ||
+        branch.status !== 'active'
+      ) {
+        throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, {
+          id: dto.draftId,
+        })
+      }
+    }
+    const existing = await this.draftRepository.findShareByDocument(document.id)
+    return this.draftRepository.upsertShare(
+      document.id,
+      existing?.token ?? randomBytes(24).toString('base64url'),
+      dto,
+    )
+  }
+
+  async deleteShare(documentId: string): Promise<void> {
+    const removed = await this.draftRepository.deleteShareByDocument(documentId)
+    if (!removed) {
+      throw createAppException(AppErrorCode.DRAFT_SHARE_NOT_FOUND, {
+        id: documentId,
+      })
+    }
+  }
+
+  async findSharedSnapshot(token: string): Promise<SharedRevisionSnapshot> {
+    const share = await this.draftRepository.findShareByToken(token)
+    if (!share) {
+      throw createAppException(AppErrorCode.DRAFT_SHARE_NOT_FOUND)
+    }
+    let revisionId = share.revisionId
+    if (share.mode === 'follow') {
+      const branch = share.draftId
+        ? await this.draftRepository.findBranchById(share.draftId)
+        : null
+      if (!branch || branch.status !== 'active') {
+        throw createAppException(AppErrorCode.DRAFT_SHARE_NOT_FOUND)
+      }
+      revisionId = branch.headRevisionId
+    }
+    const [revision, document] = await Promise.all([
+      revisionId ? this.draftRepository.findRevisionById(revisionId) : null,
+      this.draftRepository.findDocumentById(share.documentId),
+    ])
+    if (!revision || !document) {
+      throw createAppException(AppErrorCode.DRAFT_SHARE_NOT_FOUND)
+    }
+    return {
+      content: revision.content,
+      contentFormat: revision.contentFormat,
+      createdAt: revision.createdAt,
+      images: revision.images,
+      refType: document.refType,
+      text: revision.text,
+      title: revision.title,
     }
   }
 

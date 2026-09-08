@@ -422,6 +422,11 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'Content revision not found',
     details: (p) => (p?.id ? { id: p.id } : undefined),
   },
+  [AppErrorCode.DRAFT_SHARE_NOT_FOUND]: {
+    status: 404,
+    message: 'Share link not found',
+    details: (p) => (p?.id ? { id: p.id } : undefined),
+  },
   [AppErrorCode.DRAFT_HEAD_CONFLICT]: {
     status: 409,
     message: 'The same draft was updated elsewhere',

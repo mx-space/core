@@ -2,6 +2,7 @@ import {
   ArrowLeftRight,
   Ellipsis,
   History,
+  Link2,
   Loader2,
   PencilLine,
   Send,
@@ -19,6 +20,7 @@ export interface DraftActionHandlers {
   onDelete: () => void
   onHistory: () => void
   onPublish: () => void
+  onShare: () => void
 }
 
 export function DraftActions(props: {
@@ -71,6 +73,10 @@ export function DraftActions(props: {
           <DropdownMenu.Item onClick={handlers.onHistory}>
             <History aria-hidden="true" className="size-4 text-fg-subtle" />
             {t('write.branch.history')}
+          </DropdownMenu.Item>
+          <DropdownMenu.Item onClick={handlers.onShare}>
+            <Link2 aria-hidden="true" className="size-4 text-fg-subtle" />
+            {t('write.share.shareDraft')}
           </DropdownMenu.Item>
           <DropdownMenu.Item
             disabled={props.draft.relationToPublished === 'same'}

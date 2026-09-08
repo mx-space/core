@@ -4,7 +4,7 @@ import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getDraftRevisions } from '~/api/drafts'
+import { getDraftRevisions, getDraftShare, setDraftShare } from '~/api/drafts'
 import { I18nProvider } from '~/i18n'
 import type {
   ContentRevision,
@@ -15,7 +15,12 @@ import { DraftRefType } from '~/models/draft'
 
 import { VersionTreePanel } from './VersionTreePanel'
 
-vi.mock('~/api/drafts', () => ({ getDraftRevisions: vi.fn() }))
+vi.mock('~/api/drafts', () => ({
+  deleteDraftShare: vi.fn(),
+  getDraftRevisions: vi.fn(),
+  getDraftShare: vi.fn(),
+  setDraftShare: vi.fn(),
+}))
 
 const at = '2026-08-31T00:00:00.000Z'
 const revision = (
@@ -171,6 +176,7 @@ describe('VersionTreePanel', () => {
               currentDraftId: branchA.id,
               currentPublishedRevisionId: onlineRevision.id,
               deletingDraftId: null,
+              documentId: null,
               drafts: [branchA, branchB, branchC],
               nodes,
               onClose: vi.fn(),
@@ -231,6 +237,66 @@ describe('VersionTreePanel', () => {
     expect(getDraftRevisions).toHaveBeenCalledWith(branchA.id)
     await vi.waitFor(() => {
       expect(document.body.textContent).toContain('Intermediate autosave')
+    })
+  })
+
+  it('pins the share link to a revision picked from the tree', async () => {
+    vi.mocked(getDraftShare).mockResolvedValue({
+      createdAt: at,
+      documentId: 'document-1',
+      draftId: branchA.id,
+      id: 'share-1',
+      mode: 'follow',
+      revisionId: null,
+      token: 'token-1',
+      updatedAt: null,
+    })
+    await act(async () => {
+      root.render(
+        createElement(
+          QueryClientProvider,
+          { client: queryClient },
+          createElement(
+            I18nProvider,
+            null,
+            createElement(VersionTreePanel, {
+              currentDraftId: branchA.id,
+              currentPublishedRevisionId: onlineRevision.id,
+              deletingDraftId: null,
+              documentId: 'document-1',
+              drafts: [branchA, branchB, branchC],
+              nodes,
+              onClose: vi.fn(),
+              onCompare: vi.fn(),
+              onContinue: vi.fn(),
+              onDelete: vi.fn(),
+              onHistory: vi.fn(),
+              onPublish: vi.fn(),
+              onViewOnline: vi.fn(),
+            }),
+          ),
+        ),
+      )
+      await Promise.resolve()
+    })
+
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain('跟随草稿')
+    })
+    expect(
+      document.querySelectorAll('[title="分享链接指向这里"]'),
+    ).toHaveLength(1)
+
+    await act(async () => {
+      ;[...document.querySelectorAll('button')]
+        .find((button) => button.textContent?.trim() === '分享这一版')
+        ?.click()
+      await Promise.resolve()
+    })
+
+    expect(setDraftShare).toHaveBeenCalledWith('document-1', {
+      mode: 'pinned',
+      revisionId: rootRevision.id,
     })
   })
 })

@@ -77,3 +77,22 @@ export const RevisionComparisonSchema = z.object({
 })
 
 export type RevisionComparisonDto = z.infer<typeof RevisionComparisonSchema>
+
+export const DraftDocumentIdSchema = z.object({
+  documentId: zEntityId,
+})
+
+export type DraftDocumentIdDto = z.infer<typeof DraftDocumentIdSchema>
+
+export const DraftShareTokenSchema = z.object({
+  token: z.string().min(1).max(128),
+})
+
+export type DraftShareTokenDto = z.infer<typeof DraftShareTokenSchema>
+
+export const SetDraftShareSchema = z.discriminatedUnion('mode', [
+  z.object({ draftId: zEntityId, mode: z.literal('follow') }),
+  z.object({ mode: z.literal('pinned'), revisionId: zEntityId }),
+])
+
+export type SetDraftShareDto = z.infer<typeof SetDraftShareSchema>

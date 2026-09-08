@@ -59,7 +59,10 @@ const harness = () => {
     findRevisionById: vi.fn(),
     findRevisionsByDocument: vi.fn(),
     findRevisionsByIds: vi.fn(),
+    findShareByDocument: vi.fn(),
+    findShareByToken: vi.fn(),
     saveBranch: vi.fn(),
+    upsertShare: vi.fn(),
   }
   const fileReferences = {
     removeReferencesForDocument: vi.fn(),
@@ -248,5 +251,103 @@ describe('DraftService tree revisions', () => {
       branch.id,
       FileReferenceType.Draft,
     )
+  })
+})
+
+describe('DraftService share links', () => {
+  it('keeps the existing token when the share is repointed', async () => {
+    const { repository, service } = harness()
+    repository.findDocumentById.mockResolvedValue(document)
+    repository.findRevisionById.mockResolvedValue(
+      revision('published-1', 'root', 'Published one'),
+    )
+    repository.findShareByDocument.mockResolvedValue({
+      documentId: document.id,
+      draftId: branch.id,
+      mode: 'follow',
+      token: 'existing-token',
+    })
+    repository.upsertShare.mockImplementation(
+      async (documentId: string, token: string) => ({ documentId, token }),
+    )
+
+    await service.setShare(document.id, {
+      mode: 'pinned',
+      revisionId: 'published-1',
+    })
+
+    expect(repository.upsertShare).toHaveBeenCalledWith(
+      document.id,
+      'existing-token',
+      { mode: 'pinned', revisionId: 'published-1' },
+    )
+  })
+
+  it('resolves a following share to the current branch head', async () => {
+    const { repository, service } = harness()
+    repository.findShareByToken.mockResolvedValue({
+      documentId: document.id,
+      draftId: branch.id,
+      mode: 'follow',
+      revisionId: null,
+      token: 'token',
+    })
+    repository.findBranchById.mockResolvedValue(branch)
+    repository.findRevisionById.mockResolvedValue(
+      revision('branch-head', 'published-1', 'Head'),
+    )
+    repository.findDocumentById.mockResolvedValue(document)
+
+    const snapshot = await service.findSharedSnapshot('token')
+
+    expect(repository.findRevisionById).toHaveBeenCalledWith('branch-head')
+    expect(snapshot).toEqual({
+      content: null,
+      contentFormat: 'markdown',
+      createdAt: at,
+      images: null,
+      refType: DraftRefType.Post,
+      text: 'Head',
+      title: 'Head',
+    })
+  })
+
+  it('rejects a following share whose branch was archived', async () => {
+    const { repository, service } = harness()
+    repository.findShareByToken.mockResolvedValue({
+      documentId: document.id,
+      draftId: branch.id,
+      mode: 'follow',
+      revisionId: null,
+      token: 'token',
+    })
+    repository.findBranchById.mockResolvedValue({
+      ...branch,
+      status: 'archived',
+    })
+
+    await expect(service.findSharedSnapshot('token')).rejects.toMatchObject({
+      code: AppErrorCode.DRAFT_SHARE_NOT_FOUND,
+    })
+  })
+
+  it('resolves a pinned share to its frozen revision', async () => {
+    const { repository, service } = harness()
+    repository.findShareByToken.mockResolvedValue({
+      documentId: document.id,
+      draftId: null,
+      mode: 'pinned',
+      revisionId: 'published-1',
+      token: 'token',
+    })
+    repository.findRevisionById.mockResolvedValue(
+      revision('published-1', 'root', 'Frozen'),
+    )
+    repository.findDocumentById.mockResolvedValue(document)
+
+    const snapshot = await service.findSharedSnapshot('token')
+
+    expect(repository.findBranchById).not.toHaveBeenCalled()
+    expect(snapshot.title).toBe('Frozen')
   })
 })

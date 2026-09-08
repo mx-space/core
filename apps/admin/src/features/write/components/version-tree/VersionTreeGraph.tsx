@@ -26,8 +26,12 @@ export function VersionTreeGraph(props: {
   onDelete: (draft: DraftModel) => void
   onHistory: (draft: DraftModel) => void
   onPublish: (draft: DraftModel) => void
+  onShareDraft: (draft: DraftModel) => void
+  onShareRevision: (node: VersionTreeNode) => void
   onViewOnline: () => void
   rows: GraphRow[]
+  sharedDraftId: string | null
+  sharedRevisionId: string | null
 }) {
   const { t } = useI18n()
   const gutter = railWidth(Math.min(laneCount(props.rows), MAX_LANE + 1))
@@ -40,6 +44,9 @@ export function VersionTreeGraph(props: {
       {props.rows.map((row) => {
         const { draft } = row
         const current = draft?.id === props.currentDraftId
+        const shared = draft
+          ? draft.id === props.sharedDraftId
+          : row.node.revision.id === props.sharedRevisionId
         return (
           <li
             className="grid items-stretch gap-x-2"
@@ -63,8 +70,10 @@ export function VersionTreeGraph(props: {
                       onDelete: () => props.onDelete(draft),
                       onHistory: () => props.onHistory(draft),
                       onPublish: () => props.onPublish(draft),
+                      onShare: () => props.onShareDraft(draft),
                     }}
                     node={row.node}
+                    shared={shared}
                   />
                 ) : (
                   <DraftLine
@@ -76,13 +85,19 @@ export function VersionTreeGraph(props: {
                       onDelete: () => props.onDelete(draft),
                       onHistory: () => props.onHistory(draft),
                       onPublish: () => props.onPublish(draft),
+                      onShare: () => props.onShareDraft(draft),
                     }}
+                    shared={shared}
                   />
                 )
               ) : row.kind === 'online' ? (
                 <OnlineCard node={row.node} onViewOnline={props.onViewOnline} />
               ) : (
-                <RevisionLine node={row.node} />
+                <RevisionLine
+                  node={row.node}
+                  onShare={() => props.onShareRevision(row.node)}
+                  shared={shared}
+                />
               )}
             </div>
           </li>

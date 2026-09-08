@@ -2190,6 +2190,13 @@ function WritePage(props: { kind: WriteKind }) {
                   ? (deleteDraftMutation.variables ?? null)
                   : null
               }
+              documentId={
+                versionContextQuery.data?.document.id ??
+                (isEditing ? activeDocumentBranches : activeNewDrafts).find(
+                  (draft) => draft.id === (draftId || routeDraftId),
+                )?.documentId ??
+                null
+              }
               drafts={isEditing ? activeDocumentBranches : activeNewDrafts}
               nodes={
                 isEditing

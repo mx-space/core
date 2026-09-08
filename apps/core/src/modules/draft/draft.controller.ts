@@ -11,18 +11,25 @@ import { DraftRefType } from './draft.enum'
 import {
   type CreateDraftDto,
   CreateDraftSchema,
+  type DraftDocumentIdDto,
+  DraftDocumentIdSchema,
   type DraftPagerDto,
   DraftPagerSchema,
   type DraftRefTypeAndIdDto,
   DraftRefTypeAndIdSchema,
   type DraftRefTypeDto,
   DraftRefTypeSchema,
+  type DraftShareTokenDto,
+  DraftShareTokenSchema,
   type RevisionComparisonDto,
   RevisionComparisonSchema,
+  type SetDraftShareDto,
+  SetDraftShareSchema,
   type UpdateDraftDto,
   UpdateDraftSchema,
 } from './draft.schema'
 import { DraftService } from './draft.service'
+import { DraftViews } from './draft.views'
 
 @ApiController('drafts')
 export class DraftController {
@@ -71,6 +78,40 @@ export class DraftController {
   @Auth()
   getNewDrafts(@Param({ schema: DraftRefTypeSchema }) params: DraftRefTypeDto) {
     return this.draftService.findNewDrafts(params.refType as DraftRefType)
+  }
+
+  @Get('/shared/:token')
+  async shared(
+    @Param({ schema: DraftShareTokenSchema }) params: DraftShareTokenDto,
+  ) {
+    const snapshot = await this.draftService.findSharedSnapshot(params.token)
+    return DraftViews.shared.parse(snapshot)
+  }
+
+  @Get('/documents/:documentId/share')
+  @Auth()
+  getShare(
+    @Param({ schema: DraftDocumentIdSchema }) params: DraftDocumentIdDto,
+  ) {
+    return this.draftService.getShare(params.documentId)
+  }
+
+  @Put('/documents/:documentId/share')
+  @Auth()
+  setShare(
+    @Param({ schema: DraftDocumentIdSchema }) params: DraftDocumentIdDto,
+    @Body({ schema: SetDraftShareSchema }) body: SetDraftShareDto,
+  ) {
+    return this.draftService.setShare(params.documentId, body)
+  }
+
+  @Delete('/documents/:documentId/share')
+  @Auth()
+  async deleteShare(
+    @Param({ schema: DraftDocumentIdSchema }) params: DraftDocumentIdDto,
+  ) {
+    await this.draftService.deleteShare(params.documentId)
+    return { success: true }
   }
 
   @Get('/compare/:leftId/:rightId')

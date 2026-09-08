@@ -50,6 +50,19 @@ export interface DraftModel {
   updatedAt: string | null
 }
 
+export type DraftShareMode = 'follow' | 'pinned'
+
+export interface DraftShare {
+  createdAt: string
+  documentId: string
+  draftId: string | null
+  id: string
+  mode: DraftShareMode
+  revisionId: string | null
+  token: string
+  updatedAt: string | null
+}
+
 export interface VersionContext {
   branches: DraftModel[]
   document: ContentDocument
