@@ -20,13 +20,13 @@
   "dependencies": {
     "@mx-space/push-protocol": "workspace:*",
     "pg": "^8.23.0",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   },
   "devDependencies": {
-    "@types/node": "26.4.0",
+    "@types/node": "26.5.0",
     "@types/pg": "^8.23.1",
     "tsdown": "0.22.14",
-    "tsx": "^4.23.12",
+    "tsx": "^4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"
   }
