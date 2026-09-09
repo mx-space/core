@@ -5,4 +5,5 @@ export {
   __seedMainTopForTests,
   acquireLayerZIndex,
 } from './manager'
+export { useCloseOnAnchorHidden } from './useCloseOnAnchorHidden'
 export { type LayerZIndexResult, useLayerZIndex } from './useLayerZIndex'

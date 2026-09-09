@@ -59,10 +59,10 @@ export function DraftLine(props: {
           head={props.draft.headRevision}
         />
       </button>
-      <span className="shrink-0 text-xs tabular-nums text-fg-subtle group-focus-within:hidden group-hover:hidden">
+      <span className="shrink-0 text-xs tabular-nums text-fg-subtle group-focus-within:hidden group-hover:hidden group-has-[[data-popup-open]]:hidden">
         {format.relativeTime(props.draft.updatedAt ?? props.draft.createdAt)}
       </span>
-      <span className="hidden shrink-0 items-center gap-0.5 group-focus-within:flex group-hover:flex [@media(pointer:coarse)]:flex">
+      <span className="hidden shrink-0 items-center gap-0.5 group-focus-within:flex group-hover:flex group-has-[[data-popup-open]]:flex [@media(pointer:coarse)]:flex">
         <DraftActions
           deleting={props.deleting}
           draft={props.draft}

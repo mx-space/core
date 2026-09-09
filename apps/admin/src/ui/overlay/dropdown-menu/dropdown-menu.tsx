@@ -1,15 +1,32 @@
 import { Menu } from '@base-ui/react/menu'
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react'
+import { createContext, useCallback, useContext, useRef } from 'react'
 
 import { menuStyles } from '~/ui/overlay/menu-styles'
 import { cn } from '~/utils/cn'
 
-import { useFloatLayerContainer, useLayerZIndex } from '../floating-layer'
+import {
+  useCloseOnAnchorHidden,
+  useFloatLayerContainer,
+  useLayerZIndex,
+} from '../floating-layer'
 
 type RootProps = ComponentPropsWithoutRef<typeof Menu.Root>
 
-function DropdownMenuRoot({ children, ...rest }: RootProps) {
-  return <Menu.Root {...rest}>{children}</Menu.Root>
+const MenuActionsContext =
+  createContext<RefObject<Menu.Root.Actions | null> | null>(null)
+
+function DropdownMenuRoot({ actionsRef, children, ...rest }: RootProps) {
+  const fallbackRef = useRef<Menu.Root.Actions | null>(null)
+  const resolvedRef = actionsRef ?? fallbackRef
+
+  return (
+    <MenuActionsContext value={resolvedRef}>
+      <Menu.Root {...rest} actionsRef={resolvedRef}>
+        {children}
+      </Menu.Root>
+    </MenuActionsContext>
+  )
 }
 
 type TriggerOwnProps = Omit<
@@ -46,6 +63,17 @@ function DropdownMenuContent({
   ...rest
 }: ContentProps) {
   const { ref: zRef, zIndex } = useLayerZIndex<HTMLDivElement>('floating')
+  const actionsRef = useContext(MenuActionsContext)
+  const anchorRef = useCloseOnAnchorHidden<HTMLDivElement>(() => {
+    actionsRef?.current?.close()
+  })
+  const positionerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      zRef(node)
+      anchorRef(node)
+    },
+    [anchorRef, zRef],
+  )
   const ctxContainer = useFloatLayerContainer()
   const resolvedContainer = container ?? ctxContainer ?? undefined
 
@@ -54,7 +82,7 @@ function DropdownMenuContent({
       <Menu.Positioner
         align={align}
         alignOffset={alignOffset}
-        ref={zRef}
+        ref={positionerRef}
         side={side}
         sideOffset={sideOffset}
         style={{ zIndex }}
