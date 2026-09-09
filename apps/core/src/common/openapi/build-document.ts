@@ -115,6 +115,16 @@ const normalizeSchema = (node: unknown): NormalizedSchema => {
     }
   }
 
+  if (Array.isArray(source.type)) {
+    const kept = (source.type as string[]).filter((type) => type !== 'null')
+    if (kept.length !== source.type.length) nullable = true
+    const { type: _dropped, ...rest } = result
+    result =
+      kept.length === 1
+        ? { ...rest, type: kept[0] }
+        : { ...rest, anyOf: kept.map((type) => ({ type })) }
+  }
+
   const properties = result.properties as Record<string, unknown> | undefined
   if (properties) {
     const required = new Set((result.required ?? []) as string[])
