@@ -1,3 +1,21 @@
+## [14.10.0](https://github.com/mx-space/core/compare/v14.9.1...v14.10.0) (2026-09-09)
+
+
+### Bug Fixes
+
+* **openapi:** fold zod 4.5 type-array unions into nullable/anyOf ([4babe26](https://github.com/mx-space/core/commit/4babe268e940043e8fcbf35ec19743bb35359d62))
+
+
+### Features
+
+* **admin:** preview and version agent-generated components ([6e9c14a](https://github.com/mx-space/core/commit/6e9c14abe935a2d203fdb3ad788452313308b7d7))
+* **draft:** share a draft revision through a public link ([f626b42](https://github.com/mx-space/core/commit/f626b4277b0f534034b78b5d8b2ec024154be6a3))
+
+
+### Performance Improvements
+
+* **core:** reduce search and aggregate query overhead ([29001ec](https://github.com/mx-space/core/commit/29001ec533d3c06b3339318ad875867455593bc5))
+
 ## [14.9.1](https://github.com/mx-space/core/compare/v14.9.0...v14.9.1) (2026-09-03)
 
 
