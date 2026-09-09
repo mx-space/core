@@ -4,9 +4,13 @@ on:
       - 'v*'
     paths-ignore:
       - CHANGELOG.MD
+      - 'apps/ios/**'
     branches:
       - master
   pull_request:
+    paths-ignore:
+      - CHANGELOG.MD
+      - 'apps/ios/**'
   workflow_dispatch:
 name: CI
 

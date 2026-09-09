@@ -3,8 +3,11 @@ name: Mobile TestFlight
 on:
   workflow_dispatch:
   push:
+    branches:
+      - master
     paths:
       - 'apps/ios/**'
+      - '.github/workflows/mobile-testflight.yml'
 
 concurrency:
   group: mobile-testflight
