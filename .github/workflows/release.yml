@@ -98,8 +98,11 @@ jobs:
           sh apps/core/zip-asset.sh
           mv release.zip release-linux.zip
 
-      # Publish the bundled admin to Cloudflare R2 (S3-compatible) on every core release.
+      # Publish the bundled admin to Cloudflare R2 (S3-compatible) only on core
+      # patch releases (vX.Y.Z, Z>0). A major/minor bump ships admin that needs the
+      # new core API, so older cores must not OTA onto it — it ships bundled instead.
       - name: Publish admin assets to R2
+        if: ${{ !endsWith(github.ref_name, '.0') }}
         continue-on-error: true
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
