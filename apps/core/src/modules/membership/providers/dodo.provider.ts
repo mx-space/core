@@ -3,6 +3,7 @@ import type DodoPayments from 'dodopayments'
 import { Webhook } from 'standardwebhooks'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { isEntityIdString } from '~/shared/id/entity-id'
 
 import { ConfigsService } from '../../configs/configs.service'
 import type { MembershipPlan } from '../membership.types'
@@ -375,13 +376,14 @@ export class DodoProvider implements PaymentProviderAdapter {
 
     const { readerId, postId } = event.data.metadata
     if (
-      !readerId ||
-      !postId ||
+      !isEntityIdString(readerId) ||
+      !isEntityIdString(postId) ||
+      typeof event.data.payment_id !== 'string' ||
       typeof event.data.total_amount !== 'number' ||
       !event.data.currency
     ) {
       this.logger.warn(
-        `Ignoring Dodo article payment ${event.data.payment_id}: metadata.readerId/postId or amount is missing`,
+        `Ignoring Dodo article payment ${event.data.payment_id}: metadata.readerId/postId, payment_id or amount is missing or malformed`,
       )
       return {
         kind: 'ignored',

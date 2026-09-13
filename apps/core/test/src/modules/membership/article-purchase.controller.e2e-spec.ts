@@ -92,10 +92,12 @@ const getPlanPricingMock = vi.fn(async () => ({
   intervalCount: 1,
 }))
 
+const verifyAndParseWebhookMock = vi.fn()
+
 const dodoProviderMock = {
   createCheckout: vi.fn(),
   createArticleCheckout: createArticleCheckoutMock,
-  verifyAndParseWebhook: vi.fn(),
+  verifyAndParseWebhook: verifyAndParseWebhookMock,
   getPlanPricing: getPlanPricingMock,
 }
 
@@ -326,6 +328,42 @@ describe('MembershipController article purchase (e2e)', () => {
       })
 
       expect(res.statusCode).toBe(401)
+    })
+  })
+
+  describe('POST /membership/webhook/:provider', () => {
+    it('applies an article paid event and records the purchase', async () => {
+      verifyAndParseWebhookMock.mockResolvedValueOnce({
+        kind: 'article',
+        event: {
+          type: 'paid',
+          eventId: 'evt_article_1',
+          occurredAt: new Date(),
+          readerId,
+          postId: draftPostId,
+          providerPaymentId: 'pay_webhook_1',
+          providerCustomerId: 'cus_1',
+          amount: 300,
+          currency: 'USD',
+        },
+        rawType: 'payment.succeeded',
+        rawPayload: {},
+      })
+
+      const res = await proxy.app.inject({
+        method: 'POST',
+        url: '/membership/webhook/dodo',
+        headers: { 'content-type': 'application/json' },
+        payload: {},
+      })
+
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ data: { ok: true, applied: true } })
+      expect(
+        await proxy.app
+          .get(ArticlePurchaseService)
+          .hasPurchased(readerId, draftPostId),
+      ).toBe(true)
     })
   })
 

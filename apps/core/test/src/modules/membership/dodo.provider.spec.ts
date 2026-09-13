@@ -486,7 +486,11 @@ describe('DodoProvider', () => {
         data: {
           payment_id: 'pay_1',
           customer: { customer_id: 'cus_1' },
-          metadata: { kind: 'article', readerId: 'reader-1', postId: 'post-1' },
+          metadata: {
+            kind: 'article',
+            readerId: '1000000000000000001',
+            postId: '1000000000000000002',
+          },
           total_amount: 300,
           currency: 'USD',
         },
@@ -501,8 +505,8 @@ describe('DodoProvider', () => {
           type: 'paid',
           eventId: 'evt_1',
           occurredAt: new Date('2026-01-01T00:00:00Z'),
-          readerId: 'reader-1',
-          postId: 'post-1',
+          readerId: '1000000000000000001',
+          postId: '1000000000000000002',
           providerPaymentId: 'pay_1',
           providerCustomerId: 'cus_1',
           amount: 300,
@@ -513,7 +517,10 @@ describe('DodoProvider', () => {
       })
     })
 
-    it('ignores an article payment missing readerId or postId metadata', async () => {
+    it.each([
+      ['missing postId', { readerId: '1000000000000000001' }],
+      ['non-snowflake ids', { readerId: 'reader-1', postId: 'post-1' }],
+    ])('ignores an article payment with %s metadata', async (_, metadata) => {
       verifyMock.mockReturnValue({
         type: 'payment.succeeded',
         business_id: 'biz_1',
@@ -521,7 +528,7 @@ describe('DodoProvider', () => {
         data: {
           payment_id: 'pay_1',
           customer: { customer_id: 'cus_1' },
-          metadata: { kind: 'article', readerId: 'reader-1' },
+          metadata: { kind: 'article', ...metadata },
           total_amount: 300,
           currency: 'USD',
         },
