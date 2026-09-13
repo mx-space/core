@@ -146,7 +146,7 @@ export function AuthorApp() {
   const canSave = (dirty || Boolean(saveError)) && !saving
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface-page text-fg">
+    <div className="flex h-dvh flex-col bg-surface-page text-fg">
       <header className="flex h-11 shrink-0 items-center gap-2.5 border-b border-border bg-surface-card px-3">
         {dirty ? (
           <span className="size-1.5 shrink-0 rounded-full bg-accent" />
