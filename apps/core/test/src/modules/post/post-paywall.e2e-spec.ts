@@ -18,6 +18,7 @@ import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
 import { ArticlePurchaseRepository } from '~/modules/membership/article-purchase.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
+import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
 import { PostController } from '~/modules/post/post.controller'
 import { PostService } from '~/modules/post/post.service'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -244,6 +245,7 @@ const postModule: ModuleMetadata = {
     EntitlementService,
     MembershipRepository,
     ArticlePurchaseRepository,
+    { provide: PaymentProviderRegistry, useValue: { get: () => undefined } },
     { provide: SnowflakeService, useValue: snowflake },
     { provide: AuthService, useValue: authServiceMock },
     { provide: ConfigsService, useValue: configsServiceMock },

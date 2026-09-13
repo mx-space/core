@@ -132,10 +132,31 @@ export const SummaryMetaSchema = z
   })
   .strict()
 
+export const PostEntitlementReasonSchema = z.enum([
+  'public',
+  'owner',
+  'free-window',
+  'purchase',
+  'membership',
+  'locked',
+])
+
 export const PaywallMetaSchema = z
   .object({
     locked: z.boolean(),
     previewBlocks: z.number().optional(),
+    freeUntil: z.string().optional(),
+    entitlement: z.object({ reason: PostEntitlementReasonSchema }).strict(),
+    purchase: z
+      .object({
+        enabled: z.boolean(),
+        price: z
+          .object({ amount: z.number(), currency: z.string() })
+          .strict()
+          .optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 

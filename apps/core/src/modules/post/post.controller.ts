@@ -12,6 +12,7 @@ import { withMeta } from '~/common/response/envelope.types'
 import type {
   ArticleTranslation,
   EnrichmentEntry,
+  PaywallMeta,
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
@@ -58,6 +59,7 @@ import {
 import { PostService } from './post.service'
 import type { PostModel } from './post.types'
 import { PostMetaBuilder } from './post-meta-builder'
+import { readPaywallMeta } from './post-paywall.util'
 
 const CATEGORY_NAME_RULES: ReadonlyArray<EntryRule> = [
   {
@@ -87,7 +89,7 @@ export class PostController {
     doc: Record<string, any>,
     isOwner: boolean,
     readerId?: string,
-  ): Promise<{ locked: boolean; previewBlocks?: number } | null> {
+  ): Promise<PaywallMeta | null> {
     const { reason, locked } =
       await this.entitlementService.resolvePostEntitlement({
         post: doc as EntitledPost,
@@ -95,10 +97,20 @@ export class PostController {
         readerId,
       })
     if (reason === 'public') return null
-    if (!locked) return { locked: false }
 
-    const previewBlocks = this.applyPaywallTeaser(doc)
-    return { locked: true, previewBlocks }
+    const { freeUntil } = readPaywallMeta(doc.meta)
+    const purchase = await this.entitlementService.resolveArticlePurchaseMeta(
+      doc.meta,
+    )
+    const previewBlocks = locked ? this.applyPaywallTeaser(doc) : undefined
+
+    return {
+      locked,
+      ...(previewBlocks === undefined ? {} : { previewBlocks }),
+      ...(freeUntil ? { freeUntil } : {}),
+      entitlement: { reason },
+      purchase,
+    }
   }
 
   private applyPaywallTeaser(doc: Record<string, any>): number {

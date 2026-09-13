@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import type { z } from 'zod'
 
-import { isInFreeWindow } from '~/modules/post/post-paywall.util'
+import type { PostEntitlementReasonSchema } from '~/common/response/meta.types'
+import {
+  isInFreeWindow,
+  readPaywallMeta,
+} from '~/modules/post/post-paywall.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { ArticlePurchaseRepository } from './article-purchase.repository'
@@ -11,9 +16,10 @@ import {
   resolveArticlePurchaseAvailability,
   resolveMembershipAvailability,
 } from './membership.types'
+import type { NormalizedPlanPricing } from './providers/provider.interface'
+import { PaymentProviderRegistry } from './providers/provider.registry'
 
-export type PostEntitlementReason =
-  'public' | 'owner' | 'free-window' | 'purchase' | 'membership' | 'locked'
+export type PostEntitlementReason = z.infer<typeof PostEntitlementReasonSchema>
 
 export type PostEntitlement = {
   reason: PostEntitlementReason
@@ -44,6 +50,7 @@ export class EntitlementService {
     private readonly membershipRepository: MembershipRepository,
     private readonly configsService: ConfigsService,
     private readonly articlePurchaseRepository: ArticlePurchaseRepository,
+    private readonly providers: PaymentProviderRegistry,
   ) {}
 
   async isActiveMember(readerId: string): Promise<boolean> {
@@ -150,5 +157,29 @@ export class EntitlementService {
   async isArticlePurchaseAvailable(): Promise<boolean> {
     const config = await this.configsService.get('membership')
     return resolveArticlePurchaseAvailability(config).enabled
+  }
+
+  async resolveArticlePurchaseMeta(meta: unknown): Promise<{
+    enabled: boolean
+    price?: { amount: number; currency: string }
+  }> {
+    const config = await this.configsService.get('membership')
+    const available = resolveArticlePurchaseAvailability(config).enabled
+    const enabled = available && readPaywallMeta(meta).purchaseEnabled !== false
+    if (!enabled) return { enabled: false }
+
+    const adapter = this.providers.get(config.provider)
+    const pricing: NormalizedPlanPricing | null =
+      adapter?.getPlanPricing && config.articleProductId
+        ? await adapter
+            .getPlanPricing(config.articleProductId)
+            .catch(() => null)
+        : null
+    return pricing
+      ? {
+          enabled: true,
+          price: { amount: pricing.amount, currency: pricing.currency },
+        }
+      : { enabled: true }
   }
 }

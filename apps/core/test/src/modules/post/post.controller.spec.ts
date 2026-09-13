@@ -48,6 +48,14 @@ type CreateControllerOptions = {
   ) => Promise<{ enrichments: Record<string, unknown> }>
   getTranslationsBatchFn?: () => Promise<ReturnType<typeof makeEmptyEntryMaps>>
   getCachedTitlesFn?: () => Promise<Map<string, string>>
+  resolvePostEntitlementFn?: (input: {
+    post: { isPremium?: boolean; entitlementReason?: string }
+    isOwner: boolean
+  }) => Promise<{ reason: string; locked: boolean }>
+  resolveArticlePurchaseMetaFn?: () => Promise<{
+    enabled: boolean
+    price?: { amount: number; currency: string }
+  }>
 }
 
 const createController = (opts: CreateControllerOptions = {}) => {
@@ -64,6 +72,8 @@ const createController = (opts: CreateControllerOptions = {}) => {
     }),
     getTranslationsBatchFn = async () => makeEmptyEntryMaps(),
     getCachedTitlesFn = async () => new Map<string, string>(),
+    resolvePostEntitlementFn,
+    resolveArticlePurchaseMetaFn = async () => ({ enabled: false }),
   } = opts
 
   const postService = {
@@ -116,14 +126,24 @@ const createController = (opts: CreateControllerOptions = {}) => {
 
   const lockedFor = (post: { isPremium?: boolean }, isOwner: boolean) =>
     Boolean(post.isPremium) && !isOwner
+  const defaultResolvePostEntitlement = async (input: {
+    post: { isPremium?: boolean; entitlementReason?: string }
+    isOwner: boolean
+  }) => {
+    if (!input.post.isPremium) return { reason: 'public', locked: false }
+    if (input.post.entitlementReason) {
+      const reason = input.post.entitlementReason
+      return { reason, locked: reason === 'locked' }
+    }
+    const locked = lockedFor(input.post, input.isOwner)
+    return { reason: locked ? 'locked' : 'owner', locked }
+  }
   const entitlementService = {
     isActiveMember: vi.fn(async () => false),
     resolvePostEntitlement: vi.fn(
-      async (input: { post: { isPremium?: boolean }; isOwner: boolean }) => {
-        const locked = lockedFor(input.post, input.isOwner)
-        return { reason: locked ? 'locked' : 'public', locked }
-      },
+      resolvePostEntitlementFn ?? defaultResolvePostEntitlement,
     ),
+    resolveArticlePurchaseMeta: vi.fn(resolveArticlePurchaseMetaFn),
     resolvePostEntitlements: vi.fn(
       async (input: {
         posts: Array<{ id: unknown; isPremium?: boolean }>
@@ -446,5 +466,87 @@ describe('PostController.getByCateAndSlug', () => {
     >
     expect(calledWith.text).toBe('translated body for enrichment check')
     expect(calledWith.content).toBe('translated content for enrichment check')
+  })
+})
+
+describe('PostController.getById — paywall meta', () => {
+  it('free-window: full content, locked false, reason free-window', async () => {
+    const post = makePost({ isPremium: true, entitlementReason: 'free-window' })
+
+    const { controller } = createController({ posts: [post] })
+
+    const res = await controller.getById(
+      { id: post.id } as any,
+      false,
+      undefined,
+      undefined,
+    )
+
+    expect(res.data.content).toBe(lexicalContent)
+    expect(res.meta?.paywall).toMatchObject({
+      locked: false,
+      entitlement: { reason: 'free-window' },
+    })
+    expect(res.meta?.paywall?.previewBlocks).toBeUndefined()
+  })
+
+  it('locked: truncated content and purchase block present', async () => {
+    const post = makePost({ isPremium: true, entitlementReason: 'locked' })
+
+    const { controller } = createController({
+      posts: [post],
+      resolveArticlePurchaseMetaFn: async () => ({
+        enabled: true,
+        price: { amount: 299, currency: 'usd' },
+      }),
+    })
+
+    const res = await controller.getById(
+      { id: post.id } as any,
+      false,
+      undefined,
+      undefined,
+    )
+
+    expect(res.meta?.paywall?.locked).toBe(true)
+    expect(typeof res.meta?.paywall?.previewBlocks).toBe('number')
+    expect(res.meta?.paywall?.purchase).toEqual({
+      enabled: true,
+      price: { amount: 299, currency: 'usd' },
+    })
+  })
+
+  it('purchase reader: full content, reason purchase, locked false', async () => {
+    const post = makePost({ isPremium: true, entitlementReason: 'purchase' })
+
+    const { controller } = createController({ posts: [post] })
+
+    const res = await controller.getById(
+      { id: post.id } as any,
+      false,
+      undefined,
+      'reader-1',
+    )
+
+    expect(res.data.content).toBe(lexicalContent)
+    expect(res.meta?.paywall).toMatchObject({
+      locked: false,
+      entitlement: { reason: 'purchase' },
+    })
+  })
+
+  it('non-premium: no paywall meta emitted', async () => {
+    const post = makePost({ isPremium: false })
+
+    const { controller } = createController({ posts: [post] })
+
+    const res = await controller.getById(
+      { id: post.id } as any,
+      false,
+      undefined,
+      undefined,
+    )
+
+    expect(res.meta?.paywall).toBeUndefined()
   })
 })
