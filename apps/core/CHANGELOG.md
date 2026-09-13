@@ -1,3 +1,10 @@
+## [14.11.0](https://github.com/mx-space/core/compare/v14.10.5...v14.11.0) (2026-09-14)
+
+
+### Features
+
+* **admin:** reset dashboard layout with unpublished changes and weekly rhythm ([ca8a7f2](https://github.com/mx-space/core/commit/ca8a7f29c63635334bc5638480328481a08d023a))
+
 ## [14.10.5](https://github.com/mx-space/core/compare/v14.10.4...v14.10.5) (2026-09-14)
 
 

@@ -1,13 +1,20 @@
 ## TL;DR
 
-Auto-translation now creates dictionary entries for every target language, and the admin editor's AI agent no longer re-issues edits it already staged.
+The admin dashboard is rebuilt around unpublished work and a weekly writing rhythm, with denser cards and a phone-friendly layout.
+
+## Highlights
+
+"Continue writing" is now "Unpublished changes". Each document appears once no matter how many draft branches it has, drafts identical to the published version are hidden, and every row shows its state — unpublished, published with edits, or scheduled — plus a link to the version tree when several branches exist.
+
+Writing rhythm moves from a per-day heatmap to 52 weekly columns, stacked by posts and notes, with the yearly total, this week's count, and the current streak folded into the header. Today's traffic is a line chart, live/peak counts sit under the greeting, pending comments show inside the stats band, and the whole page tightens its spacing; on phones the cards collapse into a single hairline ledger.
 
 ## Changes
 
-- **AI translation**: auto-generated dictionary entries were deduplicated across languages, so only the first target language received them; dedupe is now scoped per language. ([150d5ad](https://github.com/mx-space/core/commit/150d5ad927f752015afdff78a682ce4f6d40f281))
-- **Admin editor agent**: bumped `@haklex/*` to 0.39.7 — `search_document` now reflects staged edits and tool results state that edits await review, so the agent stops repeating the same `replace_node` and stops guessing it picked the wrong document. ([2ddfffb](https://github.com/mx-space/core/commit/2ddfffb28))
-- **mxs author**: `--base` renders changed blocks as inline diff notes with Accept/Reject, and watched files merge external revisions three-way at block level. ([22bc538](https://github.com/mx-space/core/commit/22bc53820127e742d2746367afe9ebb2a5b02aff))
+### Features
+- Dashboard: unpublished changes grouped per document with status badges and branch links ([ca8a7f2](https://github.com/mx-space/core/commit/ca8a7f29c63635334bc5638480328481a08d023a))
+- Dashboard: weekly stacked posts/notes rhythm chart; `GET /aggregate/publish-heatmap` now also returns `posts` and `notes` per day ([ca8a7f2](https://github.com/mx-space/core/commit/ca8a7f29c63635334bc5638480328481a08d023a))
+- Dashboard: denser layout, traffic line chart, phone ledger layout ([ca8a7f2](https://github.com/mx-space/core/commit/ca8a7f29c63635334bc5638480328481a08d023a))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.10.4...v14.10.5
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.10.5...v14.11.0
