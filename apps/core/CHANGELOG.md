@@ -1,3 +1,9 @@
+## [14.10.3](https://github.com/mx-space/core/compare/v14.10.2...v14.10.3) (2026-09-13)
+
+### Bug Fixes
+
+* **core:** fan out draft-publish events to email, webhook, and WS ([0f190af](https://github.com/mx-space/core/commit/0f190af3bed4019f5fb534e6a8c2ec6cb3be304c))
+
 ## [14.10.2](https://github.com/mx-space/core/compare/v14.10.1...v14.10.2) (2026-09-13)
 
 ### Bug Fixes
