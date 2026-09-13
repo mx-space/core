@@ -2,10 +2,35 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildMembershipWebhookUrl,
+  formatArticlePrice,
   getAppleIapSetupChecks,
   getMembershipSetupChecks,
   getMembershipSetupProgress,
 } from './membership'
+
+describe('formatArticlePrice', () => {
+  it('divides by 100 for two-decimal currencies', () => {
+    expect(formatArticlePrice({ amount: 300, currency: 'USD' })).toBe(
+      new Intl.NumberFormat(undefined, {
+        currency: 'USD',
+        style: 'currency',
+      }).format(3),
+    )
+  })
+
+  it('does not divide for zero-decimal currencies', () => {
+    expect(formatArticlePrice({ amount: 300, currency: 'JPY' })).toBe(
+      new Intl.NumberFormat(undefined, {
+        currency: 'JPY',
+        style: 'currency',
+      }).format(300),
+    )
+  })
+
+  it('returns null when price is missing', () => {
+    expect(formatArticlePrice(undefined)).toBeNull()
+  })
+})
 
 describe('buildMembershipWebhookUrl', () => {
   it('uses the active API base and selected provider', () => {

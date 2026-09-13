@@ -27,6 +27,7 @@ import { TextInput } from '~/ui/primitives/text-field'
 
 import {
   buildMembershipWebhookUrl,
+  formatArticlePrice,
   getAppleIapSetupChecks,
   getMembershipSetupChecks,
   getMembershipSetupProgress,
@@ -112,14 +113,6 @@ function SecretField(props: {
       <p className="text-xs leading-5 text-fg-muted">{props.description}</p>
     </div>
   )
-}
-
-function formatArticlePrice(price?: { amount: number; currency: string }) {
-  if (!price) return null
-  return new Intl.NumberFormat(undefined, {
-    currency: price.currency,
-    style: 'currency',
-  }).format(price.amount / 100)
 }
 
 function getStringOptions(fields: ConfigFormField[], key: string) {

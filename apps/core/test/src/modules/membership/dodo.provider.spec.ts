@@ -574,5 +574,29 @@ describe('DodoProvider', () => {
         rawPayload: rawEvent,
       })
     })
+
+    it('ignores refund.succeeded without payment_id', async () => {
+      const rawEvent = {
+        type: 'refund.succeeded',
+        business_id: 'biz_1',
+        timestamp: '2026-01-02T00:00:00Z',
+        data: {
+          refund_id: 'ref_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: {},
+          amount: 300,
+          currency: 'USD',
+        },
+      }
+      verifyMock.mockReturnValue(rawEvent)
+
+      const provider = new DodoProvider(configsService as any)
+
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        kind: 'ignored',
+        rawType: 'refund.succeeded',
+        reason: 'missing_reader_metadata',
+      })
+    })
   })
 })

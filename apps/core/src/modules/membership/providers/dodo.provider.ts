@@ -353,6 +353,16 @@ export class DodoProvider implements PaymentProviderAdapter {
     eventId: string,
   ): BillingWebhookResult | null {
     if (event.type === 'refund.succeeded') {
+      if (typeof event.data.payment_id !== 'string') {
+        this.logger.warn(
+          `Ignoring Dodo refund event: payment_id is missing or malformed`,
+        )
+        return {
+          kind: 'ignored',
+          rawType: event.type,
+          reason: 'missing_reader_metadata',
+        }
+      }
       return {
         kind: 'article',
         event: {

@@ -62,6 +62,23 @@ export function getMembershipSetupProgress(
   }
 }
 
+export function formatArticlePrice(price?: {
+  amount: number
+  currency: string
+}) {
+  if (!price) return null
+  try {
+    const formatter = new Intl.NumberFormat(undefined, {
+      currency: price.currency,
+      style: 'currency',
+    })
+    const digits = formatter.resolvedOptions().maximumFractionDigits ?? 2
+    return formatter.format(price.amount / 10 ** digits)
+  } catch {
+    return `${price.amount}`
+  }
+}
+
 export function buildMembershipWebhookUrl(apiUrl: string, provider = 'dodo') {
   return `${apiUrl.replace(/\/+$/, '')}/membership/webhook/${encodeURIComponent(provider)}`
 }
