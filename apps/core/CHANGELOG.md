@@ -1,3 +1,15 @@
+## [14.10.5](https://github.com/mx-space/core/compare/v14.10.4...v14.10.5) (2026-09-14)
+
+
+### Bug Fixes
+
+* **ai-translation:** scope auto entry dedupe by lang so every target language gets dict entries ([150d5ad](https://github.com/mx-space/core/commit/150d5ad927f752015afdff78a682ce4f6d40f281))
+
+
+### Features
+
+* **author:** inline diff notes and live revision merge for mxs author ([22bc538](https://github.com/mx-space/core/commit/22bc53820127e742d2746367afe9ebb2a5b02aff))
+
 ## [14.10.4](https://github.com/mx-space/core/compare/v14.10.3...v14.10.4) (2026-09-13)
 
 ### Bug Fixes
