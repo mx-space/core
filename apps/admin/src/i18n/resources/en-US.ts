@@ -979,6 +979,7 @@ export const enUS = {
   'dashboard.update.systemAvailable':
     'System update available: {current} → {latest}',
   'dashboard.update.update': 'Update',
+  'dashboard.update.upToDate': 'Already up to date',
 
   'debug.authn.action.authenticator.description':
     'Runs the browser passkey authentication flow for the current user.',

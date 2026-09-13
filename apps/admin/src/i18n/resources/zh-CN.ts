@@ -950,6 +950,7 @@ export const zhCN = {
   'dashboard.update.running': '运行中...',
   'dashboard.update.systemAvailable': '系统有新版本：{current} → {latest}',
   'dashboard.update.update': '更新',
+  'dashboard.update.upToDate': '已是最新版本',
 
   'debug.authn.action.authenticator.description':
     '对当前用户运行浏览器 Passkey 认证流程。',

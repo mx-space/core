@@ -14,7 +14,10 @@ import {
 } from '~/api/aggregate'
 import { getAnalyzeAggregate } from '~/api/analyze'
 import { getDrafts } from '~/api/drafts'
-import { checkUpdateFromGitHub } from '~/api/github-update'
+import {
+  checkUpdateFromGitHub,
+  type GitHubUpdateVersions,
+} from '~/api/github-update'
 import { getOwner } from '~/api/options'
 import { getAppInfo } from '~/api/system'
 import { useI18n } from '~/i18n'
@@ -116,31 +119,31 @@ export function DashboardRouteViewContent() {
     staleTime: updateStaleTime,
   })
 
-  const updates = updateQuery.data
-  const adminUpdate =
-    updates && isNewerVersion(adminVersion, updates.dashboard)
-      ? updates.dashboard
-      : null
-  const systemUpdate =
-    updates && isNewerVersion(systemVersion, updates.system)
-      ? updates.system
-      : null
+  const resolveUpdates = (versions: GitHubUpdateVersions | undefined) => ({
+    adminUpdate:
+      versions && isNewerVersion(adminVersion, versions.dashboard)
+        ? versions.dashboard
+        : null,
+    systemUpdate:
+      versions && isNewerVersion(systemVersion, versions.system)
+        ? versions.system
+        : null,
+  })
+  const { adminUpdate, systemUpdate } = resolveUpdates(updateQuery.data)
 
-  useEffect(() => {
-    if (__DEV__) return
-    if (appInfoQuery.data?.version?.startsWith('demo')) {
-      toast.info(t('dashboard.demoMode.tip'))
-    }
-  }, [appInfoQuery.data?.version])
-
-  useEffect(() => {
-    if (__DEV__) return
+  const notifyUpdates = (
+    versions: GitHubUpdateVersions | undefined,
+    force: boolean,
+  ) => {
+    if (!versions) return false
     const closedTips = readClosedUpdateTips()
+    const { adminUpdate, systemUpdate } = resolveUpdates(versions)
 
     if (
       adminUpdate &&
-      closedTips.dashboard !== adminUpdate &&
-      !notifiedUpdatesRef.current.has(`dashboard:${adminUpdate}`)
+      (force ||
+        (closedTips.dashboard !== adminUpdate &&
+          !notifiedUpdatesRef.current.has(`dashboard:${adminUpdate}`)))
     ) {
       notifiedUpdatesRef.current.add(`dashboard:${adminUpdate}`)
       toast.info(
@@ -163,8 +166,9 @@ export function DashboardRouteViewContent() {
 
     if (
       systemUpdate &&
-      closedTips.system !== systemUpdate &&
-      !notifiedUpdatesRef.current.has(`system:${systemUpdate}`)
+      (force ||
+        (closedTips.system !== systemUpdate &&
+          !notifiedUpdatesRef.current.has(`system:${systemUpdate}`)))
     ) {
       notifiedUpdatesRef.current.add(`system:${systemUpdate}`)
       toast.info(
@@ -188,7 +192,35 @@ export function DashboardRouteViewContent() {
         },
       )
     }
-  }, [adminUpdate, adminVersion, systemUpdate, systemVersion])
+
+    return Boolean(adminUpdate || systemUpdate)
+  }
+
+  useEffect(() => {
+    if (__DEV__) return
+    if (appInfoQuery.data?.version?.startsWith('demo')) {
+      toast.info(t('dashboard.demoMode.tip'))
+    }
+  }, [appInfoQuery.data?.version])
+
+  useEffect(() => {
+    if (__DEV__) return
+    notifyUpdates(updateQuery.data, false)
+  }, [updateQuery.data, adminVersion, systemVersion])
+
+  const handleCheckUpdates = async () => {
+    const [, result] = await Promise.all([
+      appInfoQuery.refetch(),
+      updateQuery.refetch(),
+    ])
+    if (result.error) {
+      toast.error(result.error.message)
+      return
+    }
+    if (!notifyUpdates(result.data, true)) {
+      toast.success(t('dashboard.update.upToDate'))
+    }
+  }
 
   const desk = deskQuery.data
   const writingItems = useMemo(
@@ -271,10 +303,7 @@ export function DashboardRouteViewContent() {
 
           <DeskFooter
             adminVersion={adminVersion}
-            onCheckUpdates={() => {
-              void appInfoQuery.refetch()
-              void updateQuery.refetch()
-            }}
+            onCheckUpdates={() => void handleCheckUpdates()}
             online={statQuery.data?.online ?? 0}
             refreshing={appInfoQuery.isFetching || updateQuery.isFetching}
             systemVersion={systemVersion}
