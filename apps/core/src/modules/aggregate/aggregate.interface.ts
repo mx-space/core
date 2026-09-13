@@ -51,4 +51,6 @@ export interface OnThisDayEntry {
 export interface HeatmapDay {
   date: string
   count: number
+  posts: number
+  notes: number
 }

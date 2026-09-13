@@ -101,6 +101,8 @@ export interface OnThisDayEntry {
 export interface HeatmapDay {
   count: number
   date: string
+  notes: number
+  posts: number
 }
 
 export function getAggregateStat() {

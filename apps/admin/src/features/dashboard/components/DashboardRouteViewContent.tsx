@@ -254,12 +254,17 @@ export function DashboardRouteViewContent() {
     <AppPage>
       <Scroll
         className="min-h-0 flex-1 bg-background"
-        innerClassName="flex min-h-full flex-col p-4 pt-8 desktop:pt-14"
+        innerClassName="flex min-h-full flex-col p-4 pt-6 desktop:px-8 desktop:pt-10"
       >
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6">
-          <DeskGreeting ownerName={ownerQuery.data?.name} />
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 phone:gap-6">
+          <DeskGreeting
+            online={statQuery.data?.online}
+            ownerName={ownerQuery.data?.name}
+            todayMaxOnline={statQuery.data?.todayMaxOnline}
+          />
 
           <DeskStatBand
+            pendingComments={desk?.unreadComments.count}
             stat={statQuery.data}
             totalReads={readLikeQuery.data?.totalReads}
           />
@@ -274,18 +279,21 @@ export function DashboardRouteViewContent() {
             />
           ) : null}
 
-          <div className="grid flex-1 gap-4 desktop:grid-cols-[8fr_4fr]">
-            <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+          <div className="grid flex-1 gap-4 phone:gap-6 desktop:grid-cols-[8fr_4fr]">
+            <div className="flex min-w-0 flex-col gap-4 phone:gap-6">
               {writingItems.length > 0 ? (
                 <DeskWritingCard items={writingItems} />
               ) : null}
               {showZen ? (
                 <EmptyState icon={Leaf} title={t('dashboard.desk.zen.title')} />
               ) : null}
-              <DeskOnThisDayCard entries={onThisDayEntries} />
               <DeskRhythmCard days={heatmapQuery.data ?? []} />
+              <div className="grid items-start gap-4 phone:gap-6 desktop:grid-cols-2">
+                <DeskOnThisDayCard entries={onThisDayEntries} />
+                <DeskTopArticlesCard articles={topArticlesQuery.data ?? []} />
+              </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-4 [&>:last-child]:flex-1">
+            <div className="flex min-w-0 flex-col gap-4 phone:gap-6">
               {hasTasks ? (
                 <DeskTasksCard
                   adminUpdate={adminUpdate}
@@ -295,20 +303,16 @@ export function DashboardRouteViewContent() {
                   systemVersion={systemVersion}
                 />
               ) : null}
-              {echoRows.length > 0 ? <DeskEchoCard rows={echoRows} /> : null}
               <DeskTrafficCard today={analyzeAggregateQuery.data?.today} />
-              <DeskTopArticlesCard articles={topArticlesQuery.data ?? []} />
+              {echoRows.length > 0 ? <DeskEchoCard rows={echoRows} /> : null}
             </div>
           </div>
 
           <DeskFooter
             adminVersion={adminVersion}
             onCheckUpdates={() => void handleCheckUpdates()}
-            online={statQuery.data?.online ?? 0}
             refreshing={appInfoQuery.isFetching || updateQuery.isFetching}
             systemVersion={systemVersion}
-            todayMaxOnline={statQuery.data?.todayMaxOnline ?? 0}
-            todayVisitors={statQuery.data?.todayOnlineTotal ?? 0}
           />
         </div>
       </Scroll>

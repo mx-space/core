@@ -4,76 +4,111 @@ import type { HeatmapDay } from '~/api/aggregate'
 import { useI18n } from '~/i18n'
 import { cn } from '~/utils/cn'
 
+import { buildWeeklyRhythm } from '../utils/rhythm'
+import { deskHeaderClassName, deskSectionClassName } from './DeskCard'
+
+const barWidth = 9
+const barGap = 4.6
+const chartHeight = 72
+
 export function DeskRhythmCard(props: { days: HeatmapDay[] }) {
   const { format, t } = useI18n()
-
-  const { months, total } = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const day of props.days) {
-      const key = day.date.slice(0, 7)
-      counts.set(key, (counts.get(key) ?? 0) + day.count)
-    }
-    const now = new Date()
-    const built: Array<{ count: number; date: Date; key: string }> = []
-    for (let offset = 11; offset >= 0; offset -= 1) {
-      const date = new Date(now.getFullYear(), now.getMonth() - offset, 1)
-      const key = `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}`
-      built.push({ count: counts.get(key) ?? 0, date, key })
-    }
-    return {
-      months: built,
-      total: props.days.reduce((sum, day) => sum + day.count, 0),
-    }
-  }, [props.days])
-
-  const max = Math.max(...months.map((month) => month.count), 1)
+  const rhythm = useMemo(() => buildWeeklyRhythm(props.days), [props.days])
+  const unit = chartHeight / Math.max(rhythm.max, 1)
+  const width = rhythm.weeks.length * (barWidth + barGap) - barGap
 
   return (
-    <section className="shadow-sm rounded-lg border border-border bg-surface-card px-4 py-3">
-      <h2 className="flex items-baseline justify-between text-sm font-medium text-fg">
-        {t('dashboard.desk.heatmap.title')}
-        <span className="text-xs font-normal text-fg-muted">
-          {t('dashboard.desk.heatmap.total', { count: total })}
+    <section className={deskSectionClassName}>
+      <h2 className={cn(deskHeaderClassName, 'flex-wrap gap-y-1')}>
+        <span className="flex items-baseline gap-3">
+          {t('dashboard.desk.rhythm.title')}
+          <span className="text-xs font-normal tabular-nums text-fg-muted">
+            {t('dashboard.desk.rhythm.summary', {
+              streak: rhythm.streak,
+              thisWeek: rhythm.thisWeek,
+              total: rhythm.total,
+            })}
+          </span>
+        </span>
+        <span className="flex items-center gap-2.5 text-xs font-normal text-fg-subtle">
+          <span className="inline-flex items-center gap-1">
+            <span className="size-2 rounded-xs bg-accent" />
+            {t('dashboard.desk.stats.posts')}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="size-2 rounded-xs bg-accent/35" />
+            {t('dashboard.desk.stats.notes')}
+          </span>
         </span>
       </h2>
-      <div className="mt-4 flex items-stretch justify-center">
-        {months.map((month) => (
-          <div
-            className="flex w-10 flex-col items-center gap-1.5"
-            key={month.key}
-            title={t('dashboard.desk.heatmap.tooltip', {
-              count: month.count,
-              date: format.dateTime(month.date, {
-                dateStyle: undefined,
-                month: 'short',
+      <div className="overflow-x-auto px-3.5 pb-2.5 pt-3 phone:px-0">
+        <svg
+          className="block min-w-[560px]"
+          height={chartHeight}
+          preserveAspectRatio="none"
+          viewBox={`0 0 ${width} ${chartHeight}`}
+          width="100%"
+        >
+          {rhythm.weeks.map((week, index) => {
+            const x = index * (barWidth + barGap)
+            const isCurrent = index === rhythm.weeks.length - 1
+            const title = t('dashboard.desk.rhythm.tooltip', {
+              date: format.dateTime(week.start, {
+                dateStyle: 'medium',
                 timeStyle: undefined,
-                year: 'numeric',
               }),
-            })}
-          >
-            <span className="flex h-24 items-end">
-              <span
-                className={cn(
-                  'w-1.5 rounded-full',
-                  month.count > 0 ? 'bg-accent' : 'bg-surface-inset',
-                )}
-                style={{
-                  height:
-                    month.count > 0
-                      ? `${Math.max((month.count / max) * 100, 12)}%`
-                      : '3px',
-                }}
-              />
-            </span>
-            <span className="text-xs text-fg-subtle">
+              notes: week.notes,
+              posts: week.posts,
+            })
+            if (week.posts + week.notes === 0) {
+              return (
+                <rect
+                  className="fill-surface-inset"
+                  height={2}
+                  key={week.key}
+                  rx={1}
+                  width={barWidth}
+                  x={x}
+                  y={chartHeight - 2}
+                >
+                  <title>{title}</title>
+                </rect>
+              )
+            }
+            return (
+              <g key={week.key} opacity={isCurrent ? 1 : 0.85}>
+                <title>{title}</title>
+                <rect
+                  className="fill-accent/35"
+                  height={week.notes * unit}
+                  rx={1.5}
+                  width={barWidth}
+                  x={x}
+                  y={chartHeight - (week.posts + week.notes) * unit}
+                />
+                <rect
+                  className="fill-accent"
+                  height={week.posts * unit}
+                  rx={1.5}
+                  width={barWidth}
+                  x={x}
+                  y={chartHeight - week.posts * unit}
+                />
+              </g>
+            )
+          })}
+        </svg>
+        <div className="mt-1 grid min-w-[560px] grid-cols-12 text-xs text-fg-subtle">
+          {rhythm.months.map((month) => (
+            <span key={month.key}>
               {format.dateTime(month.date, {
                 dateStyle: undefined,
                 month: 'short',
                 timeStyle: undefined,
               })}
             </span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   )

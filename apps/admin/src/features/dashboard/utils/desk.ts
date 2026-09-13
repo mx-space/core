@@ -1,46 +1,61 @@
 import type { DeskScheduledNote } from '~/api/aggregate'
 import { getEditPathForDraft } from '~/features/drafts/utils/draft-edit-path'
-import type { DraftModel, DraftRefType } from '~/models/draft'
+import type { DraftModel } from '~/models/draft'
+import { DraftRefType } from '~/models/draft'
 
 import { deskWritingItemLimit } from '../constants'
 
-export type DeskWritingItem =
-  | {
-      id: string
-      kind: 'draft'
-      refType: DraftRefType
-      title: string
-      to: string
-      updatedAt: string
-    }
-  | {
-      id: string
-      kind: 'scheduled'
-      publicAt: string
-      title: string
-      to: string
-    }
+export type DeskWritingStatus = 'modified' | 'scheduled' | 'unpublished'
+
+export interface DeskWritingItem {
+  branchCount: number
+  draftId: string | null
+  id: string
+  refType: DraftRefType
+  status: DeskWritingStatus
+  time: string
+  title: string
+  to: string
+}
 
 export function buildWritingItems(
   drafts: DraftModel[],
   scheduledNotes: DeskScheduledNote[],
 ): DeskWritingItem[] {
-  const draftItems = drafts.map<DeskWritingItem>((draft) => ({
-    id: draft.id,
-    kind: 'draft',
-    refType: draft.document.refType,
-    title: draft.headRevision.title,
-    to: getEditPathForDraft(draft),
-    updatedAt: draft.updatedAt ?? draft.createdAt,
-  }))
+  const byDocument = new Map<string, DeskWritingItem>()
+  for (const draft of drafts) {
+    if (draft.status !== 'active' || draft.relationToPublished === 'same')
+      continue
+    const existing = byDocument.get(draft.documentId)
+    if (existing) {
+      existing.branchCount += 1
+      continue
+    }
+    byDocument.set(draft.documentId, {
+      branchCount: 1,
+      draftId: draft.id,
+      id: draft.documentId,
+      refType: draft.document.refType,
+      status: draft.document.refId ? 'modified' : 'unpublished',
+      time: draft.updatedAt ?? draft.createdAt,
+      title: draft.headRevision.title,
+      to: getEditPathForDraft(draft),
+    })
+  }
   const scheduledItems = scheduledNotes.map<DeskWritingItem>((note) => ({
+    branchCount: 0,
+    draftId: null,
     id: note.id,
-    kind: 'scheduled',
-    publicAt: note.publicAt,
+    refType: DraftRefType.Note,
+    status: 'scheduled',
+    time: note.publicAt,
     title: note.title ?? '',
     to: `/notes/edit?id=${encodeURIComponent(note.id)}`,
   }))
 
+  const draftItems = [...byDocument.values()].sort((a, b) =>
+    b.time.localeCompare(a.time),
+  )
   return [...draftItems, ...scheduledItems].slice(0, deskWritingItemLimit)
 }
 

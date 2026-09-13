@@ -355,5 +355,7 @@ describe('AggregateController — GET /aggregate/publish-heatmap (e2e)', () => {
     expect(data).toHaveLength(1)
     expect(data[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(data[0].count).toBe(3)
+    expect(data[0].posts).toBe(1)
+    expect(data[0].notes).toBe(2)
   })
 })

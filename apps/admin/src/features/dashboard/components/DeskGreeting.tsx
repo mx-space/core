@@ -7,7 +7,11 @@ import { ButtonLink } from '~/ui/primitives/button'
 
 import { resolveGreetingKey } from '../utils/desk'
 
-export function DeskGreeting(props: { ownerName?: string }) {
+export function DeskGreeting(props: {
+  online?: number
+  ownerName?: string
+  todayMaxOnline?: number
+}) {
   const { format, t } = useI18n()
   const now = useMemo(() => new Date(), [])
   const greeting = t(resolveGreetingKey(now.getHours()))
@@ -17,7 +21,7 @@ export function DeskGreeting(props: { ownerName?: string }) {
       <div className="flex min-w-0 items-center gap-2">
         <MobileHeaderAffordance />
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold text-fg">
+          <h1 className="truncate text-xl font-semibold text-fg">
             {props.ownerName
               ? t('dashboard.desk.greeting.withName', {
                   greeting,
@@ -25,8 +29,13 @@ export function DeskGreeting(props: { ownerName?: string }) {
                 })
               : greeting}
           </h1>
-          <p className="mt-1 text-sm text-fg-muted">
+          <p className="mt-0.5 text-sm tabular-nums text-fg-muted">
             {format.dateTime(now, { dateStyle: 'full', timeStyle: undefined })}
+            {' · '}
+            {t('dashboard.desk.greeting.live', {
+              max: format.number(props.todayMaxOnline ?? 0),
+              online: format.number(props.online ?? 0),
+            })}
           </p>
         </div>
       </div>
