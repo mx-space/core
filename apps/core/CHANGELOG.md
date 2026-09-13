@@ -1,3 +1,9 @@
+## [14.10.4](https://github.com/mx-space/core/compare/v14.10.3...v14.10.4) (2026-09-13)
+
+### Bug Fixes
+
+* **core:** type subscribe republish event filter ([3e73897](https://github.com/mx-space/core/commit/3e7389792ae7bd29d2e8b325a31bfa8199058935))
+
 ## [14.10.3](https://github.com/mx-space/core/compare/v14.10.2...v14.10.3) (2026-09-13)
 
 ### Bug Fixes
