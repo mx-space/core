@@ -31,6 +31,7 @@ type BodyDoc = {
   createdAt: Date
   id: string
   isPremium?: boolean
+  isPublished?: boolean
   kind: 'note' | 'post'
   meta?: { lang?: string; paywall?: { previewBlocks?: number } } | null
   modifiedAt: Date | null
@@ -143,18 +144,17 @@ export class ArticleBodyService {
           }
         }
 
-        const lockPremium =
-          toTranslate.some((doc) => doc.isPremium) &&
-          (await this.entitlementService.isPremiumLocked({
-            isPremium: true,
+        const entitlements =
+          await this.entitlementService.resolvePostEntitlements({
+            posts: toTranslate.filter((doc) => doc.kind === 'post'),
             isOwner: context.isOwner,
             readerId: context.readerId,
-          }))
+          })
         if (cancelled || subscriber.closed) return
 
         for (const entry of pending) {
           if (!('doc' in entry)) continue
-          if (entry.doc.isPremium && lockPremium) {
+          if (entitlements.get(entry.doc.id)?.locked) {
             emit(toBodyLine(applyPaywallTeaser(entry.doc), { locked: true }))
             continue
           }
@@ -271,6 +271,7 @@ export class ArticleBodyService {
       createdAt: post.createdAt,
       id: String(post.id),
       isPremium: post.isPremium,
+      isPublished: post.isPublished,
       kind: 'post',
       meta: post.meta as BodyDoc['meta'],
       modifiedAt: post.modifiedAt,

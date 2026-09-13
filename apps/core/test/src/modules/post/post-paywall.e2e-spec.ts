@@ -15,6 +15,7 @@ import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { EnrichmentService } from '~/modules/enrichment/enrichment.service'
+import { ArticlePurchaseRepository } from '~/modules/membership/article-purchase.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import { PostController } from '~/modules/post/post.controller'
@@ -242,6 +243,7 @@ const postModule: ModuleMetadata = {
     },
     EntitlementService,
     MembershipRepository,
+    ArticlePurchaseRepository,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: AuthService, useValue: authServiceMock },
     { provide: ConfigsService, useValue: configsServiceMock },

@@ -18,6 +18,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { ArticlePurchaseRepository } from '~/modules/membership/article-purchase.repository'
 import { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { MembershipController } from '~/modules/membership/membership.controller'
@@ -231,6 +232,7 @@ const membershipModule: ModuleMetadata = {
   providers: [
     MembershipService,
     MembershipRepository,
+    ArticlePurchaseRepository,
     BillingWebhookEventRepository,
     EntitlementService,
     SponsorsService,

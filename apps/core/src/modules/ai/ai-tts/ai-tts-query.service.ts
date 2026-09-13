@@ -135,8 +135,7 @@ export class AiTtsQueryService {
     if (
       article.type === CollectionRefTypes.Post &&
       (await this.entitlementService.isPremiumLocked({
-        isPremium: (article.document as { isPremium?: boolean | null })
-          .isPremium,
+        post: article.document,
         isOwner: Boolean(reader.isOwner),
         readerId: reader.readerId,
       }))

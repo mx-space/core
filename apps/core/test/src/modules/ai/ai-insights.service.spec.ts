@@ -55,10 +55,10 @@ const createService = () => {
   const entitlementService = {
     isPremiumLocked: vi.fn(
       async (input: {
-        isPremium?: boolean | null
+        post: { isPremium?: boolean | null }
         isOwner: boolean
         readerId?: string
-      }) => Boolean(input.isPremium) && !input.isOwner && !input.readerId,
+      }) => Boolean(input.post.isPremium) && !input.isOwner && !input.readerId,
     ),
   }
   const generationMetrics = {

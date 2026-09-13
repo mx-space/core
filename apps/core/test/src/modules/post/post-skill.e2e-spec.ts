@@ -115,7 +115,13 @@ const proxy = createE2EApp({
     { provide: SnippetService, useValue: snippetService },
     {
       provide: EntitlementService,
-      useValue: { isActiveMember: vi.fn(async () => false) },
+      useValue: {
+        isActiveMember: vi.fn(async () => false),
+        resolvePostEntitlement: vi.fn(async () => ({
+          reason: 'public',
+          locked: false,
+        })),
+      },
     },
   ],
 })

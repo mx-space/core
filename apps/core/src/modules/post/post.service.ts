@@ -40,6 +40,7 @@ import {
   type PostListParams,
   type PostModel,
 } from './post.types'
+import { applyFreeWindowOnPublish } from './post-paywall.util'
 
 @Injectable()
 export class PostService implements OnApplicationBootstrap {
@@ -201,6 +202,10 @@ export class PostService implements OnApplicationBootstrap {
     const relatedIds = await this.checkRelated(post)
     const createdAt = getLessThanNow(post.createdAt ?? (post as any).created)
     const pinAt = post.pinAt ?? (post as any).pin ?? null
+    const meta =
+      (post.isPublished ?? true) && post.isPremium
+        ? applyFreeWindowOnPublish(post.meta)
+        : post.meta
     let doc = await this.postRepository.create({
       title: post.title,
       slug,
@@ -210,7 +215,7 @@ export class PostService implements OnApplicationBootstrap {
       contentFormat: post.contentFormat ?? ContentFormat.Markdown,
       summary: post.summary,
       images: post.images as unknown[],
-      meta: post.meta,
+      meta,
       tags: post.tags,
       categoryId: category.id,
       copyright: post.copyright,
@@ -424,6 +429,16 @@ export class PostService implements OnApplicationBootstrap {
       : patch.createdAt
     const pinAt =
       (data as any).pin !== undefined ? (data as any).pin : patch.pinAt
+    const effectiveIsPublished = patch.isPublished ?? oldDocument.isPublished
+    const entersPaywall =
+      effectiveIsPublished &&
+      effectiveIsPremium &&
+      (!oldDocument.isPublished || !oldDocument.isPremium)
+    const meta = entersPaywall
+      ? applyFreeWindowOnPublish(
+          patch.meta === undefined ? oldDocument.meta : patch.meta,
+        )
+      : patch.meta
     const repositoryPatch = {
       title: patch.title,
       slug: patch.slug,
@@ -433,7 +448,7 @@ export class PostService implements OnApplicationBootstrap {
       contentFormat: patch.contentFormat,
       summary: patch.summary,
       images: patch.images as unknown[] | undefined,
-      meta: patch.meta,
+      meta,
       tags: patch.tags,
       categoryId: patch.categoryId as string | undefined,
       copyright: patch.copyright,

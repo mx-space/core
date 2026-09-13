@@ -57,10 +57,10 @@ function createHarness(options: { storedNotePassword?: string } = {}) {
   const entitlementService = {
     isPremiumLocked: vi.fn(
       async (input: {
-        isPremium?: boolean | null
+        post: { isPremium?: boolean | null }
         isOwner: boolean
         readerId?: string
-      }) => Boolean(input.isPremium) && !input.isOwner && !input.readerId,
+      }) => Boolean(input.post.isPremium) && !input.isOwner && !input.readerId,
     ),
   }
   const noteService = {
@@ -258,7 +258,7 @@ describe('AiTtsQueryService.getPublicNarration', () => {
       service.getPublicNarration('1', undefined, { readerId: 'reader-1' }),
     ).resolves.not.toBeNull()
     expect(entitlementService.isPremiumLocked).toHaveBeenCalledWith({
-      isPremium: true,
+      post: expect.objectContaining({ isPremium: true }),
       isOwner: false,
       readerId: 'reader-1',
     })

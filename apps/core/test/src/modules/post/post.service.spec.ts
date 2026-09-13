@@ -427,4 +427,96 @@ describe('PostService', () => {
       expect.objectContaining({ isPremium: true }),
     )
   })
+
+  describe('free window on publish', () => {
+    const lexicalPremium = (overrides: Partial<PostRow> = {}) =>
+      createPost({
+        contentFormat: ContentFormat.Lexical,
+        isPremium: true,
+        ...overrides,
+      })
+    const freeUntilOf = (call: unknown[]) =>
+      (call.at(-1) as { meta?: { paywall?: { freeUntil?: string } } }).meta
+        ?.paywall?.freeUntil
+
+    it('writes freeUntil when creating a published premium post', async () => {
+      const { repository, service } = createService()
+      repository.findBySlug.mockResolvedValue(null)
+      repository.create.mockResolvedValue(lexicalPremium())
+
+      await service.create({
+        title: 'Post',
+        text: 'body',
+        content: '{}',
+        categoryId: 'cat-1',
+        contentFormat: ContentFormat.Lexical,
+        isPremium: true,
+        isPublished: true,
+        meta: { paywall: { freeWindowHours: 1 } },
+      } as any)
+
+      const freeUntil = freeUntilOf(repository.create.mock.calls[0])
+      expect(Date.parse(freeUntil!) - Date.now()).toBeCloseTo(3_600_000, -4)
+    })
+
+    it('does not write freeUntil when creating a draft', async () => {
+      const { repository, service } = createService()
+      repository.findBySlug.mockResolvedValue(null)
+      repository.create.mockResolvedValue(lexicalPremium())
+
+      await service.create({
+        title: 'Post',
+        text: 'body',
+        content: '{}',
+        categoryId: 'cat-1',
+        contentFormat: ContentFormat.Lexical,
+        isPremium: true,
+        isPublished: false,
+      } as any)
+
+      expect(freeUntilOf(repository.create.mock.calls[0])).toBeUndefined()
+    })
+
+    it('writes freeUntil when a premium draft is published', async () => {
+      const { repository, service } = createService()
+      repository.findById.mockResolvedValue(
+        lexicalPremium({ isPublished: false }),
+      )
+      repository.update.mockResolvedValue(lexicalPremium())
+
+      await service.updateById('post-1', { isPublished: true } as any)
+
+      expect(freeUntilOf(repository.update.mock.calls[0])).toBeDefined()
+    })
+
+    it('writes freeUntil when a published post turns premium', async () => {
+      const { repository, service } = createService()
+      repository.findById.mockResolvedValue(
+        lexicalPremium({ isPremium: false }),
+      )
+      repository.update.mockResolvedValue(lexicalPremium())
+
+      await service.updateById('post-1', { isPremium: true } as any)
+
+      expect(freeUntilOf(repository.update.mock.calls[0])).toBeDefined()
+    })
+
+    it('keeps an existing freeUntil and skips already-published premium updates', async () => {
+      const { repository, service } = createService()
+      const meta = { paywall: { freeUntil: '2020-01-01T00:00:00.000Z' } }
+      repository.findById.mockResolvedValue(
+        lexicalPremium({ isPublished: false, meta }),
+      )
+      repository.update.mockResolvedValue(lexicalPremium())
+
+      await service.updateById('post-1', { isPublished: true } as any)
+      expect(freeUntilOf(repository.update.mock.calls[0])).toBe(
+        '2020-01-01T00:00:00.000Z',
+      )
+
+      repository.findById.mockResolvedValue(lexicalPremium())
+      await service.updateById('post-1', { title: 'Renamed' } as any)
+      expect(repository.update.mock.calls[1][1].meta).toBeUndefined()
+    })
+  })
 })

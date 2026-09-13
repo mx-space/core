@@ -257,9 +257,58 @@ describe('VisitorEventDispatchService premium paywall', () => {
     expect(JSON.parse(jaPayload.content).root.children).toHaveLength(1)
   })
 
+  it('broadcasts the full body for a premium post inside its free window', async () => {
+    const { broadcasts, service } = createService({
+      enrichPayload: vi.fn(async () => ({
+        id: 'post-1',
+        isPremium: true,
+        text: 'secret paywalled body full text',
+        content: premiumContent,
+        meta: {
+          paywall: { freeUntil: new Date(Date.now() + 60_000).toISOString() },
+        },
+      })),
+    })
+
+    await (service as any).onPostCreate({ id: 'post-1' })
+
+    expect(broadcasts[0].data.text).toContain('secret')
+    expect(JSON.parse(broadcasts[0].data.content).root.children).toHaveLength(2)
+  })
+
+  it('broadcasts a teaser for a premium post whose free window expired', async () => {
+    const { broadcasts, service } = createService({
+      enrichPayload: vi.fn(async () => ({
+        id: 'post-1',
+        isPremium: true,
+        text: 'secret paywalled body full text',
+        content: premiumContent,
+        meta: {
+          paywall: { freeUntil: new Date(Date.now() - 60_000).toISOString() },
+        },
+      })),
+    })
+
+    await (service as any).onPostCreate({ id: 'post-1' })
+
+    expect(broadcasts[0].data.text).not.toContain('secret')
+    expect(JSON.parse(broadcasts[0].data.content).root.children).toHaveLength(1)
+  })
+
+  it('broadcasts non-premium posts untouched', async () => {
+    const doc = { id: 'post-1', isPremium: false, text: 'plain', content: null }
+    const { broadcasts, service } = createService({
+      enrichPayload: vi.fn(async () => doc),
+    })
+
+    await (service as any).onPostCreate({ id: 'post-1' })
+
+    expect(broadcasts[0].data).toBe(doc)
+  })
+
   it('strips translated text and summary when broadcasting for a premium post', async () => {
     const { broadcasts, service } = createService({
-      isPremiumPost: vi.fn(async () => true),
+      isPaywalledPost: vi.fn(async () => true),
     })
 
     await (service as any).onTranslationUpdate({
@@ -280,7 +329,7 @@ describe('VisitorEventDispatchService premium paywall', () => {
 
   it('keeps translated text for non-premium posts', async () => {
     const { broadcasts, service } = createService({
-      isPremiumPost: vi.fn(async () => false),
+      isPaywalledPost: vi.fn(async () => false),
     })
 
     await (service as any).onTranslationUpdate({

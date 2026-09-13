@@ -80,7 +80,15 @@ function createService(
     }),
   }
   const entitlementService = {
-    isPremiumLocked: vi.fn(async () => opts.entitled === false),
+    resolvePostEntitlements: vi.fn(
+      async (input: { posts: Array<{ id: string; isPremium?: boolean }> }) =>
+        new Map(
+          input.posts.map((post) => [
+            post.id,
+            { locked: Boolean(post.isPremium) && opts.entitled === false },
+          ]),
+        ),
+    ),
   }
 
   const service = new ArticleBodyService(
@@ -170,7 +178,7 @@ describe('ArticleBodyService.streamBodies', () => {
       posts: [makePost({ isPremium: true })],
     })
     const lines = await collect(service, [{ id: postId, kind: 'post' }])
-    expect(entitlementService.isPremiumLocked).toHaveBeenCalled()
+    expect(entitlementService.resolvePostEntitlements).toHaveBeenCalled()
     expect(lines[0]).toMatchObject({
       id: postId,
       isPremium: true,

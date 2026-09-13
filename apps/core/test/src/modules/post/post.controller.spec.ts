@@ -114,8 +114,28 @@ const createController = (opts: CreateControllerOptions = {}) => {
     findSkillBundlesByIds: vi.fn(async () => []),
   }
 
+  const lockedFor = (post: { isPremium?: boolean }, isOwner: boolean) =>
+    Boolean(post.isPremium) && !isOwner
   const entitlementService = {
     isActiveMember: vi.fn(async () => false),
+    resolvePostEntitlement: vi.fn(
+      async (input: { post: { isPremium?: boolean }; isOwner: boolean }) => {
+        const locked = lockedFor(input.post, input.isOwner)
+        return { reason: locked ? 'locked' : 'public', locked }
+      },
+    ),
+    resolvePostEntitlements: vi.fn(
+      async (input: {
+        posts: Array<{ id: unknown; isPremium?: boolean }>
+        isOwner: boolean
+      }) =>
+        new Map(
+          input.posts.map((post) => [
+            String(post.id),
+            { locked: lockedFor(post, input.isOwner) },
+          ]),
+        ),
+    ),
   }
 
   const controller = new PostController(

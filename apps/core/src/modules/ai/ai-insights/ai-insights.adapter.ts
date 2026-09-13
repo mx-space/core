@@ -106,8 +106,7 @@ export class AiInsightsAdapter implements MultilangAdapter<
       options?.blockPremium &&
       article.type === CollectionRefTypes.Post &&
       (await this.entitlementService.isPremiumLocked({
-        isPremium: (article.document as { isPremium?: boolean | null })
-          .isPremium,
+        post: article.document,
         isOwner: Boolean(options.isOwner),
         readerId: options.readerId,
       }))

@@ -15,7 +15,10 @@ import type {
 } from '~/common/response/meta.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
-import { EntitlementService } from '~/modules/membership/entitlement.service'
+import {
+  type EntitledPost,
+  EntitlementService,
+} from '~/modules/membership/entitlement.service'
 import { CountingService } from '~/processors/helper/helper.counting.service'
 import {
   applyArticleTranslationInPlace,
@@ -85,18 +88,14 @@ export class PostController {
     isOwner: boolean,
     readerId?: string,
   ): Promise<{ locked: boolean; previewBlocks?: number } | null> {
-    if (!doc.isPremium) return null
-
-    if (!(await this.entitlementService.isMembershipPurchasable())) return null
-
-    const isEntitled = await this.entitlementService.isEntitledToPremium({
-      isOwner,
-      readerId,
-    })
-
-    if (isEntitled) {
-      return { locked: false }
-    }
+    const { reason, locked } =
+      await this.entitlementService.resolvePostEntitlement({
+        post: doc as EntitledPost,
+        isOwner,
+        readerId,
+      })
+    if (reason === 'public') return null
+    if (!locked) return { locked: false }
 
     const previewBlocks = this.applyPaywallTeaser(doc)
     return { locked: true, previewBlocks }
@@ -149,6 +148,7 @@ export class PostController {
     @Query({ schema: PostPagerSchema }) query: PostPagerDto,
     @HasAdminAccess() isAuthenticated: boolean,
     @Lang() lang?: string,
+    @CurrentReaderId() readerId?: string,
   ) {
     const {
       size,
@@ -218,8 +218,13 @@ export class PostController {
       }
     }
 
+    const entitlements = await this.entitlementService.resolvePostEntitlements({
+      posts: res.data as EntitledPost[],
+      isOwner: isAuthenticated,
+      readerId,
+    })
     for (const doc of res.data) {
-      if (doc.isPremium) {
+      if (entitlements.get(String(doc.id))?.locked) {
         if (typeof doc.content === 'string') {
           this.applyPaywallTeaser(doc as Record<string, any>)
         } else {
