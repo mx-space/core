@@ -324,8 +324,9 @@ export class TranslationEntryService {
     return this.translateValuesForLangs(
       values,
       targetLangs,
-      () =>
+      (lang) =>
         this.entryRepository.listByKeyPathLookupKeys(
+          lang,
           values.map((v) => ({ keyPath: v.keyPath, lookupKey: v.lookupKey })),
         ),
       'Auto field translation failed',

@@ -583,6 +583,7 @@ export class TranslationEntryRepository extends BaseRepository {
   }
 
   async listByKeyPathLookupKeys(
+    lang: string,
     keyPathLookupKeys: Array<{ keyPath: string; lookupKey: string }>,
   ): Promise<TranslationEntryRow[]> {
     if (!keyPathLookupKeys.length) return []
@@ -590,14 +591,17 @@ export class TranslationEntryRepository extends BaseRepository {
       .select()
       .from(translationEntries)
       .where(
-        or(
-          ...keyPathLookupKeys.map(({ keyPath, lookupKey }) =>
-            and(
-              eq(translationEntries.keyPath, keyPath),
-              eq(translationEntries.lookupKey, lookupKey),
-            )!,
-          ),
-        )!,
+        and(
+          eq(translationEntries.lang, lang),
+          or(
+            ...keyPathLookupKeys.map(({ keyPath, lookupKey }) =>
+              and(
+                eq(translationEntries.keyPath, keyPath),
+                eq(translationEntries.lookupKey, lookupKey),
+              )!,
+            ),
+          )!,
+        ),
       )
     return rows.map(mapEntry)
   }
