@@ -134,6 +134,32 @@ describe('startAuthorServer', () => {
     expect(diff).toContain('+<p>new</p>')
   })
 
+  it('PUT /api/baseline replaces the diff baseline until the first save', async () => {
+    const { port, filePath } = await boot(
+      '<mxpost><meta><title>t</title></meta><content><p>old</p></content></mxpost>',
+    )
+    const put = (url: string, xml: string) =>
+      rawRequest({
+        port,
+        method: 'PUT',
+        url,
+        headers: {
+          host: `127.0.0.1:${port}`,
+          origin: `http://127.0.0.1:${port}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ lexical: { xml } }),
+      })
+    expect(JSON.parse((await put('/api/baseline', '<p id="a">old</p>')).body))
+      .toEqual({ ok: true, applied: true })
+    await put('/api/document', '<p id="a">new</p>')
+    const diff = await readFile(`${filePath}.diff`, 'utf8')
+    expect(diff).toContain('-<p id="a">old</p>')
+    expect(diff).not.toContain('-<p>old</p>')
+    expect(JSON.parse((await put('/api/baseline', '<p>ignored</p>')).body))
+      .toEqual({ ok: true, applied: false })
+  })
+
   it('rejects a non-local Host', async () => {
     const { port } = await boot('<p>x</p>', 'frag.xml')
     const res = await rawRequest({

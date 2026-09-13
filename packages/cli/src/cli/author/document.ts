@@ -16,6 +16,7 @@ export interface AuthorDocument {
   readonly variant: AuthorVariant
   originalBody: string
   lastFileText: string
+  saved: boolean
 }
 
 export interface AuthorSave {
@@ -43,6 +44,7 @@ export function openAuthorDocument(
       variant: 'article',
       originalBody: parsed.contentXml,
       lastFileText: source,
+      saved: false,
     }
   }
   if (trimmed.startsWith('<mxnote')) {
@@ -53,6 +55,7 @@ export function openAuthorDocument(
       variant: 'note',
       originalBody: parsed.contentXml,
       lastFileText: source,
+      saved: false,
     }
   }
   return {
@@ -61,7 +64,17 @@ export function openAuthorDocument(
     variant: variantOverride ?? 'article',
     originalBody: source,
     lastFileText: source,
+    saved: false,
   }
+}
+
+// The editor mints block ids and reshapes lists on hydration, so the raw
+// source is never what a zero-edit save produces. Accept the hydrated body as
+// the diff baseline until the first save locks it.
+export function setAuthorBaseline(doc: AuthorDocument, body: string): boolean {
+  if (doc.saved) return false
+  doc.originalBody = body
+  return true
 }
 
 export function currentAuthorBody(doc: AuthorDocument): string {
@@ -180,4 +193,5 @@ export async function persistAuthorSave(
     throw err
   }
   doc.lastFileText = fileText
+  doc.saved = true
 }

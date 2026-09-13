@@ -12,6 +12,7 @@ import {
   type AuthorFs,
   currentAuthorBody,
   persistAuthorSave,
+  setAuthorBaseline,
 } from './document'
 
 export interface AuthorCodec {
@@ -94,6 +95,18 @@ const handle = async (
         variant: ctx.doc.variant,
         fileName: ctx.doc.filePath.split(/[/\\]/).pop(),
       })
+    } catch (err) {
+      json(res, 400, { error: { message: messageOf(err) } })
+    }
+    return
+  }
+
+  if (url.pathname === '/api/baseline' && req.method === 'PUT') {
+    try {
+      const raw = await readBody(req)
+      const parsed = JSON.parse(raw) as { lexical?: unknown }
+      const body = ctx.codec.lexicalToLitexml(parsed.lexical)
+      json(res, 200, { ok: true, applied: setAuthorBaseline(ctx.doc, body) })
     } catch (err) {
       json(res, 400, { error: { message: messageOf(err) } })
     }

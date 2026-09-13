@@ -181,6 +181,11 @@ export function AuthorApp() {
             if (!hydrated.current) {
               hydrated.current = true
               setSaved(JSON.stringify(value))
+              void fetch('/api/baseline', {
+                method: 'PUT',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ lexical: value }),
+              })
             }
           }}
         />
