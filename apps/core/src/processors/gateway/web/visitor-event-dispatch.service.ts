@@ -158,12 +158,22 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.POST_UNPUBLISH)
   onPostUnpublish(payload: { id: string }) {
-    this.onPostDelete(payload)
+    this.webGateway.broadcast(BusinessEvents.POST_UNPUBLISH, payload.id, {
+      rooms: [buildArticleRoomName(payload.id)],
+    })
   }
 
   @OnVisitorEvent(BusinessEvents.POST_REPUBLISH)
-  onPostRepublish(payload: { id: string }) {
-    return this.onPostCreate(payload)
+  async onPostRepublish(payload: { id: string }) {
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.POST_REPUBLISH,
+      payload,
+    )
+    if (!doc || doc === payload) return
+    this.webGateway.broadcast(
+      BusinessEvents.POST_REPUBLISH,
+      this.toPublicPostPayload(doc),
+    )
   }
 
   // --- Note ---
@@ -213,12 +223,28 @@ export class VisitorEventDispatchService implements OnModuleInit {
 
   @OnVisitorEvent(BusinessEvents.NOTE_UNPUBLISH)
   onNoteUnpublish(payload: { id: string }) {
-    this.onNoteDelete(payload)
+    this.webGateway.broadcast(BusinessEvents.NOTE_UNPUBLISH, payload.id, {
+      rooms: [buildArticleRoomName(payload.id)],
+    })
   }
 
   @OnVisitorEvent(BusinessEvents.NOTE_REPUBLISH)
-  onNoteRepublish(payload: { id: string }) {
-    return this.onNoteCreate(payload)
+  async onNoteRepublish(payload: { id: string }) {
+    const doc = await this.enricher.enrichPayload(
+      BusinessEvents.NOTE_REPUBLISH,
+      payload,
+    )
+    if (!doc || doc === payload) return
+
+    if (
+      doc.isPublished === false ||
+      doc.password ||
+      (doc.publicAt && new Date(doc.publicAt) > new Date())
+    ) {
+      return
+    }
+
+    this.webGateway.broadcast(BusinessEvents.NOTE_REPUBLISH, doc)
   }
 
   // --- Page ---

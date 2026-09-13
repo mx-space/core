@@ -34,10 +34,14 @@ export interface AggregateUpdatePayload {
 export interface EventPayloadMapping {
   [BusinessEvents.POST_CREATE]: NormalizedPost
   [BusinessEvents.POST_UPDATE]: NormalizedPost
+  [BusinessEvents.POST_REPUBLISH]: NormalizedPost
+  [BusinessEvents.POST_UNPUBLISH]: PayloadOnlyId
   [BusinessEvents.POST_DELETE]: PayloadOnlyId
 
   [BusinessEvents.NOTE_CREATE]: NormalizedNote
   [BusinessEvents.NOTE_UPDATE]: NormalizedNote
+  [BusinessEvents.NOTE_REPUBLISH]: NormalizedNote
+  [BusinessEvents.NOTE_UNPUBLISH]: PayloadOnlyId
   [BusinessEvents.NOTE_DELETE]: PayloadOnlyId
 
   [BusinessEvents.PAGE_CREATE]: PageModel
@@ -91,9 +95,13 @@ export interface IActivityLike {
 export type GenericEvent =
   | { type: BusinessEvents.POST_CREATE; payload: NormalizedPost }
   | { type: BusinessEvents.POST_UPDATE; payload: NormalizedPost }
+  | { type: BusinessEvents.POST_REPUBLISH; payload: NormalizedPost }
+  | { type: BusinessEvents.POST_UNPUBLISH; payload: PayloadOnlyId }
   | { type: BusinessEvents.POST_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.NOTE_CREATE; payload: NormalizedNote }
   | { type: BusinessEvents.NOTE_UPDATE; payload: NormalizedNote }
+  | { type: BusinessEvents.NOTE_REPUBLISH; payload: NormalizedNote }
+  | { type: BusinessEvents.NOTE_UNPUBLISH; payload: PayloadOnlyId }
   | { type: BusinessEvents.NOTE_DELETE; payload: PayloadOnlyId }
   | { type: BusinessEvents.PAGE_CREATE; payload: PageModel }
   | { type: BusinessEvents.PAGE_UPDATE; payload: PageModel }

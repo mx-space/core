@@ -149,6 +149,46 @@ describe('VisitorEventDispatchService socket localization', () => {
   })
 })
 
+describe('VisitorEventDispatchService draft publish', () => {
+  it('broadcasts POST_REPUBLISH when a post is republished', async () => {
+    const doc = {
+      id: 'post-1',
+      isPublished: true,
+      slug: 'draft-went-live',
+      title: 'Draft went live',
+    }
+    const { broadcasts, service } = createService({
+      enrichPayload: vi.fn(async () => doc),
+    })
+
+    await (service as any).onPostRepublish({ id: 'post-1' })
+
+    expect(broadcasts).toEqual([
+      { data: doc, event: BusinessEvents.POST_REPUBLISH, rooms: undefined },
+    ])
+  })
+
+  it('broadcasts NOTE_REPUBLISH when a public note is republished', async () => {
+    const doc = {
+      id: 'note-1',
+      isPublished: true,
+      nid: 7,
+      password: null,
+      publicAt: null,
+      title: 'Draft went live',
+    }
+    const { broadcasts, service } = createService({
+      enrichPayload: vi.fn(async () => doc),
+    })
+
+    await (service as any).onNoteRepublish({ id: 'note-1' })
+
+    expect(broadcasts).toEqual([
+      { data: doc, event: BusinessEvents.NOTE_REPUBLISH, rooms: undefined },
+    ])
+  })
+})
+
 describe('VisitorEventDispatchService premium paywall', () => {
   const premiumContent = JSON.stringify({
     root: {

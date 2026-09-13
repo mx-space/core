@@ -101,8 +101,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       })
     }
 
-    const scopeCfg = { scope: EventScope.TO_VISITOR }
-
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
 
@@ -180,9 +178,19 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       new Co().use(precheck, noteAndPostHandler).start(doc)
     }
 
+    const publicContentEvents = new Set([
+      BusinessEvents.NOTE_CREATE,
+      BusinessEvents.NOTE_REPUBLISH,
+      BusinessEvents.POST_CREATE,
+      BusinessEvents.POST_REPUBLISH,
+    ])
+
     return [
-      this.eventManager.on(BusinessEvents.NOTE_CREATE, handleEvent, scopeCfg),
-      this.eventManager.on(BusinessEvents.POST_CREATE, handleEvent, scopeCfg),
+      this.eventManager.registerHandler((event, data, scope) => {
+        if ((scope & EventScope.TO_VISITOR) === 0) return
+        if (!publicContentEvents.has(event)) return
+        void handleEvent(data)
+      }),
     ]
   }
 

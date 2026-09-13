@@ -199,6 +199,7 @@ export class AiTranslationEventHandlerService {
 
   @OnEvent(BusinessEvents.NOTE_CREATE)
   @OnEvent(BusinessEvents.NOTE_UPDATE)
+  @OnEvent(BusinessEvents.NOTE_REPUBLISH)
   async handleNoteEntry(event: NoteEventPayload) {
     if (!(await this.isAutoEntryEnabled())) return
     if (!event.id) return

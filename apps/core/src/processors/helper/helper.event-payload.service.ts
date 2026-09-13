@@ -55,11 +55,13 @@ export class EventPayloadEnricherService {
 
     switch (event) {
       case BusinessEvents.POST_CREATE:
-      case BusinessEvents.POST_UPDATE: {
+      case BusinessEvents.POST_UPDATE:
+      case BusinessEvents.POST_REPUBLISH: {
         return (await this.postService.findById(data.id)) ?? data
       }
       case BusinessEvents.NOTE_CREATE:
-      case BusinessEvents.NOTE_UPDATE: {
+      case BusinessEvents.NOTE_UPDATE:
+      case BusinessEvents.NOTE_REPUBLISH: {
         return (await this.noteService.findById(data.id)) ?? data
       }
       case BusinessEvents.PAGE_CREATE:
