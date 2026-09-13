@@ -104,7 +104,7 @@ describe('AppleProvider', () => {
         {},
       ),
     ).resolves.toEqual({
-      ignored: true,
+      kind: 'ignored',
       rawType: 'DID_RENEW',
       reason: 'sandbox_environment',
     })

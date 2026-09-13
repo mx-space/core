@@ -142,7 +142,7 @@ export class AppleProvider implements PaymentProviderAdapter {
       signedTransactionInfo = notification.data?.signedTransactionInfo
       if (notification.data?.environment === Environment.SANDBOX) {
         return {
-          ignored: true,
+          kind: 'ignored',
           rawType: notificationType,
           reason: 'sandbox_environment',
         }
@@ -159,7 +159,7 @@ export class AppleProvider implements PaymentProviderAdapter {
     const type = appleNotificationEventType(notificationType)
     if (!type) {
       return {
-        ignored: true,
+        kind: 'ignored',
         rawType: notificationType,
         reason: 'unsupported_event',
       }
@@ -167,7 +167,7 @@ export class AppleProvider implements PaymentProviderAdapter {
 
     if (!signedTransactionInfo) {
       return {
-        ignored: true,
+        kind: 'ignored',
         rawType: notificationType,
         reason: 'missing_reader_metadata',
       }
@@ -186,7 +186,7 @@ export class AppleProvider implements PaymentProviderAdapter {
       !Number.isFinite(occurredAt)
     ) {
       return {
-        ignored: true,
+        kind: 'ignored',
         rawType: notificationType,
         reason: 'missing_reader_metadata',
       }
@@ -221,7 +221,7 @@ export class AppleProvider implements PaymentProviderAdapter {
           renewalInfo.originalTransactionId !== decoded.originalTransactionId)
       ) {
         return {
-          ignored: true,
+          kind: 'ignored',
           rawType: notificationType,
           reason: 'missing_reader_metadata',
         }
@@ -230,6 +230,7 @@ export class AppleProvider implements PaymentProviderAdapter {
     }
 
     return {
+      kind: 'membership',
       event: {
         eventId: notificationUUID,
         provider: 'apple',

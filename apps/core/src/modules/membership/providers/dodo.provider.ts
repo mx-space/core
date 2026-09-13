@@ -11,6 +11,7 @@ import type {
   NormalizedBillingEvent,
   NormalizedPlanPricing,
   PaymentProviderAdapter,
+  ReaderIdentity,
 } from './provider.interface'
 
 const PRICING_TTL_MS = 10 * 60 * 1000
@@ -44,6 +45,19 @@ type DodoSubscriptionEvent = {
     next_billing_date: string
     payment_frequency_interval?: 'Day' | 'Week' | 'Month' | 'Year'
     status?: DodoSubscriptionStatus
+  }
+}
+
+type DodoPaymentEvent = {
+  type: 'payment.succeeded' | 'refund.succeeded'
+  business_id: string
+  timestamp: string
+  data: {
+    payment_id: string
+    customer?: { customer_id: string }
+    metadata?: Record<string, string>
+    total_amount?: number
+    currency?: string
   }
 }
 
@@ -137,7 +151,7 @@ export class DodoProvider implements PaymentProviderAdapter {
   }
 
   async createCheckout(input: {
-    reader: { id: string; email?: string | null; name?: string | null }
+    reader: ReaderIdentity
     plan: MembershipPlan
     returnUrl?: string
   }): Promise<{ checkoutUrl: string }> {
@@ -151,6 +165,39 @@ export class DodoProvider implements PaymentProviderAdapter {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
 
+    return this.createCheckoutSession({
+      productId,
+      reader: input.reader,
+      metadata: { readerId: input.reader.id, plan: input.plan },
+      returnUrl: input.returnUrl,
+    })
+  }
+
+  async createArticleCheckout(input: {
+    reader: ReaderIdentity
+    postId: string
+    productId: string
+    returnUrl?: string
+  }): Promise<{ checkoutUrl: string }> {
+    return this.createCheckoutSession({
+      productId: input.productId,
+      reader: input.reader,
+      metadata: {
+        readerId: input.reader.id,
+        postId: input.postId,
+        kind: 'article',
+      },
+      returnUrl: input.returnUrl,
+    })
+  }
+
+  private async createCheckoutSession(input: {
+    productId: string
+    reader: ReaderIdentity
+    metadata: Record<string, string>
+    returnUrl?: string
+  }): Promise<{ checkoutUrl: string }> {
+    const membershipConfig = await this.configsService.get('membership')
     if (!membershipConfig.apiKey) {
       throw createAppException(AppErrorCode.MEMBERSHIP_PROVIDER_NOT_CONFIGURED)
     }
@@ -161,8 +208,8 @@ export class DodoProvider implements PaymentProviderAdapter {
     )
 
     const session = await client.checkoutSessions.create({
-      product_cart: [{ product_id: productId, quantity: 1 }],
-      metadata: { readerId: input.reader.id, plan: input.plan },
+      product_cart: [{ product_id: input.productId, quantity: 1 }],
+      metadata: input.metadata,
       customer: input.reader.email
         ? { email: input.reader.email, name: input.reader.name ?? undefined }
         : undefined,
@@ -251,6 +298,12 @@ export class DodoProvider implements PaymentProviderAdapter {
       throw createAppException(AppErrorCode.WEBHOOK_SIGNATURE_INVALID)
     }
 
+    const articleResult = this.parseArticleEvent(
+      event as unknown as DodoPaymentEvent,
+      headers['webhook-id'],
+    )
+    if (articleResult) return articleResult
+
     const type = resolveEventType(event)
     if (!type) {
       this.logger.log(
@@ -258,7 +311,11 @@ export class DodoProvider implements PaymentProviderAdapter {
           event.data?.status ? ` (status: ${event.data.status})` : ''
         }`,
       )
-      return { ignored: true, rawType: event.type, reason: 'unsupported_event' }
+      return {
+        kind: 'ignored',
+        rawType: event.type,
+        reason: 'unsupported_event',
+      }
     }
 
     const readerId = event.data.metadata?.readerId
@@ -267,13 +324,14 @@ export class DodoProvider implements PaymentProviderAdapter {
         `Ignoring Dodo event ${event.type} for subscription ${event.data.subscription_id}: metadata.readerId is missing`,
       )
       return {
-        ignored: true,
+        kind: 'ignored',
         rawType: event.type,
         reason: 'missing_reader_metadata',
       }
     }
 
     return {
+      kind: 'membership',
       event: {
         eventId: headers['webhook-id'],
         provider: 'dodo',
@@ -283,6 +341,67 @@ export class DodoProvider implements PaymentProviderAdapter {
         plan: planFromEvent(event),
         currentPeriodEnd: new Date(event.data.next_billing_date),
         readerId,
+      },
+      rawType: event.type,
+      rawPayload: event,
+    }
+  }
+
+  private parseArticleEvent(
+    event: DodoPaymentEvent,
+    eventId: string,
+  ): BillingWebhookResult | null {
+    if (event.type === 'refund.succeeded') {
+      return {
+        kind: 'article',
+        event: {
+          type: 'refunded',
+          eventId,
+          occurredAt: new Date(event.timestamp),
+          providerPaymentId: event.data.payment_id,
+          providerCustomerId: event.data.customer?.customer_id,
+        },
+        rawType: event.type,
+        rawPayload: event,
+      }
+    }
+
+    if (
+      event.type !== 'payment.succeeded' ||
+      event.data.metadata?.kind !== 'article'
+    ) {
+      return null
+    }
+
+    const { readerId, postId } = event.data.metadata
+    if (
+      !readerId ||
+      !postId ||
+      typeof event.data.total_amount !== 'number' ||
+      !event.data.currency
+    ) {
+      this.logger.warn(
+        `Ignoring Dodo article payment ${event.data.payment_id}: metadata.readerId/postId or amount is missing`,
+      )
+      return {
+        kind: 'ignored',
+        rawType: event.type,
+        reason: 'missing_reader_metadata',
+      }
+    }
+
+    return {
+      kind: 'article',
+      event: {
+        type: 'paid',
+        eventId,
+        occurredAt: new Date(event.timestamp),
+        readerId,
+        postId,
+        providerPaymentId: event.data.payment_id,
+        providerCustomerId: event.data.customer?.customer_id,
+        amount: event.data.total_amount,
+        currency: event.data.currency,
       },
       rawType: event.type,
       rawPayload: event,

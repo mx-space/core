@@ -139,6 +139,7 @@ export function resolveAppleIapAvailability(config: {
 export function resolveMembershipReturnUrl(
   returnPath: string | undefined,
   webUrl: string | undefined,
+  successParam: 'membership' | 'purchase' = 'membership',
 ): string | undefined {
   if (!returnPath || !webUrl) return undefined
   if (!returnPath.startsWith('/') || returnPath.startsWith('//'))
@@ -155,7 +156,7 @@ export function resolveMembershipReturnUrl(
   const resolved = new URL(returnPath, base)
   if (resolved.origin !== base.origin) return undefined
 
-  resolved.searchParams.set('membership', 'success')
+  resolved.searchParams.set(successParam, 'success')
   return resolved.toString()
 }
 

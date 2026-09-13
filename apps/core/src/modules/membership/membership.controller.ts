@@ -21,21 +21,26 @@ import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
+import { zEntityId } from '~/common/zod'
+import { PostRepository } from '~/modules/post/post.repository'
+import { readPaywallMeta } from '~/modules/post/post-paywall.util'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import type { SessionUser } from '../auth/auth.types'
 import { ConfigsService } from '../configs/configs.service'
+import { ArticlePurchaseService } from './article-purchase.service'
+import { EntitlementService } from './entitlement.service'
 import { MembershipService } from './membership.service'
 import {
   effectiveMembershipStatus,
   REGISTERED_PAYMENT_PROVIDERS,
   resolveAppleIapAvailability,
+  resolveArticlePurchaseAvailability,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
 } from './membership.types'
 import { AppleProvider } from './providers/apple.provider'
 import { appleAccountTokenForReader } from './providers/apple-transaction'
-import { isIgnoredBillingEvent } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 import { SponsorsService } from './sponsors.service'
 
@@ -44,6 +49,15 @@ export const CheckoutSchema = z.object({
   returnPath: z.string().max(2048).optional(),
 })
 type CheckoutDto = z.infer<typeof CheckoutSchema>
+
+export const ArticleCheckoutSchema = z.object({
+  postId: zEntityId,
+  returnPath: z.string().max(2048).optional(),
+})
+type ArticleCheckoutDto = z.infer<typeof ArticleCheckoutSchema>
+
+export const PostIdParamSchema = z.object({ postId: zEntityId })
+type PostIdParamDto = z.infer<typeof PostIdParamSchema>
 
 export const ManualGrantSchema = z.object({
   plan: z.enum(['monthly', 'yearly']),
@@ -110,6 +124,9 @@ export class MembershipController {
     private readonly providers: PaymentProviderRegistry,
     private readonly appleProvider: AppleProvider,
     private readonly sponsorsService: SponsorsService,
+    private readonly articlePurchaseService: ArticlePurchaseService,
+    private readonly entitlementService: EntitlementService,
+    private readonly postRepository: PostRepository,
   ) {}
 
   @ReaderAuth()
@@ -152,13 +169,81 @@ export class MembershipController {
     return checkout
   }
 
+  @ReaderAuth()
+  @Post('/article-checkout')
+  @HttpCode(200)
+  async articleCheckout(
+    @Body({ schema: ArticleCheckoutSchema }) body: ArticleCheckoutDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    assertNotDemoMode()
+
+    const membershipConfig = await this.configsService.get('membership')
+    if (
+      !resolveArticlePurchaseAvailability(membershipConfig).enabled ||
+      !membershipConfig.articleProductId
+    ) {
+      throw createAppException(AppErrorCode.ARTICLE_PURCHASE_UNAVAILABLE)
+    }
+
+    const post = await this.postRepository.findById(body.postId)
+    if (!post) {
+      throw createAppException(AppErrorCode.POST_NOT_FOUND, { id: body.postId })
+    }
+    if (
+      user.role === 'owner' ||
+      !post.isPremium ||
+      !post.isPublished ||
+      readPaywallMeta(post.meta).purchaseEnabled === false
+    ) {
+      throw createAppException(AppErrorCode.ARTICLE_NOT_PURCHASABLE)
+    }
+    if (await this.articlePurchaseService.hasPurchased(user.id, body.postId)) {
+      throw createAppException(AppErrorCode.ARTICLE_ALREADY_PURCHASED)
+    }
+
+    const { webUrl } = await this.configsService.get('url')
+    const returnUrl = resolveMembershipReturnUrl(
+      body.returnPath,
+      webUrl,
+      'purchase',
+    )
+
+    const adapter = this.providers.resolve(membershipConfig.provider)
+    if (!adapter.createArticleCheckout) {
+      throw createAppException(AppErrorCode.ARTICLE_PURCHASE_UNAVAILABLE)
+    }
+    return adapter.createArticleCheckout({
+      reader: { id: user.id, email: user.email, name: user.name },
+      postId: body.postId,
+      productId: membershipConfig.articleProductId,
+      returnUrl,
+    })
+  }
+
+  @ReaderAuth()
+  @Get('/article-purchases/:postId')
+  async articlePurchased(
+    @Param({ schema: PostIdParamSchema }) params: PostIdParamDto,
+    @CurrentUser() user: SessionUser,
+  ) {
+    return {
+      purchased: await this.articlePurchaseService.hasPurchased(
+        user.id,
+        params.postId,
+      ),
+    }
+  }
+
   @Get('/plans')
   async plans() {
     const membershipConfig = await this.configsService.get('membership')
     const availability = resolveMembershipAvailability(membershipConfig)
     const appleIap = resolveAppleIapAvailability(membershipConfig)
+    const articlePurchase =
+      await this.entitlementService.resolveArticlePurchaseMeta(undefined)
     if (!availability.enabled) {
-      return { enabled: false, plans: [], appleIap }
+      return { enabled: false, plans: [], appleIap, articlePurchase }
     }
 
     const adapter = this.providers.get(membershipConfig.provider)
@@ -178,7 +263,7 @@ export class MembershipController {
       }),
     )
 
-    return { enabled: true, plans, appleIap }
+    return { enabled: true, plans, appleIap, articlePurchase }
   }
 
   @ReaderAuth()
@@ -263,8 +348,15 @@ export class MembershipController {
     }
     const rawBody = req.rawBody ?? Buffer.alloc(0)
     const verified = await adapter.verifyAndParseWebhook(rawBody, headers)
-    if (isIgnoredBillingEvent(verified)) {
+    if (verified.kind === 'ignored') {
       return { ok: true, applied: false, ignored: verified.reason }
+    }
+    if (verified.kind === 'article') {
+      const result = await this.articlePurchaseService.applyEvent(
+        provider,
+        verified,
+      )
+      return { ok: true, applied: result.applied }
     }
     if (!verified.event.readerId) {
       const bound = await this.membershipService.getByProviderSubscriptionId(

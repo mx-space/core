@@ -31,6 +31,7 @@ const createMembership = (
 const createEvent = (
   overrides: Partial<NormalizedBillingEvent> = {},
 ): VerifiedBillingEvent => ({
+  kind: 'membership',
   event: {
     eventId: 'evt_1',
     provider: 'dodo',

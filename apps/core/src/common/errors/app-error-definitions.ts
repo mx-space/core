@@ -657,6 +657,18 @@ export const APP_ERROR_DEFINITIONS = {
     status: 400,
     message: 'Only Lexical-format posts can be marked as premium',
   },
+  [AppErrorCode.ARTICLE_PURCHASE_UNAVAILABLE]: {
+    status: 400,
+    message: 'Single article purchase is not available',
+  },
+  [AppErrorCode.ARTICLE_NOT_PURCHASABLE]: {
+    status: 400,
+    message: 'This article cannot be purchased',
+  },
+  [AppErrorCode.ARTICLE_ALREADY_PURCHASED]: {
+    status: 409,
+    message: 'Reader already purchased this article',
+  },
 
   // page
   [AppErrorCode.PAGE_NOT_FOUND]: {

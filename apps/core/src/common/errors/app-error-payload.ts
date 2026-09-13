@@ -191,6 +191,9 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.MEMBERSHIP_APPLE_TRANSACTION_INVALID]: undefined
   [AppErrorCode.MEMBERSHIP_APPLE_ALREADY_BOUND]: undefined
   [AppErrorCode.PREMIUM_REQUIRES_LEXICAL]: undefined
+  [AppErrorCode.ARTICLE_PURCHASE_UNAVAILABLE]: undefined
+  [AppErrorCode.ARTICLE_NOT_PURCHASABLE]: undefined
+  [AppErrorCode.ARTICLE_ALREADY_PURCHASED]: undefined
 
   // page
   [AppErrorCode.PAGE_NOT_FOUND]: WithId

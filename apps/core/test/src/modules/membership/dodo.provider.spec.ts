@@ -113,6 +113,31 @@ describe('DodoProvider', () => {
       )
     })
 
+    it('creates an article checkout with article metadata', async () => {
+      checkoutCreateMock.mockResolvedValue({
+        session_id: 'sess_a',
+        checkout_url: 'https://checkout.dodopayments.com/sess_a',
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      const result = await provider.createArticleCheckout({
+        reader: { id: 'reader-1', email: 'reader@example.com', name: 'Reader' },
+        postId: 'post-1',
+        productId: 'prod_article',
+        returnUrl: 'https://blog.example.com/posts/foo?purchase=success',
+      })
+
+      expect(result).toEqual({
+        checkoutUrl: 'https://checkout.dodopayments.com/sess_a',
+      })
+      expect(checkoutCreateMock).toHaveBeenCalledWith({
+        product_cart: [{ product_id: 'prod_article', quantity: 1 }],
+        metadata: { readerId: 'reader-1', postId: 'post-1', kind: 'article' },
+        customer: { email: 'reader@example.com', name: 'Reader' },
+        return_url: 'https://blog.example.com/posts/foo?purchase=success',
+      })
+    })
+
     it('throws MEMBERSHIP_PROVIDER_NOT_CONFIGURED when apiKey is empty', async () => {
       configsService.get.mockResolvedValue({
         enabled: true,
@@ -243,6 +268,7 @@ describe('DodoProvider', () => {
       )) as VerifiedBillingEvent
 
       expect(event).toEqual({
+        kind: 'membership',
         event: {
           eventId: 'evt_1',
           provider: 'dodo',
@@ -370,7 +396,7 @@ describe('DodoProvider', () => {
       const provider = new DodoProvider(configsService as any)
 
       expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
-        ignored: true,
+        kind: 'ignored',
         rawType: 'subscription.updated',
         reason: 'unsupported_event',
       })
@@ -424,7 +450,7 @@ describe('DodoProvider', () => {
       const provider = new DodoProvider(configsService as any)
 
       expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
-        ignored: true,
+        kind: 'ignored',
         rawType: 'subscription.active',
         reason: 'missing_reader_metadata',
       })
@@ -446,9 +472,99 @@ describe('DodoProvider', () => {
       const provider = new DodoProvider(configsService as any)
 
       expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
-        ignored: true,
+        kind: 'ignored',
         rawType: 'payment.succeeded',
         reason: 'unsupported_event',
+      })
+    })
+
+    it('maps payment.succeeded with article metadata to an article paid event', async () => {
+      const rawEvent = {
+        type: 'payment.succeeded',
+        business_id: 'biz_1',
+        timestamp: '2026-01-01T00:00:00Z',
+        data: {
+          payment_id: 'pay_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: { kind: 'article', readerId: 'reader-1', postId: 'post-1' },
+          total_amount: 300,
+          currency: 'USD',
+        },
+      }
+      verifyMock.mockReturnValue(rawEvent)
+
+      const provider = new DodoProvider(configsService as any)
+
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        kind: 'article',
+        event: {
+          type: 'paid',
+          eventId: 'evt_1',
+          occurredAt: new Date('2026-01-01T00:00:00Z'),
+          readerId: 'reader-1',
+          postId: 'post-1',
+          providerPaymentId: 'pay_1',
+          providerCustomerId: 'cus_1',
+          amount: 300,
+          currency: 'USD',
+        },
+        rawType: 'payment.succeeded',
+        rawPayload: rawEvent,
+      })
+    })
+
+    it('ignores an article payment missing readerId or postId metadata', async () => {
+      verifyMock.mockReturnValue({
+        type: 'payment.succeeded',
+        business_id: 'biz_1',
+        timestamp: '2026-01-01T00:00:00Z',
+        data: {
+          payment_id: 'pay_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: { kind: 'article', readerId: 'reader-1' },
+          total_amount: 300,
+          currency: 'USD',
+        },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        kind: 'ignored',
+        rawType: 'payment.succeeded',
+        reason: 'missing_reader_metadata',
+      })
+    })
+
+    it('maps refund.succeeded to an article refunded event without metadata', async () => {
+      const rawEvent = {
+        type: 'refund.succeeded',
+        business_id: 'biz_1',
+        timestamp: '2026-01-02T00:00:00Z',
+        data: {
+          refund_id: 'ref_1',
+          payment_id: 'pay_1',
+          customer: { customer_id: 'cus_1' },
+          metadata: {},
+          amount: 300,
+          currency: 'USD',
+        },
+      }
+      verifyMock.mockReturnValue(rawEvent)
+
+      const provider = new DodoProvider(configsService as any)
+
+      expect(await provider.verifyAndParseWebhook('{}', headers)).toEqual({
+        kind: 'article',
+        event: {
+          type: 'refunded',
+          eventId: 'evt_1',
+          occurredAt: new Date('2026-01-02T00:00:00Z'),
+          providerPaymentId: 'pay_1',
+          providerCustomerId: 'cus_1',
+        },
+        rawType: 'refund.succeeded',
+        rawPayload: rawEvent,
       })
     })
   })

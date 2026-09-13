@@ -156,6 +156,12 @@ describe('resolveMembershipReturnUrl', () => {
     )
   })
 
+  it('appends the purchase marker for article checkout', () => {
+    expect(resolveMembershipReturnUrl('/posts/foo', web, 'purchase')).toBe(
+      'https://blog.example.com/posts/foo?purchase=success',
+    )
+  })
+
   it('returns undefined when webUrl or returnPath is missing', () => {
     expect(resolveMembershipReturnUrl(undefined, web)).toBeUndefined()
     expect(resolveMembershipReturnUrl('/posts/foo', undefined)).toBeUndefined()

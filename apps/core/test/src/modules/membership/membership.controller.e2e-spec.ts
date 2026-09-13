@@ -19,6 +19,7 @@ import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { ArticlePurchaseRepository } from '~/modules/membership/article-purchase.repository'
+import { ArticlePurchaseService } from '~/modules/membership/article-purchase.service'
 import { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import { EntitlementService } from '~/modules/membership/entitlement.service'
 import { MembershipController } from '~/modules/membership/membership.controller'
@@ -29,6 +30,7 @@ import { appleAccountTokenForReader } from '~/modules/membership/providers/apple
 import { DodoProvider } from '~/modules/membership/providers/dodo.provider'
 import { PaymentProviderRegistry } from '~/modules/membership/providers/provider.registry'
 import { SponsorsService } from '~/modules/membership/sponsors.service'
+import { PostRepository } from '~/modules/post/post.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -186,12 +188,13 @@ const verifyAndParseWebhookMock = vi.fn(
     const body = JSON.parse(rawBody.toString('utf8'))
     if (body.ignoredReason) {
       return {
-        ignored: true as const,
+        kind: 'ignored' as const,
         rawType: body.providerEventType,
         reason: body.ignoredReason,
       }
     }
     return {
+      kind: 'membership' as const,
       event: {
         eventId: body.eventId,
         provider: 'dodo',
@@ -233,8 +236,10 @@ const membershipModule: ModuleMetadata = {
     MembershipService,
     MembershipRepository,
     ArticlePurchaseRepository,
+    ArticlePurchaseService,
     BillingWebhookEventRepository,
     EntitlementService,
+    PostRepository,
     SponsorsService,
     { provide: SnowflakeService, useValue: snowflake },
     { provide: DodoProvider, useValue: dodoProviderMock },
@@ -516,6 +521,7 @@ describe('MembershipController (e2e)', () => {
       expect(res.json()).toEqual({
         data: {
           apple_iap: { enabled: false },
+          article_purchase: { enabled: false },
           enabled: true,
           plans: [
             {
@@ -565,7 +571,12 @@ describe('MembershipController (e2e)', () => {
 
       expect(res.statusCode).toBe(200)
       expect(res.json()).toEqual({
-        data: { apple_iap: { enabled: false }, enabled: false, plans: [] },
+        data: {
+          apple_iap: { enabled: false },
+          article_purchase: { enabled: false },
+          enabled: false,
+          plans: [],
+        },
       })
     })
 

@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { AppErrorCode, createAppException } from '~/common/errors'
 
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
+import { applyWebhookEventOnce } from './billing-webhook-idempotency'
 import { MembershipRepository } from './membership.repository'
 import {
   effectiveMembershipStatus,
@@ -180,6 +181,7 @@ export class MembershipService {
 
     const event = appleActivatedEvent(input.decoded, input.readerId, plan)
     await this.applyEvent({
+      kind: 'membership',
       event,
       rawPayload: input.decoded,
       rawType: 'apple.confirm',
@@ -203,36 +205,16 @@ export class MembershipService {
     verifiedEvent: VerifiedBillingEvent,
   ): Promise<{ applied: boolean }> {
     const { event, rawPayload, rawType } = verifiedEvent
-    const webhookEventRow = await this.billingWebhookEventRepository.create({
-      provider: event.provider,
-      eventId: event.eventId,
-      type: rawType,
-      payload: storeBillingEventPayload(event, rawPayload),
-    })
-
-    if (!webhookEventRow) {
-      const existingRow =
-        await this.billingWebhookEventRepository.findByProviderAndEventId(
-          event.provider,
-          event.eventId,
-        )
-      if (!existingRow || existingRow.processedAt) return { applied: false }
-
-      const applied = await this.applyMembershipState(event)
-      await this.billingWebhookEventRepository.markProcessed(
-        existingRow.id,
-        new Date(),
-      )
-      return { applied }
-    }
-
-    const applied = await this.applyMembershipState(event)
-    await this.billingWebhookEventRepository.markProcessed(
-      webhookEventRow.id,
-      new Date(),
+    return applyWebhookEventOnce(
+      this.billingWebhookEventRepository,
+      {
+        provider: event.provider,
+        eventId: event.eventId,
+        type: rawType,
+        payload: storeBillingEventPayload(event, rawPayload),
+      },
+      () => this.applyMembershipState(event),
     )
-
-    return { applied }
   }
 
   async deferEvent(verifiedEvent: VerifiedBillingEvent): Promise<void> {
