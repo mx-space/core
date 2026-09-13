@@ -65,7 +65,7 @@ Spec §5 末段。
 
 - `packages/api-client/models/base.ts PaywallMeta`；`models/membership.ts` 增 `ArticleCheckoutResult`、`ArticlePurchasedResult`、`MembershipPlansResult.articlePurchase`
 - `controllers/membership.ts`：`articleCheckout(postId, returnPath?)`、`articlePurchased(postId)`
-- 版本 bump 到 `5.10.0`（仅 package.json，不发布）
+- 版本 bump 到 `5.10.0`；发布由 controller 用 `release-core` skill 执行（不在本 Task 内）
 - 测试：`__tests__/controllers/membership.test.ts`
 
 ## Task 6: Admin — Membership 设置 Single Article Purchase
