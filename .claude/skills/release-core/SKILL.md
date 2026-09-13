@@ -46,7 +46,7 @@ State the chosen version explicitly to the user, then continue.
 bash .claude/skills/release-core/scripts/prepare-server.sh X.Y.Z
 ```
 
-Does, in order: verifies no tracked files are already changed → fetches origin and aborts if `origin/master` moved since preflight → `node apps/core/scripts/bump-admin-version.js` (patch-bumps `apps/admin/package.json` iff admin changed since the last `v*` tag — mandatory, otherwise R2 silently overwrites the published `admin-X.Y.Z.zip` with different content) → sets core version → regenerates `apps/core/CHANGELOG.md` (conventional-changelog, Angular preset, scoped to `apps/core`) → backs up old release notes to `/tmp` and deletes `apps/core/RELEASE_NOTES.md`. Prints changed files, version diffs, and the head of the new changelog block.
+Does, in order: verifies no tracked files are already changed → fetches origin and aborts if `origin/master` moved since preflight → `node apps/core/scripts/bump-admin-version.js` (patch-bumps `apps/admin/package.json` iff admin changed since the last `v*` tag, so the bundled admin version stays distinct from the last R2-published one) → sets core version → regenerates `apps/core/CHANGELOG.md` (conventional-changelog, Angular preset, scoped to `apps/core`) → backs up old release notes to `/tmp` and deletes `apps/core/RELEASE_NOTES.md`. Prints changed files, version diffs, and the head of the new changelog block.
 
 Check the printed changelog block: header `## [X.Y.Z](compare-link) (YYYY-MM-DD)`, entries grouped under `### Bug Fixes` / `### Features`, only feat/fix/breaking commits, each `* **scope:** subject ([sha7](link))`. If wrong: stop, inspect `git diff apps/core/CHANGELOG.md`, then edit the changelog manually while preserving unrelated hunks.
 
@@ -116,7 +116,7 @@ Verify the printed stat shows exactly 3 files (4 when admin was bumped). Then:
 gh run watch <run-id>
 ```
 
-`release.yml`: quality → build (GitHub Release with the notes; admin zip to R2) → docker (multi-arch to DockerHub) → dokploy redeploy. If it fails: fix forward with the next patch; **never** delete or move a published tag.
+`release.yml`: quality → build (GitHub Release with the notes; admin bundled only, never published to R2) → docker (multi-arch to DockerHub) → dokploy redeploy. If it fails: fix forward with the next patch; **never** delete or move a published tag.
 
 ## B/C. npm package release (api-client / cli)
 

@@ -231,11 +231,11 @@ shells live in `apps/admin/src/ui/layout/`:
 
 Two channels publish the dashboard (full detail in `../../docs/admin-monorepo-migration.md`):
 
-- **With a core release** (`v*` tag): `release.yml` builds admin, bundles it into the
-  server zip + Docker image, and publishes it to Cloudflare R2.
+- **With a core release** (`v*` tag): `release.yml` builds admin and bundles it into the
+  server zip + Docker image. It does NOT publish to R2.
 - **Independently** (admin-only fix, no core release): run
   `../../scripts/release-admin.sh [patch|minor|major]` — bumps `package.json`, tags
-  `admin-v*`, and `admin-release.yml` builds + publishes to R2.
+  `admin-v*`, and `admin-release.yml` builds + publishes to R2. This is the only R2 channel.
 
 The version baseline is `8.x`+ (above the retired GitHub channel) so a freshly bundled
 build supersedes any copy previously downloaded into the server's data directory.
