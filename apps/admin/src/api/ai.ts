@@ -433,12 +433,12 @@ export function getTranslationEntries(params?: {
 
 export function generateTranslationEntries(data?: {
   keyPaths?: TranslationEntryKeyPath[]
-  targetLanguages?: string[]
+  targetLangs?: string[]
 }) {
   return postJson<
     GenerateEntriesResponse,
-    { keyPaths?: TranslationEntryKeyPath[]; targetLanguages?: string[] } | null
-  >('/ai/translations/entries/generate', data ?? null)
+    { keyPaths?: TranslationEntryKeyPath[]; targetLangs?: string[] }
+  >('/ai/translations/entries/generate', data ?? {})
 }
 
 export function updateTranslationEntry(
