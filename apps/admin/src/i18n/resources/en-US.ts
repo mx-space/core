@@ -3778,7 +3778,7 @@ export const enUS = {
   'write.postFields.copyright': 'Copyright',
   'write.postFields.pin': 'Pin',
   'write.postFields.pinOrder': 'Pin order',
-  'write.postFields.premium': 'Premium (paywalled)',
+  'write.postFields.premium': 'Premium Article',
   'write.postFields.premiumNeedsMoreBlocks':
     'Write at least two blocks to configure the free preview.',
   'write.postFields.premiumPreviewBlocks': 'Free preview blocks',
@@ -3798,6 +3798,50 @@ export const enUS = {
   'write.postFields.summary': 'Summary',
   'write.postPublicPath.fallback':
     'With a title, the slug is generated; without, both title and slug are generated from the body.',
+  'write.premium.description':
+    'After the free period ends, the article moves into the Sponsor Archive. Readers can become a sponsor or unlock this article on its own.',
+  'write.premium.freeWindow.customHours': 'Custom (hours)',
+  'write.premium.freeWindow.editTime': 'Edit time',
+  'write.premium.freeWindow.endNow': 'End free access now',
+  'write.premium.freeWindow.extend24': '+24h',
+  'write.premium.freeWindow.extend72': '+72h',
+  'write.premium.freeWindow.preset.custom': 'Custom',
+  'write.premium.freeWindow.preset.d7': '7d',
+  'write.premium.freeWindow.preset.h24': '24h',
+  'write.premium.freeWindow.preset.h48': '48h',
+  'write.premium.freeWindow.preset.h72': '72h',
+  'write.premium.freeWindow.preset.immediately': 'Immediately',
+  'write.premium.freeWindow.reopen24': 'Reopen for 24h',
+  'write.premium.freeWindow.reopen72': 'Reopen for 72h',
+  'write.premium.freeWindow.reopenCustom': 'Custom end time',
+  'write.premium.freeWindow.title': 'Free access period',
+  'write.premium.freeWindow.until': 'Free access ends at',
+  'write.premium.paywall.description':
+    'Once in the Sponsor Archive, readers without access can read up to here.',
+  'write.premium.paywall.title': 'Paywall position',
+  'write.premium.remaining.dayHour': '{days}d {hours}h',
+  'write.premium.remaining.hour': '{hours}h',
+  'write.premium.status.archived':
+    'Sponsor Archive · locked readers only see the first {count} blocks',
+  'write.premium.status.freeWindow':
+    'Free access · {remaining} left · Sponsor Archive · {until}',
+  'write.premium.status.pending':
+    'Awaiting publish · free for {hours} hours after publishing',
+  'write.premium.status.pendingImmediate':
+    'Awaiting publish · enters the Archive immediately after publishing',
+  'write.premium.status.pill.archived': 'Sponsor Archive',
+  'write.premium.status.pill.freeWindow': 'Free access',
+  'write.premium.status.pill.pending': 'Pending',
+  'write.premium.unlock.purchase': 'Single article unlock',
+  'write.premium.unlock.purchaseDisabled':
+    'Enable single article purchase in Settings → Membership',
+  'write.premium.unlock.purchaseHint': '{price} · permanent access',
+  'write.premium.unlock.purchasePriceUnset': 'Permanent access',
+  'write.premium.unlock.sponsor': 'Sponsor',
+  'write.premium.unlock.sponsorDisabled': 'Membership is not enabled',
+  'write.premium.unlock.sponsorHint':
+    'Every active sponsor can read the full article',
+  'write.premium.unlock.title': 'Unlock methods',
   'write.publishConfirm.aiDescription':
     'Choose resources for this publish only. All are off by default, and unselected existing resources are preserved.',
   'write.publishConfirm.aiTitle': 'Update AI resources too (optional)',

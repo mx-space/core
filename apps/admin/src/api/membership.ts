@@ -12,6 +12,7 @@ export function getMembershipConfigStatus() {
 }
 
 export interface MembershipPlansResponse {
+  enabled: boolean
   articlePurchase?: {
     enabled: boolean
     price?: {

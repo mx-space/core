@@ -119,6 +119,14 @@ import {
   DraftRecoveryReview,
   type DraftRecoveryReviewData,
 } from '~/features/write/components/DraftRecoveryReview'
+import {
+  DEFAULT_FREE_WINDOW_HOURS,
+  DEFAULT_PREVIEW_BLOCKS,
+  getPaywallMeta,
+  parseFreeWindowHours,
+  resolvePaywallMeta,
+} from '~/features/write/components/premium/paywall-meta'
+import { PremiumArticlePanel } from '~/features/write/components/premium/PremiumArticlePanel'
 import { PublishConfirmationDialog } from '~/features/write/components/PublishConfirmationDialog'
 import { openPublishProcessDock } from '~/features/write/components/PublishProcessDock'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
@@ -163,7 +171,6 @@ import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { Slider } from '~/ui/primitives/slider'
 import { Switch } from '~/ui/primitives/switch'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
@@ -195,6 +202,8 @@ interface WriteFormState {
   coordinatesLat: string
   coordinatesLng: string
   copyright: boolean
+  freeUntil: string
+  freeWindowHours: string
   isPremium: boolean
   images: NonNullable<RevisionSnapshot['images']>
   location: string
@@ -207,6 +216,7 @@ interface WriteFormState {
   pinOrder: string
   previewBlocks: string
   publicAt: string
+  purchaseEnabled: boolean
   relatedId: string
   slug: string
   subtitle: string
@@ -255,6 +265,8 @@ const emptyState: WriteFormState = {
   coordinatesLat: '',
   coordinatesLng: '',
   copyright: true,
+  freeUntil: '',
+  freeWindowHours: String(DEFAULT_FREE_WINDOW_HOURS),
   isPremium: false,
   images: [],
   location: '',
@@ -265,8 +277,9 @@ const emptyState: WriteFormState = {
   passwordProtected: false,
   pin: false,
   pinOrder: '1',
-  previewBlocks: '3',
+  previewBlocks: String(DEFAULT_PREVIEW_BLOCKS),
   publicAt: '',
+  purchaseEnabled: true,
   relatedId: '',
   slug: '',
   subtitle: '',
@@ -2434,6 +2447,7 @@ function WritePage(props: { kind: WriteKind }) {
                     <PostFields
                       categories={categories}
                       currentPostId={id}
+                      isPublished={isPublished}
                       relatedPosts={relatedPosts}
                       state={state}
                       tags={tags}
@@ -3264,6 +3278,7 @@ function SlugPill(props: {
 function PostFields(props: {
   categories: CategoryEntity[]
   currentPostId: string
+  isPublished: boolean
   relatedPosts: PostModel[]
   state: WriteFormState
   tags: Array<{ count: number; name: string }>
@@ -3371,24 +3386,11 @@ function PostFields(props: {
             value={props.state.pinOrder}
           />
         ) : null}
-        <Switch
-          checked={props.state.isPremium}
-          description={
-            props.state.contentFormat === 'lexical'
-              ? undefined
-              : t('write.postFields.premiumRequiresLexical')
-          }
-          disabled={props.state.contentFormat !== 'lexical'}
-          label={t('write.postFields.premium')}
-          onCheckedChange={(checked) => props.updateField('isPremium', checked)}
+        <PremiumArticlePanel
+          isPublished={props.isPublished}
+          updateField={props.updateField}
+          values={props.state}
         />
-        {props.state.isPremium ? (
-          <PremiumPreviewControl
-            content={props.state.content}
-            previewBlocks={props.state.previewBlocks}
-            updateField={props.updateField}
-          />
-        ) : null}
       </PanelBlock>
 
       <PanelBlock title={t('write.postFields.section.related')}>
@@ -4342,134 +4344,26 @@ function setMetaValue(
   return next
 }
 
-function getPaywall(meta: Record<string, unknown>) {
-  return isRecord(meta.paywall) ? meta.paywall : undefined
-}
-
-function getPaywallPreviewBlocks(meta: Record<string, unknown>) {
-  const previewBlocks = getPaywall(meta)?.previewBlocks
-  return typeof previewBlocks === 'number' ? previewBlocks : undefined
-}
-
-function withPaywallPreviewBlocks(
+function paywallFormState(
   meta: Record<string, unknown>,
-  previewBlocks: number,
+  previous: Pick<
+    WriteFormState,
+    'freeUntil' | 'freeWindowHours' | 'previewBlocks' | 'purchaseEnabled'
+  >,
 ) {
-  return { ...meta, paywall: { ...getPaywall(meta), previewBlocks } }
-}
-
-function withoutPaywallPreviewBlocks(meta: Record<string, unknown>) {
-  const paywall = getPaywall(meta)
-  if (!paywall) {
-    return meta
+  const paywall = getPaywallMeta(meta)
+  return {
+    freeUntil: paywall.freeUntil ?? previous.freeUntil,
+    freeWindowHours:
+      paywall.freeWindowHours === undefined
+        ? previous.freeWindowHours
+        : String(paywall.freeWindowHours),
+    previewBlocks:
+      paywall.previewBlocks === undefined
+        ? previous.previewBlocks
+        : String(paywall.previewBlocks),
+    purchaseEnabled: paywall.purchaseEnabled ?? previous.purchaseEnabled,
   }
-
-  const { previewBlocks, ...restPaywall } = paywall
-  if (Object.keys(restPaywall).length === 0) {
-    const { paywall, ...restMeta } = meta
-    return restMeta
-  }
-
-  return { ...meta, paywall: restPaywall }
-}
-
-function resolvePaywallMeta(
-  meta: Record<string, unknown>,
-  isPremium: boolean,
-  previewBlocks: number,
-) {
-  return isPremium
-    ? withPaywallPreviewBlocks(meta, previewBlocks)
-    : withoutPaywallPreviewBlocks(meta)
-}
-
-function parseLexicalTopLevelBlocks(content: string): unknown[] {
-  if (!content) return []
-  try {
-    const parsed = JSON.parse(content) as { root?: { children?: unknown[] } }
-    return Array.isArray(parsed.root?.children) ? parsed.root.children : []
-  } catch {
-    return []
-  }
-}
-
-function collectLexicalText(node: unknown): string {
-  if (!isRecord(node)) return ''
-  if (typeof node.text === 'string') return node.text
-  return Array.isArray(node.children)
-    ? node.children.map(collectLexicalText).join('')
-    : ''
-}
-
-const PREMIUM_CUTOFF_TEXT_LENGTH = 30
-
-function PremiumPreviewControl(props: {
-  content: string
-  previewBlocks: string
-  updateField: (key: 'previewBlocks', value: string) => void
-}) {
-  const { t } = useI18n()
-  const { updateField } = props
-  const blocks = useMemo(
-    () => parseLexicalTopLevelBlocks(props.content),
-    [props.content],
-  )
-  const maxPreview = blocks.length - 1
-  const tooShort = maxPreview < 1
-  const stored = Math.max(1, Math.floor(Number(props.previewBlocks)) || 3)
-  const value = Math.min(stored, Math.max(1, maxPreview))
-
-  useEffect(() => {
-    if (!tooShort && stored !== value) {
-      updateField('previewBlocks', String(value))
-    }
-  }, [stored, tooShort, updateField, value])
-
-  const cutoffText = useMemo(() => {
-    if (tooShort) return ''
-    for (let index = value - 1; index >= 0; index -= 1) {
-      const text = collectLexicalText(blocks[index]).trim()
-      if (text) {
-        return text.length > PREMIUM_CUTOFF_TEXT_LENGTH
-          ? `…${text.slice(-PREMIUM_CUTOFF_TEXT_LENGTH)}`
-          : text
-      }
-    }
-    return ''
-  }, [blocks, tooShort, value])
-
-  return (
-    <div className="grid gap-1">
-      <Slider
-        aria-label={t('write.postFields.premiumPreviewBlocks')}
-        disabled={tooShort || maxPreview < 2}
-        label={t('write.postFields.premiumPreviewBlocks')}
-        max={Math.max(2, maxPreview)}
-        min={1}
-        onValueChange={(next) => updateField('previewBlocks', String(next))}
-        value={tooShort ? 1 : value}
-        valueLabel={
-          tooShort
-            ? null
-            : t('write.postFields.premiumPreviewCount', {
-                total: blocks.length,
-                value,
-              })
-        }
-      />
-      {tooShort ? (
-        <p className="text-xs text-fg-muted">
-          {t('write.postFields.premiumNeedsMoreBlocks')}
-        </p>
-      ) : cutoffText ? (
-        <p className="truncate text-xs text-fg-muted">
-          {t('write.postFields.premiumPreviewCutoff', {
-            text: `“${cutoffText}”`,
-          })}
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 function formatMetaJson(meta: Record<string, unknown>) {
@@ -4669,7 +4563,7 @@ function fromModel(kind: WriteKind, model: WriteModel) {
       meta,
       pin: Boolean(post.pinAt),
       pinOrder: String(post.pinOrder ?? 1),
-      previewBlocks: String(getPaywallPreviewBlocks(meta) ?? 3),
+      ...paywallFormState(meta, emptyState),
       relatedId: post.related?.map((item) => item.id).join(', ') ?? '',
       slug: post.slug,
       summary: post.summary ?? '',
@@ -4762,10 +4656,7 @@ function fromRevision(
         typeof specific.pinOrder === 'number'
           ? String(specific.pinOrder)
           : previous.pinOrder,
-      previewBlocks: String(
-        getPaywallPreviewBlocks(base.meta) ??
-          (Number(previous.previewBlocks) || 3),
-      ),
+      ...paywallFormState(base.meta, previous),
       relatedId: Array.isArray(specific.relatedId)
         ? specific.relatedId.map((id) => String(id)).join(', ')
         : previous.relatedId,
@@ -5135,11 +5026,15 @@ function toDraftData(
   if (kind === 'post') {
     return {
       ...base,
-      meta: resolvePaywallMeta(
-        state.meta,
-        state.isPremium,
-        Math.max(1, Number(state.previewBlocks) || 3),
-      ),
+      meta: resolvePaywallMeta(state.meta, state.isPremium, {
+        freeUntil: state.freeUntil,
+        freeWindowHours: parseFreeWindowHours(state.freeWindowHours),
+        previewBlocks: Math.max(
+          1,
+          Number(state.previewBlocks) || DEFAULT_PREVIEW_BLOCKS,
+        ),
+        purchaseEnabled: state.purchaseEnabled,
+      }),
       typeSpecificData: {
         categoryId: state.categoryId,
         copyright: state.copyright,
