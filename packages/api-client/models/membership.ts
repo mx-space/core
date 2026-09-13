@@ -1,3 +1,5 @@
+import type { PaywallPrice } from './base'
+
 export type MembershipProvider =
   'dodo' | 'creem' | 'lemonsqueezy' | 'stripe' | 'manual' | 'apple'
 
@@ -27,10 +29,24 @@ export interface MembershipAppleIap {
   yearlyProductId?: string
 }
 
+export interface MembershipArticlePurchaseInfo {
+  enabled: boolean
+  price?: PaywallPrice
+}
+
 export interface MembershipPlansResult {
   appleIap: MembershipAppleIap
   enabled: boolean
   plans: MembershipPlanInfo[]
+  articlePurchase: MembershipArticlePurchaseInfo
+}
+
+export interface ArticleCheckoutResult {
+  checkoutUrl: string
+}
+
+export interface ArticlePurchasedResult {
+  purchased: boolean
 }
 
 export interface MembershipStatusResultNone {

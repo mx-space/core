@@ -2,6 +2,8 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type {
+  ArticleCheckoutResult,
+  ArticlePurchasedResult,
   MembershipAppleConfirmationResult,
   MembershipCheckoutResult,
   MembershipPlan,
@@ -51,5 +53,15 @@ export class MembershipController<ResponseWrapper> implements IController {
     return this.proxy.apple.confirm.post<MembershipAppleConfirmationResult>({
       data: { signedTransactionInfo },
     })
+  }
+
+  articleCheckout(postId: string, returnPath?: string) {
+    return this.proxy['article-checkout'].post<ArticleCheckoutResult>({
+      data: returnPath === undefined ? { postId } : { postId, returnPath },
+    })
+  }
+
+  articlePurchased(postId: string) {
+    return this.proxy['article-purchases'](postId).get<ArticlePurchasedResult>()
   }
 }

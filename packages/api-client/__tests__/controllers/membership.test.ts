@@ -86,4 +86,38 @@ describe('test Membership client', () => {
       client.membership.confirmApple('sandbox-jws'),
     ).resolves.toEqual({ status: 'test' })
   })
+
+  test('POST /membership/article-checkout', async () => {
+    const mocked = mockResponse(
+      '/membership/article-checkout',
+      { checkout_url: 'https://pay.example.com/session/article' },
+      'post',
+      { postId: '1' },
+    )
+
+    const data = await client.membership.articleCheckout('1')
+    expect(data).toEqual({ checkoutUrl: mocked.checkout_url })
+  })
+
+  test('POST /membership/article-checkout with a return path', async () => {
+    const mocked = mockResponse(
+      '/membership/article-checkout',
+      { checkout_url: 'https://pay.example.com/session/article-return' },
+      'post',
+      { postId: '1', returnPath: '/posts/premium-only' },
+    )
+
+    const data = await client.membership.articleCheckout(
+      '1',
+      '/posts/premium-only',
+    )
+    expect(data).toEqual({ checkoutUrl: mocked.checkout_url })
+  })
+
+  test('GET /membership/article-purchases/:postId', async () => {
+    mockResponse('/membership/article-purchases/1', { purchased: true })
+
+    const data = await client.membership.articlePurchased('1')
+    expect(data).toEqual({ purchased: true })
+  })
 })

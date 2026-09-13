@@ -90,9 +90,20 @@ export interface SkillBundleView {
   rawUrl: string
   assets: SkillAssetView[]
 }
+export type PostEntitlementReason =
+  'public' | 'owner' | 'free-window' | 'purchase' | 'membership' | 'locked'
+
+export interface PaywallPrice {
+  amount: number
+  currency: string
+}
+
 export interface PaywallMeta {
   locked: boolean
   previewBlocks?: number
+  freeUntil?: string
+  entitlement: { reason: PostEntitlementReason }
+  purchase?: { enabled: boolean; price?: PaywallPrice }
 }
 
 export interface TtsMeta {
