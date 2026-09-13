@@ -62,6 +62,7 @@ describe('cli --help', () => {
         'topic',
         'config',
         'skill',
+        'file',
         'author',
         'update',
       ]) {

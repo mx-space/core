@@ -32,6 +32,7 @@ import '../category'
 import '../comment'
 import '../config'
 import '../draft'
+import '../file'
 import '../note'
 import '../page'
 import '../post'
@@ -87,6 +88,7 @@ export const GROUP_NAMES = [
   'ai',
   'config',
   'skill',
+  'file',
   'author',
   'update',
 ] as const

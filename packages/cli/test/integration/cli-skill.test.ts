@@ -109,4 +109,43 @@ describe('mxs skill', () => {
     },
     30_000,
   )
+
+  // `overview` is the entry point agents read to pick a chapter by intent, so a
+  // slug it names but the bundle does not ship is a dead end for the reader.
+  it(
+    'every chapter slug named in `overview` exists in the corpus',
+    async () => {
+      const list = await runMxs(['skill', '--output', 'llm'])
+      expect(list.code).toBe(0)
+      const live = new Set(
+        list.stdout
+          .split('\n')
+          .filter((line) => line.includes('\t'))
+          .map((line) => line.split('\t')[0]),
+      )
+
+      const overview = await runMxs([
+        'skill',
+        'get',
+        'overview',
+        '--output',
+        'llm',
+      ])
+      expect(overview.code).toBe(0)
+
+      const slugish =
+        /^(overview|workflow|authoring|commands-[a-z-]+|output-modes|auth-config|safety|litexml[a-z-]*)$/
+      const referenced = [
+        ...new Set(
+          [...overview.stdout.matchAll(/`([^`]+)`/g)]
+            .map((m) => m[1])
+            .filter((token) => slugish.test(token)),
+        ),
+      ]
+
+      expect(referenced.length).toBeGreaterThan(10)
+      expect(referenced.filter((slug) => !live.has(slug))).toEqual([])
+    },
+    30_000,
+  )
 })

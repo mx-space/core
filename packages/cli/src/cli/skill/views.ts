@@ -15,7 +15,7 @@ export const skillListView: View<readonly Chapter[]> = {
   modes: new Set(['readable', 'llm', 'xml']),
   readable: (chapters, { color }) => {
     if (chapters.length === 0) return dim('no chapters loaded', color)
-    return renderTable(
+    const table = renderTable(
       [
         { key: 'slug', label: 'slug' },
         { key: 'title', label: 'title' },
@@ -30,9 +30,13 @@ export const skillListView: View<readonly Chapter[]> = {
       })),
       { color },
     )
+    return `${table}\n\n${dim('Read `overview` first — it maps an intent to the chapter to load.', color)}`
   },
   llm: (chapters) =>
-    chapters.map((c) => `${c.slug}\t${c.description}`).join('\n'),
+    [
+      ...chapters.map((c) => `${c.slug}\t${c.description}`),
+      '# Read `overview` first — it maps an intent to the chapter to load.',
+    ].join('\n'),
   xml: (chapters) => {
     const inner = chapters
       .map(

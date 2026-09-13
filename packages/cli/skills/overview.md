@@ -11,31 +11,33 @@ order: 0
 
 The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for direct context injection. Default output is `readable` (markdown rendered as ANSI for a terminal).
 
-## Reference map
+## Read by intent, not by slug
 
-| Need                                          | Chapter                          |
-| --------------------------------------------- | -------------------------------- |
-| How to drive any task end-to-end              | `workflow`                       |
-| Post / note / page content authoring          | `authoring`                      |
-| Exact command syntax for posts                | `commands-post`                  |
-| Notes                                         | `commands-note`                  |
-| Pages                                         | `commands-page`                  |
-| Portfolio projects                            | `commands-project`               |
-| Comments / moderation                         | `commands-comment`               |
-| Categories                                    | `commands-category`              |
-| Topics                                        | `commands-topic`                 |
-| Snippets (server data / functions)            | `commands-snippet`               |
-| AI summary / translation / insights / tts / overview / entries | `commands-ai`   |
-| Server-side options                           | `commands-config`                |
-| Authentication                                | `commands-auth`                  |
-| Local profile management                      | `commands-profile`               |
-| Local admin editor for LiteXML / envelopes    | `commands-author`                |
-| Profiles, env vars, target selection          | `auth-config`                    |
-| Output modes (`--json`, `--output llm`, …)    | `output-modes`                   |
-| Mutation safety, verification, exit codes     | `safety`                         |
-| LiteXML syntax for `<mxpost>` / `<mxnote>`    | `litexml`, `litexml-nodes`, `litexml-recipes`, `litexml-cli` |
+**Read this chapter first, then load `workflow` plus the one chapter your intent names.** That pair covers almost every task; do not guess slugs from the chapter list.
 
-`litexml*` chapters are shipped from `@haklex/rich-litexml`. If they are missing, upgrade haklex to a version that bundles its `.claude/skills/litexml-authoring/` directory.
+| I want to …                                                        | Read                                                                                            |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Drive any task end-to-end without damaging server state            | `workflow`                                                                                      |
+| See what a change renders as, without writing to the server        | `commands-author`                                                                               |
+| Edit an existing post, add a section, fix a typo                   | `commands-post` + `authoring` + `commands-author`                                               |
+| Write LiteXML that will actually parse (tags, attributes, recipes) | `litexml` + `litexml-nodes-structural`, `litexml-nodes-extensions`, `litexml-authoring-recipes` |
+| Upload an image / icon / avatar / file and get a public URL        | `commands-file`                                                                                 |
+| Stage changes without touching the published article               | `commands-draft`                                                                                |
+| Confirm which deployment and account this shell is talking to      | `auth-config`                                                                                   |
+| Produce output a program will parse                                | `output-modes`                                                                                  |
+| Delete, publish, or overwrite something irreversible               | `safety`                                                                                        |
+| Notes / pages / portfolio projects                                 | `commands-note`, `commands-page`, `commands-project`                                            |
+| Moderate comments                                                  | `commands-comment`                                                                              |
+| Categories / topics                                                | `commands-category`, `commands-topic`                                                           |
+| Server-side data and functions                                     | `commands-snippet`                                                                              |
+| AI summary / translation / insights / tts / overview               | `commands-ai`                                                                                   |
+| Server options                                                     | `commands-config`                                                                               |
+| Log in and out                                                     | `commands-auth`                                                                                 |
+| Local CLI profiles                                                 | `commands-profile`                                                                              |
+
+Chapters map to command groups. If a command has no chapter, `mxs <command> --help` is authoritative — the CLI is the source of truth, not this bundle.
+
+`litexml*` chapters (`litexml`, `litexml-nodes-structural`, `litexml-nodes-extensions`, `litexml-authoring-recipes`, `litexml-cli`) are shipped from `@haklex/rich-litexml`, not from this package — their slugs change with that dependency. If they are missing, upgrade haklex to a version that bundles its `.claude/skills/litexml-authoring/` directory. Run `mxs skill` to see the slugs actually loaded rather than trusting this list.
 
 ## How to navigate
 
@@ -43,3 +45,5 @@ The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for
 - `mxs skill get <slug>` — print the chapter body as raw markdown
 - `mxs skill all` — concatenate every chapter (for one-shot context injection)
 - `mxs skill search <keyword>` — substring search, returns matching chapters with snippets
+
+Chapters carry an `order` field and print in ascending order; `overview` is `order: 0` and always comes first.
