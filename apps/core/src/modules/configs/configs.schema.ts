@@ -1067,6 +1067,16 @@ export const MembershipSchema = section('Membership', {
     z.string().optional(),
     'Yearly plan product ID',
   ),
+  articlePurchaseEnabled: field.toggle(
+    z.boolean().optional(),
+    'Single Article Purchase',
+    { description: 'Allow readers to buy a single premium article' },
+  ),
+  articleProductId: field.halfGrid(
+    z.string().optional(),
+    'Article Product ID',
+    { description: 'Dodo one-time product for single-article purchases' },
+  ),
   apiKey: field.password(z.string().optional(), 'API key'),
   webhookSigningKey: field.password(
     z.string().optional(),

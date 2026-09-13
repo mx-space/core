@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type MembershipRow,
   resolveAppleIapAvailability,
+  resolveArticlePurchaseAvailability,
   resolveGrantExtension,
   resolveMembershipAvailability,
   resolveMembershipReturnUrl,
@@ -81,6 +82,62 @@ describe('resolveMembershipAvailability', () => {
         apiKey: 'api-key',
       }),
     ).toEqual({ enabled: false, plans: [] })
+  })
+})
+
+describe('resolveArticlePurchaseAvailability', () => {
+  it('is enabled when fully configured', () => {
+    expect(
+      resolveArticlePurchaseAvailability({
+        articlePurchaseEnabled: true,
+        provider: 'dodo',
+        articleProductId: 'a',
+        ...providerCredentials,
+      }),
+    ).toEqual({ enabled: true })
+  })
+
+  it('is disabled when the toggle is off', () => {
+    expect(
+      resolveArticlePurchaseAvailability({
+        articlePurchaseEnabled: false,
+        provider: 'dodo',
+        articleProductId: 'a',
+        ...providerCredentials,
+      }),
+    ).toEqual({ enabled: false })
+  })
+
+  it('is disabled when the provider has no registered adapter', () => {
+    expect(
+      resolveArticlePurchaseAvailability({
+        articlePurchaseEnabled: true,
+        provider: 'stripe',
+        articleProductId: 'a',
+        ...providerCredentials,
+      }),
+    ).toEqual({ enabled: false })
+  })
+
+  it('is disabled when the article product id is missing', () => {
+    expect(
+      resolveArticlePurchaseAvailability({
+        articlePurchaseEnabled: true,
+        provider: 'dodo',
+        ...providerCredentials,
+      }),
+    ).toEqual({ enabled: false })
+  })
+
+  it('is disabled when a required provider credential is absent', () => {
+    expect(
+      resolveArticlePurchaseAvailability({
+        articlePurchaseEnabled: true,
+        provider: 'dodo',
+        articleProductId: 'a',
+        apiKey: 'api-key',
+      }),
+    ).toEqual({ enabled: false })
   })
 })
 

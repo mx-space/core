@@ -41,6 +41,7 @@ export const POSTGRES_REPOSITORY_TOKENS = {
   options: Symbol('OptionsRepository'),
   metaPreset: Symbol('MetaPresetRepository'),
   membership: Symbol('MembershipRepository'),
+  articlePurchase: Symbol('ArticlePurchaseRepository'),
   billingWebhookEvent: Symbol('BillingWebhookEventRepository'),
 } as const
 

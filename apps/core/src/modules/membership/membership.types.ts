@@ -61,6 +61,43 @@ export function resolveMembershipAvailability(config: {
   return { enabled, plans: enabled ? plans : [] }
 }
 
+export type ArticlePurchaseStatus = 'paid' | 'refunded'
+
+export interface ArticlePurchaseRow {
+  id: EntityId
+  readerId: string
+  postId: string
+  provider: string
+  providerPaymentId: string
+  providerCustomerId: string | null
+  amount: number
+  currency: string
+  status: ArticlePurchaseStatus
+  createdAt: Date
+  updatedAt: Date | null
+}
+
+export interface ArticlePurchaseAvailability {
+  enabled: boolean
+}
+
+export function resolveArticlePurchaseAvailability(config: {
+  articlePurchaseEnabled?: boolean
+  provider?: string
+  articleProductId?: string
+  apiKey?: string
+  webhookSigningKey?: string
+}): ArticlePurchaseAvailability {
+  const hasProviderCredentials = !!config.apiKey && !!config.webhookSigningKey
+  const enabled =
+    !!config.articlePurchaseEnabled &&
+    !!config.provider &&
+    REGISTERED_PAYMENT_PROVIDERS.includes(config.provider) &&
+    hasProviderCredentials &&
+    !!config.articleProductId
+  return { enabled }
+}
+
 export interface AppleIapAvailability {
   enabled: boolean
   monthlyProductId?: string

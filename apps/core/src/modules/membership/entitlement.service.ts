@@ -5,6 +5,7 @@ import { MembershipRepository } from './membership.repository'
 import {
   type MembershipAvailability,
   resolveAppleIapAvailability,
+  resolveArticlePurchaseAvailability,
   resolveMembershipAvailability,
 } from './membership.types'
 
@@ -68,5 +69,10 @@ export class EntitlementService {
       resolveMembershipAvailability(config).enabled ||
       resolveAppleIapAvailability(config).enabled
     )
+  }
+
+  async isArticlePurchaseAvailable(): Promise<boolean> {
+    const config = await this.configsService.get('membership')
+    return resolveArticlePurchaseAvailability(config).enabled
   }
 }

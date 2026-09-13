@@ -274,6 +274,13 @@
       "when": 1789257600000,
       "tag": "0038_enrichment_fetch_state",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789344000000,
+      "tag": "0039_article_purchases",
+      "breakpoints": true
     }
   ]
 }

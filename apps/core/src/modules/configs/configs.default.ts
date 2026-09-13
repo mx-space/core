@@ -204,6 +204,8 @@ export const generateDefaultConfig: () => IConfig = () => ({
     provider: 'dodo',
     monthlyProductId: '',
     yearlyProductId: '',
+    articlePurchaseEnabled: false,
+    articleProductId: '',
     apiKey: '',
     webhookSigningKey: '',
     environment: 'live_mode',

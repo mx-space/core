@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm'
-import { jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
+import { integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core'
 
 import { readers } from './auth'
 import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
+import { posts } from './content'
 
 export const memberships = pgTable(
   'memberships',
@@ -25,6 +26,37 @@ export const memberships = pgTable(
     uniqueIndex('memberships_provider_subscription_id_uniq')
       .on(table.providerSubscriptionId)
       .where(sql`${table.providerSubscriptionId} is not null`),
+  ],
+)
+
+export const articlePurchases = pgTable(
+  'article_purchases',
+  {
+    id: pkText(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    readerId: refText('reader_id')
+      .notNull()
+      .references(() => readers.id, { onDelete: 'cascade' }),
+    postId: refText('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    providerPaymentId: text('provider_payment_id').notNull(),
+    providerCustomerId: text('provider_customer_id'),
+    amount: integer('amount').notNull(),
+    currency: text('currency').notNull(),
+    status: text('status').notNull(),
+  },
+  (table) => [
+    uniqueIndex('article_purchases_reader_id_post_id_uniq').on(
+      table.readerId,
+      table.postId,
+    ),
+    uniqueIndex('article_purchases_provider_payment_id_uniq').on(
+      table.provider,
+      table.providerPaymentId,
+    ),
   ],
 )
 

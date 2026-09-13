@@ -4,6 +4,7 @@ import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { ArticlePurchaseRepository } from '~/modules/membership/article-purchase.repository'
 import { BillingWebhookEventRepository } from '~/modules/membership/billing-webhook-event.repository'
 import { MembershipRepository } from '~/modules/membership/membership.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -14,9 +15,12 @@ describe('Membership + billing webhook event repositories (real PG)', () => {
   let database: Awaited<ReturnType<typeof createIsolatedPgDatabase>>
   let membershipRepository: MembershipRepository
   let billingWebhookEventRepository: BillingWebhookEventRepository
+  let articlePurchaseRepository: ArticlePurchaseRepository
   const snowflake = new SnowflakeService()
   const readerId = snowflake.nextId()
   const otherReaderId = snowflake.nextId()
+  const categoryId = snowflake.nextId()
+  const postId = snowflake.nextId()
 
   beforeAll(async () => {
     database = await createIsolatedPgDatabase()
@@ -27,10 +31,23 @@ describe('Membership + billing webhook event repositories (real PG)', () => {
       db,
       snowflake,
     )
+    articlePurchaseRepository = new ArticlePurchaseRepository(db, snowflake)
     await db.insert(schema.readers).values([
       { id: readerId, name: 'Reader One', role: 'reader' },
       { id: otherReaderId, name: 'Reader Two', role: 'reader' },
     ])
+    await db.insert(schema.categories).values({
+      id: categoryId,
+      name: 'Fixture',
+      slug: 'fixture',
+    })
+    await db.insert(schema.posts).values({
+      id: postId,
+      categoryId,
+      contentFormat: 'markdown',
+      slug: 'fixture-post',
+      title: 'Fixture post',
+    })
   }, 120_000)
 
   afterAll(async () => {
@@ -192,5 +209,61 @@ describe('Membership + billing webhook event repositories (real PG)', () => {
     const losses = fulfilled.filter((r) => r.value === null)
     expect(wins).toHaveLength(1)
     expect(losses).toHaveLength(1)
+  })
+
+  it('upserts a paid purchase idempotently on (reader_id, post_id)', async () => {
+    const created = await articlePurchaseRepository.upsertPaid({
+      readerId,
+      postId,
+      provider: 'dodo',
+      providerPaymentId: 'pay_1',
+      providerCustomerId: 'cus_1',
+      amount: 500,
+      currency: 'usd',
+    })
+    expect(created.status).toBe('paid')
+
+    await expect(
+      articlePurchaseRepository.findByReaderAndPost(readerId, postId),
+    ).resolves.toEqual(created)
+
+    const updated = await articlePurchaseRepository.upsertPaid({
+      readerId,
+      postId,
+      provider: 'dodo',
+      providerPaymentId: 'pay_2',
+      providerCustomerId: 'cus_1',
+      amount: 500,
+      currency: 'usd',
+    })
+    expect(updated.id).toBe(created.id)
+    expect(updated.providerPaymentId).toBe('pay_2')
+
+    await expect(
+      articlePurchaseRepository.findPaidPostIds(readerId, [postId]),
+    ).resolves.toEqual(new Set([postId]))
+  })
+
+  it('marks a purchase refunded by (provider, provider_payment_id)', async () => {
+    const purchaseReaderId = otherReaderId
+    const created = await articlePurchaseRepository.upsertPaid({
+      readerId: purchaseReaderId,
+      postId,
+      provider: 'dodo',
+      providerPaymentId: 'pay_refund',
+      amount: 500,
+      currency: 'usd',
+    })
+
+    const refunded = await articlePurchaseRepository.markRefunded(
+      'dodo',
+      'pay_refund',
+    )
+    expect(refunded?.id).toBe(created.id)
+    expect(refunded?.status).toBe('refunded')
+
+    await expect(
+      articlePurchaseRepository.findPaidPostIds(purchaseReaderId, [postId]),
+    ).resolves.toEqual(new Set())
   })
 })

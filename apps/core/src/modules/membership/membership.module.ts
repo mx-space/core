@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 
+import { ArticlePurchaseRepository } from './article-purchase.repository'
 import { BillingWebhookEventRepository } from './billing-webhook-event.repository'
 import { EntitlementService } from './entitlement.service'
 import { MembershipController } from './membership.controller'
@@ -17,6 +18,7 @@ import { SponsorsService } from './sponsors.service'
     SponsorsService,
     EntitlementService,
     MembershipRepository,
+    ArticlePurchaseRepository,
     BillingWebhookEventRepository,
     AppleProvider,
     DodoProvider,
