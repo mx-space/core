@@ -10,7 +10,7 @@ Spec（唯一权威）：`docs/superpowers/specs/2026-09-14-premium-article-v2-d
 - Core 响应遵守 `{ data, meta }` envelope（CLAUDE.md「API Response Rules」）；错误用 `AppException` 子类
 - Migration 用 `mx-migration-author` skill 规则：expand-only，可与旧 pod 共存
 - 不引入新依赖
-- Yohaku 仓库：`/Users/innei/git/innei-repo/Yohaku`，工作分支由 controller 指定；api-client 通过 `pnpm link` 到 `mx-core/packages/api-client`（先 `pnpm -C packages/api-client build`）
+- Yohaku 仓库：`/Users/innei/git/innei-repo/Yohaku`，分支 main；api-client 使用已发布的 `@mx-space/api-client@5.10.0`（Task 5 后发版）
 - Yohaku 设计约束：`Yohaku/DESIGN.md` §3–§5（neutral-N、accent、禁 `shadow-lg`、`rounded-xl` 上限、CJK 字体）
 
 ## Task 1: Core — article_purchases 表、配置、可用性
