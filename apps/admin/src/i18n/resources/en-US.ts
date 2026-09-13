@@ -2636,6 +2636,16 @@ export const enUS = {
     'Create an API key in the selected provider dashboard. Saved keys remain hidden.',
   'settings.membership.apiKey.label': 'API key',
   'settings.membership.apiKey.placeholder': 'Paste the provider API key',
+  'settings.membership.articlePurchase.description':
+    'Let readers unlock a single premium article permanently, without a subscription.',
+  'settings.membership.articlePurchase.enabled.label': 'Enable',
+  'settings.membership.articlePurchase.price.label': 'Price',
+  'settings.membership.articlePurchase.price.unset': '—',
+  'settings.membership.articlePurchase.productId.description':
+    'Use a one-time payment product for single-article purchases.',
+  'settings.membership.articlePurchase.productId.label': 'Product ID',
+  'settings.membership.articlePurchase.productId.placeholder': 'pdt_…',
+  'settings.membership.articlePurchase.title': 'Single article purchase',
   'settings.membership.configuration.complete': 'Ready to enable',
   'settings.membership.configuration.incomplete':
     'Complete the required setup before enabling memberships.',

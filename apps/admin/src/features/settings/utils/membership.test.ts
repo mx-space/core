@@ -37,6 +37,7 @@ describe('getMembershipSetupChecks', () => {
       ),
     ).toEqual({
       apiKey: true,
+      articleProduct: true,
       product: true,
       provider: true,
       webhookSigningKey: true,
@@ -59,6 +60,36 @@ describe('getMembershipSetupChecks', () => {
     )
 
     expect(Object.values(checks).every(Boolean)).toBe(true)
+  })
+
+  it('requires an article product id only when single article purchase is enabled', () => {
+    const status = {
+      apiKeyConfigured: true,
+      supportedProviders: ['dodo'],
+      webhookSigningKeyConfigured: true,
+    }
+
+    expect(
+      getMembershipSetupChecks(
+        { articlePurchaseEnabled: true, provider: 'dodo' },
+        status,
+      ).articleProduct,
+    ).toBe(false)
+
+    expect(
+      getMembershipSetupChecks(
+        {
+          articleProductId: 'pdt_article',
+          articlePurchaseEnabled: true,
+          provider: 'dodo',
+        },
+        status,
+      ).articleProduct,
+    ).toBe(true)
+
+    expect(
+      getMembershipSetupChecks({ provider: 'dodo' }, status).articleProduct,
+    ).toBe(true)
   })
 })
 

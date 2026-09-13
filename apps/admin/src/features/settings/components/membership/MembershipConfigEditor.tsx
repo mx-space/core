@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { getMembershipConfigStatus } from '~/api/membership'
+import { getMembershipConfigStatus, getMembershipPlans } from '~/api/membership'
 import type { ConfigFormField } from '~/api/options'
 import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
@@ -114,6 +114,14 @@ function SecretField(props: {
   )
 }
 
+function formatArticlePrice(price?: { amount: number; currency: string }) {
+  if (!price) return null
+  return new Intl.NumberFormat(undefined, {
+    currency: price.currency,
+    style: 'currency',
+  }).format(price.amount / 100)
+}
+
 function getStringOptions(fields: ConfigFormField[], key: string) {
   const options = fields.find((field) => field.key === key)?.ui.options ?? []
   return options.flatMap((option) =>
@@ -132,6 +140,10 @@ export function MembershipConfigEditor(props: {
   const statusQuery = useQuery({
     queryFn: getMembershipConfigStatus,
     queryKey: adminQueryKeys.settings.membershipConfigStatus(),
+  })
+  const plansQuery = useQuery({
+    queryFn: getMembershipPlans,
+    queryKey: adminQueryKeys.settings.membershipPlans(),
   })
 
   const provider = props.value.provider || 'dodo'
@@ -331,6 +343,52 @@ export function MembershipConfigEditor(props: {
             <p className="text-xs leading-5 text-fg-muted">
               {t('settings.membership.products.yearly.description')}
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-5 border-b border-border py-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
+        <GuideSectionHeading
+          description={t('settings.membership.articlePurchase.description')}
+          icon={PackageOpen}
+          title={t('settings.membership.articlePurchase.title')}
+        />
+        <div className="min-w-0 space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-medium text-fg">
+              {t('settings.membership.articlePurchase.enabled.label')}
+            </span>
+            <Toggle
+              aria-label={t(
+                'settings.membership.articlePurchase.enabled.label',
+              )}
+              checked={Boolean(props.value.articlePurchaseEnabled)}
+              onCheckedChange={(enabled) =>
+                update('articlePurchaseEnabled', enabled)
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <TextInput
+              label={t('settings.membership.articlePurchase.productId.label')}
+              onChange={(value) => update('articleProductId', value)}
+              placeholder={t(
+                'settings.membership.articlePurchase.productId.placeholder',
+              )}
+              value={props.value.articleProductId ?? ''}
+            />
+            <p className="text-xs leading-5 text-fg-muted">
+              {t('settings.membership.articlePurchase.productId.description')}
+            </p>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium text-fg">
+              {t('settings.membership.articlePurchase.price.label')}
+            </span>
+            <span className="text-fg-muted">
+              {formatArticlePrice(plansQuery.data?.articlePurchase?.price) ??
+                t('settings.membership.articlePurchase.price.unset')}
+            </span>
           </div>
         </div>
       </section>

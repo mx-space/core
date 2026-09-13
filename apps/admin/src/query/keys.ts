@@ -282,6 +282,7 @@ export const adminQueryKeys = {
     authSecurity: () => ['settings', 'account', 'auth-security'] as const,
     membershipConfigStatus: () =>
       ['settings', 'membership-config-status'] as const,
+    membershipPlans: () => ['settings', 'membership-plans'] as const,
     oauth: () => ['settings', 'account', 'oauth'] as const,
     options: () => ['settings', 'options'] as const,
     owner: () => ['settings', 'owner'] as const,

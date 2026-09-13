@@ -11,9 +11,11 @@ import { MEMBERSHIP_WEBHOOK_EVENTS } from '../../utils/membership'
 import { MembershipConfigEditor } from './MembershipConfigEditor'
 
 const getMembershipConfigStatusMock = vi.fn()
+const getMembershipPlansMock = vi.fn()
 
 vi.mock('~/api/membership', () => ({
   getMembershipConfigStatus: () => getMembershipConfigStatusMock(),
+  getMembershipPlans: () => getMembershipPlansMock(),
 }))
 
 vi.mock('~/constants/env', () => ({
@@ -58,6 +60,7 @@ beforeEach(() => {
     supportedProviders: ['dodo'],
     webhookSigningKeyConfigured: true,
   })
+  getMembershipPlansMock.mockResolvedValue({})
   const container = document.createElement('div')
   document.body.append(container)
   harness = { container, root: createRoot(container) }
@@ -110,6 +113,6 @@ describe('MembershipConfigEditor', () => {
     for (const event of MEMBERSHIP_WEBHOOK_EVENTS) {
       expect(harness.container.textContent).toContain(event)
     }
-    expect(harness.container.textContent).toContain('已完成 4/4 个必要步骤')
+    expect(harness.container.textContent).toContain('已完成 5/5 个必要步骤')
   })
 })

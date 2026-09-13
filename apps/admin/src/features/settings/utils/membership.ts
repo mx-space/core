@@ -16,6 +16,8 @@ export interface MembershipConfigValue {
   appleMonthlyProductId?: string
   applePrivateKey?: string
   appleYearlyProductId?: string
+  articleProductId?: string
+  articlePurchaseEnabled?: boolean
   enabled?: boolean
   environment?: string
   monthlyProductId?: string
@@ -77,6 +79,9 @@ export function getMembershipSetupChecks(
 
   return {
     apiKey: hasApiKey,
+    articleProduct: config.articlePurchaseEnabled
+      ? Boolean(config.articleProductId?.trim())
+      : true,
     product: Boolean(
       config.monthlyProductId?.trim() || config.yearlyProductId?.trim(),
     ),

@@ -2500,6 +2500,16 @@ export const zhCN = {
     '在所选支付平台的开发者设置中创建 API Key。已保存的密钥不会再次显示。',
   'settings.membership.apiKey.label': 'API Key',
   'settings.membership.apiKey.placeholder': '粘贴支付平台 API Key',
+  'settings.membership.articlePurchase.description':
+    '让读者无需订阅即可永久解锁单篇赞助者文章。',
+  'settings.membership.articlePurchase.enabled.label': '启用',
+  'settings.membership.articlePurchase.price.label': '价格',
+  'settings.membership.articlePurchase.price.unset': '—',
+  'settings.membership.articlePurchase.productId.description':
+    '使用一次性付款商品用于单篇文章购买。',
+  'settings.membership.articlePurchase.productId.label': '商品 ID',
+  'settings.membership.articlePurchase.productId.placeholder': 'pdt_…',
+  'settings.membership.articlePurchase.title': '单篇文章购买',
   'settings.membership.configuration.complete': '可以启用',
   'settings.membership.configuration.incomplete':
     '完成必要配置后才能启用付费会员。',

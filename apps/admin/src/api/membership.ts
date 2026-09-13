@@ -10,3 +10,17 @@ export interface MembershipConfigStatus {
 export function getMembershipConfigStatus() {
   return getJson<MembershipConfigStatus>('/membership/config-status')
 }
+
+export interface MembershipPlansResponse {
+  articlePurchase?: {
+    enabled: boolean
+    price?: {
+      amount: number
+      currency: string
+    }
+  }
+}
+
+export function getMembershipPlans() {
+  return getJson<MembershipPlansResponse>('/membership/plans')
+}
