@@ -6,7 +6,6 @@ import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { DEFAULT_FREE_WINDOW_HOURS } from './paywall-meta'
 import type { PremiumStatus } from './premium-status'
 
 const PRESETS = ['0', '24', '48', '72', '168'] as const
@@ -75,6 +74,8 @@ function PendingControls(props: {
         <TextInput
           controlClassName="h-9 focus:border-neutral-400"
           inputMode="numeric"
+          min={0}
+          type="number"
           label={t('write.premium.freeWindow.customHours')}
           onChange={props.onChange}
           value={props.freeWindowHours}
@@ -154,9 +155,7 @@ export function FreeWindowSection(props: {
       </span>
       {props.status.kind === 'pending' ? (
         <PendingControls
-          freeWindowHours={
-            props.freeWindowHours || String(DEFAULT_FREE_WINDOW_HOURS)
-          }
+          freeWindowHours={props.freeWindowHours}
           onChange={props.onFreeWindowHoursChange}
         />
       ) : (
