@@ -8,7 +8,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 
 import type { PublishAiResource, PublishTask } from '~/api/publish-jobs'
@@ -69,6 +69,7 @@ const queryParams = {
   type: 'content:publish',
 }
 const DISMISSED_PUBLISH_TASKS_KEY = 'dismissed-publish-task-ids'
+const AUTO_DISMISS_COMPLETED_MS = 8000
 
 export function openPublishProcessDock() {
   window.dispatchEvent(new Event('mx-admin:open-publish-dock'))
@@ -82,6 +83,8 @@ export function PublishProcessDock() {
     [],
   )
   const dismissed = useMemo(() => new Set(dismissedIds), [dismissedIds])
+  const dismissedIdsRef = useRef(dismissedIds)
+  dismissedIdsRef.current = dismissedIds
   const { socketConnected } = useTaskListSubscription()
   const tasksQuery = useQuery({
     queryFn: () => getTasks<PublishTask>(queryParams),
@@ -99,7 +102,28 @@ export function PublishProcessDock() {
   const tasks = (tasksQuery.data?.data ?? []).filter(
     (task) => !dismissed.has(task.id),
   )
+  const completedKey = tasks
+    .filter((task) => getPhase(task) === 'completed')
+    .map((task) => task.id)
+    .join(',')
+
+  useEffect(() => {
+    if (open || !completedKey) return
+    const timer = window.setTimeout(() => {
+      setDismissedIds([
+        ...new Set([...dismissedIdsRef.current, ...completedKey.split(',')]),
+      ])
+    }, AUTO_DISMISS_COMPLETED_MS)
+    return () => window.clearTimeout(timer)
+  }, [completedKey, open, setDismissedIds])
+
   if (!tasks.length) return null
+
+  const finishedIds = tasks
+    .filter((task) => !isActiveTask(task))
+    .map((task) => task.id)
+  const dismissAll = () =>
+    setDismissedIds([...new Set([...dismissedIds, ...finishedIds])])
 
   const current = tasks.find(isActiveTask) ?? tasks[0]
   const phase = getPhase(current)
@@ -148,7 +172,18 @@ export function PublishProcessDock() {
           sideOffset={8}
           width="lg"
         >
-          <Popover.Header>{t('write.publishProcess.title')}</Popover.Header>
+          <Popover.Header>
+            <span>{t('write.publishProcess.title')}</span>
+            {finishedIds.length ? (
+              <Button
+                className="h-6 px-2 text-xs normal-case tracking-normal"
+                onClick={dismissAll}
+                variant="ghost"
+              >
+                {t('write.publishProcess.clearFinished')}
+              </Button>
+            ) : null}
+          </Popover.Header>
           <Popover.Body className="max-h-[min(64svh,34rem)] overflow-y-auto p-0">
             {tasks.map((task) => (
               <ProcessDetail

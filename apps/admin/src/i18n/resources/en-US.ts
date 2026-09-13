@@ -3565,6 +3565,7 @@ export const enUS = {
     'The publish task could not start. The draft was saved.',
   'write.publishProcess.cancelled': 'Publish task stopped',
   'write.publishProcess.cancelling': 'Stopping publish task',
+  'write.publishProcess.clearFinished': 'Clear finished',
   'write.publishProcess.completed': 'Publishing completed',
   'write.publishProcess.failed': 'Publish task failed',
   'write.publishProcess.firstPublished': 'Article published',

@@ -3393,6 +3393,7 @@ export const zhCN = {
   'write.publishProcess.acceptFailed': '发布任务未能开始，草稿已保存',
   'write.publishProcess.cancelled': '发布任务已停止',
   'write.publishProcess.cancelling': '正在终止发布任务',
+  'write.publishProcess.clearFinished': '清理已结束',
   'write.publishProcess.completed': '发布已完成',
   'write.publishProcess.failed': '发布任务失败',
   'write.publishProcess.firstPublished': '文章已发布',
