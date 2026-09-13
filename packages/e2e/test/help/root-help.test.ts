@@ -18,7 +18,7 @@ const REGISTERED_GROUPS = [
   'ai',
   'config',
   'skill',
-  'preview',
+  'author',
   'update',
 ] as const
 
