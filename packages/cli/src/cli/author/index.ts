@@ -16,6 +16,7 @@ import {
   resolveAuthorSpaDir,
 } from './paths'
 import { startAuthorServer } from './server'
+import { watchAuthorFile } from './watch'
 
 registerCommandHelp({
   name: 'author',
@@ -38,6 +39,11 @@ registerCommandHelp({
       description:
         'editor variant for raw fragments; envelopes use the root tag',
     },
+    {
+      flag: '--base <file>',
+      description:
+        'pre-edit copy of <file>; changed blocks open as inline diff notes and the sidecar diff is taken against it',
+    },
   ],
 })
 
@@ -47,6 +53,7 @@ const noOpenOpt = Options.boolean('no-open').pipe(Options.optional)
 const variantOpt = Options.choice('variant', ['article', 'note']).pipe(
   Options.optional,
 )
+const baseOpt = Options.file('base').pipe(Options.optional)
 
 export const authorCmd = Command.make(
   'author',
@@ -55,8 +62,9 @@ export const authorCmd = Command.make(
     port: portOpt,
     noOpen: noOpenOpt,
     variant: variantOpt,
+    base: baseOpt,
   },
-  ({ file, port, noOpen, variant }) =>
+  ({ file, port, noOpen, variant, base }) =>
     Effect.gen(function* () {
       const renderer = yield* Renderer
       const lexical = yield* Lexical
@@ -80,15 +88,20 @@ export const authorCmd = Command.make(
         )
       }
 
-      const source = yield* fs.readFileString(file).pipe(
-        Effect.mapError(
-          (err) =>
-            new Generic({
-              message: `cannot read ${file}: ${err.message}`,
-              cause: err,
-            }),
-        ),
-      )
+      const readText = (path: string) =>
+        fs.readFileString(path).pipe(
+          Effect.mapError(
+            (err) =>
+              new Generic({
+                message: `cannot read ${path}: ${err.message}`,
+                cause: err,
+              }),
+          ),
+        )
+      const source = yield* readText(file)
+      const basePath = Option.getOrUndefined(base)
+      const baseSource =
+        basePath === undefined ? undefined : yield* readText(basePath)
 
       const cliRoot = findCliPackageRoot(import.meta.url)
       if (!cliRoot) {
@@ -128,19 +141,29 @@ export const authorCmd = Command.make(
         throw err instanceof Error ? err : new Error(String(err))
       }
 
-      yield* Effect.try({
+      const baseLexical = yield* Effect.try({
         try: () => {
-          doc.originalBody = runXml(
-            lexical.payloadToLitexml(
-              runXml(lexical.litexmlToPayload(doc.originalBody)),
-            ),
+          const baseBody =
+            basePath === undefined || baseSource === undefined
+              ? undefined
+              : openAuthorDocument(
+                  basePath,
+                  baseSource,
+                  Option.getOrUndefined(variant),
+                ).originalBody
+          const parsed = runXml(
+            lexical.litexmlToPayload(baseBody ?? doc.originalBody),
           )
+          doc.originalBody = runXml(lexical.payloadToLitexml(parsed))
+          return baseBody === undefined ? undefined : parsed
         },
         catch: (err) =>
-          new ValidationXml({
-            message: err instanceof Error ? err.message : String(err),
-            cause: err,
-          }),
+          err instanceof ValidationXml
+            ? err
+            : new ValidationXml({
+                message: err instanceof Error ? err.message : String(err),
+                cause: err,
+              }),
       })
 
       const server = yield* Effect.tryPromise({
@@ -150,6 +173,8 @@ export const authorCmd = Command.make(
             spaDir,
             port: listenPort,
             fs: nodeAuthorFs,
+            base: baseLexical,
+            log: (line) => Effect.runSync(renderer.emitInfo(line)),
             codec: {
               litexmlToLexical: (xml) => runXml(lexical.litexmlToPayload(xml)),
               lexicalToLitexml: (state) =>
@@ -163,6 +188,8 @@ export const authorCmd = Command.make(
           }),
       })
 
+      const watcher = watchAuthorFile(file, server.pushRevision)
+
       const url = `http://127.0.0.1:${server.port}`
       yield* renderer.emitInfo(`mxs author ${url}`)
       yield* renderer.emitInfo(`saving writes ${file} and ${file}.diff`)
@@ -173,6 +200,7 @@ export const authorCmd = Command.make(
 
       yield* Effect.async<void, Generic>((resume) => {
         const stop = () => {
+          watcher.close()
           void server.close().then(
             () => resume(Effect.void),
             (err) =>

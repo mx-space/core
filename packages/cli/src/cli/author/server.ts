@@ -6,6 +6,8 @@ import {
 } from 'node:http'
 import { extname, join, normalize, relative, sep } from 'node:path'
 
+import type { LexicalState } from '../../services/Lexical'
+import { annotateDiffNotes, resolveDiffNotes } from './diff-note'
 import {
   applyAuthorBody,
   type AuthorDocument,
@@ -26,11 +28,20 @@ export interface AuthorServerOptions {
   readonly codec: AuthorCodec
   readonly fs: AuthorFs
   readonly port: number
+  readonly base?: LexicalState
+  readonly log?: (line: string) => void
 }
 
 export interface AuthorServer {
   readonly port: number
   readonly close: () => Promise<void>
+  readonly pushRevision: (fileText: string) => void
+}
+
+interface LiveState {
+  revision: number
+  lastRemoteText: string | null
+  client: ServerResponse | null
 }
 
 const MIME: Record<string, string> = {
@@ -46,9 +57,15 @@ const MIME: Record<string, string> = {
 export async function startAuthorServer(
   options: AuthorServerOptions,
 ): Promise<AuthorServer> {
-  const { doc, spaDir, codec, fs } = options
+  const { doc, spaDir, codec, fs, base, log = () => undefined } = options
+  const live: LiveState = { revision: 0, lastRemoteText: null, client: null }
   const server = createServer((req, res) => {
-    void handle(req, res, { doc, spaDir, codec, fs, port: listeningPort })
+    void handle(
+      req,
+      res,
+      { doc, spaDir, codec, fs, base, log, port: listeningPort },
+      live,
+    )
   })
 
   let listeningPort = options.port
@@ -65,15 +82,43 @@ export async function startAuthorServer(
     port: listeningPort,
     close: () =>
       new Promise((resolve, reject) => {
+        live.client?.end()
         server.close((err) => (err ? reject(err) : resolve()))
       }),
+    pushRevision: (fileText) => {
+      if (fileText === doc.lastFileText || fileText === live.lastRemoteText) {
+        return
+      }
+      live.lastRemoteText = fileText
+      let lexical: unknown
+      try {
+        lexical = codec.litexmlToLexical(
+          currentAuthorBody({ ...doc, lastFileText: fileText }),
+        )
+      } catch (err) {
+        log(`revision rejected: ${messageOf(err)}`)
+        return
+      }
+      doc.lastFileText = fileText
+      live.revision += 1
+      if (!live.client) {
+        log(`revision ${live.revision} pending (no editor connected)`)
+        return
+      }
+      sendEvent(live.client, 'revision', { revision: live.revision, lexical })
+    },
   }
+}
+
+const sendEvent = (res: ServerResponse, event: string, data: unknown) => {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
 }
 
 const handle = async (
   req: IncomingMessage,
   res: ServerResponse,
-  ctx: AuthorServerOptions,
+  ctx: Required<Pick<AuthorServerOptions, 'log'>> & AuthorServerOptions,
+  live: LiveState,
 ): Promise<void> => {
   const host = req.headers.host ?? ''
   if (!isLocalHost(host, ctx.port)) {
@@ -89,11 +134,16 @@ const handle = async (
   const url = new URL(req.url ?? '/', `http://127.0.0.1:${ctx.port}`)
   if (url.pathname === '/api/document' && req.method === 'GET') {
     try {
-      const lexical = ctx.codec.litexmlToLexical(currentAuthorBody(ctx.doc))
+      const current = ctx.codec.litexmlToLexical(currentAuthorBody(ctx.doc))
+      const lexical =
+        ctx.base && !ctx.doc.saved
+          ? annotateDiffNotes(ctx.base, current as LexicalState)
+          : current
       json(res, 200, {
         lexical,
         variant: ctx.doc.variant,
         fileName: ctx.doc.filePath.split(/[/\\]/).pop(),
+        revision: live.revision,
       })
     } catch (err) {
       json(res, 400, { error: { message: messageOf(err) } })
@@ -105,7 +155,9 @@ const handle = async (
     try {
       const raw = await readBody(req)
       const parsed = JSON.parse(raw) as { lexical?: unknown }
-      const body = ctx.codec.lexicalToLitexml(parsed.lexical)
+      const body = ctx.codec.lexicalToLitexml(
+        resolveDiffNotes(parsed.lexical, 'original'),
+      )
       json(res, 200, { ok: true, applied: setAuthorBaseline(ctx.doc, body) })
     } catch (err) {
       json(res, 400, { error: { message: messageOf(err) } })
@@ -117,10 +169,48 @@ const handle = async (
     try {
       const raw = await readBody(req)
       const parsed = JSON.parse(raw) as { lexical?: unknown }
-      const body = ctx.codec.lexicalToLitexml(parsed.lexical)
+      const body = ctx.codec.lexicalToLitexml(
+        resolveDiffNotes(parsed.lexical, 'proposed'),
+      )
       const applied = applyAuthorBody(ctx.doc, body)
       await persistAuthorSave(ctx.doc, applied.fileText, applied.diff, ctx.fs)
+      ctx.log(`saved ${ctx.doc.filePath}`)
       json(res, 200, { ok: true, diffPath: applied.diffPath })
+    } catch (err) {
+      json(res, 400, { error: { message: messageOf(err) } })
+    }
+    return
+  }
+
+  if (url.pathname === '/api/events' && req.method === 'GET') {
+    if (live.client) {
+      json(res, 409, { error: { message: 'another editor is connected' } })
+      return
+    }
+    res.writeHead(200, {
+      'content-type': 'text/event-stream',
+      'cache-control': 'no-cache',
+      connection: 'keep-alive',
+    })
+    res.write(': connected\n\n')
+    live.client = res
+    req.on('close', () => {
+      if (live.client === res) live.client = null
+    })
+    return
+  }
+
+  if (url.pathname === '/api/ack' && req.method === 'POST') {
+    try {
+      const raw = await readBody(req)
+      const parsed = JSON.parse(raw) as {
+        revision?: number
+        conflicts?: number
+      }
+      ctx.log(
+        `revision ${parsed.revision ?? '?'} applied, ${parsed.conflicts ?? 0} conflicts`,
+      )
+      json(res, 200, { ok: true })
     } catch (err) {
       json(res, 400, { error: { message: messageOf(err) } })
     }

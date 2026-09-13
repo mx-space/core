@@ -129,7 +129,7 @@ export function unifiedDiff(
   return `${header}${hunk.join('\n')}\n`
 }
 
-const diffLines = (
+export const diffLines = (
   a: readonly string[],
   b: readonly string[],
 ): ReadonlyArray<readonly ['eq' | 'del' | 'add', string]> => {

@@ -1,7 +1,13 @@
+import { AgentDiffEditNode } from '@haklex/rich-ext-ai-agent'
 import type { SerializedEditorState } from 'lexical'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { RichEditor } from '../vendor/rich-editor/core/RichEditor'
+import { DiffNotePlugin } from './DiffNotePlugin'
+import { blocksOf, resolveToProposed } from './merge'
+import { type RevisionInfo, RevisionSyncPlugin } from './RevisionSyncPlugin'
+
+const extraNodes = [AgentDiffEditNode]
 
 type Variant = 'article' | 'note'
 
@@ -47,6 +53,8 @@ export function AuthorApp() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const hydrated = useRef(false)
+  const base = useRef<ReturnType<typeof blocksOf>>([])
+  const [revision, setRevision] = useState<RevisionInfo | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -99,6 +107,8 @@ export function AuthorApp() {
         throw new Error(json.error?.message ?? `save failed (${res.status})`)
       }
       setSaved(JSON.stringify(state))
+      base.current = resolveToProposed(blocksOf(state))
+      setRevision((prev) => (prev ? { ...prev, conflicts: 0 } : prev))
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -152,6 +162,12 @@ export function AuthorApp() {
           <span className="size-1.5 shrink-0 rounded-full bg-accent" />
         ) : null}
         <span className="truncate text-sm text-fg-muted">{doc.fileName}</span>
+        {revision ? (
+          <span className="shrink-0 text-xs text-fg-subtle">
+            rev {revision.revision}
+            {revision.conflicts > 0 ? ` · ${revision.conflicts} 处冲突` : ''}
+          </span>
+        ) : null}
         {saveError ? (
           <span className="min-w-0 flex-1 truncate text-sm text-red-700 dark:text-red-400">
             {saveError}
@@ -175,12 +191,14 @@ export function AuthorApp() {
         <RichEditor
           theme={theme}
           variant={doc.variant}
+          extraNodes={extraNodes}
           initialValue={doc.lexical}
           onChange={(value) => {
             setState(value)
             if (!hydrated.current) {
               hydrated.current = true
               setSaved(JSON.stringify(value))
+              base.current = resolveToProposed(blocksOf(value))
               void fetch('/api/baseline', {
                 method: 'PUT',
                 headers: { 'content-type': 'application/json' },
@@ -188,7 +206,10 @@ export function AuthorApp() {
               })
             }
           }}
-        />
+        >
+          <DiffNotePlugin />
+          <RevisionSyncPlugin base={base} onRevision={setRevision} />
+        </RichEditor>
       </div>
     </div>
   )

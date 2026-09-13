@@ -69,7 +69,9 @@ describe('startAuthorServer', () => {
     }
   })
 
+  const logs: string[] = []
   const boot = async (source: string, fileName = 'article.xml') => {
+    logs.length = 0
     const dir = await mkdtemp(join(tmpdir(), 'mxs-author-'))
     const spaDir = join(dir, 'spa')
     const { mkdir } = await import('node:fs/promises')
@@ -84,6 +86,7 @@ describe('startAuthorServer', () => {
       codec: fakeCodec,
       fs: nodeAuthorFs,
       port: 0,
+      log: (line) => logs.push(line),
     })
     closers.push(server.close)
     return { ...server, filePath, dir }
@@ -103,6 +106,7 @@ describe('startAuthorServer', () => {
       lexical: { xml: '<p>hi</p>' },
       variant: 'article',
       fileName: 'article.xml',
+      revision: 0,
     })
   })
 
@@ -216,5 +220,52 @@ describe('startAuthorServer', () => {
     })
     expect(res.status).toBe(200)
     expect(res.body).toContain('author')
+  })
+
+  it('streams an external revision over SSE and logs the ack', async () => {
+    const { port, pushRevision } = await boot(
+      '<mxpost><meta><title>t</title></meta><content><p>hi</p></content></mxpost>',
+    )
+    const events: string[] = []
+    const stream = await new Promise<import('node:http').IncomingMessage>(
+      (resolve) => {
+        http
+          .get(
+            { host: '127.0.0.1', port, path: '/api/events' },
+            resolve,
+          )
+          .end()
+      },
+    )
+    stream.on('data', (chunk: Buffer) => events.push(chunk.toString()))
+    await new Promise((r) => setTimeout(r, 20))
+
+    pushRevision(
+      '<mxpost><meta><title>t</title></meta><content><p>agent</p></content></mxpost>',
+    )
+    await new Promise((r) => setTimeout(r, 20))
+    const payload = events.join('')
+    expect(payload).toContain('event: revision')
+    expect(payload).toContain('"revision":1')
+    expect(payload).toContain('<p>agent</p>')
+
+    const ack = await rawRequest({
+      port,
+      method: 'POST',
+      url: '/api/ack',
+      headers: { host: `127.0.0.1:${port}` },
+      body: JSON.stringify({ revision: 1, conflicts: 2 }),
+    })
+    expect(ack.status).toBe(200)
+    expect(logs).toContain('revision 1 applied, 2 conflicts')
+    stream.destroy()
+  })
+
+  it('ignores a revision equal to its own last save', async () => {
+    const source =
+      '<mxpost><meta><title>t</title></meta><content><p>hi</p></content></mxpost>'
+    const { pushRevision } = await boot(source)
+    pushRevision(source)
+    expect(logs).toEqual([])
   })
 })
