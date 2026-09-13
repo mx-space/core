@@ -178,7 +178,7 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       new Co().use(precheck, noteAndPostHandler).start(doc)
     }
 
-    const publicContentEvents = new Set([
+    const publicContentEvents = new Set<string>([
       BusinessEvents.NOTE_CREATE,
       BusinessEvents.NOTE_REPUBLISH,
       BusinessEvents.POST_CREATE,
