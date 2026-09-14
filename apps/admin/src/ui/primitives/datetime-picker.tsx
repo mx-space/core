@@ -53,6 +53,31 @@ function toDatetimeLocal(date: Date): string {
   return offset.toISOString().slice(0, 16)
 }
 
+const TIME_INTERVAL = 30
+
+export const TIME_OPTIONS = Array.from(
+  { length: (24 * 60) / TIME_INTERVAL },
+  (_, i) => {
+    const hours = Math.floor((i * TIME_INTERVAL) / 60)
+    const minutes = (i * TIME_INTERVAL) % 60
+    return {
+      hours,
+      minutes,
+      label: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`,
+    }
+  },
+)
+
+export function applyTime(
+  base: Date | null,
+  hours: number,
+  minutes: number,
+): string {
+  const merged = new Date(base ?? Date.now())
+  merged.setHours(hours, minutes, 0, 0)
+  return toDatetimeLocal(merged)
+}
+
 function isSameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -113,10 +138,9 @@ export function DateTimePicker(props: DateTimePickerProps) {
   )
 
   const {
-    data: { calendars, weekDays, time, months, years },
+    data: { calendars, weekDays, months, years },
     propGetters: {
       dayButton,
-      timeButton,
       monthButton,
       yearButton,
       addOffset,
@@ -130,7 +154,6 @@ export function DateTimePicker(props: DateTimePickerProps) {
     offsetDate,
     onOffsetChange: setOffsetDate,
     dates: { mode: 'single', minDate, maxDate, toggle: false },
-    time: { interval: 30 },
     years: { mode: 'decade', numberOfYears: 12, step: 10 },
     locale: { locale: 'zh-CN' },
   })
@@ -344,22 +367,38 @@ export function DateTimePicker(props: DateTimePickerProps) {
                     {t('ui.datetimePicker.time')}
                   </div>
                   <div className="grid max-h-56 grid-cols-1 gap-0.5 overflow-y-auto px-2 pb-2">
-                    {time.map((t) => (
-                      <button
-                        {...timeButton(t)}
-                        className={cn(
-                          'rounded-sm px-2 py-1 text-xs transition-colors',
-                          t.selected
-                            ? 'bg-accent text-white'
-                            : 'text-fg-muted hover:bg-surface-inset',
-                          t.disabled && 'cursor-not-allowed opacity-40',
-                        )}
-                        key={t.time}
-                        type="button"
-                      >
-                        {t.time}
-                      </button>
-                    ))}
+                    {TIME_OPTIONS.map((option) => {
+                      const selected =
+                        !!current &&
+                        current.getHours() === option.hours &&
+                        current.getMinutes() === option.minutes
+                      const candidate = new Date(current ?? Date.now())
+                      candidate.setHours(option.hours, option.minutes, 0, 0)
+                      const outOfRange =
+                        (!!minDate && candidate < minDate) ||
+                        (!!maxDate && candidate > maxDate)
+                      return (
+                        <button
+                          className={cn(
+                            'rounded-sm px-2 py-1 text-xs transition-colors',
+                            selected
+                              ? 'bg-accent text-white'
+                              : 'text-fg-muted hover:bg-surface-inset',
+                            outOfRange && 'cursor-not-allowed opacity-40',
+                          )}
+                          disabled={outOfRange}
+                          key={option.label}
+                          onClick={() =>
+                            onChange(
+                              applyTime(current, option.hours, option.minutes),
+                            )
+                          }
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
