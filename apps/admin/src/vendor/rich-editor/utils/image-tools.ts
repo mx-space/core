@@ -37,7 +37,7 @@ export function buildImageTools({
       name: GENERATE_TOOL,
       description:
         '根据文字描述生成一张图片，用于插入正文。生成完成后返回图片 URL；' +
-        '拿到 URL 后需再调用 insert_node，用 <img src="URL" alt="..." /> 将图片插入文档，本工具本身不会修改文档。',
+        '拿到 URL 后用 bash 把 <img src="URL" alt="..." /> 写入 /doc.xml，本工具本身不会修改文档。',
       parameters: {
         additionalProperties: false,
         properties: {
@@ -77,7 +77,7 @@ export function buildImageTools({
           const result = await waitForImageTask(taskId)
 
           return {
-            content: `Generated image ready at URL: ${result.url}\nTo insert it into the document, call insert_node with xml: <img src="${result.url}" alt="..." />.`,
+            content: `Generated image ready at URL: ${result.url}\nTo insert it into the document, edit /doc.xml with bash and add <img src="${result.url}" alt="..." />.`,
             ok: true,
           }
         } catch (error) {

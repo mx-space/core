@@ -1,4 +1,5 @@
 import type {
+  AgentExecutorPlugin,
   AgentStore,
   AgentToolConfig,
   ChatMessage,
@@ -14,29 +15,38 @@ import type { AgentLitexmlRegistryProvider, AgentLoopHandle } from '../types'
 
 interface AgentLoopCaptureInnerProps {
   editorRef: RefObject<LexicalEditor | null>
+  injectDocumentXml?: boolean
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
+  plugins?: AgentExecutorPlugin[]
   provider: LLMProvider
   store: AgentStore
   tools?: AgentToolConfig[]
+  toolSystemRole?: string | false
   litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
 
 function AgentLoopCaptureInner({
   editorRef,
+  injectDocumentXml,
   onAgentLoopReady,
+  plugins,
   provider,
   store,
   tools,
+  toolSystemRole,
   litexmlRegistry,
   systemMessages,
 }: AgentLoopCaptureInnerProps) {
   const loopOptions = {
+    injectDocumentXml,
+    litexmlRegistry,
+    plugins,
     provider,
     store,
-    tools,
-    litexmlRegistry,
     systemMessages,
+    tools,
+    toolSystemRole,
   }
   const loop = useAgentLoop(loopOptions)
   const [editor] = useLexicalComposerContext()
@@ -55,20 +65,26 @@ function AgentLoopCaptureInner({
 
 export interface AgentLoopCaptureProps {
   editorRef: RefObject<LexicalEditor | null>
+  injectDocumentXml?: boolean
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
+  plugins?: AgentExecutorPlugin[]
   provider: LLMProvider | null
   store: AgentStore
   tools?: AgentToolConfig[]
+  toolSystemRole?: string | false
   litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
 
 export function AgentLoopCapture({
   editorRef,
+  injectDocumentXml,
   onAgentLoopReady,
+  plugins,
   provider,
   store,
   tools,
+  toolSystemRole,
   litexmlRegistry,
   systemMessages,
 }: AgentLoopCaptureProps) {
@@ -82,10 +98,13 @@ export function AgentLoopCapture({
   return (
     <AgentLoopCaptureInner
       editorRef={editorRef}
+      injectDocumentXml={injectDocumentXml}
       onAgentLoopReady={onAgentLoopReady}
+      plugins={plugins}
       provider={provider}
       store={store}
       tools={tools}
+      toolSystemRole={toolSystemRole}
       litexmlRegistry={litexmlRegistry}
       systemMessages={systemMessages}
     />
