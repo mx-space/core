@@ -15,8 +15,11 @@ const createService = () => {
       .mockResolvedValue({ moods: [], weathers: [] }),
   }
   const topicRepository = { findAll: vi.fn().mockResolvedValue([]) }
-  const aiService = {}
-  const configService = {}
+  const generateStructured = vi.fn()
+  const aiService = {
+    getTranslationModel: vi.fn().mockResolvedValue({ generateStructured }),
+  }
+  const configService = { get: vi.fn() }
   const pipeline = {
     hset: vi.fn().mockReturnThis(),
     hdel: vi.fn().mockReturnThis(),
@@ -37,7 +40,15 @@ const createService = () => {
     configService as any,
     redisService as any,
   )
-  return { noteService, pipeline, redis, repository, service }
+  return {
+    configService,
+    generateStructured,
+    noteService,
+    pipeline,
+    redis,
+    repository,
+    service,
+  }
 }
 
 describe('TranslationEntryService', () => {
@@ -112,6 +123,33 @@ describe('TranslationEntryService', () => {
     expect(tags.every((v) => v.keyType === 'dict')).toBe(true)
     expect(tags[0].lookupKey).toBe(
       TranslationEntryService.hashSourceText('机器学习'),
+    )
+  })
+
+  it('sends positional keys to the model and maps translations back by index', async () => {
+    const { configService, generateStructured, repository, service } =
+      createService()
+    configService.get.mockResolvedValue({ translationTargetLanguages: ['en'] })
+    repository.listDistinctPostTags.mockResolvedValue(['工程实践', 'Rust'])
+    repository.listFiltered.mockResolvedValue([])
+    generateStructured.mockResolvedValue({
+      output: { translations: { '0': 'Engineering Practice' } },
+    })
+
+    const result = await service.generateTranslations({
+      keyPaths: ['post.tag'],
+    })
+
+    expect(generateStructured.mock.calls[0][0].prompt).toContain(
+      JSON.stringify({ '0': '工程实践', '1': 'Rust' }),
+    )
+    expect(result).toEqual({ created: 1, skipped: 0 })
+    expect(repository.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        keyPath: 'post.tag',
+        lookupKey: TranslationEntryService.hashSourceText('工程实践'),
+        translatedText: 'Engineering Practice',
+      }),
     )
   })
 

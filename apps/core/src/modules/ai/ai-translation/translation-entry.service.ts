@@ -370,10 +370,11 @@ export class TranslationEntryService {
 
       if (!toTranslate.length) continue
 
+      // ponytail: models drop/mangle 64-hex hash keys, so send positional keys and map back by index
       const fields: Record<string, string> = {}
-      for (const item of toTranslate) {
-        fields[`${item.keyPath}::${item.lookupKey}`] = item.sourceText
-      }
+      toTranslate.forEach((item, index) => {
+        fields[String(index)] = item.sourceText
+      })
 
       try {
         const runtime = await this.aiService.getTranslationModel()
@@ -386,10 +387,13 @@ export class TranslationEntryService {
         })
 
         const translations = result.output.translations
-        for (const item of toTranslate) {
-          const compositeKey = `${item.keyPath}::${item.lookupKey}`
-          const translatedText = translations[compositeKey]
-          if (!translatedText) continue
+        const missing: string[] = []
+        for (const [index, item] of toTranslate.entries()) {
+          const translatedText = translations[String(index)]
+          if (!translatedText) {
+            missing.push(`${item.keyPath}:${item.sourceText}`)
+            continue
+          }
 
           await this.entryRepository.upsert({
             keyPath: item.keyPath,
@@ -414,6 +418,11 @@ export class TranslationEntryService {
         }
 
         await this.cacheDictTranslations(dictCacheEntries)
+        if (missing.length) {
+          this.logger.warn(
+            `${errorLabel} for lang=${lang}: model omitted ${missing.length}/${toTranslate.length} fields: ${missing.slice(0, 10).join(', ')}`,
+          )
+        }
       } catch (error) {
         this.logger.error(
           `${errorLabel} for lang=${lang}: ${(error as Error).message}`,
