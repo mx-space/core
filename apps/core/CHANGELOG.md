@@ -1,3 +1,15 @@
+## [14.12.2](https://github.com/mx-space/core/compare/v14.12.1...v14.12.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* **core:** map translation fields by positional keys ([59a4a2a](https://github.com/mx-space/core/commit/59a4a2a4555438fce351f6f97297b91a4fee0c73))
+
+
+### Features
+
+* **admin:** restyle Switch from lobe-ui and add FormSwitch ([12a3582](https://github.com/mx-space/core/commit/12a3582d835ab0f403802583d830df0e0cc70953))
+
 ## [14.12.1](https://github.com/mx-space/core/compare/v14.12.0...v14.12.1) (2026-09-14)
 
 

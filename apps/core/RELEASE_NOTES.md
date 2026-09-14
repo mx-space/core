@@ -1,12 +1,23 @@
 ## TL;DR
 
-Admin patch release: picking a time in date pickers now applies, and translation entry filters cover post tags and topic descriptions.
+Admin switches now match lobe-ui, and dictionary translation no longer drops fields when the model mangles hash keys.
+
+## Highlights
+
+The admin dashboard Switch control now uses the lobe-ui track, thumb shadow, and press-stretch spring. Labeled settings rows are a separate FormSwitch, so a switch sitting in an existing layout is no longer wrapped in a second title.
+
+Dictionary translation used to send 64-character hash keys that models often dropped or rewrote, leaving tags and other entries untranslated. Fields are now sent by index and mapped back, with a warning when the model still omits a value.
 
 ## Changes
 
-- Admin: choosing a time in the date-time picker (free-window end time, note publish time, membership grants) now updates the value instead of only highlighting it ([c124118](https://github.com/mx-space/core/commit/c12411897deb6bda4fe3cd67892752691473ec16))
-- Admin: translation entry key-path filter exposes `post.tag` and `topic.description` ([5d06ba7](https://github.com/mx-space/core/commit/5d06ba7f2))
+### Features
+
+- Admin Switch matches the lobe-ui control, with FormSwitch for labeled setting rows ([12a3582](https://github.com/mx-space/core/commit/12a3582d835ab0f403802583d830df0e0cc70953))
+
+### Bug Fixes
+
+- Dictionary translation maps model output by field index so hash keys cannot drop entries ([59a4a2a](https://github.com/mx-space/core/commit/59a4a2a4555438fce351f6f97297b91a4fee0c73))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.12.0...v14.12.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.12.1...v14.12.2
