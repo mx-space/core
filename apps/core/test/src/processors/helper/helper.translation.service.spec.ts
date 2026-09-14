@@ -771,6 +771,42 @@ describe('TranslationService', () => {
       expect(r2.isTranslated).toBe(false)
     })
 
+    it('includes translated summary when summary is in fields', async () => {
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        {
+          validTranslations: new Map([
+            [
+              'a1',
+              {
+                title: 'T1',
+                text: 'X1',
+                summary: 'English summary',
+                sourceLang: 'zh',
+                lang: 'en',
+                createdAt: new Date(),
+              },
+            ],
+          ]),
+          staleRefIds: [],
+        },
+      )
+
+      const { results } = await service.collectArticleTranslations({
+        articles: [
+          {
+            id: 'a1',
+            title: 'Title 1',
+            text: 'Text 1',
+            summary: '中文摘要',
+          },
+        ],
+        targetLang: 'en',
+        fields: ['title', 'text', 'summary'],
+      })
+
+      expect(results.get('a1')?.summary).toBe('English summary')
+    })
+
     it('omits untranslated items from meta map', async () => {
       mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
         {

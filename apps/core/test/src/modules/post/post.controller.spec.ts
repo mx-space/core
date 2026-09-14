@@ -166,8 +166,8 @@ describe('PostController.getPaginate', () => {
     expect(res.data[0].content).toBe(lexicalContent)
   })
 
-  it('overwrites title, text, content, category.name in place when translated', async () => {
-    const post = makePost()
+  it('overwrites title, text, summary, content, category.name in place when translated', async () => {
+    const post = makePost({ summary: '中文摘要' })
 
     const translatedResult = {
       isTranslated: true,
@@ -175,7 +175,7 @@ describe('PostController.getPaginate', () => {
       text: 'translated body',
       content: 'translated content',
       contentFormat: 'markdown',
-      summary: null,
+      summary: 'English summary',
       tags: [],
       sourceLang: 'zh',
       translationMeta: {
@@ -206,24 +206,38 @@ describe('PostController.getPaginate', () => {
 
     const entityMap = new Map([[String(post.category!.id), 'Technology']])
 
-    const { controller, enrichmentService } = createController({
-      posts: [post],
-      collectArticleTranslationsFn: async () => ({
-        results: translationResults as any,
-        meta: translationMeta as any,
-      }),
-      getTranslationsBatchFn: async () => ({
-        entityMaps: new Map([['category.name', entityMap]]),
-        dictMaps: new Map(),
-      }),
-    })
+    const { controller, enrichmentService, translationService } =
+      createController({
+        posts: [post],
+        collectArticleTranslationsFn: async () => ({
+          results: translationResults as any,
+          meta: translationMeta as any,
+        }),
+        getTranslationsBatchFn: async () => ({
+          entityMaps: new Map([['category.name', entityMap]]),
+          dictMaps: new Map(),
+        }),
+      })
 
     const res = await controller.getPaginate({} as any, false, 'en')
 
     expect(res.data[0].title).toBe('Translated title')
     expect(res.data[0].text).toBe('translated body')
+    expect(res.data[0].summary).toBe('English summary')
     expect(res.data[0].content).toBe('translated content')
     expect((res.data[0] as any).category.name).toBe('Technology')
+
+    expect(translationService.collectArticleTranslations).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fields: expect.arrayContaining(['summary']),
+        articles: [
+          expect.objectContaining({
+            id: String(post.id),
+            summary: '中文摘要',
+          }),
+        ],
+      }),
+    )
 
     expect(res.meta?.translation).toBeDefined()
     const translationBlock = (res.meta?.translation as any)?.[String(post.id)]
@@ -294,6 +308,37 @@ describe('PostController.getPaginate', () => {
 
     expect(res.data[0].title).toBe('A translated')
     expect(res.data[1].title).toBe('B')
+  })
+
+  it('keeps the original summary when the translation has no summary', async () => {
+    const post = makePost({ summary: '中文摘要' })
+
+    const translationResults = new Map([
+      [
+        String(post.id),
+        {
+          isTranslated: true,
+          title: 'Translated title',
+          text: 'translated body',
+          summary: null,
+          sourceLang: 'zh',
+          availableTranslations: ['en'],
+        },
+      ],
+    ])
+
+    const { controller } = createController({
+      posts: [post],
+      collectArticleTranslationsFn: async () => ({
+        results: translationResults as any,
+        meta: new Map(),
+      }),
+    })
+
+    const res = await controller.getPaginate({} as any, false, 'en')
+
+    expect(res.data[0].title).toBe('Translated title')
+    expect(res.data[0].summary).toBe('中文摘要')
   })
 
   it('fails closed to an empty teaser for a premium post whose content is not a string', async () => {
