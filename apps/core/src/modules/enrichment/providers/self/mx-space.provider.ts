@@ -14,6 +14,7 @@ import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { DatabaseService } from '~/processors/database/database.service'
+import { getPublicText } from '~/processors/helper/lexical-truncate.util'
 
 import type { EnrichmentResult, UrlMatchResult } from '../../enrichment.types'
 import { ENRICHMENT_CATEGORIES } from '../provider.constants'
@@ -158,13 +159,13 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       const category = slugIdx === -1 ? '' : rest.slice(0, slugIdx)
       const slug = slugIdx === -1 ? rest : rest.slice(slugIdx + 1)
       const post = await this.databaseService.findPostBySlug(slug)
-      if (!post) throw new Error(`Post not found: ${rest}`)
+      if (!post || !post.isPublished) throw new Error(`Post not found: ${rest}`)
       const [translatedTitle, aiSummary] = await Promise.all([
         this.lookupTitle(post.id, locale),
-        this.lookupSummary(post.id, locale),
+        post.isPremium ? null : this.lookupSummary(post.id, locale),
       ])
       const description =
-        aiSummary || post.summary || (post.text || '').slice(0, 300) || ''
+        aiSummary || post.summary || getPublicText(post).slice(0, 300) || ''
       return {
         title: translatedTitle || post.title || rest,
         description: description || undefined,
@@ -187,7 +188,7 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       const nid = Number.parseInt(rest, 10)
       if (!Number.isFinite(nid)) throw new Error(`Invalid note nid: ${rest}`)
       const note = await this.databaseService.findNoteByNid(nid)
-      if (!note) throw new Error(`Note not found: ${nid}`)
+      if (!note || !note.isPublished) throw new Error(`Note not found: ${nid}`)
       const [translatedTitle, aiSummary] = await Promise.all([
         this.lookupTitle(note.id, locale),
         this.lookupSummary(note.id, locale),
@@ -222,7 +223,7 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
         Number(day),
         slug,
       )
-      if (!note) throw new Error(`Note not found: ${rest}`)
+      if (!note || !note.isPublished) throw new Error(`Note not found: ${rest}`)
       const [translatedTitle, aiSummary] = await Promise.all([
         this.lookupTitle(note.id, locale),
         this.lookupSummary(note.id, locale),

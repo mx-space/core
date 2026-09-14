@@ -115,8 +115,9 @@ export class HttpCacheInterceptor implements NestInterceptor {
   private isUnsafeForSharedCache(response: any): boolean {
     if (response?.meta?.paywall?.locked === false) return true
 
+    const data = response?.data
     return (
-      response?.data?.isPremium === true &&
+      (data?.is_premium === true || data?.isPremium === true) &&
       response?.meta?.paywall?.locked !== true
     )
   }

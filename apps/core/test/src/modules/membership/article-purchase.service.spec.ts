@@ -65,6 +65,9 @@ describe('ArticlePurchaseService', () => {
     billingWebhookEventRepository.findByProviderAndEventId.mockResolvedValue(
       null,
     )
+    billingWebhookEventRepository.hasProcessedArticleRefund.mockResolvedValue(
+      false,
+    )
     service = new ArticlePurchaseService(
       articlePurchaseRepository,
       billingWebhookEventRepository,
@@ -79,7 +82,10 @@ describe('ArticlePurchaseService', () => {
       provider: 'dodo',
       eventId: 'evt_1',
       type: 'payment.succeeded',
-      payload: { type: 'payment.succeeded' },
+      payload: {
+        type: 'payment.succeeded',
+        _normalizedArticleEvent: { type: 'paid', providerPaymentId: 'pay_1' },
+      },
     })
     expect(articlePurchaseRepository.upsertPaid).toHaveBeenCalledWith({
       readerId: 'reader-1',
@@ -114,6 +120,43 @@ describe('ArticlePurchaseService', () => {
     expect(await service.applyEvent('dodo', refundedEvent())).toEqual({
       applied: false,
     })
+  })
+
+  it('keeps the row refunded when the refund was processed before the payment', async () => {
+    articlePurchaseRepository.markRefunded.mockResolvedValue(null)
+    expect(await service.applyEvent('dodo', refundedEvent())).toEqual({
+      applied: false,
+    })
+    expect(billingWebhookEventRepository.create).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          _normalizedArticleEvent: {
+            type: 'refunded',
+            providerPaymentId: 'pay_1',
+          },
+        }),
+      }),
+    )
+
+    billingWebhookEventRepository.hasProcessedArticleRefund.mockResolvedValue(
+      true,
+    )
+    expect(await service.applyEvent('dodo', paidEvent())).toEqual({
+      applied: true,
+    })
+    expect(
+      billingWebhookEventRepository.hasProcessedArticleRefund,
+    ).toHaveBeenCalledWith('dodo', 'pay_1')
+    expect(articlePurchaseRepository.upsertPaid).toHaveBeenCalledTimes(1)
+    expect(articlePurchaseRepository.markRefunded).toHaveBeenLastCalledWith(
+      'dodo',
+      'pay_1',
+    )
+  })
+
+  it('does not refund a payment when no earlier refund was processed', async () => {
+    await service.applyEvent('dodo', paidEvent())
+    expect(articlePurchaseRepository.markRefunded).not.toHaveBeenCalled()
   })
 
   it('skips an already processed event id', async () => {

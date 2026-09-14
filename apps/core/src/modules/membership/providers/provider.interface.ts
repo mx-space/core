@@ -43,7 +43,10 @@ export interface VerifiedArticlePurchaseEvent {
 }
 
 export type IgnoredBillingEventReason =
-  'unsupported_event' | 'missing_reader_metadata' | 'sandbox_environment'
+  | 'unsupported_event'
+  | 'missing_reader_metadata'
+  | 'sandbox_environment'
+  | 'article_product_mismatch'
 
 export interface IgnoredBillingEvent {
   kind: 'ignored'

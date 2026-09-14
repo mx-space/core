@@ -110,12 +110,22 @@ function createService(runtime: PiRuntimeAdapter) {
   })
 
   const eventEmitter = { emit: vi.fn() }
+  const entitlementService = {
+    isPremiumLocked: vi.fn(
+      async (input: {
+        post: { isPremium?: boolean | null }
+        isOwner: boolean
+        readerId?: string
+      }) => Boolean(input.post.isPremium) && !input.isOwner && !input.readerId,
+    ),
+  }
   const adapter = new AiSummaryAdapter(
     repository as any,
     databaseService as any,
     configService as any,
     aiService as any,
     eventEmitter as any,
+    entitlementService as any,
   )
   const multilang = new MultilangGenerationService(
     aiInFlightService as any,

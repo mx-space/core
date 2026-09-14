@@ -40,7 +40,10 @@ import {
   type PostListParams,
   type PostModel,
 } from './post.types'
-import { applyFreeWindowOnPublish } from './post-paywall.util'
+import {
+  applyFreeWindowOnPublish,
+  assertPaywallMetaValid,
+} from './post-paywall.util'
 
 @Injectable()
 export class PostService implements OnApplicationBootstrap {
@@ -179,6 +182,7 @@ export class PostService implements OnApplicationBootstrap {
   }
 
   async create(post: PostModel) {
+    assertPaywallMetaValid(post.meta)
     this.lexicalService.normalizeContentForStorage(post)
 
     const effectiveContentFormat = post.contentFormat ?? ContentFormat.Markdown
@@ -350,6 +354,7 @@ export class PostService implements OnApplicationBootstrap {
       migrationBranchId?: string
     },
   ) {
+    assertPaywallMetaValid(data.meta)
     this.lexicalService.normalizeContentForStorage(data)
 
     const oldDocument = await this.findById(id)

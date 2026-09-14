@@ -38,6 +38,15 @@ const createService = () => {
     }),
   }
   const eventEmitter = { emit: vi.fn() }
+  const entitlementService = {
+    isPremiumLocked: vi.fn(
+      async (input: {
+        post: { isPremium?: boolean | null }
+        isOwner: boolean
+        readerId?: string
+      }) => Boolean(input.post.isPremium) && !input.isOwner && !input.readerId,
+    ),
+  }
   const taskProcessor = { registerHandler: vi.fn() }
   const generationMetrics = {
     attachLatest: vi.fn(async (_type: string, items: unknown[]) =>
@@ -55,6 +64,7 @@ const createService = () => {
     configService as any,
     aiService as any,
     eventEmitter as any,
+    entitlementService as any,
   )
   const multilang = new MultilangGenerationService(
     aiInFlightService as any,
@@ -75,12 +85,24 @@ const createService = () => {
     aiService,
     configService,
     databaseService,
+    entitlementService,
     eventEmitter,
     generationMetrics,
     repository,
     service,
     taskProcessor,
   }
+}
+
+const premiumArticle = {
+  type: CollectionRefTypes.Post,
+  document: {
+    id: 'post-1',
+    title: 'Premium Post',
+    text: 'Premium text',
+    isPublished: true,
+    isPremium: true,
+  },
 }
 
 const visibleArticle = {
@@ -128,6 +150,75 @@ function runSummaryTask(
 }
 
 describe('AiSummaryService', () => {
+  it('blocks the public article-summary read for a premium post', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue(premiumArticle)
+    repository.findByRefAndLang.mockResolvedValue({
+      id: 'summary-1',
+      refId: 'post-1',
+      lang: 'zh',
+      summary: 'cached',
+      hash: 'h',
+      createdAt: now,
+    })
+
+    await expect(
+      service.getOrGenerateSummaryForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+      }),
+    ).rejects.toThrow(AppException)
+    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+  })
+
+  it('blocks the public streamed article-summary for a premium post', async () => {
+    const { configService, databaseService, service } = createService()
+    configService.get.mockResolvedValue({ enableSummary: true })
+    databaseService.findGlobalById.mockResolvedValue(premiumArticle)
+
+    await expect(
+      service.streamSummaryForArticle('post-1', { lang: 'zh' }),
+    ).rejects.toThrow(AppException)
+  })
+
+  it('serves the summary of a premium post to the owner and an entitled reader', async () => {
+    const { databaseService, entitlementService, repository, service } =
+      createService()
+    databaseService.findGlobalById.mockResolvedValue(premiumArticle)
+    repository.findByRefAndLang.mockResolvedValue({
+      id: 'summary-1',
+      refId: 'post-1',
+      lang: 'zh',
+      summary: 'cached',
+      hash: 'h',
+      createdAt: now,
+    })
+    vi.spyOn(service as any, 'findValidSummary').mockResolvedValue({
+      id: 'summary-1',
+      summary: 'cached',
+    })
+
+    await expect(
+      service.getOrGenerateSummaryForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+        isOwner: true,
+      }),
+    ).resolves.toMatchObject({ summary: 'cached' })
+    await expect(
+      service.getOrGenerateSummaryForArticle('post-1', {
+        lang: 'zh',
+        onlyDb: true,
+        readerId: 'reader-1',
+      }),
+    ).resolves.toMatchObject({ summary: 'cached' })
+    expect(entitlementService.isPremiumLocked).toHaveBeenLastCalledWith({
+      post: premiumArticle.document,
+      isOwner: false,
+      readerId: 'reader-1',
+    })
+  })
+
   it('updates summaries through the PG repository after existence validation', async () => {
     const { repository, service } = createService()
     repository.findById.mockResolvedValue({

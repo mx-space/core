@@ -123,6 +123,25 @@ export class BillingWebhookEventRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async hasProcessedArticleRefund(
+    provider: string,
+    providerPaymentId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: billingWebhookEvents.id })
+      .from(billingWebhookEvents)
+      .where(
+        and(
+          eq(billingWebhookEvents.provider, provider),
+          isNotNull(billingWebhookEvents.processedAt),
+          sql`${billingWebhookEvents.payload}->'_normalizedArticleEvent'->>'type' = 'refunded'`,
+          sql`${billingWebhookEvents.payload}->'_normalizedArticleEvent'->>'providerPaymentId' = ${providerPaymentId}`,
+        )!,
+      )
+      .limit(1)
+    return !!row
+  }
+
   async markProcessed(
     id: EntityId | string,
     processedAt: Date,

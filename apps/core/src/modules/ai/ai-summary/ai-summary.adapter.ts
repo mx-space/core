@@ -8,6 +8,7 @@ import { CollectionRefTypes } from '~/constants/db.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
+import { EntitlementService } from '../../membership/entitlement.service'
 import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import {
@@ -54,6 +55,7 @@ export class AiSummaryAdapter implements MultilangAdapter<
     private readonly configService: ConfigsService,
     private readonly aiService: AiService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly entitlementService: EntitlementService,
   ) {}
 
   toSummaryDoc(row: AiSummaryRow | null): AISummaryModel | null {
@@ -75,7 +77,10 @@ export class AiSummaryAdapter implements MultilangAdapter<
 
   async resolveArticleDetailed(
     articleId: string,
-    viewer: ArticleViewer = {},
+    options: ArticleViewer & {
+      blockPremium?: boolean
+      readerId?: string
+    } = {},
   ): Promise<{
     article: ArticleForSummary
     sourceLang: string
@@ -91,8 +96,19 @@ export class AiSummaryAdapter implements MultilangAdapter<
     ) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
     }
-    if (!isArticleVisibleToViewer(article, viewer)) {
+    if (!isArticleVisibleToViewer(article, options)) {
       throw createAppException(AppErrorCode.CONTENT_NOT_FOUND_CANT_PROCESS)
+    }
+    if (
+      options.blockPremium &&
+      article.type === CollectionRefTypes.Post &&
+      (await this.entitlementService.isPremiumLocked({
+        post: article.document,
+        isOwner: Boolean(options.isOwner),
+        readerId: options.readerId,
+      }))
+    ) {
+      throw createAppException(AppErrorCode.POST_HIDDEN_OR_ENCRYPTED)
     }
     const doc = article.document as { title: string; text: string }
     return {

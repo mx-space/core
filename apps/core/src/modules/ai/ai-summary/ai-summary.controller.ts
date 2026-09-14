@@ -12,7 +12,9 @@ import type { FastifyReply } from 'fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
+import { CurrentReaderId } from '~/common/decorators/current-user.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -134,10 +136,14 @@ export class AiSummaryController {
   getArticleSummary(
     @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @Query({ schema: GetSummaryQuerySchema }) query: GetSummaryQueryDto,
+    @HasAdminAccess() isOwner?: boolean,
+    @CurrentReaderId() readerId?: string,
   ) {
     return this.service.getOrGenerateSummaryForArticle(params.id, {
       lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
       onlyDb: query.onlyDb,
+      isOwner: Boolean(isOwner),
+      readerId,
     })
   }
 
@@ -148,6 +154,8 @@ export class AiSummaryController {
     @Query({ schema: GetSummaryStreamQuerySchema })
     query: GetSummaryStreamQueryDto,
     @Res() reply: FastifyReply,
+    @HasAdminAccess() isOwner?: boolean,
+    @CurrentReaderId() readerId?: string,
   ) {
     initSse(reply)
 
@@ -159,6 +167,8 @@ export class AiSummaryController {
     try {
       const { events } = await this.service.streamSummaryForArticle(params.id, {
         lang: query.lang ? parseLanguageCode(query.lang) : DEFAULT_SUMMARY_LANG,
+        isOwner: Boolean(isOwner),
+        readerId,
       })
 
       let sentToken = false

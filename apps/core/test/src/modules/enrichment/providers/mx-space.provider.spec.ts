@@ -91,4 +91,95 @@ describe('MxSpaceProvider', () => {
       expect(provider.isValidId('unknown:123')).toBe(false)
     })
   })
+
+  describe('fetch', () => {
+    const lexical = (...texts: string[]) =>
+      JSON.stringify({
+        root: {
+          type: 'root',
+          version: 1,
+          children: texts.map((text) => ({
+            type: 'paragraph',
+            version: 1,
+            children: [{ type: 'text', version: 1, text }],
+          })),
+        },
+      })
+
+    const basePost = {
+      id: 'post-1',
+      title: 'Post',
+      text: 'one\n\ntwo\n\nSECRET',
+      content: lexical('one', 'two', 'SECRET'),
+      summary: null,
+      isPublished: true,
+      isPremium: false,
+      meta: { paywall: { previewBlocks: 2 } },
+    }
+
+    let databaseService: {
+      findPostBySlug: ReturnType<typeof vi.fn>
+      findNoteByNid: ReturnType<typeof vi.fn>
+    }
+    let aiSummaryService: {
+      batchGetSummariesByRefIds: ReturnType<typeof vi.fn>
+    }
+
+    beforeEach(() => {
+      databaseService = {
+        findPostBySlug: vi.fn(),
+        findNoteByNid: vi.fn(),
+      }
+      aiSummaryService = {
+        batchGetSummariesByRefIds: vi
+          .fn()
+          .mockResolvedValue(new Map([['post-1', 'AI summary with SECRET']])),
+      }
+      provider = new MxSpaceProvider(
+        databaseService as any,
+        null as any,
+        aiSummaryService as any,
+        {
+          findCachedTitlesByRefIds: vi.fn().mockResolvedValue(new Map()),
+        } as any,
+      )
+    })
+
+    it('uses the AI summary for a published non-premium post', async () => {
+      databaseService.findPostBySlug.mockResolvedValue(basePost)
+      const result = await provider.fetch('post:tech/my-post', 'en')
+      expect(result.description).toBe('AI summary with SECRET')
+    })
+
+    it('treats an unpublished post as not found', async () => {
+      databaseService.findPostBySlug.mockResolvedValue({
+        ...basePost,
+        isPublished: false,
+      })
+      await expect(provider.fetch('post:tech/my-post')).rejects.toThrow(
+        'Post not found',
+      )
+    })
+
+    it('describes a premium post with only the public teaser', async () => {
+      databaseService.findPostBySlug.mockResolvedValue({
+        ...basePost,
+        isPremium: true,
+      })
+      const result = await provider.fetch('post:tech/my-post', 'en')
+      expect(result.description).toBe('one\n\ntwo')
+      expect(aiSummaryService.batchGetSummariesByRefIds).not.toHaveBeenCalled()
+    })
+
+    it('treats an unpublished note as not found', async () => {
+      databaseService.findNoteByNid.mockResolvedValue({
+        id: 'note-1',
+        nid: 42,
+        title: 'Draft',
+        text: 'SECRET',
+        isPublished: false,
+      })
+      await expect(provider.fetch('note:42')).rejects.toThrow('Note not found')
+    })
+  })
 })

@@ -296,8 +296,15 @@ export class AiSummaryService implements OnModuleInit {
       await this.aiSummaryRepository.updateSummary(id, summary),
     )
   }
-  async getSummaryByArticleId(articleId: string, lang = DEFAULT_SUMMARY_LANG) {
-    const { article } = await this.adapter.resolveArticleDetailed(articleId)
+  async getSummaryByArticleId(
+    articleId: string,
+    lang = DEFAULT_SUMMARY_LANG,
+    viewer?: { isOwner?: boolean; readerId?: string },
+  ) {
+    const { article } = await this.adapter.resolveArticleDetailed(articleId, {
+      blockPremium: true,
+      ...viewer,
+    })
     return this.findValidSummary(articleId, lang, article.text)
   }
 
@@ -329,7 +336,7 @@ export class AiSummaryService implements OnModuleInit {
 
   async streamSummaryForArticle(
     articleId: string,
-    options: { lang: string },
+    options: { lang: string; isOwner?: boolean; readerId?: string },
   ): Promise<{
     events: AsyncIterable<AiStreamEvent>
     result: Promise<AISummaryModel>
@@ -341,7 +348,11 @@ export class AiSummaryService implements OnModuleInit {
     }
 
     const { lang } = options
-    const { article } = await this.adapter.resolveArticleDetailed(articleId)
+    const { article } = await this.adapter.resolveArticleDetailed(articleId, {
+      blockPremium: true,
+      isOwner: options.isOwner,
+      readerId: options.readerId,
+    })
 
     const existingSummary = await this.findValidSummary(
       articleId,
@@ -367,11 +378,16 @@ export class AiSummaryService implements OnModuleInit {
     options: {
       lang: string
       onlyDb?: boolean
+      isOwner?: boolean
+      readerId?: string
     },
   ) {
-    const { onlyDb, lang } = options
+    const { onlyDb, lang, isOwner, readerId } = options
 
-    const dbStored = await this.getSummaryByArticleId(articleId, lang)
+    const dbStored = await this.getSummaryByArticleId(articleId, lang, {
+      isOwner,
+      readerId,
+    })
 
     if (dbStored) {
       return dbStored

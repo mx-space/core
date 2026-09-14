@@ -5,6 +5,21 @@ import { BillingWebhookEventRepository } from './billing-webhook-event.repositor
 import { applyWebhookEventOnce } from './billing-webhook-idempotency'
 import type { VerifiedArticlePurchaseEvent } from './providers/provider.interface'
 
+const storeArticleEventPayload = (
+  event: VerifiedArticlePurchaseEvent['event'],
+  rawPayload: unknown,
+): Record<string, unknown> => {
+  const payload: Record<string, unknown> =
+    rawPayload && typeof rawPayload === 'object' && !Array.isArray(rawPayload)
+      ? { ...(rawPayload as Record<string, unknown>) }
+      : { rawPayload }
+  payload._normalizedArticleEvent = {
+    type: event.type,
+    providerPaymentId: event.providerPaymentId,
+  }
+  return payload
+}
+
 @Injectable()
 export class ArticlePurchaseService {
   constructor(
@@ -19,9 +34,19 @@ export class ArticlePurchaseService {
     const { event, rawType, rawPayload } = verified
     return applyWebhookEventOnce(
       this.billingWebhookEventRepository,
-      { provider, eventId: event.eventId, type: rawType, payload: rawPayload },
+      {
+        provider,
+        eventId: event.eventId,
+        type: rawType,
+        payload: storeArticleEventPayload(event, rawPayload),
+      },
       async () => {
         if (event.type === 'paid') {
+          const alreadyRefunded =
+            await this.billingWebhookEventRepository.hasProcessedArticleRefund(
+              provider,
+              event.providerPaymentId,
+            )
           await this.articlePurchaseRepository.upsertPaid({
             readerId: event.readerId,
             postId: event.postId,
@@ -31,6 +56,12 @@ export class ArticlePurchaseService {
             amount: event.amount,
             currency: event.currency,
           })
+          if (alreadyRefunded) {
+            await this.articlePurchaseRepository.markRefunded(
+              provider,
+              event.providerPaymentId,
+            )
+          }
           return true
         }
         const refunded = await this.articlePurchaseRepository.markRefunded(

@@ -1,21 +1,43 @@
 import { z } from 'zod'
 
+import { AppErrorCode, createAppException } from '~/common/errors'
+
 export const DEFAULT_FREE_WINDOW_HOURS = 72
 
-export const PostPaywallMetaSchema = z.object({
-  previewBlocks: z.number().int().min(0).optional().catch(undefined),
+const StrictPostPaywallMetaSchema = z.object({
+  previewBlocks: z.number().int().min(0).optional(),
   freeWindowHours: z
     .number()
     .int()
     .min(0)
     .max(24 * 365)
-    .optional()
-    .catch(undefined),
-  freeUntil: z.iso.datetime().optional().catch(undefined),
-  purchaseEnabled: z.boolean().optional().catch(undefined),
+    .optional(),
+  freeUntil: z.iso.datetime().optional(),
+  purchaseEnabled: z.boolean().optional(),
+})
+
+export const PostPaywallMetaSchema = z.object({
+  previewBlocks:
+    StrictPostPaywallMetaSchema.shape.previewBlocks.catch(undefined),
+  freeWindowHours:
+    StrictPostPaywallMetaSchema.shape.freeWindowHours.catch(undefined),
+  freeUntil: StrictPostPaywallMetaSchema.shape.freeUntil.catch(undefined),
+  purchaseEnabled:
+    StrictPostPaywallMetaSchema.shape.purchaseEnabled.catch(undefined),
 })
 
 export type PostPaywallMeta = z.infer<typeof PostPaywallMetaSchema>
+
+export function assertPaywallMetaValid(meta: unknown): void {
+  const paywall = (meta as { paywall?: unknown } | null | undefined)?.paywall
+  if (paywall === undefined || paywall === null) return
+  const parsed = StrictPostPaywallMetaSchema.safeParse(paywall)
+  if (!parsed.success) {
+    throw createAppException(AppErrorCode.VALIDATION_FAILED, {
+      issues: parsed.error.issues,
+    })
+  }
+}
 
 export function readPaywallMeta(meta: unknown): PostPaywallMeta {
   const paywall = (meta as { paywall?: unknown } | null | undefined)?.paywall

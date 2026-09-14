@@ -50,17 +50,24 @@ type DodoSubscriptionEvent = {
 }
 
 type DodoPaymentEvent = {
-  type: 'payment.succeeded' | 'refund.succeeded'
+  type: string
   business_id: string
   timestamp: string
   data: {
     payment_id: string
     customer?: { customer_id: string }
     metadata?: Record<string, string>
+    product_cart?: Array<{ product_id: string; quantity: number }> | null
     total_amount?: number
     currency?: string
   }
 }
+
+const DODO_ARTICLE_REFUND_EVENTS = new Set([
+  'refund.succeeded',
+  'dispute.accepted',
+  'dispute.lost',
+])
 
 const DODO_EVENT_TYPE_MAP: Record<
   string,
@@ -332,6 +339,7 @@ export class DodoProvider implements PaymentProviderAdapter {
     const articleResult = this.parseArticleEvent(
       event as unknown as DodoPaymentEvent,
       headers['webhook-id'],
+      membershipConfig.articleProductId,
     )
     if (articleResult) return articleResult
 
@@ -381,11 +389,12 @@ export class DodoProvider implements PaymentProviderAdapter {
   private parseArticleEvent(
     event: DodoPaymentEvent,
     eventId: string,
+    articleProductId: string | undefined,
   ): BillingWebhookResult | null {
-    if (event.type === 'refund.succeeded') {
+    if (DODO_ARTICLE_REFUND_EVENTS.has(event.type)) {
       if (typeof event.data.payment_id !== 'string') {
         this.logger.warn(
-          `Ignoring Dodo refund event: payment_id is missing or malformed`,
+          `Ignoring Dodo ${event.type} event: payment_id is missing or malformed`,
         )
         return {
           kind: 'ignored',
@@ -429,6 +438,25 @@ export class DodoProvider implements PaymentProviderAdapter {
         kind: 'ignored',
         rawType: event.type,
         reason: 'missing_reader_metadata',
+      }
+    }
+
+    const cart = event.data.product_cart
+    if (
+      !articleProductId ||
+      !Array.isArray(cart) ||
+      cart.length !== 1 ||
+      cart[0].product_id !== articleProductId ||
+      cart[0].quantity !== 1 ||
+      event.data.total_amount <= 0
+    ) {
+      this.logger.warn(
+        `Ignoring Dodo article payment ${event.data.payment_id}: product_cart does not match the configured article product or amount is not positive`,
+      )
+      return {
+        kind: 'ignored',
+        rawType: event.type,
+        reason: 'article_product_mismatch',
       }
     }
 

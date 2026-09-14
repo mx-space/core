@@ -112,6 +112,25 @@ const createService = () => {
 }
 
 describe('PostService', () => {
+  it('rejects a paywall freeWindowHours above the maximum instead of silently defaulting', async () => {
+    const { repository, service } = createService()
+    repository.findById.mockResolvedValue(createPost())
+
+    await expect(
+      service.updateById('post-1', {
+        meta: { paywall: { freeWindowHours: 24 * 365 + 1 } },
+      }),
+    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' })
+    await expect(
+      service.create({
+        ...createPost(),
+        meta: { paywall: { previewBlocks: -1 } },
+      } as any),
+    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' })
+    expect(repository.update).not.toHaveBeenCalled()
+    expect(repository.create).not.toHaveBeenCalled()
+  })
+
   it('rejects a direct Markdown-to-Lexical update without a migration descriptor', async () => {
     const { repository, service } = createService()
     repository.findById.mockResolvedValue(createPost())
