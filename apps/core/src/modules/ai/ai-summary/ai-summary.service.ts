@@ -301,10 +301,10 @@ export class AiSummaryService implements OnModuleInit {
     lang = DEFAULT_SUMMARY_LANG,
     viewer?: { isOwner?: boolean; readerId?: string },
   ) {
-    const { article } = await this.adapter.resolveArticleDetailed(articleId, {
-      blockPremium: true,
-      ...viewer,
-    })
+    const { article } = await this.adapter.resolveArticleDetailed(
+      articleId,
+      viewer,
+    )
     return this.findValidSummary(articleId, lang, article.text)
   }
 
@@ -395,6 +395,22 @@ export class AiSummaryService implements OnModuleInit {
 
     if (onlyDb) {
       return null
+    }
+
+    try {
+      await this.adapter.resolveArticleDetailed(articleId, {
+        blockPremium: true,
+        isOwner,
+        readerId,
+      })
+    } catch (error) {
+      if (
+        error instanceof AppException &&
+        error.code === AppErrorCode.POST_HIDDEN_OR_ENCRYPTED
+      ) {
+        return null
+      }
+      throw error
     }
 
     const aiConfig = await this.configService.get('ai')

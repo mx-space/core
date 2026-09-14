@@ -419,7 +419,7 @@ describe('Post paywall enforcement (e2e)', () => {
     expect(body.meta.paywall).toBeUndefined()
   })
 
-  it('omits the ai summary and builds enrichments from the teaser when locked', async () => {
+  it('keeps the ai summary and builds enrichments from the teaser when locked', async () => {
     currentPost = { ...premiumPostFixture }
     const summaryService = proxy.app.get(AiSummaryService) as any
     const enrichmentService = proxy.app.get(EnrichmentService) as any
@@ -439,7 +439,9 @@ describe('Post paywall enforcement (e2e)', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json()
     expect(body.meta.paywall.locked).toBe(true)
-    expect(body.meta.summary).toBeUndefined()
+    expect(body.meta.summary.text).toBe(
+      'summary generated from the full article',
+    )
 
     const enrichedDoc =
       enrichmentService.attachEnrichments.mock.calls.at(-1)![0]

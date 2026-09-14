@@ -150,7 +150,7 @@ function runSummaryTask(
 }
 
 describe('AiSummaryService', () => {
-  it('blocks the public article-summary read for a premium post', async () => {
+  it('returns an existing stored summary for a locked premium post', async () => {
     const { databaseService, repository, service } = createService()
     databaseService.findGlobalById.mockResolvedValue(premiumArticle)
     repository.findByRefAndLang.mockResolvedValue({
@@ -161,14 +161,29 @@ describe('AiSummaryService', () => {
       hash: 'h',
       createdAt: now,
     })
+    vi.spyOn(service as any, 'findValidSummary').mockResolvedValue({
+      id: 'summary-1',
+      summary: 'cached',
+    })
 
     await expect(
       service.getOrGenerateSummaryForArticle('post-1', {
         lang: 'zh',
         onlyDb: true,
       }),
-    ).rejects.toThrow(AppException)
-    expect(repository.findByRefAndLang).not.toHaveBeenCalled()
+    ).resolves.toMatchObject({ summary: 'cached' })
+  })
+
+  it('does not generate a summary for an unentitled reader of a locked premium post', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue(premiumArticle)
+    repository.findByRefAndLang.mockResolvedValue(null)
+
+    await expect(
+      service.getOrGenerateSummaryForArticle('post-1', {
+        lang: 'zh',
+      }),
+    ).resolves.toBeNull()
   })
 
   it('blocks the public streamed article-summary for a premium post', async () => {
@@ -182,8 +197,7 @@ describe('AiSummaryService', () => {
   })
 
   it('serves the summary of a premium post to the owner and an entitled reader', async () => {
-    const { databaseService, entitlementService, repository, service } =
-      createService()
+    const { databaseService, repository, service } = createService()
     databaseService.findGlobalById.mockResolvedValue(premiumArticle)
     repository.findByRefAndLang.mockResolvedValue({
       id: 'summary-1',
@@ -212,11 +226,6 @@ describe('AiSummaryService', () => {
         readerId: 'reader-1',
       }),
     ).resolves.toMatchObject({ summary: 'cached' })
-    expect(entitlementService.isPremiumLocked).toHaveBeenLastCalledWith({
-      post: premiumArticle.document,
-      isOwner: false,
-      readerId: 'reader-1',
-    })
   })
 
   it('updates summaries through the PG repository after existence validation', async () => {

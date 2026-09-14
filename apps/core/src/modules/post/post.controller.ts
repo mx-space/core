@@ -524,7 +524,7 @@ export class PostController {
       .tts(paywall?.locked ? { available: false } : ttsMeta)
       .enrichments(enrichments as Record<string, EnrichmentEntry>)
 
-    if (summaryDoc && !paywall?.locked) {
+    if (summaryDoc) {
       metaBuilder.summary({
         id: summaryDoc.id,
         text: summaryDoc.summary,

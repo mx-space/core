@@ -264,7 +264,7 @@ Webhook 路由不变，仅分流。
 
 - premium 文章无论是否 locked 都返回 `paywall`（Yohaku 需据 `reason==='free-window'` 显示提示、`reason==='purchase'` 显示已解锁）；非 premium 不返回
 - `purchase.price` 来自 `getPlanPricing(articleProductId)`（已缓存）；provider product id 不下发
-- `locked` 时 `tts.available=false`、summary 隐藏（现状保留）
+- `locked` 时 `tts.available=false`；summary 照常下发（售点），但未解锁者不可触发生成
 - 列表 `getPaginate` 不下发 entitlement 详情，仅截断
 
 api-client `models/base.ts PaywallMeta` 同步；新增 `membership.articleCheckout(postId, returnPath?)`、`membership.articlePurchased(postId)`；`MembershipPlansResult.articlePurchase`。
