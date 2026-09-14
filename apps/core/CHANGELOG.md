@@ -1,3 +1,11 @@
+## [14.12.1](https://github.com/mx-space/core/compare/v14.12.0...v14.12.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **admin:** apply time selection in DateTimePicker ([c124118](https://github.com/mx-space/core/commit/c12411897deb6bda4fe3cd67892752691473ec16))
+* **admin:** expose post.tag and topic.description in translation entry key path filter ([5d06ba7](https://github.com/mx-space/core/commit/5d06ba7f2))
+
 # [14.12.0](https://github.com/mx-space/core/compare/v14.11.0...v14.12.0) (2026-09-14)
 
 
