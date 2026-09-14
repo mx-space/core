@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { EventBusEvents } from '~/constants/event-bus.constant'
 import { isDev } from '~/global/env.global'
 import { DEFAULT_SUMMARY_LANG } from '~/modules/ai/ai.constants'
+import { isGlobalArticleVisible } from '~/modules/ai/ai-article-visibility.util'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
@@ -159,7 +161,14 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       const category = slugIdx === -1 ? '' : rest.slice(0, slugIdx)
       const slug = slugIdx === -1 ? rest : rest.slice(slugIdx + 1)
       const post = await this.databaseService.findPostBySlug(slug)
-      if (!post || !post.isPublished) throw new Error(`Post not found: ${rest}`)
+      if (
+        !post ||
+        !isGlobalArticleVisible({
+          type: CollectionRefTypes.Post,
+          document: post,
+        })
+      )
+        throw new Error(`Post not found: ${rest}`)
       const [translatedTitle, aiSummary] = await Promise.all([
         this.lookupTitle(post.id, locale),
         post.isPremium ? null : this.lookupSummary(post.id, locale),
@@ -188,7 +197,14 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
       const nid = Number.parseInt(rest, 10)
       if (!Number.isFinite(nid)) throw new Error(`Invalid note nid: ${rest}`)
       const note = await this.databaseService.findNoteByNid(nid)
-      if (!note || !note.isPublished) throw new Error(`Note not found: ${nid}`)
+      if (
+        !note ||
+        !isGlobalArticleVisible({
+          type: CollectionRefTypes.Note,
+          document: note,
+        })
+      )
+        throw new Error(`Note not found: ${nid}`)
       const [translatedTitle, aiSummary] = await Promise.all([
         this.lookupTitle(note.id, locale),
         this.lookupSummary(note.id, locale),

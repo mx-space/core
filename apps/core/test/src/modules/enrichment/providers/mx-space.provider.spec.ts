@@ -181,5 +181,17 @@ describe('MxSpaceProvider', () => {
       })
       await expect(provider.fetch('note:42')).rejects.toThrow('Note not found')
     })
+
+    it('treats a password-protected note as not found', async () => {
+      databaseService.findNoteByNid.mockResolvedValue({
+        id: 'note-1',
+        nid: 42,
+        title: 'Locked',
+        text: 'SECRET',
+        isPublished: true,
+        hasPassword: true,
+      })
+      await expect(provider.fetch('note:42')).rejects.toThrow('Note not found')
+    })
   })
 })

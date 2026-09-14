@@ -446,8 +446,8 @@ export class DodoProvider implements PaymentProviderAdapter {
       !articleProductId ||
       !Array.isArray(cart) ||
       cart.length !== 1 ||
-      cart[0].product_id !== articleProductId ||
-      cart[0].quantity !== 1 ||
+      cart[0]?.product_id !== articleProductId ||
+      cart[0]?.quantity !== 1 ||
       event.data.total_amount <= 0
     ) {
       this.logger.warn(

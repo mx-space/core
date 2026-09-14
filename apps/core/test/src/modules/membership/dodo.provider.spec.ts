@@ -587,6 +587,7 @@ describe('DodoProvider', () => {
       ],
       ['a zero amount', { total_amount: 0 }],
       ['no cart', { product_cart: null }],
+      ['a null cart line', { product_cart: [null] }],
     ])('ignores an article payment with %s', async (_, override) => {
       verifyMock.mockReturnValue({
         type: 'payment.succeeded',
