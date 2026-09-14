@@ -1,11 +1,32 @@
-## [14.11.0](https://github.com/mx-space/core/compare/v14.10.5...v14.11.0) (2026-09-14)
+# [14.12.0](https://github.com/mx-space/core/compare/v14.11.0...v14.12.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* **core:** apply saved summary translations on post list ([#2821](https://github.com/mx-space/core/issues/2821)) ([#2823](https://github.com/mx-space/core/issues/2823)) ([e40a80b](https://github.com/mx-space/core/commit/e40a80b1f728cfa3c1dcbd38dcdec6b2fa0534be))
+* **core:** enrichment visibility via shared helper and guard empty cart lines ([9a775a7](https://github.com/mx-space/core/commit/9a775a71ec9d14df9120b1db99943b70fbb8a446))
+* **core:** harden paywall against webhook spoofing and content leaks ([32339df](https://github.com/mx-space/core/commit/32339dfa2e1581adf77d7ebf167a18e63775b8da))
+* **core:** resolve one-time product pricing for article purchase ([4334475](https://github.com/mx-space/core/commit/4334475198774b8e7c93c8399408009def5474a5))
+* **core:** validate article webhook ids and drop duplicate post repository provider ([2441314](https://github.com/mx-space/core/commit/2441314573aabd90e051735e81272c258d66d593))
+* validate refund payment id and zero-decimal article price display ([e78b14e](https://github.com/mx-space/core/commit/e78b14efca000a4af2f1e95237d8602a5ffc228f))
+
+
+### Features
+
+* **core:** article purchase checkout and webhook ([ec0261c](https://github.com/mx-space/core/commit/ec0261c96b5b1765313516387e518e1ec74f76bc))
+* **core:** article purchases table, config and availability ([774c13a](https://github.com/mx-space/core/commit/774c13a6c943c86a5f8fe1ebb7dcbb6e58972de6))
+* **core:** expose ai summary for locked premium posts ([034e35d](https://github.com/mx-space/core/commit/034e35d397f2087ab02e20e1aa0d5f5d522aadb4))
+* **core:** paywall meta with entitlement and purchase info ([3512a66](https://github.com/mx-space/core/commit/3512a66bc9076e2badce310cb22d70fc4c22eacc))
+* **core:** post entitlement with free window and article purchase ([5eb5810](https://github.com/mx-space/core/commit/5eb5810266a56ad353c57963db618f200471156f))
+
+# [14.11.0](https://github.com/mx-space/core/compare/v14.10.5...v14.11.0) (2026-09-13)
 
 
 ### Features
 
 * **admin:** reset dashboard layout with unpublished changes and weekly rhythm ([ca8a7f2](https://github.com/mx-space/core/commit/ca8a7f29c63635334bc5638480328481a08d023a))
 
-## [14.10.5](https://github.com/mx-space/core/compare/v14.10.4...v14.10.5) (2026-09-14)
+## [14.10.5](https://github.com/mx-space/core/compare/v14.10.4...v14.10.5) (2026-09-13)
 
 
 ### Bug Fixes
@@ -19,17 +40,20 @@
 
 ## [14.10.4](https://github.com/mx-space/core/compare/v14.10.3...v14.10.4) (2026-09-13)
 
+
 ### Bug Fixes
 
 * **core:** type subscribe republish event filter ([3e73897](https://github.com/mx-space/core/commit/3e7389792ae7bd29d2e8b325a31bfa8199058935))
 
 ## [14.10.3](https://github.com/mx-space/core/compare/v14.10.2...v14.10.3) (2026-09-13)
 
+
 ### Bug Fixes
 
 * **core:** fan out draft-publish events to email, webhook, and WS ([0f190af](https://github.com/mx-space/core/commit/0f190af3bed4019f5fb534e6a8c2ec6cb3be304c))
 
-## [14.10.2](https://github.com/mx-space/core/compare/v14.10.1...v14.10.2) (2026-09-13)
+## [14.10.2](https://github.com/mx-space/core/compare/v14.10.1...v14.10.2) (2026-09-12)
+
 
 ### Bug Fixes
 
@@ -40,13 +64,14 @@
 
 * **core:** broadcast draft head changes to admin clients ([2703448](https://github.com/mx-space/core/commit/2703448ec5fb8a6b9949d9fa11adf83a98f62580))
 
-## [14.10.1](https://github.com/mx-space/core/compare/v14.10.0...v14.10.1) (2026-09-13)
+## [14.10.1](https://github.com/mx-space/core/compare/v14.10.0...v14.10.1) (2026-09-12)
+
 
 ### Bug Fixes
 
 * **core:** bound browser processes and persist enrichment retry cooldowns ([f0419d5](https://github.com/mx-space/core/commit/f0419d58c4508a016367c1a2b4ff9d778352e5aa))
 
-## [14.10.0](https://github.com/mx-space/core/compare/v14.9.1...v14.10.0) (2026-09-09)
+# [14.10.0](https://github.com/mx-space/core/compare/v14.9.1...v14.10.0) (2026-09-09)
 
 
 ### Bug Fixes
@@ -64,21 +89,21 @@
 
 * **core:** reduce search and aggregate query overhead ([29001ec](https://github.com/mx-space/core/commit/29001ec533d3c06b3339318ad875867455593bc5))
 
-## [14.9.1](https://github.com/mx-space/core/compare/v14.9.0...v14.9.1) (2026-09-03)
+## [14.9.1](https://github.com/mx-space/core/compare/v14.9.0...v14.9.1) (2026-09-02)
 
 
 ### Bug Fixes
 
 * **auth:** reset review demo reader blocks ([864ab66](https://github.com/mx-space/core/commit/864ab664525e0022d43bc4a5de8f6e7acfe60920))
 
-## [14.9.0](https://github.com/mx-space/core/compare/v14.8.0...v14.9.0) (2026-09-03)
+# [14.9.0](https://github.com/mx-space/core/compare/v14.8.0...v14.9.0) (2026-09-02)
 
 
 ### Features
 
 * **comment:** add report and block moderation flow ([24d53f0](https://github.com/mx-space/core/commit/24d53f0778da9ed018d6f7496bd3274c4d9ccee8))
 
-## [14.8.0](https://github.com/mx-space/core/compare/v14.7.0...v14.8.0) (2026-09-02)
+# [14.8.0](https://github.com/mx-space/core/compare/v14.7.0...v14.8.0) (2026-09-02)
 
 
 ### Bug Fixes
@@ -91,7 +116,7 @@
 * **membership:** import sponsors from CSV alongside GitHub API ([2caa5ef](https://github.com/mx-space/core/commit/2caa5efe88650241b3f929779849a6b65767bffb))
 * **translation:** glossary-based tag translation + Lexical image caption translation ([#2816](https://github.com/mx-space/core/issues/2816)) ([e7104fd](https://github.com/mx-space/core/commit/e7104fd89df96c13efbbd4d3fb1751f61a37a394)), closes [#2815](https://github.com/mx-space/core/issues/2815)
 
-## [14.7.0](https://github.com/mx-space/core/compare/v14.6.1...v14.7.0) (2026-09-02)
+# [14.7.0](https://github.com/mx-space/core/compare/v14.6.1...v14.7.0) (2026-09-02)
 
 
 ### Bug Fixes
@@ -101,12 +126,11 @@
 
 ### Features
 
-* **core:** upgrade NestJS 11 to 12 and replace nestjs-zod with Standard Schema validation ([2d32f21](https://github.com/mx-space/core/commit/2d32f21f8)) ([#2814](https://github.com/mx-space/core/pull/2814))
 * **membership:** import GitHub sponsors as manual memberships ([50c6f23](https://github.com/mx-space/core/commit/50c6f23c817b7a659903cb03d93720af3589aca5))
 
 ## [14.6.1](https://github.com/mx-space/core/compare/v14.6.0...v14.6.1) (2026-08-31)
 
-## [14.6.0](https://github.com/mx-space/core/compare/v14.5.1...v14.6.0) (2026-08-30)
+# [14.6.0](https://github.com/mx-space/core/compare/v14.5.1...v14.6.0) (2026-08-30)
 
 
 ### Bug Fixes
@@ -118,14 +142,14 @@
 
 * **core:** stream persistable article bodies as NDJSON ([c5bea4b](https://github.com/mx-space/core/commit/c5bea4bff0125787121c548d73f2165330815cb7))
 
-## [14.5.1](https://github.com/mx-space/core/compare/v14.5.0...v14.5.1) (2026-08-26)
+## [14.5.1](https://github.com/mx-space/core/compare/v14.5.0...v14.5.1) (2026-08-25)
 
 
 ### Bug Fixes
 
 * **ai:** type tool-call arguments after isPlainObject guard ([9eaa226](https://github.com/mx-space/core/commit/9eaa2263015d2156e9573de1c9fd662b38568ab3))
 
-## [14.5.0](https://github.com/mx-space/core/compare/v14.4.1...v14.5.0) (2026-08-26)
+# [14.5.0](https://github.com/mx-space/core/compare/v14.4.1...v14.5.0) (2026-08-25)
 
 
 ### Bug Fixes
@@ -149,7 +173,7 @@
 * update references from "MX Space" to "Mix Space" across the codebase ([d95d9c4](https://github.com/mx-space/core/commit/d95d9c48848b618af100438d91a25de20ea64680))
 * **webhooks:** migrate renamed event subscriptions ([66621d9](https://github.com/mx-space/core/commit/66621d94b5a71a064523a2f20c8aa768f1fd25ae))
 
-## [14.4.0](https://github.com/mx-space/core/compare/v14.3.1...v14.4.0) (2026-08-24)
+# [14.4.0](https://github.com/mx-space/core/compare/v14.3.1...v14.4.0) (2026-08-24)
 
 
 ### Bug Fixes
@@ -168,7 +192,7 @@
 
 * **events:** emit visitor content events by visibility transition ([a9e0047](https://github.com/mx-space/core/commit/a9e0047a4d46391f01e8d2a5072441b42ab71b9e))
 
-## [14.3.0](https://github.com/mx-space/core/compare/v14.2.0...v14.3.0) (2026-08-22)
+# [14.3.0](https://github.com/mx-space/core/compare/v14.2.0...v14.3.0) (2026-08-22)
 
 
 ### Bug Fixes
@@ -180,7 +204,7 @@
 
 * **membership:** confirm Apple IAP subscriptions ([#2813](https://github.com/mx-space/core/issues/2813)) ([e7e838d](https://github.com/mx-space/core/commit/e7e838dec257cb6464b9d637d0cd488e06bc757e))
 
-## [14.2.0](https://github.com/mx-space/core/compare/v14.1.0...v14.2.0) (2026-08-18)
+# [14.2.0](https://github.com/mx-space/core/compare/v14.1.0...v14.2.0) (2026-08-17)
 
 
 ### Bug Fixes
@@ -192,7 +216,7 @@
 
 * **push:** reader content and reply notification fan-out ([#2812](https://github.com/mx-space/core/issues/2812)) ([bdb7cd4](https://github.com/mx-space/core/commit/bdb7cd42629154f1ab206fb08c1b271dbe4bd306))
 
-## [14.1.0](https://github.com/mx-space/core/compare/v14.0.2...v14.1.0) (2026-08-16)
+# [14.1.0](https://github.com/mx-space/core/compare/v14.0.2...v14.1.0) (2026-08-16)
 
 
 ### Features
@@ -1018,7 +1042,7 @@ Signed-off-by: Innei <tukon479@gmail.com>
 
 * **recently:** URL-keyed enrichment map, drop typed entries ([#2726](https://github.com/mx-space/core/issues/2726)) ([91b8a47](https://github.com/mx-space/core/commit/91b8a47469e9b9f96016b7aa3651a2ffa6669719))
 
-# [12.6.0](https://github.com/mx-space/core/compare/v12.5.4...v12.6.0) (2026-05-15)
+# [12.6.0](https://github.com/mx-space/core/compare/v0.7.0...v12.6.0) (2026-05-15)
 
 
 ### Features
