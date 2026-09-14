@@ -308,6 +308,19 @@ export class PostRepository extends BaseRepository {
     return options.metaOnly ? withCategory : this.attachRelated(withCategory)
   }
 
+  async listPremium(
+    options: { publishedOnly?: boolean } = {},
+  ): Promise<PostRow[]> {
+    const filters: SQL[] = [eq(posts.isPremium, true)]
+    if (options.publishedOnly) filters.push(eq(posts.isPublished, true))
+    const rows = await this.db
+      .select(postMetaColumns)
+      .from(posts)
+      .where(and(...filters))
+      .orderBy(desc(posts.createdAt))
+    return this.attachCategories(rows.map(mapBase))
+  }
+
   async findManyByIds(ids: Array<EntityId | string>): Promise<PostRow[]> {
     if (ids.length === 0) return []
     const bigInts = ids.map((id) => parseEntityId(id))

@@ -49,6 +49,23 @@ export interface ArticlePurchasedResult {
   purchased: boolean
 }
 
+export type ArchiveEntitlement =
+  'public' | 'owner' | 'free-window' | 'purchase' | 'membership' | 'locked'
+
+export interface ArchivePostItem {
+  id: string
+  title: string
+  slug: string
+  category: { slug: string }
+  createdAt: string
+  entitlement: ArchiveEntitlement
+  freeUntil?: string
+}
+
+export interface ArchiveResult {
+  posts: ArchivePostItem[]
+}
+
 export interface MembershipStatusResultNone {
   status: 'none'
 }

@@ -15,9 +15,13 @@ import { z } from 'zod'
 import { DEMO_MODE } from '~/app.config'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
-import { CurrentUser } from '~/common/decorators/current-user.decorator'
+import {
+  CurrentReaderId,
+  CurrentUser,
+} from '~/common/decorators/current-user.decorator'
 import { WithFastifyRouteOptions } from '~/common/decorators/fastify-route-options.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
+import { HasAdminAccess } from '~/common/decorators/role.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
@@ -232,6 +236,32 @@ export class MembershipController {
         user.id,
         params.postId,
       ),
+    }
+  }
+
+  @Get('/archive')
+  async archive(
+    @HasAdminAccess() isOwner: boolean,
+    @CurrentReaderId() readerId?: string,
+  ) {
+    const rows = await this.postRepository.listPremium({
+      publishedOnly: !isOwner,
+    })
+    const entitlements = await this.entitlementService.resolvePostEntitlements({
+      posts: rows,
+      isOwner,
+      readerId,
+    })
+    return {
+      posts: rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        category: { slug: row.category?.slug ?? '' },
+        createdAt: row.createdAt,
+        entitlement: entitlements.get(String(row.id))?.reason ?? 'locked',
+        freeUntil: readPaywallMeta(row.meta).freeUntil,
+      })),
     }
   }
 

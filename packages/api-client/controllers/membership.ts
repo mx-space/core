@@ -2,6 +2,7 @@ import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type {
+  ArchiveResult,
   ArticleCheckoutResult,
   ArticlePurchasedResult,
   MembershipAppleConfirmationResult,
@@ -63,5 +64,9 @@ export class MembershipController<ResponseWrapper> implements IController {
 
   articlePurchased(postId: string) {
     return this.proxy['article-purchases'](postId).get<ArticlePurchasedResult>()
+  }
+
+  archive() {
+    return this.proxy.archive.get<ArchiveResult>()
   }
 }
