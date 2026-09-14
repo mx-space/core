@@ -753,6 +753,7 @@ export class ConfigsService implements OnModuleInit {
       ['commentReviewModel', aiConfig.commentReviewModel],
       ['translationModel', aiConfig.translationModel],
       ['translationReviewModel', aiConfig.translationReviewModel],
+      ['fieldTranslationModel', aiConfig.fieldTranslationModel],
       ['insightsModel', aiConfig.insightsModel],
       ['insightsTranslationModel', aiConfig.insightsTranslationModel],
     ] as const

@@ -2091,6 +2091,7 @@ export const enUS = {
   'settings.ai.assignment.insightsLabel': 'Insights',
   'settings.ai.assignment.insightsTranslationDescription':
     'Model used to translate insights; falls back to the translation model when empty.',
+  'settings.ai.assignment.fieldTranslationLabel': 'Field translation',
   'settings.ai.assignment.insightsTranslationLabel': 'Insights translation',
   'settings.ai.assignment.imageGenerationLabel': 'Image generation model',
   'settings.ai.assignment.mediaModelPlaceholder':

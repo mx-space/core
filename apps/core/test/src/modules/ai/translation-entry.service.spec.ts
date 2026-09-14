@@ -17,7 +17,7 @@ const createService = () => {
   const topicRepository = { findAll: vi.fn().mockResolvedValue([]) }
   const generateStructured = vi.fn()
   const aiService = {
-    getTranslationModel: vi.fn().mockResolvedValue({ generateStructured }),
+    getFieldTranslationModel: vi.fn().mockResolvedValue({ generateStructured }),
   }
   const configService = { get: vi.fn() }
   const pipeline = {

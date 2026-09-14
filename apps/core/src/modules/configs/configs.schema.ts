@@ -1007,6 +1007,14 @@ export const AISchema = section('AI settings', {
         'AI model used by the translation reviewer (critique-only). Falls back to the translation model when empty.',
     },
   ),
+  fieldTranslationModel: field.plain(
+    AIModelAssignmentSchema.nullish(),
+    'Field translation model',
+    {
+      description:
+        'AI model used to translate short fields (category names, tags, moods, weather). Falls back to the translation model when empty.',
+    },
+  ),
   insightsModel: field.plain(
     AIModelAssignmentSchema.nullish(),
     'Insights model',

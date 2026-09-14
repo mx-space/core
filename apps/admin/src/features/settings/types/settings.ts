@@ -62,6 +62,7 @@ export interface AIConfig {
   summaryTargetLanguages?: string[]
   translationModel?: AIModelAssignment | null
   translationReviewModel?: AIModelAssignment | null
+  fieldTranslationModel?: AIModelAssignment | null
   translationTargetLanguages?: string[]
   tts?: {
     concurrency?: number

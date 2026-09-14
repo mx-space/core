@@ -1997,6 +1997,7 @@ export const zhCN = {
   'settings.ai.assignment.insightsLabel': '精读生成',
   'settings.ai.assignment.insightsTranslationDescription':
     '用于翻译精读；留空则复用翻译模型。',
+  'settings.ai.assignment.fieldTranslationLabel': '字段翻译',
   'settings.ai.assignment.insightsTranslationLabel': '精读翻译',
   'settings.ai.assignment.imageGenerationLabel': '图片生成模型',
   'settings.ai.assignment.mediaModelPlaceholder': '必须填写能力对应的模型 ID',

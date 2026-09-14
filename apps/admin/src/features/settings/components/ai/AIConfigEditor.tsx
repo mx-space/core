@@ -133,6 +133,7 @@ export function AIConfigEditor(props: {
       props.value.commentReviewModel,
       props.value.translationModel,
       props.value.translationReviewModel,
+      props.value.fieldTranslationModel,
       props.value.insightsModel,
       props.value.insightsTranslationModel,
       props.value.imageGeneration?.model,
@@ -318,6 +319,15 @@ export function AIConfigEditor(props: {
                 }
                 providers={providers}
                 value={props.value.translationReviewModel}
+              />
+              <AIModelAssignmentField
+                label={t('settings.ai.assignment.fieldTranslationLabel')}
+                models={providerModels}
+                onChange={(fieldTranslationModel) =>
+                  updateConfig({ fieldTranslationModel })
+                }
+                providers={providers}
+                value={props.value.fieldTranslationModel}
               />
             </>
           }

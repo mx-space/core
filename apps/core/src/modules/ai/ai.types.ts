@@ -11,6 +11,7 @@ export enum AIFeatureKey {
   CommentReview = 'commentReview',
   Translation = 'translation',
   TranslationReview = 'translationReview',
+  FieldTranslation = 'fieldTranslation',
   Insights = 'insights',
   InsightsTranslation = 'insightsTranslation',
 }

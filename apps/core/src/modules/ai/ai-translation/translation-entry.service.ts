@@ -377,7 +377,7 @@ export class TranslationEntryService {
       })
 
       try {
-        const runtime = await this.aiService.getTranslationModel()
+        const runtime = await this.aiService.getFieldTranslationModel()
         const promptData = AI_PROMPTS.fieldTranslation(lang, fields)
         const result = await runtime.generateStructured({
           prompt: promptData.prompt,
