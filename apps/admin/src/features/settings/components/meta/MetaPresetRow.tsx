@@ -3,7 +3,7 @@ import { GripVertical, Lock } from 'lucide-react'
 import { useI18n } from '~/i18n'
 import type { MetaPresetField } from '~/models/meta-preset'
 import { Button } from '~/ui/primitives/button'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 
 import { fieldTypeLabelKeys, scopeLabelKeys } from '../../constants'
 import { SmallBadge } from '../SettingsPrimitives'
@@ -40,7 +40,7 @@ export function MetaPresetRow(props: {
           </p>
         ) : null}
       </div>
-      <Switch
+      <FormSwitch
         checked={props.preset.enabled}
         label=""
         onCheckedChange={() => props.onToggle(props.preset)}

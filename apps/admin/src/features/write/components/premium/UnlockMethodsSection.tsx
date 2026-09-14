@@ -2,7 +2,7 @@ import { Check, Minus } from 'lucide-react'
 
 import type { MembershipPlansResponse } from '~/api/membership'
 import { useI18n } from '~/i18n'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 
 function formatPrice(price?: { amount: number; currency: string }) {
   if (!price) return null
@@ -47,7 +47,7 @@ export function UnlockMethodsSection(props: {
           />
         )}
       </div>
-      <Switch
+      <FormSwitch
         checked={purchaseAvailable && props.purchaseEnabled}
         description={
           purchaseAvailable

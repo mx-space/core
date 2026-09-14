@@ -8,7 +8,7 @@ import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
 
@@ -119,7 +119,7 @@ export function OauthProviderSection(props: {
             {props.label}
           </h3>
         </div>
-        <Switch
+        <FormSwitch
           checked={enabled}
           label={t('settings.oauth.switch.enabled')}
           onCheckedChange={setEnabled}
@@ -167,7 +167,7 @@ export function OauthProviderSection(props: {
 
         {props.type === 'apple' ? (
           <div className="grid gap-3">
-            <Switch
+            <FormSwitch
               checked={reviewDemoEnabled}
               description={t('settings.oauth.reviewDemo.helper')}
               label={t('settings.oauth.reviewDemo.switch')}

@@ -22,7 +22,7 @@ import { adminQueryKeys } from '~/query/keys'
 import { Badge } from '~/ui/primitives/badge'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
-import { Toggle } from '~/ui/primitives/switch'
+import { Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import {
@@ -233,7 +233,7 @@ export function MembershipConfigEditor(props: {
         </div>
         <div className="flex shrink-0 items-center gap-3 text-sm text-fg">
           <span>{t('settings.membership.enable.label')}</span>
-          <Toggle
+          <Switch
             aria-label={t('settings.membership.enable.label')}
             checked={Boolean(props.value.enabled)}
             disabled={!setupComplete && !props.value.enabled}
@@ -351,7 +351,7 @@ export function MembershipConfigEditor(props: {
             <span className="text-sm font-medium text-fg">
               {t('settings.membership.articlePurchase.enabled.label')}
             </span>
-            <Toggle
+            <Switch
               aria-label={t(
                 'settings.membership.articlePurchase.enabled.label',
               )}

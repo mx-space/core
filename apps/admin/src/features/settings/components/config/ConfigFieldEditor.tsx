@@ -1,6 +1,5 @@
 import type { ConfigFormField } from '~/api/options'
-
-import { Toggle } from '~/ui/primitives/switch'
+import { Switch } from '~/ui/primitives/switch'
 import { cn } from '~/utils/cn'
 
 import { renderConfigControl } from './renderConfigControl'
@@ -33,7 +32,7 @@ export function ConfigFieldEditor(props: {
         className={cn('min-w-0', isSwitch && 'md:flex md:justify-end md:pt-1')}
       >
         {isSwitch ? (
-          <Toggle
+          <Switch
             aria-label={field.title}
             checked={Boolean(props.value)}
             onCheckedChange={props.onChange}

@@ -171,7 +171,7 @@ import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 import { getDayOfYear } from '~/utils/time'
@@ -2731,7 +2731,7 @@ function ContentSettingsPanel(props: {
         innerClassName="grid grid-cols-[minmax(0,1fr)] gap-4 p-4"
       >
         <PanelBlock title={t('write.section.publish.title')}>
-          <Switch
+          <FormSwitch
             checked={props.published}
             disabled={!props.refId || props.publicationPending}
             label={t(
@@ -3367,12 +3367,12 @@ function PostFields(props: {
           onChange={(value) => props.updateField('summary', value)}
           value={props.state.summary}
         />
-        <Switch
+        <FormSwitch
           checked={props.state.copyright}
           label={t('write.postFields.copyright')}
           onCheckedChange={(checked) => props.updateField('copyright', checked)}
         />
-        <Switch
+        <FormSwitch
           checked={props.state.pin}
           label={t('write.postFields.pin')}
           onCheckedChange={(checked) => props.updateField('pin', checked)}
@@ -3577,7 +3577,7 @@ function NoteFields(props: {
             </MetadataPill>
           ))}
         </div>
-        <Switch
+        <FormSwitch
           checked={props.state.bookmark}
           label={t('write.noteFields.bookmark')}
           onCheckedChange={(checked) => props.updateField('bookmark', checked)}
@@ -3674,7 +3674,7 @@ function NoteFields(props: {
       </PanelBlock>
 
       <PanelBlock title={t('write.noteFields.section.access')}>
-        <Switch
+        <FormSwitch
           checked={props.state.passwordProtected}
           label={t('write.field.passwordProtected')}
           onCheckedChange={(checked) =>

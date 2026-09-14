@@ -2,15 +2,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Copy } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { TokenModel } from '~/models/token'
 
 import { createToken } from '~/api/auth'
 import { useI18n } from '~/i18n'
+import type { TokenModel } from '~/models/token'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { DateTimePicker } from '~/ui/primitives/datetime-picker'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import { accountQueryKey } from '../../constants'
@@ -73,7 +73,7 @@ function CreateTokenModal() {
           required
           value={name}
         />
-        <Switch
+        <FormSwitch
           checked={expiresEnabled}
           label={t('settings.token.field.expireSwitch')}
           onCheckedChange={setExpiresEnabled}

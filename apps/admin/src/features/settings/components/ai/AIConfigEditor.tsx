@@ -10,7 +10,7 @@ import type { TranslationKey } from '~/i18n/types'
 import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
-import { Switch, Toggle } from '~/ui/primitives/switch'
+import { FormSwitch, Switch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -280,7 +280,7 @@ export function AIConfigEditor(props: {
           title={t('settings.ai.section.insights')}
           toggleLabel={t('settings.ai.switch.enableInsights')}
         >
-          <Switch
+          <FormSwitch
             checked={Boolean(props.value.enableAutoTranslateInsights)}
             disabled={!props.value.enableInsights}
             label={t('settings.ai.switch.enableAutoTranslateInsights')}
@@ -329,7 +329,7 @@ export function AIConfigEditor(props: {
           title={t('settings.ai.section.translation')}
           toggleLabel={t('settings.ai.switch.enableTranslation')}
         >
-          <Switch
+          <FormSwitch
             checked={Boolean(props.value.enableAutoGenerateTranslation)}
             disabled={!props.value.enableTranslation}
             label={t('settings.ai.switch.enableAutoTranslate')}
@@ -337,7 +337,7 @@ export function AIConfigEditor(props: {
               updateConfig({ enableAutoGenerateTranslation })
             }
           />
-          <Switch
+          <FormSwitch
             checked={Boolean(props.value.enableTranslationReview)}
             disabled={!props.value.enableTranslation}
             label={t('settings.ai.switch.enableTranslationReview')}
@@ -619,7 +619,7 @@ function ProviderRow(props: {
           {capabilities.join(' · ') || t('settings.ai.provider.row.empty')}
         </div>
       </div>
-      <Toggle
+      <Switch
         aria-label={t('settings.oauth.switch.enabled')}
         checked={provider.enabled}
         onCheckedChange={props.onToggle}
@@ -656,7 +656,7 @@ function FeatureSection(props: {
   return (
     <SettingsSection description={props.description} title={props.title}>
       <div className="space-y-4">
-        <Switch
+        <FormSwitch
           checked={props.enabled}
           label={props.toggleLabel}
           onCheckedChange={props.onEnabledChange}

@@ -9,7 +9,7 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
 
@@ -113,7 +113,7 @@ export function PasskeyPanel() {
   return (
     <>
       <div className="border-b border-neutral-100 p-4 dark:border-neutral-900">
-        <Switch
+        <FormSwitch
           checked={Boolean(authSecurityQuery.data?.disablePasswordLogin)}
           description={t('settings.passkey.switch.disablePasswordDescription')}
           disabled={

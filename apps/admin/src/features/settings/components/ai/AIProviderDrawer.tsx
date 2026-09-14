@@ -10,7 +10,7 @@ import { Button } from '~/ui/primitives/button'
 import { Combobox } from '~/ui/primitives/combobox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import {
@@ -209,7 +209,7 @@ export function AIProviderDrawer(props: {
     >
       {provider ? (
         <div className="space-y-5 overflow-y-auto p-4">
-          <Switch
+          <FormSwitch
             checked={provider.enabled}
             label={t('settings.oauth.switch.enabled')}
             onCheckedChange={(enabled) => props.onChange({ enabled })}
@@ -218,7 +218,7 @@ export function AIProviderDrawer(props: {
             <div className="text-sm font-medium text-fg">
               {t('settings.ai.field.capabilities')}
             </div>
-            <Switch
+            <FormSwitch
               checked={provider.capabilities?.text ?? true}
               label={t('settings.ai.capability.text')}
               onCheckedChange={(text) =>
@@ -231,7 +231,7 @@ export function AIProviderDrawer(props: {
                 })
               }
             />
-            <Switch
+            <FormSwitch
               checked={provider.capabilities?.image ?? false}
               label={t('settings.ai.capability.image')}
               onCheckedChange={(image) =>
@@ -244,7 +244,7 @@ export function AIProviderDrawer(props: {
                 })
               }
             />
-            <Switch
+            <FormSwitch
               checked={provider.capabilities?.speech ?? false}
               label={t('settings.ai.capability.speech')}
               onCheckedChange={(speech) =>
@@ -353,7 +353,7 @@ export function AIProviderDrawer(props: {
                 placeholder={t('settings.ai.placeholder.modelListUrl')}
                 value={provider.modelListUrl ?? ''}
               />
-              <Switch
+              <FormSwitch
                 checked={provider.appendV1 ?? true}
                 label={t('settings.ai.field.appendV1')}
                 onCheckedChange={(appendV1) => props.onChange({ appendV1 })}

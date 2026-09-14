@@ -18,7 +18,7 @@ import { Checkbox } from '~/ui/primitives/checkbox'
 import { CodeEditor } from '~/ui/primitives/code-editor'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextArea, TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -420,7 +420,7 @@ function FieldControl(props: {
     }
     case 'boolean': {
       return (
-        <Switch
+        <FormSwitch
           checked={value === true}
           label={field.label}
           onCheckedChange={onChange}
@@ -503,7 +503,7 @@ function ObjectFieldRenderer(props: {
 
   return (
     <div className="grid gap-2">
-      <Switch
+      <FormSwitch
         checked={isEnabled}
         description={props.field.description}
         label={props.field.label}

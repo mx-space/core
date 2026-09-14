@@ -1,13 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, Loader2 } from 'lucide-react'
+import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import type {
-  CreateMetaPresetDto,
-  MetaFieldType,
-  MetaPresetScope,
-} from '~/models/meta-preset'
-import type { KeyboardEvent } from 'react'
 
 import {
   createMetaPreset,
@@ -15,12 +10,17 @@ import {
   updateMetaPreset,
 } from '~/api/meta-presets'
 import { useI18n } from '~/i18n'
+import type {
+  CreateMetaPresetDto,
+  MetaFieldType,
+  MetaPresetScope,
+} from '~/models/meta-preset'
 import { adminQueryKeys } from '~/query/keys'
 import { ModalHeader } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import {
@@ -187,7 +187,7 @@ function MetaPresetModal(props: MetaPresetModalProps) {
             onChange={(value) => setField('placeholder', value)}
             value={form.placeholder ?? ''}
           />
-          <Switch
+          <FormSwitch
             checked={Boolean(form.enabled ?? true)}
             label={t('settings.meta.switch.enabled')}
             onCheckedChange={(value) => setField('enabled', value)}

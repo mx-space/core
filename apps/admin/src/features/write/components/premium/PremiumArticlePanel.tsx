@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getMembershipPlans } from '~/api/membership'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 
 import { FreeWindowSection } from './FreeWindowSection'
 import { parseFreeWindowHours } from './paywall-meta'
@@ -56,7 +56,7 @@ export function PremiumArticlePanel(props: {
 
   return (
     <div className="grid gap-4">
-      <Switch
+      <FormSwitch
         checked={values.isPremium}
         description={
           lexical

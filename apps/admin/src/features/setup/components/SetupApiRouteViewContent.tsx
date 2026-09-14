@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 
 const storeApiUrlKey = 'mx-admin:setup-api:url'
@@ -104,7 +104,7 @@ export function SetupApiRouteViewContent() {
         />
 
         <div className="mb-6 text-white/90">
-          <Switch
+          <FormSwitch
             checked={persist}
             label={t('setup.api.persistLabel')}
             onCheckedChange={setPersist}

@@ -18,7 +18,7 @@ import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -246,7 +246,7 @@ function WebhookEditorModal(props: WebhookEditorModalProps) {
           </div>
         </fieldset>
 
-        <Switch
+        <FormSwitch
           bordered
           checked={enabled}
           description={t('webhooks.editor.enabledDescription')}

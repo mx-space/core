@@ -16,7 +16,7 @@ import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
-import { Switch } from '~/ui/primitives/switch'
+import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
 
@@ -173,7 +173,7 @@ export function SubscribeRouteViewContent() {
           }
         />
         <div className="rounded border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-          <Switch
+          <FormSwitch
             checked={subscribeEnabled}
             disabled={toggleMutation.isPending}
             label={t('subscribe.toggle.label')}
