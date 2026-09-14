@@ -31,6 +31,7 @@ type ContentProps = Omit<
   'className'
 > & {
   align?: PositionerProps['align']
+  anchor?: PositionerProps['anchor']
   alignOffset?: PositionerProps['alignOffset']
   className?: string
   container?: HTMLElement | null
@@ -50,6 +51,7 @@ const widthClass: Record<NonNullable<ContentProps['width']>, string> = {
 function PopoverContent({
   align = 'start',
   alignOffset,
+  anchor,
   children,
   className,
   container,
@@ -66,6 +68,7 @@ function PopoverContent({
       <BasePopover.Positioner
         align={align}
         alignOffset={alignOffset}
+        anchor={anchor}
         side={side}
         sideOffset={sideOffset}
         style={positionerStyle}

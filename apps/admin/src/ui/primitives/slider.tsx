@@ -1,15 +1,18 @@
 import { Slider as BaseSlider } from '@base-ui/react/slider'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
+import { useEffect, useState } from 'react'
 
 import { cn } from '~/utils/cn'
 
 interface SliderProps {
   'aria-label'?: string
   className?: string
+  controlRef?: Ref<HTMLDivElement>
   disabled?: boolean
   label?: ReactNode
   max: number
   min?: number
+  onActiveChange?: (active: boolean) => void
   onValueChange: (value: number) => void
   step?: number
   value: number
@@ -17,6 +20,25 @@ interface SliderProps {
 }
 
 export function Slider(props: SliderProps) {
+  const { onActiveChange } = props
+  const [dragging, setDragging] = useState(false)
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    if (!dragging) return
+    const stop = () => setDragging(false)
+    window.addEventListener('pointerup', stop)
+    window.addEventListener('pointercancel', stop)
+    return () => {
+      window.removeEventListener('pointerup', stop)
+      window.removeEventListener('pointercancel', stop)
+    }
+  }, [dragging])
+
+  useEffect(() => {
+    onActiveChange?.(dragging || focused)
+  }, [dragging, focused, onActiveChange])
+
   return (
     <div
       className={cn(
@@ -45,11 +67,17 @@ export function Slider(props: SliderProps) {
         step={props.step ?? 1}
         value={props.value}
       >
-        <BaseSlider.Control className="flex w-full touch-none select-none items-center py-2 data-[disabled]:cursor-not-allowed">
+        <BaseSlider.Control
+          className="flex w-full touch-none select-none items-center py-2 data-[disabled]:cursor-not-allowed"
+          onPointerDown={() => setDragging(true)}
+          ref={props.controlRef}
+        >
           <BaseSlider.Track className="relative h-1 w-full rounded-full bg-surface-inset">
             <BaseSlider.Indicator className="rounded-full bg-accent" />
             <BaseSlider.Thumb
               aria-label={props['aria-label']}
+              onBlur={() => setFocused(false)}
+              onFocus={() => setFocused(true)}
               className="shadow-xs size-4 rounded-full border border-border bg-white outline-hidden transition-shadow data-[dragging]:border-border-strong has-[input:focus-visible]:ring-[3px] has-[input:focus-visible]:ring-accent/15"
             />
           </BaseSlider.Track>

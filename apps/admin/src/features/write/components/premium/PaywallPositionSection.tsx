@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
 import { Slider } from '~/ui/primitives/slider'
@@ -8,6 +8,7 @@ import {
   parseLexicalTopLevelBlocks,
 } from './lexical-blocks'
 import { DEFAULT_PREVIEW_BLOCKS } from './paywall-meta'
+import { PaywallContextPopover } from './PaywallContextPopover'
 
 const CUTOFF_TEXT_LENGTH = 30
 
@@ -29,6 +30,8 @@ export function PaywallPositionSection(props: {
     Math.floor(Number(props.previewBlocks)) || DEFAULT_PREVIEW_BLOCKS,
   )
   const value = Math.min(stored, Math.max(1, maxPreview))
+  const [active, setActive] = useState(false)
+  const [control, setControl] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!tooShort && stored !== value) {
@@ -61,9 +64,11 @@ export function PaywallPositionSection(props: {
       </div>
       <Slider
         aria-label={t('write.postFields.premiumPreviewBlocks')}
+        controlRef={setControl}
         disabled={tooShort || maxPreview < 2}
         max={Math.max(2, maxPreview)}
         min={1}
+        onActiveChange={setActive}
         onValueChange={(next) => onChange(String(next))}
         value={tooShort ? 1 : value}
         valueLabel={
@@ -75,6 +80,14 @@ export function PaywallPositionSection(props: {
               })
         }
       />
+      {tooShort ? null : (
+        <PaywallContextPopover
+          anchor={control}
+          blocks={blocks}
+          open={active}
+          value={value}
+        />
+      )}
       {tooShort ? (
         <p className="text-xs text-fg-muted">
           {t('write.postFields.premiumNeedsMoreBlocks')}

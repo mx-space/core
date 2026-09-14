@@ -3661,6 +3661,12 @@ export const zhCN = {
   'write.premium.unlock.sponsorDisabled': '未开启 Membership',
   'write.premium.unlock.sponsorHint': '所有有效 Sponsor 均可阅读全文',
   'write.premium.unlock.title': '解锁方式',
+  'write.premium.paywall.context.code': '[代码块]',
+  'write.premium.paywall.context.divider': 'Sponsor Archive',
+  'write.premium.paywall.context.hr': '[分隔线]',
+  'write.premium.paywall.context.image': '[图片]',
+  'write.premium.paywall.context.other': '[{type}]',
+  'write.premium.paywall.context.readersStop': '读者读到这里 · 第 {n} 块',
   'write.publishConfirm.aiDescription':
     '仅为这一次发布选择需要更新的资源，默认全部不选。未选择的现有资源不会被删除。',
   'write.publishConfirm.aiTitle': '同时更新 AI 资源（可选）',

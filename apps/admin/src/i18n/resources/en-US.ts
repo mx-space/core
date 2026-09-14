@@ -3845,6 +3845,12 @@ export const enUS = {
   'write.premium.unlock.sponsorHint':
     'Every active sponsor can read the full article',
   'write.premium.unlock.title': 'Unlock methods',
+  'write.premium.paywall.context.code': '[Code block]',
+  'write.premium.paywall.context.divider': 'Sponsor Archive',
+  'write.premium.paywall.context.hr': '[Divider]',
+  'write.premium.paywall.context.image': '[Image]',
+  'write.premium.paywall.context.other': '[{type}]',
+  'write.premium.paywall.context.readersStop': 'Readers stop here · block {n}',
   'write.publishConfirm.aiDescription':
     'Choose resources for this publish only. All are off by default, and unselected existing resources are preserved.',
   'write.publishConfirm.aiTitle': 'Update AI resources too (optional)',
