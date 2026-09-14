@@ -215,6 +215,8 @@ export type TranslationEntryKeyPath =
   | 'category.name'
   | 'note.mood'
   | 'note.weather'
+  | 'post.tag'
+  | 'topic.description'
   | 'topic.introduce'
   | 'topic.name'
 
