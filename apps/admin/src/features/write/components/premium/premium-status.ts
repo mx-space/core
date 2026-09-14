@@ -5,6 +5,7 @@ import {
 
 export type PremiumStatus =
   | { kind: 'pending'; freeWindowHours: number }
+  | { kind: 'pending-save'; freeWindowHours: number }
   | { kind: 'free-window'; freeUntil: Date; remainingMs: number }
   | { kind: 'archived'; previewBlocks: number }
 
@@ -24,10 +25,14 @@ export function derivePremiumStatus(
     }
   }
   const freeUntil = input.freeUntil ? new Date(input.freeUntil) : null
-  if (freeUntil && !Number.isNaN(freeUntil.getTime())) {
-    const remainingMs = freeUntil.getTime() - now.getTime()
-    if (remainingMs > 0) return { kind: 'free-window', freeUntil, remainingMs }
+  if (!freeUntil || Number.isNaN(freeUntil.getTime())) {
+    return {
+      kind: 'pending-save',
+      freeWindowHours: input.freeWindowHours ?? DEFAULT_FREE_WINDOW_HOURS,
+    }
   }
+  const remainingMs = freeUntil.getTime() - now.getTime()
+  if (remainingMs > 0) return { kind: 'free-window', freeUntil, remainingMs }
   return {
     kind: 'archived',
     previewBlocks: input.previewBlocks ?? DEFAULT_PREVIEW_BLOCKS,

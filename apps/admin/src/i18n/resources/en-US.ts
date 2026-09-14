@@ -3822,16 +3822,19 @@ export const enUS = {
   'write.premium.remaining.dayHour': '{days}d {hours}h',
   'write.premium.remaining.hour': '{hours}h',
   'write.premium.status.archived':
-    'Sponsor Archive · locked readers only see the first {count} blocks',
+    'Readers without access see the first {count} blocks',
   'write.premium.status.freeWindow':
-    'Free access · {remaining} left · Sponsor Archive · {until}',
-  'write.premium.status.pending':
-    'Awaiting publish · free for {hours} hours after publishing',
+    '{remaining} left · Enters the Sponsor Archive {until}',
+  'write.premium.status.pending': 'Free for {hours} hours after publishing',
   'write.premium.status.pendingImmediate':
-    'Awaiting publish · enters the Archive immediately after publishing',
+    'Enters the Archive immediately after publishing',
+  'write.premium.status.pendingSave': 'Free for {hours} hours after saving',
+  'write.premium.status.pendingSaveImmediate':
+    'Enters the Archive immediately after saving',
   'write.premium.status.pill.archived': 'Sponsor Archive',
   'write.premium.status.pill.freeWindow': 'Free access',
   'write.premium.status.pill.pending': 'Pending',
+  'write.premium.status.pill.pendingSave': 'Pending save',
   'write.premium.unlock.purchase': 'Single article unlock',
   'write.premium.unlock.purchaseDisabled':
     'Enable single article purchase in Settings → Membership',

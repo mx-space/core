@@ -8,12 +8,14 @@ const PILL_TONE = {
   archived: 'archived',
   'free-window': 'live',
   pending: 'pending',
+  'pending-save': 'scheduled',
 } as const
 
 const PILL_LABEL = {
   archived: 'write.premium.status.pill.archived',
   'free-window': 'write.premium.status.pill.freeWindow',
   pending: 'write.premium.status.pill.pending',
+  'pending-save': 'write.premium.status.pill.pendingSave',
 } as const
 
 export function PremiumStatusLine(props: { status: PremiumStatus }) {
@@ -26,6 +28,13 @@ export function PremiumStatusLine(props: { status: PremiumStatus }) {
         return status.freeWindowHours === 0
           ? t('write.premium.status.pendingImmediate')
           : t('write.premium.status.pending', { hours: status.freeWindowHours })
+      }
+      case 'pending-save': {
+        return status.freeWindowHours === 0
+          ? t('write.premium.status.pendingSaveImmediate')
+          : t('write.premium.status.pendingSave', {
+              hours: status.freeWindowHours,
+            })
       }
       case 'free-window': {
         const { days, hours } = splitDuration(status.remainingMs)

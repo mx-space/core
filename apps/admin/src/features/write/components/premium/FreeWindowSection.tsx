@@ -153,7 +153,8 @@ export function FreeWindowSection(props: {
       <span className="text-sm font-medium text-fg">
         {t('write.premium.freeWindow.title')}
       </span>
-      {props.status.kind === 'pending' ? (
+      {props.status.kind === 'pending' ||
+      props.status.kind === 'pending-save' ? (
         <PendingControls
           freeWindowHours={props.freeWindowHours}
           onChange={props.onFreeWindowHoursChange}

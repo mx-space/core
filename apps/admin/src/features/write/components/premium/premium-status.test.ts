@@ -53,17 +53,17 @@ describe('derivePremiumStatus', () => {
     ).toEqual({ kind: 'archived', previewBlocks: 5 })
   })
 
-  it('reports archived when published without freeUntil', () => {
+  it('reports pending-save when published without freeUntil', () => {
     expect(derivePremiumStatus({ isPublished: true }, now)).toEqual({
-      kind: 'archived',
-      previewBlocks: 3,
+      kind: 'pending-save',
+      freeWindowHours: 72,
     })
   })
 
-  it('treats an invalid freeUntil as archived', () => {
+  it('treats an invalid freeUntil as pending-save', () => {
     expect(
       derivePremiumStatus({ isPublished: true, freeUntil: 'nope' }, now).kind,
-    ).toBe('archived')
+    ).toBe('pending-save')
   })
 })
 
