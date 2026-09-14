@@ -1,3 +1,10 @@
+## [14.12.3](https://github.com/mx-space/core/compare/v14.12.2...v14.12.3) (2026-09-14)
+
+
+### Features
+
+* **ai:** separate field translation model assignment ([55fb9a6](https://github.com/mx-space/core/commit/55fb9a604dd6ac2777260bb53e61fd3b7cbdb472))
+
 ## [14.12.2](https://github.com/mx-space/core/compare/v14.12.1...v14.12.2) (2026-09-14)
 
 
