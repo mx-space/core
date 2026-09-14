@@ -70,6 +70,14 @@ const CATEGORY_NAME_RULES: ReadonlyArray<EntryRule> = [
   },
 ]
 
+const POST_LIST_TRANSLATION_FIELDS = [
+  'title',
+  'text',
+  'summary',
+  'content',
+  'contentFormat',
+] as const
+
 @ApiController('posts')
 export class PostController {
   constructor(
@@ -194,6 +202,7 @@ export class PostController {
         id: String(doc.id),
         title: doc.title,
         text: truncate ? '' : doc.text,
+        summary: doc.summary,
         meta: doc.meta as { lang?: string } | undefined,
         contentFormat: doc.contentFormat,
         content: truncate ? undefined : doc.content,
@@ -206,7 +215,7 @@ export class PostController {
         this.translationService.collectArticleTranslations({
           articles: articleInputs,
           targetLang: lang,
-          fields: ['title', 'text', 'content', 'contentFormat'],
+          fields: POST_LIST_TRANSLATION_FIELDS,
         }),
         this.batchEntryTranslations(lang ?? '', res.data),
       ])
@@ -215,7 +224,7 @@ export class PostController {
       const tr = translationResults.get(String(doc.id))
       if (tr?.isTranslated) {
         applyArticleTranslationInPlace(doc as Record<string, any>, tr as any, {
-          fields: ['title', 'text', 'content', 'contentFormat'],
+          fields: POST_LIST_TRANSLATION_FIELDS,
         })
       }
     }
