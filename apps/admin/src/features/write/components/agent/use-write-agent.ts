@@ -5,6 +5,7 @@ import type {
   LLMProvider,
   ToolCallGroupItem,
 } from '@haklex/rich-agent-core'
+import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent'
 import { useQuery } from '@tanstack/react-query'
 import type { LexicalEditor } from 'lexical'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -18,6 +19,7 @@ import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import type { AgentLoopHandle } from '~/vendor/rich-editor/types'
+import { createDocumentBashWorkspace } from '~/vendor/rich-editor/utils/document-bash'
 import { buildDynamicTools } from '~/vendor/rich-editor/utils/dynamic-tools'
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
@@ -53,6 +55,7 @@ export interface WriteAgentController {
   rejectBatch: (batchId: string) => void
   reapplyBatch: (batchId: string) => void
   reapplyToolGroup: (items: ToolCallGroupItem[]) => void
+  documentBashTool: AgentToolConfig
   dynamicTools: AgentToolConfig[]
   publishDynamic: (item: ToolCallGroupItem) => Promise<void>
 }
@@ -146,6 +149,19 @@ export function useWriteAgent(opts: {
     () => buildDynamicTools(() => lexicalEditorRef.current),
     [],
   )
+  const documentBash = useMemo(
+    () =>
+      createDocumentBashWorkspace({
+        getEditorState: () => {
+          const editor = lexicalEditorRef.current
+          if (!editor) return null
+          return projectAgentDiffNodesToFactualState(
+            editor.getEditorState().toJSON(),
+          )
+        },
+      }),
+    [],
+  )
   const publishDynamic = useMemo(
     () => createDynamicPublisher(store, () => lexicalEditorRef.current),
     [store],
@@ -207,6 +223,7 @@ export function useWriteAgent(opts: {
       ? { content: trimmed, selection: pinnedSelection, type: 'user' }
       : { content: trimmed, type: 'user' }
     store.getState().addBubble(userBubble)
+    documentBash.beginRun()
     agentLoopRef.current
       .run(trimmed)
       .catch((error: unknown) => {
@@ -346,6 +363,7 @@ export function useWriteAgent(opts: {
     onAgentLoopReady,
     onEditorReady,
     provider,
+    documentBashTool: documentBash.tool,
     dynamicTools,
     publishDynamic,
     providerGroups,

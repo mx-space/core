@@ -4,6 +4,7 @@ import '@haklex/rich-ext-nested-doc/style.css'
 import '../core/style'
 
 import type {
+  AgentExecutorPlugin,
   AgentStore,
   AgentToolConfig,
   ChatMessage,
@@ -50,7 +51,10 @@ export interface ReactEditorPaneProps {
   onEditorReady?: (editor: LexicalEditor | null) => void
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
   onPinSelection?: () => void
+  injectDocumentXml?: boolean
+  plugins?: AgentExecutorPlugin[]
   tools?: AgentToolConfig[]
+  toolSystemRole?: string | false
   litexmlRegistry?: AgentLitexmlRegistryProvider
   systemMessages?: ChatMessage[]
 }
@@ -67,7 +71,10 @@ export function ReactEditorPane({
   onEditorReady,
   onAgentLoopReady,
   onPinSelection,
+  injectDocumentXml,
+  plugins,
   tools,
+  toolSystemRole,
   litexmlRegistry,
   systemMessages,
 }: ReactEditorPaneProps) {
@@ -95,7 +102,9 @@ export function ReactEditorPane({
               ]}
               header={<EditorToolbar />}
               floatingToolbarActions={
-                provider ? <AgentAskAIAction onPin={onPinSelection} /> : undefined
+                provider ? (
+                  <AgentAskAIAction onPin={onPinSelection} />
+                ) : undefined
               }
               onChange={onChange}
               onSubmit={onSubmit}
@@ -105,10 +114,13 @@ export function ReactEditorPane({
               {provider ? <AgentSelectionPinPlugin store={store} /> : null}
               <AgentLoopCapture
                 editorRef={editorRef}
+                injectDocumentXml={injectDocumentXml}
                 onAgentLoopReady={onAgentLoopReady}
+                plugins={plugins}
                 provider={provider}
                 store={store}
                 tools={tools}
+                toolSystemRole={toolSystemRole}
                 litexmlRegistry={litexmlRegistry}
                 systemMessages={systemMessages}
               />

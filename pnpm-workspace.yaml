@@ -4,6 +4,7 @@ packages:
 allowBuilds:
   "@code-inspector/core": false
   "@google/genai": false
+  "@mongodb-js/zstd": false
   "@nestjs/core": true
   "@parcel/watcher": false
   "@swc/core": true
@@ -11,6 +12,7 @@ allowBuilds:
   esbuild: true
   mongodb-memory-server: true
   msgpackr-extract: false
+  node-liblzma: false
   node-pty: true
   protobufjs: false
   redis-memory-server: true
