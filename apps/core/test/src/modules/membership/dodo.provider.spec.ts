@@ -239,6 +239,27 @@ describe('DodoProvider', () => {
     })
   })
 
+  describe('getProductPricing', () => {
+    it('resolves amount and currency for a one-time price', async () => {
+      productsRetrieveMock.mockResolvedValue({
+        price: { price: 300, currency: 'USD', type: 'one_time_price' },
+      })
+
+      const provider = new DodoProvider(configsService as any)
+      expect(await provider.getProductPricing('prod_article')).toEqual({
+        amount: 300,
+        currency: 'USD',
+      })
+    })
+
+    it('returns null when the provider call throws', async () => {
+      productsRetrieveMock.mockRejectedValue(new Error('boom'))
+
+      const provider = new DodoProvider(configsService as any)
+      expect(await provider.getProductPricing('prod_article')).toBeNull()
+    })
+  })
+
   describe('verifyAndParseWebhook', () => {
     const headers = {
       'webhook-id': 'evt_1',

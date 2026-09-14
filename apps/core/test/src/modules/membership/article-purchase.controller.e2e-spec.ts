@@ -85,11 +85,9 @@ const authServiceMock = {
 const createArticleCheckoutMock = vi.fn(async (input: { postId: string }) => ({
   checkoutUrl: `https://checkout.example/article/${input.postId}`,
 }))
-const getPlanPricingMock = vi.fn(async () => ({
+const getProductPricingMock = vi.fn(async () => ({
   amount: 300,
   currency: 'USD',
-  interval: 'month',
-  intervalCount: 1,
 }))
 
 const verifyAndParseWebhookMock = vi.fn()
@@ -98,7 +96,7 @@ const dodoProviderMock = {
   createCheckout: vi.fn(),
   createArticleCheckout: createArticleCheckoutMock,
   verifyAndParseWebhook: verifyAndParseWebhookMock,
-  getPlanPricing: getPlanPricingMock,
+  getProductPricing: getProductPricingMock,
 }
 
 const membershipModule: ModuleMetadata = {

@@ -83,6 +83,10 @@ export interface PaymentProviderAdapter {
 
   getPlanPricing?: (productId: string) => Promise<NormalizedPlanPricing | null>
 
+  getProductPricing?: (
+    productId: string,
+  ) => Promise<{ amount: number; currency: string } | null>
+
   verifyAndParseWebhook: (
     rawBody: Buffer | string,
     headers: Record<string, string>,

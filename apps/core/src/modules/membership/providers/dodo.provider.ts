@@ -132,6 +132,14 @@ export class DodoProvider implements PaymentProviderAdapter {
     { value: NormalizedPlanPricing | null; expiresAt: number }
   >()
 
+  private readonly productCache = new Map<
+    string,
+    {
+      value: Awaited<ReturnType<DodoPayments['products']['retrieve']>> | null
+      expiresAt: number
+    }
+  >()
+
   constructor(private readonly configsService: ConfigsService) {}
 
   private async getClient(
@@ -224,10 +232,10 @@ export class DodoProvider implements PaymentProviderAdapter {
     return { checkoutUrl: session.checkout_url }
   }
 
-  async getPlanPricing(
+  private async retrieveProduct(
     productId: string,
-  ): Promise<NormalizedPlanPricing | null> {
-    const cached = this.pricingCache.get(productId)
+  ): Promise<Awaited<ReturnType<DodoPayments['products']['retrieve']>> | null> {
+    const cached = this.productCache.get(productId)
     if (cached && cached.expiresAt > Date.now()) return cached.value
 
     const membershipConfig = await this.configsService.get('membership')
@@ -238,40 +246,62 @@ export class DodoProvider implements PaymentProviderAdapter {
       membershipConfig.environment,
     )
 
-    let value: NormalizedPlanPricing | null = null
+    let value: Awaited<ReturnType<DodoPayments['products']['retrieve']>> | null
     try {
-      const product = await client.products.retrieve(productId)
-      const price = product.price as
-        | {
-            price?: number
-            currency?: string
-            payment_frequency_interval?: unknown
-            payment_frequency_count?: number
-          }
-        | undefined
-      const interval = normalizeInterval(price?.payment_frequency_interval)
-      if (
-        price &&
-        typeof price.price === 'number' &&
-        price.currency &&
-        interval
-      ) {
-        value = {
-          amount: price.price,
-          currency: price.currency,
-          interval,
-          intervalCount: price.payment_frequency_count ?? 1,
-        }
-      }
+      value = await client.products.retrieve(productId)
     } catch {
       value = null
     }
+
+    this.productCache.set(productId, {
+      value,
+      expiresAt: Date.now() + PRICING_TTL_MS,
+    })
+    return value
+  }
+
+  async getPlanPricing(
+    productId: string,
+  ): Promise<NormalizedPlanPricing | null> {
+    const cached = this.pricingCache.get(productId)
+    if (cached && cached.expiresAt > Date.now()) return cached.value
+
+    const product = await this.retrieveProduct(productId)
+    const price = product?.price as
+      | {
+          price?: number
+          currency?: string
+          payment_frequency_interval?: unknown
+          payment_frequency_count?: number
+        }
+      | undefined
+    const interval = normalizeInterval(price?.payment_frequency_interval)
+    const value: NormalizedPlanPricing | null =
+      price && typeof price.price === 'number' && price.currency && interval
+        ? {
+            amount: price.price,
+            currency: price.currency,
+            interval,
+            intervalCount: price.payment_frequency_count ?? 1,
+          }
+        : null
 
     this.pricingCache.set(productId, {
       value,
       expiresAt: Date.now() + PRICING_TTL_MS,
     })
     return value
+  }
+
+  async getProductPricing(
+    productId: string,
+  ): Promise<{ amount: number; currency: string } | null> {
+    const product = await this.retrieveProduct(productId)
+    const price = product?.price as
+      { price?: number; currency?: string } | undefined
+    if (!price || typeof price.price !== 'number' || !price.currency)
+      return null
+    return { amount: price.price, currency: price.currency }
   }
 
   async verifyAndParseWebhook(

@@ -16,7 +16,6 @@ import {
   resolveArticlePurchaseAvailability,
   resolveMembershipAvailability,
 } from './membership.types'
-import type { NormalizedPlanPricing } from './providers/provider.interface'
 import { PaymentProviderRegistry } from './providers/provider.registry'
 
 export type PostEntitlementReason = z.infer<typeof PostEntitlementReasonSchema>
@@ -169,17 +168,12 @@ export class EntitlementService {
     if (!enabled) return { enabled: false }
 
     const adapter = this.providers.get(config.provider)
-    const pricing: NormalizedPlanPricing | null =
-      adapter?.getPlanPricing && config.articleProductId
+    const pricing =
+      adapter?.getProductPricing && config.articleProductId
         ? await adapter
-            .getPlanPricing(config.articleProductId)
+            .getProductPricing(config.articleProductId)
             .catch(() => null)
         : null
-    return pricing
-      ? {
-          enabled: true,
-          price: { amount: pricing.amount, currency: pricing.currency },
-        }
-      : { enabled: true }
+    return pricing ? { enabled: true, price: pricing } : { enabled: true }
   }
 }
