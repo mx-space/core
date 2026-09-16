@@ -94,7 +94,7 @@ export class MapNode extends DecoratorNode<ReactElement> {
       title: serialized.title ?? '',
       track: serialized.track,
       view: serialized.view,
-    })
+    }).updateFromJSON(serialized)
   }
 
   exportJSON(): SerializedMapNode {

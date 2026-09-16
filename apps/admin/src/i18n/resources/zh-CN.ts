@@ -3317,6 +3317,8 @@ export const zhCN = {
   'write.agent.toast.reapplyFailed': '重新应用失败',
   'write.agent.toast.reapplyPartial':
     '重新应用完成：成功 {success}，冲突 {conflict}，失败 {error}',
+  'write.agent.toast.sessionSyncFailed':
+    '对话未能保存到服务器，刷新后本轮内容会丢失',
   'write.agent.toast.reapplySuccess': '已重新应用 {count} 项工具结果',
   'write.agent.toast.suggestionApplied': '建议已应用',
   'write.agent.toast.suggestionReapplied': '建议已重新应用',

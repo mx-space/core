@@ -4,6 +4,9 @@ import type {
   ChatBubble,
 } from '@haklex/rich-agent-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+
+import { translate } from '~/i18n/translate'
 
 import type { AgentConversation } from '../api/ai-agent'
 import {
@@ -228,7 +231,10 @@ export function useAgentSessionManager({
               .catch(() => {})
           }
         })
-        .catch(() => {})
+        .catch((error: unknown) => {
+          console.error('[agent-session] failed to persist conversation', error)
+          toast.error(translate('write.agent.toast.sessionSyncFailed'))
+        })
     },
     [store],
   )

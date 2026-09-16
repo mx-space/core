@@ -108,7 +108,7 @@ export class AfilmoryNode extends DecoratorNode<ReactElement> {
       alt: serialized.alt,
       accent: serialized.accent,
       limit: serialized.limit,
-    })
+    }).updateFromJSON(serialized)
   }
 
   exportJSON(): SerializedAfilmoryNode {

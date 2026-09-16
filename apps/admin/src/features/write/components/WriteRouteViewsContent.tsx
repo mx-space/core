@@ -181,7 +181,7 @@ import type {
   RichEditorWithAgentProps,
   RichEditorWithAgentRef,
 } from '~/vendor/rich-editor/components/RichEditorWithAgent'
-import { buildMxEditorLitexmlSystemMessages } from '~/vendor/rich-editor/utils/agent-litexml-prompt'
+import { buildDocumentBashSystemMessages } from '~/vendor/rich-editor/utils/document-bash'
 import { useDynamicCatalogSystemMessages } from '~/vendor/rich-editor/utils/dynamic-catalog'
 import { buildImageTools } from '~/vendor/rich-editor/utils/image-tools'
 import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
@@ -5187,15 +5187,18 @@ function RichWriteSurface(props: {
       return { src: result.url }
     },
     initialValue: parseSerializedEditorState(props.content),
+    injectDocumentXml: false,
     litexmlRegistry: createMxLitexmlRegistry,
+    plugins: [],
     systemMessages: [
-      ...buildMxEditorLitexmlSystemMessages(),
+      ...buildDocumentBashSystemMessages(),
       ...dynamicCatalogMessages,
       ...(props.metaFieldsSchema
         ? buildMetaSystemMessages(props.metaFieldsSchema)
         : []),
     ],
     tools: [
+      agent.documentBashTool,
       ...agent.dynamicTools,
       ...(props.metaFieldsSchema &&
       props.getMetaFields &&
@@ -5210,6 +5213,7 @@ function RichWriteSurface(props: {
         ? buildImageTools({ refId: props.refId })
         : []),
     ],
+    toolSystemRole: false,
     onAgentLoopReady: agent.onAgentLoopReady,
     onChange: (value) => {
       latestCallbacks.current.onContentChange(JSON.stringify(value))

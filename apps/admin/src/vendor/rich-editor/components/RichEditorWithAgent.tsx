@@ -1,4 +1,5 @@
 import type {
+  AgentExecutorPlugin,
   AgentStore,
   AgentToolConfig,
   ChatMessage,
@@ -37,10 +38,13 @@ export interface RichEditorWithAgentProps extends BuildRichEditorPropsInput {
   provider: LLMProvider | null
   saveExcalidrawSnapshot: SaveExcalidrawSnapshot
   store: AgentStore
+  injectDocumentXml?: boolean
   litexmlRegistry?: AgentLitexmlRegistryProvider
+  plugins?: AgentExecutorPlugin[]
   systemMessages?: ChatMessage[]
   theme: 'dark' | 'light'
   tools?: AgentToolConfig[]
+  toolSystemRole?: string | false
 }
 
 export interface RichEditorWithAgentRef {
@@ -135,16 +139,19 @@ export const RichEditorWithAgent = forwardRef<
       editorProps={editorProps}
       fetchEnrichment={props.fetchEnrichment}
       key={editorKey}
+      injectDocumentXml={props.injectDocumentXml}
       onAgentLoopReady={handleAgentLoopReady}
       onChange={handleChange}
       onEditorReady={handleEditorReady}
       onPinSelection={props.onPinSelection}
       onSubmit={handleSubmit}
+      plugins={props.plugins}
       provider={props.provider}
       saveExcalidrawSnapshot={props.saveExcalidrawSnapshot}
       store={props.store}
       systemMessages={props.systemMessages}
       tools={props.tools}
+      toolSystemRole={props.toolSystemRole}
       litexmlRegistry={props.litexmlRegistry}
     />
   )

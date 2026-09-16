@@ -250,7 +250,7 @@ importers:
         version: 1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@better-auth/passkey':
         specifier: 1.6.27
-        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)
+        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)
       '@codemirror/commands':
         specifier: 6.11.0
         version: 6.11.0
@@ -282,101 +282,101 @@ importers:
         specifier: ^0.18.1
         version: 0.18.1(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(immer@11.1.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@haklex/rich-agent-core':
-        specifier: 0.41.1
-        version: 0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))
       '@haklex/rich-compose':
-        specifier: 0.41.1
-        version: 0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b)
+        specifier: 0.42.1
+        version: 0.42.1(6466b1bea947de034a9bcaa0cd55804a)
       '@haklex/rich-diff':
-        specifier: 0.41.1
-        version: 0.41.1(@haklex/rich-compose@0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b))(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-compose@0.42.1(6466b1bea947de034a9bcaa0cd55804a))(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@haklex/rich-editor':
-        specifier: 0.41.1
-        version: 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
       '@haklex/rich-editor-ui':
-        specifier: 0.41.1
-        version: 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+        specifier: 0.42.1
+        version: 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
       '@haklex/rich-ext-ai-agent':
-        specifier: 0.41.1
-        version: 0.41.1(62ad79b735c6df13b65a1889d1fd3aec)
+        specifier: 0.42.1
+        version: 0.42.1(7623d6a66bf4eaf3d63c4c8f7e7bb7e5)
       '@haklex/rich-ext-chat':
-        specifier: 0.41.1
-        version: 0.41.1(967a0975c59262951baefdb8c0674a25)
+        specifier: 0.42.1
+        version: 0.42.1(4fc90ae3340b10e7dac4dc8ac81724f4)
       '@haklex/rich-ext-code-snippet':
-        specifier: 0.41.1
-        version: 0.41.1(d403a7a14b2c2392db531c29ec55577d)
+        specifier: 0.42.1
+        version: 0.42.1(223c278f8a9f1ed4d6a14b9311920986)
       '@haklex/rich-ext-dynamic':
-        specifier: 0.41.1
-        version: 0.41.1(5fc47b996c4f338387c56539e9821177)
+        specifier: 0.42.1
+        version: 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
       '@haklex/rich-ext-embed':
-        specifier: 0.41.1
-        version: 0.41.1(9adc271356f127bb951896ffcfd307fc)
+        specifier: 0.42.1
+        version: 0.42.1(a18aaea9b371c0e50e80edf3baeafea3)
       '@haklex/rich-ext-excalidraw':
-        specifier: 0.41.1
-        version: 0.41.1(6969ea9c772f18f5928c2905ee44f30d)
+        specifier: 0.42.1
+        version: 0.42.1(ef8540b5de4439424d84f15464b63f8e)
       '@haklex/rich-ext-gallery':
-        specifier: 0.41.1
-        version: 0.41.1(7116f2e603a5defee6f7c817c7a93806)
+        specifier: 0.42.1
+        version: 0.42.1(6f391a4e6f51893cac97a61be2b72093)
       '@haklex/rich-ext-nested-doc':
-        specifier: 0.41.1
-        version: 0.41.1(67b9497621b8a7137b4636e5aada422c)
+        specifier: 0.42.1
+        version: 0.42.1(185962f8fe5fa41a3d6556a65cfb5f25)
       '@haklex/rich-plugin-block-handle':
-        specifier: 0.41.0
-        version: 0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/html@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/selection@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/html@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/selection@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
       '@haklex/rich-plugin-floating-toolbar':
-        specifier: 0.41.0
-        version: 0.41.0(24b578dd6c0b3268f98186707e9ec0e2)
+        specifier: 0.42.1
+        version: 0.42.1(c231a907e85dc82381702b444b55ef34)
       '@haklex/rich-plugin-link-edit':
-        specifier: 0.41.0
-        version: 0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@haklex/rich-plugin-litexml-paste':
-        specifier: 0.41.1
-        version: 0.41.1(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)
       '@haklex/rich-plugin-mention':
-        specifier: 0.41.1
-        version: 0.41.1(5fc47b996c4f338387c56539e9821177)
+        specifier: 0.42.1
+        version: 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
       '@haklex/rich-plugin-slash-menu':
-        specifier: 0.41.1
-        version: 0.41.1(6243bb3052af107c0bd88f2798bd010f)
+        specifier: 0.42.1
+        version: 0.42.1(a8e95b7094b326b495364d1c58968723)
       '@haklex/rich-plugin-table':
-        specifier: 0.41.0
-        version: 0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/table@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/table@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@haklex/rich-plugin-toolbar':
-        specifier: 0.41.0
-        version: 0.41.0(0d983a00a8e372ec1201f5310c932bc6)
+        specifier: 0.42.1
+        version: 0.42.1(acf88c0bbf175d3e778478bfffbc549c)
       '@haklex/rich-renderer-alert':
-        specifier: 0.41.1
-        version: 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
+        specifier: 0.42.1
+        version: 0.42.1(fb555e50c13cfece8d3e35852602762f)
       '@haklex/rich-renderer-banner':
-        specifier: 0.41.1
-        version: 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
+        specifier: 0.42.1
+        version: 0.42.1(fb555e50c13cfece8d3e35852602762f)
       '@haklex/rich-renderer-codeblock':
-        specifier: 0.41.1
-        version: 0.41.1(4d3c2b39d8fa2f262fbd59b1e4153b43)
+        specifier: 0.42.1
+        version: 0.42.1(0e697e846459d650ba1ca7080bfc0064)
       '@haklex/rich-renderer-file':
-        specifier: 0.41.1
-        version: 0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)
+        specifier: 0.42.1
+        version: 0.42.1(9dc003b05fe6d444a848264a0ae013fd)
       '@haklex/rich-renderer-image':
-        specifier: 0.41.1
-        version: 0.41.1(cd058ddd4bea604d6ac45bf352c8fb12)
+        specifier: 0.42.1
+        version: 0.42.1(0264baa560a97b5f471e62d189d8bf71)
       '@haklex/rich-renderer-katex':
-        specifier: 0.41.1
-        version: 0.41.1(cf17c0ef5e7a752eeeb5c29c6543b86e)
+        specifier: 0.42.1
+        version: 0.42.1(5ecbfdee82c2f727a1732ae7475de85b)
       '@haklex/rich-renderer-linkcard':
-        specifier: 0.41.1
-        version: 0.41.1(864175bc89406d9cc4a06d887a081d77)
+        specifier: 0.42.1
+        version: 0.42.1(663a3599d0183db514132b641f6f3f39)
       '@haklex/rich-renderer-mention':
-        specifier: 0.41.1
-        version: 0.41.1(5fc47b996c4f338387c56539e9821177)
+        specifier: 0.42.1
+        version: 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
       '@haklex/rich-renderer-mermaid':
-        specifier: 0.41.1
-        version: 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
+        specifier: 0.42.1
+        version: 0.42.1(fb555e50c13cfece8d3e35852602762f)
       '@haklex/rich-renderer-ruby':
-        specifier: 0.41.1
-        version: 0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.42.1
+        version: 0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@haklex/rich-renderer-video':
-        specifier: 0.41.1
-        version: 0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)
+        specifier: 0.42.1
+        version: 0.42.1(9dc003b05fe6d444a848264a0ae013fd)
       '@lexical/markdown':
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
@@ -427,7 +427,7 @@ importers:
         version: 6.0.0
       better-auth:
         specifier: 1.6.27
-        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       buffer:
         specifier: 6.0.3
         version: 6.0.3
@@ -467,6 +467,9 @@ importers:
       json5:
         specifier: 2.2.3
         version: 2.2.3
+      just-bash:
+        specifier: ^3.4.2
+        version: 3.4.2(supports-color@10.2.2)
       katex:
         specifier: ^0.18.7
         version: 0.18.7
@@ -623,13 +626,13 @@ importers:
         version: 8.0.4
       '@better-auth/api-key':
         specifier: 1.6.27
-        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))
+        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))
       '@better-auth/expo':
         specifier: 1.6.27
-        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))
+        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))
       '@better-auth/passkey':
         specifier: 1.6.27
-        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)
+        version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)
       '@earendil-works/pi-agent-core':
         specifier: 0.84.4
         version: 0.84.4(supports-color@5.5.0)(ws@8.21.3)(zod@4.5.4)
@@ -646,8 +649,8 @@ importers:
         specifier: 10.1.3
         version: 10.1.3
       '@haklex/rich-headless':
-        specifier: 0.41.1
-        version: 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
       '@innei/message-engine':
         specifier: 0.2.0
         version: 0.2.0(@earendil-works/pi-agent-core@0.84.4(supports-color@5.5.0)(ws@8.21.3)(zod@4.5.4))
@@ -734,7 +737,7 @@ importers:
         version: 3.0.3
       better-auth:
         specifier: 1.6.27
-        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       cache-manager:
         specifier: 7.2.9
         version: 7.2.9
@@ -758,7 +761,7 @@ importers:
         version: 13.0.0
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
       ejs:
         specifier: 6.0.1
         version: 6.0.1
@@ -981,7 +984,7 @@ importers:
         version: 0.31.10
       mongodb:
         specifier: ~7.6.0
-        version: 7.6.0(@noble/hashes@2.4.0)
+        version: 7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0)
       nodemon:
         specifier: ^3.1.14
         version: 3.1.14
@@ -1130,8 +1133,8 @@ importers:
   packages/cli:
     dependencies:
       '@haklex/rich-litexml':
-        specifier: 0.41.1
-        version: 0.41.1(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(typescript@6.0.3)
     devDependencies:
       '@clack/prompts':
         specifier: ^1.7.0
@@ -1149,8 +1152,8 @@ importers:
         specifier: 0.30.0
         version: 0.30.0(effect@3.22.1)(vitest@4.1.11)
       '@haklex/rich-headless':
-        specifier: 0.41.1
-        version: 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
       '@lexical/headless':
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
@@ -1168,7 +1171,7 @@ importers:
         version: 7.8.0
       better-auth:
         specifier: 1.6.27
-        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       effect:
         specifier: 3.22.1
         version: 3.22.1
@@ -1207,7 +1210,7 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
       zod:
         specifier: 4.5.4
         version: 4.5.4
@@ -1254,10 +1257,10 @@ importers:
         version: 8.23.1
       better-auth:
         specifier: 1.6.27
-        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+        version: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -1286,11 +1289,11 @@ importers:
   packages/editor:
     dependencies:
       '@haklex/rich-headless':
-        specifier: 0.41.1
-        version: 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
       '@haklex/rich-litexml':
-        specifier: 0.41.1
-        version: 0.41.1(typescript@6.0.3)
+        specifier: 0.42.1
+        version: 0.42.1(typescript@6.0.3)
       '@lexical/headless':
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
@@ -1327,10 +1330,10 @@ importers:
         version: 8.23.1
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+        version: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
       mongodb:
         specifier: ~7.6.0
-        version: 7.6.0(@noble/hashes@2.4.0)
+        version: 7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0)
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -2987,41 +2990,41 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@haklex/cm-editor@0.41.1':
-    resolution: {integrity: sha512-6KnACpQ74U3ANZxgOMp53/a1soeiLf/tJbYSCAj8DdbcaMnwVpQwiHNzK5M0HPibVJDyd7YAfEW+c5ejtnlxbA==}
+  '@haklex/cm-editor@0.42.1':
+    resolution: {integrity: sha512-A/GBRzPfd+H4Ur3eyEOuTd0IXeJUFKvisbPcR5v2IsLMQVSBRvgUgGc8XFNaJd72LFKIxvJfhrF/zUV4qsz3/g==}
 
-  '@haklex/rich-agent-core@0.41.1':
-    resolution: {integrity: sha512-n3G5sHbtWfcP6vz9vMb49vQrRE0eJen1MeImU3XaONzpOmrjFIr1TuRHD7JpQ1yoGPU/46+8F4kOqZXIjFvFNw==}
+  '@haklex/rich-agent-core@0.42.1':
+    resolution: {integrity: sha512-sa/l1nS+19Y0Og2eMu4hpeRtATrRTt6/c7lw0vVz1Qxlltp0+yxqodxgQbWPAj/eZqkN3aM161c9PfupNlQ3bA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
       lexical: 0.49.0
 
-  '@haklex/rich-compose@0.41.1':
-    resolution: {integrity: sha512-sZnLK2yJKUmZn+CqCShmsGiorfeXcwDPrZgnj8OyLhS7j3xkyLPC0y0vZrJ3ZFex527zBHFi3YOMz30zAVE2aA==}
+  '@haklex/rich-compose@0.42.1':
+    resolution: {integrity: sha512-cCyirecL1xc+aYRZO6jrIRDbGhhPNHLOC+A0Mh0dYOzHV9EOuVhMu3F8C+2aDg+3fMdKQ2VRVvYkmyjfJf0Sdg==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-diff-core@0.41.1':
-    resolution: {integrity: sha512-6Fvj8dOLz/D0/mwGqxSw5wd8Ur1ATEfa+18VQkBlVgMc9U6WbSP20ttT5yoRtL65u2YGaplBP8ogOQw7H7wp1g==}
+  '@haklex/rich-diff-core@0.42.1':
+    resolution: {integrity: sha512-cw4sgTYNOmD5xN751Eei6/PwU3pk3Q+E4N1bFJ07NG0afgC08/mx2Coun9Sn3Lf3PYPlQeDgOx+ZUOlAQtf0Ew==}
     peerDependencies:
       lexical: 0.49.0
 
-  '@haklex/rich-diff@0.41.1':
-    resolution: {integrity: sha512-hLhLLu1zwJKSBf6DOMiFwRrWHv6i3+M5GjVfYjY/s0HaeNqbTGJq4+FPvys7yAsNdW1qp9+owUitvGOP3NlJ6w==}
+  '@haklex/rich-diff@0.42.1':
+    resolution: {integrity: sha512-gEUW+NlHrvQvWCf5z238PQVXhEHzrZSe6a6YafWtbfwahw57vtWMnGtl2QzJ2pXnv4TUiAY/Ra5ov738Y4bLSw==}
     peerDependencies:
-      '@haklex/rich-compose': ^0.41.1
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-compose': ^0.42.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-dynamic-protocol@0.41.1':
-    resolution: {integrity: sha512-DMREVdZHoQ5U84EkXi9Tk5O2OeeMt/mxp6AOzliBh/ec3IplFe3pIIFveEceMMi5o4M2ZodHcBzg++9jMOUBgw==}
+  '@haklex/rich-dynamic-protocol@0.42.1':
+    resolution: {integrity: sha512-7Aiy2XxAObdDmr0PV6jhFHMa2gmmrhxrW6500/uIIM6uCUy280jiCfU2b0QMt9JzKXciIc7o2ukwqW4cyjrKmA==}
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
@@ -3031,8 +3034,8 @@ packages:
       react-dom:
         optional: true
 
-  '@haklex/rich-editor-ui@0.41.1':
-    resolution: {integrity: sha512-ffwreL6xAfAULR2SgiQ/n0sxTCwYlC2U6SQvh5AnTWvpLq07+rrdGPZ7UkZCK///Q2T3JtuX9CTDXlsVMs1Leg==}
+  '@haklex/rich-editor-ui@0.42.1':
+    resolution: {integrity: sha512-ml/GjRsGZkZcnPJerDr6rKv5QlRy4DqhdSD+QxkNWtAjrDuLvKGSZqag5CKM+OsuYmvYMi8ZInRzsZeNegH5Fg==}
     peerDependencies:
       '@base-ui/react': '>=1.5.0'
       '@lexical/react': 0.49.0
@@ -3049,8 +3052,8 @@ packages:
       shiki:
         optional: true
 
-  '@haklex/rich-editor@0.41.1':
-    resolution: {integrity: sha512-+dgFwIyF9qmWfuEmbhXfksIIS1R6k2Mwv3b/CmMoC9k4xUfYniLSf/m0Kvqlxu1IGwzBZMGc0Uh7HMckXrGvKA==}
+  '@haklex/rich-editor@0.42.1':
+    resolution: {integrity: sha512-JPShIn1mp34QSOgVvL6QuPkgw7Ma9JAHwZ/rbyAuonyI8CkW17uqDDAf+eR8U5UgDYMa9KC/0nsYrsx4QbZLyg==}
     peerDependencies:
       '@base-ui/react': '>=1.5.0'
       '@lexical/extension': 0.49.0
@@ -3072,60 +3075,60 @@ packages:
       shiki:
         optional: true
 
-  '@haklex/rich-ext-ai-agent@0.41.1':
-    resolution: {integrity: sha512-k/rSVSnu3FxTKgdGscjf4A6wFvqIH/OZ/xlIMdlPXfOvGdXJqSRCyXPLCiXuH0tJlNxy/DKX8YfXnK5ee1UUDQ==}
+  '@haklex/rich-ext-ai-agent@0.42.1':
+    resolution: {integrity: sha512-qQunY3LtvEdEoRE7wHwFX36QWeJExKffLmoyXl0UWVeL0iS4Jte+xDZxVyz7EompPrn9+ZO1KvS90F0E10dFbw==}
     peerDependencies:
-      '@haklex/rich-compose': ^0.41.1
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-compose': ^0.42.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-ext-chat@0.41.1':
-    resolution: {integrity: sha512-fB70GMY5pLjHa1Eiir6xEgI9xqF4p43BuGyIkdLcDSAtz1Rjkd0eWfRPCNpAZxnCD59GrtttR7/Y4RAgyTCfqQ==}
+  '@haklex/rich-ext-chat@0.42.1':
+    resolution: {integrity: sha512-gg1SkO9i2Jhvi8ReCo2yZ4WQReV4Ucd1FN+QGdKp67q98yaAgNb+Gzda0PUQPvWbwbFZJkntQKX0YvIaMUE41w==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
 
-  '@haklex/rich-ext-code-snippet@0.41.1':
-    resolution: {integrity: sha512-CAvrTCJn7VFFyURW8wYJFL+yS7I+8ntjbx9dvbn04URq4I4nwh4j5oo8TSupibqwZASeGvOy2F3jQVW/cF1IrQ==}
+  '@haklex/rich-ext-code-snippet@0.42.1':
+    resolution: {integrity: sha512-g3fGJhXfAQ7/BqZuClLodtJ4Ct/lYzWdHULJikv9bNJxEdRA+hNHRIrN0lgDqCQG3CpPYt/QKmPIxMpThYN50Q==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       shiki: ^4.4.3
 
-  '@haklex/rich-ext-dynamic@0.41.1':
-    resolution: {integrity: sha512-+Q6G/pBbiujIGjjq4xBzvkyKxxREbCc3sTOecjbAYzonIglayOYBb7IMEdh6oXVbNuFH9mTxBKBhlxtfih1yIQ==}
+  '@haklex/rich-ext-dynamic@0.42.1':
+    resolution: {integrity: sha512-m9juHparoch8LTBH7rrOTeH3WysmnnCwUZNqokpxi29hd8tzdTDG2C8CR+U6vTI1Kn0iFjV6VXMF7DK87gInQA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-ext-embed@0.41.1':
-    resolution: {integrity: sha512-z38tB/CJ7Q4ZFADWg3ASMVDbE9GKyZ+BwAe6VbEgu1zU8daV+aDxSU3NE7EDY9H+hk1wei3yfRr4pEJoR00dDw==}
+  '@haklex/rich-ext-embed@0.42.1':
+    resolution: {integrity: sha512-OOFHV2pm88A8+W1ggKEnUsDl851PTCKWdjxPDEMnpq0C4dPcfzazY7Dpq+ynbd0sYuscecojk1Pw4h/PP1HzkQ==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
@@ -3136,36 +3139,36 @@ packages:
       shiki:
         optional: true
 
-  '@haklex/rich-ext-excalidraw@0.41.1':
-    resolution: {integrity: sha512-ZMQ1dCj321k7m5IVBpiu/d7V2LP0KKgQ/p8NQ9ShbhCRK9ksu7wUxxQDRtHr+QJrBEVMa/IX1diunOs7/G/i/w==}
+  '@haklex/rich-ext-excalidraw@0.42.1':
+    resolution: {integrity: sha512-+wSFtR0RHW1CfEN+bsZ6JT+zk3i9ZuwtTScj/9Se++Bdj12OVR9G+V+TLJKkHq1WVCJRA3TziCVqT+Da7T0w0A==}
     peerDependencies:
       '@excalidraw/excalidraw': '>=0.18.0'
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-ext-gallery@0.41.1':
-    resolution: {integrity: sha512-7Be6AAWCwyctjbyC0ZxcY2W4eOihuMRoxy48arwp8HkatjbkgTOeffdrXAqelcwJlPwYK4MJJXi1zpWW60ZXZA==}
+  '@haklex/rich-ext-gallery@0.42.1':
+    resolution: {integrity: sha512-gWU0OVL5nAabK48m81kYfo5kypW4m9G2W593t6Pije+vs5r0jt6mvs/06a5Mgam7ZNLrG9OGyTXzSZhrviJSLA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-ext-nested-doc@0.41.1':
-    resolution: {integrity: sha512-WZCKfrSfKR9UB8XAznGg07FzBy2INBtXrsb2ecNXfiT/9kP9gPZa+P9bpB1JYOUdDWyP4pMLqjf1AbXV4zbGtw==}
+  '@haklex/rich-ext-nested-doc@0.42.1':
+    resolution: {integrity: sha512-2iHWgZQ3hs45Wk/ywVCW/lw09exhDmUXwTQtNBbhuCvGc3TXBWm+BqTEH1POnRcRYZLuKje1R8g/UcszYHBzoA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/markdown': 0.49.0
       '@lexical/react': 0.49.0
       lexical: 0.49.0
@@ -3173,29 +3176,29 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-ext-poll@0.41.1':
-    resolution: {integrity: sha512-OvQPKhGj0MdBW8BpvmYZ9a5ZqWT98XoaQhymRtJI89u450tmVmuW3uX4EYm6XX3PbiXkwO8qhqO2d1t31URLLA==}
+  '@haklex/rich-ext-poll@0.42.1':
+    resolution: {integrity: sha512-nmZT/3A15wv8eBSJvz/hCry/cPrGEWT18CMT2FJR44R2qm4hdQfvh5+uEnQmJTHYfwcpDsl1t+kUQgMJoLuwpw==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
 
-  '@haklex/rich-headless@0.41.1':
-    resolution: {integrity: sha512-jiQWY24Imc/0k/xh5futvIa/K6mv3XMS1dbQRk/XUG7VEmGEXvEbZ24hO1dxPMOzKqtBwiJeaCqCl6+Xg6Pv6w==}
+  '@haklex/rich-headless@0.42.1':
+    resolution: {integrity: sha512-5PP3mCJMYajFYCvQcVel19tOH5FwHi+5R8jioMiV1jzhvmTWOPNo4vCjryzkU4dGiKBymKEdJIKirbEgCXhdcA==}
     peerDependencies:
       lexical: 0.49.0
 
-  '@haklex/rich-litexml@0.41.1':
-    resolution: {integrity: sha512-60msrbu9UwcCb6ikjpXIc1Rbd1WpMQGbSOpCW0GAFRezvdhjC2TG1Bii3nOWOjfwuP6JvCQyiW9IKRO9lkd8Bw==}
+  '@haklex/rich-litexml@0.42.1':
+    resolution: {integrity: sha512-w2cb4G5fm1aBIzXZPFKVbmB3zdssoO83PY8Bnwt5GxN7T3f4726K0sC01dJziT2swSZEGQ79zaqX7t68ibeXdA==}
 
-  '@haklex/rich-plugin-block-handle@0.41.0':
-    resolution: {integrity: sha512-KI/kl5wRVCLV+FeOPB6LXCqwF+2fGQr8HmwkXaE6JYWGToc1cQU0IQHH9QX1Vgv04JE2f523QJ3jGe3zBNqCmA==}
+  '@haklex/rich-plugin-block-handle@0.42.1':
+    resolution: {integrity: sha512-nyxcKO5AWM4TfT5uJRE14jqp9oz0KSx3G4YWMz87wW7HnjUShrLzgpranw/Mg6XXTgjxtTlcosW2iXLVrOpQzA==}
     peerDependencies:
-      '@haklex/rich-editor-ui': ^0.41.0
-      '@haklex/rich-style-token': ^0.41.0
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/html': 0.49.0
       '@lexical/list': 0.49.0
       '@lexical/react': 0.49.0
@@ -3206,12 +3209,12 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-floating-toolbar@0.41.0':
-    resolution: {integrity: sha512-G+WgmvmNCNl5RIlyzrbWCMBB+7eCNR3jp/LdU7k7DB6hh5qN2PYJbvOA645PSwGLculJ3MUy2ilbrZUnzJwIQA==}
+  '@haklex/rich-plugin-floating-toolbar@0.42.1':
+    resolution: {integrity: sha512-I43RQqjGle4qgkU6IctBT4sZuU4C53tqVfCSocpZ7fNNOUSJ694/nOD51Cpsedd4CIMNNQ1ldks8MorHqZ6keQ==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.0
-      '@haklex/rich-editor-ui': ^0.41.0
-      '@haklex/rich-style-token': ^0.41.0
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/link': 0.49.0
       '@lexical/react': 0.49.0
       '@lexical/selection': 0.49.0
@@ -3220,11 +3223,11 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-link-edit@0.41.0':
-    resolution: {integrity: sha512-RqvPouGmQPRTuT4bIQuRZxQahwE2Rqbahgcf5gty3u/b4F6l+y0zYtQj03Ldum8ScEP4CqwW7TnPyQg3yk8Mig==}
+  '@haklex/rich-plugin-link-edit@0.42.1':
+    resolution: {integrity: sha512-JPwRmCAOudlqTQubCnQhKJAsXOkgyFam+shTt17GoLmBU4iPylRetZVVYpqIKmR0Xsj7TFZLaV5Jk9iLs0E6pA==}
     peerDependencies:
-      '@haklex/rich-editor-ui': ^0.41.0
-      '@haklex/rich-style-token': ^0.41.0
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/link': 0.49.0
       '@lexical/react': 0.49.0
       lexical: 0.49.0
@@ -3232,29 +3235,29 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-litexml-paste@0.41.1':
-    resolution: {integrity: sha512-NCwwTUc/ZoMyUaYIJa3CAGBrVSmNQ6WR36AN2c2dJnik+uAown5CTnvXQnhMaoq53Fbia/h/8bGR+EGS86TtrA==}
+  '@haklex/rich-plugin-litexml-paste@0.42.1':
+    resolution: {integrity: sha512-7aTJ5T4NdJLaphsq3W9DHqrKpR2my99R8Fjy3dBAA564PPB4aWhBnuL+4iQGnOu1YhrA/yzOgway6SWdJcR5qw==}
     peerDependencies:
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-mention@0.41.1':
-    resolution: {integrity: sha512-msOOgzM7JWirn5Wp41ftzquq0Es/3H0HuwjUeKY2c5WgkJqLRjBgKMFbKyO+1g1wg1WqAkCqlIKr64lvzhtENA==}
+  '@haklex/rich-plugin-mention@0.42.1':
+    resolution: {integrity: sha512-MQK860SN8fLzShJajW6gcWZSUqsZDSIo82ptgN1A3Z90bLtFwSllSe4s2ca2BPDzo/Qv3m89A3UI59xC7lkIVg==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-slash-menu@0.41.1':
-    resolution: {integrity: sha512-kKzkIF57QPSzcaxlwtJZY9ucpAFSYkORqg4sVlzOnbnnjGoqPo1qfuHNQQ9q1n6hivW6OuYaX+Wqx15vIv23RA==}
+  '@haklex/rich-plugin-slash-menu@0.42.1':
+    resolution: {integrity: sha512-UB0OqjcjtJt1l/cXlcNGaEkzlIcHHNc4NkpKV6HGp946GaM/Vhx78OfuiJkhgZ+yXIcu5ZF5PW5bdEh56ahm2w==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/list': 0.49.0
       '@lexical/react': 0.49.0
       '@lexical/rich-text': 0.49.0
@@ -3265,11 +3268,11 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-table@0.41.0':
-    resolution: {integrity: sha512-euJFoJ7o1N9a6/sI5Yfp1sElgGgsEdVoZ7LK2EwAAjfGZ/DevoTU2QHQaH/TXuVGCw1WAoaMSfWgsHq9b2h5NQ==}
+  '@haklex/rich-plugin-table@0.42.1':
+    resolution: {integrity: sha512-AUhN8i+twReRgryi8w00w1QHxUrTxV6Nib2Rw5zEfjfD8Za3p2gRlY3Iz6Y7zAbI1h1/Smn5zhCU+WhpharujA==}
     peerDependencies:
-      '@haklex/rich-editor-ui': ^0.41.0
-      '@haklex/rich-style-token': ^0.41.0
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       '@lexical/table': 0.49.0
       lexical: 0.49.0
@@ -3277,12 +3280,12 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-plugin-toolbar@0.41.0':
-    resolution: {integrity: sha512-XpUbbjwSUwM72T+l7JtmqBJk/8YhSB4j13ke0w6wKBSkqxa1AosCz517OMIRYAoac3HowQY0gdG62V2SyNEcdg==}
+  '@haklex/rich-plugin-toolbar@0.42.1':
+    resolution: {integrity: sha512-BrKcg49j84TS/FkOV2Sbqq7ZGlSHCx8XjFdvexYcEVgo0cMbTEBo+lck+hrxSBehxOLUyuXnyJksc1eHJ1/yxw==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.0
-      '@haklex/rich-editor-ui': ^0.41.0
-      '@haklex/rich-style-token': ^0.41.0
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/list': 0.49.0
       '@lexical/react': 0.49.0
       '@lexical/rich-text': 0.49.0
@@ -3293,56 +3296,56 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-alert@0.41.1':
-    resolution: {integrity: sha512-DKfils8YbqggjDTAQrvSsJ1KpJeoK5J+HAtQ5Qc9UCk31fjdbFO+FpqtDUkT3nbmFlAglRDtzPETnkEPO6ClTw==}
+  '@haklex/rich-renderer-alert@0.42.1':
+    resolution: {integrity: sha512-Hf2wLzDUOtO0J1pX7xK8KUKBO+1FIb/AGDYvVEYeXiLqRwj/tQC4Sts1FYorRJS/4PdR0H4SRuUre46rJU2XUQ==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-banner@0.41.1':
-    resolution: {integrity: sha512-H5J5fz6mtXDfhXr8hzE/YAzhqYGa1PFWp6UpLDw6x1C7dMAnz/1bZ+1CElaOZywtoYhggLvv7o3WQmOtxThQdA==}
+  '@haklex/rich-renderer-banner@0.42.1':
+    resolution: {integrity: sha512-84SmjT6roIbXlmZR4PYtD7W7Ps6689X5/H1qqTcK3b2lcZMdF/LIx8aescn0RckxSP9A9Y+X5wPGt3NNNUipLw==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-codeblock@0.41.1':
-    resolution: {integrity: sha512-1UTrMKA7q0jpiWf7r/UA0yg6ydK2KHILqxVFNfiEL1iXn413g1EcN8J6bsweXP3flgTe0EAMzxYKBMxmLv925A==}
+  '@haklex/rich-renderer-codeblock@0.42.1':
+    resolution: {integrity: sha512-u0cjHeNQUYtT+mJyVDseUOmNp7q5DZa2v2kXbJ/Jl/cO8dQyhstW2dUSCIyaqwR41mBbBt49l0UclHYBvAe4Kg==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
       shiki: ^4.4.3
 
-  '@haklex/rich-renderer-file@0.41.1':
-    resolution: {integrity: sha512-GZBirktFtCMN21NEwIQ+7VA+EDNShlfmOY3BhRysQVJ2xRlPVBXZxRwAi9RG7LxDSay+QoZXxSkuRFu7knQVyg==}
+  '@haklex/rich-renderer-file@0.42.1':
+    resolution: {integrity: sha512-tOnM0D8qTYo8tq5XfXCiiNhJ3C0fH4Pa+7X5Y8aT4Sfy1Kwx4coqIHqkPH0pzy8OhfZYGewL2XQBVpIvJgoIIQ==}
     peerDependencies:
       '@base-ui/react': '>=1.5.0'
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-image@0.41.1':
-    resolution: {integrity: sha512-9R/4u0sc7Mjp99e+bzfB1y1Ri4rFvveQvHMOpeH7WpN4aY96Z5oH5aH0cvrFFR5D0GYENsoojgLpalz5tRz/iA==}
+  '@haklex/rich-renderer-image@0.42.1':
+    resolution: {integrity: sha512-yS9Ul/kCYLXOLkWvX3vYZbOgcvrFUUVZx3H5ubs9LKtuGLrzXhB0q0nc5sYImYKehQmSb+3vufMPLgK9MjqfPg==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       jotai: '>=2'
       lexical: 0.49.0
@@ -3350,12 +3353,12 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-katex@0.41.1':
-    resolution: {integrity: sha512-HHmfoO4grodC13u5dyBIe7ZpSQ+I6wlwXBaILF2hma4J/N1FJ0YU353sckL7iAi7c0ysdKFF5hwcJHf38P+jyA==}
+  '@haklex/rich-renderer-katex@0.42.1':
+    resolution: {integrity: sha512-Z20k7xVmCq3G4vXXu5jCGpCszbmsCtiQIN+KFXFOHW1+qqlL6h3jNz+rjy/UWDCYmJg7T5Am2cXVh9mJNcgzKg==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       katex: '>=0.16.0'
       lexical: 0.49.0
@@ -3366,12 +3369,12 @@ packages:
       katex:
         optional: true
 
-  '@haklex/rich-renderer-linkcard@0.41.1':
-    resolution: {integrity: sha512-JRHZ7bbA61R31wOw+svPScOwBxldEELT/686PNJYKiY+s004qggeE3wDYp0nXmFkmeXkGbRXbYJmNJ3T8i2hrw==}
+  '@haklex/rich-renderer-linkcard@0.42.1':
+    resolution: {integrity: sha512-hvlbr2FYaUn58ZaLWSOM6S5IUMRqdwXMZ5GI81MF569IISgvA0AtHHsP9btbGMUbvW6FOrG1PuGwMp9BqTyrag==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/link': 0.49.0
       '@lexical/react': 0.49.0
       lexical: 0.49.0
@@ -3379,51 +3382,51 @@ packages:
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-mention@0.41.1':
-    resolution: {integrity: sha512-OFG4fBY9xEQpsvV98zAX9rDgaD7r7dk2111ZELKl5d+imVAx6sOeYmMNbqzIFnxH4FHSUNRg251E7KtQFjc0fw==}
+  '@haklex/rich-renderer-mention@0.42.1':
+    resolution: {integrity: sha512-Pc9dDB4uiTFHGGes+AOKg6ihnrt340IhPAtLrwPgbRYNfGNiD7NsdLqEPWnJEXIzHuNjpNCt3jtxqueCYj0ueA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-mermaid@0.41.1':
-    resolution: {integrity: sha512-Mcy9X7drLT3K66F6RiQyuy9jlRaJDoo5zIrvKRvk707pHI5d3Oizy6nYEhGwhLove665FNJ/rtUdIlKlZp+qfg==}
+  '@haklex/rich-renderer-mermaid@0.42.1':
+    resolution: {integrity: sha512-s5NCFWyuRxPrlFLKimiVjXY3RtxZRcwbQ/Bv7gpRDUlZnScq+WAz9jW8aHo8QZq5DJ9Vh7/FYMdchGR6RLO3HA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-ruby@0.41.1':
-    resolution: {integrity: sha512-3sQuhytPW410VQemeRbkItrSoSZFHH3Nu/7iy/vJBWKVUCs77Md/GbA60/ZlwFme/sMIzjOEBU6BUs6boFmcZQ==}
+  '@haklex/rich-renderer-ruby@0.42.1':
+    resolution: {integrity: sha512-+pZoEdKBSQowpevU6IsWb/mrIB9Hakd0f1dhfTkI4pZg3voA/cSWbbZ9HBKKtSxORe/BP4Hl0YihMRlzmdMGXA==}
     peerDependencies:
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-renderer-video@0.41.1':
-    resolution: {integrity: sha512-pnwY7FNJrA88CnnPeKtP53J3nuGxiNQLtIhIbd7ZGBZx0gVH6lerZjintMpxOTbF5LubU1zVpvVJKm0fsNcbrw==}
+  '@haklex/rich-renderer-video@0.42.1':
+    resolution: {integrity: sha512-iVuXm3EP1urGqp5VaV7cEgi8z7MGHHbWOAM5OqXVkjoeCL/daO2TInA/o3wW6+dc2Vre6qGITwctldjcfy2I+A==}
     peerDependencies:
       '@base-ui/react': '>=1.5.0'
-      '@haklex/rich-editor': ^0.41.1
-      '@haklex/rich-editor-ui': ^0.41.1
-      '@haklex/rich-style-token': ^0.41.1
+      '@haklex/rich-editor': ^0.42.1
+      '@haklex/rich-editor-ui': ^0.42.1
+      '@haklex/rich-style-token': ^0.42.1
       '@lexical/react': 0.49.0
       lexical: 0.49.0
       lucide-react: 1.42.0
       react: '>=19'
       react-dom: '>=19'
 
-  '@haklex/rich-style-token@0.41.1':
-    resolution: {integrity: sha512-lji7g/vMA4LyEGZr4UH1dvqYkTTvkCQ6j/qkyzGDNGl4/5V2nJhHQs4ZGV8C+5TRHdwocQEcbxbXPCaxs7HI6Q==}
+  '@haklex/rich-style-token@0.42.1':
+    resolution: {integrity: sha512-hggUlzw99kCqIVOwkiu9HSF4dK75xBSQEUwp64T3gY/BfWxvZ9JMsM2/eET3h9fw7Z/6Ur3lO3yc2Ts83PAUbg==}
     peerDependencies:
       react: '>=19'
 
@@ -3961,6 +3964,21 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
+  '@jitl/quickjs-ffi-types@0.32.0':
+    resolution: {integrity: sha512-v9T+GQpmk43VDJ7d72sf0Nexhk+ArvtUihW27dy7lqAl0zBObFKtSBBIm5RBjwIhE8VwsPPm9PNuvPvNqLWUEg==}
+
+  '@jitl/quickjs-wasmfile-debug-asyncify@0.32.0':
+    resolution: {integrity: sha512-EX8zbXwGqCgAE764M+qvkHtyXDi/FUoMBea0JnES7vCM3P7a2+EOZOjGv85wtZ2sJhI1oJ+nekmqpOODFDY+hw==}
+
+  '@jitl/quickjs-wasmfile-debug-sync@0.32.0':
+    resolution: {integrity: sha512-LeYWrPGC1uNCTBWvibo3ZLJj0CSVNYUXvJpXMCmuQ5Sap2cCACc3uvGvYV4homHHBAzfw5akoTqMMS4YFRtw+Q==}
+
+  '@jitl/quickjs-wasmfile-release-asyncify@0.32.0':
+    resolution: {integrity: sha512-3oSwPfja12ICz4aIblB58cuY8JlEq5Txt8Cut4VLo+LH47QN+mzCnSgnbB03hWzg1LBcc+VyyI9UOag7a1NF+Q==}
+
+  '@jitl/quickjs-wasmfile-release-sync@0.32.0':
+    resolution: {integrity: sha512-BKNDI/TPBfGlLNGYpLrhcDGXmIk4xHm4MRAisOBnOzpXVn9HZWsfmMAc9WMBrAHjvvds6HOikKeaOBKdPdpVrg==}
+
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -4321,6 +4339,9 @@ packages:
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
 
+  '@mixmark-io/domino@2.2.0':
+    resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
+
   '@monaco-editor/loader@1.7.0':
     resolution: {integrity: sha512-gIwR1HrJrrx+vfyOhYmCZ0/JcWqG5kbfG7+d3f/C1LXk2EvzAbHSg3MQ5lO2sMlo9izoAZ04shohfKLVT6crVA==}
 
@@ -4333,6 +4354,10 @@ packages:
 
   '@mongodb-js/saslprep@1.4.11':
     resolution: {integrity: sha512-o9rAHc0IpIjuPSxRutWpE1F62x7n+4mVS4rCNHkzhIUMQcc18bb6xEq5wd2NdN0WjepIyXIppRshYI2kQDOZVA==}
+
+  '@mongodb-js/zstd@7.0.0':
+    resolution: {integrity: sha512-mQ2s0pYYiav+tzCDR05Zptem8Ey2v8s11lri5RKGhTtL4COVCvVCk5vtyRYNT+9L8qSfyOqqefF9UtnW8mC5jA==}
+    engines: {node: '>= 20.19.0'}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
@@ -7771,6 +7796,14 @@ packages:
     resolution: {integrity: sha512-oj7KWToJuuxlPr7VV0vabvxEIiqNMo+q0NueIiL3XhtwC6FVOX7Hr1c0C4eD0bmf7Zr+S/dSf2xvkH3Ad6sU3Q==}
     engines: {node: '>=20'}
 
+  decompress-response@6.0.0:
+    resolution: {integrity: sha512-aW35yZM6Bb/4oJlZncMH2LCoZtJXTRxES17vE3hoRiowU2kWHaJKFkSBDnDR+cm9J+9QhXmREyIfv0pji9ejCQ==}
+    engines: {node: '>=10'}
+
+  deep-extend@0.6.0:
+    resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
+    engines: {node: '>=4.0.0'}
+
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
@@ -8443,6 +8476,10 @@ packages:
   exifr@7.1.3:
     resolution: {integrity: sha512-g/aje2noHivrRSLbAUtBPWFbxKdKhgj/xr1vATDdUXPOFYJlQ62Ft0oy+72V6XLIpDJfHs6gXLbBLAolqOXYRw==}
 
+  expand-template@2.0.3:
+    resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
+    engines: {node: '>=6'}
+
   expect-type@1.3.0:
     resolution: {integrity: sha512-knvyeauYhqjOYvQ66MznSMs83wmHrCycNEN6Ao+2AeYEfxUIkuiVxdEa1qlGEPK+We3n0THiDciYSsCcgW/DoA==}
     engines: {node: '>=12.0.0'}
@@ -8766,6 +8803,9 @@ packages:
     resolution: {integrity: sha512-/6gFNr0N04nob252sTQxyFLi3eKFRqIg1I87YcqAMT1i6SQrSF6KujUEQrtrjMV0H/eejTCltLdDSTEMzHbnsQ==}
     engines: {node: '>=20.20.0'}
 
+  github-from-package@0.0.0:
+    resolution: {integrity: sha512-SyHy3T1v2NUXn29OsWdxmK6RwHD+vkj3v8en8AOBZ1wBQ/hCAQ5bAQTD02kW4W9tUp/3Qh6J8r9EvntiyCmOOw==}
+
   gl-matrix@3.4.4:
     resolution: {integrity: sha512-latSnyDNt/8zYUB6VIJ6PCh2jBjJX6gnDsoCZ7LyW7GkqrD51EWwa9qCoGixj8YqBtETQK/xY7OmpTF8xz1DdQ==}
 
@@ -9028,9 +9068,16 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
+  ini@1.3.8:
+    resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
+
   ini@4.1.3:
     resolution: {integrity: sha512-X7rqawQBvfdjS10YU1y1YVreA3SsLrW9dX2CewP2EbBJM4ypVNLDkO5y04gejPwKIY9lR+7r9gn3rFPt/kmWFg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  ini@6.0.0:
+    resolution: {integrity: sha512-IBTdIkzZNOpqm7q3dRqJvMaldXjDHWkEDfrwGEQTs5eaQMWV+djAhR+wahyNNMAa+qpbDUhBMVt4ZKNwpPm7xQ==}
+    engines: {node: ^20.17.0 || >=22.9.0}
 
   inline-style-parser@0.2.7:
     resolution: {integrity: sha512-Nb2ctOyNR8DqQoR0OwRG95uNWIC0C1lCgf5Naz5H6Ji72KZ8OcFZLz2P5sNgwlyoJ8Yif11oMuYs5pBQa86csA==}
@@ -9450,6 +9497,11 @@ packages:
 
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
+
+  just-bash@3.4.2:
+    resolution: {integrity: sha512-T0Vpy7YRgCjxJdqG3tkxn0ZnIDLJvVwb8hH4L+6NVdp+Te27jQxjxnszW9ODjEKbWxWujj83rP5S0GQxCSufgg==}
+    engines: {node: '>=20.18.1'}
+    hasBin: true
 
   jwa@2.0.1:
     resolution: {integrity: sha512-hRF04fqJIP8Abbkq5NKGN0Bbr3JxlQ+qhZufXVr0DvujKy93ZCbXZMHDL4EOtodSbCWxOqR8MS1tXA5hwqCXDg==}
@@ -10062,6 +10114,10 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
+  mimic-response@3.1.0:
+    resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
+    engines: {node: '>=10'}
+
   mimic-response@4.0.0:
     resolution: {integrity: sha512-e5ISH9xMYU0DzrT+jl8q2ze9D6eWBto+I8CNpe+VI+K2J/F/k3PdkdTdz4wvGVH4NTpo+NRYTVIuMQEMMcsLqg==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -10110,6 +10166,10 @@ packages:
     resolution: {integrity: sha512-+NsyUUAZDmo6YVHzL/stxSu3t9YS1iljliy3BSDrXJ/dkn1KYdmtZODGGjLcc9XLgVVpH4KshHB8XmZgMhaBXg==}
     engines: {node: '>=10'}
     hasBin: true
+
+  modern-tar@0.7.7:
+    resolution: {integrity: sha512-t9VmxaqrmANnEOBhpSDI6HD192Ge48k8vmWqQQL7hSFEqHEYwZbbsu49+aKLWZeRvFs3j1pMhXOqqF4kPlvjkQ==}
+    engines: {node: '>=18.0.0'}
 
   monaco-editor@0.56.0:
     resolution: {integrity: sha512-sXboRm3BeBeLm938eaiyLMe0OxzfXIlZvbv4ir/jVgQy1zDhWjgmny0WoN45fuDKhCCQsYMbBJrv/A6jd8aCUg==}
@@ -10207,6 +10267,9 @@ packages:
     resolution: {integrity: sha512-Wxv8Roefr2nqtiRG0bnaFlpYqpIVtOEeJZHaH+4nGgOK1/7n6OHOuHCb/bhqrNQgZM8fyd0s1PqhdrJc9Ib44g==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
+  napi-build-utils@2.0.0:
+    resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
+
   napi-postinstall@0.3.4:
     resolution: {integrity: sha512-PHI5f1O0EP5xJ9gQmFGMS6IZcrVvTjpXjz7Na41gTE7eE2hK11lg04CECCYEEjdc17EV4DO+fkGEtt7TpTaTiQ==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
@@ -10226,11 +10289,19 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
+  node-abi@3.96.0:
+    resolution: {integrity: sha512-rebQ/lz7i0EkoLzUVSrKRzA69zMkwLp95kKMWoMDkkM00Suxz0D7zEQPwRml5fQum24mj7bPvmlgLAmu2JCiYg==}
+    engines: {node: '>=10'}
+
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -10263,6 +10334,15 @@ packages:
 
   node-gyp-build-optional-packages@5.2.2:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
+    hasBin: true
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
+
+  node-liblzma@2.2.0:
+    resolution: {integrity: sha512-s0KzNOWwOJJgPG6wxg6cKohnAl9Wk/oW1KrQaVzJBjQwVcUGPQCzpR46Ximygjqj/3KhOrtJXnYMp/xYAXp75g==}
+    engines: {node: '>=16.0.0'}
     hasBin: true
 
   node-machine-id@1.1.12:
@@ -10463,6 +10543,9 @@ packages:
 
   pako@2.0.3:
     resolution: {integrity: sha512-WjR1hOeg+kki3ZIOjaf4b5WVcay1jaliKSYiEaB1XzwhMQZJxRdQRv0V31EKBYlxb4T7SK3hjfc/jxyU64BoSw==}
+
+  papaparse@5.7.0:
+    resolution: {integrity: sha512-qBGxg/7Q3Kl9Wfhrz2Z74UnvnHTXLNG6jmKJFeBvP2+y4lV7So+7SR62+Zd47JvdrCkX+nDcnr0ObPzek/+6RA==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -10676,6 +10759,12 @@ packages:
     resolution: {integrity: sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==}
     engines: {node: '>=20'}
 
+  prebuild-install@7.1.3:
+    resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
+    engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+    hasBin: true
+
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
@@ -10785,6 +10874,13 @@ packages:
     resolution: {integrity: sha512-k9lSsjl36EJdK7I06v7APZCbyGT2vMTsYSRX1Q2nbYmnkBqgUhRkAuzH08Ciotteu/PLJmIF2+tti7o3C/ts2g==}
     engines: {node: '>=18'}
 
+  quickjs-emscripten-core@0.32.0:
+    resolution: {integrity: sha512-QFnPfjFey8EqknSrSxe1hZrf1/8z7/6s1QzGOmKo6++02r7QRRX7ZoyNaZh7JuVjWsVW87KnQrbZqnHkOAzUyg==}
+
+  quickjs-emscripten@0.32.0:
+    resolution: {integrity: sha512-So0Sqw869y/S2oE3Nuc0uT3Dhqgvsj8FSrwBdsuTosVsG8ME5/OcudU1GxsrIFdFABgy17GHnTVO9TYV/bLQcA==}
+    engines: {node: '>=16.0.0'}
+
   quickselect@3.0.0:
     resolution: {integrity: sha512-XdjUArbK4Bm5fLLvlm5KpTFOiOThgfWWI4axAZDWg4E/0mKdZyI9tNEfds27qCi1ze/vwTR16kvmmGhRra3c2g==}
 
@@ -10795,6 +10891,13 @@ packages:
   raw-body@3.0.2:
     resolution: {integrity: sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA==}
     engines: {node: '>= 0.10'}
+
+  rc@1.2.8:
+    resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
+    hasBin: true
+
+  re2js@1.3.3:
+    resolution: {integrity: sha512-s/I5zEAo79SUK0Qw4dpZKpiMwbQ6Gz0KU2NRr7eaO4x/p2g7Vvmn3hdeXDg8VsaUjfj/ora+e9oi27LX/C9+mw==}
 
   react-dom@19.2.8:
     resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
@@ -11295,6 +11398,12 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  simple-concat@1.0.1:
+    resolution: {integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==}
+
+  simple-get@4.0.1:
+    resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
+
   simple-git-hooks@2.14.0:
     resolution: {integrity: sha512-kkTORPAuxQz2g1QUuN0J8yGWT28tjGBfPOdJ4xT7Vbeu30veKUZQIoID2qGgCDAakaQn59UeZJJ4cFGB8PVP2A==}
     hasBin: true
@@ -11321,6 +11430,10 @@ packages:
   slugify@1.6.9:
     resolution: {integrity: sha512-vZ7rfeehZui7wQs438JXBckYLkIIdfHOXsaVEUMyS5fHo1483l1bMdo0EDSWYclY0yZKFOipDy4KHuKs6ssvdg==}
     engines: {node: '>=8.0.0'}
+
+  smol-toml@1.8.0:
+    resolution: {integrity: sha512-kCZr2V3ch9i00x8zXRhjUNVcjG9ijES5dDudkXvUVCT5QlJNQWElSJdZqyPemffHoLNUYwOcou0Fy+ojN0uHSQ==}
+    engines: {node: '>= 18'}
 
   sonner@2.0.8:
     resolution: {integrity: sha512-UM/ByIoFra8yzV75n1o0Puu0bw5U/9UNnDacrJNspekBewIfsQ3D6ez1nvlWpt7aTsO6rujQtifBpycwIivqlg==}
@@ -11373,6 +11486,12 @@ packages:
   split2@4.2.0:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
+
+  sprintf-js@1.1.3:
+    resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
+
+  sql.js@1.14.2:
+    resolution: {integrity: sha512-3ZGPovObMFrdw79zrUHbfdE/DLIsy8jdNdssmMSQuRAymedU6q84asPt0kgiqrdMYlPegDItiIMfmIXzZnYFcw==}
 
   ssh-remote-port-forward@1.0.4:
     resolution: {integrity: sha512-x0LV1eVDwjf1gmG7TTnfqIzf+3VPRz7vrNIjX6oYLbeCrf/PeVY6hkT68Mg+q02qXxQhrLjB0jfgvhevoCRmLQ==}
@@ -11504,6 +11623,10 @@ packages:
   strip-indent@4.1.1:
     resolution: {integrity: sha512-SlyRoSkdh1dYP0PzclLE7r0M9sgbFKKMFXpFRUMNuKhQSbC6VQIGzq3E0qsfvGJaUFJPGv6Ws1NZ/haTAjfbMA==}
     engines: {node: '>=12'}
+
+  strip-json-comments@2.0.1:
+    resolution: {integrity: sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==}
+    engines: {node: '>=0.10.0'}
 
   strnum@2.4.2:
     resolution: {integrity: sha512-rDG3Ah4TV0k1hWvLSzkZtMmLN9+eS+h3knq4MP6A42Y3Yh5qGNnOUs1jJkoSr8FG5dsL28c7KgkIBzSEykqtuw==}
@@ -11847,8 +11970,15 @@ packages:
     resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
     engines: {node: '>= 6.0.0'}
 
+  tunnel-agent@0.6.0:
+    resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
+
   tunnel-rat@0.1.2:
     resolution: {integrity: sha512-lR5VHmkPhzdhrM092lI2nACsLO4QubF0/yoOhzX7c+wIpbN1GjHNzCc91QlpxBi+cnx8vVJ+Ur6vL5cEoQPFpQ==}
+
+  turndown@7.2.4:
+    resolution: {integrity: sha512-I8yFsfRzmzK0WV1pNNOA4A7y4RDfFxPRxb3t+e3ui14qSGOxGtiSP6GjeX+Y6CHb7HYaFj7ECUD7VE5kQMZWGQ==}
+    engines: {node: '>=18', npm: '>=9'}
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
@@ -13166,11 +13296,11 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@better-auth/api-key@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))':
+  '@better-auth/api-key@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))':
     dependencies:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
-      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       better-call: 1.4.0(zod@4.5.4)
       zod: 4.5.4
 
@@ -13189,18 +13319,18 @@ snapshots:
       '@cloudflare/workers-types': 5.20260907.1
       '@opentelemetry/api': 1.9.0
 
-  '@better-auth/drizzle-adapter@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))':
+  '@better-auth/drizzle-adapter@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))':
     dependencies:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
-      drizzle-orm: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
+      drizzle-orm: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
 
-  '@better-auth/expo@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))':
+  '@better-auth/expo@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))':
     dependencies:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
       '@better-fetch/fetch': 1.3.1
-      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       better-call: 1.4.0(zod@4.5.4)
       zod: 4.5.4
 
@@ -13221,16 +13351,16 @@ snapshots:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
     optionalDependencies:
-      mongodb: 7.6.0(@noble/hashes@2.4.0)
+      mongodb: 7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0)
 
-  '@better-auth/passkey@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)':
+  '@better-auth/passkey@1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(better-call@1.4.0(zod@4.5.4))(nanostores@1.4.2)':
     dependencies:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
       '@better-auth/utils': 0.4.2
       '@better-fetch/fetch': 1.3.1
       '@simplewebauthn/browser': 13.3.0
       '@simplewebauthn/server': 13.3.2
-      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
+      better-auth: 1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11)
       better-call: 1.4.0(zod@4.5.4)
       nanostores: 1.4.2
       zod: 4.5.4
@@ -14411,7 +14541,7 @@ snapshots:
       protobufjs: 7.6.6
       yargs: 17.7.3
 
-  '@haklex/cm-editor@0.41.1':
+  '@haklex/cm-editor@0.42.1':
     dependencies:
       '@codemirror/language': 6.12.4
       '@codemirror/language-data': 6.5.2
@@ -14419,10 +14549,10 @@ snapshots:
       '@codemirror/theme-one-dark': 6.1.3
       '@codemirror/view': 6.43.11
 
-  '@haklex/rich-agent-core@0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))':
+  '@haklex/rich-agent-core@0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-litexml': 0.41.1(typescript@6.0.3)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-litexml': 0.42.1(typescript@6.0.3)
       lexical: 0.49.0(typescript@6.0.3)
       nanoid: 6.0.1
       zustand: 5.0.15(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
@@ -14434,31 +14564,31 @@ snapshots:
       - typescript
       - use-sync-external-store
 
-  '@haklex/rich-compose@0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b)':
+  '@haklex/rich-compose@0.42.1(6466b1bea947de034a9bcaa0cd55804a)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-ext-chat': 0.41.1(967a0975c59262951baefdb8c0674a25)
-      '@haklex/rich-ext-code-snippet': 0.41.1(d403a7a14b2c2392db531c29ec55577d)
-      '@haklex/rich-ext-dynamic': 0.41.1(5fc47b996c4f338387c56539e9821177)
-      '@haklex/rich-ext-embed': 0.41.1(9adc271356f127bb951896ffcfd307fc)
-      '@haklex/rich-ext-excalidraw': 0.41.1(6969ea9c772f18f5928c2905ee44f30d)
-      '@haklex/rich-ext-gallery': 0.41.1(7116f2e603a5defee6f7c817c7a93806)
-      '@haklex/rich-ext-nested-doc': 0.41.1(67b9497621b8a7137b4636e5aada422c)
-      '@haklex/rich-ext-poll': 0.41.1(933daabceef82aac7eaed7c2dcda8142)
-      '@haklex/rich-litexml': 0.41.1(typescript@6.0.3)
-      '@haklex/rich-plugin-slash-menu': 0.41.1(6243bb3052af107c0bd88f2798bd010f)
-      '@haklex/rich-renderer-alert': 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
-      '@haklex/rich-renderer-banner': 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
-      '@haklex/rich-renderer-codeblock': 0.41.1(4d3c2b39d8fa2f262fbd59b1e4153b43)
-      '@haklex/rich-renderer-file': 0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)
-      '@haklex/rich-renderer-image': 0.41.1(cd058ddd4bea604d6ac45bf352c8fb12)
-      '@haklex/rich-renderer-katex': 0.41.1(cf17c0ef5e7a752eeeb5c29c6543b86e)
-      '@haklex/rich-renderer-linkcard': 0.41.1(864175bc89406d9cc4a06d887a081d77)
-      '@haklex/rich-renderer-mention': 0.41.1(5fc47b996c4f338387c56539e9821177)
-      '@haklex/rich-renderer-mermaid': 0.41.1(e59931ddaf3d1f402bc15240380dc1a7)
-      '@haklex/rich-renderer-ruby': 0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-renderer-video': 0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-ext-chat': 0.42.1(4fc90ae3340b10e7dac4dc8ac81724f4)
+      '@haklex/rich-ext-code-snippet': 0.42.1(223c278f8a9f1ed4d6a14b9311920986)
+      '@haklex/rich-ext-dynamic': 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
+      '@haklex/rich-ext-embed': 0.42.1(a18aaea9b371c0e50e80edf3baeafea3)
+      '@haklex/rich-ext-excalidraw': 0.42.1(ef8540b5de4439424d84f15464b63f8e)
+      '@haklex/rich-ext-gallery': 0.42.1(6f391a4e6f51893cac97a61be2b72093)
+      '@haklex/rich-ext-nested-doc': 0.42.1(185962f8fe5fa41a3d6556a65cfb5f25)
+      '@haklex/rich-ext-poll': 0.42.1(689e4cf54b80adba79f5d61c9aa9e3d3)
+      '@haklex/rich-litexml': 0.42.1(typescript@6.0.3)
+      '@haklex/rich-plugin-slash-menu': 0.42.1(a8e95b7094b326b495364d1c58968723)
+      '@haklex/rich-renderer-alert': 0.42.1(fb555e50c13cfece8d3e35852602762f)
+      '@haklex/rich-renderer-banner': 0.42.1(fb555e50c13cfece8d3e35852602762f)
+      '@haklex/rich-renderer-codeblock': 0.42.1(0e697e846459d650ba1ca7080bfc0064)
+      '@haklex/rich-renderer-file': 0.42.1(9dc003b05fe6d444a848264a0ae013fd)
+      '@haklex/rich-renderer-image': 0.42.1(0264baa560a97b5f471e62d189d8bf71)
+      '@haklex/rich-renderer-katex': 0.42.1(5ecbfdee82c2f727a1732ae7475de85b)
+      '@haklex/rich-renderer-linkcard': 0.42.1(663a3599d0183db514132b641f6f3f39)
+      '@haklex/rich-renderer-mention': 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
+      '@haklex/rich-renderer-mermaid': 0.42.1(fb555e50c13cfece8d3e35852602762f)
+      '@haklex/rich-renderer-ruby': 0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@haklex/rich-renderer-video': 0.42.1(9dc003b05fe6d444a848264a0ae013fd)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/headless': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14484,30 +14614,30 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@haklex/rich-diff-core@0.41.1(lexical@0.49.0(typescript@6.0.3))':
+  '@haklex/rich-diff-core@0.42.1(lexical@0.49.0(typescript@6.0.3))':
     dependencies:
       lexical: 0.49.0(typescript@6.0.3)
 
-  '@haklex/rich-diff@0.41.1(@haklex/rich-compose@0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b))(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@haklex/rich-diff@0.42.1(@haklex/rich-compose@0.42.1(6466b1bea947de034a9bcaa0cd55804a))(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@haklex/rich-compose': 0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b)
-      '@haklex/rich-diff-core': 0.41.1(lexical@0.49.0(typescript@6.0.3))
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-compose': 0.42.1(6466b1bea947de034a9bcaa0cd55804a)
+      '@haklex/rich-diff-core': 0.42.1(lexical@0.49.0(typescript@6.0.3))
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
     transitivePeerDependencies:
       - lexical
 
-  '@haklex/rich-dynamic-protocol@0.41.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@haklex/rich-dynamic-protocol@0.42.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     optionalDependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)':
+  '@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
@@ -14516,12 +14646,12 @@ snapshots:
       lexical: 0.49.0(typescript@6.0.3)
       shiki: 4.4.3
 
-  '@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)':
+  '@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-headless': 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-headless': 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/code-core': 0.49.0(typescript@6.0.3)
       '@lexical/extension': 0.49.0(typescript@6.0.3)
       '@lexical/link': 0.49.0(typescript@6.0.3)
@@ -14542,15 +14672,15 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@haklex/rich-ext-ai-agent@0.41.1(62ad79b735c6df13b65a1889d1fd3aec)':
+  '@haklex/rich-ext-ai-agent@0.42.1(7623d6a66bf4eaf3d63c4c8f7e7bb7e5)':
     dependencies:
-      '@haklex/rich-agent-core': 0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))
-      '@haklex/rich-compose': 0.41.1(18c1c6c93c1b63dcd76beca8191e9f3b)
-      '@haklex/rich-diff-core': 0.41.1(lexical@0.49.0(typescript@6.0.3))
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-litexml': 0.41.1(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-agent-core': 0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))
+      '@haklex/rich-compose': 0.42.1(6466b1bea947de034a9bcaa0cd55804a)
+      '@haklex/rich-diff-core': 0.42.1(lexical@0.49.0(typescript@6.0.3))
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-litexml': 0.42.1(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
@@ -14563,11 +14693,11 @@ snapshots:
       - typescript
       - use-sync-external-store
 
-  '@haklex/rich-ext-chat@0.41.1(967a0975c59262951baefdb8c0674a25)':
+  '@haklex/rich-ext-chat@0.42.1(4fc90ae3340b10e7dac4dc8ac81724f4)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       '@streamdown/code': 1.1.1(react@19.2.8)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14579,7 +14709,7 @@ snapshots:
       - react-dom
       - supports-color
 
-  '@haklex/rich-ext-code-snippet@0.41.1(d403a7a14b2c2392db531c29ec55577d)':
+  '@haklex/rich-ext-code-snippet@0.42.1(223c278f8a9f1ed4d6a14b9311920986)':
     dependencies:
       '@codemirror/commands': 6.11.0
       '@codemirror/state': 6.7.4
@@ -14587,12 +14717,12 @@ snapshots:
       '@dnd-kit/core': 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@dnd-kit/utilities': 3.2.2(react@19.2.8)
-      '@haklex/cm-editor': 0.41.1
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-headless': 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
-      '@haklex/rich-renderer-codeblock': 0.41.1(4d3c2b39d8fa2f262fbd59b1e4153b43)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/cm-editor': 0.42.1
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-headless': 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+      '@haklex/rich-renderer-codeblock': 0.42.1(0e697e846459d650ba1ca7080bfc0064)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
@@ -14602,23 +14732,23 @@ snapshots:
       - react-dom
       - typescript
 
-  '@haklex/rich-ext-dynamic@0.41.1(5fc47b996c4f338387c56539e9821177)':
+  '@haklex/rich-ext-dynamic@0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)':
     dependencies:
-      '@haklex/rich-dynamic-protocol': 0.41.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-dynamic-protocol': 0.42.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-ext-embed@0.41.1(9adc271356f127bb951896ffcfd307fc)':
+  '@haklex/rich-ext-embed@0.42.1(a18aaea9b371c0e50e80edf3baeafea3)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@icons-pack/react-simple-icons': 13.15.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14629,13 +14759,13 @@ snapshots:
     optionalDependencies:
       shiki: 4.4.3
 
-  '@haklex/rich-ext-excalidraw@0.41.1(6969ea9c772f18f5928c2905ee44f30d)':
+  '@haklex/rich-ext-excalidraw@0.42.1(ef8540b5de4439424d84f15464b63f8e)':
     dependencies:
       '@excalidraw/excalidraw': 0.18.1(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(immer@11.1.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-headless': 0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-headless': 0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       jsondiffpatch: 0.7.6
       lexical: 0.49.0(typescript@6.0.3)
@@ -14645,25 +14775,25 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@haklex/rich-ext-gallery@0.41.1(7116f2e603a5defee6f7c817c7a93806)':
+  '@haklex/rich-ext-gallery@0.42.1(6f391a4e6f51893cac97a61be2b72093)':
     dependencies:
       '@dnd-kit/core': 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@dnd-kit/sortable': 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@dnd-kit/utilities': 3.2.2(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       react-intersection-observer: 11.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
-  '@haklex/rich-ext-nested-doc@0.41.1(67b9497621b8a7137b4636e5aada422c)':
+  '@haklex/rich-ext-nested-doc@0.42.1(185962f8fe5fa41a3d6556a65cfb5f25)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/markdown': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14671,18 +14801,18 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-ext-poll@0.41.1(933daabceef82aac7eaed7c2dcda8142)':
+  '@haklex/rich-ext-poll@0.42.1(689e4cf54b80adba79f5d61c9aa9e3d3)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
       nanoid: 6.0.1
       react: 19.2.8
 
-  '@haklex/rich-headless@0.41.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)':
+  '@haklex/rich-headless@0.42.1(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
       '@lexical/code-core': 0.49.0(typescript@6.0.3)
       '@lexical/extension': 0.49.0(typescript@6.0.3)
@@ -14695,7 +14825,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@haklex/rich-litexml@0.41.1(typescript@6.0.3)':
+  '@haklex/rich-litexml@0.42.1(typescript@6.0.3)':
     dependencies:
       lexical: 0.49.0(typescript@6.0.3)
       linkedom: 0.18.13
@@ -14704,10 +14834,10 @@ snapshots:
       - canvas
       - typescript
 
-  '@haklex/rich-plugin-block-handle@0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/html@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/selection@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)':
+  '@haklex/rich-plugin-block-handle@0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/html@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/selection@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)':
     dependencies:
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/code-core': 0.49.0(typescript@6.0.3)
       '@lexical/html': 0.49.0(typescript@6.0.3)
       '@lexical/list': 0.49.0(typescript@6.0.3)
@@ -14721,11 +14851,11 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@haklex/rich-plugin-floating-toolbar@0.41.0(24b578dd6c0b3268f98186707e9ec0e2)':
+  '@haklex/rich-plugin-floating-toolbar@0.42.1(c231a907e85dc82381702b444b55ef34)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/link': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       '@lexical/selection': 0.49.0(typescript@6.0.3)
@@ -14734,10 +14864,10 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-plugin-link-edit@0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@haklex/rich-plugin-link-edit@0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/link': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14745,9 +14875,9 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-plugin-litexml-paste@0.41.1(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)':
+  '@haklex/rich-plugin-litexml-paste@0.42.1(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)':
     dependencies:
-      '@haklex/rich-litexml': 0.41.1(typescript@6.0.3)
+      '@haklex/rich-litexml': 0.42.1(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       react: 19.2.8
@@ -14756,11 +14886,11 @@ snapshots:
       - canvas
       - typescript
 
-  '@haklex/rich-plugin-mention@0.41.1(5fc47b996c4f338387c56539e9821177)':
+  '@haklex/rich-plugin-mention@0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-renderer-mention': 0.41.1(5fc47b996c4f338387c56539e9821177)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-renderer-mention': 0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       react: 19.2.8
@@ -14769,11 +14899,11 @@ snapshots:
       - '@haklex/rich-editor-ui'
       - lucide-react
 
-  '@haklex/rich-plugin-slash-menu@0.41.1(6243bb3052af107c0bd88f2798bd010f)':
+  '@haklex/rich-plugin-slash-menu@0.42.1(a8e95b7094b326b495364d1c58968723)':
     dependencies:
       '@floating-ui/react-dom': 2.1.9(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/list': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       '@lexical/rich-text': 0.49.0(typescript@6.0.3)
@@ -14784,10 +14914,10 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-plugin-table@0.41.0(@haklex/rich-editor-ui@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/table@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@haklex/rich-plugin-table@0.42.1(@haklex/rich-editor-ui@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/table@0.49.0(typescript@6.0.3))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       '@lexical/table': 0.49.0(typescript@6.0.3)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14795,11 +14925,11 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-plugin-toolbar@0.41.0(0d983a00a8e372ec1201f5310c932bc6)':
+  '@haklex/rich-plugin-toolbar@0.42.1(acf88c0bbf175d3e778478bfffbc549c)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/list': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       '@lexical/rich-text': 0.49.0(typescript@6.0.3)
@@ -14810,33 +14940,33 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-alert@0.41.1(e59931ddaf3d1f402bc15240380dc1a7)':
+  '@haklex/rich-renderer-alert@0.42.1(fb555e50c13cfece8d3e35852602762f)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-banner@0.41.1(e59931ddaf3d1f402bc15240380dc1a7)':
+  '@haklex/rich-renderer-banner@0.42.1(fb555e50c13cfece8d3e35852602762f)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-codeblock@0.41.1(4d3c2b39d8fa2f262fbd59b1e4153b43)':
+  '@haklex/rich-renderer-codeblock@0.42.1(0e697e846459d650ba1ca7080bfc0064)':
     dependencies:
       '@codemirror/commands': 6.11.0
       '@codemirror/state': 6.7.4
       '@codemirror/view': 6.43.11
-      '@haklex/cm-editor': 0.41.1
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/cm-editor': 0.42.1
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@iconify-json/material-icon-theme': 1.2.70
       '@iconify/utils': 3.1.4
       lucide-react: 1.42.0(react@19.2.8)
@@ -14844,23 +14974,23 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
       shiki: 4.4.3
 
-  '@haklex/rich-renderer-file@0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)':
+  '@haklex/rich-renderer-file@0.42.1(9dc003b05fe6d444a848264a0ae013fd)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-image@0.41.1(cd058ddd4bea604d6ac45bf352c8fb12)':
+  '@haklex/rich-renderer-image@0.42.1(0264baa560a97b5f471e62d189d8bf71)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       jotai: 2.20.3(@babel/core@8.0.1)(@babel/template@8.0.0)(@types/react@19.2.18)(react@19.2.8)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14868,11 +14998,11 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-katex@0.41.1(cf17c0ef5e7a752eeeb5c29c6543b86e)':
+  '@haklex/rich-renderer-katex@0.42.1(5ecbfdee82c2f727a1732ae7475de85b)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
@@ -14881,11 +15011,11 @@ snapshots:
     optionalDependencies:
       katex: 0.18.7
 
-  '@haklex/rich-renderer-linkcard@0.41.1(864175bc89406d9cc4a06d887a081d77)':
+  '@haklex/rich-renderer-linkcard@0.42.1(663a3599d0183db514132b641f6f3f39)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/link': 0.49.0(typescript@6.0.3)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14894,11 +15024,11 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
       react-intersection-observer: 11.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
-  '@haklex/rich-renderer-mention@0.41.1(5fc47b996c4f338387c56539e9821177)':
+  '@haklex/rich-renderer-mention@0.42.1(ff06eb91fa7e5aeae9c087c84bfd2dd5)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@icons-pack/react-simple-icons': 13.15.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
@@ -14906,37 +15036,37 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-mermaid@0.41.1(e59931ddaf3d1f402bc15240380dc1a7)':
+  '@haklex/rich-renderer-mermaid@0.42.1(fb555e50c13cfece8d3e35852602762f)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       beautiful-mermaid: 1.1.3
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       react-zoom-pan-pinch: 4.0.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
-  '@haklex/rich-renderer-ruby@0.41.1(@haklex/rich-editor@0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.41.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@haklex/rich-renderer-ruby@0.42.1(@haklex/rich-editor@0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@haklex/rich-style-token@0.42.1(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-renderer-video@0.41.1(2faebf8ab0abd5edfb3b2c734e80a3a0)':
+  '@haklex/rich-renderer-video@0.42.1(9dc003b05fe6d444a848264a0ae013fd)':
     dependencies:
       '@base-ui/react': 1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@haklex/rich-editor': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
-      '@haklex/rich-editor-ui': 0.41.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
-      '@haklex/rich-style-token': 0.41.1(react@19.2.8)
+      '@haklex/rich-editor': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3)
+      '@haklex/rich-editor-ui': 0.42.1(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)
+      '@haklex/rich-style-token': 0.42.1(react@19.2.8)
       '@lexical/react': 0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30)
       lexical: 0.49.0(typescript@6.0.3)
       lucide-react: 1.42.0(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@haklex/rich-style-token@0.41.1(react@19.2.8)':
+  '@haklex/rich-style-token@0.42.1(react@19.2.8)':
     dependencies:
       react: 19.2.8
 
@@ -15393,6 +15523,24 @@ snapshots:
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.3
+
+  '@jitl/quickjs-ffi-types@0.32.0': {}
+
+  '@jitl/quickjs-wasmfile-debug-asyncify@0.32.0':
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.32.0
+
+  '@jitl/quickjs-wasmfile-debug-sync@0.32.0':
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.32.0
+
+  '@jitl/quickjs-wasmfile-release-asyncify@0.32.0':
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.32.0
+
+  '@jitl/quickjs-wasmfile-release-sync@0.32.0':
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.32.0
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -15892,6 +16040,8 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
+  '@mixmark-io/domino@2.2.0': {}
+
   '@monaco-editor/loader@1.7.0':
     dependencies:
       state-local: 1.0.7
@@ -15906,6 +16056,12 @@ snapshots:
   '@mongodb-js/saslprep@1.4.11':
     dependencies:
       sparse-bitfield: 3.0.3
+
+  '@mongodb-js/zstd@7.0.0':
+    dependencies:
+      node-addon-api: 8.9.2
+      prebuild-install: 7.1.3
+    optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
@@ -18573,10 +18729,10 @@ snapshots:
 
   before-after-hook@4.0.0: {}
 
-  better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11):
+  better-auth@1.6.27(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11):
     dependencies:
       '@better-auth/core': 1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2)
-      '@better-auth/drizzle-adapter': 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0))
+      '@better-auth/drizzle-adapter': 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2))
       '@better-auth/kysely-adapter': 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(kysely@0.29.5)
       '@better-auth/memory-adapter': 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)
       '@better-auth/mongo-adapter': 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(better-call@1.4.0(zod@4.5.4))(jose@6.2.12)(kysely@0.29.5)(nanostores@1.4.2))(@better-auth/utils@0.4.2)(mongodb@7.6.0(@noble/hashes@2.4.0))
@@ -18594,8 +18750,8 @@ snapshots:
       zod: 4.5.4
     optionalDependencies:
       drizzle-kit: 0.31.10
-      drizzle-orm: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)
-      mongodb: 7.6.0(@noble/hashes@2.4.0)
+      drizzle-orm: 0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2)
+      mongodb: 7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0)
       pg: 8.23.0
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
@@ -19306,6 +19462,14 @@ snapshots:
     dependencies:
       mimic-response: 4.0.0
 
+  decompress-response@6.0.0:
+    dependencies:
+      mimic-response: 3.1.0
+    optional: true
+
+  deep-extend@0.6.0:
+    optional: true
+
   deep-is@0.1.4: {}
 
   deepmerge@4.3.1:
@@ -19475,13 +19639,14 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.12
 
-  drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0):
+  drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260907.1)(@opentelemetry/api@1.9.0)(@types/pg@8.23.1)(kysely@0.29.5)(pg@8.23.0)(sql.js@1.14.2):
     optionalDependencies:
       '@cloudflare/workers-types': 5.20260907.1
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.23.1
       kysely: 0.29.5
       pg: 8.23.0
+      sql.js: 1.14.2
 
   dts-resolver@3.0.0: {}
 
@@ -20173,6 +20338,9 @@ snapshots:
 
   exifr@7.1.3: {}
 
+  expand-template@2.0.3:
+    optional: true
+
   expect-type@1.3.0: {}
 
   express@5.2.1(supports-color@10.2.2):
@@ -20326,6 +20494,15 @@ snapshots:
   file-entry-cache@11.1.5:
     dependencies:
       flat-cache: 6.1.23
+
+  file-type@21.3.4(supports-color@10.2.2):
+    dependencies:
+      '@tokenizer/inflate': 0.4.1(supports-color@10.2.2)
+      strtok3: 10.3.5
+      token-types: 6.1.2
+      uint8array-extras: 1.5.0
+    transitivePeerDependencies:
+      - supports-color
 
   file-type@21.3.4(supports-color@5.5.0):
     dependencies:
@@ -20580,6 +20757,9 @@ snapshots:
   get-tsconfig@5.0.0-beta.5:
     dependencies:
       resolve-pkg-maps: 1.0.0
+
+  github-from-package@0.0.0:
+    optional: true
 
   gl-matrix@3.4.4: {}
 
@@ -20934,7 +21114,12 @@ snapshots:
 
   inherits@2.0.4: {}
 
+  ini@1.3.8:
+    optional: true
+
   ini@4.1.3: {}
+
+  ini@6.0.0: {}
 
   inline-style-parser@0.2.7: {}
 
@@ -21340,6 +21525,30 @@ snapshots:
       pako: 1.0.11
       readable-stream: 2.3.8
       setimmediate: 1.0.5
+
+  just-bash@3.4.2(supports-color@10.2.2):
+    dependencies:
+      diff: 8.0.4
+      fast-xml-parser: 5.11.1
+      file-type: 21.3.4(supports-color@10.2.2)
+      ini: 6.0.0
+      minimatch: 10.2.6
+      modern-tar: 0.7.7
+      papaparse: 5.7.0
+      quickjs-emscripten: 0.32.0
+      re2js: 1.3.3
+      seek-bzip: 2.0.0
+      smol-toml: 1.8.0
+      sprintf-js: 1.1.3
+      sql.js: 1.14.2
+      turndown: 7.2.4
+      undici: 8.10.2
+      yaml: 2.9.0
+    optionalDependencies:
+      '@mongodb-js/zstd': 7.0.0
+      node-liblzma: 2.2.0
+    transitivePeerDependencies:
+      - supports-color
 
   jwa@2.0.1:
     dependencies:
@@ -22108,6 +22317,9 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
+  mimic-response@3.1.0:
+    optional: true
+
   mimic-response@4.0.0: {}
 
   miniflare@5.20260907.0-alpha(@types/node@26.5.0):
@@ -22157,6 +22369,8 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
+  modern-tar@0.7.7: {}
+
   monaco-editor@0.56.0:
     dependencies:
       dompurify: 3.4.15
@@ -22169,11 +22383,13 @@ snapshots:
     transitivePeerDependencies:
       - '@noble/hashes'
 
-  mongodb@7.6.0(@noble/hashes@2.4.0):
+  mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0):
     dependencies:
       '@mongodb-js/saslprep': 1.4.11
       bson: 7.3.0
       mongodb-connection-string-url: 7.0.1(@noble/hashes@2.4.0)
+    optionalDependencies:
+      '@mongodb-js/zstd': 7.0.0
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -22231,6 +22447,9 @@ snapshots:
 
   nanostores@1.4.2: {}
 
+  napi-build-utils@2.0.0:
+    optional: true
+
   napi-postinstall@0.3.4: {}
 
   natural-compare@1.4.0: {}
@@ -22242,10 +22461,18 @@ snapshots:
   neo-async@2.6.2:
     optional: true
 
+  node-abi@3.96.0:
+    dependencies:
+      semver: 7.8.5
+    optional: true
+
   node-abort-controller@3.1.1:
     optional: true
 
   node-addon-api@7.1.1: {}
+
+  node-addon-api@8.9.2:
+    optional: true
 
   node-domexception@1.0.0: {}
 
@@ -22282,6 +22509,15 @@ snapshots:
   node-gyp-build-optional-packages@5.2.2:
     dependencies:
       detect-libc: 2.1.2
+    optional: true
+
+  node-gyp-build@4.8.4:
+    optional: true
+
+  node-liblzma@2.2.0:
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
     optional: true
 
   node-machine-id@1.1.12: {}
@@ -22504,6 +22740,8 @@ snapshots:
 
   pako@2.0.3: {}
 
+  papaparse@5.7.0: {}
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -22695,6 +22933,22 @@ snapshots:
 
   powershell-utils@0.2.1: {}
 
+  prebuild-install@7.1.3:
+    dependencies:
+      detect-libc: 2.1.2
+      expand-template: 2.0.3
+      github-from-package: 0.0.0
+      minimist: 1.2.8
+      mkdirp-classic: 0.5.3
+      napi-build-utils: 2.0.0
+      node-abi: 3.96.0
+      pump: 3.0.4
+      rc: 1.2.8
+      simple-get: 4.0.1
+      tar-fs: 2.1.4
+      tunnel-agent: 0.6.0
+    optional: true
+
   prelude-ls@1.2.1: {}
 
   prettier-package-json@2.8.0:
@@ -22818,6 +23072,18 @@ snapshots:
 
   quick-lru@7.3.0: {}
 
+  quickjs-emscripten-core@0.32.0:
+    dependencies:
+      '@jitl/quickjs-ffi-types': 0.32.0
+
+  quickjs-emscripten@0.32.0:
+    dependencies:
+      '@jitl/quickjs-wasmfile-debug-asyncify': 0.32.0
+      '@jitl/quickjs-wasmfile-debug-sync': 0.32.0
+      '@jitl/quickjs-wasmfile-release-asyncify': 0.32.0
+      '@jitl/quickjs-wasmfile-release-sync': 0.32.0
+      quickjs-emscripten-core: 0.32.0
+
   quickselect@3.0.0: {}
 
   range-parser@1.2.1: {}
@@ -22828,6 +23094,16 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.2
       unpipe: 1.0.0
+
+  rc@1.2.8:
+    dependencies:
+      deep-extend: 0.6.0
+      ini: 1.3.8
+      minimist: 1.2.8
+      strip-json-comments: 2.0.1
+    optional: true
+
+  re2js@1.3.3: {}
 
   react-dom@19.2.8(react@19.2.8):
     dependencies:
@@ -23504,6 +23780,16 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
+  simple-concat@1.0.1:
+    optional: true
+
+  simple-get@4.0.1:
+    dependencies:
+      decompress-response: 6.0.0
+      once: 1.4.0
+      simple-concat: 1.0.1
+    optional: true
+
   simple-git-hooks@2.14.0: {}
 
   simple-update-notifier@2.0.0:
@@ -23521,6 +23807,8 @@ snapshots:
   sliced@1.0.1: {}
 
   slugify@1.6.9: {}
+
+  smol-toml@1.8.0: {}
 
   sonner@2.0.8(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -23561,6 +23849,10 @@ snapshots:
   split-ca@1.0.1: {}
 
   split2@4.2.0: {}
+
+  sprintf-js@1.1.3: {}
+
+  sql.js@1.14.2: {}
 
   ssh-remote-port-forward@1.0.4:
     dependencies:
@@ -23742,6 +24034,9 @@ snapshots:
   strip-final-newline@4.0.0: {}
 
   strip-indent@4.1.1: {}
+
+  strip-json-comments@2.0.1:
+    optional: true
 
   strnum@2.4.2:
     dependencies:
@@ -24100,6 +24395,11 @@ snapshots:
     dependencies:
       tslib: 1.14.1
 
+  tunnel-agent@0.6.0:
+    dependencies:
+      safe-buffer: 5.2.1
+    optional: true
+
   tunnel-rat@0.1.2(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8):
     dependencies:
       zustand: 4.5.7(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8)
@@ -24107,6 +24407,10 @@ snapshots:
       - '@types/react'
       - immer
       - react
+
+  turndown@7.2.4:
+    dependencies:
+      '@mixmark-io/domino': 2.2.0
 
   tweetnacl@0.14.5: {}
 

@@ -18,6 +18,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { BypassCaseTransform } from '~/common/decorators/bypass-case-transform.decorator'
+import { WithFastifyRouteOptions } from '~/common/decorators/fastify-route-options.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 import { applyRawCorsHeaders } from '~/utils/sse.util'
@@ -38,6 +39,10 @@ import {
 } from './ai-agent.schema'
 import { AiAgentChatService } from './ai-agent-chat.service'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
+
+// Review batches embed base/preview document snapshots, so a long session on a
+// large post passes Fastify's 1 MB default and the client would silently drop turns.
+const CONVERSATION_PAYLOAD_BYTES = 32 * 1024 * 1024
 
 const HEARTBEAT_INTERVAL_MS = 15_000
 
@@ -118,6 +123,7 @@ export class AiAgentController {
 
   @Post('/conversations')
   @Auth()
+  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
   @BypassCaseTransform(['data.messages[]'])
   createConversation(
     @Body({ schema: CreateConversationSchema }) body: CreateConversationDto,
@@ -152,6 +158,7 @@ export class AiAgentController {
 
   @Patch('/conversations/:id/messages')
   @Auth()
+  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
   appendMessages(
     @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @Body({ schema: AppendMessagesSchema }) body: AppendMessagesDto,
@@ -161,6 +168,7 @@ export class AiAgentController {
 
   @Put('/conversations/:id/messages')
   @Auth()
+  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
   replaceMessages(
     @Param({ schema: EntityIdSchema }) params: EntityIdDto,
     @Body({ schema: ReplaceMessagesSchema }) body: ReplaceMessagesDto,
