@@ -1,3 +1,10 @@
+# [14.13.0](https://github.com/mx-space/core/compare/v14.12.4...v14.13.0) (2026-09-16)
+
+
+### Features
+
+* **admin:** drive write agent edits through virtual bash ([#2824](https://github.com/mx-space/core/issues/2824)) ([e34d5ec](https://github.com/mx-space/core/commit/e34d5ec834fe57fc52cf368ea26243f53fe676db))
+
 ## [14.12.4](https://github.com/mx-space/core/compare/v14.12.3...v14.12.4) (2026-09-14)
 
 
