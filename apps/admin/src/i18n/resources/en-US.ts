@@ -3482,6 +3482,8 @@ export const enUS = {
   'write.agent.toast.reapplyFailed': 'Reapply failed',
   'write.agent.toast.reapplyPartial':
     'Reapply done: {success} succeeded, {conflict} conflict, {error} failed',
+  'write.agent.toast.sessionSyncFailed':
+    'Conversation could not be saved; this turn will be lost on reload',
   'write.agent.toast.reapplySuccess': 'Reapplied {count} tool result(s)',
   'write.agent.toast.suggestionApplied': 'Suggestion applied',
   'write.agent.toast.suggestionReapplied': 'Suggestion reapplied',

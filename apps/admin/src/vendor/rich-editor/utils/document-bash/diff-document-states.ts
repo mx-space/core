@@ -1,4 +1,5 @@
 import type { AgentOperation } from '@haklex/rich-agent-core'
+import { serializeMxLexicalToLitexml } from '@mx-space/editor'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 
 type NodeRecord = SerializedLexicalNode & {
@@ -38,7 +39,17 @@ function withBlockId(
 }
 
 function fingerprint(node: SerializedLexicalNode): string {
-  return JSON.stringify(node)
+  const state = {
+    root: {
+      children: [node],
+      direction: null,
+      format: '',
+      indent: 0,
+      type: 'root',
+      version: 1,
+    },
+  } as SerializedEditorState
+  return serializeMxLexicalToLitexml(state, { compact: true })
 }
 
 function mintBlockId(): string {
@@ -157,28 +168,21 @@ export function diffDocumentStates(
     if (!lcs.has(id)) operations.push({ blockId: id, op: 'delete' })
   }
 
+  let lastKeptId: string | null = null
   for (let index = 0; index < nextNodes.length; index++) {
     const node = nextNodes[index]
     const id = getBlockId(node)!
     if (!lcs.has(id)) {
-      if (index === 0) {
-        operations.push({
-          node,
-          op: 'insert',
-          position: { index: 0, type: 'root' },
-        })
-      } else {
-        operations.push({
-          node,
-          op: 'insert',
-          position: {
-            blockId: getBlockId(nextNodes[index - 1])!,
-            type: 'after',
-          },
-        })
-      }
+      operations.push({
+        node,
+        op: 'insert',
+        position: lastKeptId
+          ? { blockId: lastKeptId, type: 'after' }
+          : { index, type: 'root' },
+      })
       continue
     }
+    lastKeptId = id
     const original = baseById.get(id)
     if (original && fingerprint(original) !== fingerprint(node)) {
       operations.push({

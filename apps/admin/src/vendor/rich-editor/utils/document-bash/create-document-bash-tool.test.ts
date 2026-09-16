@@ -58,6 +58,22 @@ describe('createDocumentBashWorkspace', () => {
     expect(result.operations).toBeUndefined()
   })
 
+  it('provides /tmp and refreshes the outline after an edit', async () => {
+    const workspace = createWorkspace()
+    workspace.beginRun()
+    const tmp = await workspace.tool.execute({
+      command: 'cp /doc.xml /tmp/bak && ls /tmp',
+    })
+    expect(tmp.ok && tmp.content).toContain('bak')
+    await workspace.tool.execute({
+      command: "sed -i 's/Hello world/Hello earth/' /doc.xml",
+    })
+    const outline = await workspace.tool.execute({
+      command: 'cat /.meta/outline',
+    })
+    expect(outline.ok && outline.content).toContain('Hello earth')
+  })
+
   it('stubs python3 instead of command-not-found', async () => {
     const workspace = createWorkspace()
     workspace.beginRun()
@@ -68,6 +84,18 @@ describe('createDocumentBashWorkspace', () => {
     if (!result.ok) return
     expect(result.content).toContain('python3 is not available')
     expect(result.content).toContain('sed')
+  })
+
+  it('reports a no-op instead of an empty batch when the rewrite parses to the same document', async () => {
+    const workspace = createWorkspace()
+    workspace.beginRun()
+    const result = await workspace.tool.execute({
+      command: "sed -i 's|</p>$|</p> |' /doc.xml",
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.operations).toBeUndefined()
+    expect(result.content).toContain('parses to the same document')
   })
 
   it('returns replace-mode operations after the document is edited', async () => {

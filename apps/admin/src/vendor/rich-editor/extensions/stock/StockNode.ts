@@ -90,12 +90,12 @@ export class StockNode extends DecoratorNode<ReactElement> {
         symbol: serialized.symbol,
         range: serialized.range as StockKLineRange,
         ema: serialized.ema,
-      })
+      }).updateFromJSON(serialized)
     }
     return new StockNode({
       variant: 'snapshot',
       symbol: serialized.symbol,
-    })
+    }).updateFromJSON(serialized)
   }
 
   exportJSON(): SerializedStockNode {

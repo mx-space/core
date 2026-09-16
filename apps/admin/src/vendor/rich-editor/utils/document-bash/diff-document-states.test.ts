@@ -1,4 +1,8 @@
 import type { AgentOperation } from '@haklex/rich-agent-core'
+import {
+  deserializeMxLitexmlToLexical,
+  serializeMxLexicalToLitexml,
+} from '@mx-space/editor'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
@@ -61,6 +65,18 @@ describe('diffDocumentStates', () => {
     if (result.ok) expect(result.operations).toEqual([])
   })
 
+  it('ignores blocks that only changed through a LiteXML round trip', () => {
+    const base = state([para('a', 'one'), para('b', 'two'), para('c', 'three')])
+    const xml = serializeMxLexicalToLitexml(base, { compact: false })
+    const next = deserializeMxLitexmlToLexical(xml.replace('two', 'TWO'))
+    const result = diffDocumentStates(base, next)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.operations).toEqual([
+      expect.objectContaining({ op: 'replace', blockId: 'b' }),
+    ])
+  })
+
   it('emits replace when a block keeps its id but changes content', () => {
     const base = state([para('a', 'Hello'), para('b', 'World')])
     const next = state([para('a', 'Hello'), para('b', 'Earth')])
@@ -97,6 +113,33 @@ describe('diffDocumentStates', () => {
     if (!result.ok) return
     const inserted = insertAfter(result.operations, 'a')
     expect(inserted?.node).toEqual(para('b', 'Middle'))
+  })
+
+  it('anchors consecutive new blocks to the last kept block, never to a minted id', () => {
+    const base = state([para('a', 'A'), para('b', 'B')])
+    const next = state([
+      para(undefined, 'lead 1'),
+      para(undefined, 'lead 2'),
+      para('a', 'A'),
+      para(undefined, 'mid 1'),
+      para(undefined, 'mid 2'),
+      para('b', 'B'),
+    ])
+    const result = diffDocumentStates(base, next)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    const positions = result.operations
+      .filter(
+        (op): op is Extract<AgentOperation, { op: 'insert' }> =>
+          op.op === 'insert',
+      )
+      .map((op) => op.position)
+    expect(positions).toEqual([
+      { index: 0, type: 'root' },
+      { index: 1, type: 'root' },
+      { blockId: 'a', type: 'after' },
+      { blockId: 'a', type: 'after' },
+    ])
   })
 
   it('inserts at root index 0 when the first block is new', () => {

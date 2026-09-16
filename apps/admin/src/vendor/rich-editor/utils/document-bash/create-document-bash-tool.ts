@@ -36,6 +36,7 @@ const ALLOWED_COMMANDS: CommandName[] = [
   'rm',
   'sed',
   'sort',
+  'tail',
   'tee',
   'touch',
   'tr',
@@ -133,6 +134,7 @@ export function createDocumentBashWorkspace(
   let session: {
     base: SerializedEditorState
     bash: Bash
+    emittedOperations: boolean
     lastEmittedXml: string
   } | null = null
 
@@ -140,7 +142,7 @@ export function createDocumentBashWorkspace(
     session = null
   }
 
-  const ensureSession = () => {
+  const ensureSession = async () => {
     if (session) return session
     const editorState = options.getEditorState()
     if (!editorState) return null
@@ -154,9 +156,11 @@ export function createDocumentBashWorkspace(
         [OUTLINE_PATH]: buildOutline(editorState),
       },
     })
+    await bash.exec('mkdir -p /tmp')
     session = {
       base: editorState,
       bash,
+      emittedOperations: false,
       lastEmittedXml: xml,
     }
     return session
@@ -168,7 +172,7 @@ export function createDocumentBashWorkspace(
     Pick<
       Extract<AgentToolResult, { ok: true }>,
       'operations' | 'operationsMode'
-    >
+    > & { note?: string }
   > => {
     const xml = await current.bash.readFile(DOC_PATH)
     if (xml === current.lastEmittedXml) return {}
@@ -194,7 +198,15 @@ export function createDocumentBashWorkspace(
     } else {
       current.lastEmittedXml = xml
     }
+    await current.bash.writeFile(OUTLINE_PATH, buildOutline(diff.nextState))
 
+    if (diff.operations.length === 0 && !current.emittedOperations) {
+      return {
+        note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
+      }
+    }
+
+    current.emittedOperations = diff.operations.length > 0
     return {
       operations: diff.operations,
       operationsMode: 'replace',
@@ -237,7 +249,7 @@ export function createDocumentBashWorkspace(
         }
       }
 
-      const current = ensureSession()
+      const current = await ensureSession()
       if (!current) {
         return {
           error: {
@@ -250,9 +262,10 @@ export function createDocumentBashWorkspace(
 
       const execResult = await current.bash.exec(command)
       try {
-        const projection = await projectDocument(current)
+        const { note, ...projection } = await projectDocument(current)
+        const content = formatExec(execResult)
         return {
-          content: formatExec(execResult),
+          content: note ? `${content}\n${note}`.trim() : content,
           ok: true,
           ...projection,
         }
