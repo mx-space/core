@@ -257,7 +257,10 @@ export class MembershipController {
         id: row.id,
         title: row.title,
         slug: row.slug,
-        category: { slug: row.category?.slug ?? '' },
+        category: {
+          slug: row.category?.slug ?? '',
+          name: row.category?.name ?? '',
+        },
         createdAt: row.createdAt,
         entitlement: entitlements.get(String(row.id))?.reason ?? 'locked',
         freeUntil: readPaywallMeta(row.meta).freeUntil,

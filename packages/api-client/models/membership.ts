@@ -56,7 +56,7 @@ export interface ArchivePostItem {
   id: string
   title: string
   slug: string
-  category: { slug: string }
+  category: { slug: string; name: string }
   createdAt: string
   entitlement: ArchiveEntitlement
   freeUntil?: string
