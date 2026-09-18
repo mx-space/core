@@ -23,6 +23,7 @@ import type {
   AuthorThreatLevel,
   CommentFindFilter,
   CommentModel,
+  CommentPublicFilterOptions,
   CommentRefType,
   CommentRow,
   CommentTab,
@@ -327,7 +328,11 @@ export class CommentService {
 
   async findRecent(
     size: number,
-    options: { state?: number; rootOnly?: boolean } = {},
+    options: {
+      state?: number
+      rootOnly?: boolean
+      publicFilter?: CommentPublicFilterOptions
+    } = {},
   ) {
     return this.commentRepository.findRecent(size, options)
   }

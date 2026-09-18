@@ -20,7 +20,6 @@ import {
 import { checkRefModelCollectionType } from '~/utils/biz.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
-import { CommentState } from '../comment/comment.enum'
 import { CommentService } from '../comment/comment.service'
 import { ConfigsService } from '../configs/configs.service'
 import { NoteService } from '../note/note.service'
@@ -504,8 +503,11 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const { commentShouldAudit } = configs
 
     const docs = await this.commentService.findRecent(3, {
-      state: commentShouldAudit ? CommentState.Read : undefined,
       rootOnly: false,
+      publicFilter: {
+        isAuthenticated: false,
+        commentShouldAudit,
+      },
     })
 
     // For post refs, look up their categories separately

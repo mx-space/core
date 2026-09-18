@@ -572,10 +572,16 @@ export class CommentRepository extends BaseRepository {
 
   async findRecent(
     size: number,
-    options: { state?: number; rootOnly?: boolean } = {},
+    options: {
+      state?: number
+      rootOnly?: boolean
+      publicFilter?: CommentPublicFilterOptions
+    } = {},
   ): Promise<CommentRow[]> {
-    const filters: SQL[] = [eq(comments.isDeleted, false)]
-    if (options.state !== undefined)
+    const filters: SQL[] = options.publicFilter
+      ? this.buildPublicThreadFilters(options.publicFilter)
+      : [eq(comments.isDeleted, false)]
+    if (!options.publicFilter && options.state !== undefined)
       filters.push(eq(comments.state, options.state))
     if (options.rootOnly) filters.push(sql`${comments.parentCommentId} is null`)
     const rows = await this.db

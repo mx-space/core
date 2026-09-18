@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { ActivityService } from '~/modules/activity/activity.service'
+import { CommentState } from '~/modules/comment/comment.enum'
 
 const premiumContent = JSON.stringify({
   root: {
@@ -220,5 +222,111 @@ describe('ActivityService.getLastYearPublication', () => {
     expect(JSON.stringify(result)).not.toContain('private content')
     expect(JSON.stringify(result)).not.toContain('private-image')
     expect(JSON.stringify(result)).not.toContain('password body')
+  })
+})
+
+const createRecentCommentService = ({
+  commentShouldAudit,
+  findRecent,
+}: {
+  commentShouldAudit: boolean
+  findRecent: ReturnType<typeof vi.fn>
+}) => {
+  const commentService = {
+    findRecent,
+    fillAndReplaceAvatarUrl: vi.fn(async () => undefined),
+  }
+  const databaseService = {
+    findGlobalByIds: vi.fn(async () => ({})),
+    flatCollectionToMap: vi.fn(() => ({
+      'post-1': {
+        id: 'post-1',
+        title: 'A Post',
+        slug: 'a-post',
+        categoryId: 'cat-1',
+        category: { slug: 'default', name: 'Default' },
+      },
+    })),
+  }
+  const configsService = {
+    get: vi.fn(async () => ({ commentShouldAudit })),
+  }
+  return {
+    commentService,
+    service: new ActivityService(
+      {} as any,
+      {} as any,
+      {} as any,
+      commentService as any,
+      databaseService as any,
+      {} as any,
+      {} as any,
+      configsService as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    ),
+  }
+}
+
+describe('ActivityService.getRecentComment', () => {
+  it('requests public-visible comments when audit is off', async () => {
+    const findRecent = vi.fn(async () => [
+      {
+        id: 'c1',
+        text: 'hello',
+        author: 'Ada',
+        avatar: null,
+        createdAt: new Date('2026-09-18T00:00:00.000Z'),
+        refId: 'post-1',
+        state: CommentState.Unread,
+      },
+    ])
+    const { service } = createRecentCommentService({
+      commentShouldAudit: false,
+      findRecent,
+    })
+
+    const result = await service.getRecentComment()
+
+    expect(findRecent).toHaveBeenCalledWith(3, {
+      rootOnly: false,
+      publicFilter: {
+        isAuthenticated: false,
+        commentShouldAudit: false,
+      },
+    })
+    expect(result).toEqual([
+      {
+        createdAt: new Date('2026-09-18T00:00:00.000Z'),
+        author: 'Ada',
+        text: 'hello',
+        avatar: null,
+        title: 'A Post',
+        nid: undefined,
+        slug: 'a-post',
+        id: 'post-1',
+        category: { slug: 'default', name: 'Default' },
+        type: CollectionRefTypes.Post,
+      },
+    ])
+  })
+
+  it('requests audited public comments when audit is on', async () => {
+    const findRecent = vi.fn(async () => [])
+    const { service } = createRecentCommentService({
+      commentShouldAudit: true,
+      findRecent,
+    })
+
+    await service.getRecentComment()
+
+    expect(findRecent).toHaveBeenCalledWith(3, {
+      rootOnly: false,
+      publicFilter: {
+        isAuthenticated: false,
+        commentShouldAudit: true,
+      },
+    })
   })
 })
