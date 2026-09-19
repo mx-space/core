@@ -5,7 +5,7 @@ import { AiInsightsController } from '~/modules/ai/ai-insights/ai-insights.contr
 import { AiSummaryController } from '~/modules/ai/ai-summary/ai-summary.controller'
 import { AiTranslationController } from '~/modules/ai/ai-translation/ai-translation.controller'
 
-// Public SSE wire format is byte-pinned per apps/core/CLAUDE.md:
+// Public SSE wire format is byte-pinned per apps/core/AGENTS.md:
 //   event: token\ndata: <raw-text>\n\n
 //   event: done\n\n
 //   event: error\ndata: <json>\n\n

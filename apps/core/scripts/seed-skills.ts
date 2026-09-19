@@ -72,7 +72,7 @@ the apps/admin subpackage.
 
 Use this skill when reviewing a controller diff in \`apps/core/src/modules/\`.
 It encodes the project's API response and error contracts so the reviewer
-does not have to re-read CLAUDE.md every time.
+does not have to re-read AGENTS.md every time.
 
 ## Checklist
 
