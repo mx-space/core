@@ -732,6 +732,8 @@ export const enUS = {
   'comments.action.markRead': 'Read',
   'comments.action.markReadNext': 'Read & next',
   'comments.anonymous': 'anonymous',
+  'comments.badge.reviewPending': 'Awaiting review',
+  'comments.badge.manualReview': 'Needs manual review',
   'comments.badge.edited': 'edited',
   'comments.badge.junkAutoFlagged': 'auto-flagged',
   'comments.badge.owner': 'owner',
@@ -2128,6 +2130,11 @@ export const enUS = {
   'settings.ai.confirm.deleteProvider': 'Delete this provider?',
   'settings.ai.capability.image': 'Image generation',
   'settings.ai.capability.speech': 'Speech generation',
+  'settings.ai.section.decision': 'Decision model',
+  'settings.ai.decision.description':
+    'Fast decisions for comment review. Uncertain results fall back to the comment review language model.',
+  'settings.ai.capability.decision': 'Decision',
+  'settings.ai.providerType.typesafe': 'TypeSafe (Jev)',
   'settings.ai.capability.text': 'Text generation',
   'settings.ai.empty.providers': 'No providers',
   'settings.ai.error.fetchModelsFailed': 'Failed to fetch model list',
@@ -2359,6 +2366,12 @@ export const enUS = {
   'settings.schema.bingSearchOptions.title': 'Bing push settings',
   'settings.schema.bingSearchOptions.token.title': 'Bing API key',
   'settings.schema.commentOptions.aiReview.title': 'Enable AI review',
+  'settings.schema.commentOptions.decisionReview.title':
+    'Prefer decision model',
+  'settings.schema.commentOptions.decisionConfidence.title':
+    'Decision confidence threshold',
+  'settings.schema.commentOptions.decisionTimeoutMs.title':
+    'Decision timeout (ms)',
   'settings.schema.commentOptions.aiReviewThreshold.description':
     'Scores above this value are classified as spam. Range 1-10, default 5',
   'settings.schema.commentOptions.aiReviewThreshold.title':

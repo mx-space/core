@@ -9,6 +9,7 @@ import type { AIConfig } from '../configs/configs.schema'
 import { ConfigsService } from '../configs/configs.service'
 import type { AIModelAssignment, AIProviderConfig } from './ai.types'
 import { AIFeatureKey, AIProviderType } from './ai.types'
+import { type DecisionQuestion, requestDecision } from './decision/typesafe'
 import type { IModelRuntime } from './runtime'
 import { createModelRuntime } from './runtime'
 
@@ -20,6 +21,29 @@ export interface AIResolvedModelInfo {
 @Injectable()
 export class AiService {
   constructor(private readonly configService: ConfigsService) {}
+
+  async decide(
+    state: unknown,
+    questions: Record<string, DecisionQuestion>,
+    signal: AbortSignal,
+  ) {
+    const config = await this.configService.get('ai')
+    const assignment = config.decisionModel
+    const provider = config.providers?.find(
+      (p) =>
+        p.id === assignment?.providerId &&
+        p.enabled &&
+        p.type === AIProviderType.TypeSafe &&
+        p.capabilities?.decision,
+    )
+    if (!provider) throw new Error('No decision provider configured')
+    return requestDecision(
+      { ...provider, defaultModel: assignment?.model || provider.defaultModel },
+      state,
+      questions,
+      signal,
+    )
+  }
 
   public async getSummaryModel(): Promise<IModelRuntime> {
     return this.getModelForFeature(AIFeatureKey.Summary)

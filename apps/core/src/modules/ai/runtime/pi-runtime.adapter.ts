@@ -862,7 +862,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   ): Promise<ModelInfo[]> {
     if (
       this.providerType === AIProviderType.GoogleVertex &&
-      capability !== 'text'
+      (capability === 'image' || capability === 'speech')
     ) {
       return getVertexMediaModels(capability)
     }

@@ -60,6 +60,12 @@ export interface CommentRefSummary {
 }
 
 export interface CommentModel {
+  moderationStatus?: 'pending' | 'approved' | 'rejected' | 'manual' | null
+  /** Present only in submission responses; never put the receipt in a public cache. */
+  moderation?: {
+    status: 'published' | 'pending' | 'rejected'
+    receipt?: string
+  }
   id: string
   createdAt: string
   refType: CollectionRefTypes

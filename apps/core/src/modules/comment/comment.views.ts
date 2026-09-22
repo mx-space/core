@@ -87,6 +87,9 @@ const AuthorActivityItemSchema = z.object({
 })
 
 export const CommentViews = {
+  moderation: z.object({
+    status: z.enum(['published', 'pending', 'rejected']),
+  }),
   card: CommentCardSchema,
   row: CommentRowSchema,
   detail: CommentDetailSchema,

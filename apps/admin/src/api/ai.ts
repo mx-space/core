@@ -347,7 +347,9 @@ export function getModels() {
   return getModelsByCapability('text')
 }
 
-export function getModelsByCapability(capability: 'image' | 'speech' | 'text') {
+export function getModelsByCapability(
+  capability: 'decision' | 'image' | 'speech' | 'text',
+) {
   return getJson<ProviderModelsResponse[]>('/ai/models', { capability })
 }
 

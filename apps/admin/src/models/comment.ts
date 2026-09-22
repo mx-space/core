@@ -17,6 +17,7 @@ export interface CommentReplyWindow {
 }
 
 export interface CommentModel {
+  moderationStatus?: 'pending' | 'approved' | 'rejected' | 'manual' | null
   id: string
   createdAt: string
   refType: 'post' | 'note' | 'page' | 'recently'
@@ -77,12 +78,7 @@ export enum CommentState {
 }
 
 export type CommentTab =
-  | 'unread'
-  | 'awaiting'
-  | 'whispers'
-  | 'read'
-  | 'junk'
-  | 'all'
+  'unread' | 'awaiting' | 'whispers' | 'read' | 'junk' | 'all'
 
 export interface CommentTabCounts {
   unread: number

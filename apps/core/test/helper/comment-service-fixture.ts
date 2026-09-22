@@ -110,6 +110,8 @@ export const createCommentServiceFixture = () => {
     fileReferenceService as any,
     commentCountryService as any,
     redisService,
+    { initialReview: vi.fn().mockResolvedValue('approved') } as any,
+    { get: vi.fn().mockResolvedValue({ commentShouldAudit: false }) } as any,
   )
   return {
     commentCountryService,

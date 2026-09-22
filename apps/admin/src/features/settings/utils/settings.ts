@@ -153,6 +153,7 @@ export function normalizeAIConfig(value: unknown): AIConfig {
         capabilities: isLegacyVertex
           ? { image: true, speech: true, text: true }
           : {
+              decision: provider.capabilities?.decision,
               text: provider.capabilities?.text ?? true,
               image: provider.capabilities?.image ?? false,
               speech: provider.capabilities?.speech ?? false,
@@ -184,7 +185,12 @@ function extractVertexProjectId(endpoint: string): string | undefined {
 }
 
 export function coerceAIProviderType(value: unknown): AIProviderType {
-  if (value === 'anthropic' || value === 'generic' || value === 'google-vertex')
+  if (
+    value === 'typesafe' ||
+    value === 'anthropic' ||
+    value === 'generic' ||
+    value === 'google-vertex'
+  )
     return value
   return 'openai-compatible'
 }
@@ -200,6 +206,9 @@ export function formatAIProviderLabel(provider: AIProviderConfig) {
 
 export function getDefaultAIModel(type: AIProviderType) {
   switch (type) {
+    case 'typesafe': {
+      return 'jev-latest'
+    }
     case 'anthropic': {
       return 'claude-sonnet-4.5'
     }
@@ -292,6 +301,9 @@ export function resolvePiProviderId(provider: {
     }
   }
   switch (provider.type) {
+    case 'typesafe': {
+      return null
+    }
     case 'anthropic': {
       return 'anthropic'
     }

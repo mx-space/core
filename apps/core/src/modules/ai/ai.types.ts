@@ -1,4 +1,5 @@
 export enum AIProviderType {
+  TypeSafe = 'typesafe',
   OpenAICompatible = 'openai-compatible',
   Anthropic = 'anthropic',
   Generic = 'generic',
@@ -16,9 +17,10 @@ export enum AIFeatureKey {
   InsightsTranslation = 'insightsTranslation',
 }
 
-export type AIProviderCapability = 'image' | 'speech' | 'text'
+export type AIProviderCapability = 'decision' | 'image' | 'speech' | 'text'
 
 export interface AIProviderCapabilities {
+  decision?: boolean
   text: boolean
   image: boolean
   speech: boolean

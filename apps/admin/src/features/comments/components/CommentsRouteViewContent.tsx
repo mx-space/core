@@ -125,7 +125,11 @@ export function CommentsRouteViewContent() {
     (comment: CommentModel) => {
       // Mark as read when opening — only fires for genuinely unread rows so
       // we don't spam the server when navigating among already-read items.
-      if (comment.state === CommentState.Unread) {
+      if (
+        comment.state === CommentState.Unread &&
+        comment.moderationStatus !== 'pending' &&
+        comment.moderationStatus !== 'manual'
+      ) {
         markReadOnOpenMutation.mutate(comment.id)
       }
       const qs = searchParams.toString()

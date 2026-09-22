@@ -3,6 +3,7 @@ import {
   Delete,
   forwardRef,
   Get,
+  HttpCode,
   Inject,
   Param,
   Patch,
@@ -13,6 +14,7 @@ import {
 } from '@nestjs/common'
 import { isUndefined, keyBy } from 'es-toolkit/compat'
 import type { FastifyReply } from 'fastify'
+import { z } from 'zod'
 
 import { RequestContext } from '~/common/contexts/request.context'
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -69,6 +71,7 @@ import type {
   CommentModel,
   CommentTab,
 } from './comment.types'
+import { CommentViews } from './comment.views'
 
 const idempotenceMessage = 'Whoops, you already said this'
 
@@ -138,10 +141,9 @@ export class CommentController {
     const model: Partial<CommentModel> = { ...body, ...ipLocation }
     const comment = await this.commentService.createComment(id, model, ref)
 
-    this.lifecycleService.afterCreateComment(
-      String((comment as any).id),
-      ipLocation,
-    )
+    void this.lifecycleService
+      .afterCreateComment(String((comment as any).id), ipLocation)
+      .catch(() => undefined)
 
     const [doc] = await this.commentService.fillAndReplaceAvatarUrl([comment])
     return doc
@@ -166,9 +168,26 @@ export class CommentController {
     }
 
     const comment = await this.commentService.replyComment(params.id, model)
-    this.lifecycleService.afterReplyComment(comment, ipLocation)
+    void this.lifecycleService
+      .afterReplyComment(comment, ipLocation)
+      .catch(() => undefined)
     const [doc] = await this.commentService.fillAndReplaceAvatarUrl([comment])
     return doc
+  }
+
+  @Post('/:id/moderation')
+  @HttpCode(200)
+  @HTTPDecorators.SkipLogging
+  async getModerationStatus(
+    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
+    @Body({ schema: z.object({ receipt: z.string().regex(/^[\da-f]{64}$/) }) })
+    body: { receipt: string },
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    reply.header('Cache-Control', 'no-store')
+    return CommentViews.moderation.parse(
+      await this.commentService.getModerationStatus(params.id, body.receipt),
+    )
   }
 
   @Get('/')
@@ -352,7 +371,7 @@ export class CommentController {
   ) {
     const { id } = params
     const data: CommentModel | null =
-      await this.commentService.findByIdWithRelations(id)
+      await this.commentService.findByIdWithRelations(id, !hasAdminAccess)
 
     if (!data) {
       throw createAppException(AppErrorCode.COMMENT_NOT_FOUND, { id })

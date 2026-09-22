@@ -125,6 +125,18 @@ export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>
 export const CommentOptionsSchema = section('Comment settings', {
   antiSpam: field.toggle(z.boolean().optional(), 'Anti-spam'),
   aiReview: field.toggle(z.boolean().optional(), 'Enable AI review'),
+  decisionReview: field.toggle(
+    z.boolean().optional().default(false),
+    'Prefer decision model',
+  ),
+  decisionConfidence: field.number(
+    z.coerce.number().min(0).max(1).optional().default(0.9),
+    'Decision confidence threshold',
+  ),
+  decisionTimeoutMs: field.number(
+    z.coerce.number().int().min(100).max(10000).optional().default(1000),
+    'Decision timeout (ms)',
+  ),
   aiReviewType: field.select(
     z.enum(['binary', 'score']).optional(),
     'AI review mode',
@@ -790,6 +802,7 @@ export type AuthSecurityConfig = z.infer<typeof AuthSecuritySchema>
 
 // ==================== AI Provider Config ====================
 const AIProviderCapabilitiesSchema = z.object({
+  decision: z.boolean().optional(),
   text: z.boolean().optional().default(true),
   image: z.boolean().optional().default(false),
   speech: z.boolean().optional().default(false),
@@ -922,6 +935,10 @@ export const AISchema = section('AI settings', {
     z.array(AIProviderConfigSchema).optional(),
     'AI providers',
     { description: 'Configure multiple AI service providers' },
+  ),
+  decisionModel: field.plain(
+    AIModelAssignmentSchema.nullish(),
+    'Decision model',
   ),
   summaryModel: field.plain(AIModelAssignmentSchema.nullish(), 'Summary model'),
   writerModel: field.plain(

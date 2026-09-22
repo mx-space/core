@@ -8,6 +8,11 @@ import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'
 import BlockedKeywords from './block-keywords.json' with { type: 'json' }
 import type { CommentModel } from './comment.types'
+import {
+  commentDecisionQuestions,
+  type ModerationStatus,
+  resolveCommentDecision,
+} from './comment-decision'
 import MeaninglessWords from './meaningless-words.json' with { type: 'json' }
 
 export interface SpamFilterContext {
@@ -90,6 +95,36 @@ export class CommentSpamFilterService {
     private readonly aiService: AiService,
   ) {}
 
+  async initialReview(
+    doc: Partial<CommentModel>,
+    trusted: boolean,
+  ): Promise<ModerationStatus> {
+    const options = await this.configsService.get('commentOptions')
+    if (trusted || !options.antiSpam) return 'approved'
+    const result = await this.runPipeline(
+      [meaninglessContentFilter, builtinKeywordsFilter, systemSettingsFilter],
+      { doc: doc as CommentModel, commentOptions: options },
+    )
+    if (result.isSpam) return 'rejected'
+    if (!options.aiReview) return 'approved'
+    if (!options.decisionReview) return 'pending'
+    try {
+      const answers = await this.aiService.decide(
+        { text: doc.text },
+        commentDecisionQuestions(options.aiReviewType || 'binary'),
+        AbortSignal.timeout(options.decisionTimeoutMs ?? 1000),
+      )
+      return resolveCommentDecision(
+        answers,
+        options.decisionConfidence ?? 0.9,
+        options.aiReviewThreshold ?? 5,
+      )
+    } catch {
+      this.logger.warn('Decision review unavailable; queued for LLM review')
+      return 'pending'
+    }
+  }
+
   async checkSpam(doc: CommentModel): Promise<boolean> {
     const commentOptions = await this.configsService.get('commentOptions')
     if (!commentOptions.antiSpam) return false
@@ -131,38 +166,33 @@ export class CommentSpamFilterService {
     text: string,
     aiReviewType: 'binary' | 'score',
     aiReviewThreshold: number,
+    signal?: AbortSignal,
   ): Promise<boolean> {
     const runtime = await this.aiService.getCommentReviewModel()
+    const reviewSignal = signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(30000)])
+      : AbortSignal.timeout(30000)
 
     if (aiReviewType === 'score') {
-      try {
-        const { output } = await runtime.generateStructured({
-          ...AI_PROMPTS.comment.score(text),
-        })
-
-        if (output.hasSensitiveContent) {
-          return true
-        }
-        return output.score > aiReviewThreshold
-      } catch (error) {
-        this.logger.error('AI review score mode failed', error)
-        return false
-      }
-    } else {
-      try {
-        const { output } = await runtime.generateStructured({
-          ...AI_PROMPTS.comment.spam(text),
-        })
-
-        if (output.hasSensitiveContent) {
-          return true
-        }
-        return output.isSpam
-      } catch (error) {
-        this.logger.error('AI review spam detection mode failed', error)
-        return false
-      }
+      const { output } = await runtime.generateStructured({
+        ...AI_PROMPTS.comment.score(text),
+        signal: reviewSignal,
+        maxRetries: 0,
+      })
+      if (
+        !Number.isFinite(output.score) ||
+        output.score < 1 ||
+        output.score > 10
+      )
+        throw new Error('Invalid comment risk score')
+      return output.hasSensitiveContent || output.score > aiReviewThreshold
     }
+    const { output } = await runtime.generateStructured({
+      ...AI_PROMPTS.comment.spam(text),
+      signal: reviewSignal,
+      maxRetries: 0,
+    })
+    return output.hasSensitiveContent || output.isSpam
   }
 
   private async runPipeline(

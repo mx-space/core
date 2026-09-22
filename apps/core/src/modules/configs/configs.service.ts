@@ -243,6 +243,7 @@ export class ConfigsService implements OnModuleInit {
         capabilities: isLegacyVertex
           ? { text: true, image: true, speech: true }
           : {
+              decision: provider.capabilities?.decision ?? false,
               text: provider.capabilities?.text ?? true,
               image: provider.capabilities?.image ?? false,
               speech: provider.capabilities?.speech ?? false,
@@ -744,6 +745,16 @@ export class ConfigsService implements OnModuleInit {
           message: `ai.providers: duplicate provider id "${provider.id}"`,
         })
       }
+      if (
+        provider.type === 'typesafe' &&
+        ((provider.capabilities?.text ?? true) ||
+          provider.capabilities?.image ||
+          provider.capabilities?.speech)
+      ) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: 'TypeSafe supports decision capability only',
+        })
+      }
       providerIds.add(provider.id)
     }
 
@@ -775,6 +786,23 @@ export class ConfigsService implements OnModuleInit {
       if (!assignment.model?.trim() && !provider.defaultModel.trim()) {
         throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
           message: `ai.${key}.model: a model or provider default model is required`,
+        })
+      }
+    }
+
+    const decision = aiConfig.decisionModel
+    if (decision?.providerId) {
+      const provider = aiConfig.providers?.find(
+        (p) => p.id === decision.providerId,
+      )
+      if (
+        !provider?.capabilities?.decision ||
+        provider.type !== 'typesafe' ||
+        !(decision.model?.trim() || provider.defaultModel?.trim())
+      ) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message:
+            'Decision model requires a TypeSafe provider with decision capability and a model',
         })
       }
     }

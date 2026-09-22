@@ -42,6 +42,16 @@ const ALL_CAPABILITIES: AIProviderConfig['capabilities'] = {
 
 export const aiProviderPresets: readonly AIProviderPreset[] = [
   {
+    id: 'typesafe',
+    name: 'TypeSafe / Jev',
+    type: 'typesafe',
+    endpoint: 'https://api.typesafe.ai/v1',
+    defaultModel: 'jev-latest',
+    category: 'official',
+    apiKeyUrl: 'https://console.typesafe.ai',
+    capabilities: { decision: true, text: false, image: false, speech: false },
+  },
+  {
     id: 'openai',
     name: 'OpenAI',
     type: 'openai-compatible',
