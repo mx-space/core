@@ -1,5 +1,8 @@
-import { Get, Post, Req, UseInterceptors } from '@nestjs/common'
-import type { FastifyRequest } from 'fastify'
+import { Get, Post, Req, UploadedFile, UseInterceptors } from '@nestjs/common'
+import {
+  FileInterceptor,
+  type UploadedMultipartFile,
+} from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
@@ -20,13 +23,22 @@ export class CommentUploadController {
 
   @Post('/')
   @ReaderAuth()
-  @UseInterceptors(ReaderUploadQuotaInterceptor)
-  async upload(@Req() req: FastifyRequest) {
-    const bizReq = req as FastifyBizRequest
-    const readerId = bizReq.readerId || bizReq.user?.id
+  @UseInterceptors(
+    ReaderUploadQuotaInterceptor,
+    FileInterceptor('file', {
+      limits: (req: FastifyBizRequest) => ({
+        fileSize: req.commentUploadMaxFileSize ?? 5 * 1024 * 1024,
+      }),
+    }),
+  )
+  async upload(
+    @Req() req: FastifyBizRequest,
+    @UploadedFile() file?: UploadedMultipartFile,
+  ) {
+    const readerId = req.readerId || req.user?.id
     if (!readerId) {
       throw createAppException(AppErrorCode.FILE_UPLOAD_NOT_AUTHORIZED)
     }
-    return this.commentUploadService.uploadForReader(req, readerId)
+    return this.commentUploadService.uploadForReader(file, readerId)
   }
 }

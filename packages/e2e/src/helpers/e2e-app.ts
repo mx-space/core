@@ -42,7 +42,6 @@ export async function createE2EBackend(): Promise<E2EBackend> {
     { AppModule },
     { fastifyApp },
     pipes,
-    pgProvider,
     constants,
     authConstant,
     redisModule,
@@ -52,7 +51,6 @@ export async function createE2EBackend(): Promise<E2EBackend> {
     import('~/app.module'),
     import('~/common/adapters/fastify.adapter'),
     import('~/common/zod'),
-    import('~/processors/database/postgres.provider'),
     import('~/constants/system.constant'),
     import('~/modules/auth/auth.constant'),
     import('~/processors/redis/redis.service'),
@@ -117,7 +115,6 @@ export async function createE2EBackend(): Promise<E2EBackend> {
       } catch {}
 
       await app.close()
-      await pgProvider.disposePool()
       await pg.drop()
       await redis.stop()
     },

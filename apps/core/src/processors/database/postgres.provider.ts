@@ -1,6 +1,11 @@
 import path from 'node:path'
 
-import { Logger } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationShutdown,
+} from '@nestjs/common'
 import { sql } from 'drizzle-orm'
 import { readMigrationFiles } from 'drizzle-orm/migrator'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
@@ -20,6 +25,8 @@ const logger = new Logger('PostgresProvider')
 
 let cachedPool: PgPool | null = null
 let cachedDb: AppDatabase | null = null
+const poolOwners = new WeakMap<PgPool, number>()
+const closingPools = new WeakMap<PgPool, Promise<void>>()
 
 export const db = new Proxy({} as AppDatabase, {
   get(_target, prop) {
@@ -150,10 +157,43 @@ export async function assertSchemaCurrent(
 }
 
 export async function disposePool(): Promise<void> {
-  if (cachedPool) {
-    await cachedPool.end()
+  if (cachedPool) await closePool(cachedPool)
+}
+
+function closePool(pool: PgPool): Promise<void> {
+  const closing = closingPools.get(pool)
+  if (closing) return closing
+
+  if (cachedPool === pool) {
     cachedPool = null
     cachedDb = null
+  }
+
+  const result = Promise.resolve().then(() => pool.end())
+  closingPools.set(pool, result)
+  return result
+}
+
+@Injectable()
+export class PostgresPoolLifecycle implements OnApplicationShutdown {
+  private released = false
+
+  constructor(@Inject(PG_POOL_TOKEN) private readonly pool: PgPool) {
+    poolOwners.set(pool, (poolOwners.get(pool) ?? 0) + 1)
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    if (this.released) return
+    this.released = true
+
+    const remaining = (poolOwners.get(this.pool) ?? 1) - 1
+    if (remaining > 0) {
+      poolOwners.set(this.pool, remaining)
+      return
+    }
+
+    poolOwners.delete(this.pool)
+    await closePool(this.pool)
   }
 }
 

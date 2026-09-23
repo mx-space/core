@@ -16,6 +16,7 @@ type BizRequest = {
   token?: string
   readerId?: string
   rawBody?: Buffer
+  commentUploadMaxFileSize?: number
 }
 
 export type FastifyBizRequest = FastifyRequest & BizRequest

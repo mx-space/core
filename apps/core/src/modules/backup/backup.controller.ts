@@ -1,6 +1,7 @@
 import { Readable } from 'node:stream'
 
 import {
+  BadRequestException,
   Body,
   Delete,
   Get,
@@ -10,15 +11,18 @@ import {
   Patch,
   Post,
   Query,
-  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common'
-import type { FastifyRequest } from 'fastify'
+import {
+  FileInterceptor,
+  type UploadedMultipartFile,
+} from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 import { getMediumDateTime } from '~/utils/time.util'
 
@@ -27,10 +31,7 @@ import { BackupService } from './backup.service'
 @ApiController({ path: 'backups' })
 @Auth()
 export class BackupController {
-  constructor(
-    private readonly backupService: BackupService,
-    private readonly uploadService: UploadService,
-  ) {}
+  constructor(private readonly backupService: BackupService) {}
 
   @Get('/new')
   @HTTPDecorators.RawResponse
@@ -70,19 +71,28 @@ export class BackupController {
 
   @Post(['/rollback/', '/'])
   @HttpCode(200)
-  async uploadAndRestore(@Req() req: FastifyRequest) {
-    const data = await this.uploadService.getAndValidMultipartField(req, {
-      maxFileSize: 1024 * 1024 * 100,
-    })
-    const { mimetype } = data
-
-    if (!isZipMinetype(mimetype)) {
-      throw createAppException(AppErrorCode.MIME_ZIP_REQUIRED, {
-        got: `got: ${mimetype}`,
-      })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 100 },
+      fileFilter: (_req, file, done) => {
+        if (!isZipMinetype(file.mimetype)) {
+          done(
+            createAppException(AppErrorCode.MIME_ZIP_REQUIRED, {
+              got: `got: ${file.mimetype}`,
+            }),
+            false,
+          )
+          return
+        }
+        done(null, true)
+      },
+    }),
+  )
+  async uploadAndRestore(@UploadedFile() data?: UploadedMultipartFile) {
+    if (!data?.buffer) {
+      throw new BadRequestException('Only file uploads are accepted!')
     }
-
-    await this.backupService.saveTempBackupByUpload(await data.toBuffer())
+    await this.backupService.saveTempBackupByUpload(data.buffer)
   }
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {

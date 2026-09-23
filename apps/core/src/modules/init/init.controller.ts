@@ -1,24 +1,28 @@
 import {
+  BadRequestException,
   Body,
   Get,
   HttpCode,
   Param,
   Patch,
   Post,
-  Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
-import type { FastifyRequest } from 'fastify'
+import {
+  FileInterceptor,
+  type UploadedMultipartFile,
+} from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { UploadService } from '~/processors/helper/helper.upload.service'
 import { isZipMinetype } from '~/utils/mine.util'
 
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
 import { type ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
-import { InitGuard } from './init.guard'
+import { InitGuard, InitRestoreGuard } from './init.guard'
 import { type InitOwnerCreateDto, InitOwnerCreateSchema } from './init.schema'
 import { InitService } from './init.service'
 
@@ -29,7 +33,6 @@ export class InitController {
     private readonly configs: ConfigsService,
     private readonly initService: InitService,
     private readonly backupService: BackupService,
-    private readonly uploadService: UploadService,
   ) {}
 
   private async assertNotInitialized(forbiddenMode = false) {
@@ -76,19 +79,30 @@ export class InitController {
 
   @Post('/restore')
   @HttpCode(200)
-  async uploadAndRestore(@Req() req: FastifyRequest) {
+  @UseGuards(InitRestoreGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 1024 * 1024 * 100 },
+      fileFilter: (_req, file, done) => {
+        if (!isZipMinetype(file.mimetype)) {
+          done(
+            createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, {
+              got: file.mimetype,
+            }),
+            false,
+          )
+          return
+        }
+        done(null, true)
+      },
+    }),
+  )
+  async uploadAndRestore(@UploadedFile() data?: UploadedMultipartFile) {
     await this.assertNotInitialized()
-    const data = await this.uploadService.getAndValidMultipartField(req, {
-      maxFileSize: 1024 * 1024 * 100,
-    })
-    const { mimetype } = data
-    if (!isZipMinetype(mimetype)) {
-      throw createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, {
-        got: mimetype,
-      })
+    if (!data?.buffer) {
+      throw new BadRequestException('Only file uploads are accepted!')
     }
-
-    await this.backupService.saveTempBackupByUpload(await data.toBuffer())
+    await this.backupService.saveTempBackupByUpload(data.buffer)
 
     return
   }

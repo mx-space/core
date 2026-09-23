@@ -3,7 +3,8 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, PayloadTooLargeException } from '@nestjs/common'
+import { catchError } from 'rxjs'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CommentRepository } from '~/modules/comment/comment.repository'
@@ -32,11 +33,27 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
       throw createAppException(AppErrorCode.AUTH_NOT_LOGGED_IN)
     }
 
-    if (request.user?.role === 'owner') {
-      return next.handle()
+    const config = await this.configsService.get('commentUploadOptions')
+    request.commentUploadMaxFileSize =
+      (config.singleFileSizeMB ?? 5) * 1024 * 1024
+
+    const handleUpload = () => {
+      if (config.enable === false) {
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
+      }
+      return next.handle().pipe(
+        catchError((error: unknown) => {
+          if (error instanceof PayloadTooLargeException) {
+            throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
+          }
+          throw error
+        }),
+      )
     }
 
-    const config = await this.configsService.get('commentUploadOptions')
+    if (request.user?.role === 'owner') {
+      return handleUpload()
+    }
 
     const minAccountAgeHours = config.readerMinAccountAgeHours ?? 0
     if (minAccountAgeHours > 0) {
@@ -81,6 +98,6 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
       }
     }
 
-    return next.handle()
+    return handleUpload()
   }
 }

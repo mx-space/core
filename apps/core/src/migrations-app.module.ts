@@ -1,7 +1,10 @@
 import { Global, Module } from '@nestjs/common'
 
 import { AppMigrationsModule } from './database/app-migrations/app-migrations.module'
-import { postgresProviders } from './processors/database/postgres.provider'
+import {
+  PostgresPoolLifecycle,
+  postgresProviders,
+} from './processors/database/postgres.provider'
 import { PrettyLoggerModule } from './processors/logger/pretty-logger.module'
 
 /**
@@ -12,7 +15,7 @@ import { PrettyLoggerModule } from './processors/logger/pretty-logger.module'
  */
 @Global()
 @Module({
-  providers: [...postgresProviders],
+  providers: [...postgresProviders, PostgresPoolLifecycle],
   exports: [...postgresProviders],
 })
 class MigrationsDatabaseModule {}

@@ -1,6 +1,5 @@
 import { Readable } from 'node:stream'
 
-import fastifyCookie from '@fastify/cookie'
 import FastifyMultipart from '@fastify/multipart'
 import { Logger } from '@nestjs/common'
 import { FastifyAdapter } from '@nestjs/platform-fastify'
@@ -159,8 +158,4 @@ app.getInstance().addHook('onRequest', (request, reply, done) => {
   }
 
   done()
-})
-
-app.register(fastifyCookie, {
-  secret: 'cookie-secret',
 })
