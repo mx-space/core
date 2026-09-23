@@ -7,6 +7,7 @@ import {
   gte,
   ilike,
   inArray,
+  isNotNull,
   isNull,
   lte,
   ne,
@@ -1103,7 +1104,15 @@ export class CommentRepository extends BaseRepository {
       )!,
     ]
     if (commentShouldAudit) {
-      filters.push(eq(comments.state, CommentState.Read))
+      filters.push(
+        or(
+          eq(comments.state, CommentState.Read),
+          and(
+            eq(comments.state, CommentState.Unread),
+            isNotNull(comments.readerId),
+          ),
+        )!,
+      )
     } else {
       filters.push(
         inArray(comments.state, [CommentState.Unread, CommentState.Read]),

@@ -68,6 +68,7 @@ export function commentSubmissionStatus(
     state: number
     moderationStatus?: string | null
     isDeleted?: boolean
+    readerId?: string | null
   },
   requiresAudit: boolean,
 ): 'published' | 'pending' | 'rejected' {
@@ -80,7 +81,7 @@ export function commentSubmissionStatus(
   if (
     comment.moderationStatus === 'pending' ||
     comment.moderationStatus === 'manual' ||
-    (requiresAudit && comment.state !== 1)
+    (requiresAudit && comment.state !== 1 && !comment.readerId)
   )
     return 'pending'
   return 'published'

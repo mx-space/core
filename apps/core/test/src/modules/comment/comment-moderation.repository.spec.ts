@@ -7,6 +7,7 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
+import { readers } from '~/database/schema'
 import { CommentRepository } from '~/modules/comment/comment.repository'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -72,6 +73,33 @@ describe('durable comment moderation', () => {
     ).toHaveLength(0)
     await repository.finishReview(reply, 'rejected')
     expect((await repository.findById(reply.id))?.state).toBe(2)
+  })
+
+  it('keeps approved reader comments public when human approval is required', async () => {
+    const refId = snowflake.nextId()
+    const readerId = snowflake.nextId()
+    await context.db.insert(readers).values({ id: readerId, name: 'Reader' })
+    await repository.create({
+      refType: CollectionRefTypes.Post,
+      refId,
+      text: 'reader',
+      moderationStatus: 'approved',
+      readerId,
+    })
+    await repository.create({
+      refType: CollectionRefTypes.Post,
+      refId,
+      text: 'guest',
+      moderationStatus: 'approved',
+    })
+    const { data } = await repository.findRootThreadsByRef(refId, {
+      page: 1,
+      size: 10,
+      sort: 'newest',
+      isAuthenticated: false,
+      commentShouldAudit: true,
+    })
+    expect(data.map((row) => row.text)).toEqual(['reader'])
   })
 
   it('cannot overwrite manual decisions or edited text with stale model results', async () => {

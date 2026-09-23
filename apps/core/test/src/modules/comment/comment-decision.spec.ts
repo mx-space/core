@@ -84,6 +84,12 @@ describe('two-stage comment decisions', () => {
       ),
     ).toBe('published')
     expect(
+      commentSubmissionStatus(
+        { state: 0, moderationStatus: 'approved', readerId: 'reader' },
+        true,
+      ),
+    ).toBe('published')
+    expect(
       commentSubmissionStatus({ state: 1, moderationStatus: 'pending' }, false),
     ).toBe('pending')
     expect(
