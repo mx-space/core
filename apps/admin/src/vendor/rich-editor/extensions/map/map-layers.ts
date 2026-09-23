@@ -110,11 +110,14 @@ export function addPoiLayers(map: MapLibreMap, colors: LayerColors) {
 
 export function setRouteData(
   map: MapLibreMap,
-  coords: Array<[number, number]>,
+  segments: Array<Array<[number, number]>>,
 ) {
   const src = map.getSource(ROUTE_SOURCE) as GeoJSONSource | undefined
   src?.setData({
-    geometry: { coordinates: coords, type: 'LineString' },
+    geometry: {
+      coordinates: segments.filter((segment) => segment.length >= 2),
+      type: 'MultiLineString',
+    },
     properties: {},
     type: 'Feature',
   })

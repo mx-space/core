@@ -1,4 +1,9 @@
-import type { MapTrackData, MapTrackStop } from '@mx-space/editor'
+import type {
+  MapTrackData,
+  MapTrackLeg,
+  MapTrackPointTuple,
+  MapTrackStop,
+} from '@mx-space/editor'
 
 export interface GpxPoint {
   ele: number | null
@@ -26,6 +31,12 @@ export interface BuildTrackJsonOptions {
   detectStopsOptions?: DetectStopsOptions
   sampleTarget?: number | null
   timezoneOffsetMinutes?: number | null
+}
+
+export interface GpxLegInput {
+  points: GpxPoint[]
+  timezoneOffsetMinutes?: number | null
+  title: string
 }
 
 export function parseGpx(text: string): GpxPoint[] {
@@ -275,42 +286,132 @@ export function getBounds(points: GpxPoint[]): Bounds {
   }
 }
 
+export function orderTrackPoints(points: GpxPoint[]): GpxPoint[] {
+  if (points.length < 2) return points
+  if (!points.every((point) => Number.isFinite(point.timeMs))) return points
+  for (let i = 1; i < points.length; i++) {
+    if (points[i]!.timeMs! < points[i - 1]!.timeMs!) {
+      return [...points].sort((a, b) => a.timeMs! - b.timeMs!)
+    }
+  }
+  return points
+}
+
+export function splitTrackSegments(
+  points: GpxPoint[],
+  { breakDistanceMeters = 3_000, breakGapSec = 1_800 } = {},
+): GpxPoint[][] {
+  if (points.length === 0) return []
+  const segments: GpxPoint[][] = [[points[0]!]]
+  for (let i = 1; i < points.length; i++) {
+    const previous = points[i - 1]!
+    const current = points[i]!
+    const dtSec =
+      Number.isFinite(previous.timeMs) && Number.isFinite(current.timeMs)
+        ? (current.timeMs! - previous.timeMs!) / 1000
+        : 0
+    const shouldBreak =
+      dtSec < 0 ||
+      (dtSec >= breakGapSec &&
+        distanceMeters(previous, current) >= breakDistanceMeters)
+    if (shouldBreak) segments.push([current])
+    else segments.at(-1)!.push(current)
+  }
+  return segments
+}
+
 export function buildTrackJson(
   points: GpxPoint[],
   title: string,
   options: BuildTrackJsonOptions = {},
 ): MapTrackData {
-  const {
-    sampleTarget = 450,
-    timezoneOffsetMinutes,
-    detectStopsOptions,
-  } = options
-  const sampled =
-    sampleTarget && points.length > sampleTarget
-      ? simplifyToTarget(points, sampleTarget)
-      : points
-  const stops = detectStops(points, detectStopsOptions)
-  const startTimeMs = firstFinite(points.map((p) => p.timeMs ?? null))
-  const endTimeMs = lastFinite(points.map((p) => p.timeMs ?? null))
+  return buildLegsTrackJson(
+    [{ points, timezoneOffsetMinutes: options.timezoneOffsetMinutes, title }],
+    title,
+    options,
+  )
+}
+
+export function buildLegsTrackJson(
+  inputs: GpxLegInput[],
+  title: string,
+  options: Omit<BuildTrackJsonOptions, 'timezoneOffsetMinutes'> = {},
+): MapTrackData {
+  const { sampleTarget = 450, detectStopsOptions } = options
+  const segments: GpxPoint[][] = []
+  const stops: MapTrackStop[] = []
+  const legs: MapTrackLeg[] = []
+  let originalCount = 0
+  let distance = 0
+
+  for (const input of inputs) {
+    const ordered = orderTrackPoints(input.points)
+    const legSegments = splitTrackSegments(ordered)
+    const legDistance = legSegments.reduce(
+      (sum, segment) => sum + totalDistance(segment),
+      0,
+    )
+    const startTimeMs = firstFinite(ordered.map((p) => p.timeMs ?? null))
+    const endTimeMs = lastFinite(ordered.map((p) => p.timeMs ?? null))
+    legs.push({
+      distanceMeters: Math.round(legDistance),
+      ...(typeof endTimeMs === 'number' && { endTimeMs }),
+      segments: [segments.length, segments.length + legSegments.length],
+      ...(typeof startTimeMs === 'number' && { startTimeMs }),
+      title: input.title,
+    })
+    segments.push(...legSegments)
+    stops.push(...detectStops(ordered, detectStopsOptions))
+    originalCount += ordered.length
+    distance += legDistance
+  }
+
+  const sampledSegments =
+    sampleTarget && originalCount > sampleTarget
+      ? segments.map((segment) =>
+          simplifyToTarget(
+            segment,
+            Math.max(
+              2,
+              Math.round((sampleTarget * segment.length) / originalCount),
+            ),
+          ),
+        )
+      : segments
+  const sampled = sampledSegments.flat()
+  const startTimes = legs.flatMap((leg) => leg.startTimeMs ?? [])
+  const endTimes = legs.flatMap((leg) => leg.endTimeMs ?? [])
+  const timezoneOffsetMinutes = inputs.find(
+    (input) => typeof input.timezoneOffsetMinutes === 'number',
+  )?.timezoneOffsetMinutes
+
   return {
     bounds: getBounds(sampled),
-    distanceMeters: Math.round(totalDistance(points)),
-    ...(typeof endTimeMs === 'number' && { endTimeMs }),
-    originalCount: points.length,
-    points: sampled.map((point) => [
-      round(point.lat, 7),
-      round(point.lon, 7),
-      point.ele === null ? null : round(point.ele, 1),
-    ]) as MapTrackData['points'],
+    distanceMeters: Math.round(distance),
+    ...(endTimes.length > 0 && { endTimeMs: Math.max(...endTimes) }),
+    ...(legs.length > 1 && { legs }),
+    originalCount,
+    points: sampled.map(toTuple),
     sampledCount: sampled.length,
-    ...(typeof startTimeMs === 'number' && { startTimeMs }),
-    ...(stops.length > 0 && { stops }),
+    segments: sampledSegments.map((segment) => segment.map(toTuple)),
+    ...(startTimes.length > 0 && { startTimeMs: Math.min(...startTimes) }),
+    ...(stops.length > 0 && {
+      stops: stops.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? '')),
+    }),
     ...(typeof timezoneOffsetMinutes === 'number' && {
       timezoneOffsetMinutes,
     }),
     title,
     version: 1,
   }
+}
+
+function toTuple(point: GpxPoint): MapTrackPointTuple {
+  return [
+    round(point.lat, 7),
+    round(point.lon, 7),
+    point.ele === null ? null : round(point.ele, 1),
+  ]
 }
 
 export function isGpxFile(file: { name: string; type: string }): boolean {
@@ -334,7 +435,16 @@ export function buildTrackFile(
   points: GpxPoint[],
   options: BuildTrackJsonOptions = {},
 ): { file: File; trackData: MapTrackData } {
-  const trackData = buildTrackJson(points, baseFileName, options)
+  return trackDataToFile(
+    baseFileName,
+    buildTrackJson(points, baseFileName, options),
+  )
+}
+
+export function trackDataToFile(
+  baseFileName: string,
+  trackData: MapTrackData,
+): { file: File; trackData: MapTrackData } {
   const jsonBlob = new Blob([JSON.stringify(trackData)], {
     type: 'application/json',
   })

@@ -10,24 +10,17 @@ import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import type { GpxPoint } from './gps-compress'
-import { buildTrackFile, isGpxFile, readGpxFile } from './gps-compress'
+import { buildLegsTrackJson, trackDataToFile } from './gps-compress'
 import { MapBlockReadonly } from './MapBlockReadonly'
+import { MapLegList } from './MapLegList'
 import type { MapNodePayload } from './MapNode'
+import type { GpxLeg, RawPick } from './parse-track-file'
+import { parseTrackFile } from './parse-track-file'
 
 interface InsertMapDialogProps {
   initial?: MapNodePayload
   onSubmit: (payload: MapNodePayload) => void
 }
-
-type RawPick =
-  | {
-      file: File
-      points: GpxPoint[]
-      tzOffsetMinutes: number | null
-      type: 'gpx'
-    }
-  | { file: File; type: 'json' }
 
 const DEFAULT_CLUSTER_RADIUS_M = 80
 const DEFAULT_DWELL_MINUTES = 10
@@ -37,31 +30,37 @@ function InsertMapDialog(props: InsertMapDialogProps) {
   const [title, setTitle] = useState(props.initial?.title ?? '')
   const [trackUrl, setTrackUrl] = useState(props.initial?.track?.url ?? '')
   const [raw, setRaw] = useState<RawPick | null>(null)
+  const [legTitles, setLegTitles] = useState<Record<string, string>>({})
   const [clusterRadiusM, setClusterRadiusM] = useState(DEFAULT_CLUSTER_RADIUS_M)
   const [dwellMinutes, setDwellMinutes] = useState(DEFAULT_DWELL_MINUTES)
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const prepareMutation = useMutation({
-    mutationFn: async (file: File): Promise<RawPick> => {
-      if (!isGpxFile(file)) {
-        const text = await file.text()
-        if (!/<gpx\b/i.test(text)) return { file, type: 'json' }
-        const { points, tzOffsetMinutes } = await readGpxFile(
-          new File([text], file.name, { type: 'application/gpx+xml' }),
-        )
-        return { file, points, tzOffsetMinutes, type: 'gpx' }
-      }
-      const { points, tzOffsetMinutes } = await readGpxFile(file)
-      return { file, points, tzOffsetMinutes, type: 'gpx' }
-    },
+    mutationFn: (files: File[]) => Promise.all(files.map(parseTrackFile)),
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : String(error)
       toast.error(`Failed to read file: ${message}`)
     },
-    onSuccess: (next) => {
+    onSuccess: (parsed) => {
+      const json = parsed.find((item) => item.type === 'json')
+      if (json) {
+        if (parsed.length > 1) {
+          toast.error('A track JSON cannot be combined with other files')
+          return
+        }
+        setTrackUrl('')
+        setRaw(json)
+        return
+      }
+      const added = parsed
+        .flatMap((item) => (item.type === 'gpx' ? [item.leg] : []))
+        .sort((a, b) => a.startTimeMs - b.startTimeMs)
       setTrackUrl('')
-      setRaw(next)
+      setRaw((prev) => ({
+        legs: [...(prev?.type === 'gpx' ? prev.legs : []), ...added],
+        type: 'gpx',
+      }))
     },
   })
 
@@ -76,22 +75,52 @@ function InsertMapDialog(props: InsertMapDialogProps) {
   const prepared = useMemo(() => {
     if (!raw) return null
     if (raw.type === 'json') {
-      return { file: raw.file, stopCount: null as number | null }
+      return { file: raw.file, trackData: null }
     }
-    const baseFileName = raw.file.name.replace(/\.gpx$/i, '')
-    const { file, trackData } = buildTrackFile(baseFileName, raw.points, {
-      detectStopsOptions: {
-        clusterRadiusM,
-        minMergedSec: dwellMinutes * 60,
-      },
-      sampleTarget: null,
-      timezoneOffsetMinutes: raw.tzOffsetMinutes,
-    })
-    return {
-      file,
-      stopCount: trackData.stops?.length ?? 0,
-    }
+    const baseFileName = raw.legs[0]!.baseName
+    return trackDataToFile(
+      baseFileName,
+      buildLegsTrackJson(
+        raw.legs.map((leg) => ({
+          points: leg.points,
+          timezoneOffsetMinutes: leg.tzOffsetMinutes,
+          title: leg.baseName,
+        })),
+        baseFileName,
+        {
+          detectStopsOptions: {
+            clusterRadiusM,
+            minMergedSec: dwellMinutes * 60,
+          },
+          sampleTarget: null,
+        },
+      ),
+    )
   }, [raw, clusterRadiusM, dwellMinutes])
+
+  const gpxLegs = raw?.type === 'gpx' ? raw.legs : []
+  const legTitle = (leg: GpxLeg) => legTitles[leg.id] ?? leg.baseName
+
+  const updateLegs = (update: (legs: GpxLeg[]) => GpxLeg[]) => {
+    setRaw((prev) => {
+      if (prev?.type !== 'gpx') return prev
+      const legs = update(prev.legs)
+      return legs.length > 0 ? { legs, type: 'gpx' } : null
+    })
+  }
+
+  const finalFile = () => {
+    if (!prepared?.trackData?.legs) return prepared?.file ?? null
+    const trackData = {
+      ...prepared.trackData,
+      legs: prepared.trackData.legs.map((leg, index) => ({
+        ...leg,
+        title: legTitle(gpxLegs[index]!) || leg.title,
+      })),
+      title: title || prepared.trackData.title,
+    }
+    return trackDataToFile(gpxLegs[0]!.baseName, trackData).file
+  }
 
   useEffect(() => {
     if (!prepared) {
@@ -121,8 +150,9 @@ function InsertMapDialog(props: InsertMapDialogProps) {
     event.preventDefault()
     if (!canInsert) return
     let finalUrl = trackUrl
-    if (prepared) {
-      const result = await uploadMutation.mutateAsync(prepared.file)
+    const file = finalFile()
+    if (file) {
+      const result = await uploadMutation.mutateAsync(file)
       finalUrl = result.url
     }
     if (!finalUrl) {
@@ -157,17 +187,24 @@ function InsertMapDialog(props: InsertMapDialogProps) {
               <TextInput
                 disabled={!!raw}
                 onChange={onTrackUrlChange}
-                placeholder={raw ? raw.file.name : 'https://…/track.json'}
+                placeholder={
+                  raw?.type === 'json'
+                    ? raw.file.name
+                    : raw
+                      ? gpxLegs.map((leg) => leg.baseName).join(', ')
+                      : 'https://…/track.json'
+                }
                 value={trackUrl}
               />
             </div>
             <input
               accept=".gpx,.json,application/json,application/gpx+xml"
               className="hidden"
+              multiple
               onChange={(event) => {
-                const file = event.target.files?.[0]
+                const files = [...(event.target.files ?? [])]
                 event.target.value = ''
-                if (file) prepareMutation.mutate(file)
+                if (files.length > 0) prepareMutation.mutate(files)
               }}
               ref={fileInputRef}
               type="file"
@@ -204,11 +241,36 @@ function InsertMapDialog(props: InsertMapDialogProps) {
             )}
           </div>
           <p className="text-xs text-fg-muted">
-            {raw
+            {raw?.type === 'json'
               ? `Selected: ${raw.file.name} · uploads on insert`
-              : 'Select a .gpx file (full track preserved) or paste a pre-built track JSON URL.'}
+              : raw
+                ? `${gpxLegs.length} GPX file${gpxLegs.length === 1 ? '' : 's'} · uploads on insert`
+                : 'Select one or more .gpx files (each becomes a leg) or paste a pre-built track JSON URL.'}
           </p>
         </div>
+        {raw?.type === 'gpx' ? (
+          <MapLegList
+            adding={prepareMutation.isPending}
+            legs={gpxLegs.map((leg) => ({ id: leg.id, title: legTitle(leg) }))}
+            meta={prepared?.trackData?.legs}
+            onAdd={() => fileInputRef.current?.click()}
+            onMove={(index, delta) =>
+              updateLegs((legs) => {
+                const next = [...legs]
+                const [leg] = next.splice(index, 1)
+                next.splice(index + delta, 0, leg!)
+                return next
+              })
+            }
+            onRemove={(index) =>
+              updateLegs((legs) => legs.filter((_, i) => i !== index))
+            }
+            onRename={(index, value) => {
+              const id = gpxLegs[index]!.id
+              setLegTitles((prev) => ({ ...prev, [id]: value }))
+            }}
+          />
+        ) : null}
         {raw?.type === 'gpx' ? (
           <div className="grid gap-2 rounded-sm border border-border bg-surface-inset p-3">
             <div className="text-xs font-medium text-fg">Stop detection</div>
@@ -240,7 +302,7 @@ function InsertMapDialog(props: InsertMapDialogProps) {
               Group GPS samples within {clusterRadiusM} m and surface clusters
               dwelt in for at least {dwellMinutes} minute
               {dwellMinutes === 1 ? '' : 's'} as stops. Detected:{' '}
-              {prepared?.stopCount ?? 0}.
+              {prepared?.trackData?.stops?.length ?? 0}.
             </p>
           </div>
         ) : null}

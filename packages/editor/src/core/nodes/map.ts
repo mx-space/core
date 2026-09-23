@@ -2,8 +2,7 @@ import type { MxBlockProjection } from '../types'
 import { serializeLiteXmlFallbackNode } from './litexml'
 
 export type MapTrackPointTuple =
-  | [number, number]
-  | [number, number, number | null]
+  [number, number] | [number, number, number | null]
 
 export interface MapTrackStop {
   durationSec: number
@@ -21,13 +20,23 @@ export interface MapTrackBounds {
   minLon: number
 }
 
+export interface MapTrackLeg {
+  distanceMeters?: number
+  endTimeMs?: number
+  segments: [from: number, to: number]
+  startTimeMs?: number
+  title: string
+}
+
 export interface MapTrackData {
   bounds?: MapTrackBounds
   distanceMeters?: number
   endTimeMs?: number
+  legs?: MapTrackLeg[]
   originalCount?: number
   points: MapTrackPointTuple[]
   sampledCount?: number
+  segments?: MapTrackPointTuple[][]
   startTimeMs?: number
   stops?: MapTrackStop[]
   timezoneOffsetMinutes?: number
