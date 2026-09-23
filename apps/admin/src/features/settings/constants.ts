@@ -61,6 +61,7 @@ export const aiProviderTypeOptions: Array<{
   labelKey: TranslationKey
   value: AIProviderType
 }> = [
+  { labelKey: 'settings.ai.providerType.typesafe', value: 'typesafe' },
   {
     labelKey: 'settings.ai.providerType.openaiCompatible',
     value: 'openai-compatible',

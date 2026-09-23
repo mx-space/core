@@ -37,6 +37,9 @@ export const generateDefaultConfig: () => IConfig = () => ({
   commentOptions: {
     antiSpam: true,
     aiReview: false,
+    decisionReview: false,
+    decisionConfidence: 0.9,
+    decisionTimeoutMs: 1000,
     aiReviewType: 'binary',
     aiReviewThreshold: 5,
     testAiReview: '__action__',

@@ -204,6 +204,16 @@ export function CommentListItem(props: CommentListItemProps) {
             </span>
           ) : null}
 
+          {props.comment.moderationStatus === 'pending' ||
+          props.comment.moderationStatus === 'manual' ? (
+            <Badge pill size="sm" tone="warning" variant="soft">
+              {t(
+                props.comment.moderationStatus === 'manual'
+                  ? 'comments.badge.manualReview'
+                  : 'comments.badge.reviewPending',
+              )}
+            </Badge>
+          ) : null}
           {props.comment.editedAt ? (
             <Badge
               data-testid="comments-row-badge-edited"

@@ -121,7 +121,7 @@ describe('CommentSpamFilterService faux e2e', () => {
     expect(result).toBe(true)
   })
 
-  it('returns false on AI error (failure-path)', async () => {
+  it('propagates AI errors so moderation remains pending (failure-path)', async () => {
     const handle = mountFaux([
       fauxAssistantMessage('boom', {
         stopReason: 'error',
@@ -130,7 +130,8 @@ describe('CommentSpamFilterService faux e2e', () => {
     ])
     torn.push(() => handle.teardown())
     const { service } = buildService()
-    const result = await service.evaluateWithAI('anything', 'binary', 5)
-    expect(result).toBe(false)
+    await expect(
+      service.evaluateWithAI('anything', 'binary', 5),
+    ).rejects.toThrow('upstream down')
   })
 })

@@ -286,3 +286,34 @@ describe('contextWindow/maxTokens visibility rule across 6 providers', () => {
     })
   }
 })
+
+it('preserves a saved decision provider and assignment when reopening settings', () => {
+  const reopened = normalizeAIConfig({
+    providers: [
+      {
+        id: 'jev',
+        name: 'Jev',
+        type: 'typesafe',
+        enabled: true,
+        apiKey: '',
+        defaultModel: 'jev-preview',
+        capabilities: {
+          decision: true,
+          text: false,
+          image: false,
+          speech: false,
+        },
+      },
+    ],
+    decisionModel: { providerId: 'jev', model: 'jev-preview' },
+  })
+  expect(reopened.decisionModel).toEqual({
+    providerId: 'jev',
+    model: 'jev-preview',
+  })
+  expect(reopened.providers?.[0]).toMatchObject({
+    type: 'typesafe',
+    capabilities: { decision: true, text: false },
+  })
+  expect(resolvePiProviderId(reopened.providers![0])).toBeNull()
+})

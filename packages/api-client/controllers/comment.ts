@@ -44,6 +44,12 @@ export class CommentController<ResponseWrapper> implements IController {
   /**
    * 根据 comment id 获取评论，包括子评论
    */
+  getModerationStatus(id: string, receipt: string) {
+    return this.proxy(id).moderation.post<{
+      status: 'published' | 'pending' | 'rejected'
+    }>({ data: { receipt } })
+  }
+
   getById(id: string) {
     return this.proxy(id).get<
       CommentModel & {

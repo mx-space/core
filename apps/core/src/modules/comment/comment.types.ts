@@ -14,6 +14,7 @@ export interface CommentRow {
   url: string | null
   text: string
   state: number
+  moderationStatus?: string | null
   parentCommentId: EntityId | null
   rootCommentId: EntityId | null
   replyCount: number
@@ -55,6 +56,8 @@ export interface CommentCreateInput {
   mail?: string | null
   url?: string | null
   state?: number
+  moderationStatus?: string | null
+  moderationReceiptHash?: string
   parentCommentId?: EntityId | string | null
   rootCommentId?: EntityId | string | null
   pin?: boolean

@@ -56,7 +56,9 @@ const PRESET_NAME_KEYS: Partial<Record<string, TranslationKey>> = {
   xai: 'settings.ai.preset.name.xai',
 }
 
-async function getProviderModels(capability: 'image' | 'speech' | 'text') {
+async function getProviderModels(
+  capability: 'decision' | 'image' | 'speech' | 'text',
+) {
   const response = await getModelsByCapability(capability)
   const entries: Array<[string, AIProviderModel[]]> = response.map(
     (provider) => [provider.providerId, provider.models ?? []],
@@ -99,6 +101,13 @@ export function AIConfigEditor(props: {
     queryKey: [...props.modelCacheKey, 'image'],
     staleTime: 24 * 60 * 60 * 1000,
   })
+  const decisionModelsQuery = useQuery({
+    enabled: providers.some((p) => p.enabled && p.capabilities?.decision),
+    queryFn: () => getProviderModels('decision'),
+    queryKey: [...props.modelCacheKey, 'decision'],
+    staleTime: 24 * 60 * 60 * 1000,
+  })
+  const decisionModels = decisionModelsQuery.data ?? {}
   const providerModels = modelsQuery.data ?? {}
   const speechProviderModels = speechModelsQuery.data ?? {}
   const imageProviderModels = imageModelsQuery.data ?? {}
@@ -128,6 +137,7 @@ export function AIConfigEditor(props: {
 
   const deleteProvider = (id: string) => {
     const references = [
+      props.value.decisionModel,
       props.value.summaryModel,
       props.value.writerModel,
       props.value.commentReviewModel,
@@ -226,6 +236,18 @@ export function AIConfigEditor(props: {
               ))}
             </div>
           )}
+        </SettingsSection>
+
+        <SettingsSection title={t('settings.ai.section.decision')}>
+          <AIModelAssignmentField
+            capability="decision"
+            label={t('settings.ai.section.decision')}
+            description={t('settings.ai.decision.description')}
+            models={decisionModels}
+            providers={providers}
+            value={props.value.decisionModel}
+            onChange={(decisionModel) => updateConfig({ decisionModel })}
+          />
         </SettingsSection>
 
         <FeatureSection
@@ -590,14 +612,22 @@ export function AIConfigEditor(props: {
       </div>
 
       <AIProviderDrawer
-        modelCacheKey={props.modelCacheKey}
+        modelCacheKey={
+          editingProvider?.capabilities?.decision
+            ? [...props.modelCacheKey, 'decision']
+            : props.modelCacheKey
+        }
         onChange={(patch) =>
           editingId ? updateProvider(editingId, patch) : undefined
         }
         onClose={() => setEditingId(null)}
         provider={editingProvider}
         providerModels={
-          editingProvider ? (providerModels[editingProvider.id] ?? []) : []
+          editingProvider
+            ? ((editingProvider.capabilities?.decision
+                ? decisionModels
+                : providerModels)[editingProvider.id] ?? [])
+            : []
         }
       />
     </>
@@ -613,6 +643,9 @@ function ProviderRow(props: {
   const { t } = useI18n()
   const provider = props.provider
   const capabilities = [
+    provider.capabilities?.decision
+      ? t('settings.ai.capability.decision')
+      : null,
     (provider.capabilities?.text ?? true)
       ? t('settings.ai.capability.text')
       : null,

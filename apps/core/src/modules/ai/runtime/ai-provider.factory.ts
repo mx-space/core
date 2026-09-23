@@ -12,6 +12,8 @@ export function createModelRuntime(
   modelOverride?: string,
   options?: { reasoningEffort?: AIReasoningEffort; sessionId?: string },
 ): IModelRuntime {
+  if (config.type === 'typesafe')
+    throw new Error('Decision providers cannot generate text')
   const model = modelOverride || config.defaultModel
 
   const runtimeConfig: TextProtocolAdapterConfig = {

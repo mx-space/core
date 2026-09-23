@@ -4,10 +4,11 @@ import type { ConfigFormGroup } from '~/api/options'
 import type { TranslationKey } from '~/i18n/types'
 
 export type AIProviderType =
-  'anthropic' | 'generic' | 'google-vertex' | 'openai-compatible'
-export type AIProviderCapability = 'image' | 'speech' | 'text'
+  'anthropic' | 'generic' | 'google-vertex' | 'openai-compatible' | 'typesafe'
+export type AIProviderCapability = 'decision' | 'image' | 'speech' | 'text'
 
 export interface AIProviderCapabilities {
+  decision?: boolean
   image: boolean
   speech: boolean
   text: boolean
@@ -40,6 +41,7 @@ export interface AIModelAssignment {
 
 export interface AIConfig {
   version?: 2
+  decisionModel?: AIModelAssignment | null
   commentReviewModel?: AIModelAssignment | null
   enableAutoGenerateTranslation?: boolean
   enableAutoTranslateInsights?: boolean

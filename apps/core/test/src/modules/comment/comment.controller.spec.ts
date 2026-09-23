@@ -26,8 +26,8 @@ describe('CommentController permission gating', () => {
     fillAndReplaceAvatarUrl: vi.fn(async (docs: any[]) => docs),
   }
   const mockLifecycleService = {
-    afterCreateComment: vi.fn(),
-    afterReplyComment: vi.fn(),
+    afterCreateComment: vi.fn().mockResolvedValue(undefined),
+    afterReplyComment: vi.fn().mockResolvedValue(undefined),
   }
   const mockConfigsService = {
     get: vi.fn(),

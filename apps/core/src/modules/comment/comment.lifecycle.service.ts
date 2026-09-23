@@ -1,5 +1,6 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
+import { Interval } from '@nestjs/schedule'
 import ejs from 'ejs'
 import { omit, pick } from 'es-toolkit/compat'
 
@@ -10,6 +11,7 @@ import { BarkPushService } from '~/processors/helper/helper.bark.service'
 import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
+import { TaskQueueProcessor, TaskQueueService } from '~/processors/task-queue'
 import { scheduleManager } from '~/utils/schedule.util'
 import { getAvatar } from '~/utils/tool.util'
 
@@ -30,9 +32,11 @@ import {
   defaultCommentModelKeys,
 } from './comment.email.default'
 import { CommentReplyMailType, CommentState } from './comment.enum'
+import { CommentRepository } from './comment.repository'
 import { CommentService } from './comment.service'
 import { CommentSpamFilterService } from './comment.spam-filter'
 import type { CommentModel } from './comment.types'
+import { commentSubmissionStatus } from './comment-decision'
 
 @Injectable()
 export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
@@ -52,9 +56,17 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
     private readonly eventManager: EventManagerService,
     private readonly barkService: BarkPushService,
     private readonly fileReferenceService: FileReferenceService,
+    private readonly repository: CommentRepository,
+    private readonly taskQueue: TaskQueueService,
+    private readonly processor: TaskQueueProcessor,
   ) {}
 
   async onModuleInit() {
+    this.processor.registerHandler<{ commentId: string }>({
+      type: 'comment:review',
+      execute: async ({ commentId }, context) =>
+        this.reviewComment(commentId, context.signal),
+    })
     const ownerInfo = await this.ownerService.getSiteOwnerOrMocked()
     const serialized = OwnerModel.serialize(ownerInfo)
     const renderProps = {
@@ -88,6 +100,7 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy() {
+    this.processor.unregisterHandler('comment:review')
     this.commentCreateListenerDisposer?.()
   }
 
@@ -108,91 +121,108 @@ export class CommentLifecycleService implements OnModuleInit, OnModuleDestroy {
 
   async afterCreateComment(commentId: string, ipLocation: { ip: string }) {
     const comment = await this.commentService.findById(commentId)
-
     if (!comment) return
-    const isLoggedInComment = !!comment.readerId
-
-    scheduleManager.schedule(async () => {
-      if (isLoggedInComment) return
-      await this.appendIpLocation(commentId, ipLocation.ip)
-    })
-
-    scheduleManager.batch(async () => {
-      const configs = await this.configsService.get('commentOptions')
-      const { commentShouldAudit } = configs
-
-      if (
-        (await this.spamFilterService.checkSpam(comment)) &&
-        !isLoggedInComment
-      ) {
-        await this.commentService.updateComment(commentId, {
-          state: CommentState.Junk,
-        })
-        await this.cascadeDeleteFilesIfSpamConfigured(commentId)
-        return
-      }
-
-      this.sendEmail(comment, CommentReplyMailType.Owner)
-
-      const broadcastPayload = await this.enrichForBroadcast(comment)
-      await this.eventManager.broadcast(
-        BusinessEvents.COMMENT_CREATE,
-        broadcastPayload,
-        { scope: EventScope.TO_SYSTEM_ADMIN },
+    if (!comment.readerId)
+      void this.appendIpLocation(commentId, ipLocation.ip).catch(() =>
+        this.logger.warn('Comment location unavailable'),
       )
-
-      if ((!commentShouldAudit || isLoggedInComment) && !comment.isWhispers) {
-        await this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          omit(broadcastPayload, ['ip', 'agent']),
-          { scope: EventScope.TO_VISITOR },
-        )
-      }
-    })
+    if (comment.moderationStatus === 'pending') {
+      await this.enqueueReview(comment)
+      return
+    }
+    await this.notifyReviewResult(comment)
   }
 
   async afterReplyComment(comment: CommentModel, ipLocation: { ip: string }) {
-    const commentId = comment.id ?? (comment as any).id?.toString()
-    const isLoggedInComment = !!comment.readerId
+    await this.afterCreateComment(comment.id, ipLocation)
+  }
 
-    scheduleManager.schedule(async () => {
-      if (isLoggedInComment) return
-      await this.appendIpLocation(commentId, ipLocation.ip)
-    })
-
-    const broadcastPayload = await this.enrichForBroadcast(comment)
-
-    if (isLoggedInComment) {
-      this.sendEmail(comment, CommentReplyMailType.Guest)
-      this.eventManager.broadcast(
-        BusinessEvents.COMMENT_CREATE,
-        broadcastPayload,
-        {
-          scope: EventScope.TO_SYSTEM_VISITOR,
-        },
+  private async enqueueReview(comment: CommentModel) {
+    try {
+      await this.taskQueue.createTask({
+        type: 'comment:review',
+        payload: { commentId: comment.id },
+        dedupKey: `comment:review:${comment.id}`,
+        scope: 'comment',
+      })
+    } catch {
+      this.logger.warn(
+        'Comment review enqueue failed; pending record will be recovered',
       )
-    } else {
-      const configs = await this.configsService.get('commentOptions')
-      const { commentShouldAudit } = configs
+    }
+  }
 
-      if (commentShouldAudit) {
-        this.eventManager.broadcast(
-          BusinessEvents.COMMENT_CREATE,
-          broadcastPayload,
-          {
-            scope: EventScope.TO_SYSTEM_ADMIN,
-          },
-        )
-        return
+  @Interval(30000)
+  async recoverPendingReviews() {
+    try {
+      for (const comment of await this.repository.pendingReviews())
+        await this.enqueueReview(comment)
+    } catch {
+      this.logger.warn('Comment review recovery unavailable')
+    }
+  }
+
+  private async reviewComment(id: string, signal?: AbortSignal) {
+    const comment = await this.repository.findById(id)
+    if (!comment || comment.moderationStatus !== 'pending' || comment.isDeleted)
+      return
+    const attempts = await this.repository.beginReview(comment)
+    if (attempts === null) return
+    let status: 'approved' | 'rejected' | 'manual'
+    try {
+      if (attempts > 3) status = 'manual'
+      else {
+        const options = await this.configsService.get('commentOptions')
+        status = (await this.spamFilterService.evaluateWithAI(
+          comment.text,
+          options.aiReviewType || 'binary',
+          options.aiReviewThreshold ?? 5,
+          signal,
+        ))
+          ? 'rejected'
+          : 'approved'
       }
+    } catch {
+      signal?.throwIfAborted()
+      if (attempts < 3)
+        throw new Error('Comment review failed; pending record will be retried')
+      status = 'manual'
+    }
+    signal?.throwIfAborted()
+    const updated = await this.repository.finishReview(comment, status)
+    if (updated) {
+      await this.commentService.invalidateTabCountsCache()
+      await this.notifyReviewResult(updated)
+    }
+  }
 
-      this.sendEmail(comment, CommentReplyMailType.Owner)
-      this.eventManager.broadcast(
+  private async notifyReviewResult(comment: CommentModel) {
+    if (
+      comment.moderationStatus === 'rejected' ||
+      comment.state === CommentState.Junk
+    ) {
+      await this.cascadeDeleteFilesIfSpamConfigured(comment.id)
+      return
+    }
+    const options = await this.configsService.get('commentOptions')
+    const published =
+      commentSubmissionStatus(comment, !!options.commentShouldAudit) ===
+      'published'
+    void this.sendEmail(
+      comment,
+      comment.isOwnerReply && published
+        ? CommentReplyMailType.Guest
+        : CommentReplyMailType.Owner,
+    ).catch(() => this.logger.warn('Comment email failed'))
+    const payload = await this.enrichForBroadcast(comment)
+    await this.eventManager.broadcast(BusinessEvents.COMMENT_CREATE, payload, {
+      scope: EventScope.TO_SYSTEM_ADMIN,
+    })
+    if (published && !comment.isWhispers) {
+      await this.eventManager.broadcast(
         BusinessEvents.COMMENT_CREATE,
-        broadcastPayload,
-        {
-          scope: EventScope.ALL,
-        },
+        omit(payload, ['ip', 'agent', 'mail']),
+        { scope: EventScope.TO_VISITOR },
       )
     }
   }

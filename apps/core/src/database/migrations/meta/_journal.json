@@ -281,6 +281,13 @@
       "when": 1789344000000,
       "tag": "0039_article_purchases",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1790045227587,
+      "tag": "0040_comment_moderation",
+      "breakpoints": true
     }
   ]
 }

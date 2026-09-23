@@ -355,6 +355,9 @@ export const comments = pgTable(
     url: text('url'),
     text: text('text').notNull(),
     state: integer('state').notNull().default(0),
+    moderationStatus: text('moderation_status'),
+    moderationReceiptHash: text('moderation_receipt_hash'),
+    moderationAttempts: integer('moderation_attempts').notNull().default(0),
     parentCommentId: refText('parent_comment_id').references(
       (): AnyPgColumn => comments.id,
       { onDelete: 'cascade' },
