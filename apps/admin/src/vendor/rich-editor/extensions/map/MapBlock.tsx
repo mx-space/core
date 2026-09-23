@@ -67,13 +67,20 @@ export function MapBlock({
       ),
     [poisProp],
   )
-  const coordinates = useMemo(
+  const routeSegments = useMemo(
     () =>
-      (data?.points ?? [])
-        .map(([lat, lon]) => [lon, lat] as [number, number])
-        .filter(([lon, lat]) => Number.isFinite(lat) && Number.isFinite(lon)),
+      (data?.segments?.length ? data.segments : [data?.points ?? []])
+        .map((segment) =>
+          segment
+            .map(([lat, lon]) => [lon, lat] as [number, number])
+            .filter(
+              ([lon, lat]) => Number.isFinite(lat) && Number.isFinite(lon),
+            ),
+        )
+        .filter((segment) => segment.length > 0),
     [data],
   )
+  const coordinates = useMemo(() => routeSegments.flat(), [routeSegments])
   const stops = useMemo(
     () =>
       (data?.stops ?? []).filter(
@@ -167,13 +174,13 @@ export function MapBlock({
         }
 
         if (revealedRef.current) {
-          if (freshRoute && hasTrack) setRouteData(current, coordinates)
+          if (freshRoute && hasTrack) setRouteData(current, routeSegments)
           if (freshStops) setStopsData(current, stops)
         } else if (freshRoute && hasTrack) {
           if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
           rafRef.current = animateReveal(
             current,
-            coordinates,
+            routeSegments,
             stops,
             REVEAL_DURATION_MS,
             (handle) => {
@@ -200,7 +207,7 @@ export function MapBlock({
       mapRef.current = null
       revealedRef.current = false
     }
-  }, [coordinates, pois])
+  }, [coordinates, pois, routeSegments])
 
   useEffect(() => {
     const map = mapRef.current
@@ -324,11 +331,12 @@ function joinWithDots(items: Array<{ id: string; node: React.ReactNode }>) {
 
 function animateReveal(
   map: MapLibreMap,
-  coords: Array<[number, number]>,
+  segments: Array<Array<[number, number]>>,
   stops: MapTrackStop[],
   durationMs: number,
   onDone: (handle: number) => void,
 ) {
+  const coords = segments.flat()
   if (coords.length < 2) return null
   const sortedStops = stops
     .map((stop) => ({ pathIdx: nearestCoordIdx(coords, stop), stop }))
@@ -351,15 +359,7 @@ function animateReveal(
     const raw = Math.min(1, (ts - start) / durationMs)
     const eased = 1 - (1 - raw) ** 3
     const tip = eased * (coords.length - 1)
-    const i = Math.floor(tip)
-    const frac = tip - i
-    const head = coords.slice(0, i + 1)
-    if (i < coords.length - 1 && frac > 0) {
-      const a = coords[i]!
-      const b = coords[i + 1]!
-      head.push([a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac])
-    }
-    setRouteData(map, head)
+    setRouteData(map, sliceSegmentsAt(segments, tip))
 
     let nextRevealed = revealedStops
     while (
@@ -391,4 +391,27 @@ function animateReveal(
 
   handle = requestAnimationFrame(step)
   return handle
+}
+
+function sliceSegmentsAt(
+  segments: Array<Array<[number, number]>>,
+  tip: number,
+): Array<Array<[number, number]>> {
+  const out: Array<Array<[number, number]>> = []
+  let offset = 0
+  for (const segment of segments) {
+    if (offset > tip) break
+    const local = Math.min(segment.length - 1, tip - offset)
+    const i = Math.floor(local)
+    const frac = local - i
+    const head = segment.slice(0, i + 1)
+    if (i < segment.length - 1 && frac > 0) {
+      const a = segment[i]!
+      const b = segment[i + 1]!
+      head.push([a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac])
+    }
+    out.push(head)
+    offset += segment.length
+  }
+  return out
 }
