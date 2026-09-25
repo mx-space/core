@@ -9,7 +9,7 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import type { BasicPagerInput } from '~/shared/dto/pager.dto'
+import type { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -26,7 +26,7 @@ import {
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiSummaryAdapter } from './ai-summary.adapter'
 import { AiSummaryRepository } from './ai-summary.repository'
-import type { GetSummariesGroupedQueryInput } from './ai-summary.schema'
+import type { GetSummariesGroupedQueryDto } from './ai-summary.schema'
 import type { AISummaryModel, AiSummaryRow } from './ai-summary.types'
 
 @Injectable()
@@ -234,7 +234,7 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
-  async getAllSummaries(pager: BasicPagerInput) {
+  async getAllSummaries(pager: BasicPagerDto) {
     const { page, size } = pager
     const summaries = await this.aiSummaryRepository.list(page, size)
     const docs = await this.generationMetrics.attachLatest(
@@ -252,7 +252,7 @@ export class AiSummaryService implements OnModuleInit {
     }
   }
 
-  async getAllSummariesGrouped(query: GetSummariesGroupedQueryInput) {
+  async getAllSummariesGrouped(query: GetSummariesGroupedQueryDto) {
     const { data, pagination } = await buildGroupedWithOrphans<AISummaryModel>({
       page: query.page,
       size: query.size,

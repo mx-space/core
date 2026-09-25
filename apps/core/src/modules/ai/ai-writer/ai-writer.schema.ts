@@ -25,12 +25,9 @@ export const GenerateAiSchema = z
       return true
     },
     {
-      message:
+      error:
         'text is required when type is TitleSlug, title is required when type is Slug',
     },
   )
 
 export type GenerateAiDto = z.infer<typeof GenerateAiSchema>
-
-// Type exports
-export type GenerateAiInput = z.infer<typeof GenerateAiSchema>

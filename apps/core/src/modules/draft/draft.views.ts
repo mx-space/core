@@ -8,9 +8,9 @@ const DraftCardSchema = z
     version: z.number(),
     createdAt: z.date().or(z.string()),
   })
-  .passthrough()
+  .loose()
 
-const DraftDetailSchema = z.object({}).passthrough()
+const DraftDetailSchema = z.object({}).loose()
 
 const DraftSharedSchema = z.object({
   content: z.string().nullable(),

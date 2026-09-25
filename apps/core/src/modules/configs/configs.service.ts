@@ -866,7 +866,7 @@ export class ConfigsService implements OnModuleInit {
     }
   }
 
-  private validWithDto(schema: z.ZodTypeAny, value: unknown): any {
+  private validWithDto(schema: z.ZodType, value: unknown): any {
     const result = schema.safeParse(value)
     if (!result.success) {
       const zodError = result.error as ZodError

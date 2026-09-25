@@ -45,8 +45,6 @@ export const PostSchema = PostBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export type PostDto = z.infer<typeof PostSchema>
-
 /**
  * Partial post schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
@@ -112,12 +110,3 @@ export const SetPostPublishStatusSchema = z.object({
 })
 
 export type SetPostPublishStatusDto = z.infer<typeof SetPostPublishStatusSchema>
-
-// Type exports
-export type PostInput = z.infer<typeof PostSchema>
-export type PartialPostInput = z.infer<typeof PartialPostSchema>
-export type CategoryAndSlugInput = z.infer<typeof CategoryAndSlugSchema>
-export type PostPagerInput = z.infer<typeof PostPagerSchema>
-export type SetPostPublishStatusInput = z.infer<
-  typeof SetPostPublishStatusSchema
->

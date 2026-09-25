@@ -16,7 +16,7 @@ import { AiTranslationRepository } from '../ai-translation/ai-translation.reposi
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiTtsRepository } from './ai-tts.repository'
-import type { GetTtsGroupedQueryInput } from './ai-tts.schema'
+import type { GetTtsGroupedQueryDto } from './ai-tts.schema'
 import type { AiTtsBlockRow, AiTtsRow } from './ai-tts.types'
 
 export interface TtsSegmentResult {
@@ -207,7 +207,7 @@ export class AiTtsQueryService {
     return { article, rows }
   }
 
-  async getAllNarrationsGrouped(query: GetTtsGroupedQueryInput) {
+  async getAllNarrationsGrouped(query: GetTtsGroupedQueryDto) {
     const { data, pagination } =
       await buildGroupedWithOrphans<NarrationDetailResult>({
         page: query.page,

@@ -21,9 +21,9 @@ export const RecentlyRefTypeSchema = z.enum([
 
 export const RecentlyMetadataSchema = z
   .object({
-    selectedEnrichmentUrls: z.array(z.string().url()).optional(),
+    selectedEnrichmentUrls: z.array(z.url()).optional(),
   })
-  .passthrough()
+  .loose()
 
 export const RecentlySchema = z.object({
   content: z.string().min(1),
@@ -52,6 +52,3 @@ export const RecentlyAttitudeSchema = z.object({
 })
 
 export type RecentlyAttitudeDto = z.infer<typeof RecentlyAttitudeSchema>
-
-export type RecentlyInput = z.infer<typeof RecentlySchema>
-export type RecentlyAttitudeInput = z.infer<typeof RecentlyAttitudeSchema>

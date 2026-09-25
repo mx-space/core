@@ -2,7 +2,7 @@ import type { z } from 'zod'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 
-export type ViewDef = z.ZodTypeAny
+export type ViewDef = z.ZodType
 
 export type ViewMap = Record<string, ViewDef>
 

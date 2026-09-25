@@ -105,16 +105,3 @@ export const GetPresenceQuerySchema = z.object({
 })
 
 export type GetPresenceQueryDto = z.infer<typeof GetPresenceQuerySchema>
-
-// Type exports
-export type ActivityTypeParamsInput = z.infer<typeof ActivityTypeParamsSchema>
-export type ActivityDeleteInput = z.infer<typeof ActivityDeleteSchema>
-export type ActivityQueryInput = z.infer<typeof ActivityQuerySchema>
-export type ActivityRangeInput = z.infer<typeof ActivityRangeSchema>
-export type ActivityNotificationInput = z.infer<
-  typeof ActivityNotificationSchema
->
-export type ActivityTopReadingsInput = z.infer<typeof ActivityTopReadingsSchema>
-export type LikeBodyInput = z.infer<typeof LikeBodySchema>
-export type UpdatePresenceInput = z.infer<typeof UpdatePresenceSchema>
-export type GetPresenceQueryInput = z.infer<typeof GetPresenceQuerySchema>

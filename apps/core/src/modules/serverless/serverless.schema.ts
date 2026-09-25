@@ -16,6 +16,3 @@ export const ServerlessLogQuerySchema = z.object({
 })
 
 export type ServerlessLogQueryDto = z.infer<typeof ServerlessLogQuerySchema>
-
-// Type exports
-export type ServerlessReferenceInput = z.infer<typeof ServerlessReferenceSchema>

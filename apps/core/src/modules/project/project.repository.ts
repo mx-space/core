@@ -13,7 +13,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-import type { ProjectCreateInput, ProjectPatchInput } from './project.dto'
+import type { ProjectCreateDto, ProjectPatchDto } from './project.dto'
 import type { ProjectRow } from './project.types'
 
 const PG_UNIQUE_VIOLATION = '23505'
@@ -87,7 +87,7 @@ export class ProjectRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
-  async create(input: ProjectCreateInput): Promise<ProjectRow> {
+  async create(input: ProjectCreateDto): Promise<ProjectRow> {
     const id = this.snowflake.nextId()
     try {
       const [row] = await this.db
@@ -117,7 +117,7 @@ export class ProjectRepository extends BaseRepository {
 
   async update(
     id: EntityId | string,
-    patch: ProjectPatchInput,
+    patch: ProjectPatchDto,
   ): Promise<ProjectRow | null> {
     const idBig = parseEntityId(id)
     const update: Partial<typeof projects.$inferInsert> = {}

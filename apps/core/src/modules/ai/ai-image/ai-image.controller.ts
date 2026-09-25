@@ -15,7 +15,6 @@ import {
   type DraftImagePromptDto,
   DraftImagePromptSchema,
   type GenerateImageDto,
-  type GenerateImageInput,
   GenerateImageSchema,
 } from './ai-image.dto'
 import { AiImageViews, type ImageModelView } from './ai-image.views'
@@ -66,7 +65,7 @@ export class AiImageController {
     if (body.presetId) {
       const preset = resolveCoverPreset(body.presetId)
       aspectRatio ??=
-        preset.defaultAspectRatio as GenerateImageInput['aspectRatio']
+        preset.defaultAspectRatio as GenerateImageDto['aspectRatio']
     }
 
     const result = await this.aiTaskService.createImageGenerationTask({

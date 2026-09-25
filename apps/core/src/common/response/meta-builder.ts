@@ -35,7 +35,7 @@ const normalizePagination = (pagination: LegacyPaginationLike) => {
 }
 
 export class MetaObjectBuilder<
-  TSchema extends z.ZodTypeAny = typeof BaseResponseMetaSchema,
+  TSchema extends z.ZodType = typeof BaseResponseMetaSchema,
 > {
   protected readonly meta: Partial<z.infer<TSchema>> = {}
 

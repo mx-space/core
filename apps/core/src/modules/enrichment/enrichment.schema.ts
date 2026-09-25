@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 export const ResolveQuerySchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 })
 export type ResolveQueryDto = z.infer<typeof ResolveQuerySchema>
 

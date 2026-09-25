@@ -22,7 +22,7 @@ export const zSlug = z
   .transform((val) => val.trim())
 
 export const zEmail = (message = 'Please enter a valid email address') =>
-  z.string().email({ message })
+  z.email({ error: message })
 
 export const zMaxLengthString = (max: number, message?: string) =>
   z.string().max(max, message || `Must not exceed ${max} characters`)

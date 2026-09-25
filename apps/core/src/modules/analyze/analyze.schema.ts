@@ -29,12 +29,9 @@ export type AnalyzeDto = z.infer<typeof AnalyzeSchema>
  * `page`/`size` are runtime-validated rather than reaching the service raw.
  * Keeps the legacy default size of 50 for analyze endpoints.
  */
-export const AnalyzePagerSchema = AnalyzeSchema.merge(BasicPagerSchema).extend({
+export const AnalyzePagerSchema = AnalyzeSchema.extend({
+  ...BasicPagerSchema.shape,
   size: BasicPagerSchema.shape.size.default(50),
 })
 
 export type AnalyzePagerDto = z.infer<typeof AnalyzePagerSchema>
-
-// Type exports
-export type AnalyzeInput = z.infer<typeof AnalyzeSchema>
-export type AnalyzePagerInput = z.infer<typeof AnalyzePagerSchema>

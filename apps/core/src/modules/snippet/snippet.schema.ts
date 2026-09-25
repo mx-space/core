@@ -20,10 +20,10 @@ const SnippetPathSchema = z
   .max(4096)
   .transform((val) => val.replaceAll(/^\/+|\/+$/g, ''))
   .refine((val) => val.length > 0, {
-    message: 'path is required',
+    error: 'path is required',
   })
   .refine((val) => !val.includes('//'), {
-    message: 'path must not contain empty segments',
+    error: 'path must not contain empty segments',
   })
   .refine(
     (val) =>
@@ -34,7 +34,7 @@ const SnippetPathSchema = z
         return !/[\u0000-\u001F\u007F]/.test(segment)
       }),
     {
-      message: 'path contains an invalid segment',
+      error: 'path contains an invalid segment',
     },
   )
 
@@ -72,8 +72,6 @@ export type SnippetDto = z.infer<typeof SnippetSchema>
 
 export const PartialSnippetSchema = SnippetSchema.partial()
 
-export type PartialSnippetDto = z.infer<typeof PartialSnippetSchema>
-
 export const SnippetMoreSchema = z.object({
   snippets: z.array(SnippetSchema),
   packages: z.array(z.string()).optional(),
@@ -89,12 +87,6 @@ export const SnippetListSchema = BasicPagerSchema.extend({
 })
 
 export type SnippetListDto = z.infer<typeof SnippetListSchema>
-
-// Type exports
-export type SnippetInput = z.infer<typeof SnippetSchema>
-export type PartialSnippetInput = z.infer<typeof PartialSnippetSchema>
-export type SnippetMoreInput = z.infer<typeof SnippetMoreSchema>
-export type SnippetListInput = z.infer<typeof SnippetListSchema>
 
 export const SnippetByPathSchema = z.object({
   path: SnippetPathSchema,

@@ -20,8 +20,6 @@ export const MetaSchema = z.object({
   slug: z.string(),
 })
 
-export type MetaDto = z.infer<typeof MetaSchema>
-
 /**
  * Datatype schema
  */
@@ -66,10 +64,3 @@ export const MarkdownPreviewSchema = z.object({
 })
 
 export type MarkdownPreviewDto = z.infer<typeof MarkdownPreviewSchema>
-
-// Type exports
-export type MetaInput = z.infer<typeof MetaSchema>
-export type DatatypeInput = z.infer<typeof DatatypeSchema>
-export type DataListInput = z.infer<typeof DataListSchema>
-export type ExportMarkdownQueryInput = z.infer<typeof ExportMarkdownQuerySchema>
-export type MarkdownPreviewInput = z.infer<typeof MarkdownPreviewSchema>

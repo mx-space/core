@@ -28,8 +28,3 @@ export const EmailTemplateBodySchema = z.object({
 })
 
 export type EmailTemplateBodyDto = z.infer<typeof EmailTemplateBodySchema>
-
-// Type exports
-export type ConfigKeyInput = z.infer<typeof ConfigKeySchema>
-export type EmailTemplateTypeInput = z.infer<typeof EmailTemplateTypeSchema>
-export type EmailTemplateBodyInput = z.infer<typeof EmailTemplateBodySchema>

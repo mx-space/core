@@ -31,7 +31,7 @@ function getEncryptedPaths(): Set<string> {
 /**
  * Get the type name from a Zod schema (Zod 4.x compatible)
  */
-function getZodTypeName(schema: z.ZodTypeAny): string {
+function getZodTypeName(schema: z.ZodType): string {
   // Zod 4.x uses _zod.def.type
   const zodDef = (schema as any)._zod?.def
   if (zodDef?.type) {
@@ -47,7 +47,7 @@ function getZodTypeName(schema: z.ZodTypeAny): string {
 /**
  * Get the inner type from wrapper types (optional, nullable, default, etc.)
  */
-function getInnerType(schema: z.ZodTypeAny): z.ZodTypeAny | null {
+function getInnerType(schema: z.ZodType): z.ZodType | null {
   const zodDef = (schema as any)._zod?.def
   return zodDef?.innerType || null
 }
@@ -55,9 +55,7 @@ function getInnerType(schema: z.ZodTypeAny): z.ZodTypeAny | null {
 /**
  * Get the shape from an object schema
  */
-function getObjectShape(
-  schema: z.ZodTypeAny,
-): Record<string, z.ZodTypeAny> | null {
+function getObjectShape(schema: z.ZodType): Record<string, z.ZodType> | null {
   // Try direct .shape property first (Zod 4.x)
   if ((schema as any).shape && typeof (schema as any).shape === 'object') {
     return (schema as any).shape
@@ -76,7 +74,7 @@ function getObjectShape(
 /**
  * Get the element type from an array schema
  */
-function getArrayElementType(schema: z.ZodTypeAny): z.ZodTypeAny | null {
+function getArrayElementType(schema: z.ZodType): z.ZodType | null {
   const zodDef = (schema as any)._zod?.def
   return zodDef?.element || zodDef?.type || null
 }
@@ -88,7 +86,7 @@ function getArrayElementType(schema: z.ZodTypeAny): z.ZodTypeAny | null {
  * @param parentEncrypt - Whether a parent is marked as encrypt (for subtree encryption)
  */
 function collectEncryptedPathsFromSchema(
-  schema: z.ZodTypeAny,
+  schema: z.ZodType,
   prefix: string,
   parentEncrypt = false,
 ): Set<string> {

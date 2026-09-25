@@ -37,7 +37,7 @@ const RecentlyCardSchema = z
     // client renders media cards without resolving any link itself.
     enrichments: z.record(z.string(), EnrichmentViews.result).optional(),
   })
-  .passthrough()
+  .loose()
 
 const RecentlyDetailSchema = RecentlyCardSchema
 

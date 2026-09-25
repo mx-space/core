@@ -50,10 +50,3 @@ export const GetInsightsGroupedQuerySchema = z.object({
 export type GetInsightsGroupedQueryDto = z.infer<
   typeof GetInsightsGroupedQuerySchema
 >
-
-// Type exports
-export type GetInsightsQueryInput = z.infer<typeof GetInsightsQuerySchema>
-export type UpdateInsightsInput = z.infer<typeof UpdateInsightsSchema>
-export type GetInsightsGroupedQueryInput = z.infer<
-  typeof GetInsightsGroupedQuerySchema
->

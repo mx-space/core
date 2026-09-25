@@ -5,14 +5,14 @@ import { SubscribeTypeToBitMap } from './subscribe.constant'
 const subscribeTypeKeys = Object.keys(SubscribeTypeToBitMap)
 
 export const SubscribeSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   types: z.array(z.enum(subscribeTypeKeys as [string, ...string[]])),
 })
 
 export type SubscribeDto = z.infer<typeof SubscribeSchema>
 
 export const CancelSubscribeSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   cancelToken: z.string(),
 })
 
@@ -26,13 +26,8 @@ export const BatchUnsubscribeSchema = z
   .refine(
     (data) => data.all === true || (data.emails && data.emails.length > 0),
     {
-      message: 'Either provide an emails array or set all to true',
+      error: 'Either provide an emails array or set all to true',
     },
   )
 
 export type BatchUnsubscribeDto = z.infer<typeof BatchUnsubscribeSchema>
-
-// Type exports
-export type SubscribeInput = z.infer<typeof SubscribeSchema>
-export type CancelSubscribeInput = z.infer<typeof CancelSubscribeSchema>
-export type BatchUnsubscribeInput = z.infer<typeof BatchUnsubscribeSchema>

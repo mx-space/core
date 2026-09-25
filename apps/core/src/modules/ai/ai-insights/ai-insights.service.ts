@@ -9,7 +9,7 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import type { BasicPagerInput } from '~/shared/dto/pager.dto'
+import type { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { createAbortError } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -20,7 +20,7 @@ import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import { AiInsightsAdapter } from './ai-insights.adapter'
 import { AiInsightsRepository } from './ai-insights.repository'
-import type { GetInsightsGroupedQueryInput } from './ai-insights.schema'
+import type { GetInsightsGroupedQueryDto } from './ai-insights.schema'
 import type { AIInsightsModel, AiInsightsRow } from './ai-insights.types'
 
 @Injectable()
@@ -231,7 +231,7 @@ export class AiInsightsService implements OnModuleInit {
     return { insights, article }
   }
 
-  async getAllInsights(pager: BasicPagerInput) {
+  async getAllInsights(pager: BasicPagerDto) {
     const { page, size } = pager
     const result = await this.aiInsightsRepository.list(page, size)
     const docs = await this.generationMetrics.attachLatest(
@@ -245,7 +245,7 @@ export class AiInsightsService implements OnModuleInit {
     }
   }
 
-  async getAllInsightsGrouped(query: GetInsightsGroupedQueryInput) {
+  async getAllInsightsGrouped(query: GetInsightsGroupedQueryDto) {
     const { data, pagination } = await buildGroupedWithOrphans<AIInsightsModel>(
       {
         page: query.page,

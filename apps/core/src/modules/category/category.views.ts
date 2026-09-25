@@ -8,9 +8,9 @@ const CategoryCardSchema = z
     type: z.number(),
     createdAt: z.date().or(z.string()),
   })
-  .passthrough()
+  .loose()
 
-const CategoryDetailSchema = z.object({}).passthrough()
+const CategoryDetailSchema = z.object({}).loose()
 
 export const CategoryViews = {
   card: CategoryCardSchema,

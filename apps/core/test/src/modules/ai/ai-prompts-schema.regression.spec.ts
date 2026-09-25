@@ -122,7 +122,7 @@ const zodFieldTranslation = z
 const buildZodTranslationChunkSchema = (
   textEntries: Record<string, unknown>,
 ) => {
-  const shape: Record<string, z.ZodTypeAny> = {}
+  const shape: Record<string, z.ZodType> = {}
   for (const [key, value] of Object.entries(textEntries)) {
     if (
       value &&

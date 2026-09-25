@@ -33,7 +33,7 @@ const RecentActivitiesSchema = z
     comment: z.array(RecentCommentSchema),
     like: z.array(RecentLikeSchema),
   })
-  .passthrough()
+  .loose()
 
 const ReadingRankSchema = z.object({
   count: z.number().int(),

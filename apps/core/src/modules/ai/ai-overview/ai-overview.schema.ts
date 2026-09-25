@@ -18,7 +18,3 @@ export const GetOverviewGroupedQuerySchema = z.object({
 export type GetOverviewGroupedQueryDto = z.infer<
   typeof GetOverviewGroupedQuerySchema
 >
-
-export type GetOverviewGroupedQueryInput = z.infer<
-  typeof GetOverviewGroupedQuerySchema
->

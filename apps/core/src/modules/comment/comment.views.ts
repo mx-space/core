@@ -10,7 +10,7 @@ const CommentCardSchema = z
     refType: z.string(),
     refId: z.string(),
   })
-  .passthrough()
+  .loose()
 
 /**
  * `row` view powers the redesigned `/comments` list row (spec §7.2).
@@ -34,7 +34,7 @@ const CommentRefSummarySchema = z
       .nullable()
       .optional(),
   })
-  .passthrough()
+  .loose()
 
 const CommentParentPreviewSchema = z.object({
   id: z.string(),
@@ -74,7 +74,7 @@ const CommentTabCountsSchema = z
     awaiting: z.number().int(),
     all: z.number().int(),
   })
-  .passthrough()
+  .loose()
 
 const AuthorActivityItemSchema = z.object({
   id: z.string(),

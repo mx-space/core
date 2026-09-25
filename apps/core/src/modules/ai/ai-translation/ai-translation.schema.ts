@@ -37,7 +37,3 @@ export const GetTranslationsGroupedQuerySchema = z.object({
 export type GetTranslationsGroupedQueryDto = z.infer<
   typeof GetTranslationsGroupedQuerySchema
 >
-
-export type GetTranslationsGroupedQueryInput = z.infer<
-  typeof GetTranslationsGroupedQuerySchema
->

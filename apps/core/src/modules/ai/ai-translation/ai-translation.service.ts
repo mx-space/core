@@ -55,7 +55,7 @@ import {
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
 import type { IModelRuntime } from '../runtime'
 import { AiTranslationRepository } from './ai-translation.repository'
-import type { GetTranslationsGroupedQueryInput } from './ai-translation.schema'
+import type { GetTranslationsGroupedQueryDto } from './ai-translation.schema'
 import type {
   ArticleContent,
   ArticleDocument,
@@ -1078,7 +1078,7 @@ export class AiTranslationService
     return doc
   }
 
-  async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryInput) {
+  async getAllTranslationsGrouped(query: GetTranslationsGroupedQueryDto) {
     const { data, pagination } =
       await buildGroupedWithOrphans<AITranslationModel>({
         page: query.page,

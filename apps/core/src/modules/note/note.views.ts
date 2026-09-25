@@ -12,7 +12,7 @@ const NoteCardSchema = z
     isPublished: z.boolean(),
     bookmark: z.boolean(),
   })
-  .passthrough()
+  .loose()
 
 const NoteSummarySchema = NoteCardSchema.extend({
   modifiedAt: z.date().or(z.string()).nullable().optional(),

@@ -52,14 +52,3 @@ export const CreateTranslationAllTaskSchema = z.object({
 export type CreateTranslationAllTaskDto = z.infer<
   typeof CreateTranslationAllTaskSchema
 >
-
-export type CreateSummaryTaskInput = z.infer<typeof CreateSummaryTaskSchema>
-export type CreateTranslationTaskInput = z.infer<
-  typeof CreateTranslationTaskSchema
->
-export type CreateTranslationBatchTaskInput = z.infer<
-  typeof CreateTranslationBatchTaskSchema
->
-export type CreateTranslationAllTaskInput = z.infer<
-  typeof CreateTranslationAllTaskSchema
->

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const AggregateDetailSchema = z.object({}).passthrough()
+const AggregateDetailSchema = z.object({}).loose()
 
 const DeskSchema = z
   .object({
@@ -34,7 +34,7 @@ const DeskSchema = z
       }),
     ),
   })
-  .passthrough()
+  .loose()
 
 const StatSchema = z
   .object({
@@ -56,7 +56,7 @@ const StatSchema = z
     uv: z.number().int(),
     todayIpAccessCount: z.number().int(),
   })
-  .passthrough()
+  .loose()
 
 export const AggregateViews = {
   detail: AggregateDetailSchema,

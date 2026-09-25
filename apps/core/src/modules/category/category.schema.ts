@@ -84,14 +84,3 @@ export const MultiCategoriesQuerySchema = z.object({
 })
 
 export type MultiCategoriesQueryDto = z.infer<typeof MultiCategoriesQuerySchema>
-
-// Type exports
-export type CategoryInput = z.infer<typeof CategorySchema>
-export type PartialCategoryInput = z.infer<typeof PartialCategorySchema>
-export type SlugOrIdInput = z.infer<typeof SlugOrIdSchema>
-export type MultiQueryTagAndCategoryInput = z.infer<
-  typeof MultiQueryTagAndCategorySchema
->
-export type MultiCategoriesQueryInput = z.infer<
-  typeof MultiCategoriesQuerySchema
->

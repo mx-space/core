@@ -7,7 +7,7 @@ const MAX_TASK_LANGS = 8
 const zResolvableLang = z
   .string()
   .refine((lang) => normalizeLanguageCode(lang) !== undefined, {
-    message: 'unresolvable language code',
+    error: 'unresolvable language code',
   })
 
 export const CreateTtsTaskSchema = z.object({
@@ -35,12 +35,5 @@ export const DiscoverTtsVoicesQuerySchema = z.object({
   model: z.string().trim().min(1, 'model is required'),
 })
 export type DiscoverTtsVoicesQueryDto = z.infer<
-  typeof DiscoverTtsVoicesQuerySchema
->
-
-export type CreateTtsTaskInput = z.infer<typeof CreateTtsTaskSchema>
-export type GetTtsQueryInput = z.infer<typeof GetTtsQuerySchema>
-export type GetTtsGroupedQueryInput = z.infer<typeof GetTtsGroupedQuerySchema>
-export type DiscoverTtsVoicesQueryInput = z.infer<
   typeof DiscoverTtsVoicesQuerySchema
 >

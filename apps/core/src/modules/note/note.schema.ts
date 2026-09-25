@@ -62,8 +62,6 @@ export const NoteSchema = NoteBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export type NoteDto = z.infer<typeof NoteSchema>
-
 /**
  * Partial note schema for PATCH operations
  * Override fields with .default() to prevent defaults from being applied during partial updates
@@ -159,16 +157,3 @@ export const NoteTopicPagerSchema = createPagerSchema([
 })
 
 export type NoteTopicPagerDto = z.infer<typeof NoteTopicPagerSchema>
-
-// Type exports
-export type CoordinateInput = z.infer<typeof CoordinateSchema>
-export type NoteInput = z.infer<typeof NoteSchema>
-export type PartialNoteInput = z.infer<typeof PartialNoteSchema>
-export type NoteQueryInput = z.infer<typeof NoteQuerySchema>
-export type NotePasswordQueryInput = z.infer<typeof NotePasswordQuerySchema>
-export type ListQueryInput = z.infer<typeof ListQuerySchema>
-export type NidTypeInput = z.infer<typeof NidTypeSchema>
-export type NoteSlugDateParamsInput = z.infer<typeof NoteSlugDateParamsSchema>
-export type SetNotePublishStatusInput = z.infer<
-  typeof SetNotePublishStatusSchema
->

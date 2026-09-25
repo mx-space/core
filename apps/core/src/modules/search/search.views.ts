@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const SearchResultSchema = z.object({}).passthrough()
+const SearchResultSchema = z.object({}).loose()
 
 export const SearchViews = {
   result: SearchResultSchema,

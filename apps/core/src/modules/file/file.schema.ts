@@ -24,7 +24,7 @@ export const FileUploadSchema = z
     immutable: z.literal('true').optional(),
   })
   .refine((value) => !value.immutable || !value.type || value.type === 'file', {
-    message: 'Immutable uploads require type=file',
+    error: 'Immutable uploads require type=file',
   })
 
 export type FileUploadDto = z.infer<typeof FileUploadSchema>
@@ -47,7 +47,7 @@ export const BatchOrphanDeleteSchema = z
     all: z.boolean().optional(),
   })
   .refine((data) => data.ids?.length || data.all, {
-    message: 'Either ids or all must be provided',
+    error: 'Either ids or all must be provided',
   })
 
 export type BatchOrphanDeleteDto = z.infer<typeof BatchOrphanDeleteSchema>
@@ -75,17 +75,5 @@ export const CommentUploadsListQuerySchema = BasicPagerSchema.extend({
 })
 
 export type CommentUploadsListQueryDto = z.infer<
-  typeof CommentUploadsListQuerySchema
->
-
-// Type exports
-export type FileQueryInput = z.infer<typeof FileQuerySchema>
-export type FileUploadInput = z.infer<typeof FileUploadSchema>
-export type RenameFileQueryInput = z.infer<typeof RenameFileQuerySchema>
-export type BatchOrphanDeleteInput = z.infer<typeof BatchOrphanDeleteSchema>
-export type ReconcileFileReferencesInput = z.infer<
-  typeof ReconcileFileReferencesSchema
->
-export type CommentUploadsListQueryInput = z.infer<
   typeof CommentUploadsListQuerySchema
 >

@@ -79,7 +79,7 @@ export const LatestQuerySchema = z.object({
       if (Array.isArray(val)) return val.map(Number)
       return val
     },
-    z.array(z.nativeEnum(TimelineType)).optional(),
+    z.array(z.enum(TimelineType)).optional(),
   ),
   combined: z.preprocess(
     (val) => val === 'true' || val === true,
@@ -88,12 +88,3 @@ export const LatestQuerySchema = z.object({
 })
 
 export type LatestQueryDto = z.infer<typeof LatestQuerySchema>
-
-// Type exports
-export type TopQueryInput = z.infer<typeof TopQuerySchema>
-export type TimelineQueryInput = z.infer<typeof TimelineQuerySchema>
-export type AggregateQueryInput = z.infer<typeof AggregateQuerySchema>
-export type ReadAndLikeCountTypeInput = z.infer<
-  typeof ReadAndLikeCountTypeSchema
->
-export type LatestQueryInput = z.infer<typeof LatestQuerySchema>

@@ -14,7 +14,7 @@ const EnrichmentImageSchema = z
       })
       .optional(),
   })
-  .passthrough()
+  .loose()
 
 const EnrichmentAttributeSchema = z
   .object({
@@ -25,7 +25,7 @@ const EnrichmentAttributeSchema = z
       .enum(['number', 'rating', 'date', 'percent', 'text', 'duration'])
       .optional(),
   })
-  .passthrough()
+  .loose()
 
 /**
  * Mirrors `EnrichmentResult`. `raw` is intentionally absent — it is
@@ -56,7 +56,7 @@ const EnrichmentResultSchema = z
       )
       .optional(),
   })
-  .passthrough()
+  .loose()
   // Registered so the OpenAPI exporter hoists it into a shared component
   // instead of inlining a second copy wherever a recently entry embeds it.
   .meta({ id: 'EnrichmentResult' })

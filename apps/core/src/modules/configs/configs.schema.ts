@@ -35,7 +35,6 @@ export const UrlSchema = section('Site URLs', {
   serverUrl: field.halfGrid(zAllowedUrl.optional(), 'API URL'),
   wsUrl: field.halfGrid(zAllowedUrl.optional(), 'Gateway URL'),
 })
-export type UrlConfig = z.infer<typeof UrlSchema>
 
 // ==================== Mail Options ====================
 const SmtpConfigSchema = withMeta(
@@ -119,7 +118,6 @@ export const MailOptionsSchema = section('Email notifications', {
     },
   ),
 })
-export type MailOptionsConfig = z.infer<typeof MailOptionsSchema>
 
 // ==================== Comment Options ====================
 export const CommentOptionsSchema = section('Comment settings', {
@@ -199,7 +197,6 @@ export const CommentOptionsSchema = section('Comment settings', {
     'Publicly display comment location',
   ),
 })
-export type CommentOptionsConfig = z.infer<typeof CommentOptionsSchema>
 
 // ==================== S3 Storage Options ====================
 const nullableStorageText = () =>
@@ -223,7 +220,6 @@ export const BackupOptionsSchema = section('Backup', {
     .halfGrid(nullableStorageText(), 'Region')
     .transform((value) => value || 'auto'),
 })
-export type BackupOptionsConfig = z.infer<typeof BackupOptionsSchema>
 
 // ==================== Image Storage Options ====================
 
@@ -256,9 +252,6 @@ export const ImageStorageOptionsSchema = section('Image storage', {
     },
   ),
 })
-export type ImageStorageOptionsConfig = z.infer<
-  typeof ImageStorageOptionsSchema
->
 
 // ==================== Image Generation Options ====================
 export const ImageGenerationOptionsSchema = section('AI image generation', {
@@ -326,9 +319,6 @@ export const ImageGenerationOptionsSchema = section('AI image generation', {
     { 'ui:options': { halfGrid: true } },
   ),
 })
-export type ImageGenerationOptionsConfig = z.infer<
-  typeof ImageGenerationOptionsSchema
->
 
 // ==================== TTS Options ====================
 export const TtsOptionsSchema = section('AI text to speech', {
@@ -377,7 +367,6 @@ export const TtsOptionsSchema = section('AI text to speech', {
     { 'ui:options': { halfGrid: true } },
   ),
 })
-export type TtsOptionsConfig = z.infer<typeof TtsOptionsSchema>
 
 // ==================== Comment Upload Options ====================
 export const CommentUploadOptionsSchema = section('Comment image uploads', {
@@ -488,9 +477,6 @@ export const CommentUploadOptionsSchema = section('Comment image uploads', {
       'Defaults to image/jpeg, image/png, image/webp, image/gif. Changes take effect immediately',
   }),
 })
-export type CommentUploadOptionsConfig = z.infer<
-  typeof CommentUploadOptionsSchema
->
 
 // ==================== File Upload Options ====================
 export const FileUploadOptionsSchema = section('File upload settings', {
@@ -522,21 +508,18 @@ export const FileUploadOptionsSchema = section('File upload settings', {
     },
   ),
 })
-export type FileUploadOptionsConfig = z.infer<typeof FileUploadOptionsSchema>
 
 // ==================== Baidu Search Options ====================
 export const BaiduSearchOptionsSchema = section('Baidu push settings', {
   enable: field.toggle(z.boolean().optional(), 'Enable push'),
   token: field.password(z.string().min(1).optional(), 'Token'),
 })
-export type BaiduSearchOptionsConfig = z.infer<typeof BaiduSearchOptionsSchema>
 
 // ==================== Bing Search Options ====================
 export const BingSearchOptionsSchema = section('Bing push settings', {
   enable: field.toggle(z.boolean().optional(), 'Enable push'),
   token: field.password(z.string().optional(), 'Bing API key'),
 })
-export type BingSearchOptionsConfig = z.infer<typeof BingSearchOptionsSchema>
 
 // ==================== Admin Extra ====================
 export const AdminExtraSchema = section('Admin extras', {
@@ -553,7 +536,6 @@ export const AdminExtraSchema = section('Admin extras', {
     description: 'Location lookup for diary entries',
   }),
 })
-export type AdminExtraConfig = z.infer<typeof AdminExtraSchema>
 
 // ==================== Friend Link Options ====================
 export const FriendLinkOptionsSchema = section('Friend link settings', {
@@ -577,13 +559,12 @@ export const FriendLinkOptionsSchema = section('Friend link settings', {
     },
   ),
 })
-export type FriendLinkOptionsConfig = z.infer<typeof FriendLinkOptionsSchema>
 
 // ==================== Bark Options ====================
 export const BarkOptionsSchema = section('Bark notifications', {
   enable: field.toggle(z.boolean().optional(), 'Enable Bark notifications'),
   key: field.password(z.string().optional(), 'Device key'),
-  serverUrl: field.plain(z.string().url().optional(), 'Server URL', {
+  serverUrl: field.plain(z.url().optional(), 'Server URL', {
     description: 'Defaults to the public server, https://day.app, when empty',
   }),
   enableComment: field.toggle(
@@ -599,7 +580,6 @@ export const BarkOptionsSchema = section('Bark notifications', {
     },
   ),
 })
-export type BarkOptionsConfig = z.infer<typeof BarkOptionsSchema>
 
 // ==================== Feature List ====================
 export const FeatureListSchema = section('Feature toggles', {
@@ -608,7 +588,6 @@ export const FeatureListSchema = section('Feature toggles', {
     'Enable email subscription',
   ),
 })
-export type FeatureListConfig = z.infer<typeof FeatureListSchema>
 
 // ==================== Third Party Service Integration ====================
 
@@ -779,9 +758,6 @@ export const ThirdPartyServiceIntegrationSchema = section(
     polygon: PolygonIntegrationSchema.optional(),
   },
 )
-export type ThirdPartyServiceIntegrationConfig = z.infer<
-  typeof ThirdPartyServiceIntegrationSchema
->
 
 // ==================== Auth Security ====================
 export const AuthSecuritySchema = section(
@@ -798,7 +774,6 @@ export const AuthSecuritySchema = section(
   },
   { 'ui:options': { type: 'hidden' } },
 )
-export type AuthSecurityConfig = z.infer<typeof AuthSecuritySchema>
 
 // ==================== AI Provider Config ====================
 const AIProviderCapabilitiesSchema = z.object({
@@ -1132,7 +1107,6 @@ export const MembershipSchema = section('Membership', {
   ),
   appleAppAppleId: field.plain(z.string().optional(), 'Apple app Apple ID'),
 })
-export type MembershipConfig = z.infer<typeof MembershipSchema>
 
 // ==================== OAuth ====================
 const OAuthProviderSchema = z.object({
@@ -1188,5 +1162,3 @@ export const FullConfigSchema = withMeta(z.object(configSchemaMapping), {
   description:
     '* Sensitive fields are hidden; the backend does not return them by default, so they appear empty',
 })
-
-export type FullConfig = z.infer<typeof FullConfigSchema>

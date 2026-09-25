@@ -8,6 +8,3 @@ export const UpdateAdminSchema = z.object({
 })
 
 export type UpdateAdminDto = z.infer<typeof UpdateAdminSchema>
-
-// Type exports
-export type UpdateAdminInput = z.infer<typeof UpdateAdminSchema>

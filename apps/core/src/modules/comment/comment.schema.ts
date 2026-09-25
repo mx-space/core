@@ -30,7 +30,7 @@ const RangeCommentAnchorSchema = z
     endOffset: z.number().int().min(0),
   })
   .refine((data) => data.endOffset >= data.startOffset, {
-    message: 'endOffset must be greater than or equal to startOffset',
+    error: 'endOffset must be greater than or equal to startOffset',
     path: ['endOffset'],
   })
 
@@ -46,26 +46,23 @@ export const CommentSchema = z.object({
   author: z
     .string()
     .min(1)
-    .max(20, { message: 'Nickname must not exceed 20 characters' }),
+    .max(20, { error: 'Nickname must not exceed 20 characters' }),
   text: z
     .string()
     .min(1)
-    .max(500, { message: 'Comment must not exceed 500 characters' }),
+    .max(500, { error: 'Comment must not exceed 500 characters' }),
   mail: z
-    .string()
-    .email({ message: 'Please provide a valid email address' })
-    .max(50, { message: 'Email address must not exceed 50 characters' }),
+    .email({ error: 'Please provide a valid email address' })
+    .max(50, { error: 'Email address must not exceed 50 characters' }),
   url: z
-    .string()
-    .url({ message: 'Please provide a valid URL' })
-    .max(50, { message: 'URL must not exceed 50 characters' })
+    .url({ error: 'Please provide a valid URL' })
+    .max(50, { error: 'URL must not exceed 50 characters' })
     .optional(),
   isWhispers: z.boolean().optional(),
   avatar: z
-    .string()
-    .url({ message: 'Avatar must be a valid HTTPS URL' })
+    .url({ error: 'Avatar must be a valid HTTPS URL' })
     .refine((val) => val.startsWith('https://'), {
-      message: 'Avatar must be a valid HTTPS URL',
+      error: 'Avatar must be a valid HTTPS URL',
     })
     .optional(),
   anchor: CommentAnchorSchema.optional(),
@@ -78,7 +75,7 @@ export const ReaderCommentSchema = z.object({
   text: z
     .string()
     .min(1)
-    .max(500, { message: 'Comment must not exceed 500 characters' }),
+    .max(500, { error: 'Comment must not exceed 500 characters' }),
   isWhispers: z.boolean().optional(),
   anchor: CommentAnchorSchema.optional(),
 })
@@ -108,16 +105,11 @@ export const RequiredGuestReaderCommentSchema = CommentSchema.extend({
   author: z
     .string()
     .min(1)
-    .max(20, { message: 'Nickname must not exceed 20 characters' }),
+    .max(20, { error: 'Nickname must not exceed 20 characters' }),
   mail: z
-    .string()
-    .email({ message: 'Please provide a valid email address' })
-    .max(50, { message: 'Email address must not exceed 50 characters' }),
+    .email({ error: 'Please provide a valid email address' })
+    .max(50, { error: 'Email address must not exceed 50 characters' }),
 })
-
-export type RequiredGuestReaderCommentDto = z.infer<
-  typeof RequiredGuestReaderCommentSchema
->
 
 /**
  * Text only schema
@@ -126,8 +118,6 @@ export const TextOnlySchema = z.object({
   text: z.string().min(1),
   anchor: CommentAnchorSchema.optional(),
 })
-
-export type TextOnlyDto = z.infer<typeof TextOnlySchema>
 
 /**
  * Comment ref types schema
@@ -159,11 +149,9 @@ export const CommentListQuerySchema = z.object({
   around: z
     .string()
     .trim()
-    .regex(/^[\da-f]{24}$/i, { message: 'around must be a valid id' })
+    .regex(/^[\da-f]{24}$/i, { error: 'around must be a valid id' })
     .optional(),
 })
-
-export type CommentListQueryDto = z.infer<typeof CommentListQuerySchema>
 
 export const CommentTabSchema = z.enum([
   'unread',
@@ -227,7 +215,7 @@ export const CommentAuthorActivityQuerySchema = z
     limit: z.coerce.number().int().min(1).max(50).optional(),
   })
   .refine((data) => Boolean(data.mail) || Boolean(data.ip), {
-    message: 'At least one of mail or ip must be provided',
+    error: 'At least one of mail or ip must be provided',
     path: ['mail'],
   })
 
@@ -280,7 +268,7 @@ export const BatchCommentStateSchema = z
     search: z.string().trim().min(1).optional(),
   })
   .refine((data) => data.ids?.length || data.all, {
-    message: 'Either ids or all must be provided',
+    error: 'Either ids or all must be provided',
   })
 
 export type BatchCommentStateDto = z.infer<typeof BatchCommentStateSchema>
@@ -302,25 +290,10 @@ export const BatchCommentDeleteSchema = z
     search: z.string().trim().min(1).optional(),
   })
   .refine((data) => data.ids?.length || data.all, {
-    message: 'Either ids or all must be provided',
+    error: 'Either ids or all must be provided',
   })
 
 export type BatchCommentDeleteDto = z.infer<typeof BatchCommentDeleteSchema>
 
 // Type exports
-export type CommentInput = z.infer<typeof CommentSchema>
-export type AnonymousCommentInput = z.infer<typeof AnonymousCommentSchema>
-export type AnonymousReplyCommentInput = z.infer<
-  typeof AnonymousReplyCommentSchema
->
-export type ReaderCommentInput = z.infer<typeof ReaderCommentSchema>
-export type ReaderReplyCommentInput = z.infer<typeof ReaderReplyCommentSchema>
 export type CommentAnchorInput = z.infer<typeof CommentAnchorSchema>
-export type EditCommentInput = z.infer<typeof EditCommentSchema>
-export type RequiredGuestReaderCommentInput = z.infer<
-  typeof RequiredGuestReaderCommentSchema
->
-export type TextOnlyInput = z.infer<typeof TextOnlySchema>
-export type CommentRefTypesInput = z.infer<typeof CommentRefTypesSchema>
-export type CommentListQueryInput = z.infer<typeof CommentListQuerySchema>
-export type CommentStatePatchInput = z.infer<typeof CommentStatePatchSchema>

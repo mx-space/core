@@ -27,8 +27,6 @@ export const PageSchema = PageBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export type PageDto = z.infer<typeof PageSchema>
-
 /**
  * Page reorder sequence item schema
  */
@@ -54,8 +52,3 @@ export const PageDetailQuerySchema = z.object({
 })
 
 export type PageDetailQueryDto = z.infer<typeof PageDetailQuerySchema>
-
-// Type exports
-export type PageInput = z.infer<typeof PageSchema>
-export type PageReorderSeqInput = z.infer<typeof PageReorderSeqSchema>
-export type PageReorderInput = z.infer<typeof PageReorderSchema>

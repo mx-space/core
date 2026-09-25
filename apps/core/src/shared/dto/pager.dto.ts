@@ -17,8 +17,6 @@ export const BasicPagerSchema = z.object({
 
 export type BasicPagerDto = z.infer<typeof BasicPagerSchema>
 
-export type BasicPagerInput = z.infer<typeof BasicPagerSchema>
-
 /**
  * Sort-aware pager factory. Pass the column names this endpoint is allowed to
  * sort by; the resulting schema exposes `sortBy` (typed as `z.enum(sortKeys)`)
@@ -43,5 +41,3 @@ export const OffsetSchema = z.object({
 })
 
 export type OffsetDto = z.infer<typeof OffsetSchema>
-
-export type OffsetInput = z.infer<typeof OffsetSchema>

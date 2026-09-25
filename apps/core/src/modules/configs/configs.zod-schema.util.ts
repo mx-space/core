@@ -22,12 +22,7 @@ export interface UIOptions {
   actionId?: string
   actionLabel?: string
   actionVariant?:
-    | 'default'
-    | 'primary'
-    | 'info'
-    | 'success'
-    | 'warning'
-    | 'error'
+    'default' | 'primary' | 'info' | 'success' | 'warning' | 'error'
 }
 
 /**
@@ -49,7 +44,7 @@ const SCHEMA_META = Symbol('schemaMeta')
 /**
  * Extend a Zod schema with JSON Schema metadata
  */
-export function withMeta<T extends z.ZodTypeAny>(
+export function withMeta<T extends z.ZodType>(
   schema: T,
   meta: SchemaMetadata,
 ): T {
@@ -61,7 +56,7 @@ export function withMeta<T extends z.ZodTypeAny>(
 /**
  * Get metadata from a Zod schema
  */
-export function getMeta(schema: z.ZodTypeAny): SchemaMetadata | undefined {
+export function getMeta(schema: z.ZodType): SchemaMetadata | undefined {
   return (schema as any)[SCHEMA_META]
 }
 
@@ -69,13 +64,13 @@ export function getMeta(schema: z.ZodTypeAny): SchemaMetadata | undefined {
  * Helper functions for common field types
  */
 export const field = {
-  plain: <T extends z.ZodTypeAny>(
+  plain: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
   ) => withMeta(schema, { title, ...options }),
 
-  halfGrid: <T extends z.ZodTypeAny>(
+  halfGrid: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title' | 'ui:options'>,
@@ -86,7 +81,7 @@ export const field = {
       'ui:options': { halfGrid: true },
     }),
 
-  password: <T extends z.ZodTypeAny>(
+  password: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
@@ -98,7 +93,7 @@ export const field = {
       'ui:options': { type: 'password', ...options?.['ui:options'] },
     }),
 
-  passwordHalfGrid: <T extends z.ZodTypeAny>(
+  passwordHalfGrid: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
@@ -114,25 +109,25 @@ export const field = {
       },
     }),
 
-  toggle: <T extends z.ZodTypeAny>(
+  toggle: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
   ) => withMeta(schema, { title, ...options }),
 
-  array: <T extends z.ZodTypeAny>(
+  array: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
   ) => withMeta(schema, { title, ...options }),
 
-  number: <T extends z.ZodTypeAny>(
+  number: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
   ) => withMeta(schema, { title, ...options }),
 
-  textarea: <T extends z.ZodTypeAny>(
+  textarea: <T extends z.ZodType>(
     schema: T,
     title: string,
     options?: Omit<SchemaMetadata, 'title'>,
@@ -143,7 +138,7 @@ export const field = {
       'ui:options': { type: 'textarea', ...options?.['ui:options'] },
     }),
 
-  select: <T extends z.ZodTypeAny>(
+  select: <T extends z.ZodType>(
     schema: T,
     title: string,
     values: Array<{ label: string; value: string }>,
@@ -155,7 +150,7 @@ export const field = {
       'ui:options': { type: 'select', values, ...options?.['ui:options'] },
     }),
 
-  hidden: <T extends z.ZodTypeAny>(schema: T, title?: string) =>
+  hidden: <T extends z.ZodType>(schema: T, title?: string) =>
     withMeta(schema, {
       title,
       'ui:options': { type: 'hidden' },
@@ -168,12 +163,7 @@ export const field = {
       description?: string
       actionLabel?: string
       actionVariant?:
-        | 'default'
-        | 'primary'
-        | 'info'
-        | 'success'
-        | 'warning'
-        | 'error'
+        'default' | 'primary' | 'info' | 'success' | 'warning' | 'error'
       showWhen?: Record<string, string | string[]>
     },
   ) =>

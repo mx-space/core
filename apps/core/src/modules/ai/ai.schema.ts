@@ -5,5 +5,3 @@ export const RegistryModelsQuerySchema = z.object({
 })
 
 export type RegistryModelsQueryDto = z.infer<typeof RegistryModelsQuerySchema>
-
-export type RegistryModelsQueryInput = z.infer<typeof RegistryModelsQuerySchema>

@@ -65,7 +65,7 @@ export function tryParseEntityId(
 
 export const zEntityId = z
   .string()
-  .refine(isEntityIdString, { message: 'Invalid entity id' })
+  .refine(isEntityIdString, { error: 'Invalid entity id' })
   .transform((val) => val as EntityId)
 
 export const zEntityIdOrInt = z.union([

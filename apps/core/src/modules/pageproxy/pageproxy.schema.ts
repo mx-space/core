@@ -29,8 +29,3 @@ export const PageProxyDebugSchema = z.object({
     .optional(),
   __local: z.boolean().default(false).optional(),
 })
-
-export type PageProxyDebugDto = z.infer<typeof PageProxyDebugSchema>
-
-// Type exports
-export type PageProxyDebugInput = z.infer<typeof PageProxyDebugSchema>

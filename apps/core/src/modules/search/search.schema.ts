@@ -52,7 +52,3 @@ export const SearchAdminListSchema = BasicPagerSchema.extend({
 })
 
 export type SearchAdminListDto = z.infer<typeof SearchAdminListSchema>
-
-// Type exports
-export type SearchInput = z.infer<typeof SearchSchema>
-export type SearchAdminListInput = z.infer<typeof SearchAdminListSchema>

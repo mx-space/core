@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common'
+
 import { DATA_DIR, TEMP_DIR } from '~/constants/path.constant'
+
 import { AuthService } from '../auth/auth.service'
 import { OwnerService } from '../owner/owner.service'
-import type { InitOwnerCreateInput } from './init.schema'
+import type { InitOwnerCreateDto } from './init.schema'
 
 @Injectable()
 export class InitService {
@@ -23,7 +25,7 @@ export class InitService {
     return this.ownerService.hasOwner()
   }
 
-  createOwner(input: InitOwnerCreateInput) {
+  createOwner(input: InitOwnerCreateDto) {
     return this.authService.createOwnerByCredential(input)
   }
 }

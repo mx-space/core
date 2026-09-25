@@ -16,8 +16,6 @@ export const GenerateAiSummarySchema = BaseLangQuerySchema.extend({
   refId: z.string(),
 })
 
-export type GenerateAiSummaryDto = z.infer<typeof GenerateAiSummarySchema>
-
 /**
  * Get summary query schema
  */
@@ -49,14 +47,5 @@ export const GetSummariesGroupedQuerySchema = z.object({
 })
 
 export type GetSummariesGroupedQueryDto = z.infer<
-  typeof GetSummariesGroupedQuerySchema
->
-
-// Type exports
-export type BaseLangQueryInput = z.infer<typeof BaseLangQuerySchema>
-export type GenerateAiSummaryInput = z.infer<typeof GenerateAiSummarySchema>
-export type GetSummaryQueryInput = z.infer<typeof GetSummaryQuerySchema>
-export type UpdateSummaryInput = z.infer<typeof UpdateSummarySchema>
-export type GetSummariesGroupedQueryInput = z.infer<
   typeof GetSummariesGroupedQuerySchema
 >

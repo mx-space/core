@@ -26,17 +26,14 @@ export const zAllowedUrl = z.string().refine(
       return false
     }
   },
-  { message: 'Please enter a valid URL' },
+  { error: 'Please enter a valid URL' },
 )
 
-export const zStrictUrl = z.string().url()
+export const zStrictUrl = z.url()
 
-export const zHttpsUrl = z
-  .string()
-  .url()
-  .refine((val) => val.startsWith('https://'), {
-    message: 'URL must use HTTPS protocol',
-  })
+export const zHttpsUrl = z.url().refine((val) => val.startsWith('https://'), {
+  error: 'URL must use HTTPS protocol',
+})
 
 // Number Types
 
@@ -75,9 +72,9 @@ export const zOptionalDate = z.preprocess((val) => {
 
 // Array Types
 
-export const zArrayUnique = <T extends z.ZodTypeAny>(schema: T) =>
+export const zArrayUnique = <T extends z.ZodType>(schema: T) =>
   z.array(schema).refine((arr) => new Set(arr).size === arr.length, {
-    message: 'Array elements must be unique',
+    error: 'Array elements must be unique',
   })
 
 export const zUniqueStringArray = zArrayUnique(z.string().min(1))

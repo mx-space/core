@@ -12,10 +12,7 @@ export const LinkSchema = z.object({
   name: zMaxLengthString(20, 'Title is too long'),
   url: zHttpsUrl,
   avatar: z
-    .preprocess(
-      (val) => (val === '' ? null : val),
-      z.string().url().max(200).nullable(),
-    )
+    .preprocess((val) => (val === '' ? null : val), z.url().max(200).nullable())
     .optional(),
   description: zMaxLengthString(
     50,
@@ -31,8 +28,6 @@ export const LinkSchema = z.object({
     .optional(),
 })
 
-export type LinkSchemaDto = z.infer<typeof LinkSchema>
-
 /**
  * Link DTO with author field (for guest submissions)
  */
@@ -46,8 +41,6 @@ export type LinkDto = z.infer<typeof LinkWithAuthorSchema>
  * Partial link schema for PATCH operations
  */
 export const PartialLinkSchema = LinkSchema.partial()
-
-export type PartialLinkDto = z.infer<typeof PartialLinkSchema>
 
 /**
  * Audit reason schema
@@ -67,9 +60,3 @@ export const LinkPagerSchema = BasicPagerSchema.extend({
 })
 
 export type LinkPagerDto = z.infer<typeof LinkPagerSchema>
-
-// Type exports
-export type LinkInput = z.infer<typeof LinkSchema>
-export type LinkWithAuthorInput = z.infer<typeof LinkWithAuthorSchema>
-export type PartialLinkInput = z.infer<typeof PartialLinkSchema>
-export type AuditReasonInput = z.infer<typeof AuditReasonSchema>

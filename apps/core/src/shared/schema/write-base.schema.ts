@@ -67,12 +67,4 @@ export const WriteBaseSchemaWithRefine = WriteBaseSchema.superRefine(
   validateLexicalCreateContentPair,
 )
 
-export type WriteBaseDto = z.infer<typeof WriteBaseSchema>
-
-export type WriteBaseInput = z.infer<typeof WriteBaseSchema>
-
 export const PartialWriteBaseSchema = WriteBaseSchema.partial()
-
-export type PartialWriteBaseDto = z.infer<typeof PartialWriteBaseSchema>
-
-export type PartialWriteBaseInput = z.infer<typeof PartialWriteBaseSchema>

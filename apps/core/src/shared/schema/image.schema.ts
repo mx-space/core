@@ -11,10 +11,6 @@ export const ImageSchema = z.object({
   thumbhash: z.string().optional(),
 })
 
-export type ImageDto = z.infer<typeof ImageSchema>
-
-export type ImageInput = z.infer<typeof ImageSchema>
-
 /**
  * Image array schema that tolerates null/undefined by collapsing to [].
  * Use this everywhere a write payload accepts an `images` field.

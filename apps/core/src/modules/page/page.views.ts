@@ -9,13 +9,13 @@ const PageCardSchema = z
     order: z.number(),
     createdAt: z.date().or(z.string()),
   })
-  .passthrough()
+  .loose()
 
 const PageSummarySchema = PageCardSchema.extend({
   modifiedAt: z.date().or(z.string()).nullable().optional(),
 })
 
-const PageDetailSchema = z.object({}).passthrough()
+const PageDetailSchema = z.object({}).loose()
 
 export const PageViews = {
   card: PageCardSchema,

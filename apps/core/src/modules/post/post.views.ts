@@ -20,14 +20,14 @@ const PostCardSchema = z
     isPublished: z.boolean(),
     pinAt: z.date().or(z.string()).nullable().optional(),
   })
-  .passthrough()
+  .loose()
 
 const PostSummarySchema = PostCardSchema.extend({
   tags: z.array(z.string()).optional(),
   modifiedAt: z.date().or(z.string()).nullable().optional(),
 })
 
-const PostDetailSchema = z.object({}).passthrough()
+const PostDetailSchema = z.object({}).loose()
 
 export const PostViews = {
   card: PostCardSchema,

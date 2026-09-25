@@ -97,7 +97,7 @@ export const EnrichmentEntrySchema = z
     screenshot: EnrichmentScreenshotSchema.optional(),
     raw: z.unknown().optional(),
   })
-  .passthrough()
+  .loose()
 
 export const RelatedRefSchema = z
   .object({
@@ -107,7 +107,7 @@ export const RelatedRefSchema = z
     nid: z.number().optional(),
     type: z.string().optional(),
   })
-  .passthrough()
+  .loose()
 
 export const InsightsMetaSchema = z
   .object({ hasInLocale: z.boolean() })
@@ -172,7 +172,7 @@ export const BaseResponseMetaSchema = z.object({
   interaction: z
     .union([InteractionMetaSchema, z.record(z.string(), InteractionMetaSchema)])
     .optional(),
-  enrichments: z.record(z.string().url(), EnrichmentEntrySchema).optional(),
+  enrichments: z.record(z.url(), EnrichmentEntrySchema).optional(),
   glossary: GlossaryMetaSchema.optional(),
 })
 
@@ -196,8 +196,8 @@ export const NoteResponseMetaSchema = BaseResponseMetaSchema.extend({
  * @deprecated Use `BaseResponseMetaSchema` plus a per-resource schema
  * (`PostResponseMetaSchema`, `NoteResponseMetaSchema`) instead.
  */
-export const ResponseMetaSchema = PostResponseMetaSchema.merge(
-  NoteResponseMetaSchema,
+export const ResponseMetaSchema = PostResponseMetaSchema.extend(
+  NoteResponseMetaSchema.shape,
 )
 
 export type Pagination = z.infer<typeof PaginationSchema>

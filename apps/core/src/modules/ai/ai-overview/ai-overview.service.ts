@@ -21,7 +21,7 @@ import {
   toArticleContent,
 } from '../ai-translation/article-content.util'
 import { AiOverviewRepository } from './ai-overview.repository'
-import type { GetOverviewGroupedQueryInput } from './ai-overview.schema'
+import type { GetOverviewGroupedQueryDto } from './ai-overview.schema'
 import type {
   AiOverviewCost,
   AiOverviewDetail,
@@ -49,7 +49,7 @@ export class AiOverviewService {
     private readonly multilang: MultilangGenerationService,
   ) {}
 
-  async getOverviewGrouped(query: GetOverviewGroupedQueryInput) {
+  async getOverviewGrouped(query: GetOverviewGroupedQueryDto) {
     const { page, size } = query
     const search = query.search?.trim()
 

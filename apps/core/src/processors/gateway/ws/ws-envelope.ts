@@ -13,7 +13,7 @@ export const wsIncomingEnvelopeSchema = z
     payload: z.unknown().optional(),
     id: z.string().min(1).max(64).optional(),
   })
-  .passthrough()
+  .loose()
 
 export function buildAck(id: string, payload: WsAckPayload): WsEnvelope {
   return buildEnvelope(ACK_EVENT, payload, id)

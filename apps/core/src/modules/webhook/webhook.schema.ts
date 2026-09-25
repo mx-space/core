@@ -16,7 +16,3 @@ export type WebhookDto = z.infer<typeof WebhookSchema>
 export const PartialWebhookSchema = WebhookSchema.partial()
 
 export type WebhookDtoPartial = z.infer<typeof PartialWebhookSchema>
-
-// Type exports
-export type WebhookInput = z.infer<typeof WebhookSchema>
-export type PartialWebhookInput = z.infer<typeof PartialWebhookSchema>

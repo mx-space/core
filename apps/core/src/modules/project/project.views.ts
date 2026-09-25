@@ -10,9 +10,9 @@ const ProjectCardSchema = z
     projectUrl: z.string().nullable(),
     createdAt: z.date().or(z.string()),
   })
-  .passthrough()
+  .loose()
 
-const ProjectDetailSchema = z.object({}).passthrough()
+const ProjectDetailSchema = z.object({}).loose()
 
 export const ProjectViews = {
   card: ProjectCardSchema,

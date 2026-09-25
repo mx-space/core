@@ -211,7 +211,7 @@ describe('buildOpenApiDocument', () => {
     const { untypedOperations } = build([
       {
         ...baseRoute,
-        response: { name: 'Thing', schema: z.object({}).passthrough() },
+        response: { name: 'Thing', schema: z.object({}).loose() },
       },
     ])
 

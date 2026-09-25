@@ -10,9 +10,9 @@ const TopicCardSchema = z
     icon: z.string().nullable().optional(),
     createdAt: z.date().or(z.string()),
   })
-  .passthrough()
+  .loose()
 
-const TopicDetailSchema = z.object({}).passthrough()
+const TopicDetailSchema = z.object({}).loose()
 
 export const TopicViews = {
   card: TopicCardSchema,

@@ -8,7 +8,7 @@ const SayDetailSchema = z
     source: z.string().nullable().optional(),
     author: z.string().nullable().optional(),
   })
-  .passthrough()
+  .loose()
 
 export const SayViews = {
   detail: SayDetailSchema,

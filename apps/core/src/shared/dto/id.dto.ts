@@ -36,8 +36,3 @@ export const IntIdOrEntityIdSchema = z.object({
     z.union([zEntityId, z.number().int().positive()]),
   ),
 })
-
-export type IntIdOrEntityIdDto = z.infer<typeof IntIdOrEntityIdSchema>
-
-export type EntityIdInput = z.infer<typeof EntityIdSchema>
-export type IntIdOrEntityIdInput = z.infer<typeof IntIdOrEntityIdSchema>

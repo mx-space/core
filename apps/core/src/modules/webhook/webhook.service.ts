@@ -11,7 +11,7 @@ import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.ev
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
-import type { BasicPagerInput } from '~/shared/dto/pager.dto'
+import type { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { isPrivateIp } from '~/utils/ssrf.util'
 
 import { WebhookRepository } from './webhook.repository'
@@ -237,7 +237,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     )
   }
 
-  async getEventsByHookId(hookId: string, query: BasicPagerInput) {
+  async getEventsByHookId(hookId: string, query: BasicPagerDto) {
     const { page, size } = query
     return this.webhookRepository.listEvents(hookId, page, size)
   }
