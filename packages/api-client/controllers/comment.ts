@@ -6,6 +6,7 @@ import type { ReaderModel } from '~/models'
 import type { PaginateResult } from '~/models/base'
 import type {
   CommentModel,
+  CommentModerationStatus,
   CommentParentPreview,
   CommentThreadItem,
   CommentThreadReplies,
@@ -45,9 +46,9 @@ export class CommentController<ResponseWrapper> implements IController {
    * 根据 comment id 获取评论，包括子评论
    */
   getModerationStatus(id: string, receipt: string) {
-    return this.proxy(id).moderation.post<{
-      status: 'published' | 'pending' | 'rejected'
-    }>({ data: { receipt } })
+    return this.proxy(id).moderation.post<CommentModerationStatus>({
+      data: { receipt },
+    })
   }
 
   getById(id: string) {

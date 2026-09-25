@@ -218,7 +218,10 @@ describe('comment moderation HTTP lifecycle', () => {
     const replyResponse = await submit(safe.id)
     expect(replyResponse.statusCode, replyResponse.body).toBe(201)
     const pending = replyResponse.json().data
-    expect(pending.moderation.status).toBe('pending')
+    expect(pending.moderation).toMatchObject({
+      status: 'pending',
+      reviewer: 'ai',
+    })
     expect(
       (await app.inject({ method: 'GET', url: `/comments/${pending.id}` }))
         .statusCode,
@@ -226,7 +229,10 @@ describe('comment moderation HTTP lifecycle', () => {
     expect((await status(pending.id, 'f'.repeat(64))).statusCode).toBe(404)
     const receiptResponse = await status(pending.id, pending.moderation.receipt)
     expect(receiptResponse.headers['cache-control']).toBe('no-store')
-    expect(receiptResponse.json().data).toEqual({ status: 'pending' })
+    expect(receiptResponse.json().data).toEqual({
+      status: 'pending',
+      reviewer: 'ai',
+    })
     llm.mockResolvedValue({
       output: { isSpam: false, hasSensitiveContent: false },
     })
@@ -259,12 +265,15 @@ describe('comment moderation HTTP lifecycle', () => {
       'manual',
     )
     expect(
-      (await status(pending.id, pending.moderation.receipt)).json().data.status,
-    ).toBe('pending')
+      (await status(pending.id, pending.moderation.receipt)).json().data,
+    ).toEqual({ status: 'pending', reviewer: 'owner' })
     options.commentShouldAudit = true
     decide.mockResolvedValue(answer(1))
     const humanReview = (await submit()).json().data
-    expect(humanReview.moderation.status).toBe('pending')
+    expect(humanReview.moderation).toMatchObject({
+      status: 'pending',
+      reviewer: 'owner',
+    })
     await repository.updateStateBulk([humanReview.id], 1)
     expect(
       (await status(humanReview.id, humanReview.moderation.receipt)).json().data

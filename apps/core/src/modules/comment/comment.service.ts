@@ -35,7 +35,7 @@ import type {
   CommentTabCountsFilter,
 } from './comment.types'
 import { CommentCountryService } from './comment-country.service'
-import { commentSubmissionStatus } from './comment-decision'
+import { commentModeration, commentSubmissionStatus } from './comment-decision'
 
 /**
  * Minimal hydrated reference attached to a comment when its `refType`/`refId`
@@ -419,7 +419,7 @@ export class CommentService {
     return {
       ...comment,
       moderation: {
-        status: commentSubmissionStatus(comment, !!options.commentShouldAudit),
+        ...commentModeration(comment, !!options.commentShouldAudit),
         receipt,
       },
     }
@@ -432,9 +432,7 @@ export class CommentService {
     )
     if (!comment) throw createAppException(AppErrorCode.NOT_FOUND)
     const options = await this.configsService.get('commentOptions')
-    return {
-      status: commentSubmissionStatus(comment, !!options.commentShouldAudit),
-    }
+    return commentModeration(comment, !!options.commentShouldAudit)
   }
 
   async validAuthorName(author: string): Promise<void> {
@@ -532,7 +530,7 @@ export class CommentService {
     return {
       ...comment,
       moderation: {
-        status: commentSubmissionStatus(comment, !!options.commentShouldAudit),
+        ...commentModeration(comment, !!options.commentShouldAudit),
         receipt,
       },
     }

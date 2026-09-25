@@ -10,6 +10,7 @@ import {
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 import {
   commentDecisionQuestions,
+  commentModeration,
   commentSubmissionStatus,
   resolveCommentDecision,
 } from '~/modules/comment/comment-decision'
@@ -95,6 +96,24 @@ describe('two-stage comment decisions', () => {
     expect(
       commentSubmissionStatus({ state: 1, moderationStatus: 'manual' }, false),
     ).toBe('pending')
+  })
+
+  it('names who holds a pending submission', () => {
+    expect(
+      commentModeration({ state: 0, moderationStatus: 'approved' }, false),
+    ).toEqual({ status: 'published' })
+    expect(
+      commentModeration({ state: 0, moderationStatus: 'pending' }, false),
+    ).toEqual({ status: 'pending', reviewer: 'ai' })
+    expect(
+      commentModeration({ state: 0, moderationStatus: 'manual' }, false),
+    ).toEqual({ status: 'pending', reviewer: 'owner' })
+    expect(
+      commentModeration({ state: 0, moderationStatus: 'approved' }, true),
+    ).toEqual({ status: 'pending', reviewer: 'owner' })
+    expect(
+      commentModeration({ state: 2, moderationStatus: 'rejected' }, false),
+    ).toEqual({ status: 'rejected' })
   })
 
   it('validates upstream choices and probability distributions instead of trusting malformed success responses', async () => {

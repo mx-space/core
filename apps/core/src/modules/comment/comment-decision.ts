@@ -86,3 +86,17 @@ export function commentSubmissionStatus(
     return 'pending'
   return 'published'
 }
+
+export function commentModeration(
+  comment: Parameters<typeof commentSubmissionStatus>[0],
+  requiresAudit: boolean,
+):
+  | { status: 'published' | 'rejected' }
+  | { status: 'pending'; reviewer: 'ai' | 'owner' } {
+  const status = commentSubmissionStatus(comment, requiresAudit)
+  if (status !== 'pending') return { status }
+  return {
+    status,
+    reviewer: comment.moderationStatus === 'pending' ? 'ai' : 'owner',
+  }
+}
