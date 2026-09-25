@@ -1,3 +1,17 @@
+# [14.14.0](https://github.com/mx-space/core/compare/v14.13.0...v14.14.0) (2026-09-26)
+
+
+### Bug Fixes
+
+* **core:** exclude junk comments from public recent activity ([#2825](https://github.com/mx-space/core/issues/2825)) ([3432985](https://github.com/mx-space/core/commit/34329854fb6910442d5466cdb021be33f7527fe9))
+
+
+### Features
+
+* **ai:** add Jev decision model and two-stage comment moderation ([#2826](https://github.com/mx-space/core/issues/2826)) ([77225ab](https://github.com/mx-space/core/commit/77225ab723714cf1ea7693d8ccc1d5fe51c3f485))
+* **comment:** report who holds a pending submission ([0f1eb29](https://github.com/mx-space/core/commit/0f1eb2992b4a98aeab876ce61c8b2ce634916113))
+* **membership:** return category name in the sponsor archive ([edb896b](https://github.com/mx-space/core/commit/edb896b10b2488ce40c6ef1bab387c31994bb456))
+
 # [14.13.0](https://github.com/mx-space/core/compare/v14.12.4...v14.13.0) (2026-09-16)
 
 

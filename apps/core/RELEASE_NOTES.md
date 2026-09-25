@@ -1,31 +1,34 @@
 ## TL;DR
 
-The admin write agent now edits posts through a sandboxed virtual shell over the document, with a more reliable review overlay.
+Comment moderation now decides most submissions instantly with a decision model, and visitors can see whether their comment was published, held, or rejected.
 
 ## Highlights
 
-The AI write agent in the admin editor no longer calls per-node insert/replace/delete tools. It gets a virtual bash workspace where the post is mounted as `/doc.xml` and edits it with `cat`, `grep`, `sed` and heredocs. The result is diffed back by block id into the existing review overlay, so every change still lands as a pending suggestion you accept or reject. Follow-up turns see the document as it currently is, with pending suggestions left out.
+Comment review now runs in two stages. When "Prefer decision model" is enabled, a fast decision model judges each guest comment within about a second and publishes or rejects the clear cases immediately. Comments it is unsure about, or that time out, go to the existing LLM review in the background; after repeated failures they wait for the site owner. The confidence threshold and timeout are configurable in comment settings.
 
-Review behaviour is tightened around multi-turn sessions. Accepting one batch no longer resurrects entries you had already rejected in another. A second turn that edits a block still pending from an earlier turn now supersedes the older suggestion instead of silently hiding both. A block the agent moves keeps its id after you accept, and custom blocks (Afilmory, Map, Stock) keep their ids across reloads.
+Visitors now get a real answer after submitting. The submission response reports whether the comment was published, is pending, or was rejected, together with a private receipt. With that receipt, the author can later ask for the current status, and a pending result also says whether it is waiting on automatic review, which usually finishes in seconds, or on the site owner.
 
-Large agent sessions persist again: the session endpoints accept bodies up to 32 MB, and the admin surfaces a persistence failure with a toast instead of swallowing it.
+The bundled admin can now combine several GPX files into one map, with each file drawn as a separate leg that has its own title and order.
 
 ## Changes
 
 ### Features
-- Admin write agent drives edits through a just-bash virtual workspace over `/doc.xml`, with LiteXML block-id diffing into the review overlay ([#2824](https://github.com/mx-space/core/pull/2824))
-- Whitespace-only or identical rewrites report a no-op instead of an empty review batch ([#2824](https://github.com/mx-space/core/pull/2824))
-- `python3` inside the agent shell is stubbed with a hint to use `sed` / `grep` / heredocs ([#2824](https://github.com/mx-space/core/pull/2824))
+
+- Two-stage comment moderation: a decision model settles clear cases instantly, and uncertain ones fall back to background LLM review, then owner review ([#2826](https://github.com/mx-space/core/pull/2826))
+- Comment submissions return their moderation status and a private receipt, and `POST /comments/:id/moderation` returns the current status for that receipt ([#2826](https://github.com/mx-space/core/pull/2826))
+- Pending submissions report whether they wait on automatic review or on the site owner ([0f1eb29](https://github.com/mx-space/core/commit/0f1eb2992b4a98aeab876ce61c8b2ce634916113))
+- The admin map editor can combine several GPX files into one map as separate legs ([#2826](https://github.com/mx-space/core/pull/2826))
+- The sponsor archive now includes each item's category name ([edb896b](https://github.com/mx-space/core/commit/edb896b10b2488ce40c6ef1bab387c31994bb456))
 
 ### Bug Fixes
-- Accepting a batch no longer resurrects entries already rejected in a sibling batch ([#2824](https://github.com/mx-space/core/pull/2824))
-- A later turn on a still-pending block supersedes the earlier suggestion instead of marking both as conflicted and hiding them ([#2824](https://github.com/mx-space/core/pull/2824))
-- Moved blocks keep their block id after accept; Afilmory / Map / Stock nodes keep their ids across reloads ([#2824](https://github.com/mx-space/core/pull/2824))
-- Agent session save requests over 1 MB no longer fail with 413; failures are now shown in the admin ([#2824](https://github.com/mx-space/core/pull/2824))
 
-### Other
-- `@haklex/*` bumped to 0.42.1 ([#2824](https://github.com/mx-space/core/pull/2824))
+- Comments marked as junk no longer appear in the homepage's recent activity ([#2825](https://github.com/mx-space/core/pull/2825))
+- Comments from signed-in readers stay public when audit mode is on ([#2826](https://github.com/mx-space/core/pull/2826))
+
+## Upgrade Notes
+
+This release adds migration `0040_comment_moderation`, which adds three nullable or defaulted columns to `comments`. Run it before starting the new version; the server refuses to boot on an outdated schema. Docker Compose deployments that include the `mx-migrate` service run it automatically.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.12.4...v14.13.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.13.0...v14.14.0
