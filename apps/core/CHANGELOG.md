@@ -1,3 +1,10 @@
+## [14.14.5](https://github.com/mx-space/core/compare/v14.14.4...v14.14.5) (2026-09-27)
+
+
+### Bug Fixes
+
+* **aggregate:** translate category names on top and latest ([c8cb80b](https://github.com/mx-space/core/commit/c8cb80bc9a13c0ca0081ae5ea47a4458a147d82c))
+
 ## [14.14.4](https://github.com/mx-space/core/compare/v14.14.3...v14.14.4) (2026-09-26)
 
 

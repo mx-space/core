@@ -1,12 +1,11 @@
 ## TL;DR
 
-The dashboard home loads in well under a second again after its aggregated response shrank from about 1.5 MB to a few kilobytes.
+English and other locales now see translated category names on the home writing list and the latest feed.
 
 ## Changes
 
-- `GET /aggregate/dashboard` returns only what the home renders for each recent draft (title, excerpt, character count and status) instead of three full revisions per draft ([da2fde9](https://github.com/mx-space/core/commit/da2fde916))
-- Today's traffic is no longer part of the aggregated response; the dashboard loads it separately behind a fixed-size placeholder, so the rest of the page does not wait for it ([c9f8efc](https://github.com/mx-space/core/commit/c9f8efc8d))
+- Home top and latest feeds translate post category names for the requested language ([c8cb80b](https://github.com/mx-space/core/commit/c8cb80bc9a13c0ca0081ae5ea47a4458a147d82c))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.14.3...v14.14.4
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.14.4...v14.14.5
