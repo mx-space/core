@@ -4,7 +4,10 @@ import type { StatCount } from '~/api/aggregate'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
 
+import { deskFocusClassName, DeskSection } from './DeskSection'
+
 export function DeskStatBand(props: {
+  className?: string
   pendingComments?: number
   stat?: StatCount
   totalReads?: number
@@ -54,26 +57,31 @@ export function DeskStatBand(props: {
   ]
 
   return (
-    <div className="shadow-sm grid grid-cols-6 gap-px overflow-hidden rounded-lg border border-border bg-border phone:grid-cols-3">
-      {cells.map((cell) => (
-        <Link
-          className="focus-visible:outline-hidden min-w-0 bg-surface-card px-3.5 py-2 transition-colors hover:bg-surface-inset focus-visible:ring-[3px] focus-visible:ring-accent/15"
-          key={cell.labelKey}
-          to={cell.to}
-        >
-          <span className="block truncate text-xs text-fg-muted">
-            {t(cell.labelKey)}
-          </span>
-          <span className="mt-0.5 flex items-baseline gap-1.5 truncate text-base font-semibold tabular-nums text-fg">
-            {format.number(cell.value)}
-            {cell.badge ? (
-              <span className="text-xs font-medium text-accent">
-                {cell.badge}
-              </span>
-            ) : null}
-          </span>
-        </Link>
-      ))}
-    </div>
+    <DeskSection
+      className={props.className}
+      title={t('dashboard.desk.stats.title')}
+    >
+      <div className="grid grid-cols-6 phone:grid-cols-3 phone:gap-y-4">
+        {cells.map((cell) => (
+          <Link
+            className={`group min-w-0 border-l border-border px-4 first:border-l-0 first:pl-0 phone:nth-4:border-l-0 phone:nth-4:pl-0 ${deskFocusClassName}`}
+            key={cell.labelKey}
+            to={cell.to}
+          >
+            <span className="block truncate text-xs text-fg-subtle">
+              {t(cell.labelKey)}
+            </span>
+            <span className="mt-0.5 flex items-baseline gap-1.5 truncate text-base font-semibold tabular-nums text-fg transition-colors group-hover:text-accent">
+              {format.number(cell.value)}
+              {cell.badge ? (
+                <span className="text-xs font-medium text-accent">
+                  {cell.badge}
+                </span>
+              ) : null}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </DeskSection>
   )
 }

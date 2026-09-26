@@ -1,18 +1,14 @@
-import { Heart, MessageSquare } from 'lucide-react'
-
 import type { RecentActivityComment, RecentActivityLike } from '~/api/activity'
 import { useI18n } from '~/i18n'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import { relativeTimeFromNow } from '~/utils/time'
 
-import { DeskCard, DeskRow } from './DeskCard'
+import { DeskItem, DeskRailSection } from './DeskSection'
 
 const echoRowLimit = 4
 
 interface EchoRow {
   createdAt: string
-  icon: typeof MessageSquare
-  iconClassName: string
   key: string
   meta: string
   text: string
@@ -34,8 +30,6 @@ export function buildEchoRows(
   const commentRows = comments.map((comment, index): EchoRow => {
     return {
       createdAt: comment.createdAt,
-      icon: MessageSquare,
-      iconClassName: 'text-fg-subtle',
       key: `comment-${comment.id ?? index}-${comment.createdAt}`,
       meta: `${comment.text} · ${relativeTimeFromNow(comment.createdAt)}`,
       text: t('dashboard.desk.echo.comment', {
@@ -63,8 +57,6 @@ export function buildEchoRows(
   const likeRows = [...likeGroups.entries()].map(
     ([groupKey, group]): EchoRow => ({
       createdAt: group.latest.createdAt,
-      icon: Heart,
-      iconClassName: 'text-red-400',
       key: `like-${groupKey}`,
       meta: relativeTimeFromNow(group.latest.createdAt),
       text: t('dashboard.desk.echo.likes', {
@@ -79,25 +71,28 @@ export function buildEchoRows(
     .slice(0, echoRowLimit)
 }
 
-export function DeskEchoCard(props: { rows: EchoRow[] }) {
+export function DeskEchoCard(props: { className?: string; rows: EchoRow[] }) {
   const { t } = useI18n()
 
   return (
-    <DeskCard title={t('dashboard.desk.echo.title')}>
+    <DeskRailSection
+      className={props.className}
+      title={t('dashboard.desk.echo.title')}
+    >
       {props.rows.map((row) => (
-        <DeskRow key={row.key} to={row.to}>
-          <row.icon
-            aria-hidden="true"
-            className={`size-4 shrink-0 ${row.iconClassName}`}
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm text-fg">{row.text}</span>
-            <span className="mt-0.5 block truncate text-xs text-fg-muted">
-              {row.meta}
-            </span>
+        <DeskItem
+          className="border-b border-border py-2.5 first:pt-0 last:border-b-0"
+          key={row.key}
+          to={row.to}
+        >
+          <span className="line-clamp-2 text-sm font-medium text-fg transition-colors group-hover:text-accent">
+            {row.text}
           </span>
-        </DeskRow>
+          <span className="mt-0.5 block truncate text-xs text-fg-subtle">
+            {row.meta}
+          </span>
+        </DeskItem>
       ))}
-    </DeskCard>
+    </DeskRailSection>
   )
 }

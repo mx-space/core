@@ -1,9 +1,11 @@
 import { useI18n } from '~/i18n'
+import { cn } from '~/utils/cn'
 
 import { formatVersionLabel } from '../utils/desk'
 
 export function DeskFooter(props: {
   adminVersion: string
+  className?: string
   onCheckUpdates: () => void
   refreshing: boolean
   systemVersion: string
@@ -11,7 +13,12 @@ export function DeskFooter(props: {
   const { t } = useI18n()
 
   return (
-    <footer className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 text-xs text-fg-subtle">
+    <footer
+      className={cn(
+        'mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-5 text-xs text-fg-subtle',
+        props.className,
+      )}
+    >
       <span className="inline-flex items-center gap-2">
         <span>
           {t('dashboard.footer.versions', {

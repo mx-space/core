@@ -21,4 +21,6 @@ export const updateStaleTime = 60 * 60 * 1000
 
 export const deskWritingItemLimit = 5
 
+export const deskSplitMediaQuery = '(min-width: 1280px)'
+
 export const closedUpdateTipsStorageKey = 'closed-tips'

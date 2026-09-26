@@ -10,6 +10,7 @@ function draft(over: {
   id: string
   refId?: string | null
   relation?: DraftModel['relationToPublished']
+  text?: string
   updatedAt: string
 }): DraftModel {
   return {
@@ -18,7 +19,7 @@ function draft(over: {
       refType: DraftRefType.Post,
     },
     documentId: over.documentId,
-    headRevision: { title: over.id },
+    headRevision: { text: over.text ?? '', title: over.id },
     id: over.id,
     relationToPublished: over.relation ?? null,
     status: 'active',
@@ -44,7 +45,12 @@ describe('buildWritingItems', () => {
           relation: 'diverged',
           updatedAt: '2026-09-10',
         }),
-        draft({ documentId: 'doc-b', id: 'b1', updatedAt: '2026-09-12' }),
+        draft({
+          documentId: 'doc-b',
+          id: 'b1',
+          text: '  第一段\n\n second  line ',
+          updatedAt: '2026-09-12',
+        }),
         draft({
           documentId: 'doc-c',
           id: 'c1',
@@ -63,5 +69,6 @@ describe('buildWritingItems', () => {
       ['n1', 'scheduled', 0],
     ])
     expect(items[0].draftId).toBe('a1')
+    expect(items[1]).toMatchObject({ chars: 13, excerpt: '第一段 second line' })
   })
 })

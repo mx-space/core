@@ -3,13 +3,13 @@ import { Link } from 'react-router'
 import { refTypeMeta } from '~/features/drafts/constants'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
-import { Badge, type BadgeTone } from '~/ui/primitives/badge'
+import type { BadgeTone } from '~/ui/primitives/badge'
 import { relativeTimeFromNow } from '~/utils/time'
 
 import type { DeskWritingItem, DeskWritingStatus } from '../utils/desk'
-import { DeskCard } from './DeskCard'
+import { deskFocusClassName, DeskSection } from './DeskSection'
 
-const statusMeta: Record<
+export const writingStatusMeta: Record<
   DeskWritingStatus,
   { labelKey: TranslationKey; tone: BadgeTone }
 > = {
@@ -27,56 +27,59 @@ const statusMeta: Record<
   },
 }
 
-export function DeskWritingCard(props: { items: DeskWritingItem[] }) {
+export function DeskWritingCard(props: {
+  className?: string
+  items: DeskWritingItem[]
+  total: number
+}) {
   const { format, t } = useI18n()
 
   return (
-    <DeskCard
+    <DeskSection
+      aside={t('dashboard.desk.writing.count', { count: props.total })}
+      className={props.className}
       title={t('dashboard.desk.writing.title')}
-      aside={t('dashboard.desk.writing.count', { count: props.items.length })}
     >
-      {props.items.map((item) => {
-        const status = statusMeta[item.status]
-        const time =
-          item.status === 'scheduled'
-            ? format.dateTime(item.time, {
-                dateStyle: 'medium',
-                timeStyle: undefined,
-              })
-            : relativeTimeFromNow(item.time)
-        return (
-          <li
-            className="flex items-center gap-3 border-b border-border px-3.5 py-1.5 last:border-b-0 hover:bg-surface-inset phone:px-0"
-            key={item.id}
-          >
-            <Badge size="sm" tone={refTypeMeta[item.refType].tone}>
-              {t(refTypeMeta[item.refType].labelKey)}
-            </Badge>
-            <Link
-              className="focus-visible:outline-hidden min-w-0 flex-1 truncate text-sm text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15"
-              to={item.to}
+      <ul>
+        {props.items.map((item) => {
+          const time =
+            item.status === 'scheduled'
+              ? format.dateTime(item.time, {
+                  dateStyle: 'medium',
+                  timeStyle: undefined,
+                })
+              : relativeTimeFromNow(item.time)
+          return (
+            <li
+              className="border-b border-border last:border-b-0"
+              key={item.id}
             >
-              {item.title || t('dashboard.desk.untitled')}
-            </Link>
-            {item.branchCount > 1 && item.draftId ? (
               <Link
-                className="shrink-0 text-xs text-fg-muted hover:text-accent"
-                to={`/drafts/${item.draftId}`}
+                className={`group grid grid-cols-[minmax(0,1fr)_auto_5rem] items-center gap-4 py-3 phone:grid-cols-[minmax(0,1fr)_auto] phone:gap-x-3 phone:gap-y-0.5 ${deskFocusClassName}`}
+                to={item.to}
               >
-                {t('dashboard.desk.writing.branches', {
-                  count: item.branchCount,
-                })}
+                <span className="truncate text-sm text-fg transition-colors group-hover:text-accent">
+                  {item.title || t('dashboard.desk.untitled')}
+                  {item.branchCount > 1 ? (
+                    <span className="ml-2 text-xs text-fg-subtle phone:hidden">
+                      {t('dashboard.desk.writing.branches', {
+                        count: item.branchCount,
+                      })}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="whitespace-nowrap text-xs text-fg-subtle phone:col-start-1 phone:row-start-2">
+                  {t(refTypeMeta[item.refType].labelKey)} ·{' '}
+                  {t(writingStatusMeta[item.status].labelKey)}
+                </span>
+                <span className="text-right text-xs tabular-nums text-fg-subtle phone:col-start-2 phone:row-span-2 phone:row-start-1">
+                  {time}
+                </span>
               </Link>
-            ) : null}
-            <Badge size="sm" tone={status.tone}>
-              {t(status.labelKey)}
-            </Badge>
-            <span className="w-16 shrink-0 text-right text-xs tabular-nums text-fg-subtle">
-              {time}
-            </span>
-          </li>
-        )
-      })}
-    </DeskCard>
+            </li>
+          )
+        })}
+      </ul>
+    </DeskSection>
   )
 }

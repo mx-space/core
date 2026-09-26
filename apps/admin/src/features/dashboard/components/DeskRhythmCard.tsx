@@ -2,35 +2,27 @@ import { useMemo } from 'react'
 
 import type { HeatmapDay } from '~/api/aggregate'
 import { useI18n } from '~/i18n'
-import { cn } from '~/utils/cn'
 
 import { buildWeeklyRhythm } from '../utils/rhythm'
-import { deskHeaderClassName, deskSectionClassName } from './DeskCard'
+import { DeskSection } from './DeskSection'
 
 const barWidth = 9
 const barGap = 4.6
 const chartHeight = 72
 
-export function DeskRhythmCard(props: { days: HeatmapDay[] }) {
+export function DeskRhythmCard(props: {
+  className?: string
+  days: HeatmapDay[]
+}) {
   const { format, t } = useI18n()
   const rhythm = useMemo(() => buildWeeklyRhythm(props.days), [props.days])
   const unit = chartHeight / Math.max(rhythm.max, 1)
   const width = rhythm.weeks.length * (barWidth + barGap) - barGap
 
   return (
-    <section className={deskSectionClassName}>
-      <h2 className={cn(deskHeaderClassName, 'flex-wrap gap-y-1')}>
-        <span className="flex items-baseline gap-3">
-          {t('dashboard.desk.rhythm.title')}
-          <span className="text-xs font-normal tabular-nums text-fg-muted">
-            {t('dashboard.desk.rhythm.summary', {
-              streak: rhythm.streak,
-              thisWeek: rhythm.thisWeek,
-              total: rhythm.total,
-            })}
-          </span>
-        </span>
-        <span className="flex items-center gap-2.5 text-xs font-normal text-fg-subtle">
+    <DeskSection
+      aside={
+        <span className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-1">
             <span className="size-2 rounded-xs bg-accent" />
             {t('dashboard.desk.stats.posts')}
@@ -40,8 +32,20 @@ export function DeskRhythmCard(props: { days: HeatmapDay[] }) {
             {t('dashboard.desk.stats.notes')}
           </span>
         </span>
-      </h2>
-      <div className="overflow-x-auto px-3.5 pb-2.5 pt-3 phone:px-0">
+      }
+      className={props.className}
+      title={
+        <span className="tabular-nums">
+          {t('dashboard.desk.rhythm.title')} ·{' '}
+          {t('dashboard.desk.rhythm.summary', {
+            streak: rhythm.streak,
+            thisWeek: rhythm.thisWeek,
+            total: rhythm.total,
+          })}
+        </span>
+      }
+    >
+      <div className="overflow-x-auto">
         <svg
           className="block min-w-[560px]"
           height={chartHeight}
@@ -110,6 +114,6 @@ export function DeskRhythmCard(props: { days: HeatmapDay[] }) {
           ))}
         </div>
       </div>
-    </section>
+    </DeskSection>
   )
 }

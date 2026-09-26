@@ -52,3 +52,44 @@ export function buildWeeklyRhythm(days: HeatmapDay[], now = new Date()) {
     weeks,
   }
 }
+
+export interface WeekStripDay {
+  date: Date
+  isToday: boolean
+  key: string
+  published: boolean
+  scheduled: boolean
+}
+
+function localDateKey(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+export function buildWeekStrip(
+  days: HeatmapDay[],
+  scheduledAt: string[],
+  now = new Date(),
+): WeekStripDay[] {
+  const start = startOfWeek(now)
+  const todayKey = localDateKey(now)
+  const published = new Set(
+    days.filter((day) => day.count > 0).map((day) => day.date),
+  )
+  const scheduled = new Set(
+    scheduledAt.map((time) => localDateKey(new Date(time))),
+  )
+  return Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(start)
+    date.setDate(start.getDate() + offset)
+    const key = localDateKey(date)
+    return {
+      date,
+      isToday: key === todayKey,
+      key,
+      published: published.has(key),
+      scheduled: scheduled.has(key),
+    }
+  })
+}

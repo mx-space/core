@@ -5,11 +5,15 @@ import { DraftRefType } from '~/models/draft'
 
 import { deskWritingItemLimit } from '../constants'
 
+const excerptLength = 240
+
 export type DeskWritingStatus = 'modified' | 'scheduled' | 'unpublished'
 
 export interface DeskWritingItem {
   branchCount: number
+  chars: number
   draftId: string | null
+  excerpt: string
   id: string
   refType: DraftRefType
   status: DeskWritingStatus
@@ -31,9 +35,12 @@ export function buildWritingItems(
       existing.branchCount += 1
       continue
     }
+    const text = draft.headRevision.text ?? ''
     byDocument.set(draft.documentId, {
       branchCount: 1,
+      chars: text.replaceAll(/\s/g, '').length,
       draftId: draft.id,
+      excerpt: text.replaceAll(/\s+/g, ' ').trim().slice(0, excerptLength),
       id: draft.documentId,
       refType: draft.document.refType,
       status: draft.document.refId ? 'modified' : 'unpublished',
@@ -44,7 +51,9 @@ export function buildWritingItems(
   }
   const scheduledItems = scheduledNotes.map<DeskWritingItem>((note) => ({
     branchCount: 0,
+    chars: 0,
     draftId: null,
+    excerpt: '',
     id: note.id,
     refType: DraftRefType.Note,
     status: 'scheduled',

@@ -1,32 +1,33 @@
 import type { TopArticle } from '~/api/aggregate'
 import { useI18n } from '~/i18n'
 
-import { DeskCard, DeskRow } from './DeskCard'
+import { DeskItem, DeskSectionTitle } from './DeskSection'
 
 export function DeskTopArticlesCard(props: { articles: TopArticle[] }) {
   const { format, t } = useI18n()
-  if (props.articles.length === 0) return null
 
   return (
-    <DeskCard title={t('dashboard.desk.topArticles.title')}>
+    <section className="min-w-0">
+      <DeskSectionTitle title={t('dashboard.desk.topArticles.title')} />
       {props.articles.slice(0, 5).map((article, index) => (
-        <DeskRow
+        <DeskItem
+          className="grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-baseline gap-2.5 py-2.5"
           key={article.id}
           to={`/posts/edit?id=${encodeURIComponent(article.id)}`}
         >
-          <span className="w-5 shrink-0 text-xs tabular-nums text-fg-subtle">
+          <span className="text-xs tabular-nums text-fg-subtle">
             {index + 1}
           </span>
-          <span className="min-w-0 flex-1 truncate text-sm text-fg">
+          <span className="truncate text-sm text-fg transition-colors group-hover:text-accent">
             {article.title}
           </span>
-          <span className="shrink-0 text-xs tabular-nums text-fg-muted">
+          <span className="text-xs tabular-nums text-fg-subtle">
             {t('dashboard.desk.topArticles.reads', {
               count: format.number(article.reads),
             })}
           </span>
-        </DeskRow>
+        </DeskItem>
       ))}
-    </DeskCard>
+    </section>
   )
 }

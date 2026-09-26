@@ -1,17 +1,15 @@
-import type { LucideIcon } from 'lucide-react'
-import { ArrowUpCircle, ChevronRight, Link2, MessageSquare } from 'lucide-react'
-
 import type { DeskSummary } from '~/api/aggregate'
 import { useI18n } from '~/i18n'
 
 import { writeClosedUpdateTip } from '../utils/dashboard'
 import { presentDashboardUpgrade } from './DashboardUpgradeModal'
-import { DeskCard, DeskRow } from './DeskCard'
+import { DeskItem, DeskRailSection } from './DeskSection'
 import { presentUpdateRelease } from './UpdateReleaseModal'
 
 export function DeskTasksCard(props: {
   adminUpdate: null | string
   adminVersion: string
+  className?: string
   desk?: DeskSummary
   systemUpdate: null | string
   systemVersion: string
@@ -22,11 +20,13 @@ export function DeskTasksCard(props: {
   const links = props.desk?.linkApplications
 
   return (
-    <DeskCard title={t('dashboard.desk.tasks.title')}>
+    <DeskRailSection
+      className={props.className}
+      title={t('dashboard.desk.tasks.title')}
+    >
       {comments && comments.count > 0 ? (
         <DeskTaskRow
           count={comments.count}
-          icon={MessageSquare}
           label={t('dashboard.desk.task.comments')}
           preview={
             comments.latest
@@ -42,7 +42,6 @@ export function DeskTasksCard(props: {
       {links && links.count > 0 ? (
         <DeskTaskRow
           count={links.count}
-          icon={Link2}
           label={t('dashboard.desk.task.links')}
           preview={
             links.latest
@@ -58,7 +57,6 @@ export function DeskTasksCard(props: {
       {systemUpdate ? (
         <DeskTaskRow
           count={1}
-          icon={ArrowUpCircle}
           label={t('dashboard.desk.task.serverUpdate')}
           onClick={() => {
             writeClosedUpdateTip('system', systemUpdate)
@@ -77,7 +75,6 @@ export function DeskTasksCard(props: {
       {adminUpdate ? (
         <DeskTaskRow
           count={1}
-          icon={ArrowUpCircle}
           label={t('dashboard.desk.task.adminUpdate')}
           onClick={() => {
             writeClosedUpdateTip('dashboard', adminUpdate)
@@ -89,41 +86,38 @@ export function DeskTasksCard(props: {
           })}
         />
       ) : null}
-    </DeskCard>
+    </DeskRailSection>
   )
 }
 
 function DeskTaskRow(props: {
   count: number
-  icon: LucideIcon
   label: string
   onClick?: () => void
   preview: null | string
   to?: string
 }) {
   const { format } = useI18n()
-  const Icon = props.icon
 
   return (
-    <DeskRow onClick={props.onClick} to={props.to}>
-      <Icon aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="truncate text-sm text-fg">{props.label}</span>
-          <span className="shrink-0 rounded-full bg-accent-soft px-1.5 text-xs font-medium tabular-nums text-accent">
-            {format.number(props.count)}
-          </span>
+    <DeskItem
+      className="border-b border-border py-3 first:pt-0 last:border-b-0"
+      onClick={props.onClick}
+      to={props.to}
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate text-sm font-medium text-fg transition-colors group-hover:text-accent">
+          {props.label}
         </span>
-        {props.preview ? (
-          <span className="mt-0.5 block truncate text-xs text-fg-muted">
-            {props.preview}
-          </span>
-        ) : null}
+        <span className="ml-auto shrink-0 rounded-full bg-accent-soft px-1.5 text-xs font-medium tabular-nums text-accent">
+          {format.number(props.count)}
+        </span>
       </span>
-      <ChevronRight
-        aria-hidden="true"
-        className="size-4 shrink-0 text-fg-subtle"
-      />
-    </DeskRow>
+      {props.preview ? (
+        <span className="mt-0.5 block truncate text-xs text-fg-subtle">
+          {props.preview}
+        </span>
+      ) : null}
+    </DeskItem>
   )
 }
