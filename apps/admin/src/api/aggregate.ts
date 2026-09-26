@@ -1,3 +1,7 @@
+import type { DraftModel } from '~/models/draft'
+
+import type { RecentActivities } from './activity'
+import type { IPAggregate } from './analyze'
 import { getJson } from './http'
 
 export interface StatCount {
@@ -105,20 +109,25 @@ export interface HeatmapDay {
   posts: number
 }
 
+export interface DashboardPayload {
+  desk: DeskSummary
+  drafts: DraftModel[]
+  onThisDay: OnThisDayEntry[]
+  ownerName: null | string
+  publishHeatmap: HeatmapDay[]
+  reads: { totalLikes: number; totalReads: number }
+  recent: RecentActivities
+  stat: StatCount
+  topArticles: TopArticle[]
+  trafficToday: IPAggregate['today']
+}
+
+export function getDashboard() {
+  return getJson<DashboardPayload>('/aggregate/dashboard')
+}
+
 export function getAggregateStat() {
   return getJson<StatCount>('/aggregate/stat')
-}
-
-export function getDesk() {
-  return getJson<DeskSummary>('/aggregate/desk')
-}
-
-export function getOnThisDay() {
-  return getJson<OnThisDayEntry[]>('/aggregate/on-this-day')
-}
-
-export function getPublishHeatmap() {
-  return getJson<HeatmapDay[]>('/aggregate/publish-heatmap')
 }
 
 export function getCategoryDistribution() {

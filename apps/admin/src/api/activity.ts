@@ -72,10 +72,6 @@ export interface RecentActivities {
   like: RecentActivityLike[]
 }
 
-export function getRecentActivities() {
-  return getJson<RecentActivities>('/activity/recent')
-}
-
 export function getActivityList(params: {
   page?: number
   size?: number
