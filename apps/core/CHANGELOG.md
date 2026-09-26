@@ -1,3 +1,10 @@
+## [14.14.3](https://github.com/mx-space/core/compare/v14.14.2...v14.14.3) (2026-09-26)
+
+
+### Features
+
+* **aggregate:** serve the dashboard home from one endpoint ([689dcd5](https://github.com/mx-space/core/commit/689dcd5a5953dfcd0c71af16a04de4134e4b1d4a))
+
 ## [14.14.2](https://github.com/mx-space/core/compare/v14.14.1...v14.14.2) (2026-09-26)
 
 

@@ -1,29 +1,24 @@
 ## TL;DR
 
-The dashboard home is reorganised around writing, and schema migrations no longer skip a migration whose earlier branch version was applied.
+The dashboard home now loads from one aggregated request and renders all at once, so sections no longer push the page around.
+
+## Breaking Changes
+
+- **aggregate**: `GET /aggregate/on-this-day` and `GET /aggregate/publish-heatmap` are removed; only the dashboard home used them. **Migration**: read `on_this_day` and `publish_heatmap` from `GET /aggregate/dashboard` instead.
 
 ## Highlights
 
-The dashboard home now opens with a short summary of what needs attention (comments awaiting review, link requests, the next scheduled note) and a block to pick up the latest draft, with its excerpt and character count. Unpublished changes, on this day, top articles, writing rhythm and site stats follow as plain sections instead of cards.
+Opening the dashboard used to fire about ten requests and draw each section as its data arrived, so the page jumped several times while loading. The home now makes a single request to the new `GET /aggregate/dashboard` endpoint, shows a skeleton until it returns, and then renders every section in one pass. Online visitor counts still refresh every few seconds.
 
-A side rail holds this week's calendar, pending tasks, today's traffic and recent comments and likes. On wide screens the main column and the rail scroll independently; on phones everything stacks in one column with pending tasks moved near the top.
-
-The schema migrator could record a migration as applied without running its SQL when a development database had applied an earlier branch version of that migration. Such stale ledger rows no longer count towards the backfill waterline, so the final version of the migration runs.
+`GET /aggregate/dashboard` requires sign-in and returns the owner name, site counters, read and like totals, pending comments and link requests, the latest drafts, on this day, the publishing heatmap, top articles, recent comments and likes, and today's hourly traffic.
 
 ## Changes
 
 ### Features
 
-- Dashboard home redesigned with a writing-first main column and a side rail for this week, tasks, traffic and recent activity ([93cb882](https://github.com/mx-space/core/commit/93cb882b3))
-
-### Bug Fixes
-
-- Schema migrations are no longer skipped when a database holds a ledger row from a superseded branch version of the same migration ([9d34f8c](https://github.com/mx-space/core/commit/9d34f8c7f))
-
-## Upgrade Notes
-
-Development databases that applied a branch version of `0040_comment_moderation` may be missing the `comments.moderation_status`, `moderation_receipt_hash` and `moderation_attempts` columns, which makes comment queries fail. This release does not re-apply migrations that are already recorded, so add the columns on those databases by hand with `ALTER TABLE "comments" ADD COLUMN IF NOT EXISTS ...`, using the definitions in `0040_comment_moderation.sql`.
+- Add `GET /aggregate/dashboard`, returning everything the dashboard home needs in one response ([689dcd5](https://github.com/mx-space/core/commit/689dcd5a5))
+- The dashboard home loads in a single request and shows a skeleton instead of filling in section by section ([7c4ef8c](https://github.com/mx-space/core/commit/7c4ef8c84))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.14.1...v14.14.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.14.2...v14.14.3
