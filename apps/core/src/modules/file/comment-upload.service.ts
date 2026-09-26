@@ -1,12 +1,11 @@
 import { Readable } from 'node:stream'
 
 import { Injectable, Logger } from '@nestjs/common'
-import type { FastifyRequest } from 'fastify'
+import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 import { fileTypeFromBuffer } from 'file-type'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
-import { UploadService } from '~/processors/helper/helper.upload.service'
 import {
   generateFilename,
   replaceFilenameTemplate,
@@ -49,7 +48,7 @@ async function detectImageMime(
   return { mime: result.mime, ext: `.${result.ext}` }
 }
 
-function resolveCommentUploadConfig(config: {
+export function resolveCommentUploadConfig(config: {
   enable?: boolean
   singleFileSizeMB?: number
   commentImageMaxCount?: number
@@ -74,7 +73,6 @@ export class CommentUploadService {
   constructor(
     private readonly fileReferenceService: FileReferenceService,
     private readonly configsService: ConfigsService,
-    private readonly uploadService: UploadService,
     private readonly fileService: FileService,
   ) {}
 
@@ -84,39 +82,16 @@ export class CommentUploadService {
   }
 
   async uploadForReader(
-    req: FastifyRequest,
+    file: UploadedMultipartFile,
     readerId: string,
   ): Promise<ReaderUploadResult> {
-    const rawConfig = await this.configsService.get('commentUploadOptions')
-    if (rawConfig.enable === false) {
-      throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
-    }
+    const { mimeWhitelist: whitelist, pendingTtlMinutes } =
+      resolveCommentUploadConfig(
+        await this.configsService.get('commentUploadOptions'),
+      )
 
-    const {
-      singleFileSizeMB,
-      mimeWhitelist: whitelist,
-      pendingTtlMinutes,
-    } = resolveCommentUploadConfig(rawConfig)
-    const maxFileSize = singleFileSizeMB * 1024 * 1024
-
-    const file = await this.uploadService.getAndValidMultipartField(req, {
-      maxFileSize,
-    })
-
-    const chunks: Buffer[] = []
-    let totalBytes = 0
-    for await (const chunk of file.file) {
-      chunks.push(chunk)
-      totalBytes += chunk.length
-      if (totalBytes > maxFileSize) {
-        throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
-      }
-    }
-    const buffer = Buffer.concat(chunks)
-
-    if (file.file.truncated) {
-      throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
-    }
+    const buffer = file.buffer!
+    const totalBytes = file.size
 
     const detected = await detectImageMime(buffer)
     if (!detected || !whitelist.includes(detected.mime)) {

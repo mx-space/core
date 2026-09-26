@@ -514,6 +514,10 @@ export const APP_ERROR_DEFINITIONS = {
     status: 403,
     message: 'File upload is not authorized',
   },
+  [AppErrorCode.FILE_REQUIRED]: {
+    status: 400,
+    message: 'A file must be uploaded in the "file" field',
+  },
   [AppErrorCode.MIME_ZIP_REQUIRED]: {
     status: 422,
     message: (p) =>

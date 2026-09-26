@@ -1,6 +1,11 @@
 import path from 'node:path'
 
-import { Logger } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnApplicationShutdown,
+} from '@nestjs/common'
 import { sql } from 'drizzle-orm'
 import { readMigrationFiles } from 'drizzle-orm/migrator'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
@@ -18,8 +23,12 @@ export type AppDatabase = NodePgDatabase<DrizzleSchema>
 
 const logger = new Logger('PostgresProvider')
 
+const POOL_END_TIMEOUT_MS = 5_000
+
 let cachedPool: PgPool | null = null
 let cachedDb: AppDatabase | null = null
+const poolOwners = new WeakMap<PgPool, number>()
+const closingPools = new WeakMap<PgPool, Promise<void>>()
 
 export const db = new Proxy({} as AppDatabase, {
   get(_target, prop) {
@@ -150,10 +159,63 @@ export async function assertSchemaCurrent(
 }
 
 export async function disposePool(): Promise<void> {
-  if (cachedPool) {
-    await cachedPool.end()
-    cachedPool = null
-    cachedDb = null
+  const pool = cachedPool
+  cachedPool = null
+  cachedDb = null
+  if (pool) await closePool(pool)
+}
+
+// The cached pool is intentionally left in place after it ends: work that
+// outlives app.close() then fails on the ended pool instead of silently
+// opening a new one nothing will ever close. Only disposePool() resets it.
+function closePool(pool: PgPool): Promise<void> {
+  const closing = closingPools.get(pool)
+  if (closing) return closing
+
+  const result = endPool(pool)
+  closingPools.set(pool, result)
+  return result
+}
+
+async function endPool(pool: PgPool): Promise<void> {
+  let timer: NodeJS.Timeout | undefined
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(resolve, POOL_END_TIMEOUT_MS, 'timeout')
+    timer.unref()
+  })
+  try {
+    const outcome = await Promise.race([pool.end(), timeout])
+    if (outcome === 'timeout') {
+      logger.warn(
+        `PostgreSQL pool did not drain within ${POOL_END_TIMEOUT_MS}ms; ` +
+          `${pool.totalCount - pool.idleCount} client(s) still checked out`,
+      )
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+@Injectable()
+export class PostgresPoolLifecycle implements OnApplicationShutdown {
+  private released = false
+
+  constructor(@Inject(PG_POOL_TOKEN) private readonly pool: PgPool) {
+    poolOwners.set(pool, (poolOwners.get(pool) ?? 0) + 1)
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    if (this.released) return
+    this.released = true
+
+    const remaining = (poolOwners.get(this.pool) ?? 1) - 1
+    if (remaining > 0) {
+      poolOwners.set(this.pool, remaining)
+      return
+    }
+
+    poolOwners.delete(this.pool)
+    await closePool(this.pool)
   }
 }
 

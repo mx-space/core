@@ -7,11 +7,16 @@ import { RecentlyModule } from '~/modules/recently/recently.module'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import { DatabaseService } from './database.service'
-import { postgresProviders } from './postgres.provider'
+import { PostgresPoolLifecycle, postgresProviders } from './postgres.provider'
 
 @Module({
   imports: [PostModule, NoteModule, PageModule, RecentlyModule],
-  providers: [DatabaseService, ...postgresProviders, SnowflakeService],
+  providers: [
+    DatabaseService,
+    ...postgresProviders,
+    PostgresPoolLifecycle,
+    SnowflakeService,
+  ],
   exports: [DatabaseService, ...postgresProviders, SnowflakeService],
 })
 @Global()
