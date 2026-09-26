@@ -155,6 +155,37 @@ describe('runSchemaMigrationFiles', () => {
     }
   }, 60_000)
 
+  it('runs a migration whose superseded branch version shares its timestamp', async () => {
+    const context = await createPgTestDatabase('mx_schema_migrator', {
+      migrate: false,
+    })
+    try {
+      await context.pool.query('CREATE SCHEMA IF NOT EXISTS "drizzle"')
+      await context.pool.query(
+        'CREATE TABLE "drizzle"."__drizzle_migrations" (id SERIAL PRIMARY KEY, hash text NOT NULL, created_at bigint)',
+      )
+      await context.pool.query(
+        `INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at) VALUES ('branch-version', 2000)`,
+      )
+
+      const folder = writeMigrationsFolder([
+        {
+          tag: '0000_posts',
+          when: 2000,
+          sql: 'CREATE TABLE "posts" ("id" text PRIMARY KEY NOT NULL);',
+        },
+      ])
+      await runSchemaMigrationFiles(context.pool, folder)
+
+      const exists = await context.pool.query<{ reg: string | null }>(
+        `SELECT to_regclass('public.posts') AS reg`,
+      )
+      expect(exists.rows[0]?.reg).toBe('posts')
+    } finally {
+      await context.close()
+    }
+  }, 60_000)
+
   it('backfills a below-waterline migration instead of re-running it', async () => {
     const context = await createPgTestDatabase('mx_schema_migrator', {
       migrate: false,

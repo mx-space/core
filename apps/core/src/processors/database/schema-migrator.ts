@@ -140,8 +140,19 @@ export async function runSchemaMigrationFiles(
       result.rows.map((row) => [row.hash, row.created_at]),
     )
     const bundledHashes = new Set(migrations.map((migration) => migration.hash))
+    const bundledTimestamps = new Set(
+      migrations.map((migration) => migration.folderMillis),
+    )
+    // A row sharing a bundled migration's `when` but not its hash is a
+    // superseded version of that same migration (edited on a branch after a
+    // dev database applied it), not a pre-hash-era watermark. Counting it
+    // would backfill the final version at that timestamp without its SQL.
     const legacyTimestamps = result.rows
-      .filter((row) => !bundledHashes.has(row.hash))
+      .filter(
+        (row) =>
+          !bundledHashes.has(row.hash) &&
+          !bundledTimestamps.has(Number(row.created_at)),
+      )
       .map((row) => Number(row.created_at))
     const waterline = legacyTimestamps.length
       ? Math.max(...legacyTimestamps)
