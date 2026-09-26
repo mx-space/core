@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common'
 import { RedisKeys } from '~/constants/cache.constant'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
+import { getTodayEarly } from '~/utils/time.util'
 
 import { OptionsRepository } from '../configs/options.repository'
 import { AnalyzeRepository } from './analyze.repository'
@@ -113,6 +114,21 @@ export class AnalyzeService {
     return records.sort((a, b) =>
       String(b[keyField] ?? '').localeCompare(String(a[keyField] ?? '')),
     )
+  }
+
+  async getTodayHourly(now = new Date()) {
+    const day = await this.getIpAndPvAggregateByRange(
+      { from: getTodayEarly(now), to: now, granularity: 'hour' },
+      true,
+    )
+    return Array.from({ length: 24 }, (_, i) => {
+      const bucket = day[i.toString().padStart(2, '0')]
+      const hour = `${i}:00`
+      return [
+        { hour, key: 'ip', value: bucket?.ip || 0 },
+        { hour, key: 'pv', value: bucket?.pv || 0 },
+      ]
+    }).flat()
   }
 
   async getRangeOfTopPathVisitor(from?: Date, to?: Date): Promise<any[]> {

@@ -6,6 +6,7 @@ import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ArticleTypeEnum } from '~/constants/article.constant'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
+import { CollectionRefTypes } from '~/constants/db.constant'
 import { POST_SERVICE_TOKEN } from '~/constants/injection.constant'
 import { DatabaseService } from '~/processors/database/database.service'
 import type { SocketLike } from '~/processors/gateway/gateway.service'
@@ -496,6 +497,27 @@ export class ActivityService implements OnModuleInit, OnModuleDestroy {
     const startAt = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
     return this.getDateRangeOfReadings(startAt, endAt, limit)
+  }
+
+  async getRecentLikes(size = 5) {
+    const like = await this.getLikeActivities(1, size)
+    return like.data.map((item) => {
+      const likeData = pick(item, 'createdAt', 'id') as any
+      if (!item.ref) {
+        likeData.title = 'Deleted content'
+        return likeData
+      }
+      if ('nid' in item.ref) {
+        likeData.type = CollectionRefTypes.Note
+        likeData.nid = item.ref.nid
+      } else {
+        likeData.type = CollectionRefTypes.Post
+        likeData.slug = item.ref.slug
+      }
+      likeData.title = item.ref.title
+      likeData.articleId = (item.payload as { id?: string } | null)?.id
+      return likeData
+    })
   }
 
   async getRecentComment() {

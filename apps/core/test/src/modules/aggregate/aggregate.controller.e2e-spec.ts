@@ -3,9 +3,10 @@ import type { ModuleMetadata } from '@nestjs/common'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { ActivityService } from '~/modules/activity/activity.service'
 import { AggregateController } from '~/modules/aggregate/aggregate.controller'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
@@ -14,6 +15,7 @@ import { CommentState } from '~/modules/comment/comment.enum'
 import { CommentRepository } from '~/modules/comment/comment.repository'
 import { CommentService } from '~/modules/comment/comment.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { DraftService } from '~/modules/draft/draft.service'
 import { LinkRepository } from '~/modules/link/link.repository'
 import { LinkService } from '~/modules/link/link.service'
 import { LinkState } from '~/modules/link/link.types'
@@ -61,10 +63,40 @@ const aggregateModule: ModuleMetadata = {
   controllers: [AggregateController],
   providers: [
     { provide: ConfigsService, useValue: {} },
-    { provide: AnalyzeService, useValue: {} },
+    {
+      provide: AnalyzeService,
+      useValue: {
+        getCallTime: async () => ({ callTime: 42, uv: 7 }),
+        getTodayAccessIp: async () => ['1.1.1.1', '2.2.2.2'],
+        getTodayHourly: async () =>
+          Array.from({ length: 24 }, (_, i) => [
+            { hour: `${i}:00`, key: 'ip', value: 0 },
+            { hour: `${i}:00`, key: 'pv', value: i === 9 ? 5 : 0 },
+          ]).flat(),
+      },
+    },
     { provide: NoteService, useValue: {} },
     { provide: SnippetService, useValue: {} },
-    { provide: OwnerService, useValue: {} },
+    {
+      provide: OwnerService,
+      useValue: { getOwner: async () => ({ name: 'Desk Owner' }) },
+    },
+    {
+      provide: ActivityService,
+      useValue: {
+        getRecentComment: async () => [{ id: 'c1', author: 'Jane Reader' }],
+        getRecentLikes: async () => [{ id: 'l1', title: 'Liked Post' }],
+      },
+    },
+    {
+      provide: DraftService,
+      useValue: {
+        list: async (page: number, size: number) => ({
+          data: [{ id: 'd1', page, size }],
+          pagination: {},
+        }),
+      },
+    },
     { provide: TranslationService, useValue: {} },
     { provide: TranslationEntryService, useValue: {} },
   ],
@@ -233,6 +265,17 @@ beforeAll(async () => {
     {} as any,
   )
 
+  vi.spyOn(aggregateService, 'getCounts').mockResolvedValue({
+    posts: 3,
+  } as any)
+  vi.spyOn(aggregateService, 'getAllReadAndLikeCount').mockResolvedValue({
+    totalLikes: 4,
+    totalReads: 9,
+  })
+  vi.spyOn(aggregateService, 'getTopArticles').mockResolvedValue([
+    { id: postId, title: 'Why the Desk Endpoint Matters' } as any,
+  ])
+
   aggregateModule.providers!.push({
     provide: AggregateService,
     useValue: aggregateService,
@@ -295,67 +338,83 @@ describe('AggregateController — GET /aggregate/desk (e2e)', () => {
   })
 })
 
-describe('AggregateController — GET /aggregate/on-this-day (e2e)', () => {
+describe('AggregateController — GET /aggregate/dashboard (e2e)', () => {
   it('rejects anonymous callers with 401', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: `${apiRoutePrefix}/aggregate/on-this-day`,
+      url: `${apiRoutePrefix}/aggregate/dashboard`,
     })
 
     expect(res.statusCode).toBe(401)
   })
 
-  it('returns prior-year entries newest first, excluding this year', async () => {
+  it('returns every dashboard section in one payload', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: `${apiRoutePrefix}/aggregate/on-this-day`,
+      url: `${apiRoutePrefix}/aggregate/dashboard`,
       headers: authPassHeader,
     })
 
     expect(res.statusCode).toBe(200)
     const { data } = res.json()
 
-    expect(data).toHaveLength(2)
-    expect(data[0]).toMatchObject({
+    expect(data.owner_name).toBe('Desk Owner')
+    expect(data.stat).toMatchObject({
+      posts: 3,
+      call_time: 42,
+      uv: 7,
+      today_ip_access_count: 2,
+    })
+    expect(data.reads).toEqual({ total_likes: 4, total_reads: 9 })
+    expect(data.desk.unread_comments.count).toBe(1)
+    expect(data.desk.scheduled_notes).toHaveLength(1)
+    expect(data.drafts).toEqual([{ id: 'd1', page: 1, size: 5 }])
+    expect(data.top_articles).toEqual([
+      { id: postId, title: 'Why the Desk Endpoint Matters' },
+    ])
+    expect(data.recent).toEqual({
+      comment: [{ id: 'c1', author: 'Jane Reader' }],
+      like: [{ id: 'l1', title: 'Liked Post' }],
+    })
+    expect(data.traffic_today).toHaveLength(48)
+  })
+
+  it('lists prior-year entries newest first, excluding this year', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/aggregate/dashboard`,
+      headers: authPassHeader,
+    })
+    const { on_this_day: onThisDay } = res.json().data
+
+    expect(onThisDay).toHaveLength(2)
+    expect(onThisDay[0]).toMatchObject({
       id: onThisDayPostId,
       type: 'post',
       title: 'Two Years Ago Today',
       excerpt: 'a'.repeat(80),
     })
-    expect(data[1]).toMatchObject({
+    expect(onThisDay[1]).toMatchObject({
       id: onThisDayNoteId,
       type: 'note',
       title: 'Three Years Ago Today',
       excerpt: 'that day note body',
     })
-    expect(data.some((entry: any) => entry.id === postId)).toBe(false)
-  })
-})
-
-describe('AggregateController — GET /aggregate/publish-heatmap (e2e)', () => {
-  it('rejects anonymous callers with 401', async () => {
-    const res = await proxy.app.inject({
-      method: 'GET',
-      url: `${apiRoutePrefix}/aggregate/publish-heatmap`,
-    })
-
-    expect(res.statusCode).toBe(401)
+    expect(onThisDay.some((entry: any) => entry.id === postId)).toBe(false)
   })
 
   it('counts published posts and notes per day within the trailing year', async () => {
     const res = await proxy.app.inject({
       method: 'GET',
-      url: `${apiRoutePrefix}/aggregate/publish-heatmap`,
+      url: `${apiRoutePrefix}/aggregate/dashboard`,
       headers: authPassHeader,
     })
+    const { publish_heatmap: heatmap } = res.json().data
 
-    expect(res.statusCode).toBe(200)
-    const { data } = res.json()
-
-    expect(data).toHaveLength(1)
-    expect(data[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-    expect(data[0].count).toBe(3)
-    expect(data[0].posts).toBe(1)
-    expect(data[0].notes).toBe(2)
+    expect(heatmap).toHaveLength(1)
+    expect(heatmap[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(heatmap[0].count).toBe(3)
+    expect(heatmap[0].posts).toBe(1)
+    expect(heatmap[0].notes).toBe(2)
   })
 })

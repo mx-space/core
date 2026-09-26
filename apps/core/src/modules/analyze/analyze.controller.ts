@@ -98,25 +98,7 @@ export class AnalyzeController {
     return this.getOrSetCache(cacheKey, 60, async () => {
       const getIpAndPvAggregate = async () => {
         const now = new Date()
-        const todayEarly = getTodayEarly(now)
-        const day = await this.service.getIpAndPvAggregateByRange(
-          {
-            from: todayEarly,
-            to: now,
-            granularity: 'hour',
-          },
-          true,
-        )
-
-        const dayData = Array.from({ length: 24 }, (_, i) => {
-          const hour = i.toString().padStart(2, '0')
-          const bucket = day[hour]
-          const label = `${i}:00`
-          return [
-            { hour: label, key: 'ip', value: bucket?.ip || 0 },
-            { hour: label, key: 'pv', value: bucket?.pv || 0 },
-          ]
-        })
+        const dayData = await this.service.getTodayHourly(now)
 
         const rangeStart = dayjs().subtract(29, 'day').startOf('day').toDate()
         const all = (await this.service.getIpAndPvAggregateByRange({
@@ -158,7 +140,7 @@ export class AnalyzeController {
           getIpAndPvAggregate(),
         ])
       return {
-        today: dayData.flat(),
+        today: dayData,
         weeks: weekData.flat(),
         months: monthData.flat(),
         paths,

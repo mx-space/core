@@ -303,29 +303,11 @@ export class ActivityController {
 
   @Get('/recent')
   async getRecentActivities(@Lang() lang?: string) {
-    const [like, comment, recentPublish] = await Promise.all([
-      this.service.getLikeActivities(1, 5),
+    const [transformedLike, comment, recentPublish] = await Promise.all([
+      this.service.getRecentLikes(),
       this.service.getRecentComment(),
       this.service.getRecentPublish(),
     ])
-
-    const transformedLike = like.data.map((item) => {
-      const likeData = pick(item, 'createdAt', 'id') as any
-      if (!item.ref) {
-        likeData.title = 'Deleted content'
-        return likeData
-      }
-      if ('nid' in item.ref) {
-        likeData.type = CollectionRefTypes.Note
-        likeData.nid = item.ref.nid
-      } else {
-        likeData.type = CollectionRefTypes.Post
-        likeData.slug = item.ref.slug
-      }
-      likeData.title = item.ref.title
-      likeData.articleId = (item.payload as { id?: string } | null)?.id
-      return likeData
-    })
 
     const post = recentPublish.post as any[]
     const note = recentPublish.note as any[]

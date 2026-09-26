@@ -1,5 +1,5 @@
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager'
-import { Get, Query } from '@nestjs/common'
+import { forwardRef, Get, Inject, Query } from '@nestjs/common'
 import { merge, omit } from 'es-toolkit/compat'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -16,9 +16,11 @@ import {
   TranslationService,
 } from '~/processors/helper/helper.translation.service'
 
+import { ActivityService } from '../activity/activity.service'
 import { TranslationEntryService } from '../ai/ai-translation/translation-entry.service'
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
+import { DraftService } from '../draft/draft.service'
 import { NoteService } from '../note/note.service'
 import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
@@ -37,6 +39,8 @@ import {
 } from './aggregate.schema'
 import { AggregateService } from './aggregate.service'
 import { resolveSeo } from './resolve-seo.util'
+
+const dashboardDraftLimit = 5
 
 type TitledItem = {
   id: string
@@ -70,6 +74,10 @@ export class AggregateController {
     private readonly ownerService: OwnerService,
     private readonly translationService: TranslationService,
     private readonly translationEntryService: TranslationEntryService,
+    @Inject(forwardRef(() => ActivityService))
+    private readonly activityService: ActivityService,
+    @Inject(forwardRef(() => DraftService))
+    private readonly draftService: DraftService,
   ) {}
 
   private async getThemeConfig(theme?: string, lang?: string) {
@@ -362,7 +370,64 @@ export class AggregateController {
 
   @Get('/stat')
   @Auth()
-  async stat() {
+  stat() {
+    return this.buildStat()
+  }
+
+  @Get('/desk')
+  @Auth()
+  async desk() {
+    return await this.aggregateService.getDesk()
+  }
+
+  @Get('/dashboard')
+  @Auth()
+  async dashboard() {
+    const [
+      ownerName,
+      stat,
+      reads,
+      desk,
+      drafts,
+      onThisDay,
+      publishHeatmap,
+      topArticles,
+      recentComments,
+      recentLikes,
+      trafficToday,
+    ] = await Promise.all([
+      this.ownerService
+        .getOwner()
+        .then((owner) => owner.name ?? null)
+        .catch(() => null),
+      this.buildStat(),
+      this.aggregateService.getAllReadAndLikeCount(
+        ReadAndLikeCountDocumentType.All,
+      ),
+      this.aggregateService.getDesk(),
+      this.draftService.list(1, dashboardDraftLimit),
+      this.aggregateService.getOnThisDay(),
+      this.aggregateService.getPublishHeatmap(),
+      this.aggregateService.getTopArticles(),
+      this.activityService.getRecentComment(),
+      this.activityService.getRecentLikes(),
+      this.analyzeService.getTodayHourly(),
+    ])
+    return {
+      ownerName,
+      stat,
+      reads,
+      desk,
+      drafts: drafts.data,
+      onThisDay,
+      publishHeatmap,
+      topArticles,
+      recent: { comment: recentComments, like: recentLikes },
+      trafficToday,
+    }
+  }
+
+  private async buildStat() {
     const [count, callTime, todayIpAccess] = await Promise.all([
       this.aggregateService.getCounts(),
       this.analyzeService.getCallTime(),
@@ -373,24 +438,6 @@ export class AggregateController {
       ...callTime,
       todayIpAccessCount: todayIpAccess.length,
     }
-  }
-
-  @Get('/desk')
-  @Auth()
-  async desk() {
-    return await this.aggregateService.getDesk()
-  }
-
-  @Get('/on-this-day')
-  @Auth()
-  async onThisDay() {
-    return await this.aggregateService.getOnThisDay()
-  }
-
-  @Get('/publish-heatmap')
-  @Auth()
-  async publishHeatmap() {
-    return await this.aggregateService.getPublishHeatmap()
   }
 
   @Get('/count_read_and_like')

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { ActivityController } from '~/modules/activity/activity.controller'
+import { ActivityService } from '~/modules/activity/activity.service'
 
 const NOW = new Date('2024-01-01')
 
@@ -70,6 +71,9 @@ const createController = (opts: {
     getLikeActivities: vi.fn(async () => ({
       data: opts.recent?.likeData ?? [],
     })),
+    getRecentLikes(this: any) {
+      return ActivityService.prototype.getRecentLikes.call(this)
+    },
     getRecentComment: vi.fn(async () => opts.recent?.comment ?? []),
     getRecentPublish: vi.fn(
       async () =>
