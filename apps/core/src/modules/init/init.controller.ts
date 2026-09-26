@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Get,
   HttpCode,
@@ -10,19 +9,17 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
-import {
-  FileInterceptor,
-  type UploadedMultipartFile,
-} from '@nestjs/platform-fastify'
+import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { isZipMinetype } from '~/utils/mine.util'
+import { ZipUploadInterceptor } from '~/common/interceptors/zip-upload.interceptor'
+import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
 
 import { BackupService } from '../backup/backup.service'
 import { ConfigsService } from '../configs/configs.service'
 import { type ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
-import { InitGuard, InitRestoreGuard } from './init.guard'
+import { InitGuard } from './init.guard'
 import { type InitOwnerCreateDto, InitOwnerCreateSchema } from './init.schema'
 import { InitService } from './init.service'
 
@@ -79,30 +76,16 @@ export class InitController {
 
   @Post('/restore')
   @HttpCode(200)
-  @UseGuards(InitRestoreGuard)
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: 1024 * 1024 * 100 },
-      fileFilter: (_req, file, done) => {
-        if (!isZipMinetype(file.mimetype)) {
-          done(
-            createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, {
-              got: file.mimetype,
-            }),
-            false,
-          )
-          return
-        }
-        done(null, true)
-      },
-    }),
+    ZipUploadInterceptor((got) =>
+      createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, { got }),
+    ),
   )
-  async uploadAndRestore(@UploadedFile() data?: UploadedMultipartFile) {
+  async uploadAndRestore(
+    @UploadedFile(requiredFilePipe) data: UploadedMultipartFile,
+  ) {
     await this.assertNotInitialized()
-    if (!data?.buffer) {
-      throw new BadRequestException('Only file uploads are accepted!')
-    }
-    await this.backupService.saveTempBackupByUpload(data.buffer)
+    await this.backupService.saveTempBackupByUpload(data.buffer!)
 
     return
   }

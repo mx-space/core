@@ -150,6 +150,7 @@ export type AppErrorPayloadMap = {
   [AppErrorCode.FILE_STORAGE_NOT_CONFIGURED]: undefined
   [AppErrorCode.FILE_UPLOAD_DISABLED]: undefined
   [AppErrorCode.FILE_UPLOAD_NOT_AUTHORIZED]: undefined
+  [AppErrorCode.FILE_REQUIRED]: undefined
   [AppErrorCode.MIME_ZIP_REQUIRED]: { got?: string } | undefined
 
   // init

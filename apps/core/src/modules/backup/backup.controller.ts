@@ -1,7 +1,6 @@
 import { Readable } from 'node:stream'
 
 import {
-  BadRequestException,
   Body,
   Delete,
   Get,
@@ -14,16 +13,14 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
-import {
-  FileInterceptor,
-  type UploadedMultipartFile,
-} from '@nestjs/platform-fastify'
+import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { isZipMinetype } from '~/utils/mine.util'
+import { ZipUploadInterceptor } from '~/common/interceptors/zip-upload.interceptor'
+import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
 import { getMediumDateTime } from '~/utils/time.util'
 
 import { BackupService } from './backup.service'
@@ -72,27 +69,14 @@ export class BackupController {
   @Post(['/rollback/', '/'])
   @HttpCode(200)
   @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: 1024 * 1024 * 100 },
-      fileFilter: (_req, file, done) => {
-        if (!isZipMinetype(file.mimetype)) {
-          done(
-            createAppException(AppErrorCode.MIME_ZIP_REQUIRED, {
-              got: `got: ${file.mimetype}`,
-            }),
-            false,
-          )
-          return
-        }
-        done(null, true)
-      },
-    }),
+    ZipUploadInterceptor((got) =>
+      createAppException(AppErrorCode.MIME_ZIP_REQUIRED, { got }),
+    ),
   )
-  async uploadAndRestore(@UploadedFile() data?: UploadedMultipartFile) {
-    if (!data?.buffer) {
-      throw new BadRequestException('Only file uploads are accepted!')
-    }
-    await this.backupService.saveTempBackupByUpload(data.buffer)
+  async uploadAndRestore(
+    @UploadedFile(requiredFilePipe) data: UploadedMultipartFile,
+  ) {
+    await this.backupService.saveTempBackupByUpload(data.buffer!)
   }
   @Patch(['/rollback/:dirname', '/:dirname'])
   async rollback(@Param('dirname') dirname: string) {

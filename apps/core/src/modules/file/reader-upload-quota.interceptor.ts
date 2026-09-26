@@ -12,6 +12,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 import { ReaderRepository } from '~/modules/reader/reader.repository'
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 
+import { resolveCommentUploadConfig } from './comment-upload.service'
 import { FileReferenceService } from './file-reference.service'
 
 @Injectable()
@@ -34,14 +35,14 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
     }
 
     const config = await this.configsService.get('commentUploadOptions')
-    request.commentUploadMaxFileSize =
-      (config.singleFileSizeMB ?? 5) * 1024 * 1024
+    const { enable, singleFileSizeMB } = resolveCommentUploadConfig(config)
+    if (!enable) {
+      throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
+    }
+    request.commentUploadMaxFileSize = singleFileSizeMB * 1024 * 1024
 
-    const handleUpload = () => {
-      if (config.enable === false) {
-        throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
-      }
-      return next.handle().pipe(
+    const handleUpload = () =>
+      next.handle().pipe(
         catchError((error: unknown) => {
           if (error instanceof PayloadTooLargeException) {
             throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
@@ -49,7 +50,6 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
           throw error
         }),
       )
-    }
 
     if (request.user?.role === 'owner') {
       return handleUpload()

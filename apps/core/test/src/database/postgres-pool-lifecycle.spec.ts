@@ -6,6 +6,7 @@ import { PG_POOL_TOKEN } from '~/constants/system.constant'
 import {
   __setTestPostgresInstance,
   type AppDatabase,
+  createPool,
   db,
   disposePool,
   PostgresPoolLifecycle,
@@ -34,16 +35,41 @@ describe('PostgreSQL pool shutdown', () => {
     __setTestPostgresInstance(null, null)
   })
 
-  it('ends the cached pool on app.close and clears its database reference', async () => {
+  it('ends the cached pool on app.close without replacing it', async () => {
     const { pool, end } = makePool()
-    __setTestPostgresInstance(pool, {} as AppDatabase)
+    const cachedDb = { query: {} } as AppDatabase
+    __setTestPostgresInstance(pool, cachedDb)
     const app = await createApp(pool)
 
     await app.close()
+
+    expect(end).toHaveBeenCalledTimes(1)
+    expect(await createPool()).toBe(pool)
+    expect(db.query).toBe(cachedDb.query)
+
     await disposePool()
 
     expect(end).toHaveBeenCalledTimes(1)
     expect(() => db.query).toThrow('before initialization')
+  })
+
+  it('stops waiting for a pool that never drains', async () => {
+    vi.useFakeTimers()
+    try {
+      const pool = {
+        end: () => new Promise<void>(() => {}),
+        totalCount: 1,
+        idleCount: 0,
+      } as unknown as Pool
+      __setTestPostgresInstance(pool, {} as AppDatabase)
+
+      const disposing = disposePool()
+      await vi.advanceTimersByTimeAsync(5_000)
+
+      await expect(disposing).resolves.toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('keeps a shared pool open until the last app closes', async () => {

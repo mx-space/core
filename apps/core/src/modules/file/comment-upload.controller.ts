@@ -7,6 +7,7 @@ import {
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { ReaderAuth } from '~/common/decorators/reader-auth.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 import { CommentUploadService } from './comment-upload.service'
@@ -27,13 +28,13 @@ export class CommentUploadController {
     ReaderUploadQuotaInterceptor,
     FileInterceptor('file', {
       limits: (req: FastifyBizRequest) => ({
-        fileSize: req.commentUploadMaxFileSize ?? 5 * 1024 * 1024,
+        fileSize: req.commentUploadMaxFileSize!,
       }),
     }),
   )
   async upload(
     @Req() req: FastifyBizRequest,
-    @UploadedFile() file?: UploadedMultipartFile,
+    @UploadedFile(requiredFilePipe) file: UploadedMultipartFile,
   ) {
     const readerId = req.readerId || req.user?.id
     if (!readerId) {

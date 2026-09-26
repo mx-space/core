@@ -18,6 +18,10 @@ import {
 import { Test } from '@nestjs/testing'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { AppErrorCode, createAppException } from '~/common/errors'
+import { ZipUploadInterceptor } from '~/common/interceptors/zip-upload.interceptor'
+import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
+
 @Controller('upload-probe')
 class UploadProbeController {
   @Post()
@@ -31,6 +35,16 @@ class UploadProbeController {
     }
   }
 
+  @Post('zip')
+  @UseInterceptors(
+    ZipUploadInterceptor((got) =>
+      createAppException(AppErrorCode.MIME_ZIP_REQUIRED, { got }),
+    ),
+  )
+  zip(@UploadedFile(requiredFilePipe) file: UploadedMultipartFile) {
+    return { size: file.size }
+  }
+
   @Get('cookie')
   cookie(@Cookies('session') session?: string) {
     return { session }
@@ -40,8 +54,8 @@ class UploadProbeController {
 @Module({ controllers: [UploadProbeController] })
 class UploadProbeModule {}
 
-function multipart(field: string, value: string) {
-  return `--boundary\r\nContent-Disposition: form-data; name="${field}"; filename="test.txt"\r\nContent-Type: text/plain\r\n\r\n${value}\r\n--boundary--\r\n`
+function multipart(field: string, value: string, contentType = 'text/plain') {
+  return `--boundary\r\nContent-Disposition: form-data; name="${field}"; filename="test.txt"\r\nContent-Type: ${contentType}\r\n\r\n${value}\r\n--boundary--\r\n`
 }
 
 describe('Nest 12.1 Fastify upload and cookie integration', () => {
@@ -97,6 +111,23 @@ describe('Nest 12.1 Fastify upload and cookie integration', () => {
 
     expect(wrongField.statusCode).toBe(400)
     expect(tooLarge.statusCode).toBe(413)
+  })
+
+  it('accepts zip archives only and requires a file', async () => {
+    const headers = { 'content-type': 'multipart/form-data; boundary=boundary' }
+    const inject = (payload: string) =>
+      app.inject({ method: 'POST', url: '/upload-probe/zip', headers, payload })
+
+    const zip = await inject(multipart('file', 'PK', 'application/zip'))
+    const text = await inject(multipart('file', 'PK'))
+    const missing = await inject(
+      `--boundary\r\nContent-Disposition: form-data; name="note"\r\n\r\nx\r\n--boundary--\r\n`,
+    )
+
+    expect(zip.statusCode).toBe(201)
+    expect(text.statusCode).toBe(422)
+    expect(missing.statusCode).toBe(400)
+    expect(missing.body).toContain(AppErrorCode.FILE_REQUIRED)
   })
 
   it('reads a cookie without registering @fastify/cookie', async () => {

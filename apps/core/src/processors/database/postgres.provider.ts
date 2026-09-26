@@ -23,6 +23,8 @@ export type AppDatabase = NodePgDatabase<DrizzleSchema>
 
 const logger = new Logger('PostgresProvider')
 
+const POOL_END_TIMEOUT_MS = 5_000
+
 let cachedPool: PgPool | null = null
 let cachedDb: AppDatabase | null = null
 const poolOwners = new WeakMap<PgPool, number>()
@@ -157,21 +159,41 @@ export async function assertSchemaCurrent(
 }
 
 export async function disposePool(): Promise<void> {
-  if (cachedPool) await closePool(cachedPool)
+  const pool = cachedPool
+  cachedPool = null
+  cachedDb = null
+  if (pool) await closePool(pool)
 }
 
+// The cached pool is intentionally left in place after it ends: work that
+// outlives app.close() then fails on the ended pool instead of silently
+// opening a new one nothing will ever close. Only disposePool() resets it.
 function closePool(pool: PgPool): Promise<void> {
   const closing = closingPools.get(pool)
   if (closing) return closing
 
-  if (cachedPool === pool) {
-    cachedPool = null
-    cachedDb = null
-  }
-
-  const result = Promise.resolve().then(() => pool.end())
+  const result = endPool(pool)
   closingPools.set(pool, result)
   return result
+}
+
+async function endPool(pool: PgPool): Promise<void> {
+  let timer: NodeJS.Timeout | undefined
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(resolve, POOL_END_TIMEOUT_MS, 'timeout')
+    timer.unref()
+  })
+  try {
+    const outcome = await Promise.race([pool.end(), timeout])
+    if (outcome === 'timeout') {
+      logger.warn(
+        `PostgreSQL pool did not drain within ${POOL_END_TIMEOUT_MS}ms; ` +
+          `${pool.totalCount - pool.idleCount} client(s) still checked out`,
+      )
+    }
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 @Injectable()

@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream'
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 import { fileTypeFromBuffer } from 'file-type'
 
@@ -48,7 +48,7 @@ async function detectImageMime(
   return { mime: result.mime, ext: `.${result.ext}` }
 }
 
-function resolveCommentUploadConfig(config: {
+export function resolveCommentUploadConfig(config: {
   enable?: boolean
   singleFileSizeMB?: number
   commentImageMaxCount?: number
@@ -82,29 +82,16 @@ export class CommentUploadService {
   }
 
   async uploadForReader(
-    file: UploadedMultipartFile | undefined,
+    file: UploadedMultipartFile,
     readerId: string,
   ): Promise<ReaderUploadResult> {
-    const rawConfig = await this.configsService.get('commentUploadOptions')
-    if (rawConfig.enable === false) {
-      throw createAppException(AppErrorCode.COMMENT_UPLOAD_DISABLED)
-    }
+    const { mimeWhitelist: whitelist, pendingTtlMinutes } =
+      resolveCommentUploadConfig(
+        await this.configsService.get('commentUploadOptions'),
+      )
 
-    const {
-      singleFileSizeMB,
-      mimeWhitelist: whitelist,
-      pendingTtlMinutes,
-    } = resolveCommentUploadConfig(rawConfig)
-    const maxFileSize = singleFileSizeMB * 1024 * 1024
-
-    if (!file?.buffer) {
-      throw new BadRequestException('Only file uploads are accepted!')
-    }
-    const buffer = file.buffer
+    const buffer = file.buffer!
     const totalBytes = file.size
-    if (totalBytes > maxFileSize) {
-      throw createAppException(AppErrorCode.COMMENT_UPLOAD_FILE_TOO_LARGE)
-    }
 
     const detected = await detectImageMime(buffer)
     if (!detected || !whitelist.includes(detected.mime)) {

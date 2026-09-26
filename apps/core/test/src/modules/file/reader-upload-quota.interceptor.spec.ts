@@ -8,10 +8,10 @@ import { ReaderUploadQuotaInterceptor } from '~/modules/file/reader-upload-quota
 import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 describe('ReaderUploadQuotaInterceptor', () => {
-  it('rejects disabled uploads before parsing the multipart body', async () => {
+  it('rejects disabled uploads before quota queries or body parsing', async () => {
     const request = {
       readerId: 'reader-1',
-      user: { role: 'owner' },
+      user: { role: 'reader' },
     } as FastifyBizRequest
     const context = {
       switchToHttp: () => ({ getRequest: () => request }),
