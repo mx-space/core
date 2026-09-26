@@ -1,7 +1,11 @@
-import type { DraftModel } from '~/models/draft'
+import type { ContentDocument, DraftModel } from '~/models/draft'
 import { DraftRefType as DraftRefTypeValue } from '~/models/draft'
 
-export function getEditPathForDraft(draft: DraftModel) {
+export function getEditPathForDraft(
+  draft: Pick<DraftModel, 'id'> & {
+    document: Pick<ContentDocument, 'refId' | 'refType'>
+  },
+) {
   const basePath =
     draft.document.refType === DraftRefTypeValue.Post
       ? '/posts/edit'

@@ -1,7 +1,6 @@
-import type { DraftModel } from '~/models/draft'
+import type { ContentDocument, DraftModel } from '~/models/draft'
 
 import type { RecentActivities } from './activity'
-import type { IPAggregate } from './analyze'
 import { getJson } from './http'
 
 export interface StatCount {
@@ -109,9 +108,20 @@ export interface HeatmapDay {
   posts: number
 }
 
+export interface DeskDraft {
+  createdAt: string
+  document: Pick<ContentDocument, 'refId' | 'refType'>
+  documentId: string
+  headRevision: { chars: number; excerpt: string; title: string }
+  id: string
+  relationToPublished: DraftModel['relationToPublished']
+  status: DraftModel['status']
+  updatedAt: null | string
+}
+
 export interface DashboardPayload {
   desk: DeskSummary
-  drafts: DraftModel[]
+  drafts: DeskDraft[]
   onThisDay: OnThisDayEntry[]
   ownerName: null | string
   publishHeatmap: HeatmapDay[]
@@ -119,7 +129,6 @@ export interface DashboardPayload {
   recent: RecentActivities
   stat: StatCount
   topArticles: TopArticle[]
-  trafficToday: IPAggregate['today']
 }
 
 export function getDashboard() {

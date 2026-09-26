@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { DraftModel } from '~/models/draft'
+import type { DeskDraft } from '~/api/aggregate'
 import { DraftRefType } from '~/models/draft'
 
 import { buildWritingItems } from './desk'
@@ -9,22 +9,27 @@ function draft(over: {
   documentId: string
   id: string
   refId?: string | null
-  relation?: DraftModel['relationToPublished']
-  text?: string
+  chars?: number
+  excerpt?: string
+  relation?: DeskDraft['relationToPublished']
   updatedAt: string
-}): DraftModel {
+}): DeskDraft {
   return {
     document: {
       refId: over.refId ?? null,
       refType: DraftRefType.Post,
     },
     documentId: over.documentId,
-    headRevision: { text: over.text ?? '', title: over.id },
+    headRevision: {
+      chars: over.chars ?? 0,
+      excerpt: over.excerpt ?? '',
+      title: over.id,
+    },
     id: over.id,
     relationToPublished: over.relation ?? null,
     status: 'active',
     updatedAt: over.updatedAt,
-  } as unknown as DraftModel
+  } as unknown as DeskDraft
 }
 
 describe('buildWritingItems', () => {
@@ -48,7 +53,8 @@ describe('buildWritingItems', () => {
         draft({
           documentId: 'doc-b',
           id: 'b1',
-          text: '  第一段\n\n second  line ',
+          chars: 13,
+          excerpt: '第一段 second line',
           updatedAt: '2026-09-12',
         }),
         draft({

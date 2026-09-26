@@ -2,6 +2,7 @@ import { adminQueryKeys } from '~/query/keys'
 
 export const dashboardQueryKeys = {
   aggregateStat: adminQueryKeys.dashboard.aggregateStat(),
+  analyzeAggregate: adminQueryKeys.analyze.aggregate(),
   appInfo: adminQueryKeys.dashboard.appInfo(),
   githubUpdate: adminQueryKeys.dashboard.githubUpdate(),
   home: adminQueryKeys.dashboard.home(),

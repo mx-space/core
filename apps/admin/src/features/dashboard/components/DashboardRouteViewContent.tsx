@@ -287,10 +287,7 @@ export function DashboardRouteViewContent() {
               systemVersion={systemVersion}
             />
           ) : null}
-          <DeskTrafficCard
-            className="phone:order-6"
-            today={home.trafficToday}
-          />
+          <DeskTrafficCard className="phone:order-6" />
           {echoRows.length > 0 ? (
             <DeskEchoCard className="phone:order-7" rows={echoRows} />
           ) : null}
