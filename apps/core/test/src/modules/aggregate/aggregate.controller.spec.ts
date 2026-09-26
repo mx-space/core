@@ -465,6 +465,45 @@ describe('AggregateController.top', () => {
     expect(res.data.notes[0].weather).toBe('Ensoleille')
   })
 
+  it('translates post category.name in place', async () => {
+    const post = makePost({
+      id: 'p1',
+      title: 'Japanese Article',
+      category: { id: 'cat1', name: '技术', slug: 'tech' },
+    })
+
+    const { controller, translationEntryService } = createController({
+      topActivityResult: { notes: [], posts: [post], says: [], recently: [] },
+      collectTranslations: {
+        results: new Map([
+          ['p1', { ...TRANSLATED_TITLE_RESULT, title: 'Article EN' }],
+        ]),
+        meta: new Map([['p1', makeTranslationMeta('p1')]]),
+      },
+      entryMaps: {
+        entityMaps: new Map([
+          ['category.name', new Map([['cat1', 'Technology']])],
+        ]),
+        dictMaps: new Map(),
+      },
+    })
+
+    const res = await controller.top({ size: 5 } as any, false, 'en')
+
+    expect(res.data.posts[0].category.name).toBe('Technology')
+    expect(translationEntryService.getTranslationsBatch).toHaveBeenCalledWith(
+      'en',
+      expect.objectContaining({
+        entityLookups: [
+          expect.objectContaining({
+            keyPath: 'category.name',
+            lookupKeys: ['cat1'],
+          }),
+        ],
+      }),
+    )
+  })
+
   it('returns raw result when no items are translated', async () => {
     const note = makeNote({ id: 'n1' })
 
@@ -510,7 +549,9 @@ describe('AggregateController.getLatest', () => {
         ]),
       },
       entryMaps: {
-        entityMaps: new Map(),
+        entityMaps: new Map([
+          ['category.name', new Map([['cat1', 'Technology']])],
+        ]),
         dictMaps: new Map([
           ['note.mood', new Map([['Happy', 'Happy EN']])],
           ['note.weather', new Map([['Clear', 'Clear EN']])],
@@ -527,6 +568,7 @@ describe('AggregateController.getLatest', () => {
     const noteItem = (res.data as any[]).find((i: any) => i.id === 'n1')
 
     expect(postItem.title).toBe('Post EN')
+    expect(postItem.category.name).toBe('Technology')
     expect(noteItem.title).toBe('Note EN')
     expect(noteItem.mood).toBe('Happy EN')
     expect(noteItem.weather).toBe('Clear EN')
@@ -553,6 +595,12 @@ describe('AggregateController.getLatest', () => {
           ['n1', makeTranslationMeta('n1')],
         ]),
       },
+      entryMaps: {
+        entityMaps: new Map([
+          ['category.name', new Map([['cat1', 'Technology']])],
+        ]),
+        dictMaps: new Map(),
+      },
     })
 
     const res = await controller.getLatest(
@@ -561,6 +609,7 @@ describe('AggregateController.getLatest', () => {
     )
 
     expect(res.data.posts[0].title).toBe('Post EN')
+    expect(res.data.posts[0].category.name).toBe('Technology')
     expect(res.data.notes[0].title).toBe('Note EN')
     expect(res.data.notes[1].title).toBe('Untranslated')
 

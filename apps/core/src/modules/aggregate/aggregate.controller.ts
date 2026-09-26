@@ -306,6 +306,7 @@ export class AggregateController {
       lang,
       allItems,
       notes,
+      categoryPosts: posts,
     })
 
     if (translationMeta.size === 0) return result
@@ -330,17 +331,18 @@ export class AggregateController {
     const notes: TitledItem[] = isCombined
       ? (result as TitledItem[]).filter((i) => i.type === 'note')
       : (((result as Record<string, any>).notes ?? []) as TitledItem[])
+    const posts: TitledItem[] = isCombined
+      ? (result as TitledItem[]).filter((i) => i.type === 'post')
+      : (((result as Record<string, any>).posts ?? []) as TitledItem[])
     const allItems: TitledItem[] = isCombined
       ? (result as TitledItem[])
-      : [
-          ...(((result as Record<string, any>).posts ?? []) as TitledItem[]),
-          ...notes,
-        ]
+      : [...posts, ...notes]
 
     const translationMeta = await this.translateTitledItems({
       lang,
       allItems,
       notes,
+      categoryPosts: posts,
     })
 
     if (translationMeta.size === 0) return result
