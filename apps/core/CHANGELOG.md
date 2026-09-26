@@ -1,3 +1,10 @@
+## [14.14.2](https://github.com/mx-space/core/compare/v14.14.1...v14.14.2) (2026-09-26)
+
+
+### Bug Fixes
+
+* **migration:** stop superseded branch versions from raising the waterline ([9d34f8c](https://github.com/mx-space/core/commit/9d34f8c7f764f3201301b8a0be19f44b3745e0b3))
+
 ## [14.14.1](https://github.com/mx-space/core/compare/v14.14.0...v14.14.1) (2026-09-26)
 
 
