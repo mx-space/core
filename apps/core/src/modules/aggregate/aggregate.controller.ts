@@ -21,6 +21,7 @@ import { TranslationEntryService } from '../ai/ai-translation/translation-entry.
 import { AnalyzeService } from '../analyze/analyze.service'
 import { ConfigsService } from '../configs/configs.service'
 import { DraftService } from '../draft/draft.service'
+import type { DraftBranchView } from '../draft/draft.types'
 import { NoteService } from '../note/note.service'
 import { OwnerService } from '../owner/owner.service'
 import { SnippetService } from '../snippet/snippet.service'
@@ -41,6 +42,31 @@ import { AggregateService } from './aggregate.service'
 import { resolveSeo } from './resolve-seo.util'
 
 const dashboardDraftLimit = 5
+const dashboardDraftExcerptLength = 240
+
+function toDeskDraft(draft: DraftBranchView) {
+  const text = draft.headRevision.text ?? ''
+  return {
+    id: draft.id,
+    documentId: draft.documentId,
+    status: draft.status,
+    relationToPublished: draft.relationToPublished,
+    createdAt: draft.createdAt,
+    updatedAt: draft.updatedAt,
+    document: {
+      refId: draft.document.refId,
+      refType: draft.document.refType,
+    },
+    headRevision: {
+      title: draft.headRevision.title,
+      excerpt: text
+        .replaceAll(/\s+/g, ' ')
+        .trim()
+        .slice(0, dashboardDraftExcerptLength),
+      chars: text.replaceAll(/\s/g, '').length,
+    },
+  }
+}
 
 type TitledItem = {
   id: string
@@ -394,7 +420,6 @@ export class AggregateController {
       topArticles,
       recentComments,
       recentLikes,
-      trafficToday,
     ] = await Promise.all([
       this.ownerService
         .getOwner()
@@ -411,19 +436,17 @@ export class AggregateController {
       this.aggregateService.getTopArticles(),
       this.activityService.getRecentComment(),
       this.activityService.getRecentLikes(),
-      this.analyzeService.getTodayHourly(),
     ])
     return {
       ownerName,
       stat,
       reads,
       desk,
-      drafts: drafts.data,
+      drafts: drafts.data.map(toDeskDraft),
       onThisDay,
       publishHeatmap,
       topArticles,
       recent: { comment: recentComments, like: recentLikes },
-      trafficToday,
     }
   }
 

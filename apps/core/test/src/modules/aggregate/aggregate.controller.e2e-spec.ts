@@ -68,11 +68,6 @@ const aggregateModule: ModuleMetadata = {
       useValue: {
         getCallTime: async () => ({ callTime: 42, uv: 7 }),
         getTodayAccessIp: async () => ['1.1.1.1', '2.2.2.2'],
-        getTodayHourly: async () =>
-          Array.from({ length: 24 }, (_, i) => [
-            { hour: `${i}:00`, key: 'ip', value: 0 },
-            { hour: `${i}:00`, key: 'pv', value: i === 9 ? 5 : 0 },
-          ]).flat(),
       },
     },
     { provide: NoteService, useValue: {} },
@@ -91,8 +86,25 @@ const aggregateModule: ModuleMetadata = {
     {
       provide: DraftService,
       useValue: {
-        list: async (page: number, size: number) => ({
-          data: [{ id: 'd1', page, size }],
+        list: async () => ({
+          data: [
+            {
+              id: 'd1',
+              documentId: 'doc1',
+              status: 'active',
+              relationToPublished: null,
+              createdAt: '2026-09-01T00:00:00.000Z',
+              updatedAt: '2026-09-02T00:00:00.000Z',
+              document: { id: 'doc1', refId: null, refType: 'post' },
+              baseRevision: { content: 'x'.repeat(1000) },
+              publishedRevision: null,
+              headRevision: {
+                title: 'Draft title',
+                text: '  第一段\n\n second  line ',
+                content: '{"root":{}}',
+              },
+            },
+          ],
           pagination: {},
         }),
       },
@@ -368,7 +380,22 @@ describe('AggregateController — GET /aggregate/dashboard (e2e)', () => {
     expect(data.reads).toEqual({ total_likes: 4, total_reads: 9 })
     expect(data.desk.unread_comments.count).toBe(1)
     expect(data.desk.scheduled_notes).toHaveLength(1)
-    expect(data.drafts).toEqual([{ id: 'd1', page: 1, size: 5 }])
+    expect(data.drafts).toEqual([
+      {
+        id: 'd1',
+        document_id: 'doc1',
+        status: 'active',
+        relation_to_published: null,
+        created_at: '2026-09-01T00:00:00.000Z',
+        updated_at: '2026-09-02T00:00:00.000Z',
+        document: { ref_id: null, ref_type: 'post' },
+        head_revision: {
+          title: 'Draft title',
+          excerpt: '第一段 second line',
+          chars: 13,
+        },
+      },
+    ])
     expect(data.top_articles).toEqual([
       { id: postId, title: 'Why the Desk Endpoint Matters' },
     ])
@@ -376,7 +403,7 @@ describe('AggregateController — GET /aggregate/dashboard (e2e)', () => {
       comment: [{ id: 'c1', author: 'Jane Reader' }],
       like: [{ id: 'l1', title: 'Liked Post' }],
     })
-    expect(data.traffic_today).toHaveLength(48)
+    expect(data).not.toHaveProperty('traffic_today')
   })
 
   it('lists prior-year entries newest first, excluding this year', async () => {
