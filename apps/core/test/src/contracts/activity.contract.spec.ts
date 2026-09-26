@@ -49,6 +49,9 @@ const activityServiceProvider = {
         },
       }
     },
+    getRecentLikes(this: ActivityService) {
+      return ActivityService.prototype.getRecentLikes.call(this)
+    },
     async getRecentComment() {
       return []
     },

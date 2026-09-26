@@ -13,10 +13,12 @@
 import { describe, expect, test } from 'vitest'
 
 import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
+import { ActivityService } from '~/modules/activity/activity.service'
 import { AggregateController } from '~/modules/aggregate/aggregate.controller'
 import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeService } from '~/modules/analyze/analyze.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { DraftService } from '~/modules/draft/draft.service'
 import { NoteService } from '~/modules/note/note.service'
 import { OwnerService } from '~/modules/owner/owner.service'
 import { SnippetService } from '~/modules/snippet/snippet.service'
@@ -73,6 +75,8 @@ const aggregateServiceProvider = {
 }
 
 const baseProviders = [
+  { provide: ActivityService, useValue: {} },
+  { provide: DraftService, useValue: {} },
   aggregateServiceProvider,
   translationProvider,
   translationEntryProvider,
