@@ -1,3 +1,10 @@
+## [14.14.4](https://github.com/mx-space/core/compare/v14.14.3...v14.14.4) (2026-09-26)
+
+
+### Performance Improvements
+
+* **aggregate:** trim the dashboard payload to what the home renders ([da2fde9](https://github.com/mx-space/core/commit/da2fde916ed8704865c18c6940d8cee54e21bb44))
+
 ## [14.14.3](https://github.com/mx-space/core/compare/v14.14.2...v14.14.3) (2026-09-26)
 
 
