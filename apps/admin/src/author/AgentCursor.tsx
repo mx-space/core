@@ -52,12 +52,15 @@ export function AgentCursor({
       setRect(element ? measure(element, cursor.offset) : null)
     }
     update()
+    let frame = 0
     const unregister = editor.registerUpdateListener(() => {
-      requestAnimationFrame(update)
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(update)
     })
     window.addEventListener('scroll', update, true)
     window.addEventListener('resize', update)
     return () => {
+      cancelAnimationFrame(frame)
       unregister()
       window.removeEventListener('scroll', update, true)
       window.removeEventListener('resize', update)

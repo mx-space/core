@@ -16,6 +16,11 @@ interface Props {
 
 const BATCH_MS = 100
 
+interface WireCursor {
+  id: `${number}@${number}`
+  offset: number
+}
+
 const decode = (base64: string): Uint8Array =>
   Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
 
@@ -32,6 +37,13 @@ export function LoroSyncPlugin({
     let sent: VersionVector | undefined = doc.oplogVersion()
     let timer: ReturnType<typeof setTimeout> | undefined
     let inFlight = false
+    let agentCursor: WireCursor | null = null
+    const showAgentCursor = () => {
+      const key = agentCursor ? binding.keyOf(agentCursor.id) : undefined
+      onAgentCursor(
+        key && agentCursor ? { key, offset: agentCursor.offset } : null,
+      )
+    }
 
     const send = async () => {
       timer = undefined
@@ -80,11 +92,12 @@ export function LoroSyncPlugin({
       onInvalid(invalid)
     })
     source.addEventListener('cursor', (event) => {
-      const { cursor } = JSON.parse((event as MessageEvent<string>).data) as {
-        cursor: { id: `${number}@${number}`; offset: number } | null
-      }
-      const key = cursor ? binding.keyOf(cursor.id) : undefined
-      onAgentCursor(key && cursor ? { key, offset: cursor.offset } : null)
+      agentCursor = (
+        JSON.parse((event as MessageEvent<string>).data) as {
+          cursor: WireCursor | null
+        }
+      ).cursor
+      showAgentCursor()
     })
     source.addEventListener('error', () => onStatus('offline'))
     source.addEventListener('open', () => {
@@ -104,6 +117,7 @@ export function LoroSyncPlugin({
             return
           }
           binding.import(decode(json.snapshot))
+          showAgentCursor()
           onInvalid(json.invalid)
           sent = undefined
           schedule()

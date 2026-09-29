@@ -9,7 +9,7 @@ import { extname, join, normalize, relative, sep } from 'node:path'
 import type { OpId } from 'loro-crdt'
 
 import type { AuthorDocument } from './document'
-import type { AuthorSession } from './session'
+import type { AuthorSelection, AuthorSession } from './session'
 
 export interface AuthorCodec {
   readonly litexmlToLexical: (xml: string) => unknown
@@ -109,6 +109,26 @@ const parseOpId = (value: unknown): OpId => {
   return { peer: peer as OpId['peer'], counter: count }
 }
 
+const parseSelection = (value: unknown): AuthorSelection => {
+  const { collapsed, text, blocks } = (value ?? {}) as Record<string, unknown>
+  if (
+    typeof collapsed !== 'boolean' ||
+    typeof text !== 'string' ||
+    !Array.isArray(blocks) ||
+    !blocks.every(
+      (block) =>
+        typeof block?.id === 'string' && typeof block?.text === 'string',
+    )
+  ) {
+    throw new Error('expected { collapsed, text, blocks: [{ id, text }] }')
+  }
+  return {
+    collapsed,
+    text,
+    blocks: blocks.map(({ id, text }) => ({ id, text })),
+  }
+}
+
 const handle = async (
   req: IncomingMessage,
   res: ServerResponse,
@@ -151,6 +171,13 @@ const handle = async (
         json(res, 200, { ok: true, diffPath: `${ctx.doc.filePath}.diff` })
         return
       }
+      case 'POST /api/selection': {
+        await ctx.session.writeSelection(
+          parseSelection(JSON.parse((await readBuffer(req)).toString('utf8'))),
+        )
+        json(res, 200, { ok: true })
+        return
+      }
       case 'GET /api/history': {
         json(res, 200, { entries: ctx.session.history() })
         return
@@ -180,6 +207,8 @@ const handle = async (
           connection: 'keep-alive',
         })
         res.write(': connected\n\n')
+        const cursor = ctx.session.cursor()
+        if (cursor) sendEvent(res, 'cursor', { cursor })
         live.client = res
         req.on('close', () => {
           if (live.client === res) live.client = null

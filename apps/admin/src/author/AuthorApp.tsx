@@ -7,6 +7,7 @@ import { AgentCursor, type AgentCursorPosition } from './AgentCursor'
 import { DiffNotePlugin } from './DiffNotePlugin'
 import { HistoryPanel } from './HistoryPanel'
 import { LoroSyncPlugin, type SyncStatus } from './LoroSyncPlugin'
+import { SelectionSyncPlugin } from './SelectionSyncPlugin'
 
 const extraNodes = [AgentDiffEditNode]
 
@@ -201,6 +202,7 @@ export function AuthorApp() {
               onInvalid={setInvalid}
               onAgentCursor={setAgentCursor}
             />
+            <SelectionSyncPlugin />
             <AgentCursor cursor={agentCursor} />
           </RichEditor>
         </div>

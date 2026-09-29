@@ -13,12 +13,13 @@ import {
   type LexicalEditor,
 } from 'lexical'
 import { LoroDoc } from 'loro-crdt'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { openAuthorDocument } from '../../../src/cli/author/document'
 import { nodeSessionFs } from '../../../src/cli/author/fs'
 import type { AuthorCodec } from '../../../src/cli/author/server'
 import {
+  type AgentCursor,
   type AuthorSession,
   createAuthorSession,
 } from '../../../src/cli/author/session'
@@ -71,7 +72,6 @@ describe('createAuthorSession', () => {
     dir?: string,
     timing: {
       stepDelayMs?: number
-      cursorLingerMs?: number
       writeDelayMs?: number
       fs?: typeof nodeSessionFs
     } = {
@@ -253,7 +253,6 @@ describe('createAuthorSession', () => {
   it('streams an agent edit as typed steps with an agent cursor', async () => {
     const { filePath, session } = await boot('<p>alpha</p>', undefined, {
       stepDelayMs: 1,
-      cursorLingerMs: 5,
     })
     const client = connect(session)
     const events: string[] = []
@@ -272,8 +271,28 @@ describe('createAuthorSession', () => {
       3,
     )
     expect(events).toContain('cursor')
-    expect(events.at(-1)).toBe('hide')
+    expect(events).not.toContain('hide')
     expect(texts(client.editor)[1]).toBe('streamed text '.repeat(6))
+  })
+
+  it('keeps the agent cursor at its last position after the stream ends', async () => {
+    const { filePath, session } = await boot('<p>alpha</p>')
+    const cursors: Array<AgentCursor | null> = []
+    session.subscribe((event) => {
+      if (event.type === 'cursor') cursors.push(event.cursor)
+    })
+    const agentText = '<p>alpha</p><p>beta</p>'
+    await writeFile(filePath, agentText)
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    try {
+      session.onFileText(agentText)
+      vi.advanceTimersByTime(4000)
+    } finally {
+      vi.useRealTimers()
+    }
+    expect(cursors.length).toBeGreaterThan(0)
+    expect(cursors).not.toContain(null)
+    expect(session.cursor()).toEqual(cursors.at(-1))
   })
 
   it('keeps an agent meta-only edit through later browser autosaves', async () => {

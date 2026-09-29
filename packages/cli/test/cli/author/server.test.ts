@@ -250,6 +250,58 @@ describe('startAuthorServer', () => {
     second.destroy()
   })
 
+  it('writes the browser selection to <file>.selection.json', async () => {
+    const { port, filePath } = await boot(
+      envelope('<p id="aaaa">first block</p><p id="bbbb">second block</p>'),
+    )
+    const selection = {
+      collapsed: false,
+      text: 'block\n\nsecond',
+      blocks: [
+        { id: 'aaaa', text: 'block' },
+        { id: 'bbbb', text: 'second' },
+      ],
+    }
+    const res = await rawRequest({
+      port,
+      method: 'POST',
+      url: '/api/selection',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(selection),
+    })
+    expect(res.status).toBe(200)
+    const written = JSON.parse(
+      await readFile(`${filePath}.selection.json`, 'utf8'),
+    ) as typeof selection & { updatedAt: string }
+    expect(written).toMatchObject(selection)
+    expect(new Date(written.updatedAt).toISOString()).toBe(written.updatedAt)
+    const bad = await rawRequest({
+      port,
+      method: 'POST',
+      url: '/api/selection',
+      body: JSON.stringify({ collapsed: 'no' }),
+    })
+    expect(bad.status).toBe(400)
+  })
+
+  it('replays the last agent cursor to a newly connected editor', async () => {
+    const { port, session, filePath } = await boot(envelope('<p>hi</p>'))
+    const agentText = envelope('<p>hi</p><p>agent</p>')
+    await writeFile(filePath, agentText)
+    session.onFileText(agentText)
+    const last = session.cursor()
+    expect(last).not.toBeNull()
+    const events: string[] = []
+    const stream = await new Promise<http.IncomingMessage>((resolve) => {
+      http.get({ host: '127.0.0.1', port, path: '/api/events' }, resolve).end()
+    })
+    stream.on('data', (chunk: Buffer) => events.push(chunk.toString()))
+    await expect
+      .poll(() => events.join(''))
+      .toContain(`event: cursor\ndata: ${JSON.stringify({ cursor: last })}`)
+    stream.destroy()
+  })
+
   it('lists history, previews, and restores an entry', async () => {
     const { port, session, filePath } = await boot(envelope('<p>one</p>'))
     const agentText = envelope('<p>two</p>')

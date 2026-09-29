@@ -39,6 +39,17 @@ export interface AgentCursor {
   readonly offset: number
 }
 
+export interface SelectedBlock {
+  readonly id: string
+  readonly text: string
+}
+
+export interface AuthorSelection {
+  readonly collapsed: boolean
+  readonly text: string
+  readonly blocks: readonly SelectedBlock[]
+}
+
 export type AuthorEvent =
   | { readonly type: 'update'; readonly bytes: Uint8Array }
   | { readonly type: 'status'; readonly invalid: string | null }
@@ -53,7 +64,6 @@ export interface AuthorSessionOptions {
   readonly writeDelayMs?: number
   readonly snapshotIntervalMs?: number
   readonly stepDelayMs?: number
-  readonly cursorLingerMs?: number
 }
 
 export interface AuthorSession {
@@ -67,6 +77,8 @@ export interface AuthorSession {
   readonly preview: (id: OpId) => LexicalState
   readonly restore: (id: OpId) => Promise<void>
   readonly invalid: () => string | null
+  readonly cursor: () => AgentCursor | null
+  readonly writeSelection: (selection: AuthorSelection) => Promise<void>
   readonly lineage: () => string
   readonly close: () => Promise<void>
 }
@@ -93,8 +105,8 @@ export async function createAuthorSession(
   const { doc, codec, fs, log = () => undefined } = options
   const writeDelayMs = options.writeDelayMs ?? 300
   const stepDelayMs = options.stepDelayMs ?? 35
-  const cursorLingerMs = options.cursorLingerMs ?? 4000
   const snapshotPath = `${doc.filePath}.loro`
+  const selectionPath = `${doc.filePath}.selection.json`
   const listeners = new Set<(event: AuthorEvent) => void>()
   const emit = (event: AuthorEvent) => {
     for (const listener of listeners) listener(event)
@@ -155,7 +167,8 @@ export async function createAuthorSession(
   let writing = Promise.resolve()
   let playing = Promise.resolve()
   let streaming = 0
-  let cursorTimer: NodeJS.Timeout | undefined
+  let lastCursor: AgentCursor | null = null
+  let selectionWrite = Promise.resolve()
 
   const applyRemote = (bytes: Uint8Array) => {
     binding.import(bytes)
@@ -186,17 +199,9 @@ export async function createAuthorSession(
     binding.import(step.update)
     emit({ type: 'update', bytes: step.update })
     if (step.cursor) {
-      clearTimeout(cursorTimer)
+      lastCursor = step.cursor
       emit({ type: 'cursor', cursor: step.cursor })
     }
-  }
-
-  const hideCursorLater = () => {
-    clearTimeout(cursorTimer)
-    cursorTimer = setTimeout(
-      () => emit({ type: 'cursor', cursor: null }),
-      cursorLingerMs,
-    )
   }
 
   const onFileText = (text: string) => {
@@ -220,7 +225,6 @@ export async function createAuthorSession(
     if (stepDelayMs === 0 && streaming === 0) {
       const { stats, steps } = prepareAgentEdit(baseText, text, target)
       for (const step of steps) applyStep(step)
-      hideCursorLater()
       scheduleWrite()
       log(`agent edit merged: ${stats}`)
       return
@@ -240,7 +244,6 @@ export async function createAuthorSession(
         log(`agent edit failed: ${messageOf(err)}`)
       } finally {
         streaming -= 1
-        hideCursorLater()
         scheduleWrite()
       }
     })
@@ -360,10 +363,25 @@ export async function createAuthorSession(
       return playing
     },
     invalid: () => invalidMessage,
+    cursor: () => lastCursor,
+    writeSelection: (selection) => {
+      const payload = JSON.stringify(
+        { updatedAt: new Date().toISOString(), ...selection },
+        null,
+        2,
+      )
+      const tmp = `${selectionPath}.tmp`
+      selectionWrite = selectionWrite
+        .catch(() => undefined)
+        .then(async () => {
+          await fs.writeFile(tmp, payload)
+          await fs.rename(tmp, selectionPath)
+        })
+      return selectionWrite
+    },
     lineage: () => loro.getTree(TREE_NAME).roots()[0]!.id,
     close: async () => {
       clearInterval(snapshotTimer)
-      clearTimeout(cursorTimer)
       await flush()
       await saveSnapshot()
       binding.dispose()
