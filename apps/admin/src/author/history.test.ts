@@ -11,6 +11,7 @@ const entry = (
   lamport: counter,
   timestamp,
   message,
+  deps: counter > 0 ? [{ peer: '1', counter: counter - 1 }] : [],
 })
 
 describe('groupHistory', () => {
@@ -24,6 +25,10 @@ describe('groupHistory', () => {
     expect(rows.map((row) => [row.kind, row.id.counter, row.count])).toEqual([
       ['human', 5, 3],
       ['human', 2, 1],
+    ])
+    expect(rows.map((row) => row.before)).toEqual([
+      [{ peer: '1', counter: 2 }],
+      [{ peer: '1', counter: 1 }],
     ])
   })
 

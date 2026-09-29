@@ -203,7 +203,7 @@ describe('createAuthorSession', () => {
     setBlockText(client, 0, 'alpha v2')
     const lengthBefore = session.history().length
     expect(
-      (session.preview(initial.id).root.children as unknown[]).length,
+      (session.preview([initial.id]).root.children as unknown[]).length,
     ).toBe(1)
     session.restore(initial.id)
     expect(texts(client.editor)).toEqual(['alpha'])

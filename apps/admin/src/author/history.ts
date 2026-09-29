@@ -8,6 +8,7 @@ export interface HistoryEntry {
   lamport: number
   timestamp: number
   message?: string
+  deps: HistoryId[]
 }
 
 export type HistoryKind = 'human' | 'agent' | 'session' | 'restore' | 'other'
@@ -18,6 +19,7 @@ export interface HistoryRow {
   message: string
   timestamp: number
   count: number
+  before: HistoryId[]
 }
 
 const HUMAN_IDLE_GAP_SECONDS = 60
@@ -42,6 +44,7 @@ export function groupHistory(entries: HistoryEntry[]): HistoryRow[] {
       oldestInGroup - entry.timestamp <= HUMAN_IDLE_GAP_SECONDS
     ) {
       last.count += 1
+      last.before = entry.deps
     } else {
       rows.push({
         id: entry.id,
@@ -49,6 +52,7 @@ export function groupHistory(entries: HistoryEntry[]): HistoryRow[] {
         message: entry.message ?? '',
         timestamp: entry.timestamp,
         count: 1,
+        before: entry.deps,
       })
     }
     oldestInGroup = entry.timestamp

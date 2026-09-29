@@ -67,6 +67,19 @@ export function AuthorApp() {
   const [agentCursor, setAgentCursor] = useState<AgentCursorPosition | null>(
     null,
   )
+  const [title, setTitle] = useState<string | null>(null)
+
+  useEffect(() => {
+    // ponytail: polls a tiny local endpoint because <meta> lives outside the Loro doc; push it over /api/events if meta edits need to be instant
+    const refresh = () =>
+      void fetch('/api/title')
+        .then((res) => res.json() as Promise<{ title: string | null }>)
+        .then((json) => setTitle(json.title))
+        .catch(() => {})
+    refresh()
+    const timer = setInterval(refresh, 3000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -189,7 +202,12 @@ export function AuthorApp() {
         </button>
       </header>
       <div className="flex min-h-0 flex-1">
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto pt-10 pb-24">
+          {title ? (
+            <h1 className="mx-auto mb-2 max-w-[700px] px-4 text-2xl font-semibold leading-snug">
+              {title}
+            </h1>
+          ) : null}
           <RichEditor
             theme={theme}
             variant={meta.variant}

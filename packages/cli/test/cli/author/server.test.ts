@@ -335,4 +335,47 @@ describe('startAuthorServer', () => {
     await session.flush()
     expect(await readFile(filePath, 'utf8')).toContain('<p>one</p>')
   })
+
+  it('serves the envelope title and follows meta edits', async () => {
+    const { port, session } = await boot(envelope('<p>one</p>'))
+    const title = async () =>
+      JSON.parse((await rawRequest({ port, url: '/api/title' })).body) as {
+        title: string | null
+      }
+    expect(await title()).toEqual({ title: 't' })
+    session.onFileText(
+      '<mxpost><meta><title>新标题</title></meta><content><p>one</p></content></mxpost>',
+    )
+    await session.settled()
+    expect(await title()).toEqual({ title: '新标题' })
+  })
+
+  it('previews the state before an entry so the panel can show its diff', async () => {
+    const { port, session } = await boot(envelope('<p>one</p>'))
+    session.onFileText(envelope('<p>two</p>'))
+    await session.settled()
+    const history = JSON.parse(
+      (await rawRequest({ port, url: '/api/history' })).body,
+    ) as {
+      entries: Array<{
+        id: { peer: string; counter: number }
+        message?: string
+        deps: Array<{ peer: string; counter: number }>
+      }>
+    }
+    const agent = history.entries.find((entry) =>
+      entry.message?.startsWith('agent'),
+    )!
+    const query = new URLSearchParams({
+      peer: agent.id.peer,
+      counter: String(agent.id.counter),
+      before: JSON.stringify(agent.deps),
+    })
+    const preview = JSON.parse(
+      (await rawRequest({ port, url: `/api/history/preview?${query}` })).body,
+    ) as { lexical: LexicalState; before: LexicalState }
+    expect(JSON.stringify(preview.before)).toContain('one')
+    expect(JSON.stringify(preview.before)).not.toContain('two')
+    expect(JSON.stringify(preview.lexical)).toContain('two')
+  })
 })

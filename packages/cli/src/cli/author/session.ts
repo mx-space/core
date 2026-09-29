@@ -32,6 +32,7 @@ export interface HistoryEntry {
   readonly lamport: number
   readonly timestamp: number
   readonly message: string | undefined
+  readonly deps: readonly OpId[]
 }
 
 export interface AgentCursor {
@@ -74,7 +75,7 @@ export interface AuthorSession {
   readonly flush: () => Promise<void>
   readonly settled: () => Promise<void>
   readonly history: () => HistoryEntry[]
-  readonly preview: (id: OpId) => LexicalState
+  readonly preview: (frontiers: readonly OpId[]) => LexicalState
   readonly restore: (id: OpId) => Promise<void>
   readonly invalid: () => string | null
   readonly cursor: () => AgentCursor | null
@@ -301,9 +302,9 @@ export async function createAuthorSession(
     options.snapshotIntervalMs ?? 5000,
   )
 
-  const preview = (id: OpId): LexicalState => {
+  const preview = (frontiers: readonly OpId[]): LexicalState => {
     const editorAt = createAuthorHeadlessEditor()
-    const unbind = createLoroBinding(editorAt, loro.forkAt([id]))
+    const unbind = createLoroBinding(editorAt, loro.forkAt([...frontiers]))
     unbind.dispose()
     return editorAt.getEditorState().toJSON() as unknown as LexicalState
   }
@@ -342,6 +343,7 @@ export async function createAuthorSession(
           lamport: change.lamport,
           timestamp: change.timestamp,
           message: change.message,
+          deps: change.deps,
         })),
     preview,
     restore: (id) => {
@@ -351,7 +353,7 @@ export async function createAuthorSession(
             loro,
             loro.frontiers(),
             createAuthorHeadlessEditor,
-            preview(id) as never,
+            preview([id]) as never,
             `restore ${id.counter}@${id.peer}`,
           ),
         )

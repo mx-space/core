@@ -8,6 +8,7 @@ import { extname, join, normalize, relative, sep } from 'node:path'
 
 import type { OpId } from 'loro-crdt'
 
+import { parseEnvelope } from '../../domain/envelope'
 import type { AuthorDocument } from './document'
 import type { AuthorSelection, AuthorSession } from './session'
 
@@ -109,6 +110,24 @@ const parseOpId = (value: unknown): OpId => {
   return { peer: peer as OpId['peer'], counter: count }
 }
 
+const titleOf = (doc: AuthorDocument): string | null => {
+  if (doc.kind !== 'envelope') return null
+  try {
+    const { title } = parseEnvelope(
+      doc.lastFileText,
+      doc.variant === 'note' ? 'note' : 'post',
+    ).meta
+    return typeof title === 'string' && title.trim() ? title.trim() : null
+  } catch {
+    return null
+  }
+}
+
+const parseFrontiers = (value: unknown): OpId[] => {
+  if (!Array.isArray(value)) throw new Error('expected [{ peer, counter }]')
+  return value.map(parseOpId)
+}
+
 const parseSelection = (value: unknown): AuthorSelection => {
   const { collapsed, text, blocks } = (value ?? {}) as Record<string, unknown>
   if (
@@ -150,6 +169,10 @@ const handle = async (
   const route = `${req.method} ${url.pathname}`
   try {
     switch (route) {
+      case 'GET /api/title': {
+        json(res, 200, { title: titleOf(ctx.doc) })
+        return
+      }
       case 'GET /api/document': {
         json(res, 200, {
           snapshot: Buffer.from(ctx.session.snapshot()).toString('base64'),
@@ -187,7 +210,14 @@ const handle = async (
           peer: url.searchParams.get('peer'),
           counter: url.searchParams.get('counter'),
         })
-        json(res, 200, { lexical: ctx.session.preview(id) })
+        const before = url.searchParams.get('before')
+        json(res, 200, {
+          lexical: ctx.session.preview([id]),
+          before:
+            before === null
+              ? null
+              : ctx.session.preview(parseFrontiers(JSON.parse(before))),
+        })
         return
       }
       case 'POST /api/history/restore': {

@@ -1,6 +1,9 @@
+import { mxLexicalToMarkdown } from '@mx-space/editor'
 import type { SerializedEditorState } from 'lexical'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
+import type { DiffRendererInstance } from '../features/drafts/types/drafts'
+import { ensureDiffHighlighter } from '../features/drafts/utils/diff-highlighter'
 import { RichRenderer } from '../vendor/rich-editor/core/RichRenderer'
 import {
   groupHistory,
@@ -38,10 +41,72 @@ const labelOf = (row: HistoryRow): string => {
 const sameId = (a: HistoryId | undefined, b: HistoryId) =>
   a?.peer === b.peer && a.counter === b.counter
 
+function ChangesView({
+  before,
+  after,
+}: {
+  before: SerializedEditorState
+  after: SerializedEditorState
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [empty, setEmpty] = useState(false)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const oldText = mxLexicalToMarkdown(before as never)
+    const newText = mxLexicalToMarkdown(after as never)
+    setEmpty(oldText === newText)
+    setError(null)
+    if (oldText === newText) return
+    let disposed = false
+    let instance: DiffRendererInstance | null = null
+    void import('@pierre/diffs')
+      .then(async ({ FileDiff, preloadHighlighter }) => {
+        await ensureDiffHighlighter(preloadHighlighter)
+        if (disposed) return
+        instance = new FileDiff({
+          diffIndicators: 'bars',
+          diffStyle: 'unified',
+          disableFileHeader: true,
+          overflow: 'wrap',
+          themeType: 'system',
+        }) as unknown as DiffRendererInstance
+        instance.render({
+          containerWrapper: container,
+          oldFile: { contents: oldText, name: 'before.md' },
+          newFile: { contents: newText, name: 'after.md' },
+        })
+      })
+      .catch((err: unknown) => {
+        if (!disposed)
+          setError(err instanceof Error ? err.message : String(err))
+      })
+    return () => {
+      disposed = true
+      instance?.cleanUp()
+      container.innerHTML = ''
+    }
+  }, [before, after])
+
+  if (empty) return <p className="text-xs text-fg-muted">这一步没有改动正文</p>
+  return (
+    <>
+      {error ? (
+        <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
+      ) : null}
+      <div ref={containerRef} className="-mx-3" />
+    </>
+  )
+}
+
 export function HistoryPanel({ theme, variant, onClose }: Props) {
   const [rows, setRows] = useState<HistoryRow[]>([])
   const [selected, setSelected] = useState<HistoryRow | null>(null)
   const [preview, setPreview] = useState<SerializedEditorState | null>(null)
+  const [before, setBefore] = useState<SerializedEditorState | null>(null)
+  const [view, setView] = useState<'changes' | 'full'>('changes')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -63,13 +128,19 @@ export function HistoryPanel({ theme, variant, onClose }: Props) {
   const select = async (row: HistoryRow) => {
     setSelected(row)
     setPreview(null)
+    setBefore(null)
     const query = new URLSearchParams({
       peer: row.id.peer,
       counter: String(row.id.counter),
+      before: JSON.stringify(row.before),
     })
     const res = await fetch(`/api/history/preview?${query}`)
-    const json = (await res.json()) as { lexical: SerializedEditorState }
+    const json = (await res.json()) as {
+      lexical: SerializedEditorState
+      before: SerializedEditorState | null
+    }
     setPreview(json.lexical)
+    setBefore(json.before)
   }
 
   const restore = async () => {
@@ -84,6 +155,7 @@ export function HistoryPanel({ theme, variant, onClose }: Props) {
       if (!res.ok) throw new Error(`restore failed (${res.status})`)
       setSelected(null)
       setPreview(null)
+      setBefore(null)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -137,7 +209,22 @@ export function HistoryPanel({ theme, variant, onClose }: Props) {
       {selected ? (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center gap-2 px-3 py-2">
-            <span className="flex-1 text-xs text-fg-muted">只读预览</span>
+            <div className="flex flex-1 gap-1 text-xs">
+              {(['changes', 'full'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setView(mode)}
+                  className={`rounded-sm px-2 py-0.5 ${
+                    view === mode
+                      ? 'bg-surface-inset text-fg'
+                      : 'text-fg-muted hover:text-fg'
+                  }`}
+                >
+                  {mode === 'changes' ? '这一步的改动' : '完整版本'}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               disabled={busy || !preview}
@@ -148,7 +235,9 @@ export function HistoryPanel({ theme, variant, onClose }: Props) {
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-3 pb-3">
-            {preview ? (
+            {preview && view === 'changes' && before ? (
+              <ChangesView before={before} after={preview} />
+            ) : preview ? (
               <RichRenderer theme={theme} value={preview} variant={variant} />
             ) : (
               <p className="text-xs text-fg-muted">加载中…</p>
