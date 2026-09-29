@@ -68,7 +68,7 @@
     "@earendil-works/pi-ai": "0.84.4",
     "@fastify/multipart": "10.1.2",
     "@fastify/static": "10.1.4",
-    "@haklex/rich-headless": "0.43.1",
+    "@haklex/rich-headless": "0.43.2",
     "@innei/message-engine": "0.4.1",
     "@innei/next-async": "0.4.0",
     "@innei/pretty-logger-nestjs": "1.0.0-beta.1",
