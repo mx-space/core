@@ -15,11 +15,13 @@ vi.mock('~/utils/s3.util', () => {
     .fn()
     .mockResolvedValue('https://cdn.example.com/f.bin')
   const setCustomDomain = vi.fn()
+  const objectExists = vi.fn().mockResolvedValue(false)
   return {
     S3Uploader: vi.fn(function (this: Record<string, unknown>) {
       this.uploadStream = uploadStream
       this.uploadBuffer = uploadBuffer
       this.setCustomDomain = setCustomDomain
+      this.objectExists = objectExists
     }),
   }
 })
@@ -253,7 +255,13 @@ describe('FileController', () => {
     })
 
     const controller = new FileController(
-      { writeFile, resolveFileUrl } as any,
+      {
+        writeFile,
+        resolveFileUrl,
+        resolveUniqueLocalName: vi.fn(
+          async (_type: string, name: string) => name,
+        ),
+      } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
       {} as any,
@@ -298,7 +306,14 @@ describe('FileController', () => {
     })
 
     const controller = new FileController(
-      { writeFile, deleteFile, resolveFileUrl: vi.fn() } as any,
+      {
+        writeFile,
+        deleteFile,
+        resolveFileUrl: vi.fn(),
+        resolveUniqueLocalName: vi.fn(
+          async (_type: string, name: string) => name,
+        ),
+      } as any,
       { getAndValidMultipartField } as any,
       { createPendingReference: vi.fn() } as any,
       {} as any,
@@ -358,6 +373,93 @@ describe('FileController', () => {
       url: 'https://cdn.example.com/v.mp4',
       name: expect.stringContaining('.mp4'),
     })
+  })
+
+  it('streams a video to a fresh S3 key when the templated key is taken', async () => {
+    vi.mocked(S3Uploader).mockImplementationOnce(function (this: any) {
+      this.uploadStream = vi.fn().mockResolvedValue('https://s3/v.mp4')
+      this.setCustomDomain = vi.fn()
+      this.objectExists = vi.fn(async (key: string) => key === 'clip.mp4')
+    } as any)
+    const get = vi.fn().mockImplementation((key: string) => {
+      if (key === 'fileUploadOptions') {
+        return Promise.resolve({
+          enableCustomNaming: true,
+          filenameTemplate: '{name}{ext}',
+        })
+      }
+      if (key === 'imageStorageOptions') {
+        return Promise.resolve({
+          enable: true,
+          endpoint: 'https://s3.example.com',
+          secretId: 'id',
+          secretKey: 'key',
+          bucket: 'bucket',
+        })
+      }
+      return Promise.reject(new Error(`Unexpected config key: ${key}`))
+    })
+    const controller = new FileController(
+      {} as any,
+      {
+        getAndValidMultipartField: vi.fn().mockResolvedValue({
+          filename: 'clip.mp4',
+          file: Readable.from(['video-bytes']),
+        }),
+      } as any,
+      { createPendingReference: vi.fn() } as any,
+      {} as any,
+      { get } as any,
+    )
+
+    const result = await controller.upload({ type: 'video' } as any, {} as any)
+
+    const uploader = vi.mocked(S3Uploader).mock.instances.at(-1) as any
+    const key = uploader.uploadStream.mock.calls[0][1] as string
+    expect(key).toMatch(/^clip-[\da-z]{6}\.mp4$/)
+    expect(result.name).toBe(key)
+  })
+
+  it('writes a local video under a free name when the templated name is taken', async () => {
+    const writeFile = vi.fn().mockResolvedValue(undefined)
+    const resolveUniqueLocalName = vi.fn().mockResolvedValue('clip-abc123.mp4')
+    const get = vi.fn().mockImplementation((key: string) => {
+      if (key === 'fileUploadOptions') {
+        return Promise.resolve({
+          enableCustomNaming: true,
+          filenameTemplate: '{name}{ext}',
+          pathTemplate: '{type}',
+        })
+      }
+      if (key === 'imageStorageOptions')
+        return Promise.resolve({ enable: false })
+      return Promise.reject(new Error(`Unexpected config key: ${key}`))
+    })
+    const controller = new FileController(
+      {
+        resolveFileUrl: vi.fn().mockResolvedValue('http://x/clip-abc123.mp4'),
+        resolveUniqueLocalName,
+        writeFile,
+      } as any,
+      {
+        getAndValidMultipartField: vi.fn().mockResolvedValue({
+          filename: 'clip.mp4',
+          file: Readable.from(['video-bytes']),
+        }),
+      } as any,
+      { createPendingReference: vi.fn() } as any,
+      {} as any,
+      { get } as any,
+    )
+
+    await controller.upload({ type: 'video' } as any, {} as any)
+
+    expect(resolveUniqueLocalName).toHaveBeenCalledWith('video', 'clip.mp4')
+    expect(writeFile).toHaveBeenCalledWith(
+      'video',
+      'clip-abc123.mp4',
+      expect.any(Readable),
+    )
   })
 
   it('delegates dry-run and apply reference reconciliation requests', async () => {

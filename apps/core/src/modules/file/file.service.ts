@@ -27,6 +27,7 @@ import {
   replaceFilenameTemplate,
 } from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
+import { resolveUniqueObjectKey } from '~/utils/unique-object-key.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import type { FileType } from './file.type'
@@ -101,6 +102,12 @@ export class FileService {
     })
   }
 
+  resolveUniqueLocalName(type: FileType, name: string) {
+    return resolveUniqueObjectKey(name, (candidate) =>
+      this.checkIsExist(this.resolveFilePath(type, candidate)),
+    )
+  }
+
   async writeTrackedOwnerFile(
     type: FileType,
     name: string,
@@ -110,32 +117,6 @@ export class FileService {
     const fileUrl = await this.resolveFileUrl(type, name)
     await this.fileReferenceService.createPendingReference(fileUrl, name)
     return fileUrl
-  }
-
-  updateFile(
-    type: FileType,
-    name: string,
-    data: Readable,
-    encoding?: BufferEncoding,
-  ) {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
-      const filePath = this.resolveFilePath(type, name)
-      if (!(await this.checkIsExist(filePath))) {
-        reject(createAppException(AppErrorCode.FILE_NOT_FOUND, { name }))
-        return
-      }
-      const writable = createWriteStream(filePath, { encoding })
-      data.pipe(writable)
-      writable.on('close', () => {
-        resolve(null)
-      })
-      writable.on('error', () => reject(null))
-      data.on('end', () => {
-        writable.end()
-      })
-      data.on('error', () => reject(null))
-    })
   }
 
   async deleteFile(type: FileType, name: string) {
@@ -300,6 +281,13 @@ export class FileService {
         s3Uploader.setCustomDomain(config.customDomain)
       }
 
+      if (!explicitObjectKey) {
+        objectKey = await resolveUniqueObjectKey(objectKey, (key) =>
+          s3Uploader.objectExists(key),
+        )
+        filename = path.posix.basename(objectKey)
+      }
+
       const s3Url = await s3Uploader.uploadBuffer(
         buffer,
         objectKey,
@@ -342,6 +330,7 @@ export class FileService {
           : basePath
         relativePath = path.join(pathWithoutType, rawFilename)
       }
+      relativePath = await this.resolveUniqueLocalName(type, relativePath)
     }
 
     const fileUrl = await this.writeTrackedOwnerFile(

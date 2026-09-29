@@ -642,3 +642,32 @@ describe('S3Uploader.uploadStream', () => {
     expect(partBodies[0].length).toBe(0)
   })
 })
+
+describe('S3Uploader.objectExists', () => {
+  const statusByKey: Record<string, number> = {
+    'image/taken.png': 200,
+    'image/free.png': 404,
+    'image/unknown.png': 403,
+  }
+
+  it('reports stored keys, and treats anything but 404 as taken', async () => {
+    const methods: string[] = []
+    const { uploader, close } = await createLocalUploader((req, res) => {
+      methods.push(req.method ?? '')
+      const key = Object.keys(statusByKey).find((k) => req.url?.endsWith(k))
+      res.statusCode = key ? statusByKey[key] : 500
+      res.end()
+    })
+
+    try {
+      await expect(uploader.objectExists('image/taken.png')).resolves.toBe(true)
+      await expect(uploader.objectExists('image/free.png')).resolves.toBe(false)
+      await expect(uploader.objectExists('image/unknown.png')).resolves.toBe(
+        true,
+      )
+      expect(new Set(methods)).toEqual(new Set(['HEAD']))
+    } finally {
+      await close()
+    }
+  })
+})

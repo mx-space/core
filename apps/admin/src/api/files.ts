@@ -150,19 +150,6 @@ export function uploadFileWithProgress(
   })
 }
 
-export function updateFile(type: FileType, name: string, file: File) {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  return requestJson<UploadResponse>(
-    `/files/${type}/${encodeURIComponent(name)}`,
-    {
-      body: formData,
-      method: 'PUT',
-    },
-  )
-}
-
 export function deleteFileByTypeAndName(type: FileType, name: string) {
   return deleteJson<void>(`/files/${type}/${encodeURIComponent(name)}`)
 }

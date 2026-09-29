@@ -10,7 +10,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Query,
   Req,
   Res,
@@ -35,6 +34,7 @@ import {
   replaceFilenameTemplate,
 } from '~/utils/filename-template.util'
 import { S3Uploader } from '~/utils/s3.util'
+import { resolveUniqueObjectKey } from '~/utils/unique-object-key.util'
 
 import {
   type BatchOrphanDeleteDto,
@@ -272,7 +272,7 @@ export class FileController {
         maxFileSize: Number.MAX_SAFE_INTEGER,
       })
 
-      const filename = generateFilename(uploadConfig, {
+      let filename = generateFilename(uploadConfig, {
         originalFilename: file.filename,
         fileType: type,
       })
@@ -286,8 +286,6 @@ export class FileController {
         prefixPath = prefixPath.replace(/\/+$/, '')
       }
 
-      const objectKey = prefixPath ? `${prefixPath}/${filename}` : filename
-
       const s3Uploader = new S3Uploader({
         endpoint: config.endpoint,
         accessKey: config.secretId,
@@ -298,6 +296,12 @@ export class FileController {
       if (config.customDomain) {
         s3Uploader.setCustomDomain(config.customDomain)
       }
+
+      const objectKey = await resolveUniqueObjectKey(
+        prefixPath ? `${prefixPath}/${filename}` : filename,
+        (key) => s3Uploader.objectExists(key),
+      )
+      filename = path.posix.basename(objectKey)
 
       const contentType = lookup(file.filename) || 'application/octet-stream'
       const s3Url = await s3Uploader.uploadStream(
@@ -339,6 +343,10 @@ export class FileController {
           : basePath
         relativePath = path.join(pathWithoutType, rawFilename)
       }
+      relativePath = await this.service.resolveUniqueLocalName(
+        type,
+        relativePath,
+      )
 
       await this.service.writeFile(type, relativePath, file.file)
       if (file.file.truncated) {
@@ -383,19 +391,6 @@ export class FileController {
         ? `versions/${randomUUID()}${path.extname(file.filename)}`
         : undefined,
     })
-  }
-
-  @Put('/:type/:name')
-  @Auth()
-  async update(
-    @Param({ schema: FileQuerySchema }) params: FileQueryDto,
-    @Req() req: FastifyRequest,
-  ) {
-    const { type, name } = params
-    const file = await this.uploadService.getAndValidMultipartField(req)
-    await this.service.updateFile(type, name, file.file)
-    const fileUrl = await this.service.resolveFileUrl(type, name)
-    return { url: fileUrl, name }
   }
 
   @Delete('/:type/:name')

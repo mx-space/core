@@ -726,6 +726,13 @@ export class S3Uploader {
     return objectKey
   }
 
+  // Some providers answer 403 for a missing key without ListBucket rights, so
+  // only a 404 proves the key is free; anything else is treated as taken.
+  async objectExists(objectKey: string): Promise<boolean> {
+    const response = await this.signedRequest({ method: 'HEAD', objectKey })
+    return response.status !== 404
+  }
+
   async deleteObject(objectKey: string): Promise<void> {
     const service = 's3'
     const date = new Date()
