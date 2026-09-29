@@ -198,4 +198,23 @@ describe('createAuthorSession', () => {
     await session.flush()
     expect(await readFile(filePath, 'utf8')).toContain('<p>alpha</p>')
   })
+
+  it('rejects an update from a different document lineage', async () => {
+    const { session } = await boot('<p>alpha</p>')
+    const client = connect(session)
+    const foreign = new LoroDoc()
+    const editor = createHeadlessEditor({
+      nodes: allHeadlessNodes,
+      onError: (err) => {
+        throw err
+      },
+    })
+    createLoroBinding(editor, foreign)
+    expect(() =>
+      session.importUpdate(foreign.export({ mode: 'update' })),
+    ).toThrow(/different document/)
+    expect(texts(client.editor)).toEqual(['alpha'])
+    expect(session.lineage()).toBe(client.doc.getTree('lexical').roots()[0]!.id)
+  })
 })
+

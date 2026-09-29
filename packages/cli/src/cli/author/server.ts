@@ -128,6 +128,7 @@ const handle = async (
           variant: ctx.doc.variant,
           fileName: ctx.doc.filePath.split(/[/\\]/).pop(),
           invalid: ctx.session.invalid(),
+          lineage: ctx.session.lineage(),
         })
         return
       }
@@ -164,10 +165,7 @@ const handle = async (
         return
       }
       case 'GET /api/events': {
-        if (live.client) {
-          json(res, 409, { error: { message: 'another editor is connected' } })
-          return
-        }
+        live.client?.end()
         res.writeHead(200, {
           'content-type': 'text/event-stream',
           'cache-control': 'no-cache',

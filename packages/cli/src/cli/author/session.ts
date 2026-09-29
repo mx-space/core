@@ -2,6 +2,7 @@ import {
   $reconcileRoot,
   createLoroBinding,
   editAtVersion,
+  TREE_NAME,
 } from '@haklex/rich-collab-loro'
 import { LoroDoc, type OpId } from 'loro-crdt'
 
@@ -54,6 +55,7 @@ export interface AuthorSession {
   readonly preview: (id: OpId) => LexicalState
   readonly restore: (id: OpId) => void
   readonly invalid: () => string | null
+  readonly lineage: () => string
   readonly close: () => Promise<void>
 }
 
@@ -226,6 +228,14 @@ export async function createAuthorSession(
   return {
     snapshot: () => loro.export({ mode: 'snapshot' }),
     importUpdate: (bytes) => {
+      // ponytail: forks the whole doc per batch to vet it; vet by root ops only if docs get large
+      const probe = loro.fork()
+      probe.import(bytes)
+      if (probe.getTree(TREE_NAME).roots().length > 1) {
+        throw new Error(
+          'update belongs to a different document; reload the editor',
+        )
+      }
       binding.import(bytes)
       scheduleWrite()
     },
@@ -262,6 +272,7 @@ export async function createAuthorSession(
       )
     },
     invalid: () => invalidMessage,
+    lineage: () => loro.getTree(TREE_NAME).roots()[0]!.id,
     close: async () => {
       clearInterval(snapshotTimer)
       await flush()

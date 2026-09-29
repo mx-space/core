@@ -223,6 +223,19 @@ describe('startAuthorServer', () => {
     stream.destroy()
   })
 
+  it('lets a reconnecting editor replace a stale event stream', async () => {
+    const { port } = await boot(envelope('<p>hi</p>'))
+    const open = () =>
+      new Promise<http.IncomingMessage>((resolve) => {
+        http.get({ host: '127.0.0.1', port, path: '/api/events' }, resolve).end()
+      })
+    const first = await open()
+    const second = await open()
+    expect(second.statusCode).toBe(200)
+    first.destroy()
+    second.destroy()
+  })
+
   it('lists history, previews, and restores an entry', async () => {
     const { port, session, filePath } = await boot(envelope('<p>one</p>'))
     const agentText = envelope('<p>two</p>')
