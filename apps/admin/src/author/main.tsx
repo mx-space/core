@@ -1,6 +1,7 @@
 import '../index.css'
 import '../vendor/rich-editor/core/style'
 
+import { DialogStackProvider } from '@haklex/rich-editor-ui'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -17,6 +18,8 @@ if (!root) throw new Error('missing #root')
 
 createRoot(root).render(
   <StrictMode>
-    <AuthorApp />
+    <DialogStackProvider>
+      <AuthorApp />
+    </DialogStackProvider>
   </StrictMode>,
 )
