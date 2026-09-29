@@ -680,7 +680,7 @@ Example profile config:
 
 ## Author
 
-`mxs author <file>` opens the Mix Space admin rich editor for a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. Saving writes the file back and overwrites `<file>.diff` (current body vs the body frozen when the process started). The command does not contact `mx-core`.
+`mxs author <file>` opens the Mix Space admin rich editor for a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope and keeps it in sync with the file through a Loro CRDT. Browser edits autosave to the file; agent edits to the file stream into the editor with an agent cursor, merged three-way so concurrent typing is kept. `<file>.diff` holds the current body vs the body at process start, and `<file>.loro` persists the full history (browse and restore it from the editor's 历史 panel). The command does not contact `mx-core`. See `mxs skill get commands-author`.
 
 ```bash
 mxs author ./post.xml              # open the editor

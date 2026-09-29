@@ -1,13 +1,13 @@
 ---
 slug: commands-author
 title: Author command
-description: open a local admin editor for LiteXML / envelopes and write a sidecar diff
+description: co-edit a local LiteXML fragment or envelope with a human in the admin editor, synced through a Loro CRDT with persisted history
 order: 41
 ---
 
 # Author command
 
-`mxs author` serves the same rich editor surface as the Mix Space admin write page for a local LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. It does not contact `mx-core`. Saving writes the file back and overwrites `<file>.diff` with a unified diff of the current body against the body frozen when the process started. While it runs it watches `<file>`: an external overwrite is pushed to the open editor as a new revision and merged block-by-block into whatever the human has typed.
+`mxs author` serves the same rich editor surface as the Mix Space admin write page for a local LiteXML fragment or `<mxpost>` / `<mxnote>` envelope. It does not contact `mx-core`. The process holds the document as a Loro CRDT: the browser and the file are two peers of the same document. Browser edits autosave to `<file>` about 300 ms after typing stops; an agent's overwrite of `<file>` is merged three-way and streamed into the open editor with a visible agent cursor. `<file>.diff` always holds a unified diff of the current body against the body at process start.
 
 | Command | Behavior |
 | --- | --- |
@@ -19,35 +19,26 @@ order: 41
 
 `<file>` is required. Stdin (`-`) is not accepted.
 
-## Save contract
+## Files
 
-- Only the `<content>` body is edited. Envelope meta (title, slug, tags, …) is left byte-stable.
-- Each save overwrites `<file>` and `<file>.diff`.
-- The diff is always current body vs the body at process start, not vs the previous save.
-- An unchanged save still writes a headers-only diff.
-- With `--base`, unresolved diff notes save as the proposed side. Reject restores the original block.
-- Overwriting `<file>` while the process runs is the agent's way to deliver a new revision (see below). Do not touch `<file>.diff`.
-
-## Live revisions
-
-Each external overwrite of `<file>` becomes a revision. The editor merges it three-way at block level against the last synced state and the human's current, possibly unsaved, content:
-
-| Remote change | Human touched the same block? | Editor shows |
+| File | Written | Purpose |
 | --- | --- | --- |
-| replaced | no | diff note: original = old, proposed = yours |
-| replaced | yes | diff note: original = the human's current text, proposed = yours (conflict) |
-| deleted | no | diff note delete |
-| deleted | yes | diff note: original = the human's text, proposed = nothing (conflict) |
-| inserted | — | diff note insert after the preceding block |
+| `<file>` | ~300 ms after any change, and on ⌘S | The current body spliced into the envelope. Envelope meta stays byte-stable. |
+| `<file>.diff` | With every write of `<file>` | Current body vs body at process start. Do not touch. |
+| `<file>.loro` | Every 5 s and on exit | Full CRDT snapshot with history. Restarting `mxs author` on the same file resumes it. |
 
-Blocks the human edited and you left alone stay as the human wrote them. The header shows `rev N` and the conflict count. Stdout prints one line per event:
+## Agent edits
 
-```text
-revision 2 applied, 1 conflicts
-saved article.xml
-```
+Edit `<file>` in place with a single read-modify-write (Claude Code `Edit`, Codex `apply_patch`). Never keep a copy and `Write` it back later: the server merges your write against the version it last wrote, and a stale copy looks like you deleted whatever the human typed since.
 
-`revision N pending (no editor connected)` means the browser tab is closed; the revision is served on the next page load.
+- Text you did not change is never reverted, even if the human changed it after you read the file.
+- The editor shows your change typed in chunk by chunk with an **Agent** caret; non-text blocks (diagrams, images) appear in one step. The file is not rewritten until the stream ends.
+- Stdout prints `agent edit merged: +a ~m -d blocks` when the stream ends.
+- A broken envelope prints `agent edit rejected: <reason>` and pauses file writes (the header shows it). Fix `<file>` in place; writes resume on the next valid version. LiteXML fragments never fail to parse — unknown tags are dropped — so check the merged output when you use a new tag.
+
+## History
+
+The header's **历史** panel lists changes as human edits, agent edits, sessions and restores. Selecting one previews that version read-only; **恢复到这里** applies it as a new change, so later history stays restorable.
 
 ## Agent loop
 
@@ -55,8 +46,8 @@ saved article.xml
 2. Start `mxs author <file>` (background is fine) and tell the human the URL.
    When you edited an existing article, keep the pre-edit copy (e.g. `cp <file> <file>.orig` before editing, or the `post get` output) and start `mxs author --base <file>.orig <file>` so the human sees your changes as diff notes instead of rereading the whole piece.
 3. **Stop.** Do not poll, do not auto-continue.
-4. If the human asks for changes, edit `<file>` in place and overwrite it in one write. Watch the process stdout for `revision N applied`; then stop again.
-5. When the human says they are done (stdout shows `saved <file>`), read `<file>.diff`. Use that to understand edits. Do not rescan the full article unless the diff is missing or unreadable.
+4. On each request: re-read `<file>`, change only the blocks asked for with one in-place edit, check stdout for `agent edit merged` or `agent edit rejected`, then stop again.
+5. When the human says they are done, read `<file>.diff` to learn their edits. Do not rescan the full article unless the diff is missing or unreadable.
 6. Continue with slop / publish using the updated file.
 
 ## Failure modes
@@ -64,6 +55,8 @@ saved article.xml
 | Symptom | Likely cause |
 | --- | --- |
 | `cannot resolve mxs author editor` | Source: run `pnpm -C apps/admin run build:author`. Published: reinstall `@mx-space/cli`. |
+| Source checkout serves an old editor | A stale `packages/cli/dist/vendor/author` wins over `apps/admin/dist-author`; rebuild with `pnpm -C packages/cli package` or remove the vendored copy. |
 | `port N is in use` | Pick another `--port` or omit it. |
 | `file not found` | Pass a real path; stdin is not supported. |
 | `expected root <mxpost>` | Envelope is malformed. |
+| Browser tab reloads by itself | The server restarted with a different document (e.g. `<file>.loro` was deleted); the tab resyncs from the file. |
