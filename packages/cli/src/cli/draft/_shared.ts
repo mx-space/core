@@ -161,11 +161,45 @@ export const saveDraftPayload = (
     return { draft: normalizeDraftRow(response)!, response }
   })
 
-export const publishSavedDraft = (api: ApiService, draft: DraftRow) =>
+const AI_RESOURCES = ['summary', 'insights', 'translation', 'tts'] as const
+const AI_MODES = ['sync', 'async'] as const
+
+export type PublishAiResourceRequest = {
+  mode: (typeof AI_MODES)[number]
+  resource: (typeof AI_RESOURCES)[number]
+}
+
+export const parseAiResourcesFlag = (
+  input: string,
+): PublishAiResourceRequest[] =>
+  input
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [resource, mode = 'async'] = part.split(':').map((s) => s.trim())
+      if (!AI_RESOURCES.includes(resource as never)) {
+        throw new Error(
+          `unknown AI resource "${resource}"; expected one of ${AI_RESOURCES.join(', ')}`,
+        )
+      }
+      if (!AI_MODES.includes(mode as never)) {
+        throw new Error(
+          `unknown mode "${mode}" for ${resource}; expected one of ${AI_MODES.join(', ')}`,
+        )
+      }
+      return { mode, resource } as PublishAiResourceRequest
+    })
+
+export const publishSavedDraft = (
+  api: ApiService,
+  draft: DraftRow,
+  aiResources: PublishAiResourceRequest[] = [],
+) =>
   api.request('/publish-jobs', {
     method: 'POST',
     body: {
-      aiResources: [],
+      aiResources,
       branchId: draft.id,
       confirmDiverged:
         draft.relationToPublished === 'descendant' ||

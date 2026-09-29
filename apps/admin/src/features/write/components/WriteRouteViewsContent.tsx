@@ -82,7 +82,7 @@ import { getNoteById } from '~/api/notes'
 import { getOption } from '~/api/options'
 import { getPageById } from '~/api/pages'
 import { getPostById, getPosts } from '~/api/posts'
-import type { PublishAiResource, PublishTask } from '~/api/publish-jobs'
+import type { PublishAiResourceRequest, PublishTask } from '~/api/publish-jobs'
 import { createPublishJob } from '~/api/publish-jobs'
 import { callBuiltInFunction } from '~/api/system'
 import { AITaskStatus, getTask } from '~/api/tasks'
@@ -127,6 +127,10 @@ import {
   resolvePaywallMeta,
 } from '~/features/write/components/premium/paywall-meta'
 import { PremiumArticlePanel } from '~/features/write/components/premium/PremiumArticlePanel'
+import {
+  normalizeTaskAiResources,
+  publishAiResourceLabels,
+} from '~/features/write/components/publish-ai-choices'
 import { PublishConfirmationDialog } from '~/features/write/components/PublishConfirmationDialog'
 import { openPublishProcessDock } from '~/features/write/components/PublishProcessDock'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
@@ -1198,12 +1202,27 @@ function WritePage(props: { kind: WriteKind }) {
     }
 
     if (task.status === AITaskStatus.Completed && task.result) {
+      const background = normalizeTaskAiResources(task.payload.aiResources)
+        .filter((item) => item.mode === 'async')
+        .map((item) => t(publishAiResourceLabels[item.resource]))
+      const articleId = task.result.articleId
       toast.success(
         task.payload.operation === 'online-update'
           ? t('write.publishProcess.onlineUpdated')
           : task.payload.operation === 'republish'
             ? t('write.publishProcess.republished')
             : t('write.publishProcess.firstPublished'),
+        background.length
+          ? {
+              action: {
+                label: t('write.publishProcess.viewBackground'),
+                onClick: () => navigate(`/ai/overview/${articleId}`),
+              },
+              description: t('write.publishProcess.backgroundGenerating', {
+                resources: background.join('、'),
+              }),
+            }
+          : undefined,
       )
       syncCommittedResult()
     } else if (task.result?.articleCommitted) {
@@ -1216,6 +1235,7 @@ function WritePage(props: { kind: WriteKind }) {
     }
     setPublishTaskId(null)
   }, [
+    navigate,
     props.kind,
     publishTaskQuery.data,
     queryClient,
@@ -1532,7 +1552,7 @@ function WritePage(props: { kind: WriteKind }) {
       taskId: string
     },
     unknown,
-    { aiResources: PublishAiResource[]; confirmDiverged: boolean }
+    { aiResources: PublishAiResourceRequest[]; confirmDiverged: boolean }
   >({
     mutationFn: async ({ aiResources, confirmDiverged }) => {
       const requiresMigration =

@@ -55,7 +55,6 @@ function buildService(
   const partialBuilder = { build: vi.fn() }
   const configService = {
     get: vi.fn(async () => ({
-      enableAutoGenerateTranslation: true,
       enableTranslation: true,
       translationTargetLanguages: languages,
       translationLangConcurrency,
@@ -105,13 +104,7 @@ interface ContextHarness {
   events: Array<{
     at: number
     kind:
-      | 'log'
-      | 'progress'
-      | 'stream'
-      | 'result'
-      | 'status'
-      | 'tokens'
-      | 'cost'
+      'log' | 'progress' | 'stream' | 'result' | 'status' | 'tokens' | 'cost'
     payload?: unknown
   }>
 }
@@ -376,8 +369,7 @@ describe('AiTranslationService — executeTranslationTask (spec 2 step-10)', () 
 
       // setResult must still have been called with the successful subset.
       const result = events.find((e) => e.kind === 'result')?.payload as
-        | { translations: Array<{ lang: string }> }
-        | undefined
+        { translations: Array<{ lang: string }> } | undefined
       expect(result?.translations.map((t) => t.lang).sort()).toEqual([
         'en',
         'fr',

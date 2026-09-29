@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   type OnModuleInit,
 } from '@nestjs/common'
 
@@ -28,6 +29,7 @@ import type { PostModel } from '../post/post.types'
 import type { CreatePublishJobDto } from './publish.schema'
 import {
   CONTENT_PUBLISH_TASK,
+  normalizePublishAiResources,
   type PublishAiResource,
   type PublishTaskPayload,
   type PublishTaskResult,
@@ -42,6 +44,8 @@ const TERMINAL = new Set([
 
 @Injectable()
 export class PublishService implements OnModuleInit {
+  private readonly logger = new Logger(PublishService.name)
+
   constructor(
     private readonly drafts: DraftService,
     private readonly posts: PostService,
@@ -142,7 +146,7 @@ export class PublishService implements OnModuleInit {
       }
     }
     const payload: PublishTaskPayload = {
-      aiResources: [...new Set(dto.aiResources)],
+      aiResources: normalizePublishAiResources(dto.aiResources),
       branchId: branch.id,
       documentId: branch.documentId,
       expectedPublishedRevisionId: dto.expectedPublishedRevisionId,
@@ -172,6 +176,11 @@ export class PublishService implements OnModuleInit {
   ) {
     throwIfAborted(context.signal)
     await this.assertFrozenSelection(payload)
+    const aiResources = normalizePublishAiResources(payload.aiResources)
+    const byMode = (mode: 'sync' | 'async') =>
+      aiResources
+        .filter((item) => item.mode === mode)
+        .map((item) => item.resource)
     await context.updateProgress(2, 'Saving article snapshot', 0, 2)
 
     const committed = await this.commitSnapshot(payload)
@@ -188,12 +197,7 @@ export class PublishService implements OnModuleInit {
     await context.setResult(result)
 
     try {
-      await this.prepareResources(
-        payload.aiResources,
-        committed.id,
-        result,
-        context,
-      )
+      await this.prepareResources(byMode('sync'), committed.id, result, context)
     } catch (error) {
       result.newerDraftChanges = await this.hasNewerBranchHead(payload)
       await context.setResult(result)
@@ -210,6 +214,8 @@ export class PublishService implements OnModuleInit {
       await this.commitPublicationPointer(payload)
       result.articleCommitted = true
     }
+
+    await this.startAsyncResources(byMode('async'), committed.id, result)
 
     result.newerDraftChanges = await this.hasNewerBranchHead(payload)
     await context.setResult(result)
@@ -371,6 +377,23 @@ export class PublishService implements OnModuleInit {
         completed,
         resources.length,
       )
+    }
+  }
+
+  private async startAsyncResources(
+    resources: PublishAiResource[],
+    refId: string,
+    result: PublishTaskResult,
+  ) {
+    for (const resource of resources) {
+      try {
+        const created = await this.createResourceTask(resource, refId)
+        result.resources[resource] = created.taskId
+      } catch (error) {
+        this.logger.warn(
+          `Async ${resource} task for ${refId} was not created: ${(error as Error).message}`,
+        )
+      }
     }
   }
 

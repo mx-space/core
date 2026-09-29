@@ -955,14 +955,6 @@ export const AISchema = section('AI settings', {
       'ui:options': { type: 'textarea' },
     },
   ),
-  enableAutoGenerateTranslation: field.toggle(
-    z.boolean().optional(),
-    'Auto-generate AI translations',
-    {
-      description:
-        'When enabled, translations are auto-generated after an article is published. Requires the option above to also be enabled, otherwise has no effect.',
-    },
-  ),
   translationTargetLanguages: field.array(
     z.array(z.string()).optional(),
     'AI translation target languages',

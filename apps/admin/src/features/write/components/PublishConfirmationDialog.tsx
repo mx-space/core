@@ -1,30 +1,31 @@
 import { AlertCircle, Bot, Clock, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import type { PublishAiResource, PublishTaskPayload } from '~/api/publish-jobs'
+import type {
+  PublishAiResource,
+  PublishAiResourceRequest,
+  PublishTaskPayload,
+} from '~/api/publish-jobs'
 import type { AIConfig } from '~/features/settings/types/settings'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
 import { Modal, ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { Button } from '~/ui/primitives/button'
-import { Checkbox } from '~/ui/primitives/checkbox'
+import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { cn } from '~/utils/cn'
 
-const resources: PublishAiResource[] = [
-  'summary',
-  'insights',
-  'translation',
-  'tts',
-]
+import {
+  emptyPublishAiChoices,
+  loadPublishAiChoices,
+  type PublishAiChoice,
+  type PublishAiChoices,
+  publishAiResourceLabels,
+  publishAiResourceOrder,
+  savePublishAiChoices,
+  toPublishAiRequests,
+} from './publish-ai-choices'
 
 type ContentFormat = 'lexical' | 'markdown'
-
-const resourceLabels: Record<PublishAiResource, TranslationKey> = {
-  insights: 'ai.overview.capability.insights',
-  summary: 'ai.overview.capability.summary',
-  translation: 'ai.overview.capability.translation',
-  tts: 'ai.overview.capability.tts',
-}
 
 export function PublishConfirmationDialog(props: {
   aiConfig?: AIConfig
@@ -32,7 +33,7 @@ export function PublishConfirmationDialog(props: {
   diverged: boolean
   kind: 'note' | 'page' | 'post'
   onClose: () => void
-  onConfirm: (resources: PublishAiResource[]) => void
+  onConfirm: (resources: PublishAiResourceRequest[]) => void
   onReviewDiff?: () => void
   otherBranchCount: number
   open: boolean
@@ -42,11 +43,31 @@ export function PublishConfirmationDialog(props: {
   validationError: string | null
 }) {
   const { t } = useI18n()
-  const [selected, setSelected] = useState<PublishAiResource[]>([])
+  const [choices, setChoices] = useState<PublishAiChoices>(
+    emptyPublishAiChoices,
+  )
 
   useEffect(() => {
-    if (props.open) setSelected([])
+    if (props.open) setChoices(loadPublishAiChoices())
   }, [props.open])
+
+  const isAvailable = (resource: PublishAiResource) =>
+    !getUnavailableKey(resource, props.aiConfig, props.contentFormat)
+  const requests =
+    props.kind === 'page' ? [] : toPublishAiRequests(choices, isAvailable)
+  const confirm = () => {
+    if (props.kind !== 'page') savePublishAiChoices(choices)
+    props.onConfirm(requests)
+  }
+  const choiceOptions: { label: string; value: PublishAiChoice }[] = [
+    { label: t('write.publishAi.modeNone'), value: 'none' },
+    { label: t('write.publishAi.modeSync'), value: 'sync' },
+    { label: t('write.publishAi.modeAsync'), value: 'async' },
+  ]
+  const namesFor = (mode: 'sync' | 'async') =>
+    requests
+      .filter((request) => request.mode === mode)
+      .map((request) => t(publishAiResourceLabels[request.resource]))
 
   const actionKey: TranslationKey =
     props.operation === 'online-update'
@@ -60,12 +81,6 @@ export function PublishConfirmationDialog(props: {
       : props.operation === 'republish'
         ? 'write.publishConfirm.republishDescription'
         : 'write.publishConfirm.firstDescription'
-  const toggle = (resource: PublishAiResource, checked: boolean) =>
-    setSelected((current) =>
-      checked
-        ? [...new Set([...current, resource])]
-        : current.filter((item) => item !== resource),
-    )
 
   return (
     <Modal
@@ -126,32 +141,24 @@ export function PublishConfirmationDialog(props: {
             <p className="mt-1 text-xs leading-5 text-fg-muted">
               {t('write.publishConfirm.aiDescription')}
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {resources.map((resource) => {
+            <div className="mt-3 flex flex-col divide-y divide-border rounded-lg border border-border">
+              {publishAiResourceOrder.map((resource) => {
                 const unavailable = getUnavailableKey(
                   resource,
                   props.aiConfig,
                   props.contentFormat,
                 )
-                const checked = selected.includes(resource)
                 return (
-                  <label
+                  <div
                     className={cn(
-                      'flex min-w-0 items-start gap-2 rounded-lg border border-border bg-surface-card px-3 py-3 text-sm',
-                      checked && 'border-accent/40 bg-accent-soft',
-                      unavailable && 'opacity-55',
+                      'flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 text-sm',
+                      unavailable && 'pointer-events-none opacity-55',
                     )}
                     key={resource}
                   >
-                    <Checkbox
-                      aria-label={t(resourceLabels[resource])}
-                      checked={checked}
-                      disabled={Boolean(unavailable)}
-                      onCheckedChange={(next) => toggle(resource, next)}
-                    />
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1">
                       <span className="block font-medium text-fg">
-                        {t(resourceLabels[resource])}
+                        {t(publishAiResourceLabels[resource])}
                       </span>
                       {unavailable ? (
                         <span className="mt-0.5 block text-xs text-fg-muted">
@@ -159,10 +166,37 @@ export function PublishConfirmationDialog(props: {
                         </span>
                       ) : null}
                     </span>
-                  </label>
+                    <SegmentedControl
+                      aria-label={t(publishAiResourceLabels[resource])}
+                      onValueChange={(value) =>
+                        setChoices((current) => ({
+                          ...current,
+                          [resource]: value,
+                        }))
+                      }
+                      options={choiceOptions}
+                      value={choices[resource]}
+                    />
+                  </div>
                 )
               })}
             </div>
+            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg bg-surface-inset px-3 py-2.5 text-xs">
+              <dt className="text-fg-muted">
+                {t('write.publishAi.summaryWait')}
+              </dt>
+              <dd className="min-w-0 text-fg">
+                {namesFor('sync').join('、') ||
+                  t('write.publishAi.summaryWaitNone')}
+              </dd>
+              <dt className="text-fg-muted">
+                {t('write.publishAi.summaryLater')}
+              </dt>
+              <dd className="min-w-0 text-fg">
+                {namesFor('async').join('、') ||
+                  t('write.publishAi.summaryLaterNone')}
+              </dd>
+            </dl>
           </section>
         ) : null}
       </div>
@@ -181,7 +215,7 @@ export function PublishConfirmationDialog(props: {
         </Button>
         <Button
           disabled={Boolean(props.validationError) || props.pending}
-          onClick={() => props.onConfirm(selected)}
+          onClick={confirm}
           type="button"
         >
           {props.pending ? (

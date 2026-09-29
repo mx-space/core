@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 import { zEntityId } from '~/common/zod'
 
+import { normalizePublishAiResources } from './publish.types'
+
 const PublishAiResourceSchema = z.enum([
   'insights',
   'summary',
@@ -9,8 +11,20 @@ const PublishAiResourceSchema = z.enum([
   'tts',
 ])
 
+const PublishAiResourceRequestSchema = z.union([
+  PublishAiResourceSchema,
+  z.object({
+    mode: z.enum(['sync', 'async']),
+    resource: PublishAiResourceSchema,
+  }),
+])
+
 export const CreatePublishJobSchema = z.object({
-  aiResources: z.array(PublishAiResourceSchema).max(4).default([]),
+  aiResources: z
+    .array(PublishAiResourceRequestSchema)
+    .max(8)
+    .default([])
+    .transform(normalizePublishAiResources),
   branchId: zEntityId,
   confirmDiverged: z.boolean().default(false),
   expectedPublishedRevisionId: zEntityId.nullable(),

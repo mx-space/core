@@ -18,7 +18,7 @@ content change.
 | `mxs draft get <id>`     | Read a draft by Snowflake id.                               | global flags                                                                |
 | `mxs draft create`       | Create a standalone post draft.                             | same authoring flags as `post create` (`--file`, `--title`, `--content`, `--format`, `--meta`, ...); `--silent` emits `{ok, id}` |
 | `mxs draft update <id>`  | Update a draft; bumps version, records history.             | same authoring flags; `--silent`                                            |
-| `mxs draft publish <id>` | Publish: creates the live post/note/page (or applies to the linked one). | `--silent`, `--open`                                            |
+| `mxs draft publish <id>` | Publish: creates the live post/note/page (or applies to the linked one). | `--ai`, `--silent`, `--open`                                    |
 | `mxs draft delete <id>`  | Delete a draft.                                             | `--force`; prefer `--dry-run` first                                          |
 
 ## Recommended authoring flow for a new post
@@ -27,6 +27,7 @@ content change.
 mxs draft create --file article.xml --silent   # → { ok: true, id: <draftId> }
 mxs draft update <draftId> --file article.xml  # iterate after review feedback
 mxs draft publish <draftId>                    # go live in one step
+mxs draft publish <draftId> --ai summary:sync,insights,translation
 ```
 
 Notes:
@@ -41,5 +42,12 @@ Notes:
 - `publish` sends `draftId` to the server, which links the draft to the
   created resource and marks the draft version as published; the draft and
   its history are retained.
+
+- `--ai` picks the AI resources generated for this publish, each `sync` or
+  `async`: `summary:sync` waits for the summary before the article goes live;
+  `insights` / `insights:async` goes live first and generates it in the
+  background. Resources: `summary`, `insights`, `translation`, `tts`. Without
+  `--ai` nothing is generated. Nothing is generated automatically on content
+  changes; regenerate later with `mxs ai`.
 
 Dry-run support: `create`, `update`, `publish`, `delete`.

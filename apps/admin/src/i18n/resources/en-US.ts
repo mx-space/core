@@ -2246,7 +2246,6 @@ export const enUS = {
   'settings.ai.section.tts': 'AI speech generation',
   'settings.ai.section.ttsDescription':
     'Reuse an existing provider connection and configure the speech model, voice, and execution limits.',
-  'settings.ai.switch.enableAutoTranslate': 'Auto-generate translations',
   'settings.ai.switch.enableAutoTranslateInsights': 'Auto-translate insights',
   'settings.ai.switch.enableInsights': 'Enable AI insights',
   'settings.ai.switch.enableImageGeneration': 'Enable AI image generation',
@@ -3600,6 +3599,13 @@ export const enUS = {
     'Configure translation target languages first',
   'write.publishAi.ttsRequiresLexical': 'Narration requires Lexical content',
   'write.publishAi.unavailable': 'This AI capability is not enabled',
+  'write.publishAi.modeAsync': 'After',
+  'write.publishAi.modeNone': 'Skip',
+  'write.publishAi.modeSync': 'Before',
+  'write.publishAi.summaryLater': 'Generated after going live',
+  'write.publishAi.summaryLaterNone': 'None',
+  'write.publishAi.summaryWait': 'Waits before going live',
+  'write.publishAi.summaryWaitNone': 'None, goes live immediately',
   'write.publishProcess.acceptFailed':
     'The publish task could not start. The draft was saved.',
   'write.publishProcess.cancelled': 'Publish task stopped',
@@ -3648,6 +3654,9 @@ export const enUS = {
   'write.publication.unpublishTitle': 'Take this article offline?',
   'write.publishProcess.viewProgress': 'View publish progress',
   'write.publishProcess.viewTask': 'View task details',
+  'write.publishProcess.backgroundGenerating':
+    'Still generating in the background: {resources}',
+  'write.publishProcess.viewBackground': 'View AI resources',
   'write.header.titleNote': 'Write a note',
   'write.header.titlePage': 'Write a page',
   'write.header.titlePost': 'Write a post',
@@ -3881,7 +3890,7 @@ export const enUS = {
   'write.premium.paywall.context.other': '[{type}]',
   'write.premium.paywall.context.readersStop': 'Readers stop here · block {n}',
   'write.publishConfirm.aiDescription':
-    'Choose resources for this publish only. All are off by default, and unselected existing resources are preserved.',
+    'For each resource, skip it, generate it before going live (publishing waits for it), or after going live (generated in the background). Unselected existing resources are preserved.',
   'write.publishConfirm.aiTitle': 'Update AI resources too (optional)',
   'write.publishConfirm.diverged':
     'This draft started from an older online version. Continuing will replace the online article with this draft. The other {count} draft branch(es) will be preserved.',

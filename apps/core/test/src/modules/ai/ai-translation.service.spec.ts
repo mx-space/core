@@ -72,7 +72,6 @@ const createService = () => {
   const partialBuilder = { build: vi.fn() }
   const configService = {
     get: vi.fn(() => ({
-      enableAutoGenerateTranslation: true,
       enableTranslation: true,
     })),
   }
@@ -383,10 +382,6 @@ describe('AiTranslationService', () => {
       translationConsistencyService,
     } = createService()
     const validTranslation = row()
-    const scheduleSpy = vi.spyOn(
-      service,
-      'scheduleRegenerationForStaleTranslations',
-    )
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -401,7 +396,6 @@ describe('AiTranslationService', () => {
       service.getTranslationForArticle('post-1', 'en'),
     ).resolves.toBe(validTranslation)
 
-    expect(scheduleSpy).not.toHaveBeenCalled()
     expect(partialBuilder.build).not.toHaveBeenCalled()
   })
 
@@ -413,10 +407,6 @@ describe('AiTranslationService', () => {
       service,
       translationConsistencyService,
     } = createService()
-    const scheduleSpy = vi.spyOn(
-      service,
-      'scheduleRegenerationForStaleTranslations',
-    )
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -431,7 +421,6 @@ describe('AiTranslationService', () => {
     expect(
       translationConsistencyService.evaluateTranslationFreshness,
     ).not.toHaveBeenCalled()
-    expect(scheduleSpy).not.toHaveBeenCalled()
     expect(partialBuilder.build).not.toHaveBeenCalled()
   })
 
@@ -447,10 +436,6 @@ describe('AiTranslationService', () => {
       contentFormat: ContentFormat.Lexical,
       content: '{"root":{"children":[]}}',
     })
-    const scheduleSpy = vi.spyOn(
-      service,
-      'scheduleRegenerationForStaleTranslations',
-    )
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -465,7 +450,6 @@ describe('AiTranslationService', () => {
       service.getTranslationForArticle('post-1', 'en'),
     ).resolves.toBeNull()
 
-    expect(scheduleSpy).not.toHaveBeenCalled()
     expect(partialBuilder.build).not.toHaveBeenCalled()
   })
 
@@ -488,9 +472,6 @@ describe('AiTranslationService', () => {
       contentFormat: ContentFormat.Lexical,
       content: '{"root":{"children":[]}}',
     })
-    const scheduleSpy = vi
-      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
-      .mockResolvedValue(undefined)
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -523,7 +504,6 @@ describe('AiTranslationService', () => {
       }),
       staleTranslation,
     )
-    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'en')
     expect(repository.updateById).not.toHaveBeenCalled()
     expect(repository.upsert).not.toHaveBeenCalled()
   })
@@ -540,9 +520,6 @@ describe('AiTranslationService', () => {
       contentFormat: ContentFormat.Lexical,
       content: '{"root":{"children":[]}}',
     })
-    const scheduleSpy = vi
-      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
-      .mockResolvedValue(undefined)
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -564,7 +541,6 @@ describe('AiTranslationService', () => {
       }),
       staleTranslation,
     )
-    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'en')
   })
 
   it('returns a partial requested stale translation without listing it as available', async () => {
@@ -589,9 +565,6 @@ describe('AiTranslationService', () => {
       contentFormat: ContentFormat.Lexical,
       content: '{"root":{"children":[]}}',
     })
-    const scheduleSpy = vi
-      .spyOn(service, 'scheduleRegenerationForStaleTranslations')
-      .mockResolvedValue(undefined)
 
     databaseService.findGlobalById.mockResolvedValue({
       document: articleDocument(),
@@ -630,7 +603,6 @@ describe('AiTranslationService', () => {
       }),
       staleTranslation,
     )
-    expect(scheduleSpy).toHaveBeenCalledWith(['post-1'], 'ja')
   })
 })
 

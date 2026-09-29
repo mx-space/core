@@ -1,10 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
-import { DatabaseService } from '~/processors/database/database.service'
 
-import { ConfigsService } from '../../configs/configs.service'
 import { AiTranslationService } from './ai-translation.service'
 import type { ArticleEventPayload } from './ai-translation.types'
 import { TranslationEntryService } from './translation-entry.service'
@@ -21,27 +19,10 @@ interface TopicEventPayload {
   description?: string
 }
 
-interface NoteEventPayload {
-  id: string
-}
-
-interface NoteDocumentLike {
-  mood?: unknown
-  weather?: unknown
-}
-
-interface PostDocumentLike {
-  tags?: unknown
-}
-
 @Injectable()
 export class AiTranslationEventHandlerService {
-  private readonly logger = new Logger(AiTranslationEventHandlerService.name)
-
   constructor(
     private readonly aiTranslationService: AiTranslationService,
-    private readonly configService: ConfigsService,
-    private readonly databaseService: DatabaseService,
     private readonly translationEntryService: TranslationEntryService,
   ) {}
 
@@ -54,29 +35,6 @@ export class AiTranslationEventHandlerService {
     await this.aiTranslationService.deleteTranslationsByRefId(id)
   }
 
-  // === Translation Entry: Category ===
-
-  @OnEvent(BusinessEvents.CATEGORY_CREATE)
-  async handleCategoryCreate(event: CategoryEventPayload) {
-    if (!(await this.isAutoEntryEnabled())) return
-    if (!event.id || !event.name) return
-    this.logger.log(
-      `Auto-generating translation entry for category: ${event.id}`,
-    )
-    try {
-      await this.translationEntryService.generateForValues([
-        {
-          keyPath: 'category.name',
-          keyType: 'entity',
-          lookupKey: event.id,
-          sourceText: event.name,
-        },
-      ])
-    } catch (err: any) {
-      this.logger.error(`Category entry generation failed: ${err.message}`)
-    }
-  }
-
   @OnEvent(BusinessEvents.CATEGORY_UPDATE)
   async handleCategoryUpdate(event: CategoryEventPayload) {
     if (!event.id || !event.name) return
@@ -85,20 +43,6 @@ export class AiTranslationEventHandlerService {
       event.id,
       event.name,
     )
-
-    if (!(await this.isAutoEntryEnabled())) return
-    try {
-      await this.translationEntryService.generateForValues([
-        {
-          keyPath: 'category.name',
-          keyType: 'entity',
-          lookupKey: event.id,
-          sourceText: event.name,
-        },
-      ])
-    } catch (err: any) {
-      this.logger.error(`Category entry re-generation failed: ${err.message}`)
-    }
   }
 
   @OnEvent(BusinessEvents.CATEGORY_DELETE)
@@ -108,24 +52,6 @@ export class AiTranslationEventHandlerService {
       'category.name',
       event.id,
     )
-  }
-
-  // === Translation Entry: Topic ===
-
-  @OnEvent(BusinessEvents.TOPIC_CREATE)
-  async handleTopicCreate(event: TopicEventPayload) {
-    if (!(await this.isAutoEntryEnabled())) return
-    if (!event.id) return
-    const values = this.collectTopicValues(event)
-    if (!values.length) return
-    this.logger.log(
-      `Auto-generating translation entries for topic: ${event.id}`,
-    )
-    try {
-      await this.translationEntryService.generateForValues(values)
-    } catch (err: any) {
-      this.logger.error(`Topic entry generation failed: ${err.message}`)
-    }
   }
 
   @OnEvent(BusinessEvents.TOPIC_UPDATE)
@@ -152,33 +78,6 @@ export class AiTranslationEventHandlerService {
         event.description,
       )
     }
-
-    if (!(await this.isAutoEntryEnabled())) return
-    const values = this.collectTopicValues(event)
-    if (!values.length) return
-    try {
-      await this.translationEntryService.generateForValues(values)
-    } catch (err: any) {
-      this.logger.error(`Topic entry re-generation failed: ${err.message}`)
-    }
-  }
-
-  private collectTopicValues(
-    event: TopicEventPayload,
-  ): Parameters<TranslationEntryService['generateForValues']>[0] {
-    const fields = [
-      ['topic.name', event.name],
-      ['topic.introduce', event.introduce],
-      ['topic.description', event.description],
-    ] as const
-    return fields
-      .filter(([, sourceText]) => !!sourceText)
-      .map(([keyPath, sourceText]) => ({
-        keyPath,
-        keyType: 'entity',
-        lookupKey: event.id,
-        sourceText: sourceText!,
-      }))
   }
 
   @OnEvent(BusinessEvents.TOPIC_DELETE)
@@ -193,90 +92,5 @@ export class AiTranslationEventHandlerService {
       'topic.description',
       event.id,
     )
-  }
-
-  // === Translation Entry: Note mood/weather ===
-
-  @OnEvent(BusinessEvents.NOTE_CREATE)
-  @OnEvent(BusinessEvents.NOTE_UPDATE)
-  @OnEvent(BusinessEvents.NOTE_REPUBLISH)
-  async handleNoteEntry(event: NoteEventPayload) {
-    if (!(await this.isAutoEntryEnabled())) return
-    if (!event.id) return
-    const note = await this.databaseService.findGlobalById(event.id)
-    if (!note) return
-    const values = this.collectNoteDictValues(note.document)
-    if (!values.length) return
-    try {
-      await this.translationEntryService.generateForValues(values)
-    } catch (err: any) {
-      this.logger.error(`Note entry generation failed: ${err.message}`)
-    }
-  }
-
-  @OnEvent(BusinessEvents.POST_CREATE)
-  @OnEvent(BusinessEvents.POST_UPDATE)
-  @OnEvent(BusinessEvents.POST_REPUBLISH)
-  async handlePostTagEntry(event: { id: string }) {
-    if (!(await this.isAutoEntryEnabled())) return
-    if (!event.id) return
-    const post = await this.databaseService.findGlobalById(event.id)
-    if (!post) return
-    const values = this.collectPostTagValues(post.document)
-    if (!values.length) return
-    try {
-      await this.translationEntryService.generateForValues(values)
-    } catch (err: any) {
-      this.logger.error(`Post tag entry generation failed: ${err.message}`)
-    }
-  }
-
-  private collectPostTagValues(
-    doc: unknown,
-  ): Parameters<TranslationEntryService['generateForValues']>[0] {
-    const tags = (doc as PostDocumentLike).tags
-    if (!Array.isArray(tags)) return []
-    return tags
-      .filter((tag): tag is string => typeof tag === 'string' && !!tag.trim())
-      .map((tag) => ({
-        keyPath: 'post.tag' as const,
-        keyType: 'dict' as const,
-        lookupKey: TranslationEntryService.hashSourceText(tag),
-        sourceText: tag,
-      }))
-  }
-
-  // === Helpers ===
-
-  private async isAutoEntryEnabled(): Promise<boolean> {
-    const aiConfig = await this.configService.get('ai')
-    return Boolean(
-      aiConfig.enableAutoGenerateTranslation && aiConfig.enableTranslation,
-    )
-  }
-
-  private collectNoteDictValues(
-    doc: unknown,
-  ): Parameters<TranslationEntryService['generateForValues']>[0] {
-    const values: Parameters<TranslationEntryService['generateForValues']>[0] =
-      []
-    const note = doc as NoteDocumentLike
-    if (typeof note.mood === 'string') {
-      values.push({
-        keyPath: 'note.mood',
-        keyType: 'dict',
-        lookupKey: TranslationEntryService.hashSourceText(note.mood),
-        sourceText: note.mood,
-      })
-    }
-    if (typeof note.weather === 'string') {
-      values.push({
-        keyPath: 'note.weather',
-        keyType: 'dict',
-        lookupKey: TranslationEntryService.hashSourceText(note.weather),
-        sourceText: note.weather,
-      })
-    }
-    return values
   }
 }

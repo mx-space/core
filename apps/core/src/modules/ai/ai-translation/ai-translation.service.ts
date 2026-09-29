@@ -127,21 +127,6 @@ export class AiTranslationService
       : this.markdownStrategy
   }
 
-  private scheduleStaleTranslationRegenerationBestEffort(
-    articleId: string,
-    targetLang: string,
-  ) {
-    this.scheduleRegenerationForStaleTranslations(
-      [articleId],
-      targetLang,
-    ).catch((err) =>
-      this.logger.error(
-        'Failed to schedule stale translation regeneration',
-        err,
-      ),
-    )
-  }
-
   onModuleInit() {
     this.registerTaskHandlers()
   }
@@ -1253,8 +1238,6 @@ export class AiTranslationService
       return null
     }
 
-    this.scheduleStaleTranslationRegenerationBestEffort(articleId, targetLang)
-
     const partial = this.lexicalPartialTranslationBuilder.build(
       this.toArticleContent(document),
       translation,
@@ -1307,18 +1290,6 @@ export class AiTranslationService
 
         result.validTranslations.set(refId, translation)
       }
-    }
-
-    if (result.staleRefIds.length) {
-      this.scheduleRegenerationForStaleTranslations(
-        result.staleRefIds,
-        targetLang,
-      ).catch((err) =>
-        this.logger.error(
-          'Failed to schedule stale translation regeneration',
-          err,
-        ),
-      )
     }
 
     return result
@@ -1416,53 +1387,10 @@ export class AiTranslationService
       }
     }
 
-    if (staleLangs.length && targetLang) {
-      this.scheduleStaleTranslationRegenerationBestEffort(articleId, targetLang)
-    }
-
     return {
       availableTranslations: validLangs,
       sourceLang,
       translation: matchedTranslation,
-    }
-  }
-
-  async scheduleRegenerationForStaleTranslations(
-    articleIds: string[],
-    targetLang: string,
-  ) {
-    if (!articleIds.length) return
-
-    const aiConfig = await this.configService.get('ai')
-    if (
-      !aiConfig.enableAutoGenerateTranslation ||
-      !aiConfig.enableTranslation
-    ) {
-      return
-    }
-
-    const existingTranslations =
-      await this.aiTranslationRepository.listByRefIdsAndLang(
-        articleIds,
-        targetLang,
-      )
-
-    if (!existingTranslations.length) return
-
-    const staleRefIds =
-      await this.translationConsistencyService.filterTrulyStaleTranslations(
-        existingTranslations,
-      )
-    if (!staleRefIds.length) return
-
-    for (const refId of staleRefIds) {
-      this.logger.log(
-        `Scheduling stale translation regeneration: article=${refId} lang=${targetLang}`,
-      )
-      await this.aiTaskService.createTranslationTask({
-        refId,
-        targetLanguages: [targetLang],
-      })
     }
   }
 }

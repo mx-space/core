@@ -362,14 +362,6 @@ export function AIConfigEditor(props: {
           toggleLabel={t('settings.ai.switch.enableTranslation')}
         >
           <FormSwitch
-            checked={Boolean(props.value.enableAutoGenerateTranslation)}
-            disabled={!props.value.enableTranslation}
-            label={t('settings.ai.switch.enableAutoTranslate')}
-            onCheckedChange={(enableAutoGenerateTranslation) =>
-              updateConfig({ enableAutoGenerateTranslation })
-            }
-          />
-          <FormSwitch
             checked={Boolean(props.value.enableTranslationReview)}
             disabled={!props.value.enableTranslation}
             label={t('settings.ai.switch.enableTranslationReview')}

@@ -11,7 +11,11 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 
-import type { PublishAiResource, PublishTask } from '~/api/publish-jobs'
+import type {
+  PublishAiMode,
+  PublishAiResource,
+  PublishTask,
+} from '~/api/publish-jobs'
 import {
   AITaskStatus,
   cancelTask,
@@ -42,6 +46,8 @@ import { confirmDialog } from '~/ui/feedback/confirm'
 import { Popover } from '~/ui/overlay/popover'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
+
+import { normalizeTaskAiResources } from './publish-ai-choices'
 
 type PublishProcessPhase =
   | 'cancelled'
@@ -313,13 +319,16 @@ function ProcessDetail(props: { onDismiss: () => void; task: PublishTask }) {
 
       {task.payload.aiResources.length ? (
         <ul className="mt-2 flex flex-col gap-px">
-          {task.payload.aiResources.map((resource) => (
-            <ResourceProgress
-              key={resource}
-              resource={resource}
-              taskId={task.result?.resources[resource]}
-            />
-          ))}
+          {normalizeTaskAiResources(task.payload.aiResources).map(
+            ({ mode, resource }) => (
+              <ResourceProgress
+                key={resource}
+                mode={mode}
+                resource={resource}
+                taskId={task.result?.resources[resource]}
+              />
+            ),
+          )}
         </ul>
       ) : null}
       {active ? (
@@ -351,6 +360,7 @@ function ProcessDetail(props: { onDismiss: () => void; task: PublishTask }) {
 }
 
 function ResourceProgress(props: {
+  mode: PublishAiMode
   resource: PublishAiResource
   taskId?: string
 }) {
@@ -377,6 +387,13 @@ function ResourceProgress(props: {
         className="size-4 shrink-0 text-fg-subtle"
       />
       <span className="min-w-0 flex-1 truncate">{t(meta.labelKey)}</span>
+      <span className="shrink-0 text-fg-subtle">
+        {t(
+          props.mode === 'sync'
+            ? 'write.publishAi.modeSync'
+            : 'write.publishAi.modeAsync',
+        )}
+      </span>
       {props.taskId ? (
         <Link
           aria-label={t('write.publishProcess.viewTask')}

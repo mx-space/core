@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
-import { Effect } from 'effect'
+import { Args, Command, Options } from '@effect/cli'
+import { Effect, Option } from 'effect'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { Generic } from '../../domain/errors'
@@ -8,17 +8,28 @@ import { Renderer } from '../../services/Renderer'
 import { openFlag, silentFlag } from '../post/_flags'
 import {
   normalizeDraftRow,
+  parseAiResourcesFlag,
   publishSavedDraft,
   REF_TYPE_TO_RESOURCE,
 } from './_shared'
 
 const id = Args.text({ name: 'id' })
+const ai = Options.text('ai').pipe(
+  Options.withDescription(
+    'AI resources to generate, e.g. summary:sync,insights:async,translation (sync waits before going live; a bare name is async).',
+  ),
+  Options.optional,
+)
 
 export const publish = Command.make(
   'publish',
-  { id, open: openFlag, silent: silentFlag },
-  ({ id, open, silent }) =>
+  { ai, id, open: openFlag, silent: silentFlag },
+  ({ ai, id, open, silent }) =>
     Effect.gen(function* () {
+      const aiResources = yield* Effect.try({
+        try: () => parseAiResourcesFlag(Option.getOrElse(ai, () => '')),
+        catch: (error) => new Generic({ message: (error as Error).message }),
+      })
       const api = yield* Api
       const renderer = yield* Renderer
       const draft = normalizeDraftRow(
@@ -38,7 +49,7 @@ export const publish = Command.make(
         )
       }
 
-      const res = yield* publishSavedDraft(api, draft)
+      const res = yield* publishSavedDraft(api, draft, aiResources)
 
       yield* renderer.emitSuccess(silent ? { ok: true } : res)
       if (open) {

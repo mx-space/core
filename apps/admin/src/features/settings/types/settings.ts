@@ -43,7 +43,6 @@ export interface AIConfig {
   version?: 2
   decisionModel?: AIModelAssignment | null
   commentReviewModel?: AIModelAssignment | null
-  enableAutoGenerateTranslation?: boolean
   enableAutoTranslateInsights?: boolean
   enableInsights?: boolean
   enableSummary?: boolean

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   type DraftRow,
+  parseAiResourcesFlag,
   publishSavedDraft,
   saveDraftPayload,
   splitDraftBody,
@@ -122,5 +123,46 @@ describe('tree draft CLI contract', () => {
       },
       method: 'POST',
     })
+  })
+})
+
+describe('draft publish --ai', () => {
+  it('parses resources with modes and defaults a bare name to async', () => {
+    expect(parseAiResourcesFlag('summary:sync, insights:async,translation')).toEqual([
+      { mode: 'sync', resource: 'summary' },
+      { mode: 'async', resource: 'insights' },
+      { mode: 'async', resource: 'translation' },
+    ])
+  })
+
+  it('rejects unknown resources and modes with the valid values', () => {
+    expect(() => parseAiResourcesFlag('cover:sync')).toThrow(
+      /summary, insights, translation, tts/,
+    )
+    expect(() => parseAiResourcesFlag('summary:later')).toThrow(/sync, async/)
+  })
+
+  it('forwards parsed resources to the publish job', async () => {
+    const request = vi.fn(() => Effect.succeed({ taskId: 't' }))
+    const api = { request } as unknown as ApiService
+    const draft = {
+      document: { publishedRevisionId: null },
+      headRevisionId: 'rev-1',
+      id: 'branch-1',
+      relationToPublished: null,
+    } as unknown as DraftRow
+
+    await Effect.runPromise(
+      publishSavedDraft(api, draft, [{ mode: 'sync', resource: 'summary' }]),
+    )
+
+    expect(request).toHaveBeenCalledWith(
+      '/publish-jobs',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          aiResources: [{ mode: 'sync', resource: 'summary' }],
+        }),
+      }),
+    )
   })
 })

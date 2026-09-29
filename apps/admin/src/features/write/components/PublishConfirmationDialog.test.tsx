@@ -7,6 +7,9 @@ import { I18nProvider } from '~/i18n'
 
 import { PublishConfirmationDialog } from './PublishConfirmationDialog'
 
+const SUMMARY = '摘要'
+const INSIGHTS = '精读'
+
 let container: HTMLDivElement
 let root: Root
 
@@ -54,7 +57,7 @@ describe('PublishConfirmationDialog', () => {
     expect(onReviewDiff).toHaveBeenCalledOnce()
   })
 
-  it('uses one-time empty AI selections for an online update', async () => {
+  it('submits per-resource modes and pre-fills the last choice', async () => {
     const onConfirm = vi.fn()
     const props = {
       aiConfig: {
@@ -76,63 +79,50 @@ describe('PublishConfirmationDialog', () => {
       savedAt: '刚刚',
       validationError: null,
     }
-
-    act(() => {
-      root.render(
-        createElement(
-          I18nProvider,
-          null,
-          createElement(PublishConfirmationDialog, props),
+    const render = (open: boolean) =>
+      act(() => {
+        root.render(
+          createElement(
+            I18nProvider,
+            null,
+            createElement(PublishConfirmationDialog, { ...props, open }),
+          ),
+        )
+      })
+    const tab = (resource: string, label: string) =>
+      [
+        ...document.querySelectorAll<HTMLElement>(
+          `[role="tablist"][aria-label="${resource}"] [role="tab"]`,
         ),
-      )
-    })
+      ].find((item) => item.textContent?.trim() === label)!
+
+    localStorage.clear()
+    render(true)
 
     expect(document.body.textContent).toContain(
       '提交后将直接更新当前线上文章。',
     )
-    const checkboxes = [
-      ...document.querySelectorAll<HTMLElement>('[role="checkbox"]'),
-    ]
-    expect(checkboxes).toHaveLength(4)
-    expect(
-      checkboxes.every((item) => item.getAttribute('aria-checked') === 'false'),
-    ).toBe(true)
+    expect(tab(SUMMARY, '不生成').getAttribute('aria-selected')).toBe('true')
 
     await act(async () => {
-      checkboxes[0].closest('label')?.click()
+      tab(SUMMARY, '上线前').click()
+      tab(INSIGHTS, '上线后').click()
       await Promise.resolve()
     })
-    expect(checkboxes[0].getAttribute('aria-checked')).toBe('true')
     act(() => {
       ;[...document.querySelectorAll('button')]
         .find((button) => button.textContent?.trim() === '更新线上文章')
         ?.click()
     })
-    expect(onConfirm).toHaveBeenCalledWith(['summary'])
+    expect(onConfirm).toHaveBeenCalledWith([
+      { mode: 'sync', resource: 'summary' },
+      { mode: 'async', resource: 'insights' },
+    ])
 
-    act(() => {
-      root.render(
-        createElement(
-          I18nProvider,
-          null,
-          createElement(PublishConfirmationDialog, { ...props, open: false }),
-        ),
-      )
-    })
-    act(() => {
-      root.render(
-        createElement(
-          I18nProvider,
-          null,
-          createElement(PublishConfirmationDialog, props),
-        ),
-      )
-    })
+    render(false)
+    render(true)
 
-    expect(
-      [...document.querySelectorAll<HTMLElement>('[role="checkbox"]')].every(
-        (item) => item.getAttribute('aria-checked') === 'false',
-      ),
-    ).toBe(true)
+    expect(tab(SUMMARY, '上线前').getAttribute('aria-selected')).toBe('true')
+    expect(tab(INSIGHTS, '上线后').getAttribute('aria-selected')).toBe('true')
   })
 })
