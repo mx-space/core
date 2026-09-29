@@ -4,12 +4,14 @@ import {
   BANNER_NODE_KEY,
   CODE_BLOCK_NODE_KEY,
   IMAGE_NODE_KEY,
+  KATEX_NODE_KEY,
   LINK_CARD_NODE_KEY,
   MENTION_NODE_KEY,
   MERMAID_NODE_KEY,
   RUBY_NODE_KEY,
   VIDEO_NODE_KEY,
 } from '@haklex/rich-editor'
+import { KaTeXRenderer } from '@haklex/rich-editor/renderers'
 import { CHAT_NODE_KEY } from '@haklex/rich-ext-chat/node'
 import { ChatRenderer } from '@haklex/rich-ext-chat/renderer'
 import { CODE_SNIPPET_NODE_KEY } from '@haklex/rich-ext-code-snippet/node'
@@ -42,6 +44,7 @@ export const enhancedRendererConfig: RendererConfig = {
   [DYNAMIC_NODE_KEY]: MxDynamicRenderer,
   [GALLERY_NODE_KEY]: GalleryRenderer,
   [IMAGE_NODE_KEY]: ImageRenderer,
+  [KATEX_NODE_KEY]: KaTeXRenderer,
   [LINK_CARD_NODE_KEY]: LinkCardRenderer,
   [MAP_NODE_KEY]: MapBlockReadonly,
   [MENTION_NODE_KEY]: MentionRenderer,
