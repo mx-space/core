@@ -9,6 +9,7 @@ import {
 import { LoroDoc, type OpId, type TreeID } from 'loro-crdt'
 
 import type { LexicalState } from '../../services/Lexical'
+import { unbalancedTag } from './balance'
 import { annotateDiffNotes, resolveDiffNotes } from './diff-note'
 import {
   applyAuthorBody,
@@ -64,7 +65,7 @@ export interface AuthorSession {
   readonly settled: () => Promise<void>
   readonly history: () => HistoryEntry[]
   readonly preview: (id: OpId) => LexicalState
-  readonly restore: (id: OpId) => void
+  readonly restore: (id: OpId) => Promise<void>
   readonly invalid: () => string | null
   readonly lineage: () => string
   readonly close: () => Promise<void>
@@ -202,6 +203,10 @@ export async function createAuthorSession(
     if (text === doc.lastFileText) return
     let target: LexicalState
     try {
+      const unbalanced = unbalancedTag(
+        currentAuthorBody({ ...doc, lastFileText: text }),
+      )
+      if (unbalanced) throw new Error(unbalanced)
       target = parseBody(text)
     } catch (err) {
       const message = messageOf(err)
@@ -249,7 +254,7 @@ export async function createAuthorSession(
     if (onDisk) {
       const text = new TextDecoder().decode(onDisk)
       if (text !== doc.lastFileText) onFileText(text)
-      if (invalidMessage !== null) return
+      if (invalidMessage !== null || streaming > 0) return
     }
     const body = codec.lexicalToLitexml(
       resolveDiffNotes(editor.getEditorState().toJSON(), 'proposed'),
@@ -258,6 +263,10 @@ export async function createAuthorSession(
     if (applied.fileText === doc.lastFileText && doc.saved) return
     await persistAuthorSave(doc, applied.fileText, applied.diff, fs)
     remember(applied.fileText)
+    // The snapshot must never lag the file: a restart replays a newer file
+    // onto an older snapshot, and a surviving tab would then re-add the same text.
+    snapshotDirty = true
+    await saveSnapshot()
   }
 
   const flush = () => {
@@ -269,7 +278,11 @@ export async function createAuthorSession(
   function scheduleWrite() {
     snapshotDirty = true
     clearTimeout(writeTimer)
-    writeTimer = setTimeout(() => void flush(), writeDelayMs)
+    writeTimer = setTimeout(
+      () =>
+        void flush().catch((err) => log(`autosave failed: ${messageOf(err)}`)),
+      writeDelayMs,
+    )
   }
 
   const saveSnapshot = async () => {
@@ -329,15 +342,22 @@ export async function createAuthorSession(
         })),
     preview,
     restore: (id) => {
-      applyRemote(
-        editAtVersion(
-          loro,
-          loro.frontiers(),
-          createAuthorHeadlessEditor,
-          preview(id) as never,
-          `restore ${id.counter}@${id.peer}`,
-        ),
-      )
+      const apply = () =>
+        applyRemote(
+          editAtVersion(
+            loro,
+            loro.frontiers(),
+            createAuthorHeadlessEditor,
+            preview(id) as never,
+            `restore ${id.counter}@${id.peer}`,
+          ),
+        )
+      if (streaming === 0) {
+        apply()
+        return Promise.resolve()
+      }
+      playing = playing.then(apply)
+      return playing
     },
     invalid: () => invalidMessage,
     lineage: () => loro.getTree(TREE_NAME).roots()[0]!.id,

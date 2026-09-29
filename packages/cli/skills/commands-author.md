@@ -34,7 +34,7 @@ Edit `<file>` in place with a single read-modify-write (Claude Code `Edit`, Code
 - Text you did not change is never reverted, even if the human changed it after you read the file.
 - The editor shows your change typed in chunk by chunk with an **Agent** caret; non-text blocks (diagrams, images) appear in one step. The file is not rewritten until the stream ends.
 - Stdout prints `agent edit merged: +a ~m -d blocks` when the stream ends.
-- A broken envelope prints `agent edit rejected: <reason>` and pauses file writes (the header shows it). Fix `<file>` in place; writes resume on the next valid version. LiteXML fragments never fail to parse — unknown tags are dropped — so check the merged output when you use a new tag.
+- A broken envelope or unbalanced tags (e.g. `<h2>…</h3>`, which the lenient reader would otherwise re-nest silently) print `agent edit rejected: <reason>` and pause file writes (the header shows it). Fix `<file>` in place; writes resume on the next valid version. Unknown tags are still dropped silently, so check the merged output when you use a new tag.
 
 ## History
 

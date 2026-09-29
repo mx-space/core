@@ -69,7 +69,12 @@ describe('createAuthorSession', () => {
   const boot = async (
     source: string,
     dir?: string,
-    timing: { stepDelayMs?: number; cursorLingerMs?: number } = {
+    timing: {
+      stepDelayMs?: number
+      cursorLingerMs?: number
+      writeDelayMs?: number
+      fs?: typeof nodeSessionFs
+    } = {
       stepDelayMs: 0,
     },
   ) => {
@@ -80,9 +85,9 @@ describe('createAuthorSession', () => {
     const session = await createAuthorSession({
       doc: openAuthorDocument(filePath, text),
       codec,
-      fs: nodeSessionFs,
       log: (line) => logs.push(line),
       ...timing,
+      fs: timing.fs ?? nodeSessionFs,
     })
     sessions.push(session)
     return { dir: root, filePath, session }
@@ -269,5 +274,99 @@ describe('createAuthorSession', () => {
     expect(events).toContain('cursor')
     expect(events.at(-1)).toBe('hide')
     expect(texts(client.editor)[1]).toBe('streamed text '.repeat(6))
+  })
+
+  it('keeps an agent meta-only edit through later browser autosaves', async () => {
+    const envelope = (title: string, body: string) =>
+      `<mxpost><meta><title>${title}</title></meta><content>${body}</content></mxpost>`
+    const { filePath, session } = await boot(envelope('old', '<p>alpha</p>'))
+    const client = connect(session)
+    const agentText = envelope('new title', '<p>alpha</p>')
+    await writeFile(filePath, agentText)
+    session.onFileText(agentText)
+    expect(logs.at(-1)).toBe('agent edit merged: +0 ~0 -0 blocks')
+    setBlockText(client, 0, 'alpha typed later')
+    await session.flush()
+    const written = await readFile(filePath, 'utf8')
+    expect(written).toContain('<title>new title</title>')
+    expect(written).toContain('alpha typed later')
+  })
+
+  it('keeps an unprocessed agent write on disk while its stream plays', async () => {
+    const { filePath, session } = await boot('<p>alpha</p>', undefined, {
+      stepDelayMs: 20,
+    })
+    const client = connect(session)
+    await session.flush()
+    setBlockText(client, 0, 'alpha typed')
+    const agentText = `<p>alpha</p><p>${'agent words '.repeat(8)}</p>`
+    await writeFile(filePath, agentText)
+    await session.flush()
+    expect(await readFile(filePath, 'utf8')).toBe(agentText)
+    await session.settled()
+    await session.flush()
+    const merged = await readFile(filePath, 'utf8')
+    expect(merged).toContain('alpha typed')
+    expect(merged).toContain('agent words agent words')
+  })
+
+  it('does not duplicate text when a surviving tab reconnects after a crash', async () => {
+    const first = await boot('<p>alpha</p>')
+    await sessions.pop()!.close()
+    const crashed = await boot('', first.dir)
+    const tab = connect(crashed.session)
+    setBlockText(tab, 0, 'alpha typed before crash')
+    await crashed.session.flush()
+    const restarted = await boot('', first.dir)
+    restarted.session.importUpdate(tab.doc.export({ mode: 'update' }))
+    const fresh = connect(restarted.session)
+    expect(texts(fresh.editor)).toEqual(['alpha typed before crash'])
+  })
+
+  it('queues a restore behind a playing stream', async () => {
+    const { filePath, session } = await boot('<p>alpha</p>', undefined, {
+      stepDelayMs: 5,
+    })
+    const client = connect(session)
+    const initial = session.history()[0]!
+    const agentText = `<p>alpha</p><p>${'streamed '.repeat(10)}</p>`
+    await writeFile(filePath, agentText)
+    session.onFileText(agentText)
+    await session.restore(initial.id)
+    await session.settled()
+    expect(texts(client.editor)).toEqual(['alpha'])
+  })
+
+  it('logs instead of crashing when a scheduled autosave fails', async () => {
+    let failing = false
+    const flaky = {
+      ...nodeSessionFs,
+      writeFile: (path: string, data: string) =>
+        failing
+          ? Promise.reject(new Error('disk full'))
+          : nodeSessionFs.writeFile(path, data),
+    }
+    const { session } = await boot('<p>alpha</p>', undefined, {
+      stepDelayMs: 0,
+      writeDelayMs: 5,
+      fs: flaky,
+    })
+    const client = connect(session)
+    failing = true
+    setBlockText(client, 0, 'alpha typed')
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(logs.some((line) => line.includes('disk full'))).toBe(true)
+    failing = false
+  })
+
+  it('rejects an agent write with mismatched tags instead of re-nesting blocks', async () => {
+    const { filePath, session } = await boot('<h2>Title</h2><p>para</p>')
+    const client = connect(session)
+    const broken = '<h2>Title</h3><p>para</p>'
+    await writeFile(filePath, broken)
+    session.onFileText(broken)
+    expect(logs.at(-1)).toMatch(/^agent edit rejected: <\/h3> closes <h2>/)
+    expect(session.invalid()).not.toBeNull()
+    expect(texts(client.editor)).toEqual(['Title', 'para'])
   })
 })

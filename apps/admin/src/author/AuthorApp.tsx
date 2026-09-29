@@ -10,6 +10,8 @@ import { LoroSyncPlugin, type SyncStatus } from './LoroSyncPlugin'
 
 const extraNodes = [AgentDiffEditNode]
 
+const HUMAN_CHANGE_MERGE_SECONDS = 20
+
 type Variant = 'article' | 'note'
 
 interface DocumentResponse {
@@ -83,6 +85,8 @@ export function AuthorApp() {
       .then((next) => {
         if (cancelled) return
         const loro = new LoroDoc()
+        loro.setRecordTimestamp(true)
+        loro.setChangeMergeInterval(HUMAN_CHANGE_MERGE_SECONDS)
         loro.import(
           Uint8Array.from(atob(next.snapshot), (c) => c.charCodeAt(0)),
         )

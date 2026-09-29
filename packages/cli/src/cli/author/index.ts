@@ -226,6 +226,7 @@ export const authorCmd = Command.make(
         }
         process.once('SIGINT', stop)
         process.once('SIGTERM', stop)
+        process.once('SIGHUP', stop)
       })
     }),
 )

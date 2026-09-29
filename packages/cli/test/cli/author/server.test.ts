@@ -200,6 +200,14 @@ describe('startAuthorServer', () => {
     expect(res.status).toBe(400)
   })
 
+  it('answers a malformed path with 400 and keeps serving', async () => {
+    const { port } = await boot('<p>x</p>', 'frag.xml')
+    const bad = await rawRequest({ port, url: '/%E0%A4%A' })
+    expect(bad.status).toBe(400)
+    const ok = await rawRequest({ port, url: '/' })
+    expect(ok.status).toBe(200)
+  })
+
   it('serves the SPA index', async () => {
     const { port } = await boot('<p>x</p>', 'frag.xml')
     const res = await rawRequest({ port, url: '/' })

@@ -62,7 +62,13 @@ export async function startAuthorServer(
     }
   })
   const server = createServer((req, res) => {
-    void handle(req, res, { ...options, log, port: listeningPort }, live)
+    handle(req, res, { ...options, log, port: listeningPort }, live).catch(
+      (err: unknown) => {
+        log(`request failed: ${messageOf(err)}`)
+        if (res.headersSent) res.end()
+        else json(res, 500, { error: { message: messageOf(err) } })
+      },
+    )
   })
 
   let listeningPort = options.port
@@ -161,7 +167,7 @@ const handle = async (
         const id = parseOpId(
           JSON.parse((await readBuffer(req)).toString('utf8')),
         )
-        ctx.session.restore(id)
+        await ctx.session.restore(id)
         ctx.log(`restored ${id.counter}@${id.peer}`)
         json(res, 200, { ok: true })
         return
@@ -181,13 +187,12 @@ const handle = async (
         return
       }
     }
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      serveSpa(res, ctx.spaDir, url.pathname, req.method === 'HEAD')
+      return
+    }
   } catch (err) {
     json(res, 400, { error: { message: messageOf(err) } })
-    return
-  }
-
-  if (req.method === 'GET' || req.method === 'HEAD') {
-    serveSpa(res, ctx.spaDir, url.pathname, req.method === 'HEAD')
     return
   }
 
