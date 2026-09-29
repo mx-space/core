@@ -1141,6 +1141,9 @@ importers:
       '@haklex/rich-litexml':
         specifier: 0.44.0
         version: 0.44.0(typescript@6.0.3)
+      loro-crdt:
+        specifier: ^1.16.3
+        version: 1.16.3
     devDependencies:
       '@clack/prompts':
         specifier: ^1.7.0
@@ -1193,9 +1196,6 @@ importers:
       lexical:
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
-      loro-crdt:
-        specifier: ^1.16.3
-        version: 1.16.3
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
