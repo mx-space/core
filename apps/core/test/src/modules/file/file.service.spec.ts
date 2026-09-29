@@ -1,4 +1,4 @@
-import { copyFile, mkdir, unlink } from 'node:fs/promises'
+import { access, copyFile, mkdir, unlink } from 'node:fs/promises'
 import { Readable } from 'node:stream'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -30,10 +30,12 @@ vi.mock('~/utils/s3.util', () => {
     .fn()
     .mockResolvedValue('https://cdn.example.com/f.bin')
   const setCustomDomain = vi.fn()
+  const objectExists = vi.fn().mockResolvedValue(false)
   return {
     S3Uploader: vi.fn(function (this: Record<string, unknown>) {
       this.uploadBuffer = uploadBuffer
       this.setCustomDomain = setCustomDomain
+      this.objectExists = objectExists
     }),
   }
 })
@@ -112,9 +114,85 @@ describe('FileService.uploadBuffer', () => {
   const createFileReferenceService = () => ({
     createPendingReference: vi.fn().mockResolvedValue(undefined),
   })
+  const s3Config = (filenameTemplate: string) => ({
+    get: vi.fn(async (key: string) => {
+      if (key === 'fileUploadOptions') {
+        return { enableCustomNaming: true, filenameTemplate }
+      }
+      if (key === 'imageStorageOptions') {
+        return {
+          enable: true,
+          endpoint: 'https://s3.example.com',
+          secretId: 'id',
+          secretKey: 'key',
+          bucket: 'bucket',
+        }
+      }
+      throw new Error(`Unexpected config key: ${key}`)
+    }),
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(access).mockRejectedValue(
+      Object.assign(new Error('ENOENT'), { code: 'ENOENT' }),
+    )
+  })
+
+  it('never overwrites an existing S3 object when the naming template repeats a key', async () => {
+    const service = new FileService(
+      s3Config('{name}{ext}') as any,
+      createFileReferenceService() as any,
+    )
+    const uploader = () => vi.mocked(S3Uploader).mock.instances.at(-1) as any
+    vi.mocked(S3Uploader).mockImplementationOnce(function (this: any) {
+      this.uploadBuffer = vi.fn().mockResolvedValue('https://s3/x')
+      this.setCustomDomain = vi.fn()
+      this.objectExists = vi.fn(async (key: string) => key === 'image.png')
+    } as any)
+
+    const result = await service.uploadBuffer(Buffer.from('new-bytes'), {
+      type: 'image',
+      originalFilename: 'image.png',
+      contentType: 'image/png',
+    })
+
+    const key = uploader().uploadBuffer.mock.calls[0][1] as string
+    expect(key).toMatch(/^image-[\da-z]{6}\.png$/)
+    expect(result.storageKey).toBe(key)
+    expect(result.name).toBe(key)
+  })
+
+  it('picks a free local filename instead of failing when the name is taken', async () => {
+    const configService = {
+      get: vi.fn(async (key: string) => {
+        if (key === 'fileUploadOptions') {
+          return { enableCustomNaming: true, filenameTemplate: '{name}{ext}' }
+        }
+        if (key === 'imageStorageOptions') return { enable: false }
+        throw new Error(`Unexpected config key: ${key}`)
+      }),
+    }
+    const service = new FileService(
+      configService as any,
+      createFileReferenceService() as any,
+    )
+    vi.mocked(access).mockImplementation(async (p) => {
+      if (String(p) === '/static/image/image.png') return
+      throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
+    })
+    const writeFileSpy = vi
+      .spyOn(service, 'writeFile')
+      .mockResolvedValue(undefined as any)
+    vi.spyOn(service, 'resolveFileUrl').mockResolvedValue('http://x/y')
+
+    await service.uploadBuffer(Buffer.from('new-bytes'), {
+      type: 'image',
+      originalFilename: 'image.png',
+      contentType: 'image/png',
+    })
+
+    expect(writeFileSpy.mock.calls[0][1]).toMatch(/^image-[\da-z]{6}\.png$/)
   })
 
   it('tracks owner files written by module-specific producers', async () => {

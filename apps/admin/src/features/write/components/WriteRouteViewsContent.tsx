@@ -141,7 +141,6 @@ import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
 import type { TranslationKey } from '~/i18n/types'
-import { prepareImageFileForUpload } from '~/lib/image-upload-privacy'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
 import type {
@@ -5162,10 +5161,7 @@ function RichWriteSurface(props: {
     debounceMs: 250,
     editorStyle,
     imageUpload: async (file) => {
-      const preparedFile = await prepareImageFileForUpload(file)
-      if (!preparedFile) throw new Error('Image upload canceled')
-
-      const result = await uploadFile(preparedFile, 'image')
+      const result = await uploadFile(file, 'image')
       return { src: result.url }
     },
     trackUpload: async (file) => {
