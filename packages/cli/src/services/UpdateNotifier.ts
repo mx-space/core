@@ -314,12 +314,16 @@ export function satisfiesNodeEngine(
   return satisfies(currentVersion, trimmed, { loose: true })
 }
 
+// Package managers resolve dist-tags from cached metadata, so `@latest` can
+// silently reinstall the old version right after a publish; pin what the
+// update check resolved whenever it is known.
 export function buildUpgradeCommand(
   pm: PmKind,
   channel: UpdateChannel,
+  version?: string,
 ): { cmd: string; args: string[] } {
-  const target =
-    channel === 'next' ? `${PACKAGE_NAME}@next` : `${PACKAGE_NAME}@latest`
+  const tag = version ?? (channel === 'next' ? 'next' : 'latest')
+  const target = `${PACKAGE_NAME}@${tag}`
   switch (pm) {
     case 'npm': {
       return { cmd: 'npm', args: ['install', '-g', target] }
@@ -524,10 +528,11 @@ interface AutoUpdatePlan {
 const planAutoUpdate = (
   entry: string,
   channel: UpdateChannel,
+  version: string,
 ): AutoUpdatePlan | null => {
   const detection = detectPackageManager(entry)
   if (detection.kind !== 'global') return null
-  const { cmd, args } = buildUpgradeCommand(detection.pm, channel)
+  const { cmd, args } = buildUpgradeCommand(detection.pm, channel, version)
   return { pm: detection.pm, cmd, args }
 }
 
@@ -565,10 +570,9 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
     ) {
       return false
     }
-    const channel: UpdateChannel =
-      opts.channel ?? readChannelFromEnv(env)
+    const channel: UpdateChannel = opts.channel ?? readChannelFromEnv(env)
     const entry = deps.entrypoint ?? process.argv[1] ?? ''
-    const plan = planAutoUpdate(entry, channel)
+    const plan = planAutoUpdate(entry, channel, latest)
     if (!plan) return false
     try {
       spawnDetached(plan.cmd, plan.args, path.join(dir, AUTO_UPDATE_LOG))
@@ -814,7 +818,7 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
         }
       }
 
-      const { cmd, args } = buildUpgradeCommand(pm, channel)
+      const { cmd, args } = buildUpgradeCommand(pm, channel, hit.version)
       const shown = `${cmd} ${args.join(' ')}`
 
       if (opts.dryRun) {

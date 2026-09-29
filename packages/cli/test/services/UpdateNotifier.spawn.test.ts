@@ -60,7 +60,7 @@ describe('UpdateNotifier default spawn adapter', () => {
       expect(res.upgraded).toBe(true)
       expect(spawnMock).toHaveBeenCalledWith(
         'npm',
-        ['install', '-g', '@mx-space/cli@latest'],
+        ['install', '-g', '@mx-space/cli@9.9.9'],
         expect.objectContaining({
           stdio: ['ignore', 'inherit', 'pipe'],
         }),

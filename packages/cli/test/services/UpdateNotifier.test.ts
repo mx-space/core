@@ -214,6 +214,16 @@ describe('buildUpgradeCommand', () => {
     )
   })
 
+  it('pins the version the update check resolved', () => {
+    expect(buildUpgradeCommand('pnpm', 'stable', '0.18.1')).toEqual({
+      cmd: 'pnpm',
+      args: ['add', '-g', '@mx-space/cli@0.18.1'],
+    })
+    expect(buildUpgradeCommand('npm', 'next', '0.19.0-beta.1').args).toContain(
+      '@mx-space/cli@0.19.0-beta.1',
+    )
+  })
+
   it('builds pnpm, yarn, and bun commands', () => {
     expect(buildUpgradeCommand('pnpm', 'stable')).toEqual({
       cmd: 'pnpm',
@@ -287,15 +297,13 @@ describe('fetchLatestVersion', () => {
   })
 
   it('uses global fetch and the default registry when no fetch override is supplied', async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue({
-        ok: true,
-        status: 200,
-        headers: { get: () => null },
-        async json() {
-          return { version: '0.5.0' }
-        },
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      async json() {
+        return { version: '0.5.0' }
+      },
       async text() {
         return ''
       },
@@ -321,7 +329,11 @@ describe('fetchLatestVersion', () => {
 // ---------------------------------------------------------------------------
 
 describe('shouldSkipNotify', () => {
-  const base = { currentVersion: '0.2.0', isTTY: true, env: {} as NodeJS.ProcessEnv }
+  const base = {
+    currentVersion: '0.2.0',
+    isTTY: true,
+    env: {} as NodeJS.ProcessEnv,
+  }
   it('skips when quiet', () => {
     expect(shouldSkipNotify({ ...base, quiet: true })).toBe(true)
   })
@@ -396,7 +408,10 @@ describe('cache read/write', () => {
 describe('maybeNotify', () => {
   it('emits when cache has a newer version (within throttle)', async () => {
     const t = 1_000_000_000_000
-    writeCacheAtomic({ last_check_ts: t - 1000, latest_version: '0.3.0' }, tmpDir)
+    writeCacheAtomic(
+      { last_check_ts: t - 1000, latest_version: '0.3.0' },
+      tmpDir,
+    )
     const lines: string[] = []
     const svc = make({ now: () => t })
     await Effect.runPromise(
@@ -414,7 +429,10 @@ describe('maybeNotify', () => {
 
   it('does not emit when cache version <= current', async () => {
     const t = 1_000_000_000_000
-    writeCacheAtomic({ last_check_ts: t - 1000, latest_version: '0.2.0' }, tmpDir)
+    writeCacheAtomic(
+      { last_check_ts: t - 1000, latest_version: '0.2.0' },
+      tmpDir,
+    )
     const lines: string[] = []
     const svc = make({ now: () => t })
     await Effect.runPromise(
@@ -576,14 +594,12 @@ describe('maybeNotify', () => {
       tmpDir,
     )
     const lines: string[] = []
-    const spawnDetached = vi.fn<
-      (cmd: string, args: string[], logPath: string) => void
-    >()
+    const spawnDetached =
+      vi.fn<(cmd: string, args: string[], logPath: string) => void>()
     const svc = make({
       now: () => t,
       spawnDetached,
-      entrypoint:
-        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+      entrypoint: '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
     })
     await Effect.runPromise(
       svc.maybeNotify({
@@ -597,7 +613,7 @@ describe('maybeNotify', () => {
     expect(spawnDetached).toHaveBeenCalledOnce()
     const [cmd, args, logPath] = spawnDetached.mock.calls[0]!
     expect(cmd).toBe('npm')
-    expect(args.join(' ')).toBe('install -g @mx-space/cli@latest')
+    expect(args.join(' ')).toBe('install -g @mx-space/cli@9.9.9')
     expect(logPath).toBe(path.join(tmpDir, 'auto-update.log'))
     expect(lines[0]).toMatch(/auto-updating 0\.2\.0 → 9\.9\.9 in background/)
     expect(readCache(tmpDir)?.last_auto_update_ts).toBe(t)
@@ -618,8 +634,7 @@ describe('maybeNotify', () => {
     const svc = make({
       now: () => t,
       spawnDetached,
-      entrypoint:
-        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+      entrypoint: '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
     })
     await Effect.runPromise(
       svc.maybeNotify({
@@ -645,8 +660,7 @@ describe('maybeNotify', () => {
     const svc = make({
       now: () => t,
       spawnDetached,
-      entrypoint:
-        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+      entrypoint: '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
     })
     await Effect.runPromise(
       svc.maybeNotify({
@@ -692,8 +706,7 @@ describe('maybeNotify', () => {
       now: () => t,
       fetchImpl: makeFetchOK('0.3.0'),
       spawnDetached,
-      entrypoint:
-        '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
+      entrypoint: '/usr/local/lib/node_modules/@mx-space/cli/dist/bin/mxs.mjs',
     })
     await Effect.runPromise(
       svc.maybeNotify({
@@ -782,9 +795,8 @@ describe('runUpdate', () => {
   })
 
   it('returns up-to-date result without spawning when local >= registry latest', async () => {
-    const spawnImpl = vi.fn<
-      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
-    >()
+    const spawnImpl =
+      vi.fn<(cmd: string, args: string[]) => Promise<SpawnUpgradeResult>>()
     const svc = make({ fetchImpl: makeFetchOK('0.2.0'), spawnImpl })
     const res = await Effect.runPromise(
       svc.runUpdate({
@@ -801,9 +813,8 @@ describe('runUpdate', () => {
   })
 
   it('returns dry-run result when --dry-run set', async () => {
-    const spawnImpl = vi.fn<
-      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
-    >()
+    const spawnImpl =
+      vi.fn<(cmd: string, args: string[]) => Promise<SpawnUpgradeResult>>()
     const svc = make({ fetchImpl: makeFetchOK('9.9.9'), spawnImpl })
     const res = await Effect.runPromise(
       svc.runUpdate({
@@ -817,15 +828,14 @@ describe('runUpdate', () => {
     )
     expect(res.dryRun).toBe(true)
     expect(res.upgraded).toBe(false)
-    expect(res.command).toMatch(/^npm install -g @mx-space\/cli@latest$/)
+    expect(res.command).toMatch(/^npm install -g @mx-space\/cli@9\.9\.9$/)
     expect(spawnImpl).not.toHaveBeenCalled()
   })
 
   it('emits the exact command for non-json dry-run updates', async () => {
     const lines: string[] = []
-    const spawnImpl = vi.fn<
-      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
-    >()
+    const spawnImpl =
+      vi.fn<(cmd: string, args: string[]) => Promise<SpawnUpgradeResult>>()
     const svc = make({
       fetchImpl: makeFetchOK('9.9.9'),
       spawnImpl,
@@ -841,16 +851,15 @@ describe('runUpdate', () => {
         json: false,
       }),
     )
-    expect(res.command).toBe('npm install -g @mx-space/cli@latest')
+    expect(res.command).toBe('npm install -g @mx-space/cli@9.9.9')
     expect(lines.join('\n')).toContain('would run')
     expect(spawnImpl).not.toHaveBeenCalled()
   })
 
   it('returns check-only result and emits non-json announcement', async () => {
     const lines: string[] = []
-    const spawnImpl = vi.fn<
-      (cmd: string, args: string[]) => Promise<SpawnUpgradeResult>
-    >()
+    const spawnImpl =
+      vi.fn<(cmd: string, args: string[]) => Promise<SpawnUpgradeResult>>()
     const svc = make({
       fetchImpl: makeFetchOK('9.9.9'),
       spawnImpl,
@@ -887,7 +896,7 @@ describe('runUpdate', () => {
     )
     expect(res.channel).toBe('next')
     expect(res.pm).toBe('pnpm')
-    expect(res.command).toBe('pnpm add -g @mx-space/cli@next')
+    expect(res.command).toBe('pnpm add -g @mx-space/cli@9.9.9')
   })
 
   it('maps unexpected 304 during runUpdate to UpdateRegistryUnreachable', async () => {
@@ -1129,7 +1138,12 @@ function extractTag(cause: unknown): string | undefined {
     const obj = node as Record<string, unknown>
     if (typeof obj._tag === 'string' && obj._tag.startsWith('Update'))
       return obj._tag as string
-    if (typeof obj._tag === 'string' && /^(Update|Auth|Validation|Resource|Server|Network|Config|Profile|Argv|Generic|Write)/.test(obj._tag as string))
+    if (
+      typeof obj._tag === 'string' &&
+      /^(Update|Auth|Validation|Resource|Server|Network|Config|Profile|Argv|Generic|Write)/.test(
+        obj._tag as string,
+      )
+    )
       return obj._tag as string
     for (const v of Object.values(obj)) {
       const t = visit(v)
