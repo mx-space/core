@@ -146,6 +146,11 @@ async function stripGpsMetadata(file: File): Promise<File> {
   })
 }
 
+export const imageGpsPrivacy = {
+  detectGps: readGpsLocation,
+  stripGps: stripGpsMetadata,
+}
+
 export async function prepareImageFileForUpload(
   file: File,
 ): Promise<File | null> {

@@ -23,8 +23,11 @@ import {
   nestedDocEditNodes,
   NestedDocPlugin,
 } from '@haklex/rich-ext-nested-doc'
+import { ImageEditModalPlugin } from '@haklex/rich-plugin-image-editor'
 import type { LexicalEditor } from 'lexical'
 import { useRef } from 'react'
+
+import { imageGpsPrivacy } from '~/lib/image-upload-privacy'
 
 import type { RichEditorProps } from '../core'
 import { RichEditor } from '../core'
@@ -125,6 +128,7 @@ export function ReactEditorPane({
                 systemMessages={systemMessages}
               />
               <NestedDocPlugin />
+              <ImageEditModalPlugin privacy={imageGpsPrivacy} />
             </RichEditor>
           </ExcalidrawConfigProvider>
         </DialogStackProvider>
