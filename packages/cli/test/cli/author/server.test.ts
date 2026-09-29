@@ -85,6 +85,7 @@ describe('startAuthorServer', () => {
       codec,
       fs: nodeSessionFs,
       log,
+      stepDelayMs: 0,
     })
     const server = await startAuthorServer({
       doc,
@@ -220,6 +221,9 @@ describe('startAuthorServer', () => {
     await expect
       .poll(() => events.join(''), { timeout: 2000 })
       .toContain('event: update')
+    await expect
+      .poll(() => events.join(''), { timeout: 2000 })
+      .toContain('event: cursor')
     stream.destroy()
   })
 
@@ -227,7 +231,9 @@ describe('startAuthorServer', () => {
     const { port } = await boot(envelope('<p>hi</p>'))
     const open = () =>
       new Promise<http.IncomingMessage>((resolve) => {
-        http.get({ host: '127.0.0.1', port, path: '/api/events' }, resolve).end()
+        http
+          .get({ host: '127.0.0.1', port, path: '/api/events' }, resolve)
+          .end()
       })
     const first = await open()
     const second = await open()
@@ -243,7 +249,12 @@ describe('startAuthorServer', () => {
     session.onFileText(agentText)
     const history = JSON.parse(
       (await rawRequest({ port, url: '/api/history' })).body,
-    ) as { entries: Array<{ id: { peer: string; counter: number }; message?: string }> }
+    ) as {
+      entries: Array<{
+        id: { peer: string; counter: number }
+        message?: string
+      }>
+    }
     const first = history.entries.at(-1)!
     const preview = JSON.parse(
       (

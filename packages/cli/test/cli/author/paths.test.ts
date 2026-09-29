@@ -54,7 +54,9 @@ describe('pickAuthorPort', () => {
         resolve(typeof addr === 'object' && addr ? addr.port : 0)
       })
     })
-    await expect(pickAuthorPort(port)).rejects.toMatchObject({ _tag: 'Generic' })
+    await expect(pickAuthorPort(port)).rejects.toMatchObject({
+      _tag: 'Generic',
+    })
     await new Promise<void>((resolve) => holder.close(() => resolve()))
   })
 

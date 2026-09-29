@@ -66,7 +66,13 @@ describe('createAuthorSession', () => {
     logs.length = 0
   })
 
-  const boot = async (source: string, dir?: string) => {
+  const boot = async (
+    source: string,
+    dir?: string,
+    timing: { stepDelayMs?: number; cursorLingerMs?: number } = {
+      stepDelayMs: 0,
+    },
+  ) => {
     const root = dir ?? (await mkdtemp(join(tmpdir(), 'mxs-session-')))
     const filePath = join(root, 'article.xml')
     if (!dir) await writeFile(filePath, source)
@@ -76,6 +82,7 @@ describe('createAuthorSession', () => {
       codec,
       fs: nodeSessionFs,
       log: (line) => logs.push(line),
+      ...timing,
     })
     sessions.push(session)
     return { dir: root, filePath, session }
@@ -178,7 +185,9 @@ describe('createAuthorSession', () => {
     expect(texts(reconnected.editor)).toEqual(['alpha v2'])
     expect(second.session.history().length).toBeGreaterThan(before)
     expect(
-      second.session.history().filter((entry) => entry.message?.startsWith('session')),
+      second.session
+        .history()
+        .filter((entry) => entry.message?.startsWith('session')),
     ).toHaveLength(2)
   })
 
@@ -216,5 +225,49 @@ describe('createAuthorSession', () => {
     expect(texts(client.editor)).toEqual(['alpha'])
     expect(session.lineage()).toBe(client.doc.getTree('lexical').roots()[0]!.id)
   })
-})
 
+  it('merges two quick agent edits without duplicating inserted blocks', async () => {
+    const { filePath, session } = await boot('<p>alpha</p><p>beta</p>')
+    const client = connect(session)
+    const first = (await readFile(filePath, 'utf8')).replace(
+      '<p>beta</p>',
+      '<p>beta</p><p>inserted by agent</p>',
+    )
+    await writeFile(filePath, first)
+    session.onFileText(first)
+    const second = first.replace('<p>alpha</p>', '<p>alpha edited</p>')
+    await writeFile(filePath, second)
+    session.onFileText(second)
+    expect(texts(client.editor)).toEqual([
+      'alpha edited',
+      'beta',
+      'inserted by agent',
+    ])
+  })
+
+  it('streams an agent edit as typed steps with an agent cursor', async () => {
+    const { filePath, session } = await boot('<p>alpha</p>', undefined, {
+      stepDelayMs: 1,
+      cursorLingerMs: 5,
+    })
+    const client = connect(session)
+    const events: string[] = []
+    session.subscribe((event) => {
+      if (event.type === 'update') events.push('update')
+      if (event.type === 'cursor') events.push(event.cursor ? 'cursor' : 'hide')
+    })
+    const agentText = `<p>alpha</p><p>${'streamed text '.repeat(6)}</p>`
+    await writeFile(filePath, agentText)
+    session.onFileText(agentText)
+    await session.flush()
+    expect(await readFile(filePath, 'utf8')).toContain('streamed text streamed')
+    await session.settled()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(events.filter((event) => event === 'update').length).toBeGreaterThan(
+      3,
+    )
+    expect(events).toContain('cursor')
+    expect(events.at(-1)).toBe('hide')
+    expect(texts(client.editor)[1]).toBe('streamed text '.repeat(6))
+  })
+})

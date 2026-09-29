@@ -3,12 +3,15 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import type { LoroDoc, VersionVector } from 'loro-crdt'
 import { useEffect } from 'react'
 
+import type { AgentCursorPosition } from './AgentCursor'
+
 export type SyncStatus = 'synced' | 'syncing' | 'offline'
 
 interface Props {
   doc: LoroDoc
   onStatus: (status: SyncStatus) => void
   onInvalid: (message: string | null) => void
+  onAgentCursor: (cursor: AgentCursorPosition | null) => void
 }
 
 const BATCH_MS = 100
@@ -16,7 +19,12 @@ const BATCH_MS = 100
 const decode = (base64: string): Uint8Array =>
   Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
 
-export function LoroSyncPlugin({ doc, onStatus, onInvalid }: Props) {
+export function LoroSyncPlugin({
+  doc,
+  onStatus,
+  onInvalid,
+  onAgentCursor,
+}: Props) {
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
@@ -71,6 +79,13 @@ export function LoroSyncPlugin({ doc, onStatus, onInvalid }: Props) {
       }
       onInvalid(invalid)
     })
+    source.addEventListener('cursor', (event) => {
+      const { cursor } = JSON.parse((event as MessageEvent<string>).data) as {
+        cursor: { id: `${number}@${number}`; offset: number } | null
+      }
+      const key = cursor ? binding.keyOf(cursor.id) : undefined
+      onAgentCursor(key && cursor ? { key, offset: cursor.offset } : null)
+    })
     source.addEventListener('error', () => onStatus('offline'))
     source.addEventListener('open', () => {
       void fetch('/api/document')
@@ -102,7 +117,7 @@ export function LoroSyncPlugin({ doc, onStatus, onInvalid }: Props) {
       unsubscribe()
       binding.dispose()
     }
-  }, [editor, doc, onStatus, onInvalid])
+  }, [editor, doc, onStatus, onInvalid, onAgentCursor])
 
   return null
 }

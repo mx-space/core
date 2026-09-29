@@ -55,6 +55,8 @@ export async function startAuthorServer(
       sendEvent(live.client, 'update', {
         bytes: Buffer.from(event.bytes).toString('base64'),
       })
+    } else if (event.type === 'cursor') {
+      sendEvent(live.client, 'cursor', { cursor: event.cursor })
     } else {
       sendEvent(live.client, 'status', { invalid: event.invalid })
     }

@@ -81,9 +81,7 @@ describe('applyAuthorBody', () => {
 describe('unifiedDiff', () => {
   it('writes headers only when the body is unchanged', () => {
     const diff = unifiedDiff('<p>same</p>', '<p>same</p>', 'article.xml')
-    expect(diff).toBe(
-      '--- article.xml (original)\n+++ article.xml (current)\n',
-    )
+    expect(diff).toBe('--- article.xml (original)\n+++ article.xml (current)\n')
   })
 })
 

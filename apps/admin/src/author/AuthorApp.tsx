@@ -3,6 +3,7 @@ import { LoroDoc } from 'loro-crdt'
 import { useCallback, useEffect, useState } from 'react'
 
 import { RichEditor } from '../vendor/rich-editor/core/RichEditor'
+import { AgentCursor, type AgentCursorPosition } from './AgentCursor'
 import { DiffNotePlugin } from './DiffNotePlugin'
 import { HistoryPanel } from './HistoryPanel'
 import { LoroSyncPlugin, type SyncStatus } from './LoroSyncPlugin'
@@ -60,6 +61,9 @@ export function AuthorApp() {
   const [invalid, setInvalid] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [agentCursor, setAgentCursor] = useState<AgentCursorPosition | null>(
+    null,
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -191,7 +195,9 @@ export function AuthorApp() {
               doc={doc}
               onStatus={setStatus}
               onInvalid={setInvalid}
+              onAgentCursor={setAgentCursor}
             />
+            <AgentCursor cursor={agentCursor} />
           </RichEditor>
         </div>
         {historyOpen ? (

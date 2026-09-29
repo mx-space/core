@@ -48,7 +48,10 @@ describe('annotateDiffNotes', () => {
   it('marks a lone removal as delete', () => {
     const children = annotateDiffNotes(state(p('a'), p('b')), state(p('a')))
       .root.children as Array<Record<string, unknown>>
-    expect(children[1]).toMatchObject({ opType: 'delete', originalNode: p('b') })
+    expect(children[1]).toMatchObject({
+      opType: 'delete',
+      originalNode: p('b'),
+    })
   })
 
   it('leaves an identical document untouched', () => {

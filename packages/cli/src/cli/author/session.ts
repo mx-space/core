@@ -2,9 +2,11 @@ import {
   $reconcileRoot,
   createLoroBinding,
   editAtVersion,
+  streamAtVersion,
+  type StreamStep,
   TREE_NAME,
 } from '@haklex/rich-collab-loro'
-import { LoroDoc, type OpId } from 'loro-crdt'
+import { LoroDoc, type OpId, type TreeID } from 'loro-crdt'
 
 import type { LexicalState } from '../../services/Lexical'
 import { annotateDiffNotes, resolveDiffNotes } from './diff-note'
@@ -31,9 +33,15 @@ export interface HistoryEntry {
   readonly message: string | undefined
 }
 
+export interface AgentCursor {
+  readonly id: TreeID
+  readonly offset: number
+}
+
 export type AuthorEvent =
   | { readonly type: 'update'; readonly bytes: Uint8Array }
   | { readonly type: 'status'; readonly invalid: string | null }
+  | { readonly type: 'cursor'; readonly cursor: AgentCursor | null }
 
 export interface AuthorSessionOptions {
   readonly doc: AuthorDocument
@@ -43,6 +51,8 @@ export interface AuthorSessionOptions {
   readonly log?: (line: string) => void
   readonly writeDelayMs?: number
   readonly snapshotIntervalMs?: number
+  readonly stepDelayMs?: number
+  readonly cursorLingerMs?: number
 }
 
 export interface AuthorSession {
@@ -51,6 +61,7 @@ export interface AuthorSession {
   readonly onFileText: (text: string) => void
   readonly subscribe: (listener: (event: AuthorEvent) => void) => () => void
   readonly flush: () => Promise<void>
+  readonly settled: () => Promise<void>
   readonly history: () => HistoryEntry[]
   readonly preview: (id: OpId) => LexicalState
   readonly restore: (id: OpId) => void
@@ -80,6 +91,8 @@ export async function createAuthorSession(
 ): Promise<AuthorSession> {
   const { doc, codec, fs, log = () => undefined } = options
   const writeDelayMs = options.writeDelayMs ?? 300
+  const stepDelayMs = options.stepDelayMs ?? 35
+  const cursorLingerMs = options.cursorLingerMs ?? 4000
   const snapshotPath = `${doc.filePath}.loro`
   const listeners = new Set<(event: AuthorEvent) => void>()
   const emit = (event: AuthorEvent) => {
@@ -120,9 +133,9 @@ export async function createAuthorSession(
   loro.commit()
 
   const written = new Map<string, ReturnType<LoroDoc['frontiers']>>()
-  const remember = (fileText: string) => {
+  const remember = (fileText: string, frontiers = loro.frontiers()) => {
     written.delete(fileText)
-    written.set(fileText, loro.frontiers())
+    written.set(fileText, frontiers)
     if (written.size > WRITTEN_LIMIT) {
       written.delete(written.keys().next().value!)
     }
@@ -139,11 +152,50 @@ export async function createAuthorSession(
   let writeTimer: NodeJS.Timeout | undefined
   let snapshotDirty = false
   let writing = Promise.resolve()
+  let playing = Promise.resolve()
+  let streaming = 0
+  let cursorTimer: NodeJS.Timeout | undefined
 
   const applyRemote = (bytes: Uint8Array) => {
     binding.import(bytes)
     emit({ type: 'update', bytes })
     scheduleWrite()
+  }
+
+  const prepareAgentEdit = (
+    baseText: string,
+    text: string,
+    target: LexicalState,
+  ) => {
+    const baseState = parseBody(baseText)
+    const stats = blockStats(baseState, target)
+    const { frontiers, steps } = streamAtVersion(
+      loro,
+      written.get(baseText) ?? loro.frontiers(),
+      createAuthorHeadlessEditor,
+      baseState as never,
+      target as never,
+      `agent: ${stats}`,
+    )
+    remember(text, frontiers)
+    return { stats, steps }
+  }
+
+  const applyStep = (step: StreamStep) => {
+    binding.import(step.update)
+    emit({ type: 'update', bytes: step.update })
+    if (step.cursor) {
+      clearTimeout(cursorTimer)
+      emit({ type: 'cursor', cursor: step.cursor })
+    }
+  }
+
+  const hideCursorLater = () => {
+    clearTimeout(cursorTimer)
+    cursorTimer = setTimeout(
+      () => emit({ type: 'cursor', cursor: null }),
+      cursorLingerMs,
+    )
   }
 
   const onFileText = (text: string) => {
@@ -158,27 +210,41 @@ export async function createAuthorSession(
       return
     }
     const baseText = doc.lastFileText
-    const frontiers = written.get(baseText) ?? loro.frontiers()
-    const stats = blockStats(parseBody(baseText), target)
     doc.lastFileText = text
-    remember(text)
-    applyRemote(
-      editAtVersion(
-        loro,
-        frontiers,
-        createAuthorHeadlessEditor,
-        target as never,
-        `agent: ${stats}`,
-      ),
-    )
     setInvalid(null)
-    log(`agent edit merged: ${stats}`)
+    if (stepDelayMs === 0 && streaming === 0) {
+      const { stats, steps } = prepareAgentEdit(baseText, text, target)
+      for (const step of steps) applyStep(step)
+      hideCursorLater()
+      scheduleWrite()
+      log(`agent edit merged: ${stats}`)
+      return
+    }
+    streaming += 1
+    playing = playing.then(async () => {
+      try {
+        const { stats, steps } = prepareAgentEdit(baseText, text, target)
+        for (const step of steps) {
+          applyStep(step)
+          await new Promise((resolve) =>
+            setTimeout(resolve, stepDelayMs * (0.6 + Math.random() * 0.8)),
+          )
+        }
+        log(`agent edit merged: ${stats}`)
+      } catch (err) {
+        log(`agent edit failed: ${messageOf(err)}`)
+      } finally {
+        streaming -= 1
+        hideCursorLater()
+        scheduleWrite()
+      }
+    })
   }
 
   const write = async () => {
     clearTimeout(writeTimer)
     writeTimer = undefined
-    if (invalidMessage !== null) return
+    if (invalidMessage !== null || streaming > 0) return
     const onDisk = await fs.readFile(doc.filePath)
     if (onDisk) {
       const text = new TextDecoder().decode(onDisk)
@@ -195,7 +261,8 @@ export async function createAuthorSession(
   }
 
   const flush = () => {
-    writing = writing.then(write, write)
+    const previous = writing
+    writing = playing.then(() => previous).then(write, write)
     return writing
   }
 
@@ -245,6 +312,7 @@ export async function createAuthorSession(
       return () => listeners.delete(listener)
     },
     flush,
+    settled: () => playing,
     history: () =>
       [...loro.getAllChanges().values()]
         .flat()
@@ -275,6 +343,7 @@ export async function createAuthorSession(
     lineage: () => loro.getTree(TREE_NAME).roots()[0]!.id,
     close: async () => {
       clearInterval(snapshotTimer)
+      clearTimeout(cursorTimer)
       await flush()
       await saveSnapshot()
       binding.dispose()
