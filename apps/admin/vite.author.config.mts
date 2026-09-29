@@ -32,6 +32,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
     alias: {
+      'loro-crdt': 'loro-crdt/base64',
       path: 'path-browserify',
       os: 'os-browserify',
       'node-fetch': 'isomorphic-fetch',

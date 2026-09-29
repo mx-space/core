@@ -284,6 +284,9 @@ importers:
       '@haklex/rich-agent-core':
         specifier: 0.43.2
         version: 0.43.2(@haklex/rich-editor@0.43.2(@base-ui/react@1.8.0(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@lexical/extension@0.49.0(typescript@6.0.3))(@lexical/link@0.49.0(typescript@6.0.3))(@lexical/list@0.49.0(typescript@6.0.3))(@lexical/markdown@0.49.0(typescript@6.0.3))(@lexical/react@0.49.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3)(yjs@13.6.30))(@lexical/rich-text@0.49.0(typescript@6.0.3))(@lexical/table@0.49.0(typescript@6.0.3))(katex@0.18.7)(lexical@0.49.0(typescript@6.0.3))(lucide-react@1.42.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(shiki@4.4.3)(typescript@6.0.3))(@types/react@19.2.18)(immer@11.1.18)(lexical@0.49.0(typescript@6.0.3))(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.6.0(react@19.2.8))
+      '@haklex/rich-collab-loro':
+        specifier: file:../../../haklex/packages/rich-collab-loro
+        version: file:../haklex/packages/rich-collab-loro(lexical@0.49.0(typescript@6.0.3))(loro-crdt@1.16.3)
       '@haklex/rich-compose':
         specifier: 0.43.2
         version: 0.43.2(03090e263ef7d8231e6a54621578db0f)
@@ -485,6 +488,9 @@ importers:
       lit:
         specifier: 3.3.3
         version: 3.3.3
+      loro-crdt:
+        specifier: ^1.16.3
+        version: 1.16.3
       lucide-react:
         specifier: 1.42.0
         version: 1.42.0(react@19.2.8)
