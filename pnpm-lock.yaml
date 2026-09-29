@@ -1151,6 +1151,9 @@ importers:
       '@effect/vitest':
         specifier: 0.30.0
         version: 0.30.0(effect@3.22.1)(vitest@4.1.11)
+      '@haklex/rich-collab-loro':
+        specifier: file:../../../haklex/packages/rich-collab-loro
+        version: file:../haklex/packages/rich-collab-loro(lexical@0.49.0(typescript@6.0.3))(loro-crdt@1.16.3)
       '@haklex/rich-headless':
         specifier: 0.43.2
         version: 0.43.2(lexical@0.49.0(typescript@6.0.3))(typescript@6.0.3)
@@ -1184,6 +1187,9 @@ importers:
       lexical:
         specifier: 0.49.0
         version: 0.49.0(typescript@6.0.3)
+      loro-crdt:
+        specifier: ^1.16.3
+        version: 1.16.3
       minisearch:
         specifier: ^7.2.0
         version: 7.2.0
@@ -3048,6 +3054,12 @@ packages:
     peerDependencies:
       '@haklex/rich-editor': ^0.43.2
       lexical: 0.49.0
+
+  '@haklex/rich-collab-loro@file:../haklex/packages/rich-collab-loro':
+    resolution: {directory: ../haklex/packages/rich-collab-loro, type: directory}
+    peerDependencies:
+      lexical: 0.49.0
+      loro-crdt: ^1.16.0
 
   '@haklex/rich-compose@0.43.2':
     resolution: {integrity: sha512-68q1hdA4KKCL93w1iTYer5igm7jvTwb7fq+sG/k37RVh7sEQETe4r795j0HkLEY7nwP9zqhS/wD7l4G4KWk78A==}
@@ -9792,6 +9804,9 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
+  loro-crdt@1.16.3:
+    resolution: {integrity: sha512-0FP3TsPTCIVLg7fbjh7cJTt3evpbFD/KRfnd4k9R3ZuDTzl83nuiYK/8LRxQ35xKzcHAcvMowoL9pecNDw1bkw==}
+
   lowercase-keys@3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -14657,6 +14672,11 @@ snapshots:
       - react
       - typescript
       - use-sync-external-store
+
+  '@haklex/rich-collab-loro@file:../haklex/packages/rich-collab-loro(lexical@0.49.0(typescript@6.0.3))(loro-crdt@1.16.3)':
+    dependencies:
+      lexical: 0.49.0(typescript@6.0.3)
+      loro-crdt: 1.16.3
 
   '@haklex/rich-compose@0.43.2(03090e263ef7d8231e6a54621578db0f)':
     dependencies:
@@ -21848,6 +21868,8 @@ snapshots:
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
+
+  loro-crdt@1.16.3: {}
 
   lowercase-keys@3.0.0: {}
 

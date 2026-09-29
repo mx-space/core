@@ -8,7 +8,7 @@ import { Lexical, type LexicalState } from '../../services/Lexical'
 import { Renderer } from '../../services/Renderer'
 import { registerCommandHelp } from '../help/registry'
 import { openAuthorDocument } from './document'
-import { nodeAuthorFs } from './fs'
+import { nodeSessionFs } from './fs'
 import {
   findCliPackageRoot,
   isAuthorSourceModule,
@@ -16,6 +16,7 @@ import {
   resolveAuthorSpaDir,
 } from './paths'
 import { startAuthorServer } from './server'
+import { createAuthorSession } from './session'
 import { watchAuthorFile } from './watch'
 
 registerCommandHelp({
@@ -166,33 +167,42 @@ export const authorCmd = Command.make(
               }),
       })
 
-      const server = yield* Effect.tryPromise({
+      const log = (line: string) => Effect.runSync(renderer.emitInfo(line))
+      const toGeneric = (err: unknown) =>
+        new Generic({
+          message: err instanceof Error ? err.message : String(err),
+          cause: err,
+        })
+
+      const session = yield* Effect.tryPromise({
         try: () =>
-          startAuthorServer({
+          createAuthorSession({
             doc,
-            spaDir,
-            port: listenPort,
-            fs: nodeAuthorFs,
+            fs: nodeSessionFs,
             base: baseLexical,
-            log: (line) => Effect.runSync(renderer.emitInfo(line)),
+            log,
             codec: {
               litexmlToLexical: (xml) => runXml(lexical.litexmlToPayload(xml)),
               lexicalToLitexml: (state) =>
                 runXml(lexical.payloadToLitexml(state as LexicalState)),
             },
           }),
-        catch: (err) =>
-          new Generic({
-            message: err instanceof Error ? err.message : String(err),
-            cause: err,
-          }),
+        catch: toGeneric,
       })
 
-      const watcher = watchAuthorFile(file, server.pushRevision)
+      const server = yield* Effect.tryPromise({
+        try: () =>
+          startAuthorServer({ doc, session, spaDir, port: listenPort, log }),
+        catch: toGeneric,
+      })
+
+      const watcher = watchAuthorFile(file, session.onFileText)
 
       const url = `http://127.0.0.1:${server.port}`
       yield* renderer.emitInfo(`mxs author ${url}`)
-      yield* renderer.emitInfo(`saving writes ${file} and ${file}.diff`)
+      yield* renderer.emitInfo(
+        `edits autosave to ${file} (+ .diff); history in ${file}.loro`,
+      )
 
       if (!Option.getOrElse(noOpen, () => false)) {
         yield* Effect.promise(() => open(url))
@@ -201,7 +211,7 @@ export const authorCmd = Command.make(
       yield* Effect.async<void, Generic>((resume) => {
         const stop = () => {
           watcher.close()
-          void server.close().then(
+          void Promise.all([server.close(), session.close()]).then(
             () => resume(Effect.void),
             (err) =>
               resume(
