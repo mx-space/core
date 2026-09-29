@@ -1,3 +1,10 @@
+# [14.15.0](https://github.com/mx-space/core/compare/v14.14.5...v14.15.0) (2026-09-29)
+
+
+### Features
+
+* **admin:** review and edit images before they are inserted ([#2828](https://github.com/mx-space/core/issues/2828)) ([105d232](https://github.com/mx-space/core/commit/105d2326eb45220965cea7d9feb2dc13586bd299))
+
 ## [14.14.5](https://github.com/mx-space/core/compare/v14.14.4...v14.14.5) (2026-09-27)
 
 
