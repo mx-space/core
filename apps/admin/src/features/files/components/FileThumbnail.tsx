@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { thumbHashToDataURL } from 'thumbhash'
 
 import { cn } from '~/utils/cn'
@@ -14,7 +14,10 @@ interface FileThumbnailProps {
 }
 
 export function FileThumbnail(props: FileThumbnailProps) {
-  const [loaded, setLoaded] = useState(false)
+  // Tracking the loaded src instead of resetting a flag in an effect: a cached
+  // image can fire `load` before the effect runs, which left it at opacity 0.
+  const [loadedSrc, setLoadedSrc] = useState<null | string>(null)
+  const loaded = loadedSrc === props.src
   const placeholder = useMemo(
     () => (props.thumbhash ? decodeThumbhashToDataUrl(props.thumbhash) : null),
     [props.thumbhash],
@@ -22,10 +25,6 @@ export function FileThumbnail(props: FileThumbnailProps) {
   const backgroundColor = isPreviewColor(props.dominantColor)
     ? props.dominantColor
     : undefined
-
-  useEffect(() => {
-    setLoaded(false)
-  }, [props.src])
 
   return (
     <span
@@ -61,8 +60,8 @@ export function FileThumbnail(props: FileThumbnailProps) {
         )}
         decoding="async"
         loading="lazy"
-        onError={() => setLoaded(true)}
-        onLoad={() => setLoaded(true)}
+        onError={() => setLoadedSrc(props.src)}
+        onLoad={() => setLoadedSrc(props.src)}
         src={props.src}
       />
     </span>
