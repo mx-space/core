@@ -6,6 +6,7 @@ import type { FileRowItem } from '../utils/adapters'
 
 export interface OrphanFilesRouteContextValue {
   page: number
+  listUpdatedAt: number
   deleteDisabled: boolean
   onBack: () => void
   onDelete: (item: FileRowItem<OrphanFile>) => void

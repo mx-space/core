@@ -1332,6 +1332,8 @@ export const enUS = {
   'files.toast.referencesReconciled':
     'Reference rescan completed: {active} referenced files, {isolated} isolated files, and {usages} usage relationships',
   'files.toast.referencesUpToDate': 'Reference status is up to date',
+  'files.toast.referencesScanning': 'Checking references…',
+  'files.toast.referencesApplying': 'Applying reference changes…',
   'files.toast.uploadFailed': 'Upload failed',
   'files.toast.uploaded': 'Uploaded {count} files',
   'files.upload.anyFile': 'This category accepts any file.',

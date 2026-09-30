@@ -239,7 +239,20 @@ export function OrphanFilesPage() {
           setPage(1)
           await queryClient.invalidateQueries({ queryKey: filesQueryKey })
         },
-        scan: (apply) => reconcileMutation.mutateAsync(apply),
+        scan: async (apply) => {
+          const toastId = toast.loading(
+            t(
+              apply
+                ? 'files.toast.referencesApplying'
+                : 'files.toast.referencesScanning',
+            ),
+          )
+          try {
+            return await reconcileMutation.mutateAsync(apply)
+          } finally {
+            toast.dismiss(toastId)
+          }
+        },
       })
       if (!appliedResult) return
       toast.success(
@@ -261,19 +274,26 @@ export function OrphanFilesPage() {
   }
 
   const refreshing = orphansQuery.isFetching
-  const maintenanceBusy =
-    reconcileFlowActive || cleanupMutation.isPending || refreshing
+  const maintenanceRunning = reconcileFlowActive || cleanupMutation.isPending
+  const maintenanceBusy = maintenanceRunning || refreshing
   const hasSelection = selectedCount > 0 || selectAllAcross
 
   const ctxValue = useMemo(
     () => ({
       page,
+      listUpdatedAt: orphansQuery.dataUpdatedAt,
       deleteDisabled: deleteMutation.isPending,
       onBack: closeDetail,
       onDelete: (item: FileRowItem<OrphanFile>) => void confirmAndDelete(item),
       onOpenPreview: (next: { name: string; url: string }) => setPreview(next),
     }),
-    [page, deleteMutation.isPending, closeDetail, confirmAndDelete],
+    [
+      page,
+      orphansQuery.dataUpdatedAt,
+      deleteMutation.isPending,
+      closeDetail,
+      confirmAndDelete,
+    ],
   )
 
   return (
@@ -309,7 +329,7 @@ export function OrphanFilesPage() {
                   onClick={() => void orphansQuery.refetch()}
                   title={t('files.action.refresh')}
                   type="button"
-                  variant="subtle"
+                  variant="ghost"
                 >
                   <RefreshCw
                     aria-hidden="true"
@@ -319,11 +339,18 @@ export function OrphanFilesPage() {
                 <DropdownMenu>
                   <DropdownMenu.Trigger
                     aria-label={t('files.orphans.maintenance')}
-                    className="inline-flex size-10 items-center justify-center rounded-md text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[popup-open]:bg-surface-inset"
+                    className="inline-flex size-8 items-center justify-center rounded-sm text-fg-muted outline-hidden transition-colors hover:bg-surface-inset hover:text-fg focus-visible:ring-[3px] focus-visible:ring-accent/15 data-[popup-open]:bg-surface-inset"
                     title={t('files.orphans.maintenance')}
                     type="button"
                   >
-                    <MoreHorizontal aria-hidden="true" className="size-4" />
+                    {maintenanceRunning ? (
+                      <Loader2
+                        aria-hidden="true"
+                        className="size-4 animate-spin"
+                      />
+                    ) : (
+                      <MoreHorizontal aria-hidden="true" className="size-4" />
+                    )}
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Content align="end" className="w-56">
                     <DropdownMenu.Item

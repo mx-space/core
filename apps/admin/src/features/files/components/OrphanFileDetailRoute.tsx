@@ -32,12 +32,13 @@ export function OrphanFileDetailRoute() {
   const queryClient = useQueryClient()
   const ctx = useOrphanFilesRouteContext()
 
+  // The list cache is read imperatively; listUpdatedAt re-reads it after a refetch.
   const raw = useMemo(() => {
     if (!id) return undefined
     return findInListCache<OrphanFile>(queryClient, LIST_PREFIX, id, {
       extractItems: extractOrphans,
     })
-  }, [id, queryClient])
+  }, [id, queryClient, ctx.listUpdatedAt])
 
   useDocumentTitle(raw?.fileName)
 

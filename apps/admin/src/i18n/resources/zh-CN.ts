@@ -1293,6 +1293,8 @@ export const zhCN = {
   'files.toast.referencesReconciled':
     '引用重扫完成：{active} 个被引用文件，{isolated} 个孤立文件，{usages} 条引用关系',
   'files.toast.referencesUpToDate': '引用状态已是最新',
+  'files.toast.referencesScanning': '正在检查引用状态…',
+  'files.toast.referencesApplying': '正在应用引用变更…',
   'files.toast.uploadFailed': '上传失败',
   'files.toast.uploaded': '已上传 {count} 个文件',
   'files.upload.anyFile': '当前分类接受任意文件。',
