@@ -33,7 +33,11 @@ const rawRequest = (opts: {
   url?: string
   headers?: Record<string, string>
   body?: string | Uint8Array
-}): Promise<{ status: number; body: string }> =>
+}): Promise<{
+  status: number
+  body: string
+  headers: http.IncomingHttpHeaders
+}> =>
   new Promise((resolve, reject) => {
     const req = http.request(
       {
@@ -50,6 +54,7 @@ const rawRequest = (opts: {
           resolve({
             status: res.statusCode ?? 0,
             body: Buffer.concat(chunks).toString('utf8'),
+            headers: res.headers,
           }),
         )
       },
@@ -213,6 +218,26 @@ describe('startAuthorServer', () => {
     const res = await rawRequest({ port, url: '/' })
     expect(res.status).toBe(200)
     expect(res.body).toContain('author')
+  })
+
+  it('serves files beside the draft so relative asset paths preview', async () => {
+    const { port, filePath } = await boot('<p>x</p>', 'frag.xml')
+    const draftDir = join(filePath, '..')
+    await mkdir(join(draftDir, 'assets'))
+    await writeFile(join(draftDir, 'assets', 'shot.png'), 'png-bytes')
+    await writeFile(join(draftDir, '.secret'), 'nope')
+
+    const asset = await rawRequest({ port, url: '/assets/shot.png' })
+    expect(asset.status).toBe(200)
+    expect(asset.body).toBe('png-bytes')
+    expect(asset.headers['content-type']).toBe('image/png')
+
+    const hidden = await rawRequest({ port, url: '/.secret' })
+    expect(hidden.status).toBe(404)
+    const escape = await rawRequest({ port, url: '/..%2F..%2Fetc%2Fpasswd' })
+    expect(escape.status).toBe(403)
+    const missing = await rawRequest({ port, url: '/assets/none.png' })
+    expect(missing.status).toBe(404)
   })
 
   it('streams agent edits over SSE as Loro updates', async () => {

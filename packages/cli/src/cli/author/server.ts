@@ -4,7 +4,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http'
-import { extname, join, normalize, relative, sep } from 'node:path'
+import { dirname, extname, join, normalize, relative, sep } from 'node:path'
 
 import type { OpId } from 'loro-crdt'
 
@@ -35,13 +35,23 @@ interface LiveState {
 }
 
 const MIME: Record<string, string> = {
+  '.avif': 'image/avif',
   '.css': 'text/css; charset=utf-8',
+  '.excalidraw': 'application/json; charset=utf-8',
+  '.gif': 'image/gif',
   '.html': 'text/html; charset=utf-8',
+  '.jpeg': 'image/jpeg',
+  '.jpg': 'image/jpeg',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.map': 'application/json; charset=utf-8',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.wasm': 'application/wasm',
+  '.webm': 'video/webm',
+  '.webp': 'image/webp',
   '.woff2': 'font/woff2',
 }
 
@@ -247,7 +257,12 @@ const handle = async (
       }
     }
     if (req.method === 'GET' || req.method === 'HEAD') {
-      serveSpa(res, ctx.spaDir, url.pathname, req.method === 'HEAD')
+      serveStatic(
+        res,
+        [ctx.spaDir, dirname(ctx.doc.filePath)],
+        url.pathname,
+        req.method === 'HEAD',
+      )
       return
     }
   } catch (err) {
@@ -297,30 +312,42 @@ const readBuffer = (req: IncomingMessage): Promise<Buffer> =>
     req.on('error', reject)
   })
 
-const serveSpa = (
+// The draft directory is the second root so `src="assets/shot.jpg"` in a
+// local draft previews without uploading; the SPA bundle always wins a clash.
+const serveStatic = (
   res: ServerResponse,
-  spaDir: string,
+  roots: readonly string[],
   pathname: string,
   head: boolean,
 ): void => {
   const decoded = decodeURIComponent(pathname)
   const relativePath =
     decoded === '/' ? 'index.html' : decoded.replace(/^\//, '')
-  const resolved = normalize(join(spaDir, relativePath))
-  const rel = relative(spaDir, resolved)
-  if (rel.startsWith('..') || rel.startsWith(`..${sep}`)) {
-    json(res, 403, { error: { message: 'forbidden path' } })
-    return
-  }
-  if (!existsSync(resolved) || !statSync(resolved).isFile()) {
+  if (
+    relativePath
+      .split(/[/\\]/)
+      .some((part) => part.startsWith('.') && part !== '..')
+  ) {
     json(res, 404, { error: { message: 'not found' } })
     return
   }
-  const type = MIME[extname(resolved)] ?? 'application/octet-stream'
-  res.writeHead(200, { 'content-type': type })
-  if (head) {
-    res.end()
+  for (const root of roots) {
+    const resolved = normalize(join(root, relativePath))
+    const rel = relative(root, resolved)
+    if (rel.startsWith('..') || rel.startsWith(`..${sep}`)) {
+      json(res, 403, { error: { message: 'forbidden path' } })
+      return
+    }
+    if (!existsSync(resolved) || !statSync(resolved).isFile()) continue
+    const type =
+      MIME[extname(resolved).toLowerCase()] ?? 'application/octet-stream'
+    res.writeHead(200, { 'content-type': type })
+    if (head) {
+      res.end()
+      return
+    }
+    createReadStream(resolved).pipe(res)
     return
   }
-  createReadStream(resolved).pipe(res)
+  json(res, 404, { error: { message: 'not found' } })
 }
