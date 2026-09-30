@@ -1,30 +1,32 @@
 ## TL;DR
 
-Every image added to the rich editor now opens a review sheet for cropping, redaction, resizing and GPS removal, and uploads never overwrite existing files.
+Publishing now lets you decide, per AI resource, whether the article waits for it, and several file-management screens in the dashboard behave correctly again.
 
 ## Highlights
 
-Pasting, dropping, inserting from the toolbar or slash menu, replacing an image, or adding one to a gallery now opens a review sheet before anything is uploaded. From the sheet you can insert as-is, remove images from the batch, or open a full-screen editor. The editor can crop, annotate, pixelate or blur sensitive areas, and shrink the long edge to a preset size. Multiple images share one sheet and are inserted in the order shown.
+Each AI resource attached to a publish job can now run before or after the article goes live. Resources marked to run before publishing are ready when readers first see the post; resources marked to run after never block publishing. The publish dialog offers skip, before, or after for each resource and remembers your last choice, and `mxs draft publish` accepts the same choice, for example `--ai summary:sync,insights`.
 
-Location data is handled in the sheet as well. When a photo records where it was taken, the sheet shows the coordinates, and "Remove location" is ticked by default. Images you edit are re-encoded without any metadata. If GPS stripping fails, the image is held back instead of being uploaded with its location.
+Automatic translation has been removed. The server no longer creates translation entries or regenerates stale translations on its own; both remain available as manual actions in the dashboard.
 
-Stored uploads are now immutable. A custom naming template such as `{name}{ext}`, or clipboard pastes that are always called `image.png`, could previously reuse an object key and silently replace a published image on R2. Each upload now checks whether its key is taken and adds a short suffix when it is.
+The orphan files page now updates its detail pane as soon as a reference reconcile is applied, shows progress while references are being checked or applied, and its header buttons share one style. File previews no longer stay black when the image was already loaded in the list.
 
 ## Changes
 
 ### Features
-- Review, edit (crop, annotate, mosaic or blur, resize) and strip GPS from images before they are inserted into the editor ([#2828](https://github.com/mx-space/core/pull/2828))
-- The sheet says "Replace image" when it was opened to replace an existing image ([#2828](https://github.com/mx-space/core/pull/2828))
+- Choose per AI resource whether publishing waits for it or generates it afterwards ([fe1ffe4](https://github.com/mx-space/core/commit/fe1ffe4047b71af0cf5e590f36c4e8322eb1cc34))
 
 ### Bug Fixes
-- Uploads no longer overwrite an existing S3 or local file when two uploads resolve to the same name; local uploads with a taken name now succeed instead of failing ([#2828](https://github.com/mx-space/core/pull/2828))
-- Server shutdown no longer hangs on the database pool; closing it now times out after 5 seconds ([#2827](https://github.com/mx-space/core/pull/2827))
-- Comment image uploads are rejected up front when they are disabled, before any quota checks run ([#2827](https://github.com/mx-space/core/pull/2827))
+- Math formulas render again in the dashboard editor with the updated rich editor packages ([2721a5c](https://github.com/mx-space/core/commit/2721a5c681ba589ee1c3510558a8eb60e04108a6))
+- File detail previews show the image instead of a black box when it was already cached ([5fdbca4](https://github.com/mx-space/core/commit/5fdbca4de))
+- The orphan files detail pane refreshes after a reconcile, and checking or applying references shows progress ([bcfa729](https://github.com/mx-space/core/commit/bcfa72944))
 
 ### Other
-- The unused `PUT /files/:type/:name` endpoint, which overwrote files in place, has been removed ([#2828](https://github.com/mx-space/core/pull/2828))
-- Rich editor packages updated to `@haklex/*` 0.43.2 ([#2828](https://github.com/mx-space/core/pull/2828))
+- Rich editor packages updated to `@haklex/*` 0.44.1 ([236e21f](https://github.com/mx-space/core/commit/236e21f11babed71f0c8901439f49a723d4b1ae7))
+
+## Upgrade Notes
+
+- The `enableAutoGenerateTranslation` setting has been removed. If you relied on it, trigger translations manually from the dashboard after publishing.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.14.5...v14.15.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.15.0...v14.15.1

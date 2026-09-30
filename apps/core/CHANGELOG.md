@@ -1,3 +1,10 @@
+## [14.15.1](https://github.com/mx-space/core/compare/v14.15.0...v14.15.1) (2026-09-30)
+
+
+### Features
+
+* **publish:** choose per AI resource whether publishing waits for it ([fe1ffe4](https://github.com/mx-space/core/commit/fe1ffe4047b71af0cf5e590f36c4e8322eb1cc34))
+
 # [14.15.0](https://github.com/mx-space/core/compare/v14.14.5...v14.15.0) (2026-09-29)
 
 
