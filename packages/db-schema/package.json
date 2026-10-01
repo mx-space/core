@@ -59,9 +59,9 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260907.1",
-    "@types/node": "26.5.0",
-    "tsdown": "0.22.14",
+    "@cloudflare/workers-types": "5.20260930.1",
+    "@types/node": "26.6.3",
+    "tsdown": "0.23.0",
     "typescript": "6.0.3"
   }
 }

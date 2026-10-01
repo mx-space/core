@@ -23,9 +23,9 @@
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@types/node": "26.5.0",
+    "@types/node": "26.6.3",
     "@types/pg": "^8.23.1",
-    "tsdown": "0.22.14",
+    "tsdown": "0.23.0",
     "tsx": "^4.23.13",
     "typescript": "6.0.3",
     "vitest": "4.1.11"

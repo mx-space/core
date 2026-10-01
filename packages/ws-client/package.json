@@ -44,11 +44,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/node": "26.5.0",
-    "@types/ws": "8.18.1",
-    "tsdown": "0.22.14",
+    "@types/node": "26.6.3",
+    "@types/ws": "8.18.2",
+    "tsdown": "0.23.0",
     "typescript": "6.0.3",
     "vitest": "4.1.11",
-    "ws": "8.21.3"
+    "ws": "8.22.0"
   }
 }
