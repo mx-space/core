@@ -6,6 +6,7 @@ import type {
 } from '@earendil-works/pi-agent-core'
 import { runAgentLoop as piRunAgentLoop } from '@earendil-works/pi-agent-core'
 import type { AssistantMessage, Message } from '@earendil-works/pi-ai'
+import { getCurrentTools } from '@earendil-works/pi-ai'
 
 import type { IModelRuntime } from '../../runtime'
 import type { Conversation } from '../conversation/conversation'
@@ -85,16 +86,15 @@ export async function runEngineLoop(opts: {
 
   const streamFn: StreamFn = (_model, context, options) =>
     runtime.streamMessage!({
-      messages: context.messages,
-      systemPrompt: context.systemPrompt,
-      tools: context.tools,
+      messages: context.messages.filter((message) => message.role !== 'system'),
+      systemPrompt: conversation.systemPrompt,
+      tools: getCurrentTools(context.messages),
       signal: options?.signal ?? signal,
     })
 
   await piRunAgentLoop(
     [],
     {
-      systemPrompt: conversation.systemPrompt,
       messages: conversation.messages as AgentMessage[],
       tools: agentTools,
     },
@@ -104,7 +104,17 @@ export async function runEngineLoop(opts: {
         id: runtime.providerInfo.model,
       } as never,
       convertToLlm: (messages) => messages as Message[],
-      transformContext: conversation.transformContext,
+      // pi-agent-core announces tool changes as system messages in the
+      // transcript; keep them out of the message engine so they never land
+      // in the conversation history.
+      transformContext: async (messages, transformSignal) => {
+        const system = messages.filter((message) => message.role === 'system')
+        const rest = await conversation.transformContext(
+          messages.filter((message) => message.role !== 'system'),
+          transformSignal,
+        )
+        return [...system, ...rest]
+      },
       toolExecution: 'sequential',
       beforeToolCall: async ({ toolCall }) => {
         const limit = guards.toolInvocationLimits?.[toolCall.name]
@@ -121,12 +131,19 @@ export async function runEngineLoop(opts: {
           (toolInvocations[toolCall.name] ?? 0) + 1
         return undefined
       },
-      shouldStopAfterTurn: () => {
-        if (steps >= guards.maxSteps) {
-          stoppedByMaxSteps = true
-          return true
+      finishTurn: async (turn) => {
+        if (
+          turn.message.stopReason === 'error' ||
+          turn.message.stopReason === 'aborted'
+        ) {
+          return undefined
         }
-        return false
+        // finishTurn runs before turn_end, so this turn is not yet in `steps`.
+        if (steps + 1 >= guards.maxSteps) {
+          stoppedByMaxSteps = true
+          return { action: 'end' }
+        }
+        return undefined
       },
     },
     emit,

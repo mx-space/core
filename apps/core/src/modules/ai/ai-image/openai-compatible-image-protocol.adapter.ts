@@ -1,7 +1,7 @@
 import type {
   ImageContent,
+  ImageModel,
   ImagesContext,
-  ImagesModel,
   TextContent,
 } from '@earendil-works/pi-ai'
 
@@ -20,10 +20,11 @@ import {
 } from './openrouter-images-api'
 
 export class OpenAiCompatibleImageProtocolAdapter implements IImageRuntime {
-  private readonly model: ImagesModel<OpenRouterImagesApi>
+  private readonly model: ImageModel<OpenRouterImagesApi>
 
   constructor(private readonly config: ImageRuntimeAdapterConfig) {
     this.model = {
+      type: 'image',
       id: config.model,
       name: config.model,
       api: OPENROUTER_IMAGES_API,

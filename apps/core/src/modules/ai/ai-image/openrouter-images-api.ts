@@ -1,9 +1,9 @@
 import type {
   AssistantImages,
   ImageContent,
+  ImageModel,
   ImagesContext,
   ImagesFunction,
-  ImagesModel,
   ImagesOptions,
   TextContent,
   Usage,
@@ -53,10 +53,9 @@ interface OpenRouterImagesResponse {
 const DEFAULT_IMAGE_MIME_TYPE = 'image/png'
 
 export const generateOpenRouterImages: ImagesFunction<
-  OpenRouterImagesApi,
   OpenRouterImagesOptions
 > = async (
-  model: ImagesModel<OpenRouterImagesApi>,
+  model: ImageModel<OpenRouterImagesApi>,
   context: ImagesContext,
   options?: OpenRouterImagesOptions,
 ): Promise<AssistantImages> => {
@@ -116,7 +115,7 @@ export const generateOpenRouterImages: ImagesFunction<
 }
 
 async function resolveSupportedParameters(
-  model: ImagesModel<OpenRouterImagesApi>,
+  model: ImageModel<OpenRouterImagesApi>,
   apiKey: string,
 ): Promise<SupportedImageParameters> {
   try {
@@ -140,7 +139,7 @@ async function resolveSupportedParameters(
 }
 
 function buildRequestBody(
-  model: ImagesModel<OpenRouterImagesApi>,
+  model: ImageModel<OpenRouterImagesApi>,
   context: ImagesContext,
   options: OpenRouterImagesOptions | undefined,
   supportedParameters: SupportedImageParameters,
@@ -190,7 +189,7 @@ function buildRequestBody(
 }
 
 function logDroppedParams(
-  model: ImagesModel<OpenRouterImagesApi>,
+  model: ImageModel<OpenRouterImagesApi>,
   options: OpenRouterImagesOptions | undefined,
   params: OpenRouterImageRequestParams,
   requestedReferenceImages: boolean,

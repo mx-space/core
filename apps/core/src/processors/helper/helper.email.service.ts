@@ -15,6 +15,8 @@ import {
 
 import { AssetService } from './helper.asset.service'
 
+type AddressInput = string | { address?: string } | AddressInput[]
+
 type MailProvider = 'smtp' | 'resend'
 type MailClient = {
   sendMail: (options: Mail.Options) => Promise<any>
@@ -156,13 +158,7 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
         const resend = new Resend(apiKey)
         this.instance = {
           sendMail: async (options: Mail.Options) => {
-            const from = this.normalizeSingleAddress(
-              options.from as unknown as
-                | string
-                | Mail.Address
-                | Array<string | Mail.Address>
-                | undefined,
-            )
+            const from = this.normalizeSingleAddress(options.from)
             const to = this.normalizeAddressList(options.to)
             if (!from || !to) {
               throw createAppException(AppErrorCode.INTERNAL_ERROR, {
@@ -337,43 +333,33 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private normalizeSingleAddress(
-    input: string | Mail.Address | Array<string | Mail.Address> | undefined,
-  ): string | undefined {
+  private collectAddresses(input: AddressInput | undefined): string[] {
     if (!input) {
-      return undefined
+      return []
     }
     if (typeof input === 'string') {
-      return input
+      return [input]
     }
     if (Array.isArray(input)) {
-      const value = input
-        .map((item) => (typeof item === 'string' ? item : item.address))
-        .find(Boolean)
-      return value
+      return input.flatMap((item) => this.collectAddresses(item))
     }
-    return input.address
+    return input.address ? [input.address] : []
+  }
+
+  private normalizeSingleAddress(
+    input: AddressInput | undefined,
+  ): string | undefined {
+    return this.collectAddresses(input)[0]
   }
 
   private normalizeAddressList(
-    input: string | Mail.Address | Array<string | Mail.Address> | undefined,
+    input: AddressInput | undefined,
   ): string | string[] | undefined {
-    if (!input) {
+    const list = this.collectAddresses(input)
+    if (list.length === 0) {
       return undefined
     }
-    if (typeof input === 'string') {
-      return input
-    }
-    if (Array.isArray(input)) {
-      const list = input
-        .map((item) => (typeof item === 'string' ? item : item.address))
-        .filter(Boolean)
-      if (list.length === 0) {
-        return undefined
-      }
-      return list.length === 1 ? list[0] : list
-    }
-    return input.address
+    return list.length === 1 ? list[0] : list
   }
 
   private normalizeContent(input: unknown): string | undefined {

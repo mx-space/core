@@ -3,6 +3,7 @@ import type {
   AssistantMessage,
   AssistantMessageEventStream,
   Context,
+  JsonObject,
   Message as PiMessage,
   Model,
   ProviderStreamOptions,
@@ -698,7 +699,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
           type: 'toolCall',
           id: toolCall.id,
           name: toolCall.name,
-          arguments: args as Record<string, unknown>,
+          arguments: args as JsonObject,
         })
       }
 

@@ -1,6 +1,7 @@
 import type {
   AssistantMessage,
   AssistantMessageEvent,
+  JsonObject,
   Message as PiMessage,
   TextContent,
   ThinkingContent,
@@ -300,7 +301,7 @@ export function toPiMessages(
           type: 'toolCall',
           id: String(tc.id ?? ''),
           name: String(tc.name ?? ''),
-          arguments: (args ?? {}) as Record<string, unknown>,
+          arguments: (args ?? {}) as JsonObject,
         })
       }
       piMessages.push({
