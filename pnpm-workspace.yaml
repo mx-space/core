@@ -57,31 +57,31 @@ overrides:
   shiki: ^4.4.3
   # Editor stack tracks a single lexical runtime copy; keep in lockstep with
   # the @haklex/* peer floor (^0.49 as of @haklex 0.33.0).
-  lexical: 0.49.0
-  "@lexical/a11y": 0.49.0
-  "@lexical/clipboard": 0.49.0
-  "@lexical/code-core": 0.49.0
-  "@lexical/devtools-core": 0.49.0
-  "@lexical/dragon": 0.49.0
-  "@lexical/extension": 0.49.0
-  "@lexical/hashtag": 0.49.0
-  "@lexical/headless": 0.49.0
-  "@lexical/history": 0.49.0
-  "@lexical/html": 0.49.0
-  "@lexical/internal": 0.49.0
-  "@lexical/link": 0.49.0
-  "@lexical/list": 0.49.0
-  "@lexical/mark": 0.49.0
-  "@lexical/markdown": 0.49.0
-  "@lexical/overflow": 0.49.0
-  "@lexical/plain-text": 0.49.0
-  "@lexical/react": 0.49.0
-  "@lexical/rich-text": 0.49.0
-  "@lexical/selection": 0.49.0
-  "@lexical/table": 0.49.0
-  "@lexical/text": 0.49.0
-  "@lexical/utils": 0.49.0
-  "@lexical/yjs": 0.49.0
+  lexical: 0.52.0
+  "@lexical/a11y": 0.52.0
+  "@lexical/clipboard": 0.52.0
+  "@lexical/code-core": 0.52.0
+  "@lexical/devtools-core": 0.52.0
+  "@lexical/dragon": 0.52.0
+  "@lexical/extension": 0.52.0
+  "@lexical/hashtag": 0.52.0
+  "@lexical/headless": 0.52.0
+  "@lexical/history": 0.52.0
+  "@lexical/html": 0.52.0
+  "@lexical/internal": 0.52.0
+  "@lexical/link": 0.52.0
+  "@lexical/list": 0.52.0
+  "@lexical/mark": 0.52.0
+  "@lexical/markdown": 0.52.0
+  "@lexical/overflow": 0.52.0
+  "@lexical/plain-text": 0.52.0
+  "@lexical/react": 0.52.0
+  "@lexical/rich-text": 0.52.0
+  "@lexical/selection": 0.52.0
+  "@lexical/table": 0.52.0
+  "@lexical/text": 0.52.0
+  "@lexical/utils": 0.52.0
+  "@lexical/yjs": 0.52.0
   "@esbuild-kit/core-utils>esbuild": 0.25.12
   "@fastify/static": 10.1.3
   "brace-expansion@<1.1.16": 1.1.18
