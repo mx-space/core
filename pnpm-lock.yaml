@@ -659,8 +659,8 @@ importers:
         specifier: 0.46.0
         version: 0.46.0(lexical@0.52.0(typescript@6.0.3))(typescript@6.0.3)
       '@innei/message-engine':
-        specifier: 0.4.1
-        version: 0.4.1(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.3)(supports-color@5.5.0)(undici@8.11.2)(ws@8.22.0)(zod@4.6.5))(react@19.2.8)
+        specifier: 0.5.0
+        version: 0.5.0(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.3)(supports-color@5.5.0)(undici@8.11.2)(ws@8.22.0)(zod@4.6.5))(react@19.2.8)
       '@innei/next-async':
         specifier: 0.4.0
         version: 0.4.0
@@ -3592,11 +3592,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@innei/message-engine@0.4.1':
-    resolution: {integrity: sha512-r+RqddK+wWv2c+7UziLRxLmIkN2Px9ObS8kD7Xv/qVjthenDGZajH+ePAh3Hc/jLZ9hkCTXZ99mgrUcYxsTWhQ==}
+  '@innei/message-engine@0.5.0':
+    resolution: {integrity: sha512-e4Fww7pqjOBh16JGoZyxgjddrJpbwhpE7dsHgA2oZNyrb6tdR6stORxezeShvlkzAq86z52VBPQIS2jb/lkv+w==}
     engines: {node: '>=22'}
     peerDependencies:
-      '@earendil-works/pi-agent-core': ^0.84.1
+      '@earendil-works/pi-agent-core': ^0.84.1 || ^0.99.0
       react: '>=18.3.0'
     peerDependenciesMeta:
       '@earendil-works/pi-agent-core':
@@ -15002,7 +15002,7 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@innei/message-engine@0.4.1(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.3)(supports-color@5.5.0)(undici@8.11.2)(ws@8.22.0)(zod@4.6.5))(react@19.2.8)':
+  '@innei/message-engine@0.5.0(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.3)(supports-color@5.5.0)(undici@8.11.2)(ws@8.22.0)(zod@4.6.5))(react@19.2.8)':
     optionalDependencies:
       '@earendil-works/pi-agent-core': 0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.3)(supports-color@5.5.0)(undici@8.11.2)(ws@8.22.0)(zod@4.6.5)
       react: 19.2.8
