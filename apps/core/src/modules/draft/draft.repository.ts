@@ -434,6 +434,16 @@ export class DraftRepository extends BaseRepository {
     return row ? mapDocument(row) : null
   }
 
+  async setPublishAiResources(
+    documentId: EntityId | string,
+    resources: ContentDocumentRow['publishAiResources'],
+  ): Promise<void> {
+    await this.db
+      .update(contentDocuments)
+      .set({ publishAiResources: resources })
+      .where(eq(contentDocuments.id, parseEntityId(documentId)))
+  }
+
   async recordPublication(
     documentId: EntityId | string,
     revisionId: EntityId | string,

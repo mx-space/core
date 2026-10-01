@@ -3,6 +3,7 @@ import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { PublishAiResourceRequest } from '~/api/publish-jobs'
 import { I18nProvider } from '~/i18n'
 
 import { PublishConfirmationDialog } from './PublishConfirmationDialog'
@@ -57,7 +58,7 @@ describe('PublishConfirmationDialog', () => {
     expect(onReviewDiff).toHaveBeenCalledOnce()
   })
 
-  it('submits per-resource modes and pre-fills the last choice', async () => {
+  it('submits per-resource modes and pre-fills the remembered choice', async () => {
     const onConfirm = vi.fn()
     const props = {
       aiConfig: {
@@ -79,13 +80,20 @@ describe('PublishConfirmationDialog', () => {
       savedAt: '刚刚',
       validationError: null,
     }
-    const render = (open: boolean) =>
+    const render = (
+      open: boolean,
+      rememberedResources?: PublishAiResourceRequest[],
+    ) =>
       act(() => {
         root.render(
           createElement(
             I18nProvider,
             null,
-            createElement(PublishConfirmationDialog, { ...props, open }),
+            createElement(PublishConfirmationDialog, {
+              ...props,
+              open,
+              rememberedResources,
+            }),
           ),
         )
       })
@@ -96,7 +104,6 @@ describe('PublishConfirmationDialog', () => {
         ),
       ].find((item) => item.textContent?.trim() === label)!
 
-    localStorage.clear()
     render(true)
 
     expect(document.body.textContent).toContain(
@@ -120,7 +127,10 @@ describe('PublishConfirmationDialog', () => {
     ])
 
     render(false)
-    render(true)
+    render(true, [
+      { mode: 'sync', resource: 'summary' },
+      { mode: 'async', resource: 'insights' },
+    ])
 
     expect(tab(SUMMARY, '上线前').getAttribute('aria-selected')).toBe('true')
     expect(tab(INSIGHTS, '上线后').getAttribute('aria-selected')).toBe('true')

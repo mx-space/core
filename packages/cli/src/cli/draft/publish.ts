@@ -16,7 +16,7 @@ import {
 const id = Argument.String('id')
 const ai = Flag.String('ai').pipe(
   Flag.withDescription(
-    'AI resources to generate, e.g. summary:sync,insights:async,translation (sync waits before going live; a bare name is async).',
+    'AI resources to generate, e.g. summary:sync,insights:async,translation (sync waits before going live; a bare name is async). Omit to reuse the last publish choices; "none" generates nothing.',
   ),
   Flag.optional,
 )
@@ -27,7 +27,7 @@ export const publish = Command.make(
   ({ ai, id, open, silent }) =>
     Effect.gen(function* () {
       const aiResources = yield* Effect.try({
-        try: () => parseAiResourcesFlag(Option.getOrElse(ai, () => '')),
+        try: () => Option.getOrUndefined(Option.map(ai, parseAiResourcesFlag)),
         catch: (error) => new Generic({ message: (error as Error).message }),
       })
       const api = yield* Api

@@ -1,24 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  choicesFromRequests,
   normalizeTaskAiResources,
-  parsePublishAiChoices,
   toPublishAiRequests,
 } from './publish-ai-choices'
 
 describe('publish AI choices', () => {
-  it('restores remembered choices and ignores unknown values', () => {
+  it('restores the remembered requests as choices', () => {
     expect(
-      parsePublishAiChoices(
-        JSON.stringify({ insights: 'async', summary: 'sync', tts: 'later' }),
-      ),
+      choicesFromRequests([
+        { mode: 'async', resource: 'insights' },
+        { mode: 'sync', resource: 'summary' },
+      ]),
     ).toEqual({
       insights: 'async',
       summary: 'sync',
       translation: 'none',
       tts: 'none',
     })
-    expect(parsePublishAiChoices('{broken').summary).toBe('none')
+    expect(choicesFromRequests(null).summary).toBe('none')
   })
 
   it('submits only chosen and available resources in a stable order', () => {

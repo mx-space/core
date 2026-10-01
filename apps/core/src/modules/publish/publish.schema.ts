@@ -23,8 +23,8 @@ export const CreatePublishJobSchema = z.object({
   aiResources: z
     .array(PublishAiResourceRequestSchema)
     .max(8)
-    .default([])
-    .transform(normalizePublishAiResources),
+    .transform(normalizePublishAiResources)
+    .optional(),
   branchId: zEntityId,
   confirmDiverged: z.boolean().default(false),
   expectedPublishedRevisionId: zEntityId.nullable(),

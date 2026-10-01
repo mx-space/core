@@ -146,7 +146,9 @@ export class PublishService implements OnModuleInit {
       }
     }
     const payload: PublishTaskPayload = {
-      aiResources: normalizePublishAiResources(dto.aiResources),
+      aiResources: normalizePublishAiResources(
+        dto.aiResources ?? branch.document.publishAiResources ?? [],
+      ),
       branchId: branch.id,
       documentId: branch.documentId,
       expectedPublishedRevisionId: dto.expectedPublishedRevisionId,
@@ -216,6 +218,7 @@ export class PublishService implements OnModuleInit {
     }
 
     await this.startAsyncResources(byMode('async'), committed.id, result)
+    await this.drafts.setPublishAiResources(payload.documentId, aiResources)
 
     result.newerDraftChanges = await this.hasNewerBranchHead(payload)
     await context.setResult(result)

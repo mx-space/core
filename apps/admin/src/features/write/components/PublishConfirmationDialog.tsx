@@ -15,13 +15,12 @@ import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { cn } from '~/utils/cn'
 
 import {
+  choicesFromRequests,
   emptyPublishAiChoices,
-  loadPublishAiChoices,
   type PublishAiChoice,
   type PublishAiChoices,
   publishAiResourceLabels,
   publishAiResourceOrder,
-  savePublishAiChoices,
   toPublishAiRequests,
 } from './publish-ai-choices'
 
@@ -39,6 +38,7 @@ export function PublishConfirmationDialog(props: {
   open: boolean
   operation: PublishTaskPayload['operation']
   pending: boolean
+  rememberedResources?: PublishAiResourceRequest[] | null
   savedAt?: string
   validationError: string | null
 }) {
@@ -48,17 +48,14 @@ export function PublishConfirmationDialog(props: {
   )
 
   useEffect(() => {
-    if (props.open) setChoices(loadPublishAiChoices())
-  }, [props.open])
+    if (props.open) setChoices(choicesFromRequests(props.rememberedResources))
+  }, [props.open, props.rememberedResources])
 
   const isAvailable = (resource: PublishAiResource) =>
     !getUnavailableKey(resource, props.aiConfig, props.contentFormat)
   const requests =
     props.kind === 'page' ? [] : toPublishAiRequests(choices, isAvailable)
-  const confirm = () => {
-    if (props.kind !== 'page') savePublishAiChoices(choices)
-    props.onConfirm(requests)
-  }
+  const confirm = () => props.onConfirm(requests)
   const choiceOptions: { label: string; value: PublishAiChoice }[] = [
     { label: t('write.publishAi.modeNone'), value: 'none' },
     { label: t('write.publishAi.modeSync'), value: 'sync' },

@@ -288,6 +288,13 @@
       "when": 1790045227587,
       "tag": "0040_comment_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790877150039,
+      "tag": "0041_publish_ai_resources",
+      "breakpoints": true
     }
   ]
 }

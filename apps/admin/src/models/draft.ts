@@ -1,3 +1,5 @@
+import type { PublishAiResourceRequest } from '~/api/publish-jobs'
+
 import type { Image, Pager } from './base'
 
 export enum DraftRefType {
@@ -28,6 +30,7 @@ export interface ContentRevision extends RevisionSnapshot {
 export interface ContentDocument {
   createdAt: string
   id: string
+  publishAiResources?: PublishAiResourceRequest[] | null
   publishedRevisionId: string | null
   refId: string | null
   refType: DraftRefType

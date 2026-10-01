@@ -6,7 +6,10 @@ import { AppException } from '~/common/errors/exception.types'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import { CreatePublishJobSchema } from '~/modules/publish/publish.schema'
 import { PublishService } from '~/modules/publish/publish.service'
-import type { PublishTaskPayload } from '~/modules/publish/publish.types'
+import type {
+  PublishAiResourceRequest,
+  PublishTaskPayload,
+} from '~/modules/publish/publish.types'
 import { type TaskHandler, TaskStatus } from '~/processors/task-queue'
 
 const snapshot = {
@@ -25,6 +28,7 @@ const makeBranch = () => ({
   commonAncestorRevisionId: 'published-1',
   document: {
     id: 'document-1',
+    publishAiResources: null as PublishAiResourceRequest[] | null,
     publishedRevisionId: 'published-1',
     refId: 'post-1',
     refType: DraftRefType.Post,
@@ -47,6 +51,7 @@ const harness = (options: { online?: boolean } = {}) => {
     findById: vi.fn(async () => branch),
     linkDocument: vi.fn(),
     recordPublication: vi.fn(async () => ({ kind: 'ok' })),
+    setPublishAiResources: vi.fn(),
   }
   const posts = {
     create: vi.fn(),
@@ -99,7 +104,7 @@ const harness = (options: { online?: boolean } = {}) => {
   )
   service.onModuleInit()
 
-  const create = (confirmDiverged = false, aiResources: unknown = []) =>
+  const create = (confirmDiverged = false, aiResources?: unknown) =>
     service.create({
       aiResources,
       branchId: branch.id,
@@ -268,6 +273,42 @@ describe('PublishService AI resource modes', () => {
   })
 })
 
+describe('PublishService AI resource memory', () => {
+  const remembered: PublishAiResourceRequest[] = [
+    { mode: 'async', resource: 'summary' },
+  ]
+
+  it('reuses the last publish choices when the request omits them', async () => {
+    const { branch, create, payload } = harness()
+    branch.document.publishAiResources = remembered
+
+    await create()
+
+    expect(payload().aiResources).toEqual(remembered)
+  })
+
+  it('lets an explicit empty list override the remembered choices', async () => {
+    const { branch, create, payload } = harness()
+    branch.document.publishAiResources = remembered
+
+    await create(false, [])
+
+    expect(payload().aiResources).toEqual([])
+  })
+
+  it('remembers the choices once the publish finishes', async () => {
+    const { create, drafts, run } = harness()
+    await create(false, remembered)
+
+    await run()
+
+    expect(drafts.setPublishAiResources).toHaveBeenCalledWith(
+      'document-1',
+      remembered,
+    )
+  })
+})
+
 describe('CreatePublishJobSchema aiResources', () => {
   const base = {
     branchId: '1',
@@ -285,5 +326,9 @@ describe('CreatePublishJobSchema aiResources', () => {
       { mode: 'sync', resource: 'summary' },
       { mode: 'sync', resource: 'tts' },
     ])
+  })
+
+  it('leaves aiResources undefined when omitted', () => {
+    expect(CreatePublishJobSchema.parse(base).aiResources).toBeUndefined()
   })
 })

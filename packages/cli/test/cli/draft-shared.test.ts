@@ -23,11 +23,12 @@ const revision = {
 
 describe('tree draft CLI contract', () => {
   it('keeps images in the revision snapshot instead of type-specific data', () => {
-    expect(splitDraftBody({ images: [{ src: 'cover.jpg' }], slug: 'post' }))
-      .toEqual({
-        images: [{ src: 'cover.jpg' }],
-        typeSpecificData: { slug: 'post' },
-      })
+    expect(
+      splitDraftBody({ images: [{ src: 'cover.jpg' }], slug: 'post' }),
+    ).toEqual({
+      images: [{ src: 'cover.jpg' }],
+      typeSpecificData: { slug: 'post' },
+    })
   })
 
   it('creates a new branch from the published revision without selecting another draft', async () => {
@@ -115,7 +116,6 @@ describe('tree draft CLI contract', () => {
 
     expect(request).toHaveBeenCalledWith('/publish-jobs', {
       body: {
-        aiResources: [],
         branchId: 'branch-old',
         confirmDiverged: true,
         expectedPublishedRevisionId: 'published-2',
@@ -128,7 +128,9 @@ describe('tree draft CLI contract', () => {
 
 describe('draft publish --ai', () => {
   it('parses resources with modes and defaults a bare name to async', () => {
-    expect(parseAiResourcesFlag('summary:sync, insights:async,translation')).toEqual([
+    expect(
+      parseAiResourcesFlag('summary:sync, insights:async,translation'),
+    ).toEqual([
       { mode: 'sync', resource: 'summary' },
       { mode: 'async', resource: 'insights' },
       { mode: 'async', resource: 'translation' },
@@ -140,6 +142,10 @@ describe('draft publish --ai', () => {
       /summary, insights, translation, tts/,
     )
     expect(() => parseAiResourcesFlag('summary:later')).toThrow(/sync, async/)
+  })
+
+  it('parses "none" as an explicit empty selection', () => {
+    expect(parseAiResourcesFlag('none')).toEqual([])
   })
 
   it('forwards parsed resources to the publish job', async () => {

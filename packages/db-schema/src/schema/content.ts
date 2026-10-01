@@ -223,6 +223,12 @@ export const contentDocuments = pgTable(
       (): AnyPgColumn => contentRevisions.id,
       { onDelete: 'set null' },
     ),
+    publishAiResources: jsonb('publish_ai_resources').$type<
+      {
+        mode: 'sync' | 'async'
+        resource: 'insights' | 'summary' | 'translation' | 'tts'
+      }[]
+    >(),
   },
   (table) => [
     uniqueIndex('content_documents_ref_uniq')

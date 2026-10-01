@@ -1,5 +1,6 @@
 import type { EntityId } from '~/shared/id/entity-id'
 
+import type { PublishAiResourceRequest } from '../publish/publish.types'
 import type { DraftRefType } from './draft.enum'
 
 export type { DraftRefType }
@@ -21,6 +22,7 @@ export interface RevisionSnapshot {
 export interface ContentDocumentRow {
   createdAt: Date
   id: EntityId
+  publishAiResources: PublishAiResourceRequest[] | null
   publishedRevisionId: EntityId | null
   refId: EntityId | null
   refType: DraftRefType

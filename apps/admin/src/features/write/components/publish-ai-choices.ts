@@ -24,9 +24,6 @@ export const publishAiResourceLabels: Record<
   tts: 'ai.overview.capability.tts',
 }
 
-const STORAGE_KEY = 'mx-admin:publish-ai-choices'
-const CHOICES = new Set<PublishAiChoice>(['none', 'sync', 'async'])
-
 export const emptyPublishAiChoices = (): PublishAiChoices => ({
   insights: 'none',
   summary: 'none',
@@ -34,37 +31,14 @@ export const emptyPublishAiChoices = (): PublishAiChoices => ({
   tts: 'none',
 })
 
-export function parsePublishAiChoices(raw: string | null): PublishAiChoices {
+export function choicesFromRequests(
+  requests: readonly PublishAiResourceRequest[] | null | undefined,
+): PublishAiChoices {
   const choices = emptyPublishAiChoices()
-  if (!raw) return choices
-  try {
-    const stored = JSON.parse(raw) as Record<string, unknown>
-    for (const resource of publishAiResourceOrder) {
-      const value = stored?.[resource]
-      if (CHOICES.has(value as PublishAiChoice)) {
-        choices[resource] = value as PublishAiChoice
-      }
-    }
-  } catch {
-    return choices
+  for (const { mode, resource } of requests ?? []) {
+    if (resource in choices) choices[resource] = mode
   }
   return choices
-}
-
-export function loadPublishAiChoices(): PublishAiChoices {
-  try {
-    return parsePublishAiChoices(localStorage.getItem(STORAGE_KEY))
-  } catch {
-    return emptyPublishAiChoices()
-  }
-}
-
-export function savePublishAiChoices(choices: PublishAiChoices) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(choices))
-  } catch {
-    /* storage can be unavailable (private mode); the next dialog starts empty */
-  }
 }
 
 export function toPublishAiRequests(

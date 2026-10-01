@@ -2573,6 +2573,9 @@ function WritePage(props: { kind: WriteKind }) {
             : undefined
         }
         open={publishConfirmOpen}
+        rememberedResources={
+          versionContextQuery.data?.document.publishAiResources
+        }
         operation={publishOperation}
         pending={saveMutation.isPending}
         savedAt={

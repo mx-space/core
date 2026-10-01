@@ -507,6 +507,13 @@ export class DraftService {
     )
   }
 
+  async setPublishAiResources(
+    documentId: string,
+    resources: ContentDocumentRow['publishAiResources'],
+  ) {
+    await this.draftRepository.setPublishAiResources(documentId, resources)
+  }
+
   private async ensurePublishedDocument(
     refType: DraftRefType,
     refId: string,
