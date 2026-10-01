@@ -15,11 +15,11 @@ export const resolveArticleId = (
     if (isSnowflakeId(ref)) return ref
     const asPost = yield* resolver
       .resolvePostId(ref)
-      .pipe(Effect.catchAll(() => Effect.succeed<string | null>(null)))
+      .pipe(Effect.catch(() => Effect.succeed<string | null>(null)))
     if (asPost) return asPost
     const asNote = yield* resolver
       .resolveNoteId(ref)
-      .pipe(Effect.catchAll(() => Effect.succeed<string | null>(null)))
+      .pipe(Effect.catch(() => Effect.succeed<string | null>(null)))
     if (asNote) return asNote
     return yield* Effect.fail(
       new ResourceNotFound({

@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
@@ -7,7 +7,7 @@ import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
 import { noteView } from './view'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 export const get = Command.make('get', { slugOrId }, ({ slugOrId }) =>
   Effect.gen(function* () {

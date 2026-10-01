@@ -1,10 +1,10 @@
-import { Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Flag } from 'effect/cli'
 
 import type { Generic, ValidationFailed } from '../../domain/errors'
 import { Editor } from '../../services/Editor'
 
-const optional = <A>(self: Options.Options<A>) => Options.optional(self)
+const optional = <A>(self: Flag.Flag<A>) => Flag.optional(self)
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)
 
@@ -30,20 +30,20 @@ export const SNIPPET_KEYS = [
   'enable',
 ] as const
 
-const type = optional(Options.choice('type', SNIPPET_TYPES))
-const file = optional(Options.text('file'))
-const raw = optional(Options.text('raw'))
-const comment = optional(Options.text('comment'))
+const type = optional(Flag.Literals('type', SNIPPET_TYPES))
+const file = optional(Flag.String('file'))
+const raw = optional(Flag.String('raw'))
+const comment = optional(Flag.String('comment'))
 const method = optional(
-  Options.choice('method', ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']),
+  Flag.Literals('method', ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'ALL']),
 )
-const metatype = optional(Options.text('metatype'))
-const schema = optional(Options.text('schema'))
-const secret = optional(Options.text('secret'))
-const privateFlag = Options.boolean('private')
-const noPrivateFlag = Options.boolean('no-private')
-const enableFlag = Options.boolean('enable')
-const noEnableFlag = Options.boolean('no-enable')
+const metatype = optional(Flag.String('metatype'))
+const schema = optional(Flag.String('schema'))
+const secret = optional(Flag.String('secret'))
+const privateFlag = Flag.Boolean('private').pipe(Flag.withDefault(false))
+const noPrivateFlag = Flag.Boolean('no-private').pipe(Flag.withDefault(false))
+const enableFlag = Flag.Boolean('enable').pipe(Flag.withDefault(false))
+const noEnableFlag = Flag.Boolean('no-enable').pipe(Flag.withDefault(false))
 
 export const snippetWriteOptions = {
   type,

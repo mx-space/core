@@ -1,18 +1,18 @@
-import { Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Ai } from '../../../../services/Ai'
 import { Renderer } from '../../../../services/Renderer'
 
-const keyPath = Options.text('key-path').pipe(
-  Options.repeated,
-  Options.withDescription(
+const keyPath = Flag.String('key-path').pipe(
+  Flag.atLeast(0),
+  Flag.withDescription(
     'restrict to a server-validated key path (repeatable). Allowed: category.name, topic.name, topic.introduce, topic.description, note.mood, note.weather',
   ),
 )
-const to = Options.text('to').pipe(
-  Options.repeated,
-  Options.withDescription('target language code (repeatable)'),
+const to = Flag.String('to').pipe(
+  Flag.atLeast(0),
+  Flag.withDescription('target language code (repeatable)'),
 )
 
 export const generate = Command.make(

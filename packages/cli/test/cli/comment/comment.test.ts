@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { approve } from '../../../src/cli/comment/approve'
 import { del } from '../../../src/cli/comment/delete'
@@ -130,7 +131,7 @@ describe('comment list', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.some(2),
         size: Option.some(5),
         state: Option.none(),
@@ -162,7 +163,7 @@ describe('comment list', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.none(),
         size: Option.none(),
         state: Option.none(),
@@ -191,7 +192,7 @@ describe('comment unread alias', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = unread.handler({
+      const program = handler(unread)({
         page: Option.some(3),
         size: Option.some(20),
       })
@@ -215,7 +216,7 @@ describe('comment approve', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = approve.handler({
+      const program = handler(approve)({
         ids: ['abc'],
         all: false,
         force: false,
@@ -241,7 +242,7 @@ describe('comment approve', () => {
     const restoreTty = setStdinTty(true)
     try {
       const layer = buildLayer(http.layer)
-      const program = approve.handler({
+      const program = handler(approve)({
         ids: [],
         all: true,
         force: false,
@@ -259,7 +260,7 @@ describe('comment approve', () => {
   it('rejects empty ids without --all', async () => {
     const http = testHttpLayer({})
     const layer = buildLayer(http.layer)
-    const program = approve.handler({
+    const program = handler(approve)({
       ids: [],
       all: false,
       force: false,
@@ -274,7 +275,7 @@ describe('comment approve', () => {
   it('rejects ids combined with --all', async () => {
     const http = testHttpLayer({})
     const layer = buildLayer(http.layer)
-    const program = approve.handler({
+    const program = handler(approve)({
       ids: ['x'],
       all: true,
       force: false,
@@ -291,7 +292,7 @@ describe('comment approve', () => {
     const layer = buildLayer(http.layer)
     const restoreTty = setStdinTty(false)
     try {
-      const program = approve.handler({
+      const program = handler(approve)({
         ids: [],
         all: true,
         force: false,
@@ -318,7 +319,7 @@ describe('comment reject', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = reject.handler({
+      const program = handler(reject)({
         ids: ['x', 'y'],
         all: false,
         force: false,
@@ -347,7 +348,7 @@ describe('comment reply', () => {
     const out = muteStdout()
     try {
       const layer = replyLayer(http.layer)
-      const program = reply.handler({
+      const program = handler(reply)({
         id: 'c1',
         text: Option.some('thanks'),
         whispers: false,
@@ -372,7 +373,7 @@ describe('comment reply', () => {
     const out = muteStdout()
     try {
       const layer = replyLayer(http.layer)
-      const program = reply.handler({
+      const program = handler(reply)({
         id: 'c2',
         text: Option.some('shh'),
         whispers: true,
@@ -389,7 +390,7 @@ describe('comment reply', () => {
   it('rejects when --text is missing', async () => {
     const http = testHttpLayer({})
     const layer = replyLayer(http.layer)
-    const program = reply.handler({
+    const program = handler(reply)({
       id: 'c3',
       text: Option.none(),
       whispers: false,
@@ -405,7 +406,7 @@ describe('comment reply', () => {
   it('rejects when text is whitespace-only', async () => {
     const http = testHttpLayer({})
     const layer = replyLayer(http.layer)
-    const program = reply.handler({
+    const program = handler(reply)({
       id: 'c4',
       text: Option.some('   \n\t  '),
       whispers: false,
@@ -431,7 +432,7 @@ describe('comment delete', () => {
     const restoreTty = setStdinTty(true)
     try {
       const layer = buildLayer(http.layer)
-      const program = del.handler({
+      const program = handler(del)({
         ids: ['abc'],
         all: false,
         force: false,
@@ -451,7 +452,7 @@ describe('comment delete', () => {
     const layer = buildLayer(http.layer)
     const restoreTty = setStdinTty(false)
     try {
-      const program = del.handler({
+      const program = handler(del)({
         ids: ['abc'],
         all: false,
         force: false,
@@ -476,7 +477,7 @@ describe('comment delete', () => {
     const out = muteStdout()
     try {
       const layer = buildLayer(http.layer)
-      const program = del.handler({
+      const program = handler(del)({
         ids: [],
         all: true,
         force: true,

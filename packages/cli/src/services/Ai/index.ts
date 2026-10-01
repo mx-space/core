@@ -177,7 +177,7 @@ export const make = (api: ApiService): AiService => {
 // callers can narrow `AiServiceError` without re-importing `errors.ts`).
 export type _Generic = Generic
 
-export class Ai extends Context.Tag('Ai')<Ai, AiService>() {
+export class Ai extends Context.Service<Ai, AiService>()('Ai') {
   static Default: Layer.Layer<Ai, never, Api> = Layer.effect(
     Ai,
     Effect.gen(function* () {

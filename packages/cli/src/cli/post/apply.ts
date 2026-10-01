@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Generic } from '../../domain/errors'
 import { Api } from '../../services/Api'
@@ -7,7 +7,7 @@ import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
 import { normalizeVersionContext, publishSavedDraft } from '../draft/_shared'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 export const apply = Command.make('apply', { slugOrId }, ({ slugOrId }) =>
   Effect.gen(function* () {

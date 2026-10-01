@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { status } from '../../../src/cli/auth/status'
 import { Config } from '../../../src/services/Config'
@@ -53,7 +54,7 @@ describe('auth status command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        status.handler({}).pipe(
+        handler(status)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions({
             json: true,
@@ -89,7 +90,7 @@ describe('auth status command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        status.handler({}).pipe(
+        handler(status)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions({
             json: true,

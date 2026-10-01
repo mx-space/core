@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { logout } from '../../../src/cli/auth/logout'
 import { whoami } from '../../../src/cli/auth/whoami'
@@ -86,7 +87,7 @@ describe('auth logout command', () => {
   it('fails when no active profile exists', async () => {
     const { layer } = buildLayer()
     const exit = await Effect.runPromiseExit(
-      logout.handler({}).pipe(Effect.provide(layer)),
+      handler(logout)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
   })
@@ -98,7 +99,7 @@ describe('auth logout command', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        logout.handler({}).pipe(
+        handler(logout)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions(rendererJson),
         ),
@@ -122,7 +123,7 @@ describe('auth whoami command', () => {
     )
     mem.seed(`${mxsDir}/current`, 'prod\n')
     const exit = await Effect.runPromiseExit(
-      whoami.handler({}).pipe(Effect.provide(layer)),
+      handler(whoami)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
   })
@@ -154,7 +155,7 @@ describe('auth whoami command', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        whoami.handler({}).pipe(
+        handler(whoami)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions(rendererJson),
         ),

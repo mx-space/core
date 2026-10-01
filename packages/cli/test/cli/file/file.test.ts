@@ -1,6 +1,7 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { handler } from '../../helper/handler'
 
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
@@ -115,7 +116,7 @@ describe('file commands', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = upload.handler({
+      const program = handler(upload)({
         path,
         type: 'image',
         name: Option.none(),
@@ -131,7 +132,7 @@ describe('file commands', () => {
 
   it('upload of a missing file fails with Generic and sends nothing', async () => {
     const http = testHttpLayer({})
-    const program = upload.handler({
+    const program = handler(upload)({
       path: '/nonexistent/nope.png',
       type: 'file',
       name: Option.none(),
@@ -155,7 +156,7 @@ describe('file commands', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = list.handler({ type: 'image' })
+      const program = handler(list)({ type: 'image' })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       expect(http.recorder.calls[0]?.url).toBe(
         'https://blog.example.com/api/v2/objects/image',
@@ -176,7 +177,7 @@ describe('file commands', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = del.handler({ name: 'a.zip', type: 'file', force: true })
+      const program = handler(del)({ name: 'a.zip', type: 'file', force: true })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       expect(http.recorder.calls[0]?.method).toBe('DELETE')
     } finally {
@@ -196,7 +197,7 @@ describe('file commands', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = rename.handler({
+      const program = handler(rename)({
         name: 'pic.png',
         newName: 'cover.png',
         type: 'image',

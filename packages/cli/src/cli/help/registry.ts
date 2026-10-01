@@ -28,7 +28,7 @@ export interface CommandHelp {
   // For groups: the list of verbs and their hand-curated arg summaries. The
   // canonical, exhaustive option list still lives in the per-verb
   // `Command.make(...)` definition and surfaces via
-  // `mxs <group> <verb> --help` (rendered by @effect/cli).
+  // `mxs <group> <verb> --help` (rendered by effect/cli).
   readonly verbs?: readonly VerbDescriptor[]
   // For leaf top-level commands (e.g. `update`): mark as leaf and provide a
   // flag table for the group help renderer.

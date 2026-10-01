@@ -200,14 +200,13 @@ describe('cli group help renders via markdown layer', () => {
   )
 
   it(
-    '`mxs post create --help` is still rendered by @effect/cli (we do not intercept)',
+    '`mxs post create --help` is still rendered by effect/cli (we do not intercept)',
     async () => {
       const res = await runMxs(['post', 'create', '--help'])
-      // @effect/cli exits 0 on --help.
+      // effect/cli exits 0 on --help.
       expect(res.code).toBe(0)
-      // Legacy @effect/cli layout markers — make sure the boundary is correct.
       expect(res.stdout).toContain('USAGE')
-      expect(res.stdout).toMatch(/\$ create\b/)
+      expect(res.stdout).toMatch(/mxs post create\b/)
     },
     30_000,
   )

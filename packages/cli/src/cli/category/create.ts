@@ -1,15 +1,15 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const name = Options.text('name')
-const slug = Options.text('slug')
-const type_ = Options.choice('type', ['category', 'tag'] as const).pipe(
-  Options.optional,
+const name = Flag.String('name')
+const slug = Flag.String('slug')
+const type_ = Flag.Literals('type', ['category', 'tag'] as const).pipe(
+  Flag.optional,
 )
-const icon = Options.text('icon').pipe(Options.optional)
+const icon = Flag.String('icon').pipe(Flag.optional)
 
 export const create = Command.make(
   'create',

@@ -1,6 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
-import { FileSystem } from '@effect/platform'
-import { Effect, Option } from 'effect'
+import { Effect, FileSystem, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Config } from '../../services/Config'
@@ -8,8 +7,8 @@ import { Editor } from '../../services/Editor'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
 
-const name = Args.text({ name: 'name' })
-const force = Options.boolean('force').pipe(Options.optional)
+const name = Argument.String('name')
+const force = Flag.Boolean('force').pipe(Flag.optional)
 
 export const rm = Command.make('rm', { name, force }, ({ name, force }) =>
   Effect.gen(function* () {
@@ -42,7 +41,7 @@ export const rm = Command.make('rm', { name, force }, ({ name, force }) =>
       }
       const confirmed = yield* editor
         .confirm(`Remove profile '${name}'? This cannot be undone.`)
-        .pipe(Effect.catchAll(() => Effect.succeed(false)))
+        .pipe(Effect.catch(() => Effect.succeed(false)))
       if (!confirmed) return
     }
 
@@ -56,7 +55,7 @@ export const rm = Command.make('rm', { name, force }, ({ name, force }) =>
       const currentPath = yield* config.getCurrentPath
       yield* fs
         .remove(currentPath, { force: true })
-        .pipe(Effect.catchAll(() => Effect.void))
+        .pipe(Effect.catch(() => Effect.void))
       yield* renderer.emitInfo('mxs: cleared active profile pointer')
     }
   }),

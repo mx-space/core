@@ -2,8 +2,7 @@ import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 
-import { FileSystem, Path } from '@effect/platform'
-import { Context, Effect, Layer, Ref } from 'effect'
+import { Context, Effect, FileSystem, Layer, Path, Ref } from 'effect'
 import MiniSearch from 'minisearch'
 
 import { ChapterNotFound, SkillCorpusEmpty } from '../domain/errors'
@@ -162,18 +161,18 @@ const scanCliDir = (
   Effect.gen(function* () {
     const exists = yield* fs
       .exists(dir)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catch(() => Effect.succeed(false)))
     if (!exists) return [] as readonly Chapter[]
     const entries = yield* fs
       .readDirectory(dir)
-      .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])))
+      .pipe(Effect.catch(() => Effect.succeed([] as readonly string[])))
     const chapters: Chapter[] = []
     for (const name of entries) {
       if (!name.endsWith('.md')) continue
       const full = path.join(dir, name)
       const raw = yield* fs
         .readFileString(full)
-        .pipe(Effect.catchAll(() => Effect.succeed('')))
+        .pipe(Effect.catch(() => Effect.succeed('')))
       if (!raw) continue
       const parsed = parseFrontmatter(raw, full)
       if ('error' in parsed) {
@@ -233,18 +232,18 @@ const scanHaklexDir = (
   Effect.gen(function* () {
     const exists = yield* fs
       .exists(dir)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catch(() => Effect.succeed(false)))
     if (!exists) return [] as readonly Chapter[]
     const chapters: Chapter[] = []
 
     const skillMdPath = path.join(dir, 'SKILL.md')
     const skillMdExists = yield* fs
       .exists(skillMdPath)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catch(() => Effect.succeed(false)))
     if (skillMdExists) {
       const raw = yield* fs
         .readFileString(skillMdPath)
-        .pipe(Effect.catchAll(() => Effect.succeed('')))
+        .pipe(Effect.catch(() => Effect.succeed('')))
       if (raw) {
         const { fields, body } = stripAnyFrontmatter(raw)
         chapters.push({
@@ -264,18 +263,18 @@ const scanHaklexDir = (
     const refsDir = path.join(dir, 'references')
     const refsExists = yield* fs
       .exists(refsDir)
-      .pipe(Effect.catchAll(() => Effect.succeed(false)))
+      .pipe(Effect.catch(() => Effect.succeed(false)))
     if (refsExists) {
       const refFiles = yield* fs
         .readDirectory(refsDir)
-        .pipe(Effect.catchAll(() => Effect.succeed([] as readonly string[])))
+        .pipe(Effect.catch(() => Effect.succeed([] as readonly string[])))
       const sorted = [...refFiles].filter((n) => n.endsWith('.md')).sort()
       let order = 71
       for (const name of sorted) {
         const full = path.join(refsDir, name)
         const raw = yield* fs
           .readFileString(full)
-          .pipe(Effect.catchAll(() => Effect.succeed('')))
+          .pipe(Effect.catch(() => Effect.succeed('')))
         if (!raw) continue
         const baseName = name.replace(/\.md$/, '')
         const { fields, body } = stripAnyFrontmatter(raw)
@@ -314,7 +313,7 @@ const buildRegistry = (
       ],
       { concurrency: 2 },
     ).pipe(
-      Effect.catchAllDefect((d) =>
+      Effect.catchDefect((d) =>
         Effect.fail(
           new SkillCorpusEmpty({
             message: typeof d === 'string' ? d : 'failed to load skill corpus',
@@ -512,7 +511,7 @@ const make = Effect.gen(function* () {
   return svc
 })
 
-export class Skill extends Context.Tag('Skill')<Skill, SkillService>() {
+export class Skill extends Context.Service<Skill, SkillService>()('Skill') {
   static Default: Layer.Layer<Skill, never, FileSystem.FileSystem | Path.Path> =
     Layer.effect(Skill, make)
 }

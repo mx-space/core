@@ -375,10 +375,9 @@ export const make = (
 // Tag + Layer
 // ---------------------------------------------------------------------------
 
-export class Resolver extends Context.Tag('Resolver')<
-  Resolver,
-  ResolverService
->() {
+export class Resolver extends Context.Service<Resolver, ResolverService>()(
+  'Resolver',
+) {
   /**
    * Default layer composes `Resolver` from the ambient `Api` service. Tests can
    * provide an alternate layer via {@link layer}.

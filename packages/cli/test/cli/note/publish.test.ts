@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { Api } from '../../../src/services/Api'
 import { Auth, type AuthService } from '../../../src/services/Auth'
@@ -100,7 +101,7 @@ describe('note publish / unpublish', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = publish.handler({ slugOrId: SNOWFLAKE })
+      const program = handler(publish)({ slugOrId: SNOWFLAKE })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       expect(http.recorder.calls.length).toBe(1)
       expect(http.recorder.calls[0]?.body).toEqual({ isPublished: true })
@@ -124,7 +125,7 @@ describe('note publish / unpublish', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = unpublish.handler({ slugOrId: '42' })
+      const program = handler(unpublish)({ slugOrId: '42' })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       const patch = http.recorder.calls.find((c) => c.method === 'PATCH')
       expect(patch?.url).toBe(
@@ -138,7 +139,7 @@ describe('note publish / unpublish', () => {
 
   it('rejects non-snowflake non-nid input via ValidationFailed', async () => {
     const http = testHttpLayer({})
-    const program = publish.handler({ slugOrId: 'hello-world' })
+    const program = handler(publish)({ slugOrId: 'hello-world' })
     const err = await Effect.runPromise(
       Effect.flip(Effect.provide(program, makeLayer(http))),
     )

@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../helper/handler'
 
 import { del as deleteNote } from '../../src/cli/note/delete'
 import { get as getNote } from '../../src/cli/note/get'
@@ -145,7 +146,7 @@ describe('post command CRUD handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        getPost.handler({ slugOrId: 'hello' }).pipe(
+        handler(getPost)({ slugOrId: 'hello' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -166,7 +167,7 @@ describe('post command CRUD handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deletePost.handler({ slugOrId: 'hello', force: true }).pipe(
+        handler(deletePost)({ slugOrId: 'hello', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -190,7 +191,7 @@ describe('post command CRUD handlers', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        deletePost.handler({ slugOrId: 'hello', force: false }).pipe(
+        handler(deletePost)({ slugOrId: 'hello', force: false }).pipe(
           Effect.provide(buildLayer([])),
         ),
       )
@@ -203,8 +204,7 @@ describe('post command CRUD handlers', () => {
   it('publishes a post update payload', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
-      updatePost
-        .handler({
+      handler(updatePost)({
           slugOrId: 'hello',
           title: Option.some('Updated'),
           slug: none(),
@@ -254,7 +254,7 @@ describe('note command CRUD handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        getNote.handler({ slugOrId: '42' }).pipe(
+        handler(getNote)({ slugOrId: '42' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -275,7 +275,7 @@ describe('note command CRUD handlers', () => {
     const stdout = captureStdout()
     try {
       const success = await Effect.runPromiseExit(
-        getNote.handler({ slugOrId: '123456789012346' }).pipe(
+        handler(getNote)({ slugOrId: '123456789012346' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -290,7 +290,7 @@ describe('note command CRUD handlers', () => {
     }
 
     const failure = await Effect.runPromiseExit(
-      getNote.handler({ slugOrId: 'not-a-note' }).pipe(
+      handler(getNote)({ slugOrId: 'not-a-note' }).pipe(
         Effect.provide(buildLayer([])),
       ),
     )
@@ -302,7 +302,7 @@ describe('note command CRUD handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deleteNote.handler({ slugOrId: 'note', force: true }).pipe(
+        handler(deleteNote)({ slugOrId: 'note', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -326,7 +326,7 @@ describe('note command CRUD handlers', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        deleteNote.handler({ slugOrId: 'note', force: false }).pipe(
+        handler(deleteNote)({ slugOrId: 'note', force: false }).pipe(
           Effect.provide(buildLayer([])),
         ),
       )
@@ -339,8 +339,7 @@ describe('note command CRUD handlers', () => {
   it('publishes a note update payload', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
-      updateNote
-        .handler({
+      handler(updateNote)({
           slugOrId: 'note',
           title: Option.some('Updated note'),
           slug: none(),
@@ -392,7 +391,7 @@ describe('page and topic command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deletePage.handler({ slugOrId: 'about', force: true }).pipe(
+        handler(deletePage)({ slugOrId: 'about', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -413,7 +412,7 @@ describe('page and topic command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deletePage.handler({ slugOrId: '123456789012347', force: true }).pipe(
+        handler(deletePage)({ slugOrId: '123456789012347', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -435,7 +434,7 @@ describe('page and topic command handlers', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        deletePage.handler({ slugOrId: 'about', force: false }).pipe(
+        handler(deletePage)({ slugOrId: 'about', force: false }).pipe(
           Effect.provide(buildLayer([])),
         ),
       )
@@ -450,7 +449,7 @@ describe('page and topic command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deleteTopic.handler({ slugOrId: 'life', force: true }).pipe(
+        handler(deleteTopic)({ slugOrId: 'life', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -471,7 +470,7 @@ describe('page and topic command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deleteTopic.handler({ slugOrId: '123456789012348', force: true }).pipe(
+        handler(deleteTopic)({ slugOrId: '123456789012348', force: true }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -493,7 +492,7 @@ describe('page and topic command handlers', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        deleteTopic.handler({ slugOrId: 'life', force: false }).pipe(
+        handler(deleteTopic)({ slugOrId: 'life', force: false }).pipe(
           Effect.provide(buildLayer([])),
         ),
       )
@@ -506,8 +505,7 @@ describe('page and topic command handlers', () => {
   it('patches a topic update body', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
-      updateTopic
-        .handler({
+      handler(updateTopic)({
           slugOrId: 'life',
           name: Option.some('Life'),
           slug: Option.some('life-new'),

@@ -1,6 +1,5 @@
-import { FileSystem } from '@effect/platform'
 import { it } from '@effect/vitest'
-import { Effect, Exit, Layer } from 'effect'
+import { Cause, Effect, Exit, FileSystem, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect } from 'vitest'
 
 import {
@@ -475,7 +474,7 @@ describe('Config.resolve — no profile configured', () => {
     )
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
-      const err: any = (exit.cause as any).error ?? exit.cause
+      const err: any = Cause.squash(exit.cause)
       const tag = (err && err._tag) || (err && err.failure && err.failure._tag)
       expect(['ConfigMissingApiUrl']).toContain(
         tag ?? err.error?._tag ?? 'unknown',
@@ -685,7 +684,7 @@ describe('Config.resolve — profile-aware resolution', () => {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
       const cause: any = exit.cause
-      const err = cause.error ?? cause.failure ?? cause
+      const err: any = Cause.squash(cause)
       const tag = err?._tag ?? err?.error?._tag ?? err?.failure?._tag
       expect(tag).toBe('ProfileNotFound')
     }

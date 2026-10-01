@@ -1,17 +1,17 @@
 import fs from 'node:fs/promises'
 
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { SNIPPET_TYPES } from './_flags'
 import { detectSnippetType, toRemotePath, walkTextFiles } from './_sync'
 
-const localDir = Args.text({ name: 'localDir' })
-const remotePrefix = Args.text({ name: 'remotePrefix' })
-const dryRun = Options.boolean('dry-run')
-const forceType = Options.choice('type', SNIPPET_TYPES).pipe(Options.optional)
+const localDir = Argument.String('localDir')
+const remotePrefix = Argument.String('remotePrefix')
+const dryRun = Flag.Boolean('dry-run').pipe(Flag.withDefault(false))
+const forceType = Flag.Literals('type', SNIPPET_TYPES).pipe(Flag.optional)
 
 export const push = Command.make(
   'push',

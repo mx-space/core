@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { create } from '../../../src/cli/page/create'
 import { del } from '../../../src/cli/page/delete'
@@ -105,7 +106,7 @@ describe('page list command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      list.handler({}).pipe(Effect.provide(buildLayer(http))),
+      handler(list)({}).pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(http.recorder.calls.length).toBe(1)
@@ -122,8 +123,7 @@ describe('page get command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      get
-        .handler({ slugOrId: 'about' })
+      handler(get)({ slugOrId: 'about' })
         .pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
@@ -139,8 +139,7 @@ describe('page create command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      create
-        .handler({
+      handler(create)({
           title: Option.some('About'),
           slug: Option.some('about'),
           subtitle: Option.none(),
@@ -221,8 +220,7 @@ describe('page update command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      update
-        .handler({
+      handler(update)({
           slugOrId: 'about',
           title: Option.some('New title'),
           slug: Option.none(),
@@ -256,8 +254,7 @@ describe('page delete command', () => {
   it('refuses without --force in non-TTY context', async () => {
     const http = testHttpLayer({})
     const exit = await Effect.runPromiseExit(
-      del
-        .handler({ slugOrId: '123456789012345', force: false })
+      handler(del)({ slugOrId: '123456789012345', force: false })
         .pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isFailure(exit)).toBe(true)
@@ -272,8 +269,7 @@ describe('page delete command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      del
-        .handler({ slugOrId: '123456789012345', force: true })
+      handler(del)({ slugOrId: '123456789012345', force: true })
         .pipe(
           Effect.provide(
             buildLayer(http, { ...baseResolved, profileExplicit: true }),

@@ -4,7 +4,7 @@ import { Context, Effect, Layer } from 'effect'
 // for resolver lookups / API responses lands with v3 observability work.
 export interface CacheService {}
 
-export class Cache extends Context.Tag('Cache')<Cache, CacheService>() {
+export class Cache extends Context.Service<Cache, CacheService>()('Cache') {
   static Default: Layer.Layer<Cache> = Layer.effect(
     Cache,
     Effect.die('Cache service is a v3 placeholder'),

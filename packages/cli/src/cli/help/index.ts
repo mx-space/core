@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Root `--help` + group help renderers.
 //
-// Why a custom renderer? `@effect/cli` flattens every nested verb into the
+// Why a custom renderer? `effect/cli` flattens every nested verb into the
 // root COMMANDS section and aligns columns to the longest line, producing a
 // huge wall of whitespace. It also can't see our pre-parsed global flags
 // (those are stripped from argv before `Command.run` is invoked — see
@@ -11,7 +11,7 @@
 //   - Root `mxs --help` (and bare `mxs`)            → custom renderer here.
 //   - Top-level group help (`mxs <group> --help`,
 //     `mxs <group>`)                                → custom renderer here.
-//   - Verb help (`mxs post create --help`, ...)     → @effect/cli default.
+//   - Verb help (`mxs post create --help`, ...)     → effect/cli default.
 //
 // Per-command help content lives next to each command module via the
 // `registerCommandHelp` call (see `./registry.ts`). This file aggregates
@@ -277,7 +277,7 @@ export const emitHelp = (data: RootHelpData): void => {
 // For real groups (e.g. `post`, `auth`) we render a Verbs table; for leaf
 // top-level commands (`update`) we render an Options table from the
 // `leafOptions` registered alongside the command. Verb-level help
-// (`mxs post create --help`) is intentionally left to `@effect/cli`'s
+// (`mxs post create --help`) is intentionally left to `effect/cli`'s
 // default renderer.
 // ---------------------------------------------------------------------------
 

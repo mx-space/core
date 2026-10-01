@@ -1,4 +1,4 @@
-import { Command } from '@effect/cli'
+import { Command } from 'effect/cli'
 
 import { del } from './delete'
 import { edit } from './edit'

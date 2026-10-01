@@ -1,5 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { openAdminEdit } from '../../domain/admin-link'
 import { ValidationJson } from '../../domain/errors'
@@ -9,14 +9,16 @@ import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
 import { editableFieldsOf } from './_flags'
 
-const nameOrId = Args.text({ name: 'nameOrId' })
-const openFlag = Options.boolean('open').pipe(
-  Options.withDescription(
+const nameOrId = Argument.String('nameOrId')
+const openFlag = Flag.Boolean('open').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'After success, open the admin edit page in the default browser.',
   ),
 )
-const silentFlag = Options.boolean('silent').pipe(
-  Options.withDescription(
+const silentFlag = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'On success, emit a minimal `ok` instead of the full server response.',
   ),
 )

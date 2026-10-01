@@ -1,11 +1,11 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
 
-const nameOrId = Args.text({ name: 'nameOrId' })
+const nameOrId = Argument.String('nameOrId')
 
 export const get = Command.make('get', { nameOrId }, ({ nameOrId }) =>
   Effect.gen(function* () {

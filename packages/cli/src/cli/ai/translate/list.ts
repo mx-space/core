@@ -1,14 +1,14 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Ai } from '../../../services/Ai'
 import { Renderer } from '../../../services/Renderer'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const search = Options.text('search').pipe(
-  Options.optional,
-  Options.withDescription('filter by article title'),
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
+const search = Flag.String('search').pipe(
+  Flag.optional,
+  Flag.withDescription('filter by article title'),
 )
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>

@@ -1,16 +1,16 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ResourceNotFound } from '../../domain/errors'
 import { Api, type ApiService } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
-const name = Options.text('name').pipe(Options.optional)
-const slug = Options.text('slug').pipe(Options.optional)
-const description = Options.text('description').pipe(Options.optional)
-const icon = Options.text('icon').pipe(Options.optional)
+const slugOrId = Argument.String('slugOrId')
+const name = Flag.String('name').pipe(Flag.optional)
+const slug = Flag.String('slug').pipe(Flag.optional)
+const description = Flag.String('description').pipe(Flag.optional)
+const icon = Flag.String('icon').pipe(Flag.optional)
 
 const resolveTopicId = (
   api: ApiService,
@@ -23,7 +23,7 @@ const resolveTopicId = (
         id?: string
         data?: { id?: string }
       }>(`/topics/slug/${encodeURIComponent(ref)}`)
-      .pipe(Effect.catchAll(() => Effect.succeed(null)))
+      .pipe(Effect.catch(() => Effect.succeed(null)))
     const id =
       (res && (res as { id?: string }).id) ??
       (res && (res as { data?: { id?: string } }).data?.id)

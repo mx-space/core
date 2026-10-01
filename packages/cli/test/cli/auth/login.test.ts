@@ -1,5 +1,6 @@
-import { Effect, Exit, FiberRef, Layer, Option } from 'effect'
+import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { login } from '../../../src/cli/auth/login'
 import { currentProfileFlag } from '../../../src/domain/runtime-flags'
@@ -121,7 +122,7 @@ describe('auth login command', () => {
     const { mem, layer } = buildHarness({}, { prompt: promptSpy as any })
 
     const exit = await Effect.runPromiseExit(
-      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+      handler(login)({ production: Option.none() }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
 
@@ -144,8 +145,7 @@ describe('auth login command', () => {
     const { mem, layer } = buildHarness()
 
     const exit = await Effect.runPromiseExit(
-      login
-        .handler({ production: Option.some(true) })
+      handler(login)({ production: Option.some(true) })
         .pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
@@ -187,7 +187,7 @@ describe('auth login command', () => {
     )
 
     const exit = await Effect.runPromiseExit(
-      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+      handler(login)({ production: Option.none() }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
 
@@ -204,7 +204,7 @@ describe('auth login command', () => {
       { prompt: () => Effect.succeed('   ') },
     )
     const exit = await Effect.runPromiseExit(
-      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+      handler(login)({ production: Option.none() }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
   })
@@ -220,8 +220,8 @@ describe('auth login command', () => {
     const { mem, layer } = buildHarness()
     try {
       const exit = await Effect.runPromiseExit(
-        Effect.locally(
-          login.handler({ production: Option.some(false) }),
+        Effect.provideService(
+          handler(login)({ production: Option.some(false) }),
           currentOutputOptions,
           { ...defaultOutputOptions, json: true },
         ).pipe(Effect.provide(layer)),
@@ -273,8 +273,8 @@ describe('auth login command', () => {
     )
 
     const exit = await Effect.runPromiseExit(
-      Effect.locally(
-        login.handler({ production: Option.none() }),
+      Effect.provideService(
+        handler(login)({ production: Option.none() }),
         currentProfileFlag,
         'main',
       ).pipe(Effect.provide(layer)),
@@ -323,7 +323,7 @@ describe('auth login command', () => {
     )
 
     const exit = await Effect.runPromiseExit(
-      login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+      handler(login)({ production: Option.none() }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(promptSpy).toHaveBeenCalledTimes(1)
@@ -356,7 +356,7 @@ describe('auth login command', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        login.handler({ production: Option.none() }).pipe(Effect.provide(layer)),
+        handler(login)({ production: Option.none() }).pipe(Effect.provide(layer)),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       expect(stderr.join('')).toContain('slow_down')

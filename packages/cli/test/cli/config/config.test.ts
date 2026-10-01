@@ -1,5 +1,6 @@
-import { Effect, Exit, Layer, Option } from 'effect'
+import { Cause, Effect, Exit, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { edit } from '../../../src/cli/config/edit'
 import { get } from '../../../src/cli/config/get'
@@ -115,7 +116,7 @@ describe('config list command', () => {
       Renderer.Default,
     )
     const exit = await Effect.runPromiseExit(
-      list.handler({}).pipe(Effect.provide(layer)),
+      handler(list)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(http.recorder.calls.length).toBe(1)
@@ -140,7 +141,7 @@ describe('config get command', () => {
       Renderer.Default,
     )
     const exit = await Effect.runPromiseExit(
-      get.handler({ key: 'site/url' }).pipe(Effect.provide(layer)),
+      handler(get)({ key: 'site/url' }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
   })
@@ -168,8 +169,7 @@ describe('config set command', () => {
       Renderer.Default,
     )
     const exit = await Effect.runPromiseExit(
-      set
-        .handler({
+      handler(set)({
           key: 'feature',
           value: '{"on":true}',
           type: Option.none(),
@@ -202,8 +202,7 @@ describe('config set command', () => {
     )
 
     const numOk = await Effect.runPromiseExit(
-      set
-        .handler({
+      handler(set)({
           key: 'count',
           value: '42',
           type: Option.some('number' as const),
@@ -214,8 +213,7 @@ describe('config set command', () => {
     expect(http.recorder.calls[0]?.body).toBe(42)
 
     const numBad = await Effect.runPromiseExit(
-      set
-        .handler({
+      handler(set)({
           key: 'count',
           value: 'not-a-number',
           type: Option.some('number' as const),
@@ -224,7 +222,7 @@ describe('config set command', () => {
     )
     expect(Exit.isFailure(numBad)).toBe(true)
     if (Exit.isFailure(numBad)) {
-      const err = numBad.cause._tag === 'Fail' ? numBad.cause.error : null
+      const err = Cause.squash(numBad.cause)
       expect((err as { _tag: string })?._tag).toBe('ValidationFailed')
     }
   })
@@ -259,8 +257,7 @@ describe('config set command', () => {
     )
 
     await Effect.runPromise(
-      set
-        .handler({
+      handler(set)({
           key: 'flag',
           value: 'true',
           type: Option.some('bool' as const),
@@ -268,8 +265,7 @@ describe('config set command', () => {
         .pipe(Effect.provide(layer)),
     )
     await Effect.runPromise(
-      set
-        .handler({
+      handler(set)({
           key: 'name',
           value: '{"literal":true}',
           type: Option.some('string' as const),
@@ -277,8 +273,7 @@ describe('config set command', () => {
         .pipe(Effect.provide(layer)),
     )
     await Effect.runPromise(
-      set
-        .handler({
+      handler(set)({
           key: 'raw',
           value: 'not-json',
           type: Option.none(),
@@ -292,8 +287,7 @@ describe('config set command', () => {
     ])
 
     const jsonBad = await Effect.runPromiseExit(
-      set
-        .handler({
+      handler(set)({
           key: 'raw',
           value: 'not-json',
           type: Option.some('json' as const),
@@ -325,7 +319,7 @@ describe('config edit command', () => {
       }),
     )
     const exit = await Effect.runPromiseExit(
-      edit.handler({}).pipe(Effect.provide(layer)),
+      handler(edit)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     // Only the initial GET — no PATCH because nothing changed.
@@ -371,7 +365,7 @@ describe('config edit command', () => {
       }),
     )
     const exit = await Effect.runPromiseExit(
-      edit.handler({}).pipe(Effect.provide(layer)),
+      handler(edit)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(http.recorder.calls.map((c) => c.method)).toEqual([
@@ -402,7 +396,7 @@ describe('config edit command', () => {
       }),
     )
     const exit = await Effect.runPromiseExit(
-      edit.handler({}).pipe(Effect.provide(layer)),
+      handler(edit)({}).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
     expect(http.recorder.calls.length).toBe(1)

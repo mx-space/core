@@ -1,11 +1,11 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Renderer } from '../../services/Renderer'
 import { Skill } from '../../services/Skill'
 import { skillSearchView } from './views'
 
-const keywordArg = Args.text({ name: 'keyword' })
+const keywordArg = Argument.String('keyword')
 
 export const search = Command.make(
   'search',

@@ -1,13 +1,14 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../../../domain/errors'
 import { Ai } from '../../../../services/Ai'
 import { Renderer } from '../../../../services/Renderer'
 
-const recordId = Args.text({ name: 'recordId' })
-const force = Options.boolean('force').pipe(
-  Options.withDescription('skip the non-TTY guard'),
+const recordId = Argument.String('recordId')
+const force = Flag.Boolean('force').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('skip the non-TTY guard'),
 )
 
 export const del = Command.make(

@@ -690,8 +690,8 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
       },
       catch: () => undefined,
     }).pipe(
-      Effect.catchAll(() => Effect.void),
-      Effect.catchAllDefect(() => Effect.void),
+      Effect.catch(() => Effect.void),
+      Effect.catchDefect(() => Effect.void),
     )
 
   const runUpdate = (
@@ -894,10 +894,10 @@ export const make = (deps: UpdateNotifierDeps = {}): UpdateNotifierService => {
 // Tag + Layer
 // ---------------------------------------------------------------------------
 
-export class UpdateNotifier extends Context.Tag('UpdateNotifier')<
+export class UpdateNotifier extends Context.Service<
   UpdateNotifier,
   UpdateNotifierService
->() {
+>()('UpdateNotifier') {
   static Default: Layer.Layer<UpdateNotifier> = Layer.succeed(
     UpdateNotifier,
     make(),

@@ -1,4 +1,4 @@
-import { FiberRef } from 'effect'
+import { Context } from 'effect'
 
 import type { OutputMode } from '../services/Renderer'
 
@@ -65,7 +65,7 @@ const SHORT_BOOL_FLAGS: Record<string, keyof GlobalFlags> = {
  * Walk `argv` once, extracting recognized global flags and returning both the
  * resolved `GlobalFlags` and the residual `argv` (with those flags removed).
  *
- * Unknown flags pass through untouched — `@effect/cli` will surface them at
+ * Unknown flags pass through untouched — `effect/cli` will surface them at
  * the proper command layer.
  *
  * Notes:
@@ -174,20 +174,25 @@ export const parseGlobalFlags = (
 }
 
 // ---------------------------------------------------------------------------
-// FiberRef: --dry-run. Read by `Api.layer({...})` at construction time;
-// surfaced as a FiberRef as well so individual handlers can introspect when
+// Context.Reference: --dry-run. Read by `Api.layer({...})` at construction time;
+// surfaced as a Context.Reference as well so individual handlers can introspect when
 // they need bespoke dry-run behaviour (none today; placeholder for v2/v3).
 // ---------------------------------------------------------------------------
 
-export const currentDryRun: FiberRef.FiberRef<boolean> =
-  FiberRef.unsafeMake<boolean>(false)
+export const currentDryRun = Context.Reference<boolean>('mxs/currentDryRun', {
+  defaultValue: () => false,
+})
 
 // ---------------------------------------------------------------------------
-// FiberRef: --profile. The flag is already threaded into `Api.layer` via
+// Context.Reference: --profile. The flag is already threaded into `Api.layer` via
 // `StoreOverrides`, but commands that talk to the Profile/Config services
 // directly (notably `auth login`, which creates profiles) need to read it
 // without re-parsing argv. Set once in `bin/mxs.ts` after `parseGlobalFlags`.
 // ---------------------------------------------------------------------------
 
-export const currentProfileFlag: FiberRef.FiberRef<string | undefined> =
-  FiberRef.unsafeMake<string | undefined>(undefined)
+export const currentProfileFlag = Context.Reference<string | undefined>(
+  'mxs/currentProfileFlag',
+  {
+    defaultValue: () => undefined,
+  },
+)

@@ -3,8 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 import * as Clack from '@clack/prompts'
-import { FileSystem } from '@effect/platform'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, FileSystem, Layer } from 'effect'
 
 import { Generic, ValidationFailed } from '../domain/errors'
 
@@ -144,7 +143,7 @@ const makeService = (fs: FileSystem.FileSystem): EditorService => ({
   },
 })
 
-export class Editor extends Context.Tag('Editor')<Editor, EditorService>() {
+export class Editor extends Context.Service<Editor, EditorService>()('Editor') {
   static Default: Layer.Layer<Editor, never, FileSystem.FileSystem> =
     Layer.effect(
       Editor,

@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { buildPostPayload } from '../../domain/payload'
@@ -12,7 +12,7 @@ import {
 } from '../post/_flags'
 import { normalizeDraftRow, splitDraftBody } from './_shared'
 
-const id = Args.text({ name: 'id' })
+const id = Argument.String('id')
 
 export const update = Command.make(
   'update',

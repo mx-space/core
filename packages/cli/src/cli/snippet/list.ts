@@ -1,12 +1,12 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const prefix = Args.text({ name: 'prefix' }).pipe(Args.optional)
-const limit = Options.integer('limit').pipe(Options.optional)
-const recursive = Options.boolean('recursive')
+const prefix = Argument.String('prefix').pipe(Argument.optional)
+const limit = Flag.Int('limit').pipe(Flag.optional)
+const recursive = Flag.Boolean('recursive').pipe(Flag.withDefault(false))
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)

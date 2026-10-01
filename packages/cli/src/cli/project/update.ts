@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { openAdminEdit } from '../../domain/admin-link'
 import { Api } from '../../services/Api'
@@ -11,7 +11,7 @@ import {
   toProjectFlagInputs,
 } from './_flags'
 
-const nameOrId = Args.text({ name: 'nameOrId' })
+const nameOrId = Argument.String('nameOrId')
 
 export const update = Command.make(
   'update',

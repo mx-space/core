@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../helper/handler'
 
 import { create as createProject } from '../../src/cli/project/create'
 import { del as deleteProject } from '../../src/cli/project/delete'
@@ -94,8 +95,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        listProject
-          .handler({ page: Option.some(2), size: Option.some(20) })
+        handler(listProject)({ page: Option.some(2), size: Option.some(20) })
           .pipe(
             Effect.provide(buildLayer(calls)),
             Renderer.withOptions(rendererJson),
@@ -116,7 +116,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        getProject.handler({ nameOrId: 'kami' }).pipe(
+        handler(getProject)({ nameOrId: 'kami' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -135,7 +135,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        viewProject.handler({ nameOrId: 'kami' }).pipe(
+        handler(viewProject)({ nameOrId: 'kami' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -151,8 +151,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        createProject
-          .handler({
+        handler(createProject)({
             name: Option.some('kami'),
             description: Option.some('a stack'),
             previewUrl: Option.some('https://kami.test'),
@@ -193,8 +192,7 @@ describe('project command handlers', () => {
   it('PATCHes via update with only supplied fields', async () => {
     const calls: Array<{ path: string; options: unknown }> = []
     const exit = await Effect.runPromiseExit(
-      updateProject
-        .handler({
+      handler(updateProject)({
           nameOrId: 'kami',
           name: none(),
           description: Option.some('updated'),
@@ -227,8 +225,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deleteProject
-          .handler({ nameOrId: 'kami', force: true })
+        handler(deleteProject)({ nameOrId: 'kami', force: true })
           .pipe(
             Effect.provide(buildLayer(calls)),
             Renderer.withOptions(rendererJson),
@@ -252,8 +249,7 @@ describe('project command handlers', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        deleteProject
-          .handler({ nameOrId: 'kami', force: false })
+        handler(deleteProject)({ nameOrId: 'kami', force: false })
           .pipe(Effect.provide(buildLayer([]))),
       )
       expect(Exit.isFailure(exit)).toBe(true)
@@ -287,8 +283,7 @@ describe('project command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        editProject
-          .handler({ nameOrId: 'kami', open: false, silent: false })
+        handler(editProject)({ nameOrId: 'kami', open: false, silent: false })
           .pipe(
             Effect.provide(buildLayer(calls, responses, editor)),
             Renderer.withOptions(rendererJson),
@@ -340,8 +335,7 @@ describe('project command handlers', () => {
       readFileOrStdin: () => Effect.succeed(''),
     }
     const exit = await Effect.runPromiseExit(
-      editProject
-        .handler({ nameOrId: 'kami', open: false, silent: true })
+      handler(editProject)({ nameOrId: 'kami', open: false, silent: true })
         .pipe(
           Effect.provide(buildLayer(calls, responses, editor)),
           Renderer.withOptions(rendererJson),
@@ -382,8 +376,7 @@ describe('project command handlers', () => {
       readFileOrStdin: () => Effect.succeed(''),
     }
     const exit = await Effect.runPromiseExit(
-      editProject
-        .handler({ nameOrId: 'kami', open: false, silent: false })
+      handler(editProject)({ nameOrId: 'kami', open: false, silent: false })
         .pipe(Effect.provide(buildLayer(calls, responses, editor))),
     )
     expect(Exit.isFailure(exit)).toBe(true)

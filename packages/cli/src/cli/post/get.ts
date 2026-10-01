@@ -1,12 +1,12 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
 import { postView } from './view'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 export const get = Command.make('get', { slugOrId }, ({ slugOrId }) =>
   Effect.gen(function* () {

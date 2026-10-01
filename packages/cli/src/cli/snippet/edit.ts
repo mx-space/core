@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Editor } from '../../services/Editor'
@@ -7,7 +7,7 @@ import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
 import { extForType, pickSnippetFields, unwrapDoc } from './_flags'
 
-const target = Args.text({ name: 'pathOrId' })
+const target = Argument.String('pathOrId')
 
 export const edit = Command.make('edit', { target }, ({ target }) =>
   Effect.gen(function* () {

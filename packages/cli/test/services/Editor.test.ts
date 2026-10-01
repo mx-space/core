@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 import * as Clack from '@clack/prompts'
-import { NodeContext } from '@effect/platform-node'
+import { NodeServices } from '@effect/platform-node'
 import { it } from '@effect/vitest'
 import { Effect } from 'effect'
 import { describe, expect, vi } from 'vitest'
@@ -19,7 +19,7 @@ vi.mock('@clack/prompts', () => ({
 }))
 
 const EditorLive = Editor.Default.pipe(
-  // Editor depends on FileSystem from @effect/platform; NodeContext provides it.
+  // Editor depends on FileSystem from effect; NodeServices provides it.
   (layer) => layer,
 )
 
@@ -35,20 +35,20 @@ describe('Editor — readFileOrStdin', () => {
       const contents = yield* editor.readFileOrStdin(file)
       expect(contents).toBe('hello\n')
       yield* Effect.promise(() => fs.rm(dir, { recursive: true, force: true }))
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('returns ValidationFailed for a missing file', () =>
     Effect.gen(function* () {
       const editor = yield* Editor
-      const result = yield* Effect.either(
+      const result = yield* Effect.result(
         editor.readFileOrStdin('/nonexistent/path/that/should/not/exist.txt'),
       )
-      expect(result._tag).toBe('Left')
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(ValidationFailed)
+      expect(result._tag).toBe('Failure')
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(ValidationFailed)
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 })
 
@@ -60,7 +60,7 @@ describe('Editor — service shape', () => {
       expect(typeof editor.prompt).toBe('function')
       expect(typeof editor.confirm).toBe('function')
       expect(typeof editor.readFileOrStdin).toBe('function')
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('openEditor fails fast when $EDITOR is unset', () =>
@@ -72,18 +72,18 @@ describe('Editor — service shape', () => {
       delete process.env.VISUAL
       try {
         const editor = yield* Editor
-        const result = yield* Effect.either(
+        const result = yield* Effect.result(
           editor.openEditor({ filename: 'x.txt', initialContent: '' }),
         )
-        expect(result._tag).toBe('Left')
-        if (result._tag === 'Left') {
-          expect(result.left._tag).toBe('Generic')
+        expect(result._tag).toBe('Failure')
+        if (result._tag === 'Failure') {
+          expect(result.failure._tag).toBe('Generic')
         }
       } finally {
         if (prevEditor !== undefined) process.env.EDITOR = prevEditor
         if (prevVisual !== undefined) process.env.VISUAL = prevVisual
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('openEditor round-trips through an explicit editor command', () =>
@@ -98,25 +98,25 @@ describe('Editor — service shape', () => {
         editor: `${JSON.stringify(node)} -e ${JSON.stringify(script)}`,
       })
       expect(result).toBe('edited')
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('openEditor maps a nonzero editor exit to Generic', () =>
     Effect.gen(function* () {
       const editor = yield* Editor
-      const result = yield* Effect.either(
+      const result = yield* Effect.result(
         editor.openEditor({
           filename: 'fail.txt',
           initialContent: 'initial',
           editor: `${JSON.stringify(process.execPath)} -e "process.exit(7)"`,
         }),
       )
-      expect(result._tag).toBe('Left')
-      if (result._tag === 'Left') {
-        expect(result.left._tag).toBe('Generic')
-        expect(result.left.message).toContain('editor exited with code 7')
+      expect(result._tag).toBe('Failure')
+      if (result._tag === 'Failure') {
+        expect(result.failure._tag).toBe('Generic')
+        expect(result.failure.message).toContain('editor exited with code 7')
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 })
 
@@ -147,7 +147,7 @@ describe('Editor — prompts', () => {
         textSpy.mockReset()
         confirmSpy.mockReset()
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('prompt and confirm map cancellation to Generic', () =>
@@ -164,22 +164,22 @@ describe('Editor — prompts', () => {
         .mockResolvedValue(cancel as unknown as boolean)
       try {
         const editor = yield* Editor
-        const promptResult = yield* Effect.either(editor.prompt('Question'))
-        const confirmResult = yield* Effect.either(editor.confirm('Confirm?'))
-        expect(promptResult._tag).toBe('Left')
-        expect(confirmResult._tag).toBe('Left')
-        if (promptResult._tag === 'Left') {
-          expect(promptResult.left._tag).toBe('Generic')
+        const promptResult = yield* Effect.result(editor.prompt('Question'))
+        const confirmResult = yield* Effect.result(editor.confirm('Confirm?'))
+        expect(promptResult._tag).toBe('Failure')
+        expect(confirmResult._tag).toBe('Failure')
+        if (promptResult._tag === 'Failure') {
+          expect(promptResult.failure._tag).toBe('Generic')
         }
-        if (confirmResult._tag === 'Left') {
-          expect(confirmResult.left._tag).toBe('Generic')
+        if (confirmResult._tag === 'Failure') {
+          expect(confirmResult.failure._tag).toBe('Generic')
         }
       } finally {
         isCancelSpy.mockReset()
         textSpy.mockReset()
         confirmSpy.mockReset()
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 
   it.effect('prompt and confirm map clack rejections to Generic', () =>
@@ -190,21 +190,21 @@ describe('Editor — prompts', () => {
         .mockRejectedValue(new Error('confirm failed'))
       try {
         const editor = yield* Editor
-        const promptResult = yield* Effect.either(editor.prompt('Question'))
-        const confirmResult = yield* Effect.either(editor.confirm('Confirm?'))
-        expect(promptResult._tag).toBe('Left')
-        expect(confirmResult._tag).toBe('Left')
-        if (promptResult._tag === 'Left') {
-          expect(promptResult.left.message).toBe('text failed')
+        const promptResult = yield* Effect.result(editor.prompt('Question'))
+        const confirmResult = yield* Effect.result(editor.confirm('Confirm?'))
+        expect(promptResult._tag).toBe('Failure')
+        expect(confirmResult._tag).toBe('Failure')
+        if (promptResult._tag === 'Failure') {
+          expect(promptResult.failure.message).toBe('text failed')
         }
-        if (confirmResult._tag === 'Left') {
-          expect(confirmResult.left.message).toBe('confirm failed')
+        if (confirmResult._tag === 'Failure') {
+          expect(confirmResult.failure.message).toBe('confirm failed')
         }
       } finally {
         textSpy.mockReset()
         confirmSpy.mockReset()
       }
-    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
   )
 })
 
@@ -233,7 +233,7 @@ describe('Editor — stdin', () => {
           Effect.gen(function* () {
             const editor = yield* Editor
             return yield* editor.readFileOrStdin('-')
-          }).pipe(Effect.provide(EditorLive), Effect.provide(NodeContext.layer)),
+          }).pipe(Effect.provide(EditorLive), Effect.provide(NodeServices.layer)),
         )
         const result = yield* Effect.promise(() => promise)
         expect(result).toBe('hello world')

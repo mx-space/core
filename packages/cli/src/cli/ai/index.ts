@@ -1,4 +1,4 @@
-import { Command } from '@effect/cli'
+import { Command } from 'effect/cli'
 
 import { registerCommandHelp } from '../help/registry'
 import { insightsCmd } from './insights'
@@ -40,7 +40,8 @@ const help = registerCommandHelp({
     {
       name: 'overview',
       args: ['<verb>', '...'],
-      description: 'inspect the per-article AI overview board (list, by-article)',
+      description:
+        'inspect the per-article AI overview board (list, by-article)',
     },
   ],
 })

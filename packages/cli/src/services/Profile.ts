@@ -202,7 +202,9 @@ const make = Effect.gen(function* () {
   return svc
 })
 
-export class Profile extends Context.Tag('Profile')<Profile, ProfileService>() {
+export class Profile extends Context.Service<Profile, ProfileService>()(
+  'Profile',
+) {
   static Default: Layer.Layer<Profile, never, Config> = Layer.effect(
     Profile,
     make,

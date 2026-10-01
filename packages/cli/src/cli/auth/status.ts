@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { isExpiringSoon } from '../../services/Auth'
 import { Config } from '../../services/Config'

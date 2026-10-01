@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { ResourceNotFound } from '../../domain/errors'
@@ -10,7 +10,7 @@ import { isSnowflakeId } from '../../services/Resolver'
 import { publishSavedDraft, saveDraftPayload } from '../draft/_shared'
 import { pageWriteOptions, toPageFlagInputs } from './create'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 const resolvePageId = (
   api: ApiService,
@@ -23,7 +23,7 @@ const resolvePageId = (
         id?: string
         data?: { id?: string }
       }>(`/pages/slug/${encodeURIComponent(ref)}`)
-      .pipe(Effect.catchAll(() => Effect.succeed(null)))
+      .pipe(Effect.catch(() => Effect.succeed(null)))
     const id =
       (res && (res as { id?: string }).id) ??
       (res && (res as { data?: { id?: string } }).data?.id)

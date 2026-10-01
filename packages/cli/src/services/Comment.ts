@@ -119,7 +119,9 @@ const mergeListResponses = (
   }
 }
 
-const makeService = (api: Context.Tag.Service<Api>): CommentService => {
+const makeService = (
+  api: Context.Service.Shape<typeof Api>,
+): CommentService => {
   const requestList = (
     state: CommentStateName,
     page?: number,
@@ -208,7 +210,9 @@ const makeService = (api: Context.Tag.Service<Api>): CommentService => {
   }
 }
 
-export class Comment extends Context.Tag('Comment')<Comment, CommentService>() {
+export class Comment extends Context.Service<Comment, CommentService>()(
+  'Comment',
+) {
   static Default: Layer.Layer<Comment, never, Api> = Layer.effect(
     Comment,
     Effect.gen(function* () {

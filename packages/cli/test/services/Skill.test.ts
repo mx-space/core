@@ -1,4 +1,4 @@
-import { Effect, Exit, Layer } from 'effect'
+import { Cause, Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { Skill } from '../../src/services/Skill'
@@ -28,7 +28,7 @@ const makeLayer = (
 }
 
 const tagOf = (cause: any): string | undefined => {
-  const err = cause?.error ?? cause?.failure ?? cause
+  const err: any = Cause.squash(cause)
   return err?._tag ?? err?.error?._tag ?? err?.failure?._tag
 }
 
@@ -168,7 +168,7 @@ describe('Skill.get', () => {
 
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
-      const err = (exit.cause as any).error ?? (exit.cause as any).failure
+      const err = Cause.squash(exit.cause) as any
       expect(err?.hint).toMatch(/haklex/)
     }
   })

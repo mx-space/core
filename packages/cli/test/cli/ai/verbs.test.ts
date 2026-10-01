@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { AiTaskCreateFailed } from '../../../src/domain/errors'
 import { byArticle as overviewByArticle } from '../../../src/cli/ai/overview/by-article'
@@ -121,7 +122,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          regen.handler({
+          handler(regen)({
             id: SNOWFLAKE,
             to: ['en'],
             force: true,
@@ -145,7 +146,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          refresh.handler({
+          handler(refresh)({
             id: SNOWFLAKE,
             to: ['en', 'ja'],
             force: true,
@@ -170,7 +171,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          summaryTranslate.handler({
+          handler(summaryTranslate)({
             id: SNOWFLAKE,
             to: 'ja',
             force: false,
@@ -200,7 +201,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       err = await Effect.runPromise(
         Effect.provide(
-          insightsTranslate.handler({
+          handler(insightsTranslate)({
             id: SNOWFLAKE,
             to: 'ja',
             force: false,
@@ -224,7 +225,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          summaryList.handler({
+          handler(summaryList)({
             page: Option.none(),
             size: Option.none(),
             grouped: true,
@@ -247,7 +248,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          overviewList.handler({
+          handler(overviewList)({
             page: Option.none(),
             size: Option.none(),
             search: Option.some('x'),
@@ -269,7 +270,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          ttsRun.handler({
+          handler(ttsRun)({
             id: SNOWFLAKE,
             to: ['en', 'ja'],
             force: true,
@@ -294,7 +295,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          ttsVoices.handler({ provider: 'p1', model: 'm1' }),
+          handler(ttsVoices)({ provider: 'p1', model: 'm1' }),
           buildLayer(http),
         ),
       )
@@ -312,7 +313,7 @@ describe('ai verb flag wiring', () => {
     await silenced(async () => {
       await Effect.runPromise(
         Effect.provide(
-          overviewByArticle.handler({ id: SNOWFLAKE }),
+          handler(overviewByArticle)({ id: SNOWFLAKE }),
           buildLayer(http),
         ),
       )

@@ -21,7 +21,7 @@ export const NoteSchema = Schema.Struct({
   location: Schema.optional(Schema.Any),
   coordinates: Schema.optional(Schema.Any),
   topicId: Schema.optional(Schema.Any),
-  topic: Schema.optional(Schema.Union(TopicSchema, Schema.Null)),
+  topic: Schema.optional(Schema.NullOr(TopicSchema)),
   summary: Schema.optional(Schema.Any),
   meta: Schema.optional(Schema.Any),
   images: Schema.optional(Schema.Any),

@@ -1,6 +1,4 @@
-import { FileSystem, Path } from '@effect/platform'
-import { SystemError } from '@effect/platform/Error'
-import { Effect, Layer } from 'effect'
+import { Effect, FileSystem, Layer, Path, PlatformError } from 'effect'
 
 // ---------------------------------------------------------------------------
 // In-memory FileSystem implementation for unit tests.
@@ -24,9 +22,9 @@ interface DirNode {
 
 type Node = FileNode | DirNode
 
-const notFound = (method: string, path: string): SystemError =>
-  new SystemError({
-    reason: 'NotFound',
+const notFound = (method: string, path: string): PlatformError.PlatformError =>
+  PlatformError.systemError({
+    _tag: 'NotFound',
     module: 'FileSystem',
     method,
     pathOrDescriptor: path,

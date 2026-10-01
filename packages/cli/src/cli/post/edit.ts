@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { coerceMeta, parseEnvelope } from '../../domain/envelope'
@@ -21,7 +21,7 @@ import {
   toPostFlagInputs,
 } from './_flags'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 const escapeXml = (s: string): string =>
   s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')

@@ -1,12 +1,12 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ValidationJson } from '../../../../domain/errors'
 import { Ai, type AiService } from '../../../../services/Ai'
 import { Editor } from '../../../../services/Editor'
 import { Renderer } from '../../../../services/Renderer'
 
-const recordId = Args.text({ name: 'recordId' })
+const recordId = Argument.String('recordId')
 
 const formatJson = (value: { translatedText: string }): string =>
   `${JSON.stringify(value, null, 2)}\n`
@@ -47,7 +47,7 @@ const fetchEntry = (
     for (let page = 1; page <= MAX; page++) {
       const raw = yield* ai
         .listEntries({ page, size: 50 })
-        .pipe(Effect.catchAll(() => Effect.succeed<unknown>(null)))
+        .pipe(Effect.catch(() => Effect.succeed<unknown>(null)))
       if (!raw) return null
       const rows = asRows(raw)
       for (const row of rows) {

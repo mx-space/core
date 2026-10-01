@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
@@ -13,7 +13,7 @@ import {
   toSnippetFlagInputs,
 } from './_flags'
 
-const path = Args.text({ name: 'path' })
+const path = Argument.String('path')
 
 export const create = Command.make(
   'put',

@@ -1,5 +1,5 @@
-import { Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Comment } from '../../services/Comment'
 import { Renderer } from '../../services/Renderer'
@@ -9,8 +9,8 @@ import { commentListView } from './view'
 // Convenience alias for `mxs comment list --state unread`. Accepts only the
 // paging knobs — state is fixed, and `--all` is intentionally omitted (would
 // defeat the purpose of the alias).
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
 
 export const unread = Command.make('unread', { page, size }, ({ page, size }) =>
   Effect.gen(function* () {

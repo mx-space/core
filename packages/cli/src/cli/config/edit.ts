@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'

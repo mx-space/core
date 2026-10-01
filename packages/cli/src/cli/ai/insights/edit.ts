@@ -1,12 +1,12 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ValidationJson } from '../../../domain/errors'
 import { Ai } from '../../../services/Ai'
 import { Editor } from '../../../services/Editor'
 import { Renderer } from '../../../services/Renderer'
 
-const recordId = Args.text({ name: 'recordId' })
+const recordId = Argument.String('recordId')
 
 interface InsightsEnvelope {
   content: string

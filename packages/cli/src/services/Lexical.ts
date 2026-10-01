@@ -83,20 +83,20 @@ const makeService = (): LexicalService => ({
         }),
     }),
 
-  emptyState: Effect.sync(
-    (): LexicalState => ({
-      root: {
-        type: 'root',
-        children: [],
-        direction: 'ltr',
-        format: '',
-        indent: 0,
-        version: 1,
-      },
-    }),
-  ),
+  emptyState: Effect.sync((): LexicalState => ({
+    root: {
+      type: 'root',
+      children: [],
+      direction: 'ltr',
+      format: '',
+      indent: 0,
+      version: 1,
+    },
+  })),
 })
 
-export class Lexical extends Context.Tag('Lexical')<Lexical, LexicalService>() {
+export class Lexical extends Context.Service<Lexical, LexicalService>()(
+  'Lexical',
+) {
   static Default: Layer.Layer<Lexical> = Layer.succeed(Lexical, makeService())
 }

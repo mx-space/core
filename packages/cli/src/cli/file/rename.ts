@@ -1,12 +1,12 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { typeOption } from './_shared'
 
-const name = Args.text({ name: 'name' })
-const newName = Args.text({ name: 'newName' })
+const name = Argument.String('name')
+const newName = Argument.String('newName')
 
 export const rename = Command.make(
   'rename',

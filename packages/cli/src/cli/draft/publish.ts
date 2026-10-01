@@ -1,5 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { Generic } from '../../domain/errors'
@@ -13,12 +13,12 @@ import {
   REF_TYPE_TO_RESOURCE,
 } from './_shared'
 
-const id = Args.text({ name: 'id' })
-const ai = Options.text('ai').pipe(
-  Options.withDescription(
+const id = Argument.String('id')
+const ai = Flag.String('ai').pipe(
+  Flag.withDescription(
     'AI resources to generate, e.g. summary:sync,insights:async,translation (sync waits before going live; a bare name is async).',
   ),
-  Options.optional,
+  Flag.optional,
 )
 
 export const publish = Command.make(

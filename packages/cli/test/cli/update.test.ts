@@ -1,5 +1,6 @@
-import { Effect, Exit, Layer, Option } from 'effect'
+import { Cause, Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../helper/handler'
 
 import { updateCmd as update } from '../../src/cli/update'
 import { UpdatePmUnknown } from '../../src/domain/errors'
@@ -12,7 +13,7 @@ import * as UpdaterMod from '../../src/services/UpdateNotifier'
 // ---------------------------------------------------------------------------
 
 const tagOf = (cause: any): string | undefined => {
-  const err = cause?.error ?? cause?.failure ?? cause
+  const err: any = Cause.squash(cause)
   return err?._tag ?? err?.error?._tag ?? err?.failure?._tag
 }
 
@@ -95,8 +96,7 @@ describe('update command', () => {
     const errCap = captureStderr()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.none(),
             pm: Option.none(),
@@ -141,8 +141,7 @@ describe('update command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.some(true),
             prerelease: Option.none(),
             pm: Option.none(),
@@ -190,8 +189,7 @@ describe('update command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.none(),
             pm: Option.none(),
@@ -241,8 +239,7 @@ describe('update command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.some(true),
             pm: Option.some('pnpm'),
@@ -304,8 +301,7 @@ describe('update command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.none(),
             pm: Option.none(),
@@ -353,8 +349,7 @@ describe('update command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.none(),
             pm: Option.none(),
@@ -395,8 +390,7 @@ describe('update command', () => {
     })
 
     const exit = await Effect.runPromiseExit(
-      update
-        .handler({
+      handler(update)({
           check: Option.none(),
           prerelease: Option.none(),
           pm: Option.some('npm'),
@@ -439,8 +433,7 @@ describe('update command', () => {
     const errCap = captureStderr()
     try {
       const exit = await Effect.runPromiseExit(
-        update
-          .handler({
+        handler(update)({
             check: Option.none(),
             prerelease: Option.none(),
             pm: Option.none(),

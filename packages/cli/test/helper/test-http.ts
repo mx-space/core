@@ -1,8 +1,4 @@
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from '@effect/platform'
+import { HttpClient, HttpClientRequest, HttpClientResponse } from 'effect/http'
 import { Effect, Layer } from 'effect'
 
 export interface CannedResponse {

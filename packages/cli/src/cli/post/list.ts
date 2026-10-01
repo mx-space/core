@@ -1,18 +1,14 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { postListView } from './view'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const state = Options.choice('state', ['publish', 'draft']).pipe(
-  Options.optional,
-)
-const sort = Options.choice('sort', ['created', 'modified']).pipe(
-  Options.optional,
-)
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
+const state = Flag.Literals('state', ['publish', 'draft']).pipe(Flag.optional)
+const sort = Flag.Literals('sort', ['created', 'modified']).pipe(Flag.optional)
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)

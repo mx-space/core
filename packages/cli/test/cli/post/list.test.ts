@@ -1,6 +1,7 @@
-import { HttpClient } from '@effect/platform'
+import { HttpClient } from 'effect/http'
 import { describe, it, expect, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { Api } from '../../../src/services/Api'
 import { Auth, type AuthService } from '../../../src/services/Auth'
@@ -94,7 +95,7 @@ describe('post list command', () => {
         ),
         Renderer.Default,
       )
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.some(2),
         size: Option.some(5),
         state: Option.none(),
@@ -126,7 +127,7 @@ describe('post list command', () => {
     )
     const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
     try {
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.none(),
         size: Option.none(),
         state: Option.none(),
@@ -156,7 +157,7 @@ describe('post list command', () => {
       ),
       Renderer.Default,
     )
-    const program = list.handler({
+    const program = handler(list)({
       page: Option.none(),
       size: Option.none(),
       state: Option.none(),

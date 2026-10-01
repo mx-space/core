@@ -1,17 +1,18 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Ai } from '../../../services/Ai'
 import { Renderer } from '../../../services/Renderer'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const grouped = Options.boolean('grouped').pipe(
-  Options.withDescription('group rows by article'),
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
+const grouped = Flag.Boolean('grouped').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('group rows by article'),
 )
-const search = Options.text('search').pipe(
-  Options.optional,
-  Options.withDescription('filter by article title (grouped mode)'),
+const search = Flag.String('search').pipe(
+  Flag.optional,
+  Flag.withDescription('filter by article title (grouped mode)'),
 )
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>

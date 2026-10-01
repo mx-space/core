@@ -1,30 +1,31 @@
-import { Options } from '@effect/cli'
-import { FileSystem } from '@effect/platform'
-import { Effect, Option } from 'effect'
+import { Effect, FileSystem, Option } from 'effect'
+import { Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 
-const optional = <A>(self: Options.Options<A>) => Options.optional(self)
+const optional = <A>(self: Flag.Flag<A>) => Flag.optional(self)
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)
 
-export const name = optional(Options.text('name'))
-export const description = optional(Options.text('description'))
-export const previewUrl = optional(Options.text('preview-url'))
-export const docUrl = optional(Options.text('doc-url'))
-export const projectUrl = optional(Options.text('project-url'))
-export const avatar = optional(Options.text('avatar'))
-export const images = optional(Options.text('images'))
-export const text = optional(Options.text('text'))
-export const file = optional(Options.text('file'))
+export const name = optional(Flag.String('name'))
+export const description = optional(Flag.String('description'))
+export const previewUrl = optional(Flag.String('preview-url'))
+export const docUrl = optional(Flag.String('doc-url'))
+export const projectUrl = optional(Flag.String('project-url'))
+export const avatar = optional(Flag.String('avatar'))
+export const images = optional(Flag.String('images'))
+export const text = optional(Flag.String('text'))
+export const file = optional(Flag.String('file'))
 
-export const openFlag = Options.boolean('open').pipe(
-  Options.withDescription(
+export const openFlag = Flag.Boolean('open').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'After success, open the admin edit page in the default browser.',
   ),
 )
-export const silentFlag = Options.boolean('silent').pipe(
-  Options.withDescription(
+export const silentFlag = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'On success, emit a minimal `ok` instead of the full server response.',
   ),
 )

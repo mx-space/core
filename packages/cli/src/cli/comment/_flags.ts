@@ -1,26 +1,28 @@
-import { Args, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import type { CommentStateName } from '../../services/Comment'
 
-export const ids = Args.text({ name: 'id' }).pipe(Args.repeated)
+export const ids = Argument.String('id').pipe(Argument.variadic())
 
-export const all = Options.boolean('all').pipe(
-  Options.withDescription(
+export const all = Flag.Boolean('all').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'apply to every comment (optionally filtered by --state)',
   ),
 )
 
-export const force = Options.boolean('force').pipe(
-  Options.withDescription('skip TTY confirmation guard'),
+export const force = Flag.Boolean('force').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('skip TTY confirmation guard'),
 )
 
-export const stateFilter = Options.choice('state', [
+export const stateFilter = Flag.Literals('state', [
   'unread',
   'read',
   'junk',
-]).pipe(Options.optional)
+]).pipe(Flag.optional)
 
 export const unwrapOption = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)

@@ -1,5 +1,5 @@
 /**
- * Single source of truth for preflight exemptions (the `@effect/cli`
+ * Single source of truth for preflight exemptions (the `effect/cli`
  * equivalent of the v0.2.x `preAction` hook in `src/bin/mxs.ts`).
  *
  * Any subcommand registered in `cli/*` MUST match the names declared here —

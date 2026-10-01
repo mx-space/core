@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Effect } from 'effect'
+import { Cause, Effect } from 'effect'
 
 import {
   buildUpgradeCommand,
@@ -755,7 +755,7 @@ describe('runUpdate', () => {
     )
     expect(exit._tag).toBe('Failure')
     if (exit._tag === 'Failure') {
-      const err = (exit.cause as any).error ?? (exit.cause as any).failure
+      const err = Cause.squash(exit.cause) as any
       const tag = err?._tag ?? extractTag(exit.cause)
       expect(tag).toBe('UpdateDevEnvironment')
     }

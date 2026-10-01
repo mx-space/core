@@ -1,5 +1,5 @@
-import { Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Flag } from 'effect/cli'
 
 import type { Generic, ValidationFailed } from '../../domain/errors'
 import type { ContentFormat, PostFlagInputs } from '../../domain/payload'
@@ -9,38 +9,40 @@ import { Resolver } from '../../services/Resolver'
 // Shared option definitions for `post create | edit | update`.
 // ---------------------------------------------------------------------------
 
-const optional = <A>(self: Options.Options<A>) => Options.optional(self)
+const optional = <A>(self: Flag.Flag<A>) => Flag.optional(self)
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)
 
-export const title = optional(Options.text('title'))
-export const slug = optional(Options.text('slug'))
-export const category = optional(Options.text('category'))
-export const content = optional(Options.text('content'))
-export const summary = optional(Options.text('summary'))
-export const file = optional(Options.text('file'))
-export const meta = optional(Options.text('meta'))
-export const pin = optional(Options.text('pin'))
+export const title = optional(Flag.String('title'))
+export const slug = optional(Flag.String('slug'))
+export const category = optional(Flag.String('category'))
+export const content = optional(Flag.String('content'))
+export const summary = optional(Flag.String('summary'))
+export const file = optional(Flag.String('file'))
+export const meta = optional(Flag.String('meta'))
+export const pin = optional(Flag.String('pin'))
 
-export const format = Options.choice('format', ['lexical', 'markdown']).pipe(
-  Options.optional,
+export const format = Flag.Literals('format', ['lexical', 'markdown']).pipe(
+  Flag.optional,
 )
-export const state = Options.choice('state', ['publish', 'draft']).pipe(
-  Options.optional,
+export const state = Flag.Literals('state', ['publish', 'draft']).pipe(
+  Flag.optional,
 )
 
-export const tags = optional(Options.text('tags'))
-export const related = optional(Options.text('related'))
-export const pinOrder = optional(Options.integer('pin-order'))
-export const copyright = optional(Options.text('copyright'))
+export const tags = optional(Flag.String('tags'))
+export const related = optional(Flag.String('related'))
+export const pinOrder = optional(Flag.Int('pin-order'))
+export const copyright = optional(Flag.String('copyright'))
 
-export const openFlag = Options.boolean('open').pipe(
-  Options.withDescription(
+export const openFlag = Flag.Boolean('open').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'After success, open the admin edit page in the default browser.',
   ),
 )
-export const silentFlag = Options.boolean('silent').pipe(
-  Options.withDescription(
+export const silentFlag = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
   ),
 )

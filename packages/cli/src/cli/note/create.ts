@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { buildNotePayload } from '../../domain/payload'

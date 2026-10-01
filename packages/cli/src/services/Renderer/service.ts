@@ -1,4 +1,4 @@
-import { Effect, FiberRef } from 'effect'
+import { Effect } from 'effect'
 
 import { isColorEnabled, renderMarkdownToAnsi } from '../../cli/render'
 import type { CliError } from '../../domain/errors'
@@ -49,7 +49,7 @@ export interface RendererService {
 
 export const makeService = (): RendererService => {
   const getOpts: Effect.Effect<OutputOptions> =
-    FiberRef.get(currentOutputOptions)
+    Effect.service(currentOutputOptions)
 
   const emitSuccessSync = (data: unknown, opts: OutputOptions): void => {
     if (opts.json || opts.output === 'json') {

@@ -26,7 +26,7 @@ export const resolveSnippetId = (
     if (isSnowflakeId(ref)) return ref
     const res = yield* api
       .request('/snippets/by-path', { query: { path: ref } })
-      .pipe(Effect.catchAll(() => Effect.succeed(null)))
+      .pipe(Effect.catch(() => Effect.succeed(null)))
     const doc = res && typeof res === 'object' ? (res as any).data || res : null
     const match = Array.isArray(doc)
       ? unwrapList(doc).find((s) => s.path === ref)

@@ -1,5 +1,4 @@
-import { FileSystem } from '@effect/platform'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, FileSystem, Layer } from 'effect'
 
 import { ConfigMigrationFailed, type Generic } from '../domain/errors'
 import { Config, stripLegacyConfigFields } from './Config'
@@ -50,8 +49,12 @@ const emit = (report: MigrationOptions['report'], line: string): void => {
 
 const isNotFound = (err: unknown): boolean => {
   if (typeof err === 'object' && err !== null) {
-    const e = err as { _tag?: string; reason?: string; code?: string }
-    if (e._tag === 'SystemError' && e.reason === 'NotFound') return true
+    const e = err as {
+      _tag?: string
+      reason?: { _tag?: string }
+      code?: string
+    }
+    if (e._tag === 'PlatformError' && e.reason?._tag === 'NotFound') return true
     if (e.code === 'ENOENT') return true
   }
   return false
@@ -63,7 +66,7 @@ const fileExists = (
 ): Effect.Effect<boolean, ConfigMigrationFailed> =>
   fs.stat(path).pipe(
     Effect.map(() => true),
-    Effect.catchAll((err) =>
+    Effect.catch((err) =>
       isNotFound(err)
         ? Effect.succeed(false)
         : Effect.fail(
@@ -81,7 +84,7 @@ const dirExists = (
 ): Effect.Effect<boolean, ConfigMigrationFailed> =>
   fs.stat(path).pipe(
     Effect.map((info) => (info as FileSystem.File.Info).type === 'Directory'),
-    Effect.catchAll((err) =>
+    Effect.catch((err) =>
       isNotFound(err)
         ? Effect.succeed(false)
         : Effect.fail(
@@ -99,7 +102,7 @@ const tryUnlink = (
   report: MigrationOptions['report'],
 ): Effect.Effect<void> =>
   fs.remove(path, { force: true }).pipe(
-    Effect.catchAll((err) => {
+    Effect.catch((err) => {
       if (isNotFound(err)) return Effect.void
       emit(
         report,
@@ -166,7 +169,7 @@ const make = Effect.gen(function* () {
       let legacyConfig: Record<string, unknown> = {}
       if (hasConfig) {
         const raw = yield* fs.readFileString(legacyConfigPath).pipe(
-          Effect.catchAll((err) =>
+          Effect.catch((err) =>
             Effect.fail(
               new ConfigMigrationFailed({
                 message: `failed to read legacy config at ${legacyConfigPath}: ${String(err)}`,
@@ -190,7 +193,7 @@ const make = Effect.gen(function* () {
       let legacyCredentials: Record<string, unknown> | null = null
       if (hasCreds) {
         const raw = yield* fs.readFileString(legacyCredentialsPath).pipe(
-          Effect.catchAll((err) =>
+          Effect.catch((err) =>
             Effect.fail(
               new ConfigMigrationFailed({
                 message: `failed to read legacy credentials at ${legacyCredentialsPath}: ${String(err)}`,
@@ -242,7 +245,7 @@ const make = Effect.gen(function* () {
       }
 
       yield* config.writeProfileConfig('default', migratedConfig as any).pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(
             new ConfigMigrationFailed({
               message: `failed to write profile config during migration: ${String(err)}`,
@@ -256,7 +259,7 @@ const make = Effect.gen(function* () {
         yield* config
           .writeProfileCredentials('default', legacyCredentials as any)
           .pipe(
-            Effect.catchAll((err) =>
+            Effect.catch((err) =>
               Effect.fail(
                 new ConfigMigrationFailed({
                   message: `failed to write profile credentials during migration: ${String(err)}`,
@@ -271,7 +274,7 @@ const make = Effect.gen(function* () {
       // files, so a crash mid-migration leaves the user with a recoverable
       // state.
       yield* config.writeCurrent('default').pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(
             new ConfigMigrationFailed({
               message: `failed to set current profile to default: ${String(err)}`,
@@ -297,10 +300,9 @@ const make = Effect.gen(function* () {
   return svc
 })
 
-export class Migration extends Context.Tag('Migration')<
-  Migration,
-  MigrationService
->() {
+export class Migration extends Context.Service<Migration, MigrationService>()(
+  'Migration',
+) {
   static Default: Layer.Layer<
     Migration,
     never,

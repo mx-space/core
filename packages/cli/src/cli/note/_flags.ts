@@ -1,42 +1,44 @@
-import { Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Flag } from 'effect/cli'
 
 import type { Generic, ValidationFailed } from '../../domain/errors'
 import type { ContentFormat, NoteFlagInputs } from '../../domain/payload'
 import { Resolver } from '../../services/Resolver'
 
-const optional = <A>(self: Options.Options<A>) => Options.optional(self)
+const optional = <A>(self: Flag.Flag<A>) => Flag.optional(self)
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>
   Option.getOrUndefined(value)
 
-export const title = optional(Options.text('title'))
-export const slug = optional(Options.text('slug'))
-export const topic = optional(Options.text('topic'))
-export const content = optional(Options.text('content'))
-export const mood = optional(Options.text('mood'))
-export const weather = optional(Options.text('weather'))
-export const publicAt = optional(Options.text('public-at'))
-export const password = optional(Options.text('password'))
-export const coords = optional(Options.text('coords'))
-export const location = optional(Options.text('location'))
-export const images = optional(Options.text('images'))
-export const meta = optional(Options.text('meta'))
-export const file = optional(Options.text('file'))
-export const bookmark = optional(Options.text('bookmark'))
+export const title = optional(Flag.String('title'))
+export const slug = optional(Flag.String('slug'))
+export const topic = optional(Flag.String('topic'))
+export const content = optional(Flag.String('content'))
+export const mood = optional(Flag.String('mood'))
+export const weather = optional(Flag.String('weather'))
+export const publicAt = optional(Flag.String('public-at'))
+export const password = optional(Flag.String('password'))
+export const coords = optional(Flag.String('coords'))
+export const location = optional(Flag.String('location'))
+export const images = optional(Flag.String('images'))
+export const meta = optional(Flag.String('meta'))
+export const file = optional(Flag.String('file'))
+export const bookmark = optional(Flag.String('bookmark'))
 
-export const format = Options.choice('format', ['lexical', 'markdown']).pipe(
-  Options.optional,
+export const format = Flag.Literals('format', ['lexical', 'markdown']).pipe(
+  Flag.optional,
 )
-export const state = Options.choice('state', ['publish', 'draft']).pipe(
-  Options.optional,
+export const state = Flag.Literals('state', ['publish', 'draft']).pipe(
+  Flag.optional,
 )
-export const openFlag = Options.boolean('open').pipe(
-  Options.withDescription(
+export const openFlag = Flag.Boolean('open').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'After success, open the admin edit page in the default browser.',
   ),
 )
-export const silentFlag = Options.boolean('silent').pipe(
-  Options.withDescription(
+export const silentFlag = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
   ),
 )

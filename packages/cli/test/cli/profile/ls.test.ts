@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { ls } from '../../../src/cli/profile/ls'
 import { Config } from '../../../src/services/Config'
@@ -52,7 +53,7 @@ describe('profile ls command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        ls.handler({}).pipe(
+        handler(ls)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions({
             json: true,
@@ -88,7 +89,7 @@ describe('profile ls command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        ls.handler({}).pipe(
+        handler(ls)({}).pipe(
           Effect.provide(layer),
           Renderer.withOptions({
             json: true,

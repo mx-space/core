@@ -23,10 +23,9 @@ export {
 export type { RendererService } from './service'
 export type { View, ViewCtx } from './view'
 
-export class Renderer extends Context.Tag('Renderer')<
-  Renderer,
-  RendererService
->() {
+export class Renderer extends Context.Service<Renderer, RendererService>()(
+  'Renderer',
+) {
   static Default: Layer.Layer<Renderer> = Layer.succeed(Renderer, makeService())
 
   /** Apply the given `OutputOptions` for the duration of `effect`. */
@@ -34,5 +33,5 @@ export class Renderer extends Context.Tag('Renderer')<
     options: import('./options').OutputOptions,
   ) => (effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R> =
     (options) => (effect) =>
-      Effect.locally(effect, currentOutputOptions, options)
+      Effect.provideService(effect, currentOutputOptions, options)
 }

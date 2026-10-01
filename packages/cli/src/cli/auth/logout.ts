@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { ProfileNoneActive } from '../../domain/errors'
 import { Auth } from '../../services/Auth'

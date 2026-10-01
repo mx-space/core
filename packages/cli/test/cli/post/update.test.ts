@@ -1,8 +1,9 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { handler } from '../../helper/handler'
 
-import { NodeContext } from '@effect/platform-node'
+import { NodeServices } from '@effect/platform-node'
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
 
@@ -111,7 +112,7 @@ const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
     Renderer.Default,
     Resolver.Default.pipe(Layer.provide(apiLayer)),
     Lexical.Default,
-    NodeContext.layer,
+    NodeServices.layer,
   )
 }
 
@@ -191,7 +192,7 @@ describe('post update command', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = update.handler({
+      const program = handler(update)({
         ...baseEmpty,
         slugOrId: SNOWFLAKE,
         file: some(file),
@@ -243,7 +244,7 @@ describe('post update command', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = update.handler({
+      const program = handler(update)({
         ...baseEmpty,
         slugOrId: SNOWFLAKE,
         title: some('t2'),

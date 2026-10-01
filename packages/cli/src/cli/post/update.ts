@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import { buildPostPayload } from '../../domain/payload'
@@ -17,7 +17,7 @@ import {
   toPostFlagInputs,
 } from './_flags'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
+const slugOrId = Argument.String('slugOrId')
 
 export const update = Command.make(
   'update',

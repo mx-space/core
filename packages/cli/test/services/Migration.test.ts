@@ -1,4 +1,4 @@
-import { Effect, Exit, Layer } from 'effect'
+import { Cause, Effect, Exit, Layer } from 'effect'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Config } from '../../src/services/Config'
@@ -20,7 +20,7 @@ const makeLayer = () => {
 }
 
 const tagOf = (cause: any): string | undefined => {
-  const err = cause?.error ?? cause?.failure ?? cause
+  const err: any = Cause.squash(cause)
   return err?._tag ?? err?.error?._tag ?? err?.failure?._tag
 }
 

@@ -1,5 +1,4 @@
-import { FileSystem, Path } from '@effect/platform'
-import { Context, Effect, Layer } from 'effect'
+import { Context, Effect, FileSystem, Layer, Path } from 'effect'
 
 import type { ConfigMigrationFailed } from '../domain/errors'
 import { ConfigMissingApiUrl, Generic, ProfileNotFound } from '../domain/errors'
@@ -220,8 +219,12 @@ const getXdgConfigDir = (path: Path.Path): string => {
 
 const isNotFound = (err: unknown): boolean => {
   if (typeof err === 'object' && err !== null) {
-    const e = err as { _tag?: string; reason?: string; code?: string }
-    if (e._tag === 'SystemError' && e.reason === 'NotFound') return true
+    const e = err as {
+      _tag?: string
+      reason?: { _tag?: string }
+      code?: string
+    }
+    if (e._tag === 'PlatformError' && e.reason?._tag === 'NotFound') return true
     if (e.code === 'ENOENT') return true
   }
   return false
@@ -237,7 +240,7 @@ const readJsonIfExists = <T>(
   Effect.gen(function* () {
     const raw: string | null = yield* fs.readFileString(filePath).pipe(
       Effect.map((s) => s as string | null),
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         isNotFound(err)
           ? Effect.succeed(null as string | null)
           : Effect.fail(
@@ -269,12 +272,12 @@ const writeJson = (
     yield* fs
       .writeFileString(filePath, text, { mode })
       .pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(toGeneric(err, `failed to write ${filePath}`)),
         ),
       )
     // Best-effort chmod — silently ignore failures (Windows / unsupported FS).
-    yield* fs.chmod(filePath, mode).pipe(Effect.catchAll(() => Effect.void))
+    yield* fs.chmod(filePath, mode).pipe(Effect.catch(() => Effect.void))
   })
 
 const ensureProfileDir = (
@@ -285,11 +288,11 @@ const ensureProfileDir = (
     yield* fs
       .makeDirectory(dir, { recursive: true, mode: 0o700 })
       .pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(toGeneric(err, `failed to create ${dir}`)),
         ),
       )
-    yield* fs.chmod(dir, 0o700).pipe(Effect.catchAll(() => Effect.void))
+    yield* fs.chmod(dir, 0o700).pipe(Effect.catch(() => Effect.void))
   })
 
 const make = Effect.gen(function* () {
@@ -348,7 +351,7 @@ const make = Effect.gen(function* () {
     Effect.gen(function* () {
       const info = yield* fs.stat(p).pipe(
         Effect.map((i) => i as FileSystem.File.Info | null),
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           isNotFound(err)
             ? Effect.succeed(null as FileSystem.File.Info | null)
             : Effect.fail(toGeneric(err, `failed to stat ${p}`)),
@@ -360,7 +363,7 @@ const make = Effect.gen(function* () {
         process.stderr.write(
           `mxs: credentials file ${p} had mode ${mode.toString(8)}; chmod 600\n`,
         )
-        yield* fs.chmod(p, 0o600).pipe(Effect.catchAll(() => Effect.void))
+        yield* fs.chmod(p, 0o600).pipe(Effect.catch(() => Effect.void))
       }
     })
 
@@ -391,7 +394,7 @@ const make = Effect.gen(function* () {
     fs
       .remove(profileCredentialsPath(name), { force: true })
       .pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           isNotFound(err)
             ? Effect.void
             : Effect.fail(toGeneric(err, `failed to remove credentials`)),
@@ -418,7 +421,7 @@ const make = Effect.gen(function* () {
   const deleteLegacyConfig: Effect.Effect<void, Generic> = fs
     .remove(legacyConfigPath(), { force: true })
     .pipe(
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         isNotFound(err)
           ? Effect.void
           : Effect.fail(toGeneric(err, 'failed to remove legacy config')),
@@ -428,7 +431,7 @@ const make = Effect.gen(function* () {
   const deleteLegacyCredentials: Effect.Effect<void, Generic> = fs
     .remove(legacyCredentialsPath(), { force: true })
     .pipe(
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         isNotFound(err)
           ? Effect.void
           : Effect.fail(toGeneric(err, 'failed to remove legacy credentials')),
@@ -441,7 +444,7 @@ const make = Effect.gen(function* () {
     function* () {
       const raw = yield* fs.readFileString(currentPath()).pipe(
         Effect.map((s) => s as string | null),
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           isNotFound(err)
             ? Effect.succeed(null as string | null)
             : Effect.fail(toGeneric(err, 'failed to read current pointer')),
@@ -458,14 +461,14 @@ const make = Effect.gen(function* () {
       yield* fs
         .makeDirectory(configDir(), { recursive: true })
         .pipe(
-          Effect.catchAll((err) =>
+          Effect.catch((err) =>
             Effect.fail(toGeneric(err, 'failed to create mxs config dir')),
           ),
         )
       yield* fs
         .writeFileString(currentPath(), `${name}\n`)
         .pipe(
-          Effect.catchAll((err) =>
+          Effect.catch((err) =>
             Effect.fail(toGeneric(err, 'failed to write current pointer')),
           ),
         )
@@ -480,7 +483,7 @@ const make = Effect.gen(function* () {
         .readDirectory(dir)
         .pipe(
           Effect.map((arr) => arr as readonly string[] | null),
-          Effect.catchAll((err) =>
+          Effect.catch((err) =>
             isNotFound(err)
               ? Effect.succeed(null as readonly string[] | null)
               : Effect.fail(toGeneric(err, `failed to list ${dir}`)),
@@ -493,7 +496,7 @@ const make = Effect.gen(function* () {
       for (const name of visible) {
         const info = yield* fs.stat(path.join(dir, name)).pipe(
           Effect.map((i) => i as FileSystem.File.Info | null),
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.succeed(null as FileSystem.File.Info | null),
           ),
         )
@@ -506,7 +509,7 @@ const make = Effect.gen(function* () {
   const profileExists = (name: string): Effect.Effect<boolean, Generic> =>
     fs.stat(profileDir(name)).pipe(
       Effect.map((info) => (info as FileSystem.File.Info).type === 'Directory'),
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         isNotFound(err)
           ? Effect.succeed(false)
           : Effect.fail(toGeneric(err, `failed to stat profile ${name}`)),
@@ -517,7 +520,7 @@ const make = Effect.gen(function* () {
     fs
       .remove(profileDir(name), { recursive: true, force: true })
       .pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(toGeneric(err, `failed to remove profile ${name}`)),
         ),
       )
@@ -688,7 +691,7 @@ const make = Effect.gen(function* () {
   return svc
 })
 
-export class Config extends Context.Tag('Config')<Config, ConfigService>() {
+export class Config extends Context.Service<Config, ConfigService>()('Config') {
   static Default: Layer.Layer<
     Config,
     never,

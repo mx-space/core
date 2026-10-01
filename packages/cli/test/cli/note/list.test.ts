@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { Api } from '../../../src/services/Api'
 import { Auth, type AuthService } from '../../../src/services/Auth'
@@ -92,7 +93,7 @@ describe('note list command', () => {
         ),
         Renderer.Default,
       )
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.some(1),
         size: Option.some(10),
         state: Option.none(),
@@ -124,7 +125,7 @@ describe('note list command', () => {
         ),
         Renderer.Default,
       )
-      const program = list.handler({
+      const program = handler(list)({
         page: Option.none(),
         size: Option.none(),
         state: Option.none(),

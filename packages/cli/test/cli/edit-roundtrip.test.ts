@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { describe, expect, it, vi } from 'vitest'
+import { handler } from '../helper/handler'
 
 import { edit as editNote } from '../../src/cli/note/edit'
 import { edit as editPage } from '../../src/cli/page/edit'
@@ -197,8 +198,7 @@ describe('edit command no-change round trip', () => {
     const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editPost
-          .handler({ slugOrId: 'post', ...commonPostOptions })
+        handler(editPost)({ slugOrId: 'post', ...commonPostOptions })
           .pipe(
             Effect.provide(
               buildLayer(calls, (initial) => {
@@ -222,8 +222,7 @@ describe('edit command no-change round trip', () => {
     const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editNote
-          .handler({ slugOrId: 'note', ...commonNoteOptions })
+        handler(editNote)({ slugOrId: 'note', ...commonNoteOptions })
           .pipe(
             Effect.provide(
               buildLayer(calls, (initial) => {
@@ -250,8 +249,7 @@ describe('edit command no-change round trip', () => {
     const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editPage
-          .handler({ slugOrId: '123456789012347', ...commonPageOptions })
+        handler(editPage)({ slugOrId: '123456789012347', ...commonPageOptions })
           .pipe(
             Effect.provide(
               buildLayer(calls, (initial) => {
@@ -274,8 +272,7 @@ describe('edit command no-change round trip', () => {
     const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editPost
-          .handler({
+        handler(editPost)({
             slugOrId: 'post',
             ...commonPostOptions,
             format: Option.some('markdown'),
@@ -316,8 +313,7 @@ changed body
     const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editNote
-          .handler({
+        handler(editNote)({
             slugOrId: 'note',
             ...commonNoteOptions,
             format: Option.some('markdown'),
@@ -361,8 +357,7 @@ changed note body
     const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
     try {
       const exit = await Effect.runPromiseExit(
-        editPage
-          .handler({
+        handler(editPage)({
             slugOrId: 'page',
             ...commonPageOptions,
             format: Option.some('markdown'),

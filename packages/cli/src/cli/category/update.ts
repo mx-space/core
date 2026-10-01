@@ -1,17 +1,17 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { Resolver } from '../../services/Resolver'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
-const name = Options.text('name').pipe(Options.optional)
-const slug = Options.text('slug').pipe(Options.optional)
-const type_ = Options.choice('type', ['category', 'tag'] as const).pipe(
-  Options.optional,
+const slugOrId = Argument.String('slugOrId')
+const name = Flag.String('name').pipe(Flag.optional)
+const slug = Flag.String('slug').pipe(Flag.optional)
+const type_ = Flag.Literals('type', ['category', 'tag'] as const).pipe(
+  Flag.optional,
 )
-const icon = Options.text('icon').pipe(Options.optional)
+const icon = Flag.String('icon').pipe(Flag.optional)
 
 export const update = Command.make(
   'update',

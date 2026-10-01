@@ -1,14 +1,12 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
 
-const name = Args.text({ name: 'name' })
-const production = Options.boolean('production', {
-  negationNames: ['no-production'],
-}).pipe(Options.optional)
+const name = Argument.String('name')
+const production = Flag.Boolean('production').pipe(Flag.optional)
 
 export const mark = Command.make(
   'mark',

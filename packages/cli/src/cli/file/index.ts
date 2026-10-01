@@ -1,4 +1,4 @@
-import { Command } from '@effect/cli'
+import { Command } from 'effect/cli'
 
 import { registerCommandHelp } from '../help/registry'
 import { del } from './delete'

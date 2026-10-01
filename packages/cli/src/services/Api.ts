@@ -1,7 +1,7 @@
-import type { HttpClientResponse } from '@effect/platform'
-import { HttpClient, HttpClientRequest } from '@effect/platform'
 import type { Schema } from 'effect'
 import { Context, Effect, Layer, Ref } from 'effect'
+import type { HttpClientResponse } from 'effect/http'
+import { HttpClient, HttpClientRequest } from 'effect/http'
 
 import {
   detectWireVersion,
@@ -47,7 +47,7 @@ export interface ApiRequestOptions<A = unknown, I = unknown> {
    * returned (likely an object or string, never undefined for non-204
    * responses).
    */
-  readonly schema?: Schema.Schema<A, I>
+  readonly schema?: Schema.Codec<A, I>
 }
 
 /**
@@ -105,7 +105,7 @@ export interface ApiService {
   ) => Effect.Effect<unknown, ApiError>
 }
 
-export class Api extends Context.Tag('Api')<Api, ApiService>() {
+export class Api extends Context.Service<Api, ApiService>()('Api') {
   /**
    * Default Layer: no overrides, banner + verbose enabled per env / config.
    * Wave 2 entry-point (`bin/mxs.ts`) should use `Api.layer({...})` to wire
@@ -139,8 +139,8 @@ export class Api extends Context.Tag('Api')<Api, ApiService>() {
 
 function makeApiService(
   http: HttpClient.HttpClient,
-  config: Context.Tag.Service<Config>,
-  auth: Context.Tag.Service<Auth>,
+  config: Context.Service.Shape<typeof Config>,
+  auth: Context.Service.Shape<typeof Auth>,
   opts: ApiOptions,
 ): Effect.Effect<ApiService> {
   return Effect.gen(function* () {
@@ -154,14 +154,13 @@ function makeApiService(
      * today's `ApiClient` which is constructed once per command run.
      */
     const resolvedEffect = config.resolve(opts.overrides).pipe(
-      Effect.mapError(
-        (err): ApiError =>
-          err._tag === 'Generic'
-            ? err
-            : new Generic({
-                message: 'failed to resolve config',
-                cause: err,
-              }),
+      Effect.mapError((err): ApiError =>
+        err._tag === 'Generic'
+          ? err
+          : new Generic({
+              message: 'failed to resolve config',
+              cause: err,
+            }),
       ),
     )
 
@@ -239,7 +238,7 @@ function makeApiService(
         if (token && resolved.profileName) {
           const fresh = yield* auth
             .ensureFresh(resolved)
-            .pipe(Effect.catchAll(() => Effect.succeed(null)))
+            .pipe(Effect.catch(() => Effect.succeed(null)))
           if (fresh) token = fresh.access_token
         }
 
@@ -292,16 +291,16 @@ function makeApiService(
                 (
                   err,
                 ): NetworkTimeout | NetworkDns | NetworkRefused | Generic => {
-                  if (err._tag === 'ResponseError') {
+                  if ('response' in err.reason) {
                     // Non-2xx is not surfaced through here because we
                     // don't apply filterStatusOk; if a custom layer does
-                    // raise ResponseError we fall through to Generic.
+                    // raise a response-side error we fall through to Generic.
                     return new Generic({
                       message: 'unexpected response error',
                       cause: err,
                     })
                   }
-                  return mapTransportError(err.cause ?? err, url)
+                  return mapTransportError(err.reason.cause ?? err, url)
                 },
               ),
             )
@@ -322,7 +321,7 @@ function makeApiService(
             config,
             resolved,
             token,
-          ).pipe(Effect.catchAll(() => Effect.succeed(null)))
+          ).pipe(Effect.catch(() => Effect.succeed(null)))
           if (refreshed) {
             token = refreshed.access_token
             headers = { ...headers, authorization: `Bearer ${token}` }
@@ -393,13 +392,13 @@ function parseBody(
 ): Effect.Effect<unknown, never> {
   const ct = res.headers['content-type'] ?? ''
   if (ct.includes('application/json')) {
-    return res.json.pipe(Effect.catchAll(() => Effect.succeed(undefined)))
+    return res.json.pipe(Effect.catch(() => Effect.succeed(undefined)))
   }
-  return res.text.pipe(Effect.catchAll(() => Effect.succeed('')))
+  return res.text.pipe(Effect.catch(() => Effect.succeed('')))
 }
 
 function decodeWithSchema<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   body: unknown,
 ): Effect.Effect<A, ServerError> {
   // We use the platform `Schema.decodeUnknown` to validate at runtime.
@@ -529,8 +528,8 @@ function mapTransportError(
 }
 
 function refreshOnce(
-  auth: Context.Tag.Service<Auth>,
-  config: Context.Tag.Service<Config>,
+  auth: Context.Service.Shape<typeof Auth>,
+  config: Context.Service.Shape<typeof Config>,
   resolved: ResolvedConfig,
   currentToken: string,
 ): Effect.Effect<{ readonly access_token: string } | null, Generic> {

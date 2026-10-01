@@ -1,16 +1,17 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
 
-const target = Args.text({ name: 'pathOrId' })
-const force = Options.boolean('force').pipe(
-  Options.withDescription('skip the non-TTY guard'),
+const target = Argument.String('pathOrId')
+const force = Flag.Boolean('force').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('skip the non-TTY guard'),
 )
-const recursive = Options.boolean('recursive')
+const recursive = Flag.Boolean('recursive').pipe(Flag.withDefault(false))
 
 export const del = Command.make(
   'rm',

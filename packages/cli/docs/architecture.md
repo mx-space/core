@@ -1,14 +1,14 @@
 # `@mx-space/cli` Architecture (v0.3)
 
-`@mx-space/cli` is implemented on top of [`@effect/cli`](https://effect.website/docs/cli/introduction) and [`@effect/platform`](https://effect.website/docs/platform/introduction). All effects are composed in [Effect-TS](https://effect.website) — there is no commander, no global mutable state, no ad-hoc Promise handling.
+`@mx-space/cli` is implemented on top of Effect v4 (`effect`, `effect/cli`, `effect/http`, `@effect/platform-node`). All effects are composed in [Effect-TS](https://effect.website) — there is no commander, no global mutable state, no ad-hoc Promise handling.
 
 This document covers the five patterns that recur throughout the codebase, plus a short walkthrough for adding a new command.
 
-## 1. `Context.Tag` + `Layer` — service definition and wiring
+## 1. `Context.Service` + `Layer` — service definition and wiring
 
-Every service is a `Context.Tag` paired with a `Layer` that builds it from its dependencies. The `Default` layer is the one consumed by application code; test code substitutes alternative layers.
+Every service is a `Context.Service` paired with a `Layer` that builds it from its dependencies. The `Default` layer is the one consumed by application code; test code substitutes alternative layers.
 
-The most representative example is `Config` (`src/services/Config.ts`). The contract is a `ConfigService` interface, the tag binds the interface to an implementation, and `Default` declares the dependencies it needs (the platform `FileSystem` and `Path` services from `@effect/platform`):
+The most representative example is `Config` (`src/services/Config.ts`). The contract is a `ConfigService` interface, the tag binds the interface to an implementation, and `Default` declares the dependencies it needs (the platform `FileSystem` and `Path` services from `effect`):
 
 ```ts
 // src/services/Config.ts
@@ -19,7 +19,7 @@ export interface ConfigService {
   // ...
 }
 
-export class Config extends Context.Tag('Config')<Config, ConfigService>() {
+export class Config extends Context.Service<Config, ConfigService>()('Config') {
   static Default: Layer.Layer<
     Config,
     never,
@@ -107,11 +107,11 @@ litexmlToPayload: (xml) =>
   })
 ```
 
-## 4. `catchTag` / `catchAll` — typed error handling
+## 4. `catchTag` / `catch` — typed error handling
 
 Errors are tagged classes that extend `Data.TaggedError` — see `src/domain/errors.ts` for the full tree. The compiler tracks which tags can escape an effect, so failure handling is exhaustive without coupling handlers to discriminator strings.
 
-The CLI bin wires the top-level error renderer and exit-code mapping with `tapError` + `catchAll`:
+The CLI bin wires the top-level error renderer and exit-code mapping with `tapError` + `catch`:
 
 ```ts
 // src/bin/mxs.ts (top-level error path)
@@ -122,7 +122,7 @@ const core = preflight(flags).pipe(
       ? Effect.flatMap(Renderer, (r) => r.emitError(err))
       : Effect.sync(() => undefined),
   ),
-  Effect.catchAll((err) =>
+  Effect.catch((err) =>
     Effect.sync(() => {
       const tag = isCliError(err) ? err._tag : 'Generic'
       process.exit(exitCodeForTag(tag))
@@ -131,7 +131,7 @@ const core = preflight(flags).pipe(
 )
 ```
 
-For tag-specific recovery in handlers, prefer `Effect.catchTag('Foo', ...)` over `catchAll` — it narrows the residual error type so unrelated failures still bubble.
+For tag-specific recovery in handlers, prefer `Effect.catchTag('Foo', ...)` over `catch` — it narrows the residual error type so unrelated failures still bubble.
 
 `src/domain/errors.ts#exitCodeForTag` is the single source of truth for the documented exit-code table (1, 2, 3, 4, 5, 6, 7, plus `sysexits` 70/73/75 for self-update errors).
 
@@ -195,9 +195,9 @@ Layout:
 
 ```
 src/services/Renderer/
-  index.ts          — Context.Tag, Layer, public surface re-exports
+  index.ts          — Context.Service, Layer, public surface re-exports
   view.ts           — View<T>, ViewCtx (leaf module; no service imports)
-  options.ts        — OutputMode, OutputOptions, currentOutputOptions FiberRef
+  options.ts        — OutputMode, OutputOptions, currentOutputOptions Context.Reference
   service.ts        — makeService(): emit, emitSuccess, emitView, emitMarkdown,
                        emitInfo/Warn/Error/InfoBlock
   primitives.ts     — writeStdout/writeStderr/color
@@ -232,13 +232,13 @@ Test layering follows the same split:
 
 Each command lives in its own file under `src/cli/<resource>/<verb>.ts`. The aggregator file `src/cli/<resource>.ts` wires the verbs into a `Command.withSubcommands` group.
 
-1. **Create the verb.** Define options with `Options.*`, then `Command.make` with a handler that yields the services it needs. Keep it small — most logic should live in services. Mutation verbs use `emitSuccess`; typed-read verbs use `emit(view, data)` (see step 2).
+1. **Create the verb.** Define flags with `Flag.*` / `Argument.*`, then `Command.make` with a handler that yields the services it needs. Keep it small — most logic should live in services. Mutation verbs use `emitSuccess`; typed-read verbs use `emit(view, data)` (see step 2).
 
    ```ts
    // src/cli/post/archive.ts
    export const archive = Command.make(
      'archive',
-     { slugOrId: Args.text({ name: 'slugOrId' }) },
+     { slugOrId: Argument.String('slugOrId') },
      ({ slugOrId }) =>
        Effect.gen(function* () {
          const api = yield* Api
@@ -265,7 +265,7 @@ Each command lives in its own file under `src/cli/<resource>/<verb>.ts`. The agg
 
    If the new verb is observable in `mxs post --help`, also register a `CommandHelp` entry via `registerCommandHelp` in `src/cli/help/registry.ts`-callers (the side-effect import in `src/cli/help/index.ts` loads each resource module once).
 
-4. **(Optional) Add a service.** If the verb needs a new capability, define it in `src/services/<Service>.ts` using the `Context.Tag + Layer` pattern from §1, add it to `src/layers/App.ts` so the application layer can build it, and wire any required platform services. If the service depends on per-invocation global flags (`--api-url`, `--token`, `--profile`, ...), construct it in `src/bin/mxs.ts` after `parseGlobalFlags` instead — `Api` and `Resolver` are the existing examples.
+4. **(Optional) Add a service.** If the verb needs a new capability, define it in `src/services/<Service>.ts` using the `Context.Service + Layer` pattern from §1, add it to `src/layers/App.ts` so the application layer can build it, and wire any required platform services. If the service depends on per-invocation global flags (`--api-url`, `--token`, `--profile`, ...), construct it in `src/bin/mxs.ts` after `parseGlobalFlags` instead — `Api` and `Resolver` are the existing examples.
 
 5. **Write tests.** Most verbs need a unit-level test under `test/cli/<resource>/<verb>.test.ts` (using `it.effect` + canned layers) and — if the verb has user-visible output — an entry in the relevant integration test under `test/integration/`. New views also get a `test/cli/<kind>/view.test.ts` with snapshots for each declared mode.
 

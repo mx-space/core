@@ -1,19 +1,19 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const type = Options.choice('type', ['post', 'note', 'page']).pipe(
-  Options.optional,
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
+const type = Flag.Literals('type', ['post', 'note', 'page']).pipe(Flag.optional)
+const newOnly = Flag.Boolean('new').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('only drafts not linked to a published resource'),
 )
-const newOnly = Options.boolean('new').pipe(
-  Options.withDescription('only drafts not linked to a published resource'),
-)
-const linkedOnly = Options.boolean('linked').pipe(
-  Options.withDescription('only drafts linked to a published resource'),
+const linkedOnly = Flag.Boolean('linked').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('only drafts linked to a published resource'),
 )
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>

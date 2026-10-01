@@ -1,5 +1,6 @@
-import { Effect, Exit, Layer, Option } from 'effect'
+import { Cause, Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { mark } from '../../../src/cli/profile/mark'
 import { rm } from '../../../src/cli/profile/rm'
@@ -68,7 +69,7 @@ const buildHarness = (
 }
 
 const tagOf = (cause: any): string | undefined => {
-  const err = cause?.error ?? cause?.failure ?? cause
+  const err: any = Cause.squash(cause)
   return err?._tag ?? err?.error?._tag ?? err?.failure?._tag
 }
 
@@ -84,7 +85,7 @@ describe('profile use command', () => {
   it('fails ProfileNotFound when the profile does not exist', async () => {
     const { layer } = buildHarness()
     const exit = await Effect.runPromiseExit(
-      use.handler({ name: 'ghost' }).pipe(Effect.provide(layer)),
+      handler(use)({ name: 'ghost' }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
@@ -98,7 +99,7 @@ describe('profile use command', () => {
     mem.seed(`${profileDir('staging')}/config.json`, JSON.stringify({}))
 
     const exit = await Effect.runPromiseExit(
-      use.handler({ name: 'staging' }).pipe(Effect.provide(layer)),
+      handler(use)({ name: 'staging' }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(mem.readFile(`${mxsDir}/current`)?.trim()).toBe('staging')
@@ -112,8 +113,7 @@ describe('profile mark command', () => {
     mem.seed(`${profileDir('staging')}/config.json`, JSON.stringify({}))
 
     const exit = await Effect.runPromiseExit(
-      mark
-        .handler({ name: 'staging', production: Option.none() })
+      handler(mark)({ name: 'staging', production: Option.none() })
         .pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
@@ -131,8 +131,7 @@ describe('profile mark command', () => {
     )
 
     const exit = await Effect.runPromiseExit(
-      mark
-        .handler({ name: 'staging', production: Option.some(true) })
+      handler(mark)({ name: 'staging', production: Option.some(true) })
         .pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
@@ -152,8 +151,7 @@ describe('profile mark command', () => {
     )
 
     const exit = await Effect.runPromiseExit(
-      mark
-        .handler({ name: 'staging', production: Option.some(false) })
+      handler(mark)({ name: 'staging', production: Option.some(false) })
         .pipe(Effect.provide(layer)),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
@@ -168,7 +166,7 @@ describe('profile show command', () => {
   it('fails when no profile name and no active profile exist', async () => {
     const { layer } = buildHarness()
     const exit = await Effect.runPromiseExit(
-      show.handler({ name: Option.none() }).pipe(Effect.provide(layer)),
+      handler(show)({ name: Option.none() }).pipe(Effect.provide(layer)),
     )
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
@@ -196,7 +194,7 @@ describe('profile show command', () => {
     const cap = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        show.handler({ name: Option.none() }).pipe(
+        handler(show)({ name: Option.none() }).pipe(
           Effect.provide(layer),
           Renderer.withOptions(rendererJson),
         ),
@@ -219,7 +217,7 @@ describe('profile rm command', () => {
     mem.seed(`${profileDir('prod')}/config.json`, JSON.stringify({}))
     mem.seed(`${mxsDir}/current`, 'prod\n')
     const exit = await Effect.runPromiseExit(
-      rm.handler({ name: 'prod', force: Option.none() }).pipe(
+      handler(rm)({ name: 'prod', force: Option.none() }).pipe(
         Effect.provide(layer),
       ),
     )
@@ -235,7 +233,7 @@ describe('profile rm command', () => {
     mem.seed(`${profileDir('prod')}/config.json`, JSON.stringify({}))
     mem.seed(`${mxsDir}/current`, 'prod\n')
     const exit = await Effect.runPromiseExit(
-      rm.handler({ name: 'prod', force: Option.some(true) }).pipe(
+      handler(rm)({ name: 'prod', force: Option.some(true) }).pipe(
         Effect.provide(layer),
         Renderer.withOptions(rendererJson),
       ),
@@ -258,7 +256,7 @@ describe('profile rm command', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        rm.handler({ name: 'staging', force: Option.none() }).pipe(
+        handler(rm)({ name: 'staging', force: Option.none() }).pipe(
           Effect.provide(layer),
         ),
       )
@@ -280,7 +278,7 @@ describe('profile rm command', () => {
     })
     try {
       const exit = await Effect.runPromiseExit(
-        rm.handler({ name: 'staging', force: Option.none() }).pipe(
+        handler(rm)({ name: 'staging', force: Option.none() }).pipe(
           Effect.provide(layer),
         ),
       )

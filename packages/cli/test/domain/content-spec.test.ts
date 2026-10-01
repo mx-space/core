@@ -2,8 +2,8 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { NodeContext } from '@effect/platform-node'
-import { Effect } from 'effect'
+import { NodeFileSystem, NodePath } from '@effect/platform-node'
+import { Effect, Layer } from 'effect'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { readContentSpec, readJsonSpec } from '../../src/domain/content-spec'
@@ -15,7 +15,7 @@ beforeEach(async () => {
 })
 
 const run = <A>(eff: Effect.Effect<A, any, any>) =>
-  Effect.runPromise(Effect.provide(eff, NodeContext.layer) as Effect.Effect<A>)
+  Effect.runPromise(Effect.provide(eff, Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)) as Effect.Effect<A>)
 
 describe('readContentSpec', () => {
   it('returns null when no content spec is provided', async () => {

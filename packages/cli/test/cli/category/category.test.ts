@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { describe, expect, it } from 'vitest'
+import { handler } from '../../helper/handler'
 
 import { create } from '../../../src/cli/category/create'
 import { del } from '../../../src/cli/category/delete'
@@ -102,7 +103,7 @@ describe('category list command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      list.handler({}).pipe(Effect.provide(buildLayer(http))),
+      handler(list)({}).pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
     expect(http.recorder.calls.length).toBe(1)
@@ -118,8 +119,7 @@ describe('category create command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      create
-        .handler({
+      handler(create)({
           name: 'Tech',
           slug: 'tech',
           type: Option.some('tag' as const),
@@ -155,8 +155,7 @@ describe('category update command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      update
-        .handler({
+      handler(update)({
           slugOrId: 'tech',
           name: Option.some('Technology'),
           slug: Option.none(),
@@ -181,8 +180,7 @@ describe('category delete command', () => {
     const http = testHttpLayer({})
     // Force non-TTY in test runner — process.stdin.isTTY is undefined under vitest.
     const exit = await Effect.runPromiseExit(
-      del
-        .handler({ slugOrId: '123456789012345', force: false })
+      handler(del)({ slugOrId: '123456789012345', force: false })
         .pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isFailure(exit)).toBe(true)
@@ -197,8 +195,7 @@ describe('category delete command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      del
-        .handler({ slugOrId: '123456789012345', force: true })
+      handler(del)({ slugOrId: '123456789012345', force: true })
         .pipe(
           Effect.provide(
             buildLayer(http, { ...baseResolved, profileExplicit: true }),
@@ -220,7 +217,7 @@ describe('category get command', () => {
       },
     })
     const exit = await Effect.runPromiseExit(
-      get.handler({ slugOrId: 'tech' }).pipe(Effect.provide(buildLayer(http))),
+      handler(get)({ slugOrId: 'tech' }).pipe(Effect.provide(buildLayer(http))),
     )
     expect(Exit.isSuccess(exit)).toBe(true)
   })

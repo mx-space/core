@@ -1,6 +1,6 @@
-import type { HttpClientResponse } from '@effect/platform'
-import { HttpClient, HttpClientRequest } from '@effect/platform'
 import { Context, Effect, Layer } from 'effect'
+import type { HttpClientResponse } from 'effect/http'
+import { HttpClient, HttpClientRequest } from 'effect/http'
 
 import {
   AuthDenied,
@@ -161,7 +161,7 @@ export interface AuthService {
   ) => Effect.Effect<CredentialsShape, Generic>
 }
 
-export class Auth extends Context.Tag('Auth')<Auth, AuthService>() {
+export class Auth extends Context.Service<Auth, AuthService>()('Auth') {
   /** Build the Auth Layer; depends on `Config` and `HttpClient`. */
   static Default: Layer.Layer<Auth, never, Config | HttpClient.HttpClient> =
     Layer.effect(
@@ -232,12 +232,12 @@ function mapTransportError(
 function jsonResponseBody(
   res: HttpClientResponse.HttpClientResponse,
 ): Effect.Effect<unknown> {
-  return res.json.pipe(Effect.catchAll(() => Effect.succeed(null)))
+  return res.json.pipe(Effect.catch(() => Effect.succeed(null)))
 }
 
 function makeAuthService(
   http: HttpClient.HttpClient,
-  config: Context.Tag.Service<Config>,
+  config: Context.Service.Shape<typeof Config>,
 ): AuthService {
   const sendJson = (
     url: string,
@@ -259,13 +259,12 @@ function makeAuthService(
         )
       }
       return yield* http.execute(req).pipe(
-        // ResponseError is just a status filter — we don't apply filterStatusOk,
-        // so transport-level failures (RequestError) are what we map here.
-        Effect.catchTag('RequestError', (rerr) =>
-          Effect.fail(mapTransportError(rerr.cause ?? rerr, url)),
-        ),
-        Effect.catchTag('ResponseError', (rerr) =>
-          Effect.succeed(rerr.response),
+        // No filterStatusOk is applied, so a response-side reason still carries
+        // a usable response; only request-side reasons are transport failures.
+        Effect.catchTag('HttpClientError', (rerr) =>
+          'response' in rerr.reason
+            ? Effect.succeed(rerr.reason.response)
+            : Effect.fail(mapTransportError(rerr.reason.cause ?? rerr, url)),
         ),
       )
     })
@@ -289,19 +288,14 @@ function makeAuthService(
 
       for (const cand of candidates) {
         const probeUrl = `${apiUrl}${cand.prefix}/ok`
-        const result:
-          | { _tag: 'Left'; left: Transport }
-          | {
-              _tag: 'Right'
-              right: HttpClientResponse.HttpClientResponse
-            } = yield* sendJson(probeUrl, 'GET', undefined, {
+        const result = yield* sendJson(probeUrl, 'GET', undefined, {
           accept: 'application/json',
-        }).pipe(Effect.either)
-        if (result._tag === 'Left') {
-          lastTransport = result.left
+        }).pipe(Effect.result)
+        if (result._tag === 'Failure') {
+          lastTransport = result.failure
           continue
         }
-        const res = result.right
+        const res = result.success
         attempted.push({ url: probeUrl, status: res.status })
         if (res.status >= 200 && res.status < 300) {
           const apiVersion = cand.version ?? SUPPORTED_API_VERSIONS[0]
@@ -392,8 +386,7 @@ function makeAuthService(
             signal: opts.signal,
           })
           const body = res.body as
-            | (DeviceTokenResponse & { error?: string })
-            | null
+            (DeviceTokenResponse & { error?: string }) | null
           if (res.ok && body?.access_token) {
             return body as DeviceTokenResponse
           }
@@ -513,7 +506,7 @@ function makeAuthService(
         name ??
         (yield* config.resolve().pipe(
           Effect.map((r) => r.profileName),
-          Effect.catchAll(() => Effect.succeed(null)),
+          Effect.catch(() => Effect.succeed(null)),
         ))
       if (!target) return
       yield* config.deleteProfileCredentials(target)
@@ -583,7 +576,7 @@ function makeAuthService(
       const fetched = yield* Effect.tryPromise({
         try: () => fetchSessionUser(authBase, cred),
         catch: () => null,
-      }).pipe(Effect.catchAll(() => Effect.succeed(null)))
+      }).pipe(Effect.catch(() => Effect.succeed(null)))
       if (!fetched) return cred
       const updated: CredentialsShape = { ...cred, user: fetched }
       yield* config.writeProfileCredentials(profileName, updated)

@@ -1,18 +1,18 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const key = Args.text({ name: 'key' })
-const value = Args.text({ name: 'value' })
-const type_ = Options.choice('type', [
+const key = Argument.String('key')
+const value = Argument.String('value')
+const type_ = Flag.Literals('type', [
   'json',
   'string',
   'number',
   'bool',
-] as const).pipe(Options.optional)
+] as const).pipe(Flag.optional)
 
 type CoerceType = 'json' | 'string' | 'number' | 'bool'
 

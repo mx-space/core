@@ -26,12 +26,11 @@ export type ProfileCredentials = Schema.Schema.Type<
 // Profile name — `^[a-z0-9_-]{1,32}$`, excluding the reserved word `current`.
 // ---------------------------------------------------------------------------
 
-export const ProfileNameSchema = Schema.String.pipe(
-  Schema.pattern(/^[\d_a-z-]{1,32}$/, {
-    message: () =>
-      'profile name must match ^[a-z0-9_-]{1,32}$ and is case-sensitive',
+export const ProfileNameSchema = Schema.String.check(
+  Schema.isPattern(/^[\d_a-z-]{1,32}$/, {
+    message: 'profile name must match ^[a-z0-9_-]{1,32}$ and is case-sensitive',
   }),
-  Schema.filter((s) => (s === 'current' ? "'current' is reserved" : true)),
+  Schema.makeFilter((s) => (s === 'current' ? "'current' is reserved" : true)),
 )
 
 export type ProfileName = Schema.Schema.Type<typeof ProfileNameSchema>

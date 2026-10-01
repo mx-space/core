@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `@mx-space/cli` — the `mxs` binary. Command-line interface for managing a deployed `mx-core` instance (auth, content, configuration). User-facing surface and behavior are documented in `README.md`; internal architecture is documented in `docs/architecture.md`. Forward roadmap is in `ROADMAP.md`.
 
-The implementation language is **Effect-TS** on top of `@effect/cli` + `@effect/platform`. There is intentionally no Commander, no global mutable state, and no ad-hoc Promise handling — see "Architectural conventions" below.
+The implementation language is **Effect-TS** on top of Effect v4 (`effect`, `effect/cli`, `effect/http`). There is intentionally no Commander, no global mutable state, and no ad-hoc Promise handling — see "Architectural conventions" below.
 
 ## Commands
 
@@ -31,13 +31,13 @@ After implementing or changing **user-facing CLI behavior** (commands, flags, ou
 
 Read `docs/architecture.md` for the full walkthrough. The minimum mental model:
 
-- **Services** live in `src/services/*.ts` as `Context.Tag` + `Layer` pairs. The `.Default` layer is the production wiring; tests substitute alternatives. Most services are wired in `src/layers/App.ts`. **Two exceptions** — `Api` and `Resolver` depend on per-invocation global flags (`--api-url`, `--token`, `--api-key`, `--profile`, `--dry-run`, `--lang`) and are constructed inside `src/bin/mxs.ts` *after* `parseGlobalFlags`, then merged in via `Layer.provideMerge`.
-- **Commands** live in `src/cli/<resource>/<verb>.ts` as small `Command.make` + `Effect.gen` blocks that `yield*` the services they need. The aggregator file `src/cli/<resource>/index.ts` wires verbs together with `Command.withSubcommands` and is registered on the root command in `src/bin/mxs.ts`. Keep handlers thin — non-trivial logic belongs in services.
-- **Errors** are `Data.TaggedError` classes in `src/domain/errors.ts`. Exit-code mapping is `exitCodeForTag` (single source of truth). Use `Effect.catchTag('Foo', ...)` for narrow recovery; reserve `catchAll` for the top-level shim in `bin/mxs.ts`.
-- **External Promise APIs** (fs beyond `@effect/platform`, editor subprocess, package-manager spawn, lexical bridges) are wrapped with `Effect.tryPromise` (or `Effect.try` for sync throws). Do not reach for `Effect.runPromise`/`unsafeRun*` inside handlers — if a service boundary feels wrong, fix the service, not the call site.
-- **Global flags are pre-parsed.** `src/domain/runtime-flags.ts#parseGlobalFlags` strips global flags from argv *before* `@effect/cli` sees them, then propagates them via `FiberRef`s (`currentOutputOptions`, `currentDryRun`). `@effect/cli` does not know about `--api-url`, `--json`, etc. — do not declare them on subcommands.
-- **Help rendering is overridden** at the root and group levels (`src/cli/help/`). Bare `mxs`, `mxs --help`, `mxs <group>`, and `mxs <group> --help` are intercepted in `bin/mxs.ts#detectHelpTarget` and rendered by our code; verb-level help (`mxs post create --help`) is left to `@effect/cli`. When adding a new top-level group, register it in the help data builders too.
-- **Output is centralized** in `src/services/Renderer/` (`emit` for typed views, `emitSuccess`/`emitError`/`emitInfo`/`emitWarn`/`emitInfoBlock`). Modes: `pretty-json`, `json` (envelope `{ ok, data }`), `readable`, `llm`, `envelope`. The renderer reads the `OutputOptions` FiberRef — don't pass options into handlers.
+- **Services** live in `src/services/*.ts` as `Context.Service` + `Layer` pairs. The `.Default` layer is the production wiring; tests substitute alternatives. Most services are wired in `src/layers/App.ts`. **Two exceptions** — `Api` and `Resolver` depend on per-invocation global flags (`--api-url`, `--token`, `--api-key`, `--profile`, `--dry-run`, `--lang`) and are constructed inside `src/bin/mxs.ts` *after* `parseGlobalFlags`, then merged in via `Layer.provideMerge`.
+- **Commands** live in `src/cli/<resource>/<verb>.ts` as small `Command.make` + `Effect.gen` blocks that `yield*` the services they need. The aggregator file `src/cli/<resource>/index.ts` wires verbs together with `Command.withSubcommands` and is registered on the root command in `src/bin/mxs.ts`. Keep handlers thin — non-trivial logic belongs in services. `Flag.Boolean` is **required** in `effect/cli` v4 unless piped through `Flag.withDefault(false)` or `Flag.optional` — always add one.
+- **Errors** are `Data.TaggedError` classes in `src/domain/errors.ts`. Exit-code mapping is `exitCodeForTag` (single source of truth). Use `Effect.catchTag('Foo', ...)` for narrow recovery; reserve `catch` for the top-level shim in `bin/mxs.ts`.
+- **External Promise APIs** (fs beyond `effect/FileSystem`, editor subprocess, package-manager spawn, lexical bridges) are wrapped with `Effect.tryPromise` (or `Effect.try` for sync throws). Do not reach for `Effect.runPromise`/`unsafeRun*` inside handlers — if a service boundary feels wrong, fix the service, not the call site.
+- **Global flags are pre-parsed.** `src/domain/runtime-flags.ts#parseGlobalFlags` strips global flags from argv *before* `effect/cli` sees them, then propagates them via `Context.Reference`s (`currentOutputOptions`, `currentDryRun`). `effect/cli` does not know about `--api-url`, `--json`, etc. — do not declare them on subcommands.
+- **Help rendering is overridden** at the root and group levels (`src/cli/help/`). Bare `mxs`, `mxs --help`, `mxs <group>`, and `mxs <group> --help` are intercepted in `bin/mxs.ts#detectHelpTarget` and rendered by our code; verb-level help (`mxs post create --help`) is left to `effect/cli`. When adding a new top-level group, register it in the help data builders too.
+- **Output is centralized** in `src/services/Renderer/` (`emit` for typed views, `emitSuccess`/`emitError`/`emitInfo`/`emitWarn`/`emitInfoBlock`). Modes: `pretty-json`, `json` (envelope `{ ok, data }`), `readable`, `llm`, `envelope`. The renderer reads the `OutputOptions` Context.Reference — don't pass options into handlers.
 - **Lexical content** is processed through `@haklex/rich-headless` and `@haklex/rich-litexml` via `src/services/Lexical.ts`. LiteXML `<mxpost>`/`<mxnote>` envelopes are parsed to Lexical JSON before sending to the server.
 
 ## Tests
@@ -46,6 +46,7 @@ Vitest with `@effect/vitest`. Use `it.effect` to run an `Effect` directly and pr
 
 - `test/helper/test-fs.ts` — in-memory `FileSystem` (used wherever a service reads/writes disk: `Config`, `Profile`, `Migration`).
 - `test/helper/test-http.ts` — canned-response `HttpClient` (used by `Api`, `Resolver`, `Auth`).
+- `test/helper/handler.ts` — `handler(cmd)(input)` invokes a command's handler directly with already-parsed input (v4 no longer exposes `cmd.handler`).
 
 Integration tests under `test/integration/` spawn the actual binary via `child_process.spawn` and assert on stdout/stderr/exit code — these cover the CLI surface end-to-end. See `cli-error-envelope.test.ts` for the canonical pattern.
 

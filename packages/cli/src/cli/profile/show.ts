@@ -1,5 +1,5 @@
-import { Args, Command } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { ProfileNoneActive } from '../../domain/errors'
 import { Config } from '../../services/Config'
@@ -7,7 +7,7 @@ import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
 import { formatDateTime } from '../../services/Renderer/datetime'
 
-const nameArg = Args.text({ name: 'name' }).pipe(Args.optional)
+const nameArg = Argument.String('name').pipe(Argument.optional)
 
 export const show = Command.make('show', { name: nameArg }, ({ name }) =>
   Effect.gen(function* () {

@@ -1,11 +1,11 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Comment } from '../../services/Comment'
 import { Renderer } from '../../services/Renderer'
 import { commentView } from './view'
 
-const id = Args.text({ name: 'id' })
+const id = Argument.String('id')
 
 export const get = Command.make('get', { id }, ({ id }) =>
   Effect.gen(function* () {

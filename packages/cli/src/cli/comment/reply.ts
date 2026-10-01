@@ -1,5 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { readContentSpec } from '../../domain/content-spec'
 import { ValidationFailed } from '../../domain/errors'
@@ -7,21 +7,23 @@ import { Comment } from '../../services/Comment'
 import { Renderer } from '../../services/Renderer'
 import { unwrapOption } from './_flags'
 
-const id = Args.text({ name: 'id' })
+const id = Argument.String('id')
 
-const text = Options.text('text').pipe(
-  Options.withDescription(
+const text = Flag.String('text').pipe(
+  Flag.withDescription(
     'reply text — inline literal, `file=<path>`, or `-`/`stdin` to read stdin',
   ),
-  Options.optional,
+  Flag.optional,
 )
 
-const whispers = Options.boolean('whispers').pipe(
-  Options.withDescription('mark this reply as whispers (owner-only visible)'),
+const whispers = Flag.Boolean('whispers').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('mark this reply as whispers (owner-only visible)'),
 )
 
-const silent = Options.boolean('silent').pipe(
-  Options.withDescription(
+const silent = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'on success, emit a minimal `ok` instead of the full server response',
   ),
 )

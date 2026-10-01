@@ -1,12 +1,12 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const id = Args.text({ name: 'id' })
-const force = Options.boolean('force')
+const id = Argument.String('id')
+const force = Flag.Boolean('force').pipe(Flag.withDefault(false))
 
 export const del = Command.make('delete', { id, force }, ({ id, force }) =>
   Effect.gen(function* () {

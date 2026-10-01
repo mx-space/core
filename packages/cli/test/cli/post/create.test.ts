@@ -1,6 +1,7 @@
-import { NodeContext } from '@effect/platform-node'
+import { NodeServices } from '@effect/platform-node'
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
+import { handler } from '../../helper/handler'
 
 import { Api } from '../../../src/services/Api'
 import { Auth, type AuthService } from '../../../src/services/Auth'
@@ -107,7 +108,7 @@ const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
     Renderer.Default,
     Resolver.Default.pipe(Layer.provide(apiLayer)),
     Lexical.Default,
-    NodeContext.layer,
+    NodeServices.layer,
   )
 }
 
@@ -123,7 +124,7 @@ describe('post create command', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = create.handler({
+      const program = handler(create)({
         ...baseEmpty,
         title: some('t'),
         slug: some('s'),
@@ -165,7 +166,7 @@ describe('post create command', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = create.handler({
+      const program = handler(create)({
         ...baseEmpty,
         title: some('t'),
         slug: some('s'),
@@ -187,7 +188,7 @@ describe('post create command', () => {
 
   it('rejects empty lexical content with ValidationFailed', async () => {
     const http = testHttpLayer({})
-    const program = create.handler({
+    const program = handler(create)({
       ...baseEmpty,
       title: some('t'),
       slug: some('s'),

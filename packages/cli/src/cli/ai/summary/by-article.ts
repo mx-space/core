@@ -1,15 +1,16 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Ai } from '../../../services/Ai'
 import { Renderer } from '../../../services/Renderer'
 import { Resolver } from '../../../services/Resolver'
 import { resolveArticleId } from '../_resolve'
 
-const id = Args.text({ name: 'idOrSlug' })
-const lang = Options.text('lang').pipe(Options.optional)
-const onlyDb = Options.boolean('only-db').pipe(
-  Options.withDescription('do not auto-generate on miss'),
+const id = Argument.String('idOrSlug')
+const lang = Flag.String('lang').pipe(Flag.optional)
+const onlyDb = Flag.Boolean('only-db').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('do not auto-generate on miss'),
 )
 
 const unwrap = <A>(value: Option.Option<A>): A | undefined =>

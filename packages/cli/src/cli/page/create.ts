@@ -1,5 +1,5 @@
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
 import type { PageFlagInputs } from '../../domain/payload'
@@ -8,23 +8,25 @@ import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { saveDraftPayload } from '../draft/_shared'
 
-const title = Options.optional(Options.text('title'))
-const slug = Options.optional(Options.text('slug'))
-const subtitle = Options.optional(Options.text('subtitle'))
-const order = Options.optional(Options.integer('order'))
-const content = Options.optional(Options.text('content'))
-const format = Options.choice('format', ['lexical', 'markdown']).pipe(
-  Options.optional,
+const title = Flag.optional(Flag.String('title'))
+const slug = Flag.optional(Flag.String('slug'))
+const subtitle = Flag.optional(Flag.String('subtitle'))
+const order = Flag.optional(Flag.Int('order'))
+const content = Flag.optional(Flag.String('content'))
+const format = Flag.Literals('format', ['lexical', 'markdown']).pipe(
+  Flag.optional,
 )
-const meta = Options.optional(Options.text('meta'))
-const file = Options.optional(Options.text('file'))
-const openFlag = Options.boolean('open').pipe(
-  Options.withDescription(
+const meta = Flag.optional(Flag.String('meta'))
+const file = Flag.optional(Flag.String('file'))
+const openFlag = Flag.Boolean('open').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'After success, open the admin edit page in the default browser.',
   ),
 )
-const silentFlag = Options.boolean('silent').pipe(
-  Options.withDescription(
+const silentFlag = Flag.Boolean('silent').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
     'On success, emit a minimal `ok` instead of the full server response (saves output tokens). Errors still print normally.',
   ),
 )

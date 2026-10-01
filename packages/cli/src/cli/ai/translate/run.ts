@@ -1,5 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ValidationFailed } from '../../../domain/errors'
 import { Ai } from '../../../services/Ai'
@@ -9,16 +9,18 @@ import { followTask } from '../_poll'
 import { resolveArticleId } from '../_resolve'
 import { aiTaskView } from '../views'
 
-const id = Args.text({ name: 'idOrSlug' })
-const to = Options.text('to').pipe(
-  Options.repeated,
-  Options.withDescription('target language code (repeatable, at least one)'),
+const id = Argument.String('idOrSlug')
+const to = Flag.String('to').pipe(
+  Flag.atLeast(0),
+  Flag.withDescription('target language code (repeatable, at least one)'),
 )
-const force = Options.boolean('force').pipe(
-  Options.withDescription('retranslate even when an up-to-date result exists'),
+const force = Flag.Boolean('force').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('retranslate even when an up-to-date result exists'),
 )
-const noWait = Options.boolean('no-wait').pipe(
-  Options.withDescription('return immediately after creating the task'),
+const noWait = Flag.Boolean('no-wait').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('return immediately after creating the task'),
 )
 
 export const run = Command.make(

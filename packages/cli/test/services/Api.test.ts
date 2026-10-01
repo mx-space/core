@@ -1,4 +1,4 @@
-import { HttpClient, HttpClientError, HttpClientResponse } from '@effect/platform'
+import { HttpClient, HttpClientError, HttpClientResponse } from 'effect/http'
 import { describe, it as itVitest, expect, vi } from '@effect/vitest'
 import { Effect, Layer, Schema } from 'effect'
 
@@ -96,10 +96,8 @@ const failingHttpLayer = (cause: unknown) =>
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.fail(
-        new HttpClientError.RequestError({
-          request,
-          reason: 'Transport',
-          cause,
+        new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({ request, cause }),
         }),
       ),
     ),
@@ -110,7 +108,8 @@ const responseErrorHttpLayer = () =>
     HttpClient.HttpClient,
     HttpClient.make((request) =>
       Effect.fail(
-        new HttpClientError.ResponseError({
+        new HttpClientError.HttpClientError({
+          reason: new HttpClientError.StatusCodeError({
           request,
           response: HttpClientResponse.fromWeb(
             request,
@@ -119,7 +118,7 @@ const responseErrorHttpLayer = () =>
               headers: { 'content-type': 'application/json' },
             }),
           ),
-          reason: 'StatusCode',
+          }),
         }),
       ),
     ),

@@ -1,5 +1,6 @@
 import { Effect, Exit, Layer, Option } from 'effect'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { handler } from '../helper/handler'
 
 import { create as putSnippet } from '../../src/cli/snippet/create'
 import { del as deleteSnippet } from '../../src/cli/snippet/delete'
@@ -122,8 +123,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        listSnippet
-          .handler({
+        handler(listSnippet)({
             prefix: Option.some('sk/'),
             limit: Option.some(20),
             recursive: true,
@@ -148,7 +148,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        getSnippet.handler({ target: 'root/config.json' }).pipe(
+        handler(getSnippet)({ target: 'root/config.json' }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -168,7 +168,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        getSnippet.handler({ target: SNIPPET_ID }).pipe(
+        handler(getSnippet)({ target: SNIPPET_ID }).pipe(
           Effect.provide(buildLayer(calls)),
           Renderer.withOptions(rendererJson),
         ),
@@ -185,8 +185,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        putSnippet
-          .handler({
+        handler(putSnippet)({
             path: 'root/config.json',
             ...writeFlags,
             type: Option.some('json' as const),
@@ -225,7 +224,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        putSnippet.handler({ path: 'root/config.txt', ...writeFlags }).pipe(
+        handler(putSnippet)({ path: 'root/config.txt', ...writeFlags }).pipe(
           Effect.provide(buildLayer(calls, {}, editor)),
           Renderer.withOptions(rendererJson),
         ),
@@ -245,8 +244,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        moveSnippet
-          .handler({
+        handler(moveSnippet)({
             from: 'sk/foo/',
             to: 'sk/bar/',
             recursive: true,
@@ -285,7 +283,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        editSnippet.handler({ target: SNIPPET_ID }).pipe(
+        handler(editSnippet)({ target: SNIPPET_ID }).pipe(
           Effect.provide(buildLayer(calls, responses, editor)),
           Renderer.withOptions(rendererJson),
         ),
@@ -309,7 +307,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        editSnippet.handler({ target: 'root/config.json' }).pipe(
+        handler(editSnippet)({ target: 'root/config.json' }).pipe(
           Effect.provide(buildLayer(calls, responses, editor)),
           Renderer.withOptions(rendererJson),
         ),
@@ -333,8 +331,7 @@ describe('snippet VFS command handlers', () => {
     const stdout = captureStdout()
     try {
       const exit = await Effect.runPromiseExit(
-        deleteSnippet
-          .handler({ target: 'sk/foo/', force: true, recursive: true })
+        handler(deleteSnippet)({ target: 'sk/foo/', force: true, recursive: true })
           .pipe(
             Effect.provide(buildLayer(calls)),
             Renderer.withOptions(rendererJson),
@@ -357,8 +354,7 @@ describe('snippet VFS command handlers', () => {
     const restoreTty = withStdinTty(false)
     try {
       const exit = await Effect.runPromiseExit(
-        deleteSnippet
-          .handler({ target: SNIPPET_ID, force: false, recursive: false })
+        handler(deleteSnippet)({ target: SNIPPET_ID, force: false, recursive: false })
           .pipe(Effect.provide(buildLayer([]))),
       )
       expect(Exit.isFailure(exit)).toBe(true)

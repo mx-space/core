@@ -50,7 +50,7 @@ describe('cli --help', () => {
     'lists all top-level subcommands',
     async () => {
       const res = await runMxs(['--help'])
-      // strip ANSI codes — `@effect/cli` colours headings
+      // strip ANSI codes — `effect/cli` colours headings
       const stripped = res.stdout.replace(/\x1b\[[0-9;]*m/g, '')
       for (const cmd of [
         'auth',

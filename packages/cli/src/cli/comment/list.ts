@@ -1,17 +1,16 @@
-import { Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Comment } from '../../services/Comment'
 import { Renderer } from '../../services/Renderer'
 import { stateFilter, unwrapOption } from './_flags'
 import { commentListView } from './view'
 
-const page = Options.integer('page').pipe(Options.optional)
-const size = Options.integer('size').pipe(Options.optional)
-const allFlag = Options.boolean('all').pipe(
-  Options.withDescription(
-    'list comments across every state (ignores --state)',
-  ),
+const page = Flag.Int('page').pipe(Flag.optional)
+const size = Flag.Int('size').pipe(Flag.optional)
+const allFlag = Flag.Boolean('all').pipe(
+  Flag.withDefault(false),
+  Flag.withDescription('list comments across every state (ignores --state)'),
 )
 
 export const list = Command.make(

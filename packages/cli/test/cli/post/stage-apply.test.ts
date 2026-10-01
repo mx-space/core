@@ -1,8 +1,9 @@
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { handler } from '../../helper/handler'
 
-import { NodeContext } from '@effect/platform-node'
+import { NodeServices } from '@effect/platform-node'
 import { describe, expect, it, vi } from '@effect/vitest'
 import { Effect, Layer, Option } from 'effect'
 
@@ -112,7 +113,7 @@ const makeLayer = (http: ReturnType<typeof testHttpLayer>) => {
     Renderer.Default,
     Resolver.Default.pipe(Layer.provide(apiLayer)),
     Lexical.Default,
-    NodeContext.layer,
+    NodeServices.layer,
   )
 }
 
@@ -169,7 +170,7 @@ describe('post stage / apply', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = stage.handler({
+      const program = handler(stage)({
         ...baseEmpty,
         slugOrId: SNOWFLAKE,
         file: some(file),
@@ -195,7 +196,7 @@ describe('post stage / apply', () => {
 
   it('stage with nothing to send fails with ValidationFailed', async () => {
     const http = testHttpLayer({})
-    const program = stage.handler({
+    const program = handler(stage)({
       ...baseEmpty,
       slugOrId: SNOWFLAKE,
     })
@@ -245,7 +246,7 @@ describe('post stage / apply', () => {
       .spyOn(process.stdout, 'write')
       .mockImplementation(() => true)
     try {
-      const program = apply.handler({ slugOrId: SNOWFLAKE })
+      const program = handler(apply)({ slugOrId: SNOWFLAKE })
       await Effect.runPromise(Effect.provide(program, makeLayer(http)))
       const publish = http.recorder.calls.find(
         (call) => call.url.endsWith('/publish-jobs'),
@@ -279,7 +280,7 @@ describe('post stage / apply', () => {
           },
         },
     })
-    const program = apply.handler({ slugOrId: SNOWFLAKE })
+    const program = handler(apply)({ slugOrId: SNOWFLAKE })
     const err = await Effect.runPromise(
       Effect.flip(Effect.provide(program, makeLayer(http))),
     )

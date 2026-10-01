@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module'
 
-import { Command } from '@effect/cli'
-import { NodeContext, NodeHttpClient, NodeRuntime } from '@effect/platform-node'
+import {
+  NodeHttpClient,
+  NodeRuntime,
+  NodeServices,
+} from '@effect/platform-node'
 import { Effect, Layer } from 'effect'
+import { Command } from 'effect/cli'
 
 import { aiCmd } from '../cli/ai'
 import { authCmd } from '../cli/auth'
@@ -123,7 +127,7 @@ if (import.meta.url.endsWith('/src/bin/mxs.ts')) {
 
 // ---------------------------------------------------------------------------
 // Root command (subcommands only — global flags are pre-parsed before
-// `@effect/cli` ever sees argv, so they don't need to be declared here).
+// `effect/cli` ever sees argv, so they don't need to be declared here).
 // ---------------------------------------------------------------------------
 
 const rootCmd = Command.make('mxs', {}, () =>
@@ -193,7 +197,7 @@ const preflight = (flags: GlobalFlags) =>
         report: flags.quiet ? null : undefined,
       })
       .pipe(
-        Effect.catchAll((err) =>
+        Effect.catch((err) =>
           Effect.fail(
             new Generic({
               message: err.message ?? 'legacy migration failed',
@@ -207,7 +211,7 @@ const preflight = (flags: GlobalFlags) =>
     //    active subcommand is not exempt.
     const invoked = detectInvokedCommand(process.argv)
     const currentProfile = yield* profile.current.pipe(
-      Effect.catchAll(() => Effect.succeed(null)),
+      Effect.catch(() => Effect.succeed(null)),
     )
     const effectiveCurrentProfile =
       currentProfile ||
@@ -241,7 +245,7 @@ const preflight = (flags: GlobalFlags) =>
 
     // 4. Fire-and-forget passive update notifier (no fiber leak — the bin's
     //    runMain awaits all daemon fibers before exit).
-    yield* Effect.forkDaemon(
+    yield* Effect.forkDetach(
       updater.maybeNotify({
         currentVersion: CLI_VERSION,
         quiet: flags.quiet,
@@ -260,7 +264,7 @@ const preflight = (flags: GlobalFlags) =>
 /**
  * Decide whether the user is asking for a help screen we render ourselves.
  *
- * We override `@effect/cli`'s built-in renderer at two levels:
+ * We override `effect/cli`'s built-in renderer at two levels:
  *
  *   - `root` — bare `mxs`, `mxs --help`, `mxs -h`. The default renderer
  *     flattens every nested verb into one COMMANDS table and can't see our
@@ -272,7 +276,7 @@ const preflight = (flags: GlobalFlags) =>
  *     and clutters OPTIONS with five built-in flags that don't apply to us.
  *
  * Verb-level help (`mxs post create --help`, etc.) is NOT intercepted —
- * `@effect/cli`'s single-command pages are reasonable as-is.
+ * `effect/cli`'s single-command pages are reasonable as-is.
  */
 type HelpTarget =
   | { readonly kind: 'none' }
@@ -293,7 +297,7 @@ const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
     return { kind: 'root' }
   }
   // Bare `mxs <group>` (no flags, no verb) → group help. Groups have no
-  // default executable; @effect/cli would print its default help anyway.
+  // default executable; effect/cli would print its default help anyway.
   // Leafs like `update` carry a real handler and must NOT be intercepted.
   if (args.length === 1 && isGroupName(first) && !LEAF_COMMANDS.has(first)) {
     return { kind: 'group', name: first }
@@ -315,7 +319,7 @@ export const run = (argv: readonly string[]): Promise<void> => {
   const flags = parsed.flags
 
   // Intercept root- and group-level help BEFORE building any layers or
-  // invoking `@effect/cli`. This sidesteps the broken layout produced by the
+  // invoking `effect/cli`. This sidesteps the broken layout produced by the
   // default renderer at both depths (see `src/cli/help.ts`).
   const helpTarget = detectHelpTarget(parsed.rest)
   if (helpTarget.kind === 'root') {
@@ -327,10 +331,10 @@ export const run = (argv: readonly string[]): Promise<void> => {
     return Promise.resolve()
   }
 
-  // The HttpClient layer used by Api + Auth. NodeContext.layer brings FS,
-  // Path, Terminal, CommandExecutor but NOT HttpClient — that's a separate
+  // The HttpClient layer used by Api + Auth. NodeServices.layer brings FS,
+  // Path, Terminal, ChildProcessSpawner but NOT HttpClient — that's a separate
   // export.
-  const httpLayer = NodeHttpClient.layer
+  const httpLayer = NodeHttpClient.layerNodeHttp
 
   // Build the flag-aware Api layer. Resolver depends on Api, so we provide
   // its dependencies first and let `Layer.provide` resolve the rest.
@@ -351,7 +355,7 @@ export const run = (argv: readonly string[]): Promise<void> => {
   // Path, HttpClient). `Layer.mergeAll` does not internally wire deps so we
   // use `Layer.provideMerge` to thread HttpClient into AppLayer while
   // re-exporting both. The result still requires FileSystem + Path, which
-  // come from `NodeContext.layer` at the outer `Effect.provide` site.
+  // come from `NodeServices.layer` at the outer `Effect.provide` site.
   const appWithHttp = AppLayer.pipe(Layer.provideMerge(httpLayer))
   const apiWithDeps = apiLayer.pipe(Layer.provideMerge(appWithHttp))
   const commentWithDeps = Comment.Default.pipe(Layer.provideMerge(apiWithDeps))
@@ -361,18 +365,18 @@ export const run = (argv: readonly string[]): Promise<void> => {
   const aiWithDeps = Ai.Default.pipe(Layer.provideMerge(resolverWithDeps))
   const fullAppLayer = aiWithDeps
 
-  const cli = Command.run(rootCmd, { name: 'mxs', version: CLI_VERSION })
+  const cli = Command.runWith(rootCmd, { version: CLI_VERSION })
 
-  // Tagged-error rendering + exit-code mapping happen INSIDE the FiberRef
+  // Tagged-error rendering + exit-code mapping happen INSIDE the Reference
   // scopes so the Renderer sees the parsed `--json` / `--output` settings.
   const core = preflight(flags).pipe(
-    Effect.zipRight(cli(parsed.rest)),
+    Effect.andThen(cli(parsed.rest.slice(2))),
     Effect.tapError((err) =>
       isCliError(err)
         ? Effect.flatMap(Renderer, (r) => r.emitError(err))
         : Effect.sync(() => undefined),
     ),
-    Effect.catchAll((err) =>
+    Effect.catch((err) =>
       Effect.sync(() => {
         const tag = isCliError(err) ? err._tag : 'Generic'
         process.exit(exitCodeForTag(tag))
@@ -380,9 +384,9 @@ export const run = (argv: readonly string[]): Promise<void> => {
     ),
   )
 
-  const program = Effect.locally(
-    Effect.locally(
-      Effect.locally(core, currentOutputOptions, {
+  const program = Effect.provideService(
+    Effect.provideService(
+      Effect.provideService(core, currentOutputOptions, {
         json: flags.json,
         output: flags.output,
         quiet: flags.quiet,
@@ -397,14 +401,14 @@ export const run = (argv: readonly string[]): Promise<void> => {
 
   // Defects bypass the Effect error channel; surface them generically.
   const finalized = program.pipe(
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => {
         process.stderr.write(`mxs: internal error\n${String(defect)}\n`)
         process.exit(1)
       }),
     ),
     Effect.provide(fullAppLayer),
-    Effect.provide(NodeContext.layer),
+    Effect.provide(NodeServices.layer),
   )
 
   return NodeRuntime.runMain(finalized) as unknown as Promise<void>

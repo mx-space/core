@@ -1,16 +1,16 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { toLocalPath } from './_sync'
 
-const remotePrefix = Args.text({ name: 'remotePrefix' })
-const localDir = Args.text({ name: 'localDir' })
-const dryRun = Options.boolean('dry-run')
+const remotePrefix = Argument.String('remotePrefix')
+const localDir = Argument.String('localDir')
+const dryRun = Flag.Boolean('dry-run').pipe(Flag.withDefault(false))
 
 export const pull = Command.make(
   'pull',

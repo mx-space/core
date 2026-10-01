@@ -3,10 +3,10 @@ import { Schema } from 'effect'
 // CategoryType enum mirrors `@mx-space/api-client` `CategoryType` (0 = category, 1 = tag).
 // We accept either numeric or string forms because legacy responses occasionally
 // stringify the value.
-export const CategoryTypeSchema = Schema.Union(
-  Schema.Literal(0, 1),
-  Schema.Literal('0', '1'),
-)
+export const CategoryTypeSchema = Schema.Union([
+  Schema.Literals([0, 1]),
+  Schema.Literals(['0', '1']),
+])
 
 export const CategorySchema = Schema.Struct({
   id: Schema.String,

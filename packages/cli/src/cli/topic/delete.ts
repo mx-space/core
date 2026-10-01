@@ -1,13 +1,13 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { ResourceNotFound, ValidationFailed } from '../../domain/errors'
 import { Api, type ApiService } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { isSnowflakeId } from '../../services/Resolver'
 
-const slugOrId = Args.text({ name: 'slugOrId' })
-const force = Options.boolean('force')
+const slugOrId = Argument.String('slugOrId')
+const force = Flag.Boolean('force').pipe(Flag.withDefault(false))
 
 const resolveTopicId = (
   api: ApiService,
@@ -20,7 +20,7 @@ const resolveTopicId = (
         id?: string
         data?: { id?: string }
       }>(`/topics/slug/${encodeURIComponent(ref)}`)
-      .pipe(Effect.catchAll(() => Effect.succeed(null)))
+      .pipe(Effect.catch(() => Effect.succeed(null)))
     const id =
       (res && (res as { id?: string }).id) ??
       (res && (res as { data?: { id?: string } }).data?.id)

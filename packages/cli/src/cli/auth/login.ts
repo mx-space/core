@@ -1,5 +1,5 @@
-import { Command, Options } from '@effect/cli'
-import { Effect, FiberRef, Option } from 'effect'
+import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 import open from 'open'
 
 import { Generic } from '../../domain/errors'
@@ -16,9 +16,7 @@ import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
 import { arrow, bold, dim, humanDuration, indent, ok, roundedBox } from '../ui'
 
-const production = Options.boolean('production', {
-  negationNames: ['no-production'],
-}).pipe(Options.optional)
+const production = Flag.Boolean('production').pipe(Flag.optional)
 
 const DEFAULT_PROFILE = 'default'
 
@@ -35,10 +33,10 @@ export const login = Command.make('login', { production }, ({ production }) =>
     //    no URL is available on a fresh install.
     //
     //    The `--profile` global flag is pre-parsed and propagated via a
-    //    FiberRef; forward it as an override so `auth login --profile foo`
+    //    Context.Reference; forward it as an override so `auth login --profile foo`
     //    targets `foo` even when the active-profile pointer is missing or
     //    points at a profile whose directory has been deleted manually.
-    const flagProfile = yield* FiberRef.get(currentProfileFlag)
+    const flagProfile = yield* currentProfileFlag
     const resolved = yield* profile
       .resolve(flagProfile ? { profile: flagProfile } : {})
       .pipe(
@@ -96,15 +94,24 @@ export const login = Command.make('login', { production }, ({ production }) =>
       Effect.catchTags({
         NetworkTimeout: (e) =>
           Effect.fail(
-            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+            new Generic({
+              message: e.message ?? 'auth probe failed',
+              cause: e,
+            }),
           ),
         NetworkDns: (e) =>
           Effect.fail(
-            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+            new Generic({
+              message: e.message ?? 'auth probe failed',
+              cause: e,
+            }),
           ),
         NetworkRefused: (e) =>
           Effect.fail(
-            new Generic({ message: e.message ?? 'auth probe failed', cause: e }),
+            new Generic({
+              message: e.message ?? 'auth probe failed',
+              cause: e,
+            }),
           ),
       }),
     )
@@ -169,7 +176,7 @@ export const login = Command.make('login', { production }, ({ production }) =>
 
     const existing = yield* config
       .readProfileConfig(target)
-      .pipe(Effect.catchAll(() => Effect.succeed({} as ConfigShape)))
+      .pipe(Effect.catch(() => Effect.succeed({} as ConfigShape)))
 
     const productionFlag = Option.getOrElse(production, () => undefined)
     yield* config.writeProfileConfig(target, {
@@ -191,7 +198,7 @@ export const login = Command.make('login', { production }, ({ production }) =>
     // creds and are surfaced only via the missing-user readable output.
     const enriched = yield* auth
       .enrichUser(target, probeResult.authBase, cred)
-      .pipe(Effect.catchAll(() => Effect.succeed(cred)))
+      .pipe(Effect.catch(() => Effect.succeed(cred)))
 
     // 6. Mark production via the Profile service when explicitly requested
     //    (idempotent with the write above — Profile.mark enforces the
@@ -200,7 +207,7 @@ export const login = Command.make('login', { production }, ({ production }) =>
       yield* profile
         .mark(target, { production: true })
         .pipe(
-          Effect.catchAll((e) =>
+          Effect.catch((e) =>
             Effect.fail(
               new Generic({ message: e.message ?? String(e), cause: e }),
             ),

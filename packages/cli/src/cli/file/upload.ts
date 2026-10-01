@@ -1,21 +1,21 @@
 import { readFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Generic } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { FILE_TYPES, silentFlag, typeOption } from './_shared'
 
-const path = Args.text({ name: 'path' })
+const path = Argument.String('path')
 
-const nameOption = Options.text('name').pipe(
-  Options.withDescription(
+const nameOption = Flag.String('name').pipe(
+  Flag.withDescription(
     'override the uploaded filename (defaults to the local basename)',
   ),
-  Options.optional,
+  Flag.optional,
 )
 
 export const upload = Command.make(

@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { AuthMissing } from '../../domain/errors'
 import { Auth } from '../../services/Auth'
@@ -43,7 +43,7 @@ export const whoami = Command.make('whoami', {}, () =>
       active && !active.user && resolved.profileName
         ? yield* auth
             .enrichUser(resolved.profileName, resolved.authBase, active)
-            .pipe(Effect.catchAll(() => Effect.succeed(active)))
+            .pipe(Effect.catch(() => Effect.succeed(active)))
         : active
 
     yield* renderer.emit(whoamiView, {

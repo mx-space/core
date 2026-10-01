@@ -60,7 +60,7 @@ const openAdminUrl = (buildUrl: (adminUrl: string) => string) =>
       try: () => open(url),
       catch: () => new Error('failed to launch browser'),
     }).pipe(
-      Effect.catchAll((e) =>
+      Effect.catch((e) =>
         renderer.emitWarn(
           `could not launch browser: ${e instanceof Error ? e.message : String(e)}`,
         ),

@@ -1,12 +1,12 @@
-import { Args, Command, Options } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 
-const from = Args.text({ name: 'from' })
-const to = Args.text({ name: 'to' })
-const recursive = Options.boolean('recursive')
+const from = Argument.String('from')
+const to = Argument.String('to')
+const recursive = Flag.Boolean('recursive').pipe(Flag.withDefault(false))
 
 export const update = Command.make(
   'mv',

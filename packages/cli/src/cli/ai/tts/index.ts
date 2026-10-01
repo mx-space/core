@@ -1,4 +1,4 @@
-import { Command } from '@effect/cli'
+import { Command } from 'effect/cli'
 
 import { byArticle } from './by-article'
 import { del } from './delete'

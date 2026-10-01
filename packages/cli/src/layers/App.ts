@@ -1,5 +1,6 @@
-import type { FileSystem, HttpClient, Path } from '@effect/platform'
+import type { FileSystem, Path } from 'effect'
 import { Layer } from 'effect'
+import type { HttpClient } from 'effect/http'
 
 import { Auth } from '../services/Auth'
 import { Config } from '../services/Config'

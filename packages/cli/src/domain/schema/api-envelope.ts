@@ -36,9 +36,7 @@ export type Pagination = Schema.Schema.Type<typeof PaginationSchema>
  * `{ data, pagination }` envelope — produced by paginator-decorated
  * controllers in mx-core (`ResponseInterceptor`).
  */
-export const paginatedEnvelopeSchema = <A, I, R>(
-  item: Schema.Schema<A, I, R>,
-) =>
+export const paginatedEnvelopeSchema = <S extends Schema.Top>(item: S) =>
   Schema.Struct({
     data: Schema.Array(item),
     pagination: Schema.optional(PaginationSchema),
@@ -48,9 +46,7 @@ export const paginatedEnvelopeSchema = <A, I, R>(
  * `{ data: [...] }` envelope — produced by array responses without
  * paginator decoration.
  */
-export const dataArrayEnvelopeSchema = <A, I, R>(
-  item: Schema.Schema<A, I, R>,
-) =>
+export const dataArrayEnvelopeSchema = <S extends Schema.Top>(item: S) =>
   Schema.Struct({
     data: Schema.Array(item),
   })
@@ -61,7 +57,7 @@ export const dataArrayEnvelopeSchema = <A, I, R>(
  */
 export const ServerErrorBodySchema = Schema.Struct({
   message: Schema.optional(
-    Schema.Union(Schema.String, Schema.Array(Schema.String)),
+    Schema.Union([Schema.String, Schema.Array(Schema.String)]),
   ),
   code: Schema.optional(Schema.String),
   details: Schema.optional(Schema.Unknown),

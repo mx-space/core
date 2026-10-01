@@ -1,6 +1,5 @@
-import { Args, Command, Options } from '@effect/cli'
-import { FileSystem } from '@effect/platform'
-import { Cause, Effect, Exit, Option } from 'effect'
+import { Cause, Effect, Exit, FileSystem, Option } from 'effect'
+import { Argument, Command, Flag } from 'effect/cli'
 import open from 'open'
 
 import { Generic, ValidationXml } from '../../domain/errors'
@@ -48,13 +47,13 @@ registerCommandHelp({
   ],
 })
 
-const fileArg = Args.text({ name: 'file' })
-const portOpt = Options.integer('port').pipe(Options.optional)
-const noOpenOpt = Options.boolean('no-open').pipe(Options.optional)
-const variantOpt = Options.choice('variant', ['article', 'note']).pipe(
-  Options.optional,
+const fileArg = Argument.String('file')
+const portOpt = Flag.Int('port').pipe(Flag.optional)
+const noOpenOpt = Flag.Boolean('no-open').pipe(Flag.optional)
+const variantOpt = Flag.Literals('variant', ['article', 'note']).pipe(
+  Flag.optional,
 )
-const baseOpt = Options.file('base').pipe(Options.optional)
+const baseOpt = Flag.File('base').pipe(Flag.optional)
 
 export const authorCmd = Command.make(
   'author',
@@ -208,7 +207,7 @@ export const authorCmd = Command.make(
         yield* Effect.promise(() => open(url))
       }
 
-      yield* Effect.async<void, Generic>((resume) => {
+      yield* Effect.callback<void, Generic>((resume) => {
         const stop = () => {
           watcher.close()
           void Promise.all([server.close(), session.close()]).then(

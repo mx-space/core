@@ -49,7 +49,7 @@ const withOpts = <A, E, R>(
   opts: Partial<OutputOptions>,
   effect: Effect.Effect<A, E, R>,
 ) =>
-  Effect.locally(effect, currentOutputOptions, {
+  Effect.provideService(effect, currentOutputOptions, {
     ...defaultOutputOptions,
     ...opts,
   })
@@ -494,7 +494,7 @@ describe('Renderer — emit(postListView)', () => {
         yield* renderer.emit(postListView, [])
       }),
     ).pipe(
-      Effect.zipRight(
+      Effect.andThen(
         withOpts(
           { output: 'xml' },
           Effect.gen(function* () {
@@ -694,7 +694,7 @@ describe('Renderer — emit(postView/noteView/pageView)', () => {
         })
       }),
     ).pipe(
-      Effect.zipRight(
+      Effect.andThen(
         withOpts(
           { output: 'table' as OutputOptions['output'] },
           Effect.gen(function* () {

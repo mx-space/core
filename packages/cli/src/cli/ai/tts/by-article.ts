@@ -1,12 +1,12 @@
-import { Args, Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Argument, Command } from 'effect/cli'
 
 import { Ai } from '../../../services/Ai'
 import { Renderer } from '../../../services/Renderer'
 import { Resolver } from '../../../services/Resolver'
 import { resolveArticleId } from '../_resolve'
 
-const id = Args.text({ name: 'idOrSlug' })
+const id = Argument.String('idOrSlug')
 
 export const byArticle = Command.make('by-article', { id }, ({ id }) =>
   Effect.gen(function* () {

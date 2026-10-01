@@ -1,6 +1,5 @@
-import type { Path } from '@effect/platform'
-import { FileSystem } from '@effect/platform'
-import { Effect } from 'effect'
+import type { Path } from 'effect'
+import { Effect, FileSystem } from 'effect'
 
 import { Lexical, type LexicalState } from '../services/Lexical'
 import { readContentSpec, readJsonSpec, readStdin } from './content-spec'

@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { Config, type ConfigShape } from '../../services/Config'
 import { Profile } from '../../services/Profile'
@@ -24,7 +24,7 @@ export const ls = Command.make('ls', {}, () =>
     for (const name of names) {
       const cfg = yield* config
         .readProfileConfig(name)
-        .pipe(Effect.catchAll(() => Effect.succeed({} as ConfigShape)))
+        .pipe(Effect.catch(() => Effect.succeed({} as ConfigShape)))
       rows.push({
         current: name === current ? '*' : '',
         name,

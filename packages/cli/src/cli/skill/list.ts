@@ -1,5 +1,5 @@
-import { Command } from '@effect/cli'
 import { Effect } from 'effect'
+import { Command } from 'effect/cli'
 
 import { Renderer } from '../../services/Renderer'
 import { Skill } from '../../services/Skill'

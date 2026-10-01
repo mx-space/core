@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module'
 
-import { Command, Options } from '@effect/cli'
 import { Effect, Option } from 'effect'
+import { Command, Flag } from 'effect/cli'
 
 import { Renderer } from '../../services/Renderer'
 import {
@@ -58,13 +58,13 @@ const resolveCliVersion = (): string => {
 }
 const CLI_VERSION = resolveCliVersion()
 
-const check = Options.boolean('check').pipe(Options.optional)
-const prerelease = Options.boolean('prerelease').pipe(Options.optional)
-const pm = Options.choice('pm', ['npm', 'pnpm', 'yarn', 'bun']).pipe(
-  Options.optional,
+const check = Flag.Boolean('check').pipe(Flag.optional)
+const prerelease = Flag.Boolean('prerelease').pipe(Flag.optional)
+const pm = Flag.Literals('pm', ['npm', 'pnpm', 'yarn', 'bun']).pipe(
+  Flag.optional,
 )
-const force = Options.boolean('force').pipe(Options.optional)
-const yes = Options.boolean('yes').pipe(Options.optional)
+const force = Flag.Boolean('force').pipe(Flag.optional)
+const yes = Flag.Boolean('yes').pipe(Flag.optional)
 
 const optBool = (opt: Option.Option<boolean>): boolean | undefined =>
   Option.getOrUndefined(opt)
