@@ -179,7 +179,7 @@
     "@types/ua-parser-js": "0.7.39",
     "@types/validator": "13.15.10",
     "@types/ws": "8.18.2",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.3",
     "drizzle-kit": "^0.31.11",
     "mongodb": "~7.6.0",
     "nodemon": "^3.1.14",
@@ -193,7 +193,7 @@
     "vite": "8.3.1",
     "vite-node": "^6.0.0",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "4.1.11",
+    "vitest": "5.0.3",
     "zod-compiler": "1.28.0"
   }
 }

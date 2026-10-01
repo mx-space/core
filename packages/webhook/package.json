@@ -32,7 +32,7 @@
     "express": "5.2.1",
     "tsdown": "0.23.0",
     "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "5.0.3"
   },
   "bump": {
     "before": [
