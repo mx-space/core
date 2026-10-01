@@ -1,3 +1,10 @@
+## [14.15.2](https://github.com/mx-space/core/compare/v14.15.1...v14.15.2) (2026-10-02)
+
+
+### Features
+
+* **publish:** remember AI resource choices per article ([4156d29](https://github.com/mx-space/core/commit/4156d296775380f6075499d74b3fde19ff43cb18))
+
 ## [14.15.1](https://github.com/mx-space/core/compare/v14.15.0...v14.15.1) (2026-09-30)
 
 
