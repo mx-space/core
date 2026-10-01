@@ -96,7 +96,7 @@
     "lexical": "^0.52.0",
     "lit": "3.3.3",
     "loro-crdt": "^1.16.3",
-    "lucide-react": "1.42.0",
+    "lucide-react": "1.49.0",
     "maplibre-gl": "6.11.2",
     "marked": "18.0.14",
     "monaco-editor": "0.57.0",
