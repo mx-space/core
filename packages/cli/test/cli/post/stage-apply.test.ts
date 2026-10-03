@@ -252,7 +252,6 @@ describe('post stage / apply', () => {
         (call) => call.url.endsWith('/publish-jobs'),
       )
       expect(publish?.body).toEqual({
-        aiResources: [],
         branchId: 'branch-1',
         confirmDiverged: false,
         expectedPublishedRevisionId: 'published-1',
