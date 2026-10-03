@@ -22,6 +22,8 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
+  # 0.46.1 is stuck in npm publish review; 0.46.0 has identical code. Drop once 0.46.1 is public.
+  "@haklex/rich-ext-dynamic": 0.46.0
   "eslint-plugin-react-compiler>zod": 3.25.76
   "get-pixels@^3>request": ./external/request
   # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
