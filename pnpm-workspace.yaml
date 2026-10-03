@@ -83,7 +83,7 @@ overrides:
   "@lexical/utils": 0.52.0
   "@lexical/yjs": 0.52.0
   "@esbuild-kit/core-utils>esbuild": 0.25.12
-  "@cloudflare/workers-types": 5.20260930.1
+  "@cloudflare/workers-types": 5.20260930.2
   "@fastify/static": 10.1.5
   "brace-expansion@<1.1.16": 1.1.18
   "brace-expansion@>=2.0.0 <2.1.2": 2.1.4
