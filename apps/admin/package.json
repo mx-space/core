@@ -35,7 +35,7 @@
     "@haklex/rich-ext-ai-agent": "0.46.1",
     "@haklex/rich-ext-chat": "0.46.1",
     "@haklex/rich-ext-code-snippet": "0.46.1",
-    "@haklex/rich-ext-dynamic": "0.46.0",
+    "@haklex/rich-ext-dynamic": "0.46.1",
     "@haklex/rich-ext-embed": "0.46.1",
     "@haklex/rich-ext-excalidraw": "0.46.1",
     "@haklex/rich-ext-gallery": "0.46.1",
