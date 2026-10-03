@@ -3,7 +3,9 @@ import { Argument, Command, Flag } from 'effect/cli'
 import open from 'open'
 
 import { Generic, ValidationXml } from '../../domain/errors'
+import { currentProfileFlag } from '../../domain/runtime-flags'
 import { Lexical, type LexicalState } from '../../services/Lexical'
+import { Profile } from '../../services/Profile'
 import { Renderer } from '../../services/Renderer'
 import { registerCommandHelp } from '../help/registry'
 import { openAuthorDocument } from './document'
@@ -189,9 +191,23 @@ export const authorCmd = Command.make(
         catch: toGeneric,
       })
 
+      const profileFlag = yield* currentProfileFlag
+      const apiBase = yield* Profile.pipe(
+        Effect.flatMap((profile) => profile.resolve({ profile: profileFlag })),
+        Effect.map((resolved) => resolved.apiBase),
+        Effect.orElseSucceed(() => undefined),
+      )
+
       const server = yield* Effect.tryPromise({
         try: () =>
-          startAuthorServer({ doc, session, spaDir, port: listenPort, log }),
+          startAuthorServer({
+            doc,
+            session,
+            spaDir,
+            port: listenPort,
+            apiBase,
+            log,
+          }),
         catch: toGeneric,
       })
 

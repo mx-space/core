@@ -7,49 +7,57 @@ import {
   type SerializedLexicalNode,
 } from 'lexical'
 
-class AgentDiffHeadlessNode extends DecoratorNode<null> {
-  __json: SerializedLexicalNode
+// Blocks rendered only by the admin editor; the headless side keeps their JSON verbatim.
+const createPassthroughNode = (type: string) =>
+  class PassthroughHeadlessNode extends DecoratorNode<null> {
+    __json: SerializedLexicalNode
 
-  static getType(): string {
-    return 'agent-diff'
+    static getType(): string {
+      return type
+    }
+
+    static clone(node: PassthroughHeadlessNode): PassthroughHeadlessNode {
+      return new PassthroughHeadlessNode(node.__json, node.__key)
+    }
+
+    static importJSON(json: SerializedLexicalNode): PassthroughHeadlessNode {
+      return new PassthroughHeadlessNode(json)
+    }
+
+    constructor(
+      json: SerializedLexicalNode = { type, version: 1 },
+      key?: NodeKey,
+    ) {
+      super(key)
+      this.__json = json
+    }
+
+    exportJSON(): SerializedLexicalNode {
+      return this.__json
+    }
+
+    createDOM(): never {
+      throw new Error(`${type} has no DOM in the headless author editor`)
+    }
+
+    updateDOM(): boolean {
+      return false
+    }
+
+    isInline(): boolean {
+      return false
+    }
+
+    decorate(): null {
+      return null
+    }
   }
 
-  static clone(node: AgentDiffHeadlessNode): AgentDiffHeadlessNode {
-    return new AgentDiffHeadlessNode(node.__json, node.__key)
-  }
-
-  static importJSON(json: SerializedLexicalNode): AgentDiffHeadlessNode {
-    return new AgentDiffHeadlessNode(json)
-  }
-
-  constructor(
-    json: SerializedLexicalNode = { type: 'agent-diff', version: 2 },
-    key?: NodeKey,
-  ) {
-    super(key)
-    this.__json = json
-  }
-
-  exportJSON(): SerializedLexicalNode {
-    return this.__json
-  }
-
-  createDOM(): never {
-    throw new Error('agent-diff has no DOM in the headless author editor')
-  }
-
-  updateDOM(): boolean {
-    return false
-  }
-
-  decorate(): null {
-    return null
-  }
-}
+const passthroughNodes = ['agent-diff', 'stock'].map(createPassthroughNode)
 
 export const createAuthorHeadlessEditor = (): LexicalEditor =>
   createHeadlessEditor({
-    nodes: [...allHeadlessNodes, AgentDiffHeadlessNode],
+    nodes: [...allHeadlessNodes, ...passthroughNodes],
     onError: (err) => {
       throw err
     },

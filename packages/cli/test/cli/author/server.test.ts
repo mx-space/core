@@ -76,7 +76,11 @@ describe('startAuthorServer', () => {
     logs.length = 0
   })
 
-  const boot = async (source: string, fileName = 'article.xml') => {
+  const boot = async (
+    source: string,
+    fileName = 'article.xml',
+    apiBase?: string,
+  ) => {
     const dir = await mkdtemp(join(tmpdir(), 'mxs-author-'))
     const spaDir = join(dir, 'spa')
     await mkdir(spaDir)
@@ -97,6 +101,7 @@ describe('startAuthorServer', () => {
       session,
       spaDir,
       port: 0,
+      apiBase,
       log,
     })
     closers.push(session.close)
@@ -402,5 +407,32 @@ describe('startAuthorServer', () => {
     expect(JSON.stringify(preview.before)).toContain('one')
     expect(JSON.stringify(preview.before)).not.toContain('two')
     expect(JSON.stringify(preview.lexical)).toContain('two')
+  })
+
+  it('proxies stock data requests to the configured API base', async () => {
+    const upstream = http.createServer((req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ path: req.url }))
+    })
+    await new Promise<void>((resolve) => upstream.listen(0, '127.0.0.1', resolve))
+    closers.push(
+      () => new Promise<void>((resolve) => upstream.close(() => resolve())),
+    )
+    const { port: upstreamPort } = upstream.address() as { port: number }
+    const { port } = await boot(
+      envelope('<p>hi</p>'),
+      'article.xml',
+      `http://127.0.0.1:${upstreamPort}/api/v3`,
+    )
+
+    const res = await rawRequest({
+      port,
+      url: '/serverless/built-in/stock_bars?symbol=SMH&interval=1d',
+    })
+
+    expect(res.status).toBe(200)
+    expect(JSON.parse(res.body)).toEqual({
+      path: '/api/v3/serverless/built-in/stock_bars?symbol=SMH&interval=1d',
+    })
   })
 })

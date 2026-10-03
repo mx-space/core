@@ -22,6 +22,7 @@ export interface AuthorServerOptions {
   readonly session: AuthorSession
   readonly spaDir: string
   readonly port: number
+  readonly apiBase?: string
   readonly log?: (line: string) => void
 }
 
@@ -256,6 +257,14 @@ const handle = async (
         return
       }
     }
+    if (
+      req.method === 'GET' &&
+      ctx.apiBase &&
+      url.pathname.startsWith(STOCK_PROXY_PREFIX)
+    ) {
+      await proxyStock(res, `${ctx.apiBase}${url.pathname}${url.search}`)
+      return
+    }
     if (req.method === 'GET' || req.method === 'HEAD') {
       serveStatic(
         res,
@@ -311,6 +320,19 @@ const readBuffer = (req: IncomingMessage): Promise<Buffer> =>
     req.on('end', () => resolve(Buffer.concat(chunks)))
     req.on('error', reject)
   })
+
+// Production CORS rejects 127.0.0.1, so stock blocks fetch through this server.
+const STOCK_PROXY_PREFIX = '/serverless/built-in/stock_'
+
+const proxyStock = async (res: ServerResponse, target: string) => {
+  const upstream = await fetch(target, {
+    headers: { accept: 'application/json' },
+  })
+  res.writeHead(upstream.status, {
+    'content-type': upstream.headers.get('content-type') ?? 'application/json',
+  })
+  res.end(Buffer.from(await upstream.arrayBuffer()))
+}
 
 // The draft directory is the second root so `src="assets/shot.jpg"` in a
 // local draft previews without uploading; the SPA bundle always wins a clash.
