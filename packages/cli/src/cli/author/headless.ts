@@ -53,7 +53,9 @@ const createPassthroughNode = (type: string) =>
     }
   }
 
-const passthroughNodes = ['agent-diff', 'stock'].map(createPassthroughNode)
+const passthroughNodes = ['agent-diff', 'map', 'stock'].map(
+  createPassthroughNode,
+)
 
 export const createAuthorHeadlessEditor = (): LexicalEditor =>
   createHeadlessEditor({
