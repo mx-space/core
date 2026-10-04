@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260930.2",
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.4",
     "tsdown": "0.23.0",
     "typescript": "6.0.3"
   }
