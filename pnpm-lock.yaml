@@ -164,7 +164,7 @@ overrides:
   '@cloudflare/workers-types': 5.20260930.2
   '@fastify/static': 10.1.5
   brace-expansion@<1.1.16: 1.1.21
-  brace-expansion@>=2.0.0 <2.1.2: 2.1.4
+  brace-expansion@>=2.0.0 <2.1.2: 2.1.7
   brace-expansion@>=3.0.0 <5.0.8: 5.0.9
   dompurify: 3.4.15
   fast-uri@>=3.0.0 <3.1.4: 3.1.7
@@ -6997,8 +6997,8 @@ packages:
   brace-expansion@1.1.21:
     resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
 
-  brace-expansion@2.1.4:
-    resolution: {integrity: sha512-hGfVzPxthbf3+2yjg/RBs60cB0FhqBS/zvdV/4wn4/BmN0bNMMHPc4V/BbFieqf1TKAGGAHnY4eSjajCl0f2Xg==}
+  brace-expansion@2.1.7:
+    resolution: {integrity: sha512-uZbew1NqdmPDTMJ8ah1y+b+9QEJrfkXFk3RcTQw3X0jW/xRUvFKsg1CfQdSYGdTbXZWExtU3J3ccxtnfw1Fi0g==}
 
   brace-expansion@5.0.9:
     resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
@@ -18528,7 +18528,7 @@ snapshots:
       balanced-match: 1.0.2
       concat-map: 0.0.1
 
-  brace-expansion@2.1.4:
+  brace-expansion@2.1.7:
     dependencies:
       balanced-match: 1.0.2
 
@@ -22036,11 +22036,11 @@ snapshots:
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.1.4
+      brace-expansion: 2.1.7
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.1.4
+      brace-expansion: 2.1.7
 
   minimist@1.2.8: {}
 
