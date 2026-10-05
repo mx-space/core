@@ -1,5 +1,6 @@
 import { allHeadlessNodes } from '@haklex/rich-headless'
 import { createHeadlessEditor } from '@lexical/headless'
+import { mxBlockRegistry } from '@mx-space/editor'
 import {
   DecoratorNode,
   type LexicalEditor,
@@ -53,7 +54,7 @@ const createPassthroughNode = (type: string) =>
     }
   }
 
-const passthroughNodes = ['agent-diff', 'map', 'stock'].map(
+const passthroughNodes = ['agent-diff', ...Object.keys(mxBlockRegistry)].map(
   createPassthroughNode,
 )
 

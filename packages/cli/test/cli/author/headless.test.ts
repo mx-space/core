@@ -1,9 +1,26 @@
+import { mxBlockRegistry } from '@mx-space/editor'
 import { $getRoot, type DecoratorNode } from 'lexical'
 import { describe, expect, it } from 'vitest'
 
 import { createAuthorHeadlessEditor } from '../../../src/cli/author/headless'
 
 describe('createAuthorHeadlessEditor', () => {
+  it.each(Object.keys(mxBlockRegistry))('keeps %s blocks verbatim', (type) => {
+    const block = { type, version: 1, payload: { kept: true } }
+    const state = createAuthorHeadlessEditor().parseEditorState({
+      root: {
+        type: 'root',
+        version: 1,
+        direction: null,
+        format: '',
+        indent: 0,
+        children: [block],
+      },
+    } as never)
+
+    expect(state.toJSON().root.children).toEqual([block])
+  })
+
   it('keeps admin-only map blocks verbatim', () => {
     const map = {
       type: 'map',
