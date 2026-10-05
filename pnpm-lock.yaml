@@ -168,7 +168,7 @@ overrides:
   brace-expansion@>=3.0.0 <5.0.8: 5.0.12
   dompurify: 3.4.16
   fast-uri@>=3.0.0 <3.1.4: 3.1.8
-  fast-uri@>=4.0.0 <4.1.1: 4.1.4
+  fast-uri@>=4.0.0 <4.1.1: 4.1.5
   fast-xml-parser: 5.11.2
   find-my-way: 9.9.0
   immutable: 4.3.9
@@ -8390,8 +8390,8 @@ packages:
   fast-uri@3.1.8:
     resolution: {integrity: sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg==}
 
-  fast-uri@4.1.4:
-    resolution: {integrity: sha512-dODXrIxlS9JSdgAnhIUKOosKV1oMtU2VtVw87QRaHzyl5jxO290Ii5tEZfCfzfWNHi3jKWwBSdQj0qIyshdZdQ==}
+  fast-uri@4.1.5:
+    resolution: {integrity: sha512-vZeoMRB4epNr7QfdHxel7te/RcX16CxyXI07JCCTFWZA2s4v1azGNESRj+2EoaHSaWFL/Z3GmKT2jF6A202jLg==}
 
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
@@ -14212,7 +14212,7 @@ snapshots:
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
-      fast-uri: 4.1.4
+      fast-uri: 4.1.5
 
   '@fastify/busboy@3.2.0': {}
 
@@ -20126,7 +20126,7 @@ snapshots:
       '@fastify/merge-json-schemas': 0.2.1
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
-      fast-uri: 4.1.4
+      fast-uri: 4.1.5
       json-schema-ref-resolver: 3.0.0
       rfdc: 1.4.1
 
@@ -20148,7 +20148,7 @@ snapshots:
 
   fast-uri@3.1.8: {}
 
-  fast-uri@4.1.4: {}
+  fast-uri@4.1.5: {}
 
   fast-wrap-ansi@0.2.2:
     dependencies:
