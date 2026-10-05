@@ -1,10 +1,20 @@
+import { createHash } from 'node:crypto'
 import { createReadStream, existsSync, statSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import {
   createServer,
   type IncomingMessage,
   type ServerResponse,
 } from 'node:http'
-import { dirname, extname, join, normalize, relative, sep } from 'node:path'
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  normalize,
+  relative,
+  sep,
+} from 'node:path'
 
 import type { OpId } from 'loro-crdt'
 
@@ -212,6 +222,16 @@ const handle = async (
         json(res, 200, { ok: true })
         return
       }
+      case 'POST /api/asset': {
+        json(res, 200, {
+          src: await saveAsset(
+            dirname(ctx.doc.filePath),
+            url.searchParams.get('name') ?? '',
+            await readBuffer(req),
+          ),
+        })
+        return
+      }
       case 'GET /api/history': {
         json(res, 200, { entries: ctx.session.history() })
         return
@@ -320,6 +340,27 @@ const readBuffer = (req: IncomingMessage): Promise<Buffer> =>
     req.on('end', () => resolve(Buffer.concat(chunks)))
     req.on('error', reject)
   })
+
+const saveAsset = async (
+  draftDir: string,
+  name: string,
+  bytes: Buffer,
+): Promise<string> => {
+  const file = basename(name.replaceAll('\\', '/'))
+  const ext = extname(file)
+    .toLowerCase()
+    .replaceAll(/[^\w.]/g, '')
+  const stem =
+    file
+      .slice(0, file.length - extname(file).length)
+      .replaceAll(/[^\w-]+/g, '-')
+      .replaceAll(/^-+|-+$/g, '') || 'asset'
+  const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 8)
+  const fileName = `${stem}-${hash}${ext}`
+  await mkdir(join(draftDir, 'assets'), { recursive: true })
+  await writeFile(join(draftDir, 'assets', fileName), bytes)
+  return `assets/${fileName}`
+}
 
 // Production CORS rejects 127.0.0.1, so stock blocks fetch through this server.
 const STOCK_PROXY_PREFIX = '/serverless/built-in/stock_'

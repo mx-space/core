@@ -24,6 +24,25 @@ interface DocumentResponse {
 
 type Theme = 'light' | 'dark'
 
+const uploadAsset = async (file: File): Promise<{ src: string }> => {
+  const res = await fetch(`/api/asset?name=${encodeURIComponent(file.name)}`, {
+    method: 'POST',
+    body: file,
+  })
+  const json = (await res.json()) as {
+    src?: string
+    error?: { message?: string }
+  }
+  if (!res.ok || !json.src) {
+    throw new Error(json.error?.message ?? `upload failed (${res.status})`)
+  }
+  return { src: json.src }
+}
+
+const uploadTrack = async (file: File) => ({
+  url: (await uploadAsset(file)).src,
+})
+
 const isMac =
   typeof navigator !== 'undefined' &&
   /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
@@ -212,6 +231,10 @@ export function AuthorApp() {
             theme={theme}
             variant={meta.variant}
             extraNodes={extraNodes}
+            imageUpload={uploadAsset}
+            videoUpload={uploadAsset}
+            fileUpload={uploadAsset}
+            trackUpload={uploadTrack}
           >
             <DiffNotePlugin />
             <LoroSyncPlugin

@@ -245,6 +245,32 @@ describe('startAuthorServer', () => {
     expect(missing.status).toBe(404)
   })
 
+  it('writes uploaded assets into the draft assets folder', async () => {
+    const { port, filePath } = await boot('<p>x</p>', 'frag.xml')
+    const upload = (name: string, body: string) =>
+      rawRequest({
+        port,
+        method: 'POST',
+        url: `/api/asset?name=${encodeURIComponent(name)}`,
+        headers: { origin: `http://127.0.0.1:${port}` },
+        body,
+      })
+
+    const first = await upload('../../My Shot.PNG', 'png-bytes')
+    expect(first.status).toBe(200)
+    const { src } = JSON.parse(first.body) as { src: string }
+    expect(src).toMatch(/^assets\/My-Shot-[0-9a-f]{8}\.png$/)
+    expect(await readFile(join(filePath, '..', src), 'utf8')).toBe('png-bytes')
+
+    const again = await upload('My Shot.png', 'png-bytes')
+    expect(JSON.parse(again.body)).toEqual({ src })
+    const other = await upload('My Shot.png', 'other-bytes')
+    expect(JSON.parse(other.body).src).not.toBe(src)
+
+    const served = await rawRequest({ port, url: `/${src}` })
+    expect(served.body).toBe('png-bytes')
+  })
+
   it('streams agent edits over SSE as Loro updates', async () => {
     const { port, session, filePath } = await boot(envelope('<p>hi</p>'))
     const events: string[] = []
