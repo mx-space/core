@@ -1,0 +1,6 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/push-relay-rs/Dockerfile"
+watchPatterns = [
+  "/apps/push-relay-rs/**",
+]

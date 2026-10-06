@@ -1,0 +1,434 @@
+[
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e1",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.comment.created.v1",
+      "subject": "comment/c1",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "c1",
+        "resource_type": "comment"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title": "New comment",
+          "body": "A new comment is ready to review."
+        },
+        "sound": "default",
+        "thread-id": "comments",
+        "category": "SPACE_COMMENT"
+      },
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "comment",
+      "resource_id": "c1"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e2",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "post/p1",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "p1",
+        "resource_type": "post",
+        "display_title": " Hello ",
+        "summary": "Sum",
+        "target_path": "/posts/p1"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_CONTENT_TITLE",
+          "title-loc-args": [
+            "Hello"
+          ],
+          "loc-key": "PUSH_CONTENT_SUMMARY",
+          "loc-args": [
+            "Sum"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "posts",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/posts/p1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "post",
+      "resource_id": "p1"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e3",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "note/n1",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "n1",
+        "resource_type": "note",
+        "display_title": "Note",
+        "target_path": "/notes/1"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_CONTENT_TITLE",
+          "title-loc-args": [
+            "Note"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "notes",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/notes/1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "note",
+      "resource_id": "n1"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e4",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "recently/r1",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "r1",
+        "resource_type": "recently",
+        "target_path": "/thinking/r1",
+        "kind": "enriched",
+        "owner_name": "Innei",
+        "verb": "watched",
+        "work_title": "Film",
+        "description": "Desc",
+        "fact_creator": "Dir",
+        "fact_year": "1999",
+        "fact_type": "movie"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_THINKING_WATCHED",
+          "title-loc-args": [
+            "Innei",
+            "Film"
+          ],
+          "subtitle-loc-key": "PUSH_THINKING_FACT_CREATOR",
+          "subtitle-loc-args": [
+            "Dir",
+            "1999"
+          ],
+          "loc-key": "PUSH_CONTENT_SUMMARY",
+          "loc-args": [
+            "Desc"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "recently",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/thinking/r1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "recently",
+      "resource_id": "r1"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e5",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "recently/r2",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "r2",
+        "resource_type": "recently",
+        "target_path": "/thinking/r2",
+        "kind": "enriched",
+        "owner_name": "Innei",
+        "verb": "read",
+        "work_title": "Book",
+        "fact_creator": "Author"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_THINKING_READ",
+          "title-loc-args": [
+            "Innei",
+            "Book"
+          ],
+          "subtitle-loc-key": "PUSH_THINKING_FACT_CREATOR_ONLY",
+          "subtitle-loc-args": [
+            "Author"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "recently",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/thinking/r2",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "recently",
+      "resource_id": "r2"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e6",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "recently/r3",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "r3",
+        "resource_type": "recently",
+        "target_path": "/thinking/r3",
+        "kind": "enriched",
+        "owner_name": "Innei",
+        "verb": "listened",
+        "work_title": "Album",
+        "fact_year": "2020",
+        "fact_type": "album"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_THINKING_LISTENED",
+          "title-loc-args": [
+            "Innei",
+            "Album"
+          ],
+          "subtitle-loc-key": "PUSH_THINKING_FACT_ALBUM",
+          "subtitle-loc-args": [
+            "2020"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "recently",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/thinking/r3",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "recently",
+      "resource_id": "r3"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e7",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "recently/r4",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "r4",
+        "resource_type": "recently",
+        "target_path": "/thinking/r4",
+        "kind": "enriched",
+        "owner_name": "Innei",
+        "verb": "linked",
+        "work_title": "Link",
+        "fact_year": "2020"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_THINKING_LINKED",
+          "title-loc-args": [
+            "Innei",
+            "Link"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "recently",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/thinking/r4",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "recently",
+      "resource_id": "r4"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e8",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "recently/r5",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "r5",
+        "resource_type": "recently",
+        "target_path": "/thinking/r5",
+        "kind": "plain",
+        "owner_name": "Innei",
+        "text": "Hi there",
+        "summary": "More"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_THINKING_PLAIN",
+          "title-loc-args": [
+            "Innei",
+            "Hi there"
+          ],
+          "loc-key": "PUSH_CONTENT_SUMMARY",
+          "loc-args": [
+            "More"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "recently",
+        "category": "YOHAKU_CONTENT"
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/thinking/r5",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "recently",
+      "resource_id": "r5"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e9",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.comment.replied.v1",
+      "subject": "comment/c2",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "c2",
+        "resource_type": "comment",
+        "recipient_reader_id": "rd1",
+        "sender_id": "s1",
+        "sender_name": " Bob ",
+        "sender_avatar_url": "https://a.b/c.png",
+        "target_title": "Post",
+        "target_path": "/posts/p1"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_REPLY_TITLE",
+          "title-loc-args": [
+            "Bob"
+          ],
+          "loc-key": "PUSH_REPLY_BODY",
+          "loc-args": [
+            "Post"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "comment-replies",
+        "category": "YOHAKU_COMMENT_REPLIED",
+        "mutable-content": 1
+      },
+      "event_type": "dev.mx-space.comment.replied.v1",
+      "sender_id": "s1",
+      "sender_name": "Bob",
+      "sender_avatar_url": "https://a.b/c.png",
+      "target_title": "Post",
+      "target_path": "/posts/p1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "comment",
+      "resource_id": "c2"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e10",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.comment.replied.v1",
+      "subject": "comment/c3",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "c3",
+        "resource_type": "comment",
+        "recipient_reader_id": "rd1",
+        "sender_id": "s1",
+        "sender_name": "Bob",
+        "target_title": "Post",
+        "target_path": "/posts/p1"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_REPLY_TITLE",
+          "title-loc-args": [
+            "Bob"
+          ],
+          "loc-key": "PUSH_REPLY_BODY",
+          "loc-args": [
+            "Post"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "comment-replies",
+        "category": "YOHAKU_COMMENT_REPLIED",
+        "mutable-content": 1
+      },
+      "event_type": "dev.mx-space.comment.replied.v1",
+      "sender_id": "s1",
+      "sender_name": "Bob",
+      "target_title": "Post",
+      "target_path": "/posts/p1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "comment",
+      "resource_id": "c3"
+    }
+  }
+]
