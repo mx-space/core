@@ -61,11 +61,11 @@
   },
   "dependencies": {
     "@haklex/rich-litexml": "0.46.2",
-    "loro-crdt": "^1.16.3"
+    "loro-crdt": "^1.16.4"
   },
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
-    "@effect/platform-node": "4.0.0",
+    "@effect/platform-node": "4.0.1",
     "@effect/vitest": "4.0.1",
     "@haklex/rich-collab-loro": "0.46.2",
     "@haklex/rich-headless": "0.46.2",
@@ -83,7 +83,7 @@
     "open": "^11.0.4",
     "semver": "7.8.5",
     "tsdown": "0.23.0",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.0.3"
   }

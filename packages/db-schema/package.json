@@ -55,11 +55,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.45.3",
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260930.2",
+    "@cloudflare/workers-types": "5.20261005.1",
     "@types/node": "26.6.4",
     "tsdown": "0.23.0",
     "typescript": "6.0.3"
