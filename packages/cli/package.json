@@ -75,7 +75,7 @@
     "@types/node": "26.6.4",
     "@types/semver": "7.8.0",
     "better-auth": "^1.6.27",
-    "effect": "4.0.0",
+    "effect": "4.0.1",
     "fast-xml-parser": "5.11.2",
     "get-east-asian-width": "^1.7.0",
     "lexical": "^0.52.0",
