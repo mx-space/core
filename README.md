@@ -53,7 +53,7 @@ flowchart LR
 | [`apps/core`](./apps/core) | `@mx-space/core` | The heart of the stack — AI-powered headless CMS server (NestJS + Fastify + PostgreSQL + Redis). |
 | [`apps/admin`](./apps/admin) | `@mx-admin/admin` | React 19 admin dashboard SPA, built into the server and served at `/proxy/qaqdmin`. |
 | [`apps/ios`](./apps/ios) | Space | Native iOS admin client — UIKit shell with SwiftUI leaf screens (XcodeGen). |
-| [`apps/push-relay`](./apps/push-relay) | `@mx-space/push-relay` | Independently deployable, privacy-preserving APNs relay. |
+| [`apps/push-relay-rs`](./apps/push-relay-rs) | `push-relay` (Rust) | Independently deployable, privacy-preserving APNs relay. |
 | [`apps/telemetry`](./apps/telemetry) | `@mx-space/telemetry` | Anonymous instance-telemetry collector (Cloudflare Worker + D1). |
 
 ## Packages

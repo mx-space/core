@@ -216,6 +216,9 @@ importers:
       prettier-plugin-ember-template-tag:
         specifier: 2.1.8
         version: 2.1.8(prettier@3.9.9)(supports-color@10.2.2)
+      railway:
+        specifier: ^3.12.0
+        version: 3.12.0
       redis-memory-server:
         specifier: 0.17.1
         version: 0.17.1(supports-color@10.2.2)
@@ -1028,37 +1031,6 @@ importers:
       zod-compiler:
         specifier: 2.0.7
         version: 2.0.7(@swc/core@1.16.13(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.11)(rollup@4.63.1)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))(webpack@5.106.2(@swc/core@1.16.13(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.26))(zod@4.6.5)
-
-  apps/push-relay:
-    dependencies:
-      '@mx-space/push-protocol':
-        specifier: workspace:*
-        version: link:../../packages/push-protocol
-      pg:
-        specifier: ^8.23.0
-        version: 8.23.0
-      zod:
-        specifier: 4.6.5
-        version: 4.6.5
-    devDependencies:
-      '@types/node':
-        specifier: 26.6.4
-        version: 26.6.4
-      '@types/pg':
-        specifier: ^8.23.1
-        version: 8.23.1
-      tsdown:
-        specifier: 0.23.0
-        version: 0.23.0(tsx@4.23.15)(typescript@6.0.3)
-      tsx:
-        specifier: ^4.23.13
-        version: 4.23.15
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.0)(@types/node@26.6.4)(@vitest/coverage-v8@5.0.3)(happy-dom@20.14.0)(vite@8.3.1(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
 
   apps/telemetry:
     dependencies:
@@ -2904,6 +2876,11 @@ packages:
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
+
+  '@graphql-typed-document-node/core@3.2.0':
+    resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
+    peerDependencies:
+      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
   '@grpc/grpc-js@1.14.4':
     resolution: {integrity: sha512-k9Dj3DV/itK9D06Y8f190Qgop7/Ui+D0njFV3LHMPwPT75DpXLQohE9Wmz0QElrJnzsjB7KPWiKJbOl7IPDArQ==}
@@ -8722,6 +8699,10 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  graphql@16.14.2:
+    resolution: {integrity: sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA==}
+    engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
+
   hachure-fill@0.5.2:
     resolution: {integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==}
 
@@ -10723,6 +10704,11 @@ packages:
 
   quickselect@3.0.0:
     resolution: {integrity: sha512-XdjUArbK4Bm5fLLvlm5KpTFOiOThgfWWI4axAZDWg4E/0mKdZyI9tNEfds27qCi1ze/vwTR16kvmmGhRra3c2g==}
+
+  railway@3.12.0:
+    resolution: {integrity: sha512-a6th+76NE3fZ8QMTOtEIe15sPTjObWOJYx0pCHCR/rd00r++I2rZHLKTn2R1qmPAwvGdAj6vY45GDVJs0AzOXA==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
@@ -14314,6 +14300,10 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+
+  '@graphql-typed-document-node/core@3.2.0(graphql@16.14.2)':
+    dependencies:
+      graphql: 16.14.2
 
   '@grpc/grpc-js@1.14.4':
     dependencies:
@@ -20559,6 +20549,8 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  graphql@16.14.2: {}
+
   hachure-fill@0.5.2: {}
 
   happy-dom@20.14.0:
@@ -22770,6 +22762,12 @@ snapshots:
       quickjs-emscripten-core: 0.32.0
 
   quickselect@3.0.0: {}
+
+  railway@3.12.0:
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.14.2)
+      graphql: 16.14.2
+      tsx: 4.23.15
 
   range-parser@1.2.1: {}
 

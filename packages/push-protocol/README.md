@@ -1,6 +1,6 @@
 # @mx-space/push-protocol
 
-Versioned, privacy-preserving push protocol shared between [`apps/core`](../../apps/core) (mx-core server) and [`apps/push-relay`](../../apps/push-relay) (the independently deployed APNs relay). Both sides import this package so the wire format can never drift.
+Versioned, privacy-preserving push protocol used by [`apps/core`](../../apps/core) (mx-core server) to talk to the independently deployed APNs relay. The relay itself is the Rust binary in [`apps/push-relay-rs`](../../apps/push-relay-rs), which mirrors these schemas and signatures; its tests compare against fixtures generated from this package, so update both sides together when the wire format changes.
 
 > [!NOTE]
 > This package is private to the monorepo and consumed as TypeScript source via workspace exports.
@@ -37,13 +37,6 @@ import {
   COMMENT_CREATED_EVENT,
   signPushRequest,
   sourceAuthorization,
-} from '@mx-space/push-protocol'
-
-// apps/push-relay — receiving side
-import {
-  PushEventSchema,
-  RegisterInstallationSchema,
-  verifyPushRequestSignature,
 } from '@mx-space/push-protocol'
 ```
 
