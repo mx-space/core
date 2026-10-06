@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
-    "@effect/platform-node": "4.0.0",
+    "@effect/platform-node": "4.0.1",
     "@effect/vitest": "4.0.1",
     "@haklex/rich-collab-loro": "0.46.2",
     "@haklex/rich-headless": "0.46.2",
