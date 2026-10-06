@@ -121,7 +121,7 @@ overrides:
   semver: 7.8.5
   typescript: 6.0.3
   undici: ^8.10.2
-  whatwg-url: 17.1.0
+  whatwg-url: 17.1.2
   zod: 4.6.5
   lodash-es@<4.18.0: 4.18.1
   nanoid@<3.3.8: 5.1.16
@@ -11722,8 +11722,8 @@ packages:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
     engines: {node: '>=12'}
 
-  whatwg-url@17.1.0:
-    resolution: {integrity: sha512-3GeworPmc2ZfEEHP7lEbUfBX/L75wdEsi0rLNhXcXxnoN5jyq0SL5gCy06SGW2cyTIZdTvWIDQNQoza++vKeaw==}
+  whatwg-url@17.1.2:
+    resolution: {integrity: sha512-TEZA+Zqxin7Jjsm2cjRohCmen5awh+hT6Zi3VZdqZlNRk7zvOI/9WpBFg/DWlA56bWnzwm6DuB8NS0EsxQH9uQ==}
     engines: {node: ^22.14.0 || >=24.0.0}
 
   which-boxed-primitive@1.1.1:
@@ -21024,7 +21024,7 @@ snapshots:
   mongodb-connection-string-url@7.0.2(@noble/hashes@2.4.0):
     dependencies:
       '@types/whatwg-url': 13.0.0
-      whatwg-url: 17.1.0(@noble/hashes@2.4.0)
+      whatwg-url: 17.1.2(@noble/hashes@2.4.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -21118,7 +21118,7 @@ snapshots:
 
   node-fetch@2.7.0(@noble/hashes@2.4.0):
     dependencies:
-      whatwg-url: 17.1.0(@noble/hashes@2.4.0)
+      whatwg-url: 17.1.2(@noble/hashes@2.4.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -23363,7 +23363,7 @@ snapshots:
 
   whatwg-mimetype@3.0.0: {}
 
-  whatwg-url@17.1.0(@noble/hashes@2.4.0):
+  whatwg-url@17.1.2(@noble/hashes@2.4.0):
     dependencies:
       '@exodus/bytes': 1.16.0(@noble/hashes@2.4.0)
       tr46: 6.0.0
