@@ -129,7 +129,7 @@
     "@types/js-yaml": "4.0.9",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.1.1",
+    "@vitejs/plugin-react": "6.1.2",
     "babel-plugin-react-compiler": "1.0.0",
     "code-inspector-plugin": "2.0.9",
     "happy-dom": "^20.14.5",
