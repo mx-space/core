@@ -388,13 +388,13 @@ importers:
         specifier: 0.46.2
         version: 0.46.2(54776c11c1df17da8f495197f8ddcaa7)
       '@lexical/markdown':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/react':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)(yjs@13.6.33)
       '@lexical/rich-text':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lezer/highlight':
         specifier: 1.2.5
@@ -487,7 +487,7 @@ importers:
         specifier: 10.0.3
         version: 10.0.3
       lexical:
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       lit:
         specifier: 3.3.3
@@ -535,7 +535,7 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1(supports-color@10.2.2)
       shiki:
-        specifier: ^4.4.3
+        specifier: ^4.5.0
         version: 4.5.0
       sonner:
         specifier: 2.0.8
@@ -553,7 +553,7 @@ importers:
         specifier: 1.0.15
         version: 1.0.15
       zod:
-        specifier: 4.6.5
+        specifier: 4.5.4
         version: 4.6.5
       zustand:
         specifier: 5.0.15
@@ -638,13 +638,13 @@ importers:
         specifier: ^8.0.6
         version: 8.0.6
       '@better-auth/api-key':
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20261005.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(better-auth@1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3))(better-call@1.4.0(zod@4.6.5))
       '@better-auth/expo':
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20261005.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(better-auth@1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3))
       '@better-auth/passkey':
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@better-auth/core@1.6.27(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(@cloudflare/workers-types@5.20261005.1)(better-call@1.4.0(zod@4.6.5))(jose@6.2.12)(kysely@0.29.6)(nanostores@1.5.4))(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-auth@1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3))(better-call@1.4.0(zod@4.6.5))(nanostores@1.5.4)
       '@earendil-works/pi-agent-core':
         specifier: 0.99.1
@@ -671,25 +671,25 @@ importers:
         specifier: 1.0.0-beta.1
         version: 1.0.0-beta.1(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))
       '@lexical/code-core':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/extension':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/headless':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/link':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/list':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/rich-text':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/table':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@mx-space/ai':
         specifier: workspace:*
@@ -746,7 +746,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       better-auth:
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3)
       cache-manager:
         specifier: 7.2.9
@@ -765,7 +765,7 @@ importers:
         version: 2.53.0
       dotenv:
         specifier: ^18.0.5
-        version: 18.0.5
+        version: 18.0.6
       dotenv-expand:
         specifier: ^13.0.0
         version: 13.0.0
@@ -794,7 +794,7 @@ importers:
         specifier: 5.2.2
         version: 5.2.2
       jose:
-        specifier: 6.2.12
+        specifier: ^6.2.12
         version: 6.2.12
       js-yaml:
         specifier: 5.4.2
@@ -818,7 +818,7 @@ importers:
         specifier: 5.6.0
         version: 5.6.0
       lexical:
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       linkedom:
         specifier: 0.18.13
@@ -908,7 +908,7 @@ importers:
         specifier: 2.0.10
         version: 2.0.10
       undici:
-        specifier: ^8.10.2
+        specifier: ^8.11.2
         version: 8.11.2
       wildcard-match:
         specifier: 5.1.6
@@ -1039,7 +1039,7 @@ importers:
         version: 0.1.2
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: 5.20261005.1
+        specifier: ^5.20261005.1
         version: 5.20261005.1
       wrangler:
         specifier: ^4.147.0
@@ -1131,7 +1131,7 @@ importers:
         specifier: 0.46.2
         version: 0.46.2(lexical@0.52.0(typescript@6.0.3))(typescript@6.0.3)
       '@lexical/headless':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@mx-space/api-client':
         specifier: workspace:*
@@ -1146,7 +1146,7 @@ importers:
         specifier: 7.8.0
         version: 7.8.0
       better-auth:
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3)
       effect:
         specifier: 4.0.1
@@ -1158,7 +1158,7 @@ importers:
         specifier: ^1.7.0
         version: 1.7.0
       lexical:
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       minisearch:
         specifier: ^7.2.0
@@ -1188,7 +1188,7 @@ importers:
         specifier: ^0.45.3
         version: 0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2)
       zod:
-        specifier: 4.6.5
+        specifier: 4.5.4
         version: 4.6.5
     devDependencies:
       '@cloudflare/workers-types':
@@ -1232,7 +1232,7 @@ importers:
         specifier: ^8.23.1
         version: 8.23.1
       better-auth:
-        specifier: 1.6.27
+        specifier: ^1.6.27
         version: 1.6.27(@cloudflare/workers-types@5.20261005.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@cloudflare/workers-types@5.20261005.1)(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1)(sql.js@1.14.2))(mongodb@7.6.0(@noble/hashes@2.4.0))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3)
       drizzle-orm:
         specifier: ^0.45.3
@@ -1271,16 +1271,16 @@ importers:
         specifier: 0.46.2
         version: 0.46.2(typescript@6.0.3)
       '@lexical/headless':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@lexical/markdown':
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
       '@noble/hashes':
         specifier: 2.4.0
         version: 2.4.0
       lexical:
-        specifier: 0.52.0
+        specifier: ^0.52.0
         version: 0.52.0(typescript@6.0.3)
     devDependencies:
       tsdown:
@@ -1329,7 +1329,7 @@ importers:
   packages/push-protocol:
     dependencies:
       zod:
-        specifier: 4.6.5
+        specifier: 4.5.4
         version: 4.6.5
     devDependencies:
       '@types/node':
@@ -7388,8 +7388,8 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  dotenv@18.0.5:
-    resolution: {integrity: sha512-aBrGvt6KhjxbEnatqMWOMidftwsrCiCvqh1yNIGB9QyF0J+VcWkKDMsvYOEm7ZS82oiV+BT1sTOtIlAmUlTpwQ==}
+  dotenv@18.0.6:
+    resolution: {integrity: sha512-ZMVmohV6CvAJtj++pZNyggluUt6hbRdQAxc2+Z635RL6/AG/ruXv5lHnybUFoxMPL/yrTL/tsF4paZu2l7RA6Q==}
     engines: {node: '>=12'}
     hasBin: true
 
@@ -18349,7 +18349,7 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  dotenv@18.0.5: {}
+  dotenv@18.0.6: {}
 
   drizzle-kit@0.31.11:
     dependencies:
