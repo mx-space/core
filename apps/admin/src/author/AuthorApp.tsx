@@ -1,4 +1,5 @@
 import { AgentDiffEditNode } from '@haklex/rich-ext-ai-agent'
+import { ExcalidrawConfigProvider } from '@haklex/rich-ext-excalidraw'
 import { LoroDoc } from 'loro-crdt'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -42,6 +43,21 @@ const uploadAsset = async (file: File): Promise<{ src: string }> => {
 const uploadTrack = async (file: File) => ({
   url: (await uploadAsset(file)).src,
 })
+
+const saveScene = async (snapshot: object, existingRef?: string) => {
+  const stem = existingRef
+    ?.split('/')
+    .pop()
+    ?.replace(/(-[\da-f]{8})?\.excalidraw$/, '')
+  const file = new File(
+    [JSON.stringify(snapshot)],
+    `${stem || 'scene'}.excalidraw`,
+    {
+      type: 'application/json',
+    },
+  )
+  return (await uploadAsset(file)).src
+}
 
 const isMac =
   typeof navigator !== 'undefined' &&
@@ -231,25 +247,27 @@ export function AuthorApp() {
               {title}
             </h1>
           ) : null}
-          <RichEditor
-            theme={theme}
-            variant={meta.variant}
-            extraNodes={extraNodes}
-            imageUpload={uploadAsset}
-            videoUpload={uploadAsset}
-            fileUpload={uploadAsset}
-            trackUpload={uploadTrack}
-          >
-            <DiffNotePlugin />
-            <LoroSyncPlugin
-              doc={doc}
-              onStatus={setStatus}
-              onInvalid={setInvalid}
-              onAgentCursor={setAgentCursor}
-            />
-            <SelectionSyncPlugin />
-            <AgentCursor cursor={agentCursor} container={scroller} />
-          </RichEditor>
+          <ExcalidrawConfigProvider saveSnapshot={saveScene}>
+            <RichEditor
+              theme={theme}
+              variant={meta.variant}
+              extraNodes={extraNodes}
+              imageUpload={uploadAsset}
+              videoUpload={uploadAsset}
+              fileUpload={uploadAsset}
+              trackUpload={uploadTrack}
+            >
+              <DiffNotePlugin />
+              <LoroSyncPlugin
+                doc={doc}
+                onStatus={setStatus}
+                onInvalid={setInvalid}
+                onAgentCursor={setAgentCursor}
+              />
+              <SelectionSyncPlugin />
+              <AgentCursor cursor={agentCursor} container={scroller} />
+            </RichEditor>
+          </ExcalidrawConfigProvider>
         </div>
         {historyOpen ? (
           <HistoryPanel
