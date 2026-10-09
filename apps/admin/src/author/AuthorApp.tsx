@@ -87,6 +87,7 @@ export function AuthorApp() {
     null,
   )
   const [title, setTitle] = useState<string | null>(null)
+  const [scroller, setScroller] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
     // ponytail: polls a tiny local endpoint because <meta> lives outside the Loro doc; push it over /api/events if meta edits need to be instant
@@ -221,7 +222,10 @@ export function AuthorApp() {
         </button>
       </header>
       <div className="flex min-h-0 flex-1">
-        <div className="min-h-0 flex-1 overflow-auto pt-10 pb-24">
+        <div
+          ref={setScroller}
+          className="relative min-h-0 flex-1 overflow-auto pt-10 pb-24"
+        >
           {title ? (
             <h1 className="mx-auto mb-2 max-w-[700px] px-4 text-2xl font-semibold leading-snug">
               {title}
@@ -244,7 +248,7 @@ export function AuthorApp() {
               onAgentCursor={setAgentCursor}
             />
             <SelectionSyncPlugin />
-            <AgentCursor cursor={agentCursor} />
+            <AgentCursor cursor={agentCursor} container={scroller} />
           </RichEditor>
         </div>
         {historyOpen ? (
