@@ -215,6 +215,7 @@ describe('post command CRUD handlers', () => {
           state: none(),
           tags: none(),
           copyright: none(),
+          premium: none(),
           pin: none(),
           pinOrder: none(),
           related: none(),

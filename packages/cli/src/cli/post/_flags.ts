@@ -33,6 +33,7 @@ export const tags = optional(Flag.String('tags'))
 export const related = optional(Flag.String('related'))
 export const pinOrder = optional(Flag.Int('pin-order'))
 export const copyright = optional(Flag.String('copyright'))
+export const premium = optional(Flag.String('premium'))
 
 export const openFlag = Flag.Boolean('open').pipe(
   Flag.withDefault(false),
@@ -56,7 +57,7 @@ const parseCsv = (v: string | undefined): string[] | undefined => {
   return parts
 }
 
-const parseCopyright = (v: string | undefined): boolean | undefined =>
+const parseBool = (v: string | undefined): boolean | undefined =>
   v === undefined ? undefined : v === 'true'
 
 export const postWriteOptions = {
@@ -69,6 +70,7 @@ export const postWriteOptions = {
   state,
   tags,
   copyright,
+  premium,
   pin,
   pinOrder,
   related,
@@ -88,6 +90,7 @@ export type PostWriteOptionsParsed = {
   readonly state: Option.Option<'publish' | 'draft'>
   readonly tags: Option.Option<string>
   readonly copyright: Option.Option<string>
+  readonly premium: Option.Option<string>
   readonly pin: Option.Option<string>
   readonly pinOrder: Option.Option<number>
   readonly related: Option.Option<string>
@@ -127,7 +130,8 @@ export const toPostFlagInputs = (
   summary: unwrap(opts.summary),
   state: unwrap(opts.state),
   tags: parseCsv(unwrap(opts.tags)),
-  copyright: parseCopyright(unwrap(opts.copyright)),
+  copyright: parseBool(unwrap(opts.copyright)),
+  premium: parseBool(unwrap(opts.premium)),
   pin: unwrap(opts.pin),
   pinOrder: unwrap(opts.pinOrder),
   related: parseCsv(unwrap(opts.related)),

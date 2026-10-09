@@ -42,6 +42,7 @@ Compatibility note: `post list --state publish` may be rejected by the server as
 | `--state <s>`           | `publish` or `draft`; maps to `isPublished`.                     |
 | `--tags <csv>`          | Comma-separated tags.                                            |
 | `--copyright <b>`       | `true` or `false`.                                               |
+| `--premium <b>`         | `true` or `false`; maps to `isPremium` (sponsor-only content).   |
 | `--pin <iso>`           | Pin timestamp or date.                                           |
 | `--pin-order <n>`       | Numeric pin order.                                               |
 | `--related <csv>`       | Comma-separated related document ids.                            |

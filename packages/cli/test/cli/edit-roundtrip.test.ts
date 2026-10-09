@@ -149,6 +149,7 @@ const commonPostOptions = {
   state: none<'publish' | 'draft'>(),
   tags: none<string>(),
   copyright: none<string>(),
+  premium: none<string>(),
   pin: none<string>(),
   pinOrder: none<number>(),
   related: none<string>(),

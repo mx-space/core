@@ -24,6 +24,7 @@ export interface PostFlagInputs {
   state?: 'publish' | 'draft'
   tags?: string[]
   copyright?: boolean
+  premium?: boolean
   pin?: string
   pinOrder?: number
   related?: string[]
@@ -154,6 +155,7 @@ export const buildPostPayload = (
     if (tags !== undefined) payload.tags = tags
     const copyright = flags.copyright ?? envMeta.copyright
     if (copyright !== undefined) payload.copyright = copyright
+    if (flags.premium !== undefined) payload.isPremium = flags.premium
     const pin = flags.pin ?? envMeta.pin
     if (pin !== undefined) payload.pin = pin
     const pinOrder = flags.pinOrder ?? envMeta.pinOrder
