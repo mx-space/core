@@ -39,7 +39,7 @@ overrides:
   semver: 7.8.5
   typescript: 6.0.3
   undici: ^8.10.2
-  whatwg-url: 17.1.0
+  whatwg-url: 17.1.2
   zod: 4.6.5
   "lodash-es@<4.18.0": 4.18.1
   "nanoid@<3.3.8": 5.1.16

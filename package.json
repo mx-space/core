@@ -60,7 +60,7 @@
     "semver": "7.8.5",
     "typescript": "6.0.3",
     "undici": "^8.10.2",
-    "whatwg-url": "17.1.0",
+    "whatwg-url": "17.1.2",
     "zod": "4.5.4"
   },
   "simple-git-hooks": {
