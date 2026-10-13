@@ -1,3 +1,10 @@
+## [14.15.3](https://github.com/mx-space/core/compare/v14.15.2...v14.15.3) (2026-10-14)
+
+
+### Bug Fixes
+
+* **admin:** keep the image insert dialog within its width when file names are long ([f2011e3](https://github.com/mx-space/core/commit/f2011e339393b0c54c9b721b39fcb72d9eab439b))
+
 ## [14.15.2](https://github.com/mx-space/core/compare/v14.15.1...v14.15.2) (2026-10-02)
 
 
