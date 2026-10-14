@@ -4401,7 +4401,6 @@ function buildWriteImages(state: WriteFormState): ImageModel[] {
   const addImageSrc = (src: string | undefined) => {
     if (!src || images.has(src)) return
     images.set(src, {
-      accent: '',
       height: 0,
       src,
       type: getFileExtension(src),
