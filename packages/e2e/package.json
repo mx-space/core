@@ -16,7 +16,7 @@
     "@nestjs/testing": "12.1.2",
     "@swc/core": "1.16.13",
     "@testcontainers/postgresql": "^12.2.0",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "@types/pg": "^8.23.1",
     "better-auth": "^1.6.27",
     "drizzle-orm": "^0.45.3",
@@ -25,8 +25,8 @@
     "tsx": "^4.23.15",
     "typescript": "6.0.3",
     "unplugin-swc": "2.0.0",
-    "vite": "8.3.2",
+    "vite": "8.3.4",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.0.3"
+    "vitest": "5.0.5"
   }
 }

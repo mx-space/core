@@ -2,12 +2,12 @@ packages:
   - packages/*
   - apps/*
 allowBuilds:
-  "@code-inspector/core": false
-  "@google/genai": false
-  "@mongodb-js/zstd": false
-  "@nestjs/core": true
-  "@parcel/watcher": false
-  "@swc/core": true
+  '@code-inspector/core': false
+  '@google/genai': false
+  '@mongodb-js/zstd': false
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': true
   cpu-features: false
   esbuild: true
   mongodb-memory-server: true
@@ -22,98 +22,97 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
-  "eslint-plugin-react-compiler>zod": 3.25.76
-  "get-pixels@^3>request": ./external/request
+  'eslint-plugin-react-compiler>zod': 3.25.76
+  'get-pixels@^3>request': ./external/request
   # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
   # migration; hold the 1.6 line until that lands.
   better-auth: 1.6.27
-  "@better-auth/api-key": 1.6.27
-  "@better-auth/core": 1.6.27
-  "@better-auth/expo": 1.6.27
-  "@better-auth/passkey": 1.6.27
+  '@better-auth/api-key': 1.6.27
+  '@better-auth/core': 1.6.27
+  '@better-auth/expo': 1.6.27
+  '@better-auth/passkey': 1.6.27
   kysely: 0.29.6
   mongodb: ~7.6.0
   pino: ./external/pino
   rolldown: 1.2.12
-  "tsdown@0.22.8>rolldown-plugin-dts": 0.27.14
+  'tsdown@0.22.8>rolldown-plugin-dts': 0.27.14
   semver: 7.8.5
   typescript: 6.0.3
   undici: ^8.10.2
   whatwg-url: 17.1.0
   zod: 4.6.5
-  "lodash-es@<4.18.0": 4.18.1
-  "nanoid@<3.3.8": 5.1.16
-  "nanoid@>=4.0.0 <5.0.9": 5.1.16
-  "tmp@<0.2.6": 0.2.7
-  "uuid@<11.1.1": 11.1.1
+  'lodash-es@<4.18.0': 4.18.1
+  'nanoid@<3.3.8': 5.1.16
+  'nanoid@>=4.0.0 <5.0.9': 5.1.16
+  'tmp@<0.2.6': 0.2.7
+  'uuid@<11.1.1': 11.1.1
   jose: 6.2.12
-  lucide-react: 1.49.0
-  "@codemirror/state": 6.7.6
-  "@codemirror/view": 6.43.13
-  "@codemirror/commands": 6.11.1
-  "@codemirror/language": 6.12.4
-  # @haklex/rich-ext-chat -> @streamdown/code hard-deps shiki@^3.x while
-  # @haklex/rich-editor peers shiki>=4.0.0; force one runtime copy.
-  shiki: ^4.4.3
+  lucide-react: 1.58.0
+  '@codemirror/state': 6.7.6
+  '@codemirror/view': 6.43.14
+  '@codemirror/commands': 6.11.1
+  '@codemirror/language': 6.13.1
+  # Keep the Markdown code plugin and editor on one Shiki runtime.
+  shiki: ^4.5.0
   # Editor stack tracks a single lexical runtime copy; keep in lockstep with
   # the @haklex/* peer floor (^0.49 as of @haklex 0.33.0).
   lexical: 0.52.0
-  "@lexical/a11y": 0.52.0
-  "@lexical/clipboard": 0.52.0
-  "@lexical/code-core": 0.52.0
-  "@lexical/devtools-core": 0.52.0
-  "@lexical/dragon": 0.52.0
-  "@lexical/extension": 0.52.0
-  "@lexical/hashtag": 0.52.0
-  "@lexical/headless": 0.52.0
-  "@lexical/history": 0.52.0
-  "@lexical/html": 0.52.0
-  "@lexical/internal": 0.52.0
-  "@lexical/link": 0.52.0
-  "@lexical/list": 0.52.0
-  "@lexical/mark": 0.52.0
-  "@lexical/markdown": 0.52.0
-  "@lexical/overflow": 0.52.0
-  "@lexical/plain-text": 0.52.0
-  "@lexical/react": 0.52.0
-  "@lexical/rich-text": 0.52.0
-  "@lexical/selection": 0.52.0
-  "@lexical/table": 0.52.0
-  "@lexical/text": 0.52.0
-  "@lexical/utils": 0.52.0
-  "@lexical/yjs": 0.52.0
-  "@esbuild-kit/core-utils>esbuild": 0.25.12
-  "@cloudflare/workers-types": 5.20261005.1
-  "@fastify/static": 10.1.5
-  "brace-expansion@<1.1.16": 1.1.21
-  "brace-expansion@>=2.0.0 <2.1.2": 2.1.7
-  "brace-expansion@>=3.0.0 <5.0.8": 5.0.12
+  '@lexical/a11y': 0.52.0
+  '@lexical/clipboard': 0.52.0
+  '@lexical/code-core': 0.52.0
+  '@lexical/devtools-core': 0.52.0
+  '@lexical/dragon': 0.52.0
+  '@lexical/extension': 0.52.0
+  '@lexical/hashtag': 0.52.0
+  '@lexical/headless': 0.52.0
+  '@lexical/history': 0.52.0
+  '@lexical/html': 0.52.0
+  '@lexical/internal': 0.52.0
+  '@lexical/link': 0.52.0
+  '@lexical/list': 0.52.0
+  '@lexical/mark': 0.52.0
+  '@lexical/markdown': 0.52.0
+  '@lexical/overflow': 0.52.0
+  '@lexical/plain-text': 0.52.0
+  '@lexical/react': 0.52.0
+  '@lexical/rich-text': 0.52.0
+  '@lexical/selection': 0.52.0
+  '@lexical/table': 0.52.0
+  '@lexical/text': 0.52.0
+  '@lexical/utils': 0.52.0
+  '@lexical/yjs': 0.52.0
+  '@esbuild-kit/core-utils>esbuild': 0.25.12
+  '@cloudflare/workers-types': 5.20261005.1
+  '@fastify/static': 10.1.5
+  'brace-expansion@<1.1.16': 1.1.21
+  'brace-expansion@>=2.0.0 <2.1.2': 2.1.7
+  'brace-expansion@>=3.0.0 <5.0.8': 5.0.12
   dompurify: 3.4.16
-  "fast-uri@>=3.0.0 <3.1.4": 3.1.8
-  "fast-uri@>=4.0.0 <4.1.1": 4.1.5
+  'fast-uri@>=3.0.0 <3.1.4': 3.1.8
+  'fast-uri@>=4.0.0 <4.1.1': 4.1.5
   fast-xml-parser: 5.11.2
   find-my-way: 9.9.0
   immutable: 4.3.9
-  "isomorphic-fetch>node-fetch": 2.7.0
-  "js-yaml@>=4.0.0 <4.3.0": 4.3.2
-  "js-yaml@>=5.0.0 <5.3.0": 5.4.3
-  "postcss@<8.5.18": 8.5.29
-  "protobufjs@>=7.5.0 <7.6.5": 7.6.6
+  'isomorphic-fetch>node-fetch': 2.7.0
+  'js-yaml@>=4.0.0 <4.3.0': 4.3.2
+  'js-yaml@>=5.0.0 <5.3.0': 5.4.3
+  'postcss@<8.5.18': 8.5.29
+  'protobufjs@>=7.5.0 <7.6.5': 7.6.6
   sharp: 0.35.5
-  "tar@<=7.5.17": 7.5.22
+  'tar@<=7.5.17': 7.5.22
 publicHoistPattern:
-  - "*fastify*"
+  - '*fastify*'
   - mongodb
-  - "*eslint*"
-  - "*webpack*"
-  - "*@codemirror*"
+  - '*eslint*'
+  - '*webpack*'
+  - '*@codemirror*'
 strictPeerDependencies: false
 # Nest 12 peers that have not cut a v12 major yet. Keep @nestjs/throttler 6.5.0.
 packageExtensions:
-  "@nestjs/throttler":
+  '@nestjs/throttler':
     peerDependencies:
-      "@nestjs/common": ">=10.0.0 <13.0.0"
-      "@nestjs/core": ">=10.0.0 <13.0.0"
+      '@nestjs/common': '>=10.0.0 <13.0.0'
+      '@nestjs/core': '>=10.0.0 <13.0.0'
 minimumReleaseAgeExclude:
   - '@haklex/*'
   - '@mx-space/*'
@@ -175,3 +174,4 @@ minimumReleaseAgeExclude:
   - effect@4.0.0
   - vitest@5.0.3
   - '@vitest/coverage-v8@5.0.3'
+  - pele@1.6.0

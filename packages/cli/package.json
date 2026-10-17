@@ -60,19 +60,19 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-litexml": "0.46.5",
+    "@haklex/rich-litexml": "0.47.0",
     "loro-crdt": "^1.16.4"
   },
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
     "@effect/platform-node": "4.0.1",
     "@effect/vitest": "4.0.1",
-    "@haklex/rich-collab-loro": "0.46.4",
-    "@haklex/rich-headless": "0.46.5",
+    "@haklex/rich-collab-loro": "0.47.0",
+    "@haklex/rich-headless": "0.47.0",
     "@lexical/headless": "^0.52.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "@types/semver": "7.8.0",
     "better-auth": "^1.6.27",
     "effect": "4.0.1",
@@ -85,6 +85,6 @@
     "tsdown": "0.23.0",
     "tsx": "^4.23.15",
     "typescript": "6.0.3",
-    "vitest": "5.0.3"
+    "vitest": "5.0.5"
   }
 }
