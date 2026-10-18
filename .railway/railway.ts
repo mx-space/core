@@ -12,10 +12,14 @@ export const partial = 'push-relay'
 const startCommand = [
   'umask 077',
   'chown nobody:nogroup /data',
-  'printf "%s" "$PUSH_RELAY_APNS_PRIVATE_KEY" > /tmp/AuthKey_T23JLFJTS7.p8',
-  'printf "%s" "$PUSH_RELAY_APNS_SANDBOX_PRIVATE_KEY" > /tmp/AuthKey_D8FWJZFNT9.p8',
-  'printf "%s" "$PUSH_RELAY_YOHAKU_APNS_PRIVATE_KEY" > /tmp/AuthKey_9KVCS38NGW.p8',
-  'chown nobody:nogroup /tmp/AuthKey_T23JLFJTS7.p8 /tmp/AuthKey_D8FWJZFNT9.p8 /tmp/AuthKey_9KVCS38NGW.p8',
+  'relay_key_dir=$(mktemp -d /tmp/push-relay-keys.XXXXXX)',
+  'printf "%s" "$PUSH_RELAY_APNS_PRIVATE_KEY" > "$relay_key_dir/AuthKey_T23JLFJTS7.p8"',
+  'printf "%s" "$PUSH_RELAY_APNS_SANDBOX_PRIVATE_KEY" > "$relay_key_dir/AuthKey_D8FWJZFNT9.p8"',
+  'printf "%s" "$PUSH_RELAY_YOHAKU_APNS_PRIVATE_KEY" > "$relay_key_dir/AuthKey_9KVCS38NGW.p8"',
+  'chown nobody:nogroup "$relay_key_dir/"*.p8',
+  // Renaming avoids protected /tmp files blocking root on container restart.
+  'mv "$relay_key_dir/"*.p8 /tmp/',
+  'rmdir "$relay_key_dir"',
   'exec su-exec nobody:nogroup /bin/sh -ec "push-relay migrate; exec push-relay"',
 ].join('; ')
 
