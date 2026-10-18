@@ -114,7 +114,7 @@ services:
 
   postgres:
     <<: *runtime-safety
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: mx-postgres
     restart: unless-stopped
     environment:
