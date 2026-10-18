@@ -20,7 +20,10 @@ const startCommand = [
 ].join('; ')
 
 export default defineRailway(() => {
-  const data = volume('push-relay-data')
+  const data = volume('push-relay-data', {
+    region: 'asia-southeast1-eqsg3a',
+    sizeMB: 5000,
+  })
   const pushRelay = service('push-relay', {
     source: github('mx-space/core', { branch: 'master' }),
     build: {
