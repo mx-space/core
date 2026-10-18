@@ -1,3 +1,10 @@
+## [14.16.0](https://github.com/mx-space/core/compare/v14.15.3...v14.16.0) (2026-10-19)
+
+
+### Features
+
+* **security:** protect stored credentials and encrypt full backups ([bf62622](https://github.com/mx-space/core/commit/bf62622f6b8bd47237eaabc7655904d1f4c0c93e))
+
 ## [14.15.3](https://github.com/mx-space/core/compare/v14.15.2...v14.15.3) (2026-10-14)
 
 
