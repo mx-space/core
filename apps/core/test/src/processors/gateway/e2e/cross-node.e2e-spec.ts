@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
 import { RedisKeys } from '~/constants/cache.constant'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { RoomSubsService } from '~/processors/task-queue/task-queue.room-subs.service'
 import { getRedisKey } from '~/utils/redis.util'
 
@@ -33,6 +34,43 @@ describe('gateway cross-node e2e', () => {
   afterAll(async () => {
     await appA.close()
     await appB.close()
+  })
+
+  it('revokes matching API-key connections on every node through the existing bus', async () => {
+    for (const app of [appA, appB]) {
+      app.authService.verifyApiKey.mockResolvedValue({
+        id: 'shared-key-id',
+        referenceId: 'owner',
+      })
+      app.authService.isOwnerReaderId.mockResolvedValue(true)
+    }
+    const clients = await Promise.all(
+      [appA, appB].map((app) =>
+        WsTestClient.connect(app.adminUrl(), {
+          headers: { 'x-api-key': 'raw-key' },
+        }),
+      ),
+    )
+    try {
+      await Promise.all(
+        clients.map((client) =>
+          client.waitFor(
+            (event) => event.event === BusinessEvents.GATEWAY_CONNECT,
+          ),
+        ),
+      )
+      appB.eventEmitter.emit(EventBusEvents.TokenExpired, 'shared-key-id')
+      const closed = await Promise.all(
+        clients.map((client) => client.waitForClose()),
+      )
+      expect(closed.map((event) => event.code)).toEqual([4401, 4401])
+    } finally {
+      await Promise.all(clients.map((client) => client.closeAndWait()))
+      for (const app of [appA, appB]) {
+        app.authService.verifyApiKey.mockResolvedValue(null)
+        app.authService.isOwnerReaderId.mockResolvedValue(false)
+      }
+    }
   })
 
   it('delivers a bus broadcast issued on B to a room member connected on A', async () => {

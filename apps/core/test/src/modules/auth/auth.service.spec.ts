@@ -7,6 +7,7 @@ import { REVIEW_DEMO_EMAIL } from '~/modules/auth/review-demo.constants'
 const createService = () => {
   const authRepository = {
     createApiKey: vi.fn(),
+    findAccountByProviderAccountId: vi.fn(),
     deleteApiKey: vi.fn(),
     listApiKeysForUser: vi.fn(),
     findApiKeyById: vi.fn(),
@@ -52,6 +53,33 @@ const createService = () => {
 }
 
 describe('AuthService', () => {
+  it('does not expose credential material through session account profiles', async () => {
+    const { authRepository, readerRepository, service } = createService()
+    authRepository.findAccountByProviderAccountId.mockResolvedValue({
+      userId: 'owner-1',
+      providerId: 'github',
+      password: 'password-hash',
+      accessToken: 'provider-access',
+      refreshToken: 'provider-refresh',
+      idToken: 'provider-id',
+      raw: { token: 'raw-provider-token' },
+    })
+    readerRepository.findById.mockResolvedValue({
+      name: 'Owner',
+      role: 'owner',
+    })
+    const profile = await service.getOauthUserAccount('provider-account')
+    expect(profile).toMatchObject({ name: 'Owner', provider: 'github' })
+    for (const field of [
+      'password',
+      'accessToken',
+      'refreshToken',
+      'idToken',
+      'raw',
+    ])
+      expect(profile).not.toHaveProperty(field)
+  })
+
   it('creates Better Auth API keys for the owner reader id', async () => {
     const { authInstance, service } = createService()
     const auth = authInstance.get()
@@ -65,7 +93,7 @@ describe('AuthService', () => {
     })
 
     expect(auth.api.createApiKey).toHaveBeenCalledWith({
-      body: { name: 'deploy', userId: 'owner-1' },
+      body: { name: 'deploy', userId: 'owner-1', configId: 'mx-hashed-v1' },
     })
   })
 

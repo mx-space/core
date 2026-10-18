@@ -20,6 +20,7 @@
     "dev": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"vite-node src/dev.ts\"",
     "dev:encrypt": "npm run dev -- --encrypt_enable --encrypt_key=33b9405ac49f63ef4ccbf6b338aeeff8152e844d942ef22278abbec2b1f93b5e",
     "migrate": "vite-node src/migrate.ts",
+    "migrate:secrets": "cross-env MX_SECRET_STORAGE_V2=1 MX_MIGRATE_SECRETS=1 vite-node src/app-migrate.ts",
     "migrate:app": "cross-env NODE_ENV=development vite-node src/app-migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
     "openapi:export": "vite-node scripts/export-openapi.ts",

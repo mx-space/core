@@ -504,6 +504,28 @@ export const enUS = {
   'auth.login.welcomeBack': 'Welcome back',
 
   'backup.actions.batchDelete': 'Delete selected',
+  'backup.key.saveTitle': 'Save your backup recovery key',
+  'backup.key.saveDescription':
+    'This key is shown only once. Copy or download it and keep it safe. The server does not keep it; losing it makes encrypted backups unrecoverable. Save your settings after confirming.',
+  'backup.key.label': 'Recovery key',
+  'backup.key.copy': 'Copy key',
+  'backup.key.copied': 'Key copied',
+  'backup.key.copyFailed':
+    'Copy failed. Download the key file or copy it manually.',
+  'backup.key.download': 'Download key file',
+  'backup.key.saved': 'I have saved my recovery key',
+  'backup.key.enable': 'Enable encryption',
+  'backup.key.generating': 'Generating recovery key…',
+  'backup.key.generateFailed':
+    'Cannot generate a key. Use HTTPS or localhost and try again.',
+  'backup.key.restoreTitle': 'Restore encrypted backup',
+  'backup.key.restoreDescription':
+    'This backup is encrypted and requires a recovery key. Paste the key saved when enabling encryption, or import your key file. It is used only for this restore.',
+  'backup.key.restore': 'Decrypt and restore',
+  'backup.key.restoreFailed': 'Restore failed. Check your key and backup file.',
+  'backup.key.import': 'Import key file',
+  'backup.key.invalidFile':
+    'Choose a readable text key file no larger than 16 KiB.',
   'backup.actions.confirmBatchDelete': 'Delete the {count} selected backup(s)?',
   'backup.actions.createNow': 'Create backup',
   'backup.actions.row.deleteDescription': 'Permanently delete this backup file',
@@ -2355,6 +2377,9 @@ export const enUS = {
   'settings.schema.backupOptions.enable.description':
     'Fill in the S3 information below to also upload backups to S3',
   'settings.schema.backupOptions.enable.title': 'Enable automatic backup',
+  'settings.schema.backupOptions.encryptionEnabled.title': 'Backup encryption',
+  'settings.schema.backupOptions.encryptionEnabled.description':
+    'Encrypt all new backups. Each activation generates a new recovery key; keep previous keys for older backups. When disabled, new backups are ordinary ZIP files.',
   'settings.schema.backupOptions.endpoint.title': 'S3 endpoint',
   'settings.schema.backupOptions.region.title': 'Region',
   'settings.schema.backupOptions.bucket.title': 'Bucket',

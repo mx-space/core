@@ -208,6 +208,11 @@ const nullableStorageText = () =>
 
 // ==================== Backup Options ====================
 export const BackupOptionsSchema = section('Backup', {
+  encryptionEnabled: field.toggle(z.boolean().optional(), 'Encrypt backups', {
+    description:
+      'Generate a recovery key in this browser. Save it before enabling encrypted backups.',
+  }),
+  encryptionPublicKey: field.hidden(z.string().max(4096).optional()),
   enable: field.toggle(z.boolean().optional(), 'Enable automatic backup', {
     description:
       'Fill in the S3 information below to also upload backups to S3',

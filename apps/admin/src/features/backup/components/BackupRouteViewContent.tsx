@@ -23,9 +23,10 @@ import { Checkbox } from '~/ui/primitives/checkbox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
-import { saveBlob } from '../utils/backup-file'
+import { saveBackupBlob } from '../utils/backup-file'
 import { BackupRouteContext } from './backup-route-context'
 import { BackupDetailEmptyState } from './BackupDetailEmptyState'
+import { presentRestoreBackupKey } from './BackupKeyModals'
 import { BackupListEmptyState } from './BackupListEmptyState'
 import { BackupListItem } from './BackupListItem'
 import { BackupListSkeleton } from './BackupListSkeleton'
@@ -70,7 +71,7 @@ export function BackupRouteViewContent() {
     },
     onSuccess: async (blob) => {
       toast.success(t('backup.toast.createSuccess'))
-      saveBlob(blob, 'backup.zip')
+      saveBackupBlob(blob, 'backup')
       await invalidateBackups()
     },
   })
@@ -130,7 +131,7 @@ export function BackupRouteViewContent() {
     },
     onSuccess: ({ blob, filename }) => {
       toast.success(t('backup.toast.downloadSuccess'))
-      saveBlob(blob, `${filename}.zip`)
+      saveBackupBlob(blob, filename)
     },
   })
 
@@ -190,10 +191,33 @@ export function BackupRouteViewContent() {
     )
   }
 
-  const handleUploadChange = (file: File | undefined) => {
+  const handleRollback = useCallback(
+    (item: BackupFile) => {
+      if (item.encrypted) {
+        void presentRestoreBackupKey(async (decryptionKey) => {
+          await rollbackBackup({ filename: item.filename, decryptionKey })
+          toast.success(t('backup.toast.rollbackSuccess'))
+          setTimeout(() => location.reload(), 1000)
+        })
+      } else rollbackMutation.mutate({ filename: item.filename })
+    },
+    [rollbackMutation, t],
+  )
+
+  const handleUploadChange = async (file: File | undefined) => {
     if (!file) return
-    uploadMutation.mutate(file)
     if (fileInputRef.current) fileInputRef.current.value = ''
+    try {
+      if ((await file.slice(0, 8).text()) === 'MXBACKUP') {
+        await presentRestoreBackupKey(async (decryptionKey) => {
+          await uploadAndRestoreBackup({ file, decryptionKey })
+          toast.success(t('backup.toast.uploadSuccess'))
+          setTimeout(() => location.reload(), 1000)
+        })
+      } else uploadMutation.mutate({ file })
+    } catch {
+      toast.error(t('backup.toast.uploadFailed'))
+    }
   }
 
   const ctxValue = useMemo(
@@ -201,9 +225,9 @@ export function BackupRouteViewContent() {
       onBack: closeDetail,
       onDelete: (item: BackupFile) => deleteMutation.mutate(item.filename),
       onDownload: (item: BackupFile) => downloadMutation.mutate(item.filename),
-      onRollback: (item: BackupFile) => rollbackMutation.mutate(item.filename),
+      onRollback: handleRollback,
     }),
-    [closeDetail, deleteMutation, downloadMutation, rollbackMutation],
+    [closeDetail, deleteMutation, downloadMutation, handleRollback],
   )
 
   return (
@@ -278,7 +302,7 @@ export function BackupRouteViewContent() {
                 {t('backup.actions.batchDelete')}
               </Button>
               <input
-                accept=".zip"
+                accept=".mxbackup,.zip"
                 className="hidden"
                 onChange={(event) =>
                   handleUploadChange(event.target.files?.[0])

@@ -64,6 +64,8 @@ export const generateDefaultConfig: () => IConfig = () => ({
     enableAvatarInternalization: true,
   },
   backupOptions: {
+    encryptionEnabled: false,
+    encryptionPublicKey: '',
     enable: true,
     endpoint: '',
     region: 'auto',

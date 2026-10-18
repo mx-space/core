@@ -13,6 +13,7 @@ x-mx-env: &mx-env
   SNOWFLAKE_WORKER_ID: '1'
   ALLOWED_ORIGINS: localhost
   JWT_SECRET: YOUR_SUPER_SECURED_JWT_SECRET_STRING
+  MX_SECRET_STORAGE_V2: ${MX_SECRET_STORAGE_V2:-false}
 
 # Bound crash artifacts and stdout/stderr even during dependency outages.
 x-runtime-safety: &runtime-safety

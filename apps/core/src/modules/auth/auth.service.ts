@@ -1,13 +1,16 @@
 import { IncomingMessage } from 'node:http'
 
+import { defaultKeyHasher } from '@better-auth/api-key'
 import {
   Inject,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common'
 import { hashPassword } from 'better-auth/crypto'
+import { omit } from 'es-toolkit/compat'
 import { customAlphabet } from 'nanoid'
 
+import { SECRET_STORAGE_V2 } from '~/app.config'
 import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
@@ -16,7 +19,10 @@ import { getAvatar } from '~/utils/tool.util'
 
 import { OwnerRepository } from '../owner/owner.repository'
 import { ReaderRepository } from '../reader/reader.repository'
-import { AuthInstanceInjectKey } from './auth.constant'
+import {
+  AuthInstanceInjectKey,
+  HASHED_API_KEY_CONFIG_ID,
+} from './auth.constant'
 import type { TokenDto } from './auth.controller'
 import type { InjectAuthInstance } from './auth.interface'
 import { AuthRepository } from './auth.repository'
@@ -90,9 +96,6 @@ export class AuthService {
 
     return keys.map((token) => ({
       id: token.id,
-      // Never re-expose the full secret on list responses. The plaintext key is
-      // shown once at creation; afterwards the list only carries a masked
-      // display value. The full secret is fetched on demand via getTokenSecret.
       token: this.maskApiKey(token),
       name: token.name,
       createdAt: token.createdAt,
@@ -106,12 +109,12 @@ export class AuthService {
     prefix?: string | null
   }): string {
     const prefix = token.prefix || ''
-    const start = token.start || token.key?.slice(0, 6) || ''
-    const visible = `${prefix}${start}`
+    const start = token.start || ''
+    const visible = start.startsWith(prefix) ? start : `${prefix}${start}`
     return visible ? `${visible}••••••••` : '••••••••••••••••••••••••'
   }
 
-  async getTokenSecret(id: string) {
+  async getToken(id: string) {
     const token = await this.authRepository.findApiKeyById(id)
 
     if (!token) {
@@ -119,7 +122,7 @@ export class AuthService {
     }
     return {
       id: token.id,
-      token: token.key,
+      token: this.maskApiKey(token),
       name: token.name,
       createdAt: token.createdAt,
       expired: token.expiresAt ?? undefined,
@@ -168,6 +171,7 @@ export class AuthService {
       body: {
         name: body.name,
         userId: ownerId,
+        configId: SECRET_STORAGE_V2 ? HASHED_API_KEY_CONFIG_ID : 'default',
         ...(expiresIn ? { expiresIn } : {}),
       },
     })
@@ -192,7 +196,10 @@ export class AuthService {
       name: model.name,
       start,
       prefix,
-      key: model.token,
+      key: SECRET_STORAGE_V2
+        ? await defaultKeyHasher(model.token)
+        : model.token,
+      configId: SECRET_STORAGE_V2 ? HASHED_API_KEY_CONFIG_ID : 'default',
       userId: ownerId,
       referenceId: ownerId,
       enabled: true,
@@ -454,7 +461,13 @@ export class AuthService {
       : null
 
     return {
-      ...account,
+      ...omit(account, [
+        'password',
+        'accessToken',
+        'refreshToken',
+        'idToken',
+        'raw',
+      ]),
       provider: account.providerId,
       ...(user
         ? {
@@ -512,21 +525,24 @@ export class AuthService {
     if (!auth) {
       throw new InternalServerErrorException('auth not found')
     }
-    const result = await auth.api.verifyApiKey({
-      body: {
-        key: token,
-      },
-    })
-    if (!result?.valid || !result.key?.referenceId) {
-      return this.verifyLegacyApiKey(token)
+    // Explicit config IDs prevent a stored hash from matching the legacy plaintext lookup.
+    for (const configId of [HASHED_API_KEY_CONFIG_ID, 'default']) {
+      const result = await auth.api.verifyApiKey({
+        body: { key: token, configId },
+      })
+      if (result?.valid && result.key?.referenceId) return result.key
     }
-    return result.key
+    return this.verifyLegacyApiKey(token)
   }
 
   private async verifyLegacyApiKey(token: string) {
     const legacyDoc = await this.authRepository.findApiKey(token)
 
-    if (!legacyDoc) {
+    if (
+      !legacyDoc ||
+      legacyDoc.configId === HASHED_API_KEY_CONFIG_ID ||
+      legacyDoc.referenceId
+    ) {
       return null
     }
 

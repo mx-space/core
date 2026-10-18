@@ -7,9 +7,7 @@ import { AuthController } from '~/modules/auth/auth.controller'
 const createController = () => {
   const authService = {
     verifyCustomToken: vi.fn().mockResolvedValue([true, { userId: 'owner-1' }]),
-    getTokenSecret: vi
-      .fn()
-      .mockResolvedValue({ id: 'token-1', token: 'txo-token' }),
+    getToken: vi.fn().mockResolvedValue({ id: 'token-1', token: 'txo-token' }),
     getAllAccessToken: vi
       .fn()
       .mockResolvedValue([
@@ -53,13 +51,13 @@ describe('AuthController', () => {
     expect(authService.deleteToken).toHaveBeenCalledWith('token-1')
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       EventBusEvents.TokenExpired,
-      'txo-token',
+      'token-1',
     )
   })
 
   it('rejects deletion when the token id is not found', async () => {
     const { authService, controller } = createController()
-    authService.getTokenSecret.mockResolvedValue(null)
+    authService.getToken.mockResolvedValue(null)
 
     await expect(controller.deleteToken({ id: 'missing' })).rejects.toThrow(
       AppException,

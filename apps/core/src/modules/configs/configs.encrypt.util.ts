@@ -1,5 +1,4 @@
 import { isArrayLike, isObject } from 'es-toolkit/compat'
-import { LRUCache } from 'lru-cache'
 import type { z } from 'zod'
 
 import { EncryptUtil } from '~/utils/encrypt.util'
@@ -206,23 +205,6 @@ function isEncryptedPath(path: string): boolean {
   return false
 }
 
-const decryptLRU = new LRUCache<string, string>({
-  max: 100,
-  ttl: 1000 * 60 * 5,
-})
-
-/**
- * Decrypt a single value
- */
-function decryptValue(value: string): string {
-  if (decryptLRU.has(value)) {
-    return decryptLRU.get(value)!
-  }
-  const decryptedValue = EncryptUtil.decrypt(value)
-  decryptLRU.set(value, decryptedValue)
-  return decryptedValue
-}
-
 /**
  * Recursively decrypt all encrypted fields in an object
  */
@@ -238,13 +220,13 @@ export const decryptObject = <T extends object>(target: T, prefix = ''): T => {
         if (isObject(value[i]) && !isArrayLike(value[i])) {
           value[i] = decryptObject(value[i], itemPath)
         } else if (typeof value[i] === 'string' && isEncryptedPath(itemPath)) {
-          value[i] = decryptValue(value[i])
+          value[i] = EncryptUtil.decrypt(value[i], itemPath)
         }
       }
     } else if (isObject(value) && !isArrayLike(value)) {
       ;(target as any)[key] = decryptObject(value, currentPath)
     } else if (typeof value === 'string' && isEncryptedPath(currentPath)) {
-      ;(target as any)[key] = decryptValue(value)
+      ;(target as any)[key] = EncryptUtil.decrypt(value, currentPath)
     }
   }
   return target
@@ -265,13 +247,13 @@ export const encryptObject = <T extends object>(target: T, prefix = ''): T => {
         if (isObject(value[i]) && !isArrayLike(value[i])) {
           value[i] = encryptObject(value[i], itemPath)
         } else if (typeof value[i] === 'string' && isEncryptedPath(itemPath)) {
-          value[i] = EncryptUtil.encrypt(value[i])
+          value[i] = EncryptUtil.encrypt(value[i], itemPath)
         }
       }
     } else if (isObject(value) && !isArrayLike(value)) {
       ;(target as any)[key] = encryptObject(value, currentPath)
     } else if (typeof value === 'string' && isEncryptedPath(currentPath)) {
-      ;(target as any)[key] = EncryptUtil.encrypt(value)
+      ;(target as any)[key] = EncryptUtil.encrypt(value, currentPath)
     }
   }
   return target

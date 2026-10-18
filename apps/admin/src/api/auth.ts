@@ -39,10 +39,6 @@ export function getTokens() {
   return getJson<TokenModel[]>('/auth/token')
 }
 
-export function getToken(id: string) {
-  return getJson<TokenModel>('/auth/token', { id })
-}
-
 export function createToken(data: CreateTokenData) {
   return postJson<TokenModel, CreateTokenData>('/auth/token', data)
 }

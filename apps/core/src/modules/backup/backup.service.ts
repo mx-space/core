@@ -1,5 +1,13 @@
 import { createReadStream, existsSync, statSync } from 'node:fs'
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path, { join, resolve } from 'node:path'
 
 import {
@@ -19,12 +27,16 @@ import { BACKUP_DIR, DATA_DIR } from '~/constants/path.constant'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { S3Uploader } from '~/utils/s3.util'
-import { scheduleManager } from '~/utils/schedule.util'
 import { $, $throw } from '~/utils/shell.util'
 import { getFolderSize } from '~/utils/system.util'
 import { getMediumDateTime } from '~/utils/time.util'
 
 import { ConfigsService } from '../configs/configs.service'
+import {
+  backupEncryptionPublicKey,
+  decryptBackup,
+  encryptBackup,
+} from './backup-crypto'
 
 const excludeTables = [
   'analyzes',
@@ -43,6 +55,8 @@ const excludeFolders = [
   'admin',
   'temp',
   'trash',
+  'backup_data',
+  'temp_copy_need',
 ]
 
 @Injectable()
@@ -94,9 +108,8 @@ export class BackupService {
 
   // Safe in-process zip extraction (replaces shell `unzip`).
   // Validates every entry against zip-slip; rejects absolute paths and symlinks.
-  private async safeUnzip(zipFilePath: string, destDir: string) {
+  private async safeUnzip(buffer: Buffer, destDir: string) {
     const base = resolve(destDir)
-    const buffer = await readFile(zipFilePath)
     const JSZip = (await import('jszip')).default
     const zip = await new JSZip().loadAsync(buffer)
 
@@ -131,27 +144,20 @@ export class BackupService {
     }
   }
 
-  private pgPasswordEnv() {
-    return POSTGRES.password
-      ? `PGPASSWORD=${this.shellQuote(POSTGRES.password)} `
-      : ''
+  private pgEnvironment() {
+    // Keep connection credentials out of shell commands and command-failure logs.
+    return {
+      ...process.env,
+      PGHOST: POSTGRES.host,
+      PGPORT: String(POSTGRES.port),
+      PGUSER: POSTGRES.user,
+      PGPASSWORD: POSTGRES.password,
+      PGDATABASE: POSTGRES.connectionString || POSTGRES.database,
+    }
   }
 
   private get excludeTableArgs() {
     return excludeTables.map((t) => `--exclude-table=${t}`).join(' ')
-  }
-
-  private pgConnectionArgs() {
-    if (POSTGRES.connectionString) {
-      return `--dbname ${this.shellQuote(POSTGRES.connectionString)}`
-    }
-
-    return [
-      `-h ${this.shellQuote(POSTGRES.host)}`,
-      `-p ${POSTGRES.port}`,
-      `-U ${this.shellQuote(POSTGRES.user)}`,
-      `-d ${this.shellQuote(POSTGRES.database)}`,
-    ].join(' ')
   }
 
   async list() {
@@ -167,6 +173,12 @@ export class BackupService {
       if (!statSync(path).isDirectory()) {
         continue
       }
+      if (
+        !existsSync(join(path, `backup-${filename}.mxbackup`)) &&
+        !existsSync(join(path, `backup-${filename}.zip`))
+      ) {
+        continue
+      }
       backups.push({
         filename,
         path,
@@ -175,18 +187,25 @@ export class BackupService {
     return Promise.all(
       backups.map(async ({ filename, path }) => {
         const size = await getFolderSize(path)
-        return { filename, size }
+        return {
+          filename,
+          size,
+          encrypted: existsSync(join(path, `backup-${filename}.mxbackup`)),
+        }
       }),
     )
   }
 
   async backup() {
+    const options = await this.configs.get('backupOptions')
+    const encryptionKey = options.encryptionEnabled
+      ? backupEncryptionPublicKey(options.encryptionPublicKey)
+      : undefined
     this.logger.log('--> Backing up database')
-    // Use timestamp as directory name
     const dateDir = getMediumDateTime(new Date())
-
-    const backupDirPath = join(BACKUP_DIR, dateDir)
-    mkdirp.sync(backupDirPath)
+    // Isolate plaintext staging from downloadable backups and concurrent runs.
+    const workDir = await mkdtemp(join(tmpdir(), 'mx-backup-'))
+    let backupDirPath: string | undefined
 
     const runStep = async (
       step: string,
@@ -203,13 +222,14 @@ export class BackupService {
     }
 
     try {
-      const dumpedDbDir = join(backupDirPath, 'mx-space')
+      const dumpedDbDir = join(workDir, 'mx-space')
       mkdirp.sync(dumpedDbDir)
       const dumpFilePath = join(dumpedDbDir, 'pg.dump')
 
       await runStep(
         'pg_dump',
-        `${this.pgPasswordEnv()}pg_dump --format=custom ${this.excludeTableArgs} ${this.pgConnectionArgs()} -f ${this.shellQuote(dumpFilePath)}`,
+        `pg_dump --format=custom --dbname "$PGDATABASE" ${this.excludeTableArgs} -f ${this.shellQuote(dumpFilePath)}`,
+        { env: this.pgEnvironment() },
       )
 
       if (!existsSync(dumpFilePath)) {
@@ -217,7 +237,7 @@ export class BackupService {
           `pg_dump ran but produced no file: ${dumpFilePath} (check DB name, connection, and permissions)`,
         ) as any
         error.step = 'pg_dump'
-        error.cwd = backupDirPath
+        error.cwd = workDir
         throw error
       }
       const dumpStat = statSync(dumpFilePath)
@@ -226,38 +246,33 @@ export class BackupService {
           `pg_dump produced an empty file: ${dumpFilePath} (common cause of zip exit code 12)`,
         ) as any
         error.step = 'pg_dump'
-        error.cwd = backupDirPath
+        error.cwd = workDir
         throw error
       }
 
-      // Use a directory instead of a wildcard to avoid "zip error: Nothing to do" (exit code 12) when the directory is empty
-      await runStep(
-        'zip-db',
-        `zip -r backup-${dateDir} mx-space && rm -rf mx-space`,
-        {
-          cwd: backupDirPath,
-        },
-      )
-
-      // Bundle the data directory
-
       const flags = excludeFolders.map((item) => `--exclude ${item}`).join(' ')
-      await rm(join(DATA_DIR, 'backup_data'), { recursive: true, force: true })
-      await rm(join(DATA_DIR, 'temp_copy_need'), {
-        recursive: true,
-        force: true,
+      await runStep(
+        'copy-data',
+        `rsync -a ${flags} ${this.shellQuote(`${DATA_DIR}/`)} ${this.shellQuote(join(workDir, 'backup_data'))}`,
+      )
+      await runStep('zip', 'zip -qr backup.zip mx-space backup_data', {
+        cwd: workDir,
       })
 
-      await runStep(
-        'zip-data',
-        `rsync -a . ./temp_copy_need --exclude temp_copy_need ${flags} && mv temp_copy_need backup_data && zip -r ${join(
-          backupDirPath,
-          `backup-${dateDir}`,
-        )} ./backup_data && rm -rf backup_data`,
-        { cwd: DATA_DIR },
+      const archive = await readFile(join(workDir, 'backup.zip'))
+      const buffer = encryptionKey
+        ? encryptBackup(archive, encryptionKey)
+        : archive
+      await mkdir(BACKUP_DIR, { recursive: true, mode: 0o700 })
+      backupDirPath = await mkdtemp(join(BACKUP_DIR, `${dateDir}-`))
+      const filePath = join(
+        backupDirPath,
+        `backup-${path.basename(backupDirPath)}.${encryptionKey ? 'mxbackup' : 'zip'}`,
       )
+      await writeFile(filePath, buffer, { mode: 0o600, flag: 'wx' })
 
       this.logger.log('--> Backup completed successfully')
+      return { buffer, path: filePath }
     } catch (error) {
       const step = (error as any)?.step ? `step=${(error as any).step}` : ''
       const cwd = (error as any)?.cwd ? `cwd=${(error as any).cwd}` : ''
@@ -274,7 +289,7 @@ export class BackupService {
         this.commandExists('pg_dump'),
         this.commandExists('pg_restore'),
       ])
-      const backupDirContent = await this.safeListDir(backupDirPath)
+      const backupDirContent = await this.safeListDir(workDir)
 
       this.logger.error(
         `--> Backup failed (${[step, cwd].filter(Boolean).join(', ')}): ${error.message}` +
@@ -283,15 +298,14 @@ export class BackupService {
           `- zip: ${hasZip ? 'found' : 'missing'}\n` +
           `- pg_dump: ${hasPgDump ? 'found' : 'missing'}\n` +
           `- pg_restore: ${hasPgRestore ? 'found' : 'missing'}\n` +
-          `- backupDir(${backupDirPath}): ${backupDirContent}`,
+          `- workDir(${workDir}): ${backupDirContent}`,
       )
+      if (backupDirPath) {
+        await rm(backupDirPath, { recursive: true, force: true })
+      }
       throw error
-    }
-    const path = join(backupDirPath, `backup-${dateDir}.zip`)
-
-    return {
-      buffer: await readFile(path),
-      path,
+    } finally {
+      await rm(workDir, { recursive: true, force: true })
     }
   }
 
@@ -306,20 +320,26 @@ export class BackupService {
         message: 'invalid dirname',
       })
     }
-    const filePath = join(BACKUP_DIR, dirname, `backup-${dirname}.zip`)
-    if (!existsSync(filePath)) {
-      throw createAppException(AppErrorCode.FILE_NOT_FOUND)
+    for (const extension of ['mxbackup', 'zip']) {
+      const filePath = join(
+        BACKUP_DIR,
+        dirname,
+        `backup-${dirname}.${extension}`,
+      )
+      if (existsSync(filePath)) return filePath
     }
-    return filePath
+    throw createAppException(AppErrorCode.FILE_NOT_FOUND)
   }
 
-  async saveTempBackupByUpload(buffer: Buffer) {
-    const tempDirPath = '/tmp/mx-space/backup'
-    const tempBackupPath = join(tempDirPath, 'backup.zip')
-    mkdirp.sync(tempDirPath)
-    await writeFile(tempBackupPath, buffer)
-
-    await this.restore(tempBackupPath)
+  async saveTempBackupByUpload(buffer: Buffer, decryptionKey?: string) {
+    const tempDirPath = await mkdtemp(join(tmpdir(), 'mx-backup-upload-'))
+    try {
+      const tempBackupPath = join(tempDirPath, 'backup')
+      await writeFile(tempBackupPath, buffer, { mode: 0o600 })
+      await this.restore(tempBackupPath, decryptionKey)
+    } finally {
+      await rm(tempDirPath, { recursive: true, force: true })
+    }
     await this.eventManager.broadcast(
       BusinessEvents.CONTENT_REFRESH,
       'restore_done',
@@ -329,117 +349,151 @@ export class BackupService {
     )
   }
 
-  async restore(restoreFilePath: string) {
-    await this.backup()
+  async restore(restoreFilePath: string, decryptionKey?: string) {
     const isExist = existsSync(restoreFilePath)
     if (!isExist) {
       throw new InternalServerErrorException('Backup file does not exist')
     }
-    const dirPath = path.dirname(restoreFilePath)
-
-    const tempdirs = ['mx-space', 'backup_data']
-    await Promise.all(
-      tempdirs.map((dir) => {
-        return rm(join(dirPath, dir), { recursive: true, force: true })
-      }),
-    )
-
-    // Unzip — in-process, zip-slip-safe extraction (no shell `unzip`).
+    let archive: Buffer
     try {
-      await this.safeUnzip(restoreFilePath, dirPath)
-    } catch (error: any) {
-      this.logger.error(
-        `unzip failed: ${error?.message || error}\n\n${error?.stderr || ''}`,
-      )
-      throw error
-    }
-    try {
-      // Verify
-      if (!existsSync(join(dirPath, 'mx-space'))) {
-        throw new InternalServerErrorException(
-          'Invalid backup file: directory does not exist',
-        )
-      }
-
-      const dumpFilePath = join(dirPath, 'mx-space', 'pg.dump')
-      if (!existsSync(dumpFilePath)) {
-        throw new InternalServerErrorException(
-          'Invalid backup file: database dump does not exist',
-        )
-      }
-
-      await $throw(
-        `${this.pgPasswordEnv()}pg_restore --clean --if-exists --no-owner ${this.pgConnectionArgs()} ${this.shellQuote(dumpFilePath)}`,
-        { cwd: dirPath },
-      )
+      archive = decryptBackup(await readFile(restoreFilePath), decryptionKey)
     } catch (error) {
-      this.logger.error(
-        `restore failed: ${(error as any)?.message || error}\n\n${
-          (error as any)?.stderr || ''
-        }`,
-      )
-      throw error
-    } finally {
-      await rm(join(dirPath, 'mx-space'), { recursive: true, force: true })
-    }
-    // Restore backup_data
-
-    const backupDataDir = join(dirPath, 'backup_data')
-
-    const backupDataDirFilenames = await readdir(backupDataDir)
-
-    await Promise.all(
-      backupDataDirFilenames.map(async (filename) => {
-        // Containment: source must stay within the extracted backup_data dir,
-        // destination within DATA_DIR. Rejects `..`/absolute filenames.
-        const fullpath = this.assertContained(backupDataDir, filename)
-        const targetPath = this.assertContained(DATA_DIR, filename)
-
-        await rm(targetPath, { recursive: true, force: true })
-
-        await $throw(
-          `cp -r ${this.shellQuote(fullpath)} ${this.shellQuote(targetPath)}`,
-        )
-      }),
-    )
-
-    // SECURITY: never auto-install dependencies from a restored archive.
-    // An uploaded archive is attacker-controlled; running `npm install` on its
-    // declared deps is arbitrary-code-execution via install scripts. Instead we
-    // surface the package list so an admin can review and install manually.
-    try {
-      const packageJson = await readFile(join(backupDataDir, 'package.json'), {
-        encoding: 'utf8',
+      throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+        message: error.message,
       })
-      const pkg = JSON.parse(packageJson)
-      const deps = pkg?.dependencies
-      if (deps && typeof deps === 'object' && Object.keys(deps).length > 0) {
-        const list = Object.entries(deps)
-          .map(([name, version]) => `${name}@${version}`)
-          .join(', ')
-        this.logger.warn(
-          `--> Restored archive declares ${
-            Object.keys(deps).length
-          } dependencies. Automatic installation is disabled for security ` +
-            `(install scripts can execute arbitrary code). Review and install ` +
-            `manually if required: ${list}`,
-        )
-      }
-    } catch {
-      // package.json absent or unpar. Restores without a manifest are valid.
     }
+    const dirPath = await mkdtemp(join(tmpdir(), 'mx-backup-restore-'))
+    try {
+      // Unzip — in-process, zip-slip-safe extraction (no shell `unzip`).
+      try {
+        await this.safeUnzip(archive, dirPath)
+      } catch (error: any) {
+        this.logger.error(
+          `unzip failed: ${error?.message || error}\n\n${error?.stderr || ''}`,
+        )
+        throw error
+      }
+      try {
+        // Verify
+        if (!existsSync(join(dirPath, 'mx-space'))) {
+          throw new InternalServerErrorException(
+            'Invalid backup file: directory does not exist',
+          )
+        }
 
-    await Promise.all([
-      this.redisService.cleanAllRedisKey(),
-      this.redisService.cleanCatch(),
-    ])
-    await rm(backupDataDir, { force: true, recursive: true })
+        const dumpFilePath = join(dirPath, 'mx-space', 'pg.dump')
+        if (!existsSync(dumpFilePath)) {
+          throw new InternalServerErrorException(
+            'Invalid backup file: database dump does not exist',
+          )
+        }
+
+        const backupDataDir = join(dirPath, 'backup_data')
+        if (
+          !existsSync(backupDataDir) ||
+          !statSync(backupDataDir).isDirectory()
+        ) {
+          throw new InternalServerErrorException(
+            'Invalid backup file: data directory does not exist',
+          )
+        }
+
+        const restoreSql = join(dirPath, 'restore.sql')
+        await $throw(
+          `pg_restore --clean --if-exists --no-owner --no-acl --file ${this.shellQuote(restoreSql)} ${this.shellQuote(dumpFilePath)}`,
+        )
+
+        // Authenticate and validate the input before taking a safety snapshot or mutating data.
+        await this.backup()
+
+        // Omitted runtime tables still reference restored tables; recreate their empty schemas atomically.
+        const runtimeSchema = join(dirPath, 'runtime-schema.sql')
+        const prepareSql = join(dirPath, 'prepare.sql')
+        await $throw(
+          `pg_dump --schema-only --clean --if-exists --no-owner --no-acl --dbname "$PGDATABASE" ${excludeTables.map((table) => `--table=public.${table}`).join(' ')} -f ${this.shellQuote(runtimeSchema)}`,
+          { env: this.pgEnvironment() },
+        )
+        await writeFile(
+          prepareSql,
+          `DROP TABLE IF EXISTS ${excludeTables.map((table) => `public."${table}"`).join(', ')} CASCADE;`,
+        )
+        await $throw(
+          `psql --no-psqlrc --single-transaction --set=ON_ERROR_STOP=on --dbname "$PGDATABASE" --file ${this.shellQuote(prepareSql)} --file ${this.shellQuote(restoreSql)} --file ${this.shellQuote(runtimeSchema)}`,
+          { cwd: dirPath, env: this.pgEnvironment() },
+        )
+      } catch (error) {
+        this.logger.error(
+          `restore failed: ${(error as any)?.message || error}\n\n${
+            (error as any)?.stderr || ''
+          }`,
+        )
+        throw error
+      } finally {
+        await rm(join(dirPath, 'mx-space'), { recursive: true, force: true })
+      }
+      // Restore backup_data
+
+      const backupDataDir = join(dirPath, 'backup_data')
+
+      const backupDataDirFilenames = await readdir(backupDataDir)
+
+      await Promise.all(
+        backupDataDirFilenames.map(async (filename) => {
+          // Containment: source must stay within the extracted backup_data dir,
+          // destination within DATA_DIR. Rejects `..`/absolute filenames.
+          const fullpath = this.assertContained(backupDataDir, filename)
+          const targetPath = this.assertContained(DATA_DIR, filename)
+
+          await rm(targetPath, { recursive: true, force: true })
+
+          await $throw(
+            `cp -r ${this.shellQuote(fullpath)} ${this.shellQuote(targetPath)}`,
+          )
+        }),
+      )
+
+      // SECURITY: never auto-install dependencies from a restored archive.
+      // An uploaded archive is attacker-controlled; running `npm install` on its
+      // declared deps is arbitrary-code-execution via install scripts. Instead we
+      // surface the package list so an admin can review and install manually.
+      try {
+        const packageJson = await readFile(
+          join(backupDataDir, 'package.json'),
+          {
+            encoding: 'utf8',
+          },
+        )
+        const pkg = JSON.parse(packageJson)
+        const deps = pkg?.dependencies
+        if (deps && typeof deps === 'object' && Object.keys(deps).length > 0) {
+          const list = Object.entries(deps)
+            .map(([name, version]) => `${name}@${version}`)
+            .join(', ')
+          this.logger.warn(
+            `--> Restored archive declares ${
+              Object.keys(deps).length
+            } dependencies. Automatic installation is disabled for security ` +
+              `(install scripts can execute arbitrary code). Review and install ` +
+              `manually if required: ${list}`,
+          )
+        }
+      } catch {
+        // package.json absent or unpar. Restores without a manifest are valid.
+      }
+
+      await Promise.all([
+        this.redisService.cleanAllRedisKey(),
+        this.redisService.cleanCatch(),
+      ])
+    } finally {
+      await rm(dirPath, { force: true, recursive: true })
+    }
   }
 
-  async rollbackTo(dirname: string) {
-    const bakFilePath = this.checkBackupExist(dirname) // zip file path
+  async rollbackTo(dirname: string, decryptionKey?: string) {
+    const bakFilePath = this.checkBackupExist(dirname)
 
-    await this.restore(bakFilePath)
+    await this.restore(bakFilePath, decryptionKey)
 
     await this.eventManager.broadcast(
       BusinessEvents.CONTENT_REFRESH,
@@ -475,34 +529,28 @@ export class BackupService {
 
     const backup = await this.backup()
 
-    scheduleManager.schedule(async () => {
-      const { backupOptions } = await this.configs.waitForConfigReady()
+    const { endpoint, bucket, region, secretId, secretKey } = configs
+    if (!endpoint || !bucket || !region || !secretId || !secretKey) {
+      return
+    }
 
-      const { endpoint, bucket, region, secretId, secretKey } =
-        backupOptions || {}
-      if (!endpoint || !bucket || !region || !secretId || !secretKey) {
-        return
-      }
+    const s3 = new S3Uploader({
+      bucket,
+      region,
+      accessKey: secretId,
+      secretKey,
+      endpoint,
+    })
 
-      const s3 = new S3Uploader({
-        bucket,
-        region,
-        accessKey: secretId,
-        secretKey,
-        endpoint,
+    const remoteFileKey = path.basename(backup.path)
+    this.logger.log('--> Starting upload to S3')
+    await s3
+      .uploadFile(backup.buffer, remoteFileKey, 'backup')
+      .catch((error) => {
+        this.logger.error('--> Upload failed')
+        throw error
       })
 
-      const pathParts = backup.path.split('/')
-      const remoteFileKey = `${pathParts.at(-2)}.zip`
-      this.logger.log('--> Starting upload to S3')
-      await s3
-        .uploadFile(backup.buffer, remoteFileKey, 'backup')
-        .catch((error) => {
-          this.logger.error('--> Upload failed')
-          throw error
-        })
-
-      this.logger.log('--> Upload succeeded')
-    })
+    this.logger.log('--> Upload succeeded')
   }
 }

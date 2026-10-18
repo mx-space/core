@@ -171,4 +171,36 @@ describe('AdminEventsGateway e2e', () => {
       await client.closeAndWait()
     }
   })
+  it('revokes every connection authenticated with the same API key id', async () => {
+    testApp.authService.verifyApiKey.mockResolvedValue({
+      id: 'api-key-id',
+      referenceId: 'owner',
+    })
+    testApp.authService.isOwnerReaderId.mockResolvedValue(true)
+    const clients = await Promise.all(
+      [1, 2].map(() =>
+        WsTestClient.connect(testApp.adminUrl(), {
+          headers: { 'x-api-key': 'raw-key' },
+        }),
+      ),
+    )
+    try {
+      await Promise.all(
+        clients.map((client) =>
+          client.waitFor(
+            (event) => event.event === BusinessEvents.GATEWAY_CONNECT,
+          ),
+        ),
+      )
+      testApp.eventEmitter.emit(EventBusEvents.TokenExpired, 'api-key-id')
+      const closed = await Promise.all(
+        clients.map((client) => client.waitForClose()),
+      )
+      expect(closed.map((event) => event.code)).toEqual([4401, 4401])
+    } finally {
+      await Promise.all(clients.map((client) => client.closeAndWait()))
+      testApp.authService.verifyApiKey.mockResolvedValue(null)
+      testApp.authService.isOwnerReaderId.mockResolvedValue(false)
+    }
+  })
 })

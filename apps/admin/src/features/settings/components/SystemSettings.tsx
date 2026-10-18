@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { sendTestEmail } from '~/api/health'
 import type { ConfigFormGroup, ConfigFormSchema } from '~/api/options'
 import { getAllOptions, patchOption } from '~/api/options'
+import { presentEnableBackupEncryption } from '~/features/backup/components/BackupKeyModals'
 import { useI18n } from '~/i18n'
 import { messages } from '~/i18n/resources'
 import type { TranslationKey } from '~/i18n/types'
@@ -104,6 +105,24 @@ export function SystemSettings(props: {
   })
 
   const updateValue = (path: string, value: unknown) => {
+    if (path === 'backupOptions.encryptionEnabled' && value === true) {
+      void (async () => {
+        const publicKey = await presentEnableBackupEncryption()
+        if (!publicKey) return
+        setConfigs((current) =>
+          setPathImmutable(
+            setPathImmutable(
+              current,
+              'backupOptions.encryptionPublicKey',
+              publicKey,
+            ),
+            path,
+            true,
+          ),
+        )
+      })()
+      return
+    }
     setConfigs((current) => setPathImmutable(current, path, value))
   }
 

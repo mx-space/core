@@ -7,7 +7,7 @@ import { EventBusEvents } from '~/constants/event-bus.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 
 import { BusinessEvents } from '../../../constants/business-event.constant'
-import type { WsConnection, WsNamespace } from '../ws/ws.types'
+import type { WsBusFrame, WsConnection, WsNamespace } from '../ws/ws.types'
 import { WsBusService } from '../ws/ws-bus.service'
 import { WsGatewayBase } from '../ws/ws-gateway.base'
 import { WsPresenceService } from '../ws/ws-presence.service'
@@ -30,11 +30,13 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
       super(namespace, bus, presence)
     }
 
-    tokenSocketIdMap = new Map<string, string>()
+    tokenSocketIdMap = new Map<string, Set<string>>()
     private readonly socketIdTokenMap = new Map<string, string>()
 
     protected bindToken(token: string, conn: WsConnection) {
-      this.tokenSocketIdMap.set(token, conn.id)
+      const ids = this.tokenSocketIdMap.get(token) ?? new Set<string>()
+      ids.add(conn.id)
+      this.tokenSocketIdMap.set(token, ids)
       this.socketIdTokenMap.set(conn.id, token)
     }
 
@@ -42,9 +44,9 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
       const token = this.socketIdTokenMap.get(conn.id)
       if (!token) return
       this.socketIdTokenMap.delete(conn.id)
-      if (this.tokenSocketIdMap.get(token) === conn.id) {
-        this.tokenSocketIdMap.delete(token)
-      }
+      const ids = this.tokenSocketIdMap.get(token)
+      ids?.delete(conn.id)
+      if (!ids?.size) this.tokenSocketIdMap.delete(token)
     }
 
     authFailed(conn: WsConnection) {
@@ -89,7 +91,7 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
         return this.authFailed(conn)
       }
 
-      this.completeConnection(conn, token)
+      this.completeConnection(conn, result.id)
     }
 
     // A close during the auth lookups already unbound this connection; binding
@@ -111,18 +113,36 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
 
     @OnEvent(EventBusEvents.TokenExpired)
     handleTokenExpired(token: string) {
-      const id = this.tokenSocketIdMap.get(token)
-      if (!id) {
-        return false
-      }
-      const conn = this.registry.get(id)
-      if (!conn) {
-        this.tokenSocketIdMap.delete(token)
-        return false
-      }
+      const closed = this.closeExpiredToken(token)
+      this.bus.publish({
+        ns: this.namespace,
+        event: EventBusEvents.TokenExpired,
+        payload: token,
+      })
+      return closed
+    }
 
-      conn.ws.close(AUTH_FAILED_CLOSE_CODE, 'token expired')
-      void this.handleDisconnect(conn.ws)
+    protected override deliverLocal(frame: WsBusFrame) {
+      if (
+        frame.event === EventBusEvents.TokenExpired &&
+        typeof frame.payload === 'string'
+      ) {
+        this.closeExpiredToken(frame.payload)
+        return
+      }
+      super.deliverLocal(frame)
+    }
+
+    private closeExpiredToken(token: string) {
+      const ids = this.tokenSocketIdMap.get(token)
+      if (!ids) return false
+      for (const id of ids) {
+        const conn = this.registry.get(id)
+        if (!conn) continue
+        conn.ws.close(AUTH_FAILED_CLOSE_CODE, 'token expired')
+        void this.handleDisconnect(conn.ws)
+      }
+      this.tokenSocketIdMap.delete(token)
       return true
     }
   }

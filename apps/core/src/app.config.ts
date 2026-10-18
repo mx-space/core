@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { seconds } from '@nestjs/throttler'
-import { program } from 'commander'
+import { Option, program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 import nodeMachineId from 'node-machine-id'
 
@@ -82,10 +82,11 @@ const commander = program
   .option('--demo', 'enable demo mode')
 
   // redis
-  .option(
-    '--redis_connection_string <string>',
-    'redis connection string',
-    REDIS_CONNECTION_STRING_FROM_ENV,
+  .addOption(
+    new Option(
+      '--redis_connection_string <string>',
+      'redis connection string',
+    ).default(REDIS_CONNECTION_STRING_FROM_ENV, '[configured]'),
   )
   .option('--redis_host <string>', 'redis host')
   .option('--redis_port <number>', 'redis port')
@@ -93,7 +94,12 @@ const commander = program
   .option('--disable_cache', 'disable redis cache')
 
   // jwt
-  .option('--jwt_secret <string>', 'custom jwt secret', ENV_JWT_SECRET)
+  .addOption(
+    new Option('--jwt_secret <string>', 'custom jwt secret').default(
+      ENV_JWT_SECRET,
+      '[configured]',
+    ),
+  )
   .option('--jwt_expire <number>', 'custom jwt expire time(d)')
 
   // cluster
@@ -115,10 +121,11 @@ const commander = program
   )
 
   // security
-  .option(
-    '--encrypt_key <string>',
-    'custom encrypt key, default is machine-id',
-    ENCRYPT_KEY_FROM_ENV,
+  .addOption(
+    new Option(
+      '--encrypt_key <string>',
+      '64-character hexadecimal encryption key',
+    ).default(ENCRYPT_KEY_FROM_ENV, '[configured]'),
   )
   .option(
     '--encrypt_enable',
@@ -270,6 +277,11 @@ export const THROTTLE_OPTIONS = {
 }
 
 const ENCRYPT_KEY = argv.encrypt_key
+// shortcut: enable v2 writes only after all replicas have the compatible reader; remove after the compatibility release.
+export const SECRET_STORAGE_V2 =
+  process.env.MX_SECRET_STORAGE_V2 === '1' ||
+  (parseBooleanishValue(process.env.MX_SECRET_STORAGE_V2) ?? false)
+
 export const ENCRYPT = {
   key: ENCRYPT_KEY || machineIdSync(),
   enable:
@@ -278,10 +290,19 @@ export const ENCRYPT = {
   algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
 
-if (ENCRYPT.enable && (!ENCRYPT.key || ENCRYPT.key.length !== 64))
+if (ENCRYPT.enable && (!ENCRYPT_KEY || !/^[\da-f]{64}$/i.test(ENCRYPT_KEY)))
   throw new Error(
-    `Key encryption is enabled (MX_ENCRYPT_KEY or --encrypt_key), but the key length is not 64. Current length: ${ENCRYPT.key.length}`,
+    'Encryption requires an explicit 64-character hexadecimal MX_ENCRYPT_KEY or ENCRYPT_KEY',
   )
+
+if (
+  SECRET_STORAGE_V2 &&
+  (!ENCRYPT.enable || !SECURITY.jwtSecret || SECURITY.jwtSecret.length < 32)
+) {
+  throw new Error(
+    'MX_SECRET_STORAGE_V2 requires encryption and a JWT_SECRET of at least 32 characters',
+  )
+}
 
 export const TELEMETRY = {
   enable: !parseBooleanishValue(argv.disable_telemetry ?? MX_DISABLE_TELEMETRY),

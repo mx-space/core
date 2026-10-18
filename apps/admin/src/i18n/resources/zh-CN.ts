@@ -484,6 +484,27 @@ export const zhCN = {
   'auth.login.welcomeBack': '欢迎回来',
 
   'backup.actions.batchDelete': '批量删除',
+  'backup.key.saveTitle': '保存备份恢复密钥',
+  'backup.key.saveDescription':
+    '此密钥只在这里显示一次。请复制或下载并妥善保存；服务器不会保存，丢失后无法恢复加密备份。确认后还需保存设置。',
+  'backup.key.label': '恢复密钥',
+  'backup.key.copy': '复制密钥',
+  'backup.key.copied': '密钥已复制',
+  'backup.key.copyFailed': '复制失败，请下载密钥文件或手动复制',
+  'backup.key.download': '下载密钥文件',
+  'backup.key.saved': '我已妥善保存恢复密钥',
+  'backup.key.enable': '启用加密',
+  'backup.key.generating': '正在生成恢复密钥…',
+  'backup.key.generateFailed':
+    '无法生成密钥，请使用 HTTPS 或 localhost 后重试。',
+  'backup.key.restoreTitle': '恢复加密备份',
+  'backup.key.restoreDescription':
+    '此备份已加密，需要恢复密钥才能恢复。请粘贴开启加密时保存的密钥，或导入密钥文件。密钥仅用于本次恢复。',
+  'backup.key.restore': '解密并恢复',
+  'backup.key.restoreFailed': '恢复失败，请检查密钥与备份文件',
+  'backup.key.import': '导入密钥文件',
+  'backup.key.invalidFile':
+    '无法读取密钥文件，请选择不超过 16 KiB 的文本密钥文件',
   'backup.actions.confirmBatchDelete': '确定要删除选中的 {count} 个备份吗？',
   'backup.actions.createNow': '立即备份',
   'backup.actions.row.deleteDescription': '永久删除此备份文件',
@@ -2240,6 +2261,9 @@ export const zhCN = {
   'settings.schema.backupOptions.enable.description':
     '填写下方 S3 信息后，备份也会上传到 S3',
   'settings.schema.backupOptions.enable.title': '启用自动备份',
+  'settings.schema.backupOptions.encryptionEnabled.title': '备份加密',
+  'settings.schema.backupOptions.encryptionEnabled.description':
+    '开启后加密所有新备份。每次开启会生成新的恢复密钥，请妥善保存；旧备份仍需原密钥。关闭后新备份为普通 ZIP。',
   'settings.schema.backupOptions.endpoint.title': 'S3 Endpoint',
   'settings.schema.backupOptions.region.title': '区域',
   'settings.schema.backupOptions.bucket.title': '存储桶',

@@ -1,29 +1,35 @@
+import path from 'node:path'
 import { Readable } from 'node:stream'
 
 import {
   Body,
   Delete,
   Get,
-  Header,
   HttpCode,
   Param,
   Patch,
   Post,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
-import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
+import {
+  FileInterceptor,
+  type UploadedMultipartFile,
+} from '@nestjs/platform-fastify'
+import type { FastifyReply } from 'fastify'
+import { z } from 'zod'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
 import { HTTPDecorators } from '~/common/decorators/http.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ZipUploadInterceptor } from '~/common/interceptors/zip-upload.interceptor'
 import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
-import { getMediumDateTime } from '~/utils/time.util'
 
 import { BackupService } from './backup.service'
+
+const RestoreKeySchema = z.string().max(16_384).optional()
 
 @ApiController({ path: 'backups' })
 @Auth()
@@ -32,21 +38,25 @@ export class BackupController {
 
   @Get('/new')
   @HTTPDecorators.RawResponse
-  @Header(
-    'Content-Disposition',
-    `attachment; filename="backup-${getMediumDateTime(new Date())}.zip"`,
-  )
-  @Header('Content-Type', 'application/zip')
-  async createNewBackup() {
+  async createNewBackup(@Res({ passthrough: true }) reply: FastifyReply) {
     const res = await this.backupService.backup()
     if (typeof res == 'undefined') {
       throw createAppException(AppErrorCode.BACKUP_NOT_ENABLED)
     }
     if (typeof res.buffer === 'undefined') {
       throw createAppException(AppErrorCode.FILE_NOT_FOUND, {
-        extra: 'backup zip missing',
+        extra: 'backup missing',
       })
     }
+    reply.type(
+      res.path.endsWith('.zip')
+        ? 'application/zip'
+        : 'application/octet-stream',
+    )
+    reply.header(
+      'Content-Disposition',
+      `attachment; filename="${path.basename(res.path)}"`,
+    )
     const stream = new Readable()
 
     stream.push(res.buffer)
@@ -60,33 +70,50 @@ export class BackupController {
   }
 
   @HTTPDecorators.RawResponse
-  @Header('Content-Type', 'application/zip')
   @Get('/:dirname')
-  async download(@Param('dirname') dirname: string) {
-    return this.backupService.getFileStream(dirname)
+  async download(
+    @Param('dirname') dirname: string,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const stream = await this.backupService.getFileStream(dirname)
+    const legacy = String(stream.path).endsWith('.zip')
+    reply.type(legacy ? 'application/zip' : 'application/octet-stream')
+    reply.header(
+      'Content-Disposition',
+      `attachment; filename="backup-${dirname}.${legacy ? 'zip' : 'mxbackup'}"`,
+    )
+    return stream
   }
 
   @Post(['/rollback/', '/'])
   @HttpCode(200)
   @UseInterceptors(
-    ZipUploadInterceptor((got) =>
-      createAppException(AppErrorCode.MIME_ZIP_REQUIRED, { got }),
-    ),
+    FileInterceptor('file', { limits: { fileSize: 100 * 1024 * 1024 } }),
   )
   async uploadAndRestore(
     @UploadedFile(requiredFilePipe) data: UploadedMultipartFile,
+    @Body('decryptionKey') decryptionKey?: string,
   ) {
-    await this.backupService.saveTempBackupByUpload(data.buffer!)
+    await this.backupService.saveTempBackupByUpload(
+      data.buffer!,
+      RestoreKeySchema.parse(decryptionKey),
+    )
   }
   @Patch(['/rollback/:dirname', '/:dirname'])
-  async rollback(@Param('dirname') dirname: string) {
+  async rollback(
+    @Param('dirname') dirname: string,
+    @Body('decryptionKey') decryptionKey?: string,
+  ) {
     if (!dirname) {
       throw createAppException(AppErrorCode.INVALID_PARAMETER, {
         message: 'dirname is required',
       })
     }
 
-    this.backupService.rollbackTo(dirname)
+    await this.backupService.rollbackTo(
+      dirname,
+      RestoreKeySchema.parse(decryptionKey),
+    )
   }
 
   @Delete('/')
@@ -117,6 +144,6 @@ export class BackupController {
   @Post('/upload-to-s3')
   @HttpCode(200)
   async backupAndUploadToS3() {
-    this.backupService.backupDB()
+    await this.backupService.backupDB()
   }
 }

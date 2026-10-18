@@ -11,6 +11,7 @@ import {
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import { EncryptUtil } from '~/utils/encrypt.util'
 
 import { SnippetType } from './snippet.schema'
 import type { SnippetRow } from './snippet.types'
@@ -212,7 +213,9 @@ export class SnippetRepository extends BaseRepository {
         metatype: input.metatype ?? null,
         schema: input.schema ?? null,
         method: input.method ?? null,
-        secret: input.secret ?? null,
+        secret: input.secret
+          ? EncryptUtil.encrypt(input.secret, `snippets.${id}.secret`)
+          : null,
         enable: input.enable ?? true,
         builtIn: input.builtIn ?? false,
         compiledCode: input.compiledCode ?? null,
@@ -236,6 +239,11 @@ export class SnippetRepository extends BaseRepository {
     patch: Partial<typeof snippets.$inferInsert>,
   ): Promise<SnippetRow | null> {
     const idBig = parseEntityId(id)
+    if (patch.secret)
+      patch = {
+        ...patch,
+        secret: EncryptUtil.encrypt(patch.secret, `snippets.${id}.secret`),
+      }
     const [row] = await this.db
       .update(snippets)
       .set({ ...patch, updatedAt: new Date() })
@@ -248,10 +256,11 @@ export class SnippetRepository extends BaseRepository {
     path: string,
     patch: Partial<typeof snippets.$inferInsert>,
   ): Promise<void> {
-    await this.db
-      .update(snippets)
-      .set({ ...patch, updatedAt: new Date() })
+    const rows = await this.db
+      .select({ id: snippets.id })
+      .from(snippets)
       .where(eq(snippets.path, path))
+    for (const row of rows) await this.update(row.id.toString(), patch)
   }
 
   async deleteById(id: EntityId | string): Promise<SnippetRow | null> {
@@ -385,7 +394,12 @@ export class SnippetRepository extends BaseRepository {
               metatype: input.metatype ?? null,
               schema: input.schema ?? null,
               method: input.method ?? null,
-              secret: input.secret ?? null,
+              secret: input.secret
+                ? EncryptUtil.encrypt(
+                    input.secret,
+                    `snippets.${existing.id}.secret`,
+                  )
+                : null,
               enable: input.enable ?? true,
               builtIn: input.builtIn ?? false,
               compiledCode: input.compiledCode ?? null,
@@ -411,7 +425,9 @@ export class SnippetRepository extends BaseRepository {
               metatype: input.metatype ?? null,
               schema: input.schema ?? null,
               method: input.method ?? null,
-              secret: input.secret ?? null,
+              secret: input.secret
+                ? EncryptUtil.encrypt(input.secret, `snippets.${id}.secret`)
+                : null,
               enable: input.enable ?? true,
               builtIn: input.builtIn ?? false,
               compiledCode: input.compiledCode ?? null,

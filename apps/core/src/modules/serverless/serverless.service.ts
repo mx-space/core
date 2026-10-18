@@ -313,7 +313,9 @@ export class ServerlessService implements OnModuleInit, OnModuleDestroy {
     }
 
     const secretObj = model.secret
-      ? qs.parse(EncryptUtil.decrypt(model.secret))
+      ? qs.parse(
+          EncryptUtil.decrypt(model.secret, `snippets.${model.id}.secret`),
+        )
       : {}
 
     if (!isPlainObject(secretObj)) {

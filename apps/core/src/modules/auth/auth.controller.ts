@@ -57,7 +57,7 @@ export class AuthController {
       return isValid
     }
     if (typeof id === 'string') {
-      return await this.authService.getTokenSecret(id)
+      return await this.authService.getToken(id)
     }
     return await this.authService.getAllAccessToken()
   }
@@ -72,15 +72,13 @@ export class AuthController {
   @Auth()
   async deleteToken(@Query({ schema: StringIdSchema }) query: StringIdDto) {
     const { id } = query
-    const secret = await this.authService.getTokenSecret(id)
-    const token = secret?.token
-
-    if (!token) {
+    const secret = await this.authService.getToken(id)
+    if (!secret) {
       throw createAppException(AppErrorCode.AUTH_TOKEN_NOT_FOUND)
     }
     await this.authService.deleteToken(id)
 
-    this.eventEmitter.emit(EventBusEvents.TokenExpired, token)
+    this.eventEmitter.emit(EventBusEvents.TokenExpired, id)
     return 'OK'
   }
 

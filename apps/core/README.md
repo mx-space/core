@@ -240,6 +240,7 @@ pnpm test:watch                                           # watch mode
 | `SNOWFLAKE_WORKER_ID` | Snowflake ID worker ID (0–1023) | Required |
 | `ENCRYPT_ENABLE` | Enable field encryption | `false` |
 | `ENCRYPT_KEY` | 64-char hex encryption key | — |
+| `MX_SECRET_STORAGE_V2` | Enable new secret formats after all replicas are upgraded; see [rollout guide](../../docs/security-secret-storage.md) | `false` |
 | `THROTTLE_TTL` | Rate limit window (seconds) | `10` |
 | `THROTTLE_LIMIT` | Max requests per window | `100` |
 | `PORT` | Server port | `2333` |

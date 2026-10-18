@@ -22,6 +22,7 @@ import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
 import { camelcaseKeys } from '~/utils/tool.util'
 
+import { backupEncryptionPublicKey } from '../backup/backup-crypto'
 import { generateDefaultConfig } from './configs.default'
 import {
   decryptObject,
@@ -116,7 +117,10 @@ export class ConfigsService implements OnModuleInit {
 
   private async setConfig(config: IConfig) {
     const redis = await this.getRedisClient()
-    await redis.set(getRedisKey(RedisKeys.ConfigCache), JSON.stringify(config))
+    await redis.set(
+      getRedisKey(RedisKeys.ConfigCache),
+      JSON.stringify(encryptObject(cloneDeep(config))),
+    )
   }
 
   private async ensureConfigInitialized(force = false) {
@@ -414,12 +418,12 @@ export class ConfigsService implements OnModuleInit {
   public async get<T extends keyof IConfig>(
     key: T,
   ): Promise<Readonly<IConfig[T]>> {
-    const config = await this.waitForConfigReady()
-    return config[key]
+    const config = await this.getStoredConfig()
+    return decryptObject(config[key], key)
   }
 
   // Single entry point for config reads
-  public async getConfig(errorRetryCount = 3): Promise<Readonly<IConfig>> {
+  private async getStoredConfig(errorRetryCount = 3): Promise<IConfig> {
     await this.ensureConfigInitialized()
 
     const redis = await this.getRedisClient()
@@ -428,11 +432,11 @@ export class ConfigsService implements OnModuleInit {
     if (configCache) {
       try {
         const configValue = JSON.parse(configCache) as IConfig
-        return decryptObject(configValue)
+        return configValue
       } catch (error) {
         await this.ensureConfigInitialized(true)
         if (errorRetryCount > 0) {
-          return await this.getConfig(errorRetryCount - 1)
+          return await this.getStoredConfig(errorRetryCount - 1)
         }
         this.logger.error('Failed to load config')
         throw error
@@ -440,16 +444,19 @@ export class ConfigsService implements OnModuleInit {
     } else {
       await this.ensureConfigInitialized(true)
 
-      return await this.getConfig()
+      return await this.getStoredConfig()
     }
+  }
+
+  public async getConfig(): Promise<Readonly<IConfig>> {
+    return decryptObject(await this.getStoredConfig())
   }
 
   /**
    * Get config with encrypted fields removed (for API response)
    */
   public async getConfigForResponse(): Promise<Readonly<IConfig>> {
-    const config = await this.getConfig()
-    return sanitizeConfigForResponse(config)
+    return sanitizeConfigForResponse(await this.getStoredConfig())
   }
 
   /**
@@ -458,7 +465,7 @@ export class ConfigsService implements OnModuleInit {
   public async getForResponse<T extends keyof IConfig>(
     key: T,
   ): Promise<Readonly<IConfig[T]>> {
-    const config = await this.waitForConfigReady()
+    const config = await this.getStoredConfig()
     const value = config[key]
     return sanitizeConfigForResponse(value as object, key) as IConfig[T]
   }
@@ -470,24 +477,27 @@ export class ConfigsService implements OnModuleInit {
     const config = await this.getConfig()
     const updatedConfigRow = await this.optionsRepository.upsert(
       key as string,
-      mergeWith(cloneDeep(config[key]), data, (old, newer, field) => {
-        if (newer === null) {
-          return null
-        }
-        // Arrays are not merged
-        if (Array.isArray(old)) {
-          return newer
-        }
-        // seo.i18n is replaced wholesale, otherwise a shallow object merge
-        // could never drop a locale key that was removed in the patch
-        if (field === 'i18n') {
-          return newer
-        }
-        // Objects are merged
-        if (typeof old === 'object' && typeof newer === 'object') {
-          return { ...old, ...newer }
-        }
-      }),
+      encryptObject(
+        mergeWith(cloneDeep(config[key]), data, (old, newer, field) => {
+          if (newer === null) {
+            return null
+          }
+          // Arrays are not merged
+          if (Array.isArray(old)) {
+            return newer
+          }
+          // seo.i18n is replaced wholesale, otherwise a shallow object merge
+          // could never drop a locale key that was removed in the patch
+          if (field === 'i18n') {
+            return newer
+          }
+          // Objects are merged
+          if (typeof old === 'object' && typeof newer === 'object') {
+            return { ...old, ...newer }
+          }
+        }),
+        key,
+      ),
     )
     const newData = updatedConfigRow.value as IConfig[T]
     const mergedFullConfig = Object.assign({}, config, { [key]: newData })
@@ -561,6 +571,22 @@ export class ConfigsService implements OnModuleInit {
     }
     const instanceValue = this.validWithDto(dto, value) as Partial<IConfig[T]>
 
+    if (key === 'backupOptions') {
+      const next = await this.buildNextConfigForValidation(key, instanceValue)
+      if (
+        next.backupOptions.encryptionPublicKey ||
+        next.backupOptions.encryptionEnabled
+      ) {
+        try {
+          backupEncryptionPublicKey(next.backupOptions.encryptionPublicKey)
+        } catch (error) {
+          throw createAppException(AppErrorCode.INVALID_PARAMETER, {
+            message: error.message,
+          })
+        }
+      }
+    }
+
     if (key === 'ai') {
       const nextConfig = await this.buildNextConfigForValidation(
         key,
@@ -591,10 +617,6 @@ export class ConfigsService implements OnModuleInit {
         instanceValue,
       )
       this.validateTtsProvider(nextConfig)
-    }
-
-    if (key !== 'oauth') {
-      encryptObject(instanceValue, key)
     }
 
     switch (key) {
@@ -644,7 +666,6 @@ export class ConfigsService implements OnModuleInit {
           public: merge(cloneDeep(current.public || {}), value.public || {}),
           secrets: merge(cloneDeep(current.secrets || {}), value.secrets || {}),
         }
-        encryptObject(nextOauth, key)
         const option = await this.patch(key as 'oauth', nextOauth)
 
         await this.configVersionService.bump(ConfigVersionScopes.OAuth)

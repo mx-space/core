@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { desc, eq, sql } from 'drizzle-orm'
 
+import { SECRET_STORAGE_V2 } from '~/app.config'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { webhookEvents, webhooks } from '~/database/schema'
 import {
@@ -11,6 +12,7 @@ import {
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import { EncryptUtil } from '~/utils/encrypt.util'
 
 import type { WebhookEventRow, WebhookRow } from './webhook.types'
 
@@ -57,7 +59,10 @@ export class WebhookRepository extends BaseRepository {
       .select()
       .from(webhooks)
       .where(eq(webhooks.enabled, true))
-    return rows.map((r) => ({ ...mapHook(r), secret: r.secret }))
+    return rows.map((r) => ({
+      ...mapHook(r),
+      secret: EncryptUtil.decrypt(r.secret, `webhooks.${r.id}.secret`),
+    }))
   }
 
   async findById(
@@ -70,7 +75,10 @@ export class WebhookRepository extends BaseRepository {
       .where(eq(webhooks.id, idBig))
       .limit(1)
     if (!row) return null
-    return { ...mapHook(row), secret: row.secret }
+    return {
+      ...mapHook(row),
+      secret: EncryptUtil.decrypt(row.secret, `webhooks.${row.id}.secret`),
+    }
   }
 
   async create(input: {
@@ -87,7 +95,9 @@ export class WebhookRepository extends BaseRepository {
         id,
         payloadUrl: input.payloadUrl,
         events: input.events,
-        secret: input.secret,
+        secret: SECRET_STORAGE_V2
+          ? EncryptUtil.encrypt(input.secret, `webhooks.${id}.secret`)
+          : input.secret,
         enabled: input.enabled ?? true,
         scope: input.scope ?? null,
         timestamp: new Date(),
@@ -110,7 +120,10 @@ export class WebhookRepository extends BaseRepository {
     const update: Partial<typeof webhooks.$inferInsert> = {}
     if (patch.payloadUrl !== undefined) update.payloadUrl = patch.payloadUrl
     if (patch.events !== undefined) update.events = patch.events
-    if (patch.secret !== undefined) update.secret = patch.secret
+    if (patch.secret !== undefined)
+      update.secret = SECRET_STORAGE_V2
+        ? EncryptUtil.encrypt(patch.secret, `webhooks.${id}.secret`)
+        : patch.secret
     if (patch.enabled !== undefined) update.enabled = patch.enabled
     if (patch.scope !== undefined) update.scope = patch.scope
     const [row] = await this.db

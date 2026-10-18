@@ -31,7 +31,6 @@ export async function startMain() {
   )
 
   if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
-    logger.debug(process.argv)
     logger.log('cwd: ', cwd)
   }
 
@@ -43,13 +42,7 @@ export async function startMain() {
       process.exit(1)
     }
 
-    logger.debug('encrypt key: ', ENCRYPT.key)
-    logger.log(
-      `Encrypt is enabled, please remember encrypt key. Your key is starts with ${ENCRYPT.key.slice(
-        0,
-        3,
-      )}`,
-    )
+    logger.log('Secret encryption is enabled')
   }
 
   DEBUG_MODE.memoryDump && registerForMemoryDump()

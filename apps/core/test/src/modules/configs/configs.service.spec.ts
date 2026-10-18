@@ -1,8 +1,12 @@
+import { generateKeyPairSync } from 'node:crypto'
+
 import { AppErrorCode } from '~/common/errors'
 import { RedisKeys } from '~/constants/cache.constant'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
+import { decryptObject } from '~/modules/configs/configs.encrypt.util'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -17,6 +21,102 @@ function createDeferred() {
 }
 
 describe('ConfigsService', () => {
+  it('requires a public key to enable backup encryption and never accepts private keys in settings', async () => {
+    const pair = generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    })
+    let cache: string | null = null
+    let stored: any
+    const repository = {
+      findAll: async () => [],
+      upsert: vi.fn(async (name, value) => {
+        stored = value
+        return { name, value }
+      }),
+    }
+    const service = new ConfigsService(
+      repository as any,
+      {
+        waitForReady: async () => {},
+        getClient: () => ({
+          get: async () => cache,
+          set: async (_key, value) => {
+            cache = value
+          },
+        }),
+      } as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+    await expect(
+      service.patchAndValid('backupOptions', { encryptionEnabled: true }),
+    ).rejects.toThrow('public key')
+    await expect(
+      service.patchAndValid('backupOptions', {
+        encryptionPublicKey: pair.privateKey,
+      }),
+    ).rejects.toThrow('public key')
+    expect(repository.upsert).not.toHaveBeenCalled()
+    await service.patchAndValid('backupOptions', {
+      encryptionEnabled: true,
+      encryptionPublicKey: pair.publicKey,
+    })
+    expect(stored.encryptionEnabled).toBe(true)
+    expect(stored.encryptionPublicKey).toBe(pair.publicKey)
+    expect(cache).not.toContain('PRIVATE KEY')
+    await service.patchAndValid('backupOptions', {
+      bucket: 'changed-without-replacing-key',
+    })
+    expect(
+      (await service.getForResponse('backupOptions')).encryptionPublicKey,
+    ).toBe(pair.publicKey)
+  })
+  it('keeps retained credentials encrypted in the database and every cached section', async () => {
+    let cache: string | null = null
+    let stored: any
+    const redis = {
+      get: vi.fn(async () => cache),
+      set: vi.fn(async (_key, value) => {
+        cache = value
+      }),
+    }
+    const repository = {
+      findAll: vi.fn(async () => [
+        { name: 'mailOptions', value: { smtp: { pass: 'fake-smtp' } } },
+        { name: 'backupOptions', value: { secretKey: 'fake-s3' } },
+      ]),
+      upsert: vi.fn(async (name, value) => {
+        stored = value
+        return { name, value }
+      }),
+    }
+    const service = new ConfigsService(
+      repository as any,
+      { getClient: () => redis, waitForReady: async () => {} } as any,
+      {} as any,
+      { emit: vi.fn() } as any,
+    )
+    await service.patchAndValid('backupOptions', {
+      enable: true,
+      secretKey: '',
+    })
+    expect(stored.secretKey).not.toBe('fake-s3')
+    expect(cache).not.toContain('fake-smtp')
+    expect(cache).not.toContain('fake-s3')
+    await expect(service.get('backupOptions')).resolves.toMatchObject({
+      secretKey: 'fake-s3',
+    })
+    const spy = vi.spyOn(EncryptUtil, 'decrypt')
+    spy.mockClear()
+    expect((await service.getConfigForResponse()).mailOptions.smtp?.pass).toBe(
+      '',
+    )
+    expect(spy).not.toHaveBeenCalled()
+    spy.mockRestore()
+  })
+
   it('waits for redis before writing config cache during initialization', async () => {
     const ready = createDeferred()
     const redisClient = {
@@ -123,7 +223,9 @@ describe('ConfigsService', () => {
 
     await service.onModuleInit()
 
-    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    const cachedConfig = decryptObject(
+      JSON.parse(redisClient.set.mock.calls[0][1]),
+    )
     const imageProvider = cachedConfig.ai.providers.find(
       (provider: any) => provider.id === '__legacy_image_generation__',
     )
@@ -189,7 +291,9 @@ describe('ConfigsService', () => {
 
     await service.onModuleInit()
 
-    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    const cachedConfig = decryptObject(
+      JSON.parse(redisClient.set.mock.calls[0][1]),
+    )
     expect(cachedConfig.ai.providers).toHaveLength(1)
     expect(cachedConfig.ai.providers[0].capabilities).toEqual({
       text: false,
@@ -233,7 +337,9 @@ describe('ConfigsService', () => {
 
     await service.onModuleInit()
 
-    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    const cachedConfig = decryptObject(
+      JSON.parse(redisClient.set.mock.calls[0][1]),
+    )
     expect(cachedConfig.ai.providers).toEqual([
       expect.objectContaining({
         apiKey: 'credential-without-model',
@@ -277,7 +383,9 @@ describe('ConfigsService', () => {
 
     await service.onModuleInit()
 
-    const cachedConfig = JSON.parse(redisClient.set.mock.calls[0][1])
+    const cachedConfig = decryptObject(
+      JSON.parse(redisClient.set.mock.calls[0][1]),
+    )
     expect(cachedConfig.membership).toMatchObject({
       apiKey: 'legacy-api-key',
       environment: 'test_mode',
@@ -357,7 +465,10 @@ describe('ConfigsService', () => {
             providers: [
               {
                 ...config.ai.providers[0],
-                apiKey: '$${mx}$$encrypted',
+                apiKey: EncryptUtil.encrypt(
+                  'sk-decrypted',
+                  'ai.providers.0.apiKey',
+                ),
               },
             ],
           },

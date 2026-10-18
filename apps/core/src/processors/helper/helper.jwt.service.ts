@@ -1,11 +1,8 @@
-import cluster from 'node:cluster'
-
 import { Injectable } from '@nestjs/common'
 import jwt from 'jsonwebtoken'
 
-import { CLUSTER, ENCRYPT, SECURITY } from '~/app.config'
+import { ENCRYPT, SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
-import { logger } from '~/global/consola.global'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
 
@@ -33,15 +30,6 @@ export class JWTService {
       Buffer.from(ENCRYPT_KEY).toString('base64').slice(0, 15) ||
       'asjhczxiucipoiopiqm2376'
 
-    if (isDev && cluster.isPrimary) {
-      logger.debug(secret)
-    }
-    if (!CLUSTER.enable || cluster.isPrimary) {
-      logger.debug(
-        'JWT Secret start with :',
-        secret.slice(0, 5) + '*'.repeat(secret.length - 5),
-      )
-    }
     this.secret = secret
   }
 

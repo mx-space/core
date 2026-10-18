@@ -217,7 +217,9 @@ export class SnippetService {
 
     let mergedSecret = newModel.secret
     if (old.secret && newModel.secret) {
-      const oldSecret = qs.parse(EncryptUtil.decrypt(old.secret))
+      const oldSecret = qs.parse(
+        EncryptUtil.decrypt(old.secret, `snippets.${old.id}.secret`),
+      )
       const newSecret = qs.parse(newModel.secret)
 
       for (const key in oldSecret) {
@@ -251,7 +253,7 @@ export class SnippetService {
     }
 
     if (mergedSecret !== undefined) {
-      patch.secret = mergedSecret ? EncryptUtil.encrypt(mergedSecret) : null
+      patch.secret = mergedSecret || null
     }
 
     await this.deleteCachedSnippetByPath(old.path)
@@ -441,8 +443,6 @@ export class SnippetService {
       delete next.enable
       delete next.method
       delete next.secret
-    } else if (next.secret) {
-      next.secret = EncryptUtil.encrypt(next.secret)
     }
 
     return {
@@ -472,7 +472,9 @@ export class SnippetService {
   private transformLeanSnippetModel(snippet: SnippetRow): SnippetRow {
     const next = { ...snippet }
     if (snippet.type === SnippetType.Function && snippet.secret) {
-      const secretObj = qs.parse(EncryptUtil.decrypt(snippet.secret))
+      const secretObj = qs.parse(
+        EncryptUtil.decrypt(snippet.secret, `snippets.${snippet.id}.secret`),
+      )
       for (const key in secretObj) {
         secretObj[key] = ''
       }
