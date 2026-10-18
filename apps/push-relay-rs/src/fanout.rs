@@ -4,14 +4,14 @@ use crate::protocol::{COMMENT_CREATED_EVENT, COMMENT_REPLIED_EVENT, CONTENT_PUBL
 
 pub const FANOUT_DELIVERY_INSERT_SQL: &str = "INSERT INTO push_deliveries
          (id, source_id, event_id, binding_id, installation_id, next_attempt_at)
-         SELECT 'dlv_' || encode(gen_random_bytes(18), 'hex'), b.source_id, $1::text,
-                b.id, b.installation_id, $3::timestamptz
+         SELECT 'dlv_' || lower(hex(randomblob(18))), b.source_id, ?1,
+                b.id, b.installation_id, ?3
          FROM push_bindings b
          JOIN push_installations i ON i.id = b.installation_id
-         WHERE b.source_id = $2::text AND b.revoked_at IS NULL AND i.revoked_at IS NULL
-           AND i.app_id = $4::text
-           AND ($5::text IS NULL OR b.reader_id = $5::text)
-           AND ($6::text IS NULL OR COALESCE((b.preferences ->> ($6::text))::boolean, false) = true)";
+         WHERE b.source_id = ?2 AND b.revoked_at IS NULL AND i.revoked_at IS NULL
+           AND i.app_id = ?4
+           AND (?5 IS NULL OR b.reader_id = ?5)
+           AND (?6 IS NULL OR COALESCE(json_extract(b.preferences, '$.' || ?6), 0) = 1)";
 
 pub const SPACE_APP_ID: &str = "space";
 pub const YOHAKU_APP_ID: &str = "yohaku";

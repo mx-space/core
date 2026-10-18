@@ -58,7 +58,7 @@ impl ApnsApp {
 pub struct Config {
     pub port: u16,
     pub public_url: String,
-    pub database_url: String,
+    pub database_path: String,
     pub data_key: String,
     pub apps: HashMap<String, ApnsApp>,
 }
@@ -181,8 +181,19 @@ pub fn load() -> Result<Config, String> {
             .strip_suffix('/')
             .unwrap_or(public_url.as_str())
             .to_string(),
-        database_url: required("PUSH_RELAY_DATABASE_URL")?,
+        database_path: database_path()?,
         data_key: required("PUSH_RELAY_DATA_KEY")?,
         apps,
     })
+}
+
+pub fn database_path() -> Result<String, String> {
+    match env::var("PUSH_RELAY_DATABASE_PATH") {
+        Ok(path) if !path.trim().is_empty() => Ok(path.trim().to_string()),
+        Ok(_) => Err("PUSH_RELAY_DATABASE_PATH must not be empty".into()),
+        Err(_) if env::var_os("PUSH_RELAY_DATABASE_URL").is_some() => Err(
+            "Push Relay now uses SQLite; migrate existing PostgreSQL data before setting PUSH_RELAY_DATABASE_PATH".into(),
+        ),
+        Err(_) => Ok("push-relay.sqlite3".into()),
+    }
 }

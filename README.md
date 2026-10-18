@@ -78,7 +78,7 @@ mx-core/
 │   ├── core/        # NestJS server
 │   ├── admin/       # React 19 admin SPA
 │   ├── ios/         # native iOS client (XcodeGen)
-│   ├── push-relay/  # independent APNs relay
+│   ├── push-relay-rs/ # independent APNs relay (Rust + SQLite)
 │   └── telemetry/   # telemetry collector (CF Worker)
 ├── packages/        # shared SDKs, schema, editor & AI contracts, CLI, tests
 ├── docker-compose.yml        # dev stack (PostgreSQL + Redis + mx-migrate)
