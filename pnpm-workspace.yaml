@@ -174,4 +174,4 @@ minimumReleaseAgeExclude:
   - effect@4.0.0
   - vitest@5.0.3
   - '@vitest/coverage-v8@5.0.3'
-  - pele@1.6.0
+  - pele@1.6.0 || 1.7.0
