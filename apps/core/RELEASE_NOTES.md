@@ -1,36 +1,27 @@
 ## TL;DR
 
-Adds encrypted backups with user-held recovery keys, strengthens credential storage, and improves safe restoration without requiring backup secrets in environment variables.
+mx-core now requires Node.js 26 everywhere — Docker image, CI and published packages — and bundles the latest editor improvements.
+
+## Breaking Changes
+
+- **Runtime**: mx-core requires Node.js 26. The official Docker image ships `node:26-alpine`, CI runs `26.x`, `.nvmrc` is `26`, and the workspace `engines` field declares `>=26.0.0`. **Migration**: deployments using the published `innei/mx-server` image need no action — the image already contains Node.js 26. Bare-metal, custom-image or Railway/nixpacks deployments must upgrade the host or build runtime to Node.js 26 before deploying; Node.js 22 and 24 are no longer supported. Node.js 26 also dropped the bundled corepack, so the image installs corepack from npm and still resolves pnpm from the root `packageManager` field.
+- **Published packages**: `@mx-space/api-client`, `@mx-space/cli`, `@mx-space/mongo-pg-cli` and `@mx-space/webhook` now declare `engines.node >= 26.0.0`. Installs with `engine-strict` enabled fail on older Node; the migration CLI also requires Node.js 26 on the host that runs it.
 
 ## Highlights
 
-Backup encryption is now available in Settings → Storage → Backup. Your browser generates a recovery key, displays it once, and lets you copy or download it before enabling encryption. Core stores only the public key and encrypts each complete backup with a fresh data key. Restoring an encrypted backup prompts for the saved recovery key, with file import and retry support.
+The whole toolchain moved to Node.js 26 in one step: the multi-stage Docker build uses `node:26-alpine` for both the builder and the runtime stage, every GitHub workflow pins `26.x`, and the engine ranges across the monorepo follow. The image build, the production boot path and the V8 compile-cache warmup were verified on Node.js 26; boot timings and the serve path are unchanged.
 
-Credential protection now covers configuration writes and caches, API key disclosure, secret logging, and staged upgrades to authenticated encryption and hashed API keys. Existing formats remain readable during the rollout. Backup restoration validates encrypted archives before changing data, runs database replacement in a transaction, and retains support for historical ZIP backups. The bundled admin includes the new settings and restore dialogs.
+Node.js 26 no longer ships corepack inside the distribution, so the build stage installs `corepack@0.36.0` from npm before enabling pnpm. pnpm is still resolved from the root `packageManager` field, which keeps a single source of truth for the package-manager version.
+
+The editor pipeline (`@haklex/*`) advanced from 0.48.x to 0.51.x: charts are now first-class Lexical nodes (bar, line, area, pie) with LiteXML output, Excalidraw whiteboards render to SVG without loading the editor, code-block gutters stay sticky on horizontal scroll, and custom nodes keep their block ids and node state through round-trips.
 
 ## Changes
 
-### Features
-
-- Enable complete backup encryption in settings, save the recovery key once, and restore by pasting or importing it. Manual, scheduled, and S3 backups follow the same setting ([bf62622](https://github.com/mx-space/core/commit/bf62622f6b8bd47237eaabc7655904d1f4c0c93e)).
-- Opt into authenticated credential encryption and hashed API keys after all replicas support the new formats, with a transactional migration for existing records ([bf62622](https://github.com/mx-space/core/commit/bf62622f6b8bd47237eaabc7655904d1f4c0c93e)).
-
-### Bug Fixes
-
-- Protect merged configuration secrets before storage and caching, hide existing API key values, remove secret logging, and propagate key revocation across WebSocket replicas ([bf62622](https://github.com/mx-space/core/commit/bf62622f6b8bd47237eaabc7655904d1f4c0c93e)).
-- Reject invalid recovery keys before restore operations and roll back failed database replacement ([bf62622](https://github.com/mx-space/core/commit/bf62622f6b8bd47237eaabc7655904d1f4c0c93e)).
-
 ### Other
 
-- Update bundled editor packages to `@haklex/*` 0.47.0 ([73afbe4](https://github.com/mx-space/core/commit/73afbe424)).
-
-## Upgrade Notes
-
-- Preserve your existing field-encryption key and `JWT_SECRET`. Editing sensitive configuration requires encryption enabled with an explicit 64-character hexadecimal `MX_ENCRYPT_KEY` or `ENCRYPT_KEY`.
-- Leave `MX_SECRET_STORAGE_V2=false` during the initial rolling upgrade. After every replica runs this release, enable it everywhere with encryption configured and a stable `JWT_SECRET` of at least 32 characters. Then run the one-shot credential migration as described in the [rollout guide](https://github.com/mx-space/core/blob/v14.16.0/docs/security-secret-storage.md). Do not run this migration during the initial deployment or roll back to older readers afterwards.
-- Upgrade all replicas and the bundled admin before enabling backup encryption. No backup environment variable is needed. Keep every recovery key separately from backups; losing it makes the corresponding encrypted archives unrecoverable. Existing archives are not rewritten, and recovered credentials still require their original field-encryption key and JWT secret.
-- Archive encryption does not isolate live credentials from a compromised application host. Review the [security and recovery limits](https://github.com/mx-space/core/blob/v14.16.0/docs/security-secret-storage.md) before activation.
+- Editor packages updated to `@haklex/*` 0.51.x — chart nodes with LiteXML support, whiteboard SVG rendering, sticky code-block gutter, block-id retention on custom nodes, and typography/table/code polish ([297bf1f](https://github.com/mx-space/core/commit/297bf1ff9))
+- Bundled admin dashboard bumped to 8.4.48
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v14.15.3...v14.16.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v14.16.0...v15.0.0

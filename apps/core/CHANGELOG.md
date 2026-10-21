@@ -1,3 +1,15 @@
+# [15.0.0](https://github.com/mx-space/core/compare/v14.16.0...v15.0.0) (2026-10-22)
+
+
+### Features
+
+* require Node.js 26 ([e9d43f1](https://github.com/mx-space/core/commit/e9d43f146fbcb729dfb8081fd21484b6f4ba6adf))
+
+
+### BREAKING CHANGES
+
+* mx-core now requires Node.js 26: the Docker image ships Node.js 26, Node < 26 is unsupported, and the published packages reject Node < 26 under `engine-strict`.
+
 ## [14.16.0](https://github.com/mx-space/core/compare/v14.15.3...v14.16.0) (2026-10-19)
 
 
