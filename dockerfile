@@ -1,9 +1,12 @@
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 ENV MONGOMS_DISABLE_POSTINSTALL=1
 ENV REDISMS_DISABLE_POSTINSTALL=1
 WORKDIR /app
 COPY . .
 RUN apk add git make g++ alpine-sdk python3 py3-pip unzip
+# Node.js 26 no longer ships corepack in the image; install it from npm and let
+# it resolve pnpm from the root package.json `packageManager` field.
+RUN npm i -g corepack@0.36.0
 RUN corepack enable
 RUN corepack prepare --activate
 RUN pnpm install
@@ -19,7 +22,7 @@ RUN mkdir -p ./out/admin && cp -R apps/admin/dist/. ./out/admin/
 # Stamp the built-in admin version (mirrors the runtime updater's `version` file).
 RUN node -p "require('./apps/admin/package.json').version" > ./out/admin/version
 
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 
 RUN apk add zip unzip postgresql-client bash fish rsync jq curl openrc tini --no-cache
 

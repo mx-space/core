@@ -26,7 +26,7 @@ Core ships only the API. Pair it with one of:
 
 | Component  | Technology                                |
 |------------|-------------------------------------------|
-| Runtime    | Node.js >= 22.12 + TypeScript 6           |
+| Runtime    | Node.js >= 26 + TypeScript 6              |
 | Framework  | NestJS 12 + Fastify                       |
 | Database   | PostgreSQL 16 (Drizzle ORM)               |
 | Cache      | Redis (ioredis)                           |
@@ -40,7 +40,7 @@ Core ships only the API. Pair it with one of:
 
 ## Local Development
 
-Requirements: Node.js 22+, PostgreSQL 16+, Redis 7.x.
+Requirements: Node.js 26+, PostgreSQL 16+, Redis 7.x.
 
 ```bash
 corepack enable          # enable pnpm

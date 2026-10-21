@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=26.0.0"
   },
   "license": "AGPLv3",
   "homepage": "https://github.com/mx-space/core/tree/master/apps/core#readme",

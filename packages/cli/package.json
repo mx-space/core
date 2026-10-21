@@ -22,7 +22,7 @@
   "author": "Innei <https://innei.in>",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=26.0.0"
   },
   "files": [
     "bin",

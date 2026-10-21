@@ -20,7 +20,7 @@ SDK for receiving and verifying Mix Space Core webhooks. It provides a signature
 
 ## Requirements
 
-- **Node.js** ≥ 22 (see `engines` in `package.json`)
+- **Node.js** ≥ 26 (see `engines` in `package.json`)
 - **Mix Space Core** server with webhooks configured; the webhook endpoint must use the same **secret** you pass to `createHandler`.
 
 ---

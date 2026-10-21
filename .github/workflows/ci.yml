@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
-          node-version: '22.x'
+          node-version: '26.x'
       - name: Run Lint
         run: npm run lint
       - name: Run Typecheck
@@ -107,7 +107,7 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
-          node-version: '22.x'
+          node-version: '26.x'
       - name: Build project
         run: npm run bundle
       - name: Test Bundle Server
@@ -153,7 +153,7 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
-          node-version: '22.x'
+          node-version: '26.x'
       - name: Run E2E
         run: pnpm e2e
         env:
@@ -208,7 +208,7 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
-          node-version: '22.x'
+          node-version: '26.x'
       - name: Install Redis Server
         run: |
           sudo apt-get update

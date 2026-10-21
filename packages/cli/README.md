@@ -13,7 +13,7 @@ Command-line interface for managing a deployed mx-core instance. The CLI is desi
 | pnpm   | `pnpm add -g @mx-space/cli`    |
 | npm    | `npm install -g @mx-space/cli` |
 
-Node.js 22 or newer is required.
+Node.js 26 or newer is required.
 
 ## Quick Start
 

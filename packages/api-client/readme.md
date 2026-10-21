@@ -22,7 +22,7 @@ A framework-agnostic TypeScript/JavaScript SDK for the Mix Space Core server. It
 
 ## Requirements
 
-- **Node.js** ≥ 22 (see `engines` in `package.json`)
+- **Node.js** ≥ 26 (see `engines` in `package.json`)
 - **Mix Space server**: v12+ (PostgreSQL + Snowflake IDs) for api-client **v5.x**. See the [Version Compatibility & Migration](#version-compatibility--migration) section for older lines.
 
 ---

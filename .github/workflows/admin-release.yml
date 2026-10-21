@@ -49,7 +49,7 @@ jobs:
       - name: Setup Node.js and pnpm
         uses: ./.github/actions/setup-node
         with:
-          node-version: '22.x'
+          node-version: '26.x'
 
       - name: Resolve admin version
         id: bump
