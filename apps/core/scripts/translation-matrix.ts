@@ -14,7 +14,7 @@ import {
 import type { ArticleContent } from '../src/modules/ai/ai-translation/ai-translation.types'
 import { TranslationReviewerService } from '../src/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
-import { createModelRuntime } from '../src/modules/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
 import { extractDocumentContext } from '../src/utils/content.util'

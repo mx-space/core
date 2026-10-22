@@ -1,4 +1,4 @@
-import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
+import { getVertexMediaModels } from '@mx-space/ai/runtime'
 import type {
   GeneratedImage,
   IImageRuntime,

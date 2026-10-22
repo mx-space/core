@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { AIProviderConfig } from '../ai.types'
+import type { AIProviderConfig } from '../runtime/provider.types'
 
 export type DecisionQuestion = {
   instructions: string

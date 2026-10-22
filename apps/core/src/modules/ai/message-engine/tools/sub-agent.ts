@@ -5,7 +5,7 @@ import type {
   IModelRuntime,
   ReasoningEffort,
   RuntimeUsage,
-} from '../../runtime'
+} from '@mx-space/ai/runtime'
 import { firstSchemaFailure } from './tool.types'
 
 export interface SubAgentSpec {

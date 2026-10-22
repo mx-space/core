@@ -6,7 +6,7 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import { runTranslationAgent } from '~/modules/ai/ai-translation/engine/translation-agent'
 import type { PipelineMetrics } from '~/modules/ai/ai-translation/translation-strategy.interface'
 import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-translation-agent'
 const MODEL_ID = 'faux-agent-model'

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { BaseTranslationStrategy } from '~/modules/ai/ai-translation/strategies/base-translation-strategy'
-import type { IModelRuntime } from '~/modules/ai/runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 
 class TestTranslationStrategy extends BaseTranslationStrategy {
   constructor() {

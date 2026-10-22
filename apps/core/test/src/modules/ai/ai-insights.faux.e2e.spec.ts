@@ -11,7 +11,7 @@ import { AiInsightsAdapter } from '~/modules/ai/ai-insights/ai-insights.adapter'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-insights'
 const MODEL_ID = 'faux-insights-model'

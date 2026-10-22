@@ -4,7 +4,7 @@ import { AI_PROMPTS } from '../../ai.prompts'
 import { runEngineLoop } from '../../message-engine/loop/agent-loop'
 import type { SubAgentSpec } from '../../message-engine/tools/sub-agent'
 import { VirtualFs } from '../../message-engine/vfs/virtual-fs'
-import type { IModelRuntime } from '../../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import {
   buildReviewerMetrics,
   emptyEditorMetrics,

@@ -19,7 +19,7 @@ import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/str
 import {
   createModelRuntime,
   type IModelRuntime,
-} from '../src/modules/ai/runtime'
+} from '@mx-space/ai/runtime'
 import type {
   GenerateStructuredOptions,
   GenerateStructuredResult,
@@ -27,7 +27,7 @@ import type {
   GenerateTextResult,
   GenerateTextStreamOptions,
   TextStreamChunk,
-} from '../src/modules/ai/runtime/types'
+} from '@mx-space/ai/runtime'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
 import { extractDocumentContext } from '../src/utils/content.util'

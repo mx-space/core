@@ -4,7 +4,7 @@ import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { extractDocumentContext } from '~/utils/content.util'
 
-import type { IModelRuntime } from '../../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
 import { runTranslationAgent } from '../engine/translation-agent'

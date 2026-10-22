@@ -8,7 +8,8 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 // Mock the runtime factory
-vi.mock('~/modules/ai/runtime', () => ({
+vi.mock('@mx-space/ai/runtime', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@mx-space/ai/runtime')>()),
   createModelRuntime: vi.fn((config, modelOverride, options) => ({
     providerInfo: {
       id: config.id,

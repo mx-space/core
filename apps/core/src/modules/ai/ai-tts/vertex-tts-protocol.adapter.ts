@@ -2,7 +2,7 @@ import {
   buildVertexPublisherModelUrl,
   getVertexHeaders,
   readVertexError,
-} from '../vertex/vertex-api'
+} from '@mx-space/ai/runtime'
 import { wrapPcmAsWav } from './tts-audio'
 import type {
   ITtsProtocolAdapter,

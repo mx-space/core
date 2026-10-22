@@ -17,16 +17,15 @@ import {
   getBuiltinModel,
   getBuiltinModels,
 } from '@earendil-works/pi-ai/providers/all'
-import { Logger } from '@nestjs/common'
 import { isPlainObject } from 'es-toolkit/compat'
 import { jsonrepair } from 'jsonrepair'
 import { Value } from 'typebox/value'
 
-import { isDev } from '~/global/env.global'
+import { createAiLogger, isAiDebugEnabled } from '../environment'
 
-import type { AIProviderCapability } from '../ai.types'
-import { AIProviderType } from '../ai.types'
-import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
+import type { AIProviderCapability } from './provider.types'
+import { AIProviderType } from './provider.types'
+import { getVertexMediaModels } from './vertex/vertex-model-catalog'
 import type { IModelRuntime } from './model-runtime.interface'
 import type {
   GenerateStructuredOptions,
@@ -314,7 +313,7 @@ export interface PiRuntimeAdapterOptions {
 
 export class PiRuntimeAdapter implements IModelRuntime {
   readonly providerInfo: RuntimeProviderInfo
-  private readonly logger = new Logger(PiRuntimeAdapter.name)
+  private readonly logger = createAiLogger(PiRuntimeAdapter.name)
   private readonly api: Api
   private readonly piProviderId: string
   private readonly model: Model<Api>
@@ -741,7 +740,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       if (event.type !== 'text_delta') continue
       const delta = (event as { delta?: unknown }).delta
       if (typeof delta !== 'string' || delta.length === 0) continue
-      if (isDev) {
+      if (isAiDebugEnabled()) {
         // eslint-disable-next-line no-console
         console.debug(`[runtime:pi] chunk size=${delta.length}: ${delta}`)
       }

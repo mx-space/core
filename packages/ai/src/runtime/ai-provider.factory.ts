@@ -2,7 +2,7 @@ import type {
   AIProviderConfig,
   AIProviderType,
   AIReasoningEffort,
-} from '../ai.types'
+} from './provider.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import type { TextProtocolAdapterConfig } from './text-protocol.registry'
 import { defaultTextProtocolAdapterRegistry } from './text-protocol.registry'

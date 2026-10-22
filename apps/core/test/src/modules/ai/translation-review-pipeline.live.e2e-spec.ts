@@ -14,8 +14,8 @@ import { TranslationReviewerService } from '~/modules/ai/ai-translation/reviewer
 import { LexicalTranslationStrategy } from '~/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
 import type { PipelineMetrics } from '~/modules/ai/ai-translation/translation-strategy.interface'
-import type { IModelRuntime } from '~/modules/ai/runtime'
-import { createModelRuntime } from '~/modules/ai/runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 

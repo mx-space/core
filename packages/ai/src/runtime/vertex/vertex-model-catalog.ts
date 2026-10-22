@@ -1,4 +1,4 @@
-import type { ModelInfo } from '../runtime'
+import type { ModelInfo } from '../types'
 
 const VERTEX_TTS_VOICES = [
   'Achernar',

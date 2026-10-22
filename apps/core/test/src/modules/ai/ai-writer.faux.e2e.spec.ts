@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AIProviderType } from '~/modules/ai/ai.types'
 import { AiWriterService } from '~/modules/ai/ai-writer/ai-writer.service'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-writer'
 const MODEL_ID = 'faux-writer-model'

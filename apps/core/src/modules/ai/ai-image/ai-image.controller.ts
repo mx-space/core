@@ -10,7 +10,7 @@ import { AI_PROMPTS, COVER_STYLE_PRESETS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import { AIProviderType } from '../ai.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
-import { getVertexMediaModels } from '../vertex/vertex-model-catalog'
+import { getVertexMediaModels } from '@mx-space/ai/runtime'
 import {
   type DraftImagePromptDto,
   DraftImagePromptSchema,

@@ -1,8 +1,9 @@
 import type { TSchema } from '@earendil-works/pi-ai'
 import { Type } from '@earendil-works/pi-ai'
-import { Logger } from '@nestjs/common'
 
-const logger = new Logger('JsonSchemaToTypeBox')
+import { createAiLogger } from '../environment'
+
+const logger = createAiLogger('JsonSchemaToTypeBox')
 
 const UNSUPPORTED_KEYWORDS = [
   '$ref',

@@ -8,7 +8,7 @@ import { runTranslationAgent } from '~/modules/ai/ai-translation/engine/translat
 import { splitMarkdownIntoParagraphs } from '~/modules/ai/ai-translation/markdown-paragraph-splitter'
 import type { PipelineMetrics } from '~/modules/ai/ai-translation/translation-strategy.interface'
 import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const LIVE_ENABLED = process.env.RUN_LIVE_TESTS === '1'
 const API_KEY = process.env.OPENROUTER_API_KEY

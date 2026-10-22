@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ProtocolAdapterResolutionError } from '~/modules/ai/runtime/protocol-adapter.registry'
-import { ProtocolAdapterRegistry } from '~/modules/ai/runtime/protocol-adapter.registry'
+import type { ProtocolAdapterResolutionError } from '@mx-space/ai/runtime'
+import { ProtocolAdapterRegistry } from '@mx-space/ai/runtime'
 
 describe('ProtocolAdapterRegistry', () => {
   it('returns the only adapter supporting the context', () => {

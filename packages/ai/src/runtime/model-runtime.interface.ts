@@ -4,7 +4,7 @@ import type {
   TSchema,
 } from '@earendil-works/pi-ai'
 
-import type { AIProviderCapability } from '../ai.types'
+import type { AIProviderCapability } from './provider.types'
 import type {
   GenerateStructuredOptions,
   GenerateStructuredResult,

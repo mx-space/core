@@ -14,7 +14,7 @@ import {
   deriveProviderId,
   PiRuntimeAdapter,
   resolveOpenAICompatibleBaseUrl,
-} from '~/modules/ai/runtime/pi-runtime.adapter'
+} from '@mx-space/ai/runtime'
 
 const MODEL_ID = 'faux-model'
 

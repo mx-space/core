@@ -29,11 +29,26 @@ const escapeNonAsciiPlugin = () => ({
   },
 })
 
+// @mx-space/ai resolves its own peer variant of these from packages/ai; without
+// dedupe the server would load two pi-ai copies with separate provider registries.
+const sharedAiDependencies = [
+  '@earendil-works/pi-agent-core',
+  '@earendil-works/pi-ai',
+  '@haklex/rich-headless',
+  '@innei/message-engine',
+  'lexical',
+  'typebox',
+  'zod',
+]
+
 export default defineConfig(({ command }) => {
   const isBuild = command === 'build'
 
   return {
     esbuild: false,
+    resolve: {
+      dedupe: sharedAiDependencies,
+    },
     define: {
       __DEV__: isBuild ? 'false' : 'true',
       __TEST__: 'false',

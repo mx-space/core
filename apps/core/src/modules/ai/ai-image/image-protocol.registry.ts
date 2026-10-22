@@ -1,5 +1,5 @@
 import { AIProviderType } from '../ai.types'
-import { ProtocolAdapterRegistry } from '../runtime/protocol-adapter.registry'
+import { ProtocolAdapterRegistry } from '@mx-space/ai/runtime'
 import type {
   IImageRuntime,
   ImageRuntimeAdapterConfig,

@@ -12,7 +12,7 @@ import {
 } from '~/utils/json.util'
 
 import { AI_PROMPTS } from '../../ai.prompts'
-import type { IModelRuntime } from '../../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type {
   ReviewerOutput,
   TranslationReviewerService,

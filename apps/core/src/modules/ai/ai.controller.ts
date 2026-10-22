@@ -20,13 +20,13 @@ import {
 import { AiService } from './ai.service'
 import { type AIProviderCapability, AIProviderType } from './ai.types'
 import { AiViews, type RegistryModelView } from './ai.views'
-import { listDecisionModels, requestDecision } from './decision/typesafe'
+import { listDecisionModels, requestDecision } from '@mx-space/ai/decision'
 import {
   createModelRuntime,
   createRuntimeForModelList,
   type IModelRuntime,
   type ModelInfo,
-} from './runtime'
+} from '@mx-space/ai/runtime'
 
 const REGISTRY_CACHE_TTL_MS = 5 * 60 * 1000
 

@@ -1,5 +1,5 @@
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import type { IModelRuntime } from '../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type { ArticleContent } from './ai-translation.types'
 import type { AITranslationModel } from './ai-translation.types-model'
 

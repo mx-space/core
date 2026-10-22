@@ -53,7 +53,7 @@ import {
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
-import type { IModelRuntime } from '../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import { AiTranslationRepository } from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryDto } from './ai-translation.schema'
 import type {

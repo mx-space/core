@@ -6,7 +6,7 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import type { AiStreamEvent } from '~/modules/ai/ai-inflight/ai-inflight.types'
 import type { ArticleContent } from '~/modules/ai/ai-translation/ai-translation.types'
 import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-translation'
 const MODEL_ID = 'faux-translation-model'

@@ -1,4 +1,4 @@
-import { AIProviderType } from '../ai.types'
+import { AIProviderType } from './provider.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import { PiRuntimeAdapter } from './pi-runtime.adapter'
 import { ProtocolAdapterRegistry } from './protocol-adapter.registry'

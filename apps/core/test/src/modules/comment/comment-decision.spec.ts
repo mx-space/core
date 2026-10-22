@@ -6,7 +6,7 @@ import {
   type DecisionAnswer,
   listDecisionModels,
   requestDecision,
-} from '~/modules/ai/decision/typesafe'
+} from '@mx-space/ai/decision'
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 import {
   commentDecisionQuestions,

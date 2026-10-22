@@ -6,7 +6,7 @@ import { Value } from 'typebox/value'
 import { extractFirstJsonObject } from '~/utils/json.util'
 
 import { AI_PROMPTS } from '../ai.prompts'
-import type { IModelRuntime } from '../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import { firstValidationFailure } from './strategies/base-translation-strategy'
 
 export interface ReviewerIssue {

@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common'
 import { Value } from 'typebox/value'
 import { describe, expect, it, vi } from 'vitest'
 
-import { convert } from '~/modules/ai/runtime/json-schema-to-typebox'
+import { convertJsonSchemaToTypeBox as convert } from '@mx-space/ai/runtime'
 
 const insertNodeSchema = {
   type: 'object',

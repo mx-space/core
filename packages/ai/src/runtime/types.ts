@@ -5,7 +5,7 @@ import type {
   TSchema,
 } from '@earendil-works/pi-ai'
 
-import type { AIProviderType } from '../ai.types'
+import type { AIProviderType } from './provider.types'
 
 export interface RuntimeProviderInfo {
   api?: Api

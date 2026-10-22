@@ -8,7 +8,7 @@ import { runAgentLoop as piRunAgentLoop } from '@earendil-works/pi-agent-core'
 import type { AssistantMessage, Message } from '@earendil-works/pi-ai'
 import { getCurrentTools } from '@earendil-works/pi-ai'
 
-import type { IModelRuntime } from '../../runtime'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type { Conversation } from '../conversation/conversation'
 import type { EngineTool } from '../tools/tool.types'
 

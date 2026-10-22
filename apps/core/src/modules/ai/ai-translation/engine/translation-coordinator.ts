@@ -7,7 +7,7 @@ import type { SubAgentSpec } from '../../message-engine/tools/sub-agent'
 import { invokeSubAgent } from '../../message-engine/tools/sub-agent'
 import type { EngineTool } from '../../message-engine/tools/tool.types'
 import { VirtualFs } from '../../message-engine/vfs/virtual-fs'
-import type { IModelRuntime, RuntimeUsage } from '../../runtime'
+import type { IModelRuntime, RuntimeUsage } from '@mx-space/ai/runtime'
 import {
   buildReviewerMetrics,
   emptyEditorMetrics,

@@ -14,9 +14,9 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import type { AIProviderConfig } from '../ai.types'
-import type { RuntimeProviderInfo } from '../runtime'
-import { createModelRuntime } from '../runtime'
-import { convert as convertJsonSchema } from '../runtime/json-schema-to-typebox'
+import type { RuntimeProviderInfo } from '@mx-space/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
+import { convertJsonSchemaToTypeBox as convertJsonSchema } from '@mx-space/ai/runtime'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
 interface ChatToolInput {

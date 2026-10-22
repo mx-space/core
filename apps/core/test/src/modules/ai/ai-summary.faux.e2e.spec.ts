@@ -11,7 +11,7 @@ import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multila
 import { AiSummaryAdapter } from '~/modules/ai/ai-summary/ai-summary.adapter'
 import type { AiSummaryRepository } from '~/modules/ai/ai-summary/ai-summary.repository'
 import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-summary'
 const MODEL_ID = 'faux-summary-model'

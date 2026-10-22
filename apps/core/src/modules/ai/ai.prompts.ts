@@ -38,7 +38,7 @@ import TRANSLATION_LANG_ZH from './prompts/translation-lang-zh.partial.md?raw'
 import TRANSLATION_OUTPUT_FORMAT from './prompts/translation-output-format.partial.md?raw'
 import TRANSLATION_REVIEWER_SYSTEM from './prompts/translation-reviewer.system.md?raw'
 import TRANSLATION_STREAM_REMINDER from './prompts/translation-stream-reminder.partial.md?raw'
-import type { ReasoningEffort } from './runtime/types'
+import type { ReasoningEffort } from '@mx-space/ai/runtime'
 
 const SUMMARY_SYSTEM = renderPromptTemplate(SUMMARY_TEMPLATE, {
   MAX_WORDS: AI_SUMMARY_MAX_WORDS,

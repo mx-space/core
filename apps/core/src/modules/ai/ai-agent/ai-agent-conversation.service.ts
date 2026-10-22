@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
-import { createModelRuntime } from '../runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
 @Injectable()

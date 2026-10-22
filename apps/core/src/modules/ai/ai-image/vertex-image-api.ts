@@ -5,7 +5,7 @@ import {
   getVertexHeaders,
   readVertexError,
   type VertexConnectionConfig,
-} from '../vertex/vertex-api'
+} from '@mx-space/ai/runtime'
 import type {
   GeneratedImage,
   ImageGenerateOptions,

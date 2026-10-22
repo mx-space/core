@@ -14,6 +14,7 @@ import {
   USER_ASSET_DIR,
 } from '~/constants/path.constant'
 
+import { registerAiEnvironment } from './ai.global'
 import { consola, globalLogger, logger } from './consola.global'
 import { cwd, isDev } from './env.global'
 import { registerJSONGlobal } from './json.global'
@@ -68,5 +69,6 @@ export function initializeApp() {
   registerGlobal()
   nodeEnvInjection()
   registerJSONGlobal()
+  registerAiEnvironment()
   createAppFolders()
 }

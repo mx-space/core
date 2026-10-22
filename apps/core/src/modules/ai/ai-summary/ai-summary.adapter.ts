@@ -31,7 +31,7 @@ import type {
 import {
   piUsageToGenerationUsage,
   runtimeUsageToGenerationUsage,
-} from '../runtime/pi-runtime.adapter'
+} from '@mx-space/ai/runtime'
 import { AiSummaryRepository } from './ai-summary.repository'
 import type { AISummaryModel, AiSummaryRow } from './ai-summary.types'
 

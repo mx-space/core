@@ -30,7 +30,7 @@ import type {
 import {
   piUsageToGenerationUsage,
   runtimeUsageToGenerationUsage,
-} from '../runtime/pi-runtime.adapter'
+} from '@mx-space/ai/runtime'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { AIInsightsModel, AiInsightsRow } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'
