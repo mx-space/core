@@ -5,7 +5,11 @@ import { toast } from 'sonner'
 import { restoreFromBackup } from '~/api/system'
 import { useI18n } from '~/i18n'
 
-import { primaryButtonClassName, secondaryButtonClassName } from '../constants'
+import {
+  iconTileClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from '../constants'
 import { getErrorMessage } from '../utils/setup'
 
 export function SetupStartStep(props: { onNext: () => void }) {
@@ -35,11 +39,11 @@ export function SetupStartStep(props: { onNext: () => void }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="mb-4 flex size-24 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md">
+      <div className={iconTileClassName}>
         <Rocket aria-hidden="true" className="size-12" />
       </div>
 
-      <p className="mb-4 text-center text-sm text-white/80">
+      <p className="mb-4 text-center text-sm text-fg-muted">
         {t('setup.start.description')}
       </p>
 

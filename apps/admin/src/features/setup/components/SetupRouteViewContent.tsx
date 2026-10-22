@@ -4,8 +4,8 @@ import { toast } from 'sonner'
 
 import type { InitDefaultConfigs } from '~/api/system'
 import { checkInit, getInitDefaultConfigs } from '~/api/system'
-import { bgUrl } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
 import { cn } from '~/utils/cn'
 
 import { setupSteps } from '../constants'
@@ -48,12 +48,11 @@ export function SetupRouteViewContent() {
 
   return (
     <main
-      className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
-      style={{
-        backgroundImage: `linear-gradient(rgba(10,10,10,.42), rgba(10,10,10,.58)), url(${bgUrl})`,
-        backgroundPosition: 'center',
-        backgroundSize: 'cover',
-      }}
+      className={cn(
+        authBackdropClassName,
+        'flex flex-col items-center justify-center',
+      )}
+      style={authBackdropStyle}
     >
       <div className="mb-8 flex items-center gap-3">
         {setupSteps.map((item, index) => {
@@ -74,10 +73,10 @@ export function SetupRouteViewContent() {
               className={cn(
                 'flex size-10 items-center justify-center rounded-full transition-all',
                 isActive
-                  ? 'bg-white/90 text-neutral-900'
+                  ? 'bg-accent text-white shadow-brand'
                   : isCompleted
-                    ? 'cursor-pointer bg-white/40 text-white hover:bg-white/50'
-                    : 'cursor-not-allowed bg-white/10 text-white/40',
+                    ? 'cursor-pointer bg-accent-soft text-accent hover:bg-accent/15'
+                    : 'cursor-not-allowed border border-border bg-surface-card text-fg-subtle',
               )}
               disabled={index > step}
               key={item.titleKey}
@@ -96,17 +95,17 @@ export function SetupRouteViewContent() {
         })}
       </div>
 
-      <h1 className="mb-2 text-xl font-medium tracking-wide drop-shadow-lg">
+      <h1 className="mb-2 text-xl font-medium tracking-wide">
         {t(setupSteps[step].titleKey)}
       </h1>
-      <p className="mb-8 text-sm text-white/70">
+      <p className="mb-8 text-sm text-fg-muted">
         {t(setupSteps[step].descriptionKey)}
       </p>
 
       <div className="w-full max-w-md">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="size-8 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+            <div className="size-8 animate-spin rounded-full border-2 border-accent/20 border-t-accent" />
           </div>
         ) : step === 0 ? (
           <SetupStartStep onNext={() => setStep(1)} />

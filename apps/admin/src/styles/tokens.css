@@ -44,6 +44,7 @@
   --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
   --shadow-lg:
     0 12px 32px -8px rgb(15 23 42 / 0.18), 0 2px 8px -2px rgb(15 23 42 / 0.08);
+  --shadow-brand: 0 4px 16px rgb(33 150 239 / 0.25);
 }
 
 .dark {
@@ -64,4 +65,26 @@
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
   --color-accent-soft: rgba(59, 130, 246, 0.12);
+}
+
+.auth-light {
+  color-scheme: light;
+
+  --color-background: #ffffff;
+
+  --color-surface-card: #ffffff;
+  --color-surface-inset: #eef6fd;
+  --color-surface-overlay: #ffffff;
+
+  --color-fg: #0f2a44;
+  --color-fg-muted: #46607a;
+  --color-fg-subtle: #5f7790;
+
+  --color-border: #d3e6f6;
+  --color-border-strong: #b7d5ee;
+
+  /* Deeper than the #2196ef logo blue so white button text keeps 4.5:1 contrast. */
+  --color-accent: #1677d2;
+  --color-accent-hover: #1366b8;
+  --color-accent-soft: #e3f1fd;
 }

@@ -1,13 +1,13 @@
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { CreateOwnerData } from '~/api/system'
-import type { FormEvent } from 'react'
 
+import type { CreateOwnerData } from '~/api/system'
 import { createOwner } from '~/api/system'
 import { useI18n } from '~/i18n'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { inputClassName, labelClassName } from '../constants'
+import { cardClassName, inputClassName, labelClassName } from '../constants'
 import { getErrorMessage, removeEmptyStrings } from '../utils/setup'
 import { StepActions, UrlInput } from './SetupPrimitives'
 
@@ -53,7 +53,7 @@ export function SetupOwnerStep(props: {
   }
 
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xl">
+    <div className={cardClassName}>
       <form onSubmit={submit}>
         <div className="space-y-4">
           <TextInput

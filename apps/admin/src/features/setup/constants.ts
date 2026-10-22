@@ -1,17 +1,24 @@
 import { PartyPopper, Rocket, Settings, User } from 'lucide-react'
-import type { TranslationKey } from '~/i18n/types'
 import type { ComponentType } from 'react'
 
-export const inputClassName =
-  'h-[42px] w-full rounded-full border-0 bg-white/20 px-4 text-sm text-white backdrop-blur-md transition-all placeholder:text-white/60 focus-visible:bg-white/30 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/50 disabled:cursor-not-allowed disabled:opacity-50'
+import type { TranslationKey } from '~/i18n/types'
 
-export const labelClassName = 'mb-2 block text-sm font-medium text-white/90'
+export const inputClassName =
+  'h-[42px] rounded-full px-4 text-sm focus-visible:ring-accent/25'
+
+export const labelClassName = 'mb-2 block text-sm font-medium text-fg'
 
 export const primaryButtonClassName =
-  'inline-flex h-[42px] items-center justify-center rounded-full bg-white/90 px-6 text-sm font-medium text-neutral-900 transition-all hover:bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/50 disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex h-[42px] items-center justify-center rounded-full bg-accent px-6 text-sm font-medium text-white shadow-xs transition-colors hover:bg-accent-hover focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-50'
 
 export const secondaryButtonClassName =
-  'inline-flex h-[42px] items-center justify-center rounded-full bg-white/15 px-6 text-sm text-white/90 backdrop-blur-sm transition-all hover:bg-white/25 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/50 disabled:cursor-not-allowed disabled:opacity-50'
+  'inline-flex h-[42px] items-center justify-center rounded-full border border-border bg-surface-card px-6 text-sm text-fg shadow-xs transition-colors hover:bg-surface-inset focus-visible:outline-hidden focus-visible:ring-[3px] focus-visible:ring-accent/30 disabled:cursor-not-allowed disabled:opacity-50'
+
+export const cardClassName =
+  'rounded-2xl border border-border bg-surface-card/80 p-6 shadow-sm backdrop-blur-xl'
+
+export const iconTileClassName =
+  'mb-4 flex size-24 items-center justify-center rounded-full bg-surface-card text-accent shadow-brand'
 
 export const setupSteps: Array<{
   descriptionKey: TranslationKey

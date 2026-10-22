@@ -7,7 +7,7 @@ export const bgUrl =
   window.injectData.LOGIN_BG ||
   (import.meta.env.VITE_APP_LOGIN_BG as string) ||
   localStorage.getItem('LOGIN_BG') ||
-  'https://fastly.jsdelivr.net/gh/mx-space/docs-images@master/images/chichi-1.jpeg'
+  ''
 
 export const API_URL = transformUrl(
   sessionStorage.getItem('__api') ||

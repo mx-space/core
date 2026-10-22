@@ -1,15 +1,15 @@
 import { X } from 'lucide-react'
+import type { FormEvent } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type { InitDefaultConfigs } from '~/api/system'
-import type { FormEvent } from 'react'
-import type { SetupUrls } from '../types/setup'
 
+import type { InitDefaultConfigs } from '~/api/system'
 import { patchInitConfig } from '~/api/system'
 import { useI18n } from '~/i18n'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { inputClassName, labelClassName } from '../constants'
+import { cardClassName, inputClassName, labelClassName } from '../constants'
+import type { SetupUrls } from '../types/setup'
 import { getErrorMessage } from '../utils/setup'
 import { StepActions, UrlInput } from './SetupPrimitives'
 
@@ -67,7 +67,7 @@ export function SetupSiteStep(props: {
   }
 
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xl">
+    <div className={cardClassName}>
       <form onSubmit={submit}>
         <div className="space-y-4">
           <TextInput
@@ -96,11 +96,11 @@ export function SetupSiteStep(props: {
             <label className={labelClassName}>
               {t('setup.site.keywordsLabel')}
             </label>
-            <div className="rounded-2xl bg-white/10 p-2">
+            <div className="rounded-2xl border border-border bg-surface-inset p-2">
               <div className="mb-2 flex flex-wrap gap-2">
                 {keywords.map((keyword) => (
                   <span
-                    className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs text-white"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-3 py-1 text-xs text-fg"
                     key={keyword}
                   >
                     {keyword}
@@ -121,7 +121,7 @@ export function SetupSiteStep(props: {
                 ))}
               </div>
               <TextInput
-                controlClassName="h-9 rounded-full border-0 bg-white/10 px-3 text-sm text-white placeholder:text-white/50 focus:bg-white/20 dark:border-0 dark:bg-white/10 dark:text-white"
+                controlClassName="h-9 rounded-full px-3 text-sm focus-visible:ring-accent/25"
                 onChange={setKeywordInput}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {

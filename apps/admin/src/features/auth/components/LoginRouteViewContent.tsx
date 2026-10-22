@@ -6,12 +6,13 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { getJson } from '~/api/http'
-import { bgUrl } from '~/constants/env'
 import { SESSION_WITH_LOGIN } from '~/constants/keys'
 import { useI18n } from '~/i18n'
+import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
 import type { UserModel } from '~/models/user'
 import { TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
+import { cn } from '~/utils/cn'
 
 import {
   allowLoginQueryKey,
@@ -155,15 +156,11 @@ export function LoginRouteViewContent() {
 
   return (
     <main
-      className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-neutral-950 p-4 text-white"
-      style={{
-        backgroundImage: `linear-gradient(rgba(10,10,10,.42), rgba(10,10,10,.58)), url(${bgUrl})`,
-        backgroundPosition: 'center',
-        backgroundSize: 'cover',
-      }}
+      className={cn(authBackdropClassName, 'flex items-center justify-center')}
+      style={authBackdropStyle}
     >
       <section className="flex w-full max-w-sm flex-col items-center">
-        <div className="mb-4 size-[120px] overflow-hidden rounded-full bg-white/15 shadow-2xl ring-4 ring-white/30">
+        <div className="mb-4 size-[120px] overflow-hidden rounded-full bg-surface-card shadow-brand">
           {owner?.avatar ? (
             <img
               alt=""
@@ -172,13 +169,13 @@ export function LoginRouteViewContent() {
               src={owner.avatar}
             />
           ) : (
-            <div className="flex size-full items-center justify-center text-3xl font-medium">
+            <div className="flex size-full items-center justify-center text-3xl font-medium text-accent">
               {readInitial(owner)}
             </div>
           )}
         </div>
 
-        <h1 className="mb-6 text-xl font-medium tracking-wide drop-shadow-lg">
+        <h1 className="mb-6 text-xl font-medium tracking-wide">
           {owner?.name || owner?.username || 'Admin'}
         </h1>
 
@@ -190,7 +187,7 @@ export function LoginRouteViewContent() {
             <div className="relative">
               <TextInput
                 autoComplete="current-password"
-                controlClassName="h-[38px] rounded-full border-0 bg-white/20 px-4 text-center text-sm text-white backdrop-blur-md placeholder:text-white/60 focus:bg-white/25 focus:ring-2 focus:ring-white/50 dark:border-0 dark:bg-white/20 dark:text-white"
+                controlClassName="h-[38px] rounded-full px-4 text-center text-sm focus-visible:ring-accent/25"
                 disabled={isLoggingIn}
                 id="password-input"
                 onChange={setPassword}
@@ -247,7 +244,7 @@ export function LoginRouteViewContent() {
         ) : null}
 
         {ownerQuery.isLoading || allowLoginQuery.isLoading ? (
-          <div className="mt-6 flex items-center gap-2 text-xs text-white/70">
+          <div className="mt-6 flex items-center gap-2 text-xs text-fg-muted">
             <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
             {t('auth.login.loadingProfile')}
           </div>
