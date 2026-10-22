@@ -1,10 +1,8 @@
 import type { AssistantMessage } from '@earendil-works/pi-ai'
+import type { EngineTool } from '@mx-space/ai/engine'
+import { Conversation, runEngineLoop } from '@mx-space/ai/engine'
 import { Type } from 'typebox'
 import { describe, expect, it, vi } from 'vitest'
-
-import { Conversation } from '@mx-space/ai/engine'
-import { runEngineLoop } from '@mx-space/ai/engine'
-import type { EngineTool } from '@mx-space/ai/engine'
 
 const usage = {
   input: 0,

@@ -1,21 +1,21 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
+import type { IModelRuntime } from '@mx-space/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
+import {
+  parseLexicalForTranslation,
+  restoreLexicalTranslation,
+  splitMarkdownIntoParagraphs,
+} from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
-import {
-  parseLexicalForTranslation,
-  restoreLexicalTranslation,
-} from '~/modules/ai/ai-translation/lexical-translation-parser'
-import { splitMarkdownIntoParagraphs } from '~/modules/ai/ai-translation/markdown-paragraph-splitter'
 import { TranslationReviewerService } from '~/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '~/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
 import type { PipelineMetrics } from '~/modules/ai/ai-translation/translation-strategy.interface'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
-import { createModelRuntime } from '@mx-space/ai/runtime'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 

@@ -1,3 +1,4 @@
+import { throwIfAborted } from '@mx-space/ai'
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 import pLimit from 'p-limit'
@@ -13,7 +14,6 @@ import {
   TaskQueueProcessor,
   TaskStatus,
 } from '~/processors/task-queue'
-import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { FileService } from '../../file/file.service'

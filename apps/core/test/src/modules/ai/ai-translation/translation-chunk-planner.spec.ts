@@ -1,14 +1,13 @@
-import { describe, expect, it } from 'vitest'
-
+import type { TranslationUnit } from '@mx-space/ai/translation'
 import {
   DIRECT_TRANSLATION_MAX_SEGMENTS,
   DIRECT_TRANSLATION_MAX_SOURCE_CHARS,
+  flatIdsOf,
   planTranslationChunks,
   shouldUseChunkedTranslation,
   TRANSLATION_CHUNK_MAX_SOURCE_CHARS,
-} from '~/modules/ai/ai-translation/engine/translation-chunk-planner'
-import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { flatIdsOf } from '~/modules/ai/ai-translation/translation-unit.types'
+} from '@mx-space/ai/translation'
+import { describe, expect, it } from 'vitest'
 
 describe('translation chunk planner', () => {
   it('keeps ordinary articles on the direct agent path', () => {

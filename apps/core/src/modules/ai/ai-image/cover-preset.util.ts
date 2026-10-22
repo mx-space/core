@@ -1,10 +1,11 @@
+import type { CoverStylePreset } from '@mx-space/ai/prompts'
+import { COVER_STYLE_PRESETS } from '@mx-space/ai/prompts'
+
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { DatabaseService } from '~/processors/database/database.service'
 
 import type { DraftRepository } from '../../draft/draft.repository'
-import type { CoverStylePreset } from '@mx-space/ai/prompts'
-import { COVER_STYLE_PRESETS } from '@mx-space/ai/prompts'
 
 const COVER_ARTICLE_SUMMARY_MAX_LENGTH = 800
 

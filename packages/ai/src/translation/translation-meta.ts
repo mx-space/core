@@ -3,9 +3,11 @@
 // sourceMetaHashes format, and the tags wire encoding. The persisted shape
 // must stay byte-compatible — md5 per field, tags joined with '|||'.
 
-import { md5 } from '~/utils/tool.util'
+import { createHash } from 'node:crypto'
 
-import type { ArticleContent } from './ai-translation.types'
+import type { ArticleContent } from './article-content.types'
+
+const md5 = (text: string) => createHash('md5').update(text).digest('hex')
 
 export const META_TITLE_KEY = '__title__'
 export const META_SUBTITLE_KEY = '__subtitle__'

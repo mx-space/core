@@ -1,13 +1,10 @@
+import { isNestedLexicalEditorState } from '@mx-space/ai/translation'
 import { Injectable } from '@nestjs/common'
 import type { Token, Tokens } from 'marked'
 import { marked } from 'marked'
 
 import type { ContentFormat } from '~/shared/types/content-format.type'
-import {
-  isLexical,
-  isNestedLexicalEditorState,
-  traverseLexicalNodes,
-} from '~/utils/content.util'
+import { isLexical, traverseLexicalNodes } from '~/utils/content.util'
 
 export interface ContentDoc {
   text?: string | null

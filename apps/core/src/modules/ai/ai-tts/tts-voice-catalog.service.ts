@@ -1,10 +1,9 @@
+import { createModelRuntime, getVertexMediaModels } from '@mx-space/ai/runtime'
 import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { createModelRuntime } from '@mx-space/ai/runtime'
-import { getVertexMediaModels } from '@mx-space/ai/runtime'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 const VOICE_LIST_TIMEOUT_MS = 5000

@@ -1,16 +1,14 @@
-import { Logger } from '@nestjs/common'
-
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import { runEngineLoop } from '@mx-space/ai/engine'
-import type { SubAgentSpec } from '@mx-space/ai/engine'
-import { VirtualFs } from '@mx-space/ai/engine'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
+import type { SubAgentSpec } from '../../engine'
+import { runEngineLoop, VirtualFs } from '../../engine'
+import { createAiLogger } from '../../environment'
+import { AI_PROMPTS } from '../../prompts'
+import type { IModelRuntime } from '../../runtime'
 import {
   buildReviewerMetrics,
   emptyEditorMetrics,
   emptyReviewerMetrics,
-} from '../strategies/base-translation-strategy'
-import type { PipelineMetrics } from '../translation-strategy.interface'
+} from '../base-translation-strategy'
+import type { PipelineMetrics } from '../pipeline.types'
 import type { TranslationUnit } from '../translation-unit.types'
 import { flatIdsOf, unitsToSourceMap } from '../translation-unit.types'
 import { shouldUseChunkedTranslation } from './translation-chunk-planner'
@@ -21,7 +19,7 @@ import { createTranslationTools, TRANSLATION_FILE } from './translation-tools'
 export const AGENT_MAX_STEPS = 12
 export const AGENT_MAX_REVIEW_ROUNDS = 3
 
-const logger = new Logger('TranslationAgent')
+const logger = createAiLogger('TranslationAgent')
 
 export async function runTranslationAgent(opts: {
   targetLang: string

@@ -1,49 +1,43 @@
+import type { IModelRuntime } from '@mx-space/ai/runtime'
+import type {
+  SourceMetaHashes,
+  TranslationSegment,
+  TranslationUnit,
+} from '@mx-space/ai/translation'
+import {
+  BaseTranslationStrategy,
+  buildReusableTranslationOverlay,
+  decodeTags,
+  emptyEditorMetrics,
+  emptyReviewerMetrics,
+  guardMermaidTranslations,
+  isMetaFieldUnchanged,
+  META_SUBTITLE_KEY,
+  META_SUMMARY_KEY,
+  META_TAGS_KEY,
+  META_TITLE_KEY,
+  parseLexicalForTranslation,
+  restoreLexicalTranslation,
+  runTranslationAgent,
+  unitsToEntries,
+  unitsToMeta,
+  unitsToSourceMap,
+} from '@mx-space/ai/translation'
 import { Injectable } from '@nestjs/common'
 
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 import { extractDocumentContext } from '~/utils/content.util'
 
-import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import type { AITranslationModel } from '../ai-translation.types-model'
-import { runTranslationAgent } from '../engine/translation-agent'
-import {
-  buildReusableTranslationOverlay,
-  guardMermaidTranslations,
-} from '../lexical-block-reuse'
-import {
-  parseLexicalForTranslation,
-  restoreLexicalTranslation,
-  type TranslationSegment,
-} from '../lexical-translation-parser'
 import { TranslationReviewerService } from '../reviewer.service'
-import {
-  decodeTags,
-  isMetaFieldUnchanged,
-  META_SUBTITLE_KEY,
-  META_SUMMARY_KEY,
-  META_TAGS_KEY,
-  META_TITLE_KEY,
-  type SourceMetaHashes,
-} from '../translation-meta'
 import type {
   ITranslationStrategy,
   PipelineMetrics,
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
-import type { TranslationUnit } from '../translation-unit.types'
-import {
-  unitsToEntries,
-  unitsToMeta,
-  unitsToSourceMap,
-} from '../translation-unit.types'
-import {
-  BaseTranslationStrategy,
-  emptyEditorMetrics,
-  emptyReviewerMetrics,
-} from './base-translation-strategy'
 
 interface LexicalSourceBlockSnapshot {
   id: string

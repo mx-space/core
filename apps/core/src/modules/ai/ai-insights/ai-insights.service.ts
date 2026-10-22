@@ -1,3 +1,4 @@
+import { createAbortError } from '@mx-space/ai'
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -10,7 +11,6 @@ import {
   TaskQueueProcessor,
 } from '~/processors/task-queue'
 import type { BasicPagerDto } from '~/shared/dto/pager.dto'
-import { createAbortError } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'

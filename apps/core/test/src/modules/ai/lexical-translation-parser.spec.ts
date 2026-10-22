@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest'
-
 import {
   parseLexicalForTranslation,
   restoreLexicalTranslation,
-} from '~/modules/ai/ai-translation/lexical-translation-parser'
+} from '@mx-space/ai/translation'
+import { describe, expect, it } from 'vitest'
+
 import { extractDocumentContext } from '~/utils/content.util'
 
 const makeEditorState = (children: any[]) =>

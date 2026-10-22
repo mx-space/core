@@ -1,7 +1,5 @@
 export type LexicalTranslatablePropertyName =
-  | 'summary'
-  | 'definitions'
-  | 'reading'
+  'summary' | 'definitions' | 'reading'
 
 export interface LexicalTranslatableProperty {
   property: LexicalTranslatablePropertyName

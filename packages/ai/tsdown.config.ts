@@ -13,6 +13,7 @@ export default defineConfig({
     'src/decision/index.ts',
     'src/engine/index.ts',
     'src/prompts/index.ts',
+    'src/translation/index.ts',
   ],
   outDir: 'dist',
   dts: true,

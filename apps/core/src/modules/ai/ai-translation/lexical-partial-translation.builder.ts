@@ -1,19 +1,17 @@
+import type { SourceMetaHashes } from '@mx-space/ai/translation'
+import {
+  buildReusableTranslationOverlay,
+  encodeTags,
+  guardMermaidTranslations,
+  isMetaFieldUnchanged,
+  restoreLexicalTranslation,
+} from '@mx-space/ai/translation'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { LexicalService } from '~/processors/helper/helper.lexical.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import type { AiTranslationRow, ArticleContent } from './ai-translation.types'
-import {
-  buildReusableTranslationOverlay,
-  guardMermaidTranslations,
-} from './lexical-block-reuse'
-import { restoreLexicalTranslation } from './lexical-translation-parser'
-import {
-  encodeTags,
-  isMetaFieldUnchanged,
-  type SourceMetaHashes,
-} from './translation-meta'
 
 export interface PartialLexicalTranslationStats {
   totalBlockCount: number

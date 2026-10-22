@@ -3,17 +3,15 @@
 
 import {
   BLOCK_ID_STATE_KEY,
-  NODE_STATE_KEY,
-} from '~/constants/lexical.constant'
-import {
   isNestedLexicalEditorState,
   KNOWN_LEXICAL_STRUCTURAL_PROPS,
   LEXICAL_CONTEXT_EXCALIDRAW_TYPE,
   LEXICAL_CONTEXT_MERMAID_TYPE,
   LEXICAL_CONTEXT_SKIP_BLOCKS,
   LEXICAL_CONTEXT_SKIP_INLINE,
-} from '~/utils/content.util'
-import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
+  NODE_STATE_KEY,
+} from './lexical-context'
+import { extractLexicalTranslatableProperties } from './lexical-translatable-property'
 
 const FORMAT_CODE = 16
 

@@ -7,16 +7,7 @@ import type { PostModel } from '../../post/post.types'
 import type { GenerationMetricsDto } from '../ai-generation-metrics/ai-generation-metrics.types'
 import type { TranslationEntryKeyPath } from './translation-entry.types'
 
-export interface ArticleContent {
-  title: string
-  text: string
-  subtitle?: string | null
-  summary?: string | null
-  tags?: string[]
-  meta?: { lang?: string }
-  contentFormat?: string | null
-  content?: string | null
-}
+export type { ArticleContent } from '@mx-space/ai/translation'
 
 export type ArticleDocument = PostModel | NoteModel | PageModel
 

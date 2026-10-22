@@ -1,16 +1,13 @@
-import { describe, expect, it } from 'vitest'
-
 import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import { planTranslationChunks } from '~/modules/ai/ai-translation/engine/translation-chunk-planner'
+import type { TranslationUnit } from '@mx-space/ai/translation'
 import {
   createTranslationConversation,
   createTranslationCoordinatorConversation,
-} from '~/modules/ai/ai-translation/engine/translation-context'
-import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import {
+  planTranslationChunks,
   unitsToEntries,
   unitsToMeta,
-} from '~/modules/ai/ai-translation/translation-unit.types'
+} from '@mx-space/ai/translation'
+import { describe, expect, it } from 'vitest'
 
 const units: TranslationUnit[] = [
   { id: 'text:p1', payload: '你好', meta: 'text' },

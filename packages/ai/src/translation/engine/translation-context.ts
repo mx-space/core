@@ -1,5 +1,5 @@
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import { Conversation } from '@mx-space/ai/engine'
+import { Conversation } from '../../engine'
+import { AI_PROMPTS } from '../../prompts'
 import type { TranslationUnit } from '../translation-unit.types'
 import { unitsToEntries, unitsToMeta } from '../translation-unit.types'
 import type { TranslationChunk } from './translation-chunk-planner'

@@ -2,8 +2,8 @@ export * from './ai-provider.factory'
 export {
   assertHaklexToolSchemasSupported,
   convert as convertJsonSchemaToTypeBox,
-  type ConvertOptions as JsonSchemaConvertOptions,
   UNSUPPORTED_KEYWORDS as JSON_SCHEMA_UNSUPPORTED_KEYWORDS,
+  type ConvertOptions as JsonSchemaConvertOptions,
 } from './json-schema-to-typebox'
 export * from './model-runtime.interface'
 export * from './pi-runtime.adapter'

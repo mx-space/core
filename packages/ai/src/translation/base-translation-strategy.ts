@@ -1,27 +1,26 @@
 /* eslint-disable unicorn/better-regex */
 import type { TSchema } from '@earendil-works/pi-ai'
-import { Logger } from '@nestjs/common'
 import JSON5 from 'json5'
 import { jsonrepair } from 'jsonrepair'
 import { Value } from 'typebox/value'
 
-import { throwIfAborted } from '~/utils/abort.util'
+import { type AiLogger, createAiLogger } from '../environment'
+import { AI_PROMPTS } from '../prompts'
+import type { IModelRuntime } from '../runtime'
+import { throwIfAborted } from '../shared/abort'
 import {
   extractFirstJsonObject,
   extractLastJsonObject,
-} from '~/utils/json.util'
-
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
-import type {
-  ReviewerOutput,
-  TranslationReviewerService,
-} from '../reviewer.service'
+} from '../shared/json-extract'
 import type {
   PipelineEditorMetrics,
   PipelineMetrics,
   PipelineReviewerMetrics,
-} from '../translation-strategy.interface'
+} from './pipeline.types'
+import type {
+  ReviewerOutput,
+  TranslationReviewer,
+} from './translation-reviewer'
 
 export function firstValidationFailure(
   schema: TSchema,
@@ -86,10 +85,10 @@ export function buildReviewerMetrics(
 }
 
 export abstract class BaseTranslationStrategy {
-  protected readonly logger: Logger
+  protected readonly logger: AiLogger
 
   constructor(loggerContext: string) {
-    this.logger = new Logger(loggerContext)
+    this.logger = createAiLogger(loggerContext)
   }
 
   private repairCommonJsonStringIssues(input: string): string {
@@ -610,7 +609,7 @@ export abstract class BaseTranslationStrategy {
     targetLang: string
     translatorRuntime: IModelRuntime
     reviewerRuntime: IModelRuntime
-    reviewerService: TranslationReviewerService
+    reviewerService: TranslationReviewer
     fullTranslations: Record<string, string>
     sources?: Record<string, string>
     allowedIds: readonly string[]

@@ -1,3 +1,5 @@
+import { AI_PROMPTS, COVER_STYLE_PRESETS } from '@mx-space/ai/prompts'
+import { getVertexMediaModels } from '@mx-space/ai/runtime'
 import { Body, Get, HttpCode, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
@@ -6,11 +8,9 @@ import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { DraftRepository } from '../../draft/draft.repository'
-import { AI_PROMPTS, COVER_STYLE_PRESETS } from '@mx-space/ai/prompts'
 import { AiService } from '../ai.service'
 import { AIProviderType } from '../ai.types'
 import { AiTaskService } from '../ai-task/ai-task.service'
-import { getVertexMediaModels } from '@mx-space/ai/runtime'
 import {
   type DraftImagePromptDto,
   DraftImagePromptSchema,

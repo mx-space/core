@@ -1,7 +1,7 @@
-import { AIProviderType } from './provider.types'
 import type { IModelRuntime } from './model-runtime.interface'
 import { PiRuntimeAdapter } from './pi-runtime.adapter'
 import { ProtocolAdapterRegistry } from './protocol-adapter.registry'
+import { AIProviderType } from './provider.types'
 import type { ReasoningEffort, RuntimeConfig } from './types'
 
 export interface TextProtocolAdapterConfig extends RuntimeConfig {

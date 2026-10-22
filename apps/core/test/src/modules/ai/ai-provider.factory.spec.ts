@@ -1,10 +1,9 @@
 import { Type } from '@earendil-works/pi-ai'
 import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
+import { createModelRuntime, PiRuntimeAdapter } from '@mx-space/ai/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { createModelRuntime } from '@mx-space/ai/runtime'
-import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 interface AdapterInternals {
   api: 'openai-completions' | 'anthropic-messages' | 'google-vertex'

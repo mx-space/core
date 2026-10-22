@@ -1,3 +1,4 @@
+import { createAbortError } from '@mx-space/ai'
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
 import { NOTE_SERVICE_TOKEN } from '~/constants/injection.constant'
@@ -5,7 +6,6 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import { createAbortError } from '~/utils/abort.util'
 import { normalizeSlug } from '~/utils/slug.util'
 
 import type { NoteService } from '../../note/note.service'

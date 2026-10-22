@@ -1,3 +1,8 @@
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import {
+  piUsageToGenerationUsage,
+  runtimeUsageToGenerationUsage,
+} from '@mx-space/ai/runtime'
 import { Injectable, Logger } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 
@@ -8,7 +13,6 @@ import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { EntitlementService } from '../../membership/entitlement.service'
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { AiService } from '../ai.service'
 import {
   type ArticleViewer,
@@ -27,10 +31,6 @@ import type {
   MultilangResolvedArticle,
   PushStreamEvent,
 } from '../ai-multilang/ai-multilang.types'
-import {
-  piUsageToGenerationUsage,
-  runtimeUsageToGenerationUsage,
-} from '@mx-space/ai/runtime'
 import { AiInsightsRepository } from './ai-insights.repository'
 import type { AIInsightsModel, AiInsightsRow } from './ai-insights.types'
 import { stripTopLevelCodeFence } from './insights.util'

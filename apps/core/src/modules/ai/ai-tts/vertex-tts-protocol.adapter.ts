@@ -3,6 +3,7 @@ import {
   getVertexHeaders,
   readVertexError,
 } from '@mx-space/ai/runtime'
+
 import { wrapPcmAsWav } from './tts-audio'
 import type {
   ITtsProtocolAdapter,

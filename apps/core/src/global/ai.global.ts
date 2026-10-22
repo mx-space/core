@@ -1,6 +1,5 @@
-import { Logger } from '@nestjs/common'
-
 import { configureAiEnvironment } from '@mx-space/ai'
+import { Logger } from '@nestjs/common'
 
 import { isDev } from './env.global'
 

@@ -22,11 +22,9 @@ import { jsonrepair } from 'jsonrepair'
 import { Value } from 'typebox/value'
 
 import { createAiLogger, isAiDebugEnabled } from '../environment'
-
+import type { IModelRuntime } from './model-runtime.interface'
 import type { AIProviderCapability } from './provider.types'
 import { AIProviderType } from './provider.types'
-import { getVertexMediaModels } from './vertex/vertex-model-catalog'
-import type { IModelRuntime } from './model-runtime.interface'
 import type {
   GenerateStructuredOptions,
   GenerateStructuredResult,
@@ -42,6 +40,7 @@ import type {
   StructuredStreamChunk,
   TextStreamChunk,
 } from './types'
+import { getVertexMediaModels } from './vertex/vertex-model-catalog'
 
 export { isContextOverflow }
 

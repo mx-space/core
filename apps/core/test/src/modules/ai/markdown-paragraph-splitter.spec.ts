@@ -1,10 +1,9 @@
-import { describe, expect, it } from 'vitest'
-
 import {
   applyParagraphPatches,
   joinMarkdownParagraphs,
   splitMarkdownIntoParagraphs,
-} from '~/modules/ai/ai-translation/markdown-paragraph-splitter'
+} from '@mx-space/ai/translation'
+import { describe, expect, it } from 'vitest'
 
 describe('markdown-paragraph-splitter', () => {
   it('splits text into paragraphs by blank lines', () => {

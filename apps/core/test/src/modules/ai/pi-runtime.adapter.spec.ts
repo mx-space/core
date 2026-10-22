@@ -6,15 +6,15 @@ import {
   Type,
 } from '@earendil-works/pi-ai'
 import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
-import { withFauxAi } from '@/helper/faux-ai.helper'
-import { AIProviderType } from '~/modules/ai/ai.types'
 import {
   deriveProviderId,
   PiRuntimeAdapter,
   resolveOpenAICompatibleBaseUrl,
 } from '@mx-space/ai/runtime'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { withFauxAi } from '@/helper/faux-ai.helper'
+import { AIProviderType } from '~/modules/ai/ai.types'
 
 const MODEL_ID = 'faux-model'
 

@@ -1110,12 +1110,18 @@ importers:
       '@earendil-works/pi-ai':
         specifier: 0.99.1
         version: 0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@10.2.2)(zod@4.6.5)
+      '@haklex/rich-headless':
+        specifier: 0.52.0
+        version: 0.52.0(lexical@0.52.0(typescript@6.0.3))(typescript@6.0.3)
       '@innei/message-engine':
         specifier: 0.5.0
         version: 0.5.0(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@10.2.2)(zod@4.6.5))(react@19.3.1)
       es-toolkit:
         specifier: ^1.52.0
         version: 1.52.0
+      json5:
+        specifier: 2.2.3
+        version: 2.2.3
       jsonrepair:
         specifier: ^3.15.0
         version: 3.15.0
@@ -1126,6 +1132,9 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@types/node':
+        specifier: 26.6.5
+        version: 26.6.5
       tsdown:
         specifier: 0.23.0
         version: 0.23.0(tsx@4.23.15)(typescript@6.0.3)

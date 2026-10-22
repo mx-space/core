@@ -1,14 +1,12 @@
 import type { TSchema } from '@earendil-works/pi-ai'
 import { Type } from '@earendil-works/pi-ai'
-import { Logger } from '@nestjs/common'
 
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import type { SubAgentSpec } from '@mx-space/ai/engine'
-import { invokeSubAgent } from '@mx-space/ai/engine'
-import type { EngineTool } from '@mx-space/ai/engine'
-import type { VirtualFs } from '@mx-space/ai/engine'
-import type { ReviewerIssue } from '../reviewer.service'
-import { REVIEW_WINDOW_SIZE } from '../strategies/base-translation-strategy'
+import type { EngineTool, SubAgentSpec, VirtualFs } from '../../engine'
+import { invokeSubAgent } from '../../engine'
+import { createAiLogger } from '../../environment'
+import { AI_PROMPTS } from '../../prompts'
+import { REVIEW_WINDOW_SIZE } from '../base-translation-strategy'
+import type { ReviewerIssue } from '../translation-reviewer'
 import type { TranslationUnit } from '../translation-unit.types'
 import {
   flatIdsOf,
@@ -31,7 +29,7 @@ export interface TranslationToolState {
   patchKeysDropped: string[]
 }
 
-const logger = new Logger('TranslationAgentTools')
+const logger = createAiLogger('TranslationAgentTools')
 
 const buildWriteSchema = (textEntries: Record<string, unknown>) => {
   const translationShape: Record<string, TSchema> = {}

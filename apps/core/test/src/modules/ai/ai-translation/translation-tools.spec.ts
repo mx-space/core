@@ -1,11 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
-
+import { VirtualFs } from '@mx-space/ai/engine'
+import type { TranslationUnit } from '@mx-space/ai/translation'
 import {
   createTranslationTools,
   TRANSLATION_FILE,
-} from '~/modules/ai/ai-translation/engine/translation-tools'
-import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { VirtualFs } from '@mx-space/ai/engine'
+} from '@mx-space/ai/translation'
+import { describe, expect, it, vi } from 'vitest'
 
 const units: TranslationUnit[] = [
   { id: 'text:p1', payload: '你好', meta: 'text' },

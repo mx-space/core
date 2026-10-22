@@ -1,33 +1,28 @@
-import { Injectable } from '@nestjs/common'
-
-import { throwIfAborted } from '~/utils/abort.util'
-
+import { throwIfAborted } from '@mx-space/ai'
 import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import type { IModelRuntime } from '@mx-space/ai/runtime'
-import type { ArticleContent } from '../ai-translation.types'
 import {
   applyParagraphPatches,
-  splitMarkdownIntoParagraphs,
-} from '../markdown-paragraph-splitter'
-import { TranslationReviewerService } from '../reviewer.service'
-import {
+  BaseTranslationStrategy,
   decodeTags,
+  emptyEditorMetrics,
+  emptyReviewerMetrics,
   META_SUBTITLE_KEY,
   META_SUMMARY_KEY,
   META_TAGS_KEY,
   META_TITLE_KEY,
-} from '../translation-meta'
+  splitMarkdownIntoParagraphs,
+} from '@mx-space/ai/translation'
+import { Injectable } from '@nestjs/common'
+
+import type { ArticleContent } from '../ai-translation.types'
+import { TranslationReviewerService } from '../reviewer.service'
 import type {
   ITranslationStrategy,
   PipelineMetrics,
   TranslationResult,
   TranslationStrategyOptions,
 } from '../translation-strategy.interface'
-import {
-  BaseTranslationStrategy,
-  emptyEditorMetrics,
-  emptyReviewerMetrics,
-} from './base-translation-strategy'
 
 @Injectable()
 export class MarkdownTranslationStrategy

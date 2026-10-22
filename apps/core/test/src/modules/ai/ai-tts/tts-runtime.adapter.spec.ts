@@ -1,3 +1,4 @@
+import { createAbortError } from '@mx-space/ai'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
@@ -5,7 +6,6 @@ import {
   resolveTtsBaseUrl,
   TtsRuntimeAdapter,
 } from '~/modules/ai/ai-tts/tts-runtime.adapter'
-import { createAbortError } from '~/utils/abort.util'
 
 const audio = () =>
   new Response(new Uint8Array([1, 2, 3]), {

@@ -1,19 +1,16 @@
 import { Type } from '@earendil-works/pi-ai'
-import { Logger } from '@nestjs/common'
 
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
-import { runEngineLoop } from '@mx-space/ai/engine'
-import type { SubAgentSpec } from '@mx-space/ai/engine'
-import { invokeSubAgent } from '@mx-space/ai/engine'
-import type { EngineTool } from '@mx-space/ai/engine'
-import { VirtualFs } from '@mx-space/ai/engine'
-import type { IModelRuntime, RuntimeUsage } from '@mx-space/ai/runtime'
+import type { EngineTool, SubAgentSpec } from '../../engine'
+import { invokeSubAgent, runEngineLoop, VirtualFs } from '../../engine'
+import { createAiLogger } from '../../environment'
+import { AI_PROMPTS } from '../../prompts'
+import type { IModelRuntime, RuntimeUsage } from '../../runtime'
 import {
   buildReviewerMetrics,
   emptyEditorMetrics,
   emptyReviewerMetrics,
-} from '../strategies/base-translation-strategy'
-import type { PipelineMetrics } from '../translation-strategy.interface'
+} from '../base-translation-strategy'
+import type { PipelineMetrics } from '../pipeline.types'
 import type { TranslationUnit } from '../translation-unit.types'
 import {
   flatIdsOf,
@@ -31,7 +28,7 @@ import {
   type TranslationToolState,
 } from './translation-tools'
 
-const logger = new Logger('TranslationCoordinator')
+const logger = createAiLogger('TranslationCoordinator')
 
 export const TRANSLATION_SUB_AGENT_CONCURRENCY = 3
 export const TRANSLATION_SUB_AGENT_MAX_ATTEMPTS = 2

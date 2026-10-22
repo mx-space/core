@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest'
-
 import { VirtualFs } from '@mx-space/ai/engine'
+import { describe, expect, it } from 'vitest'
 
 describe('VirtualFs', () => {
   it('write then read returns a defensive copy', () => {

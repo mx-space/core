@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto'
 
+import { type DecisionQuestion, requestDecision } from '@mx-space/ai/decision'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
 import { Injectable } from '@nestjs/common'
 
 import { OperationContext } from '~/common/contexts/operation.context'
@@ -9,9 +12,6 @@ import type { AIConfig } from '../configs/configs.schema'
 import { ConfigsService } from '../configs/configs.service'
 import type { AIModelAssignment, AIProviderConfig } from './ai.types'
 import { AIFeatureKey, AIProviderType } from './ai.types'
-import { type DecisionQuestion, requestDecision } from '@mx-space/ai/decision'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
-import { createModelRuntime } from '@mx-space/ai/runtime'
 
 export interface AIResolvedModelInfo {
   provider: AIProviderType

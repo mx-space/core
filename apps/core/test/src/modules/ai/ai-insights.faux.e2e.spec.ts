@@ -1,4 +1,5 @@
 import { fauxAssistantMessage } from '@earendil-works/pi-ai'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
@@ -11,7 +12,6 @@ import { AiInsightsAdapter } from '~/modules/ai/ai-insights/ai-insights.adapter'
 import type { AiInsightsRepository } from '~/modules/ai/ai-insights/ai-insights.repository'
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
 import { MultilangGenerationService } from '~/modules/ai/ai-multilang/ai-multilang.service'
-import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 
 const PROVIDER = 'faux-insights'
 const MODEL_ID = 'faux-insights-model'

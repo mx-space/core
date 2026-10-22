@@ -1,5 +1,6 @@
-import { AIProviderType } from '../ai.types'
 import { ProtocolAdapterRegistry } from '@mx-space/ai/runtime'
+
+import { AIProviderType } from '../ai.types'
 import { OpenAiCompatibleTtsProtocolAdapter } from './openai-compatible-tts-protocol.adapter'
 import type {
   ITtsProtocolAdapter,

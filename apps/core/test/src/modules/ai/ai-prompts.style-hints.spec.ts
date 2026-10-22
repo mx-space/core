@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest'
-
 import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import { describe, expect, it } from 'vitest'
 
 const hints =
   'DOCUMENT_TYPE: personal technical blog\nREGISTER: candid, conversational'

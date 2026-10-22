@@ -4,9 +4,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import { createModelRuntime } from '@mx-space/ai/runtime'
 import { config as loadEnv } from 'dotenv'
 
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import {
   type AIProviderConfig,
   AIProviderType,
@@ -14,7 +15,6 @@ import {
 import type { ArticleContent } from '../src/modules/ai/ai-translation/ai-translation.types'
 import { TranslationReviewerService } from '../src/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
-import { createModelRuntime } from '@mx-space/ai/runtime'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
 import { extractDocumentContext } from '../src/utils/content.util'
@@ -231,9 +231,10 @@ async function main() {
       console.log(
         `ok=true ms=${r.durationMs} title=${JSON.stringify(r.translatedTitle)} leaves=${r.textLeaves} nodeDiff=${r.nodeTypeDiff.join(',') || 'none'}`,
       )
-    else console.log(`ok=false ms=${r.durationMs} error=${r.error?.slice(0,400)}`)
+    else
+      console.log(`ok=false ms=${r.durationMs} error=${r.error?.slice(0, 400)}`)
     if (r.translatedLexical) {
-      const safe = r.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      const safe = r.label.toLowerCase().replaceAll(/[^\da-z]+/g, '-')
       await writeFile(
         resolve(OUT, `lexical-${safe}.json`),
         `${JSON.stringify(r.translatedLexical, null, 2)}\n`,

@@ -1,13 +1,14 @@
 import type { TSchema } from '@earendil-works/pi-ai'
 import { Type } from '@earendil-works/pi-ai'
 
+import type { ReasoningEffort } from '../runtime/types'
+import COMMENT_SCORE_SYSTEM from './comment-score.system.md?raw'
+import COMMENT_SPAM_SYSTEM from './comment-spam.system.md?raw'
 import {
   AI_SUMMARY_MAX_WORDS,
   DEFAULT_SUMMARY_LANG,
   LANGUAGE_CODE_TO_NAME,
 } from './constants'
-import COMMENT_SCORE_SYSTEM from './comment-score.system.md?raw'
-import COMMENT_SPAM_SYSTEM from './comment-spam.system.md?raw'
 import COVER_SIGNAL_GEOMETRY_SYSTEM from './cover-signal-geometry.system.md?raw'
 import COVER_SIGNAL_GEOMETRY_FALLBACK from './cover-signal-geometry-fallback.partial.md?raw'
 import COVER_SIGNAL_GEOMETRY_HARD_CONSTRAINTS from './cover-signal-geometry-hard-constraints.partial.md?raw'
@@ -38,7 +39,6 @@ import TRANSLATION_LANG_ZH from './translation-lang-zh.partial.md?raw'
 import TRANSLATION_OUTPUT_FORMAT from './translation-output-format.partial.md?raw'
 import TRANSLATION_REVIEWER_SYSTEM from './translation-reviewer.system.md?raw'
 import TRANSLATION_STREAM_REMINDER from './translation-stream-reminder.partial.md?raw'
-import type { ReasoningEffort } from '../runtime/types'
 
 const SUMMARY_SYSTEM = renderPromptTemplate(SUMMARY_TEMPLATE, {
   MAX_WORDS: AI_SUMMARY_MAX_WORDS,

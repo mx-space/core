@@ -33,6 +33,10 @@
       "types": "./src/prompts/index.ts",
       "import": "./src/prompts/index.ts"
     },
+    "./translation": {
+      "types": "./src/translation/index.ts",
+      "import": "./src/translation/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -61,6 +65,10 @@
         "types": "./dist/prompts/index.d.ts",
         "import": "./dist/prompts/index.js"
       },
+      "./translation": {
+        "types": "./dist/translation/index.d.ts",
+        "import": "./dist/translation/index.js"
+      },
       "./package.json": "./package.json"
     }
   },
@@ -86,13 +94,16 @@
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.99.1",
     "@earendil-works/pi-ai": "0.99.1",
+    "@haklex/rich-headless": "0.52.0",
     "@innei/message-engine": "0.5.0",
     "es-toolkit": "^1.52.0",
+    "json5": "2.2.3",
     "jsonrepair": "^3.15.0",
     "typebox": "1.3.35",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@types/node": "26.6.5",
     "tsdown": "0.23.0",
     "typescript": "6.0.3",
     "vitest": "5.0.5"
