@@ -1,10 +1,9 @@
 {
   "name": "@mx-space/ai",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "description": "Shared AI contracts for mx-space (SSE event unions, etc.) consumed by the server and its clients",
-  "license": "AGPLv3",
+  "description": "Shared AI building blocks for mx-space: SSE contracts, language codes, model runtime, prompts and translation engine",
+  "license": "MIT",
   "author": "Innei <https://innei.in>",
   "files": [
     "dist",
@@ -21,6 +20,7 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "access": "public",
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -32,10 +32,23 @@
       "./package.json": "./package.json"
     }
   },
+  "bump": {
+    "before": [
+      "git pull --rebase",
+      "pnpm i",
+      "npm run build"
+    ],
+    "after": [
+      "npm publish --access=public"
+    ],
+    "tag": false,
+    "commit_message": "chore(release): bump @mx-space/ai to v${NEW_VERSION}"
+  },
   "scripts": {
     "build": "tsdown",
     "clean": "rm -rf dist",
     "prepublishOnly": "tsdown",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -43,6 +56,7 @@
   },
   "devDependencies": {
     "tsdown": "0.23.0",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
   }
 }
