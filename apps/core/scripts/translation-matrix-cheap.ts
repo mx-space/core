@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { createModelRuntime } from '@mx-space/ai/runtime'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 
 import {
@@ -17,7 +18,6 @@ import { TranslationReviewerService } from '../src/modules/ai/ai-translation/rev
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '@mx-space/ai/translation'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')

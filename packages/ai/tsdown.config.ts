@@ -20,6 +20,9 @@ export default defineConfig({
   format: ['esm'],
   platform: 'neutral',
   sourcemap: true,
+  deps: {
+    neverBundle: [/^node:/],
+  },
   plugins: [
     {
       name: 'raw-text',

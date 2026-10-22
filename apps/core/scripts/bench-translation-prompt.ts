@@ -15,6 +15,7 @@ import type {
   TextStreamChunk,
 } from '@mx-space/ai/runtime'
 import { createModelRuntime } from '@mx-space/ai/runtime'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 import type { z } from 'zod'
 
@@ -28,7 +29,6 @@ import { TranslationReviewerService } from '../src/modules/ai/ai-translation/rev
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '@mx-space/ai/translation'
 
 interface Options {
   dataDir: string
