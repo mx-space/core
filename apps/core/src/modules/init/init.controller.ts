@@ -13,10 +13,13 @@ import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
-import { ZipUploadInterceptor } from '~/common/interceptors/zip-upload.interceptor'
 import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
 
 import { BackupService } from '../backup/backup.service'
+import {
+  BackupUploadInterceptor,
+  RestoreKeySchema,
+} from '../backup/backup-restore'
 import { ConfigsService } from '../configs/configs.service'
 import { type ConfigKeyDto, ConfigKeySchema } from '../option/option.schema'
 import { InitGuard } from './init.guard'
@@ -76,16 +79,16 @@ export class InitController {
 
   @Post('/restore')
   @HttpCode(200)
-  @UseInterceptors(
-    ZipUploadInterceptor((got) =>
-      createAppException(AppErrorCode.INIT_INVALID_MIME_TYPE, { got }),
-    ),
-  )
+  @UseInterceptors(BackupUploadInterceptor)
   async uploadAndRestore(
     @UploadedFile(requiredFilePipe) data: UploadedMultipartFile,
+    @Body('decryptionKey') decryptionKey?: string,
   ) {
     await this.assertNotInitialized()
-    await this.backupService.saveTempBackupByUpload(data.buffer!)
+    await this.backupService.saveTempBackupByUpload(
+      data.buffer!,
+      RestoreKeySchema.parse(decryptionKey),
+    )
 
     return
   }

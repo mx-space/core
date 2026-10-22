@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
-import type { BackupFile } from '~/api/backups'
+import type { BackupFile, BackupRestoreInput } from '~/api/backups'
 import {
   createBackup,
   deleteBackup,
@@ -26,7 +26,10 @@ import { cn } from '~/utils/cn'
 import { saveBackupBlob } from '../utils/backup-file'
 import { BackupRouteContext } from './backup-route-context'
 import { BackupDetailEmptyState } from './BackupDetailEmptyState'
-import { presentRestoreBackupKey } from './BackupKeyModals'
+import {
+  presentBackupRestore,
+  presentRestoreBackupKey,
+} from './BackupKeyModals'
 import { BackupListEmptyState } from './BackupListEmptyState'
 import { BackupListItem } from './BackupListItem'
 import { BackupListSkeleton } from './BackupListSkeleton'
@@ -77,10 +80,7 @@ export function BackupRouteViewContent() {
   })
 
   const uploadMutation = useMutation({
-    mutationFn: uploadAndRestoreBackup,
-    onError: () => {
-      toast.error(t('backup.toast.uploadFailed'))
-    },
+    mutationFn: (input: BackupRestoreInput) => uploadAndRestoreBackup(input),
     onSuccess: () => {
       toast.success(t('backup.toast.uploadSuccess'))
       setTimeout(() => {
@@ -208,13 +208,9 @@ export function BackupRouteViewContent() {
     if (!file) return
     if (fileInputRef.current) fileInputRef.current.value = ''
     try {
-      if ((await file.slice(0, 8).text()) === 'MXBACKUP') {
-        await presentRestoreBackupKey(async (decryptionKey) => {
-          await uploadAndRestoreBackup({ file, decryptionKey })
-          toast.success(t('backup.toast.uploadSuccess'))
-          setTimeout(() => location.reload(), 1000)
-        })
-      } else uploadMutation.mutate({ file })
+      await presentBackupRestore(file, (decryptionKey) =>
+        uploadMutation.mutateAsync({ file, decryptionKey }),
+      )
     } catch {
       toast.error(t('backup.toast.uploadFailed'))
     }

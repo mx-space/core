@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { getAppInfo, restoreFromBackup } from '~/api/system'
 import { API_URL } from '~/constants/env'
+import { presentBackupRestore } from '~/features/backup/components/BackupKeyModals'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
@@ -39,13 +40,14 @@ export function WelcomeStep(props: {
 
   const restore = async (file: File | undefined) => {
     if (!file) return
-    const formData = new FormData()
-    formData.append('file', file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setRestoring(true)
     try {
-      await restoreFromBackup(formData)
-      toast.success(t('setup.start.restoreSuccess'))
-      setTimeout(() => location.reload(), 1000)
+      await presentBackupRestore(file, async (decryptionKey) => {
+        await restoreFromBackup({ file, decryptionKey })
+        toast.success(t('setup.start.restoreSuccess'))
+        setTimeout(() => location.reload(), 1000)
+      })
     } catch (error) {
       toast.error(getErrorMessage(error, t('setup.start.restoreError')))
     } finally {
@@ -172,7 +174,7 @@ export function WelcomeStep(props: {
             </div>
           ) : null}
           <input
-            accept=".zip"
+            accept=".mxbackup,.zip"
             className="hidden"
             onChange={(event) => void restore(event.target.files?.[0])}
             ref={fileInputRef}

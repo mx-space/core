@@ -14,12 +14,8 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common'
-import {
-  FileInterceptor,
-  type UploadedMultipartFile,
-} from '@nestjs/platform-fastify'
+import type { UploadedMultipartFile } from '@nestjs/platform-fastify'
 import type { FastifyReply } from 'fastify'
-import { z } from 'zod'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -28,8 +24,7 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { requiredFilePipe } from '~/common/pipes/required-file.pipe'
 
 import { BackupService } from './backup.service'
-
-const RestoreKeySchema = z.string().max(16_384).optional()
+import { BackupUploadInterceptor, RestoreKeySchema } from './backup-restore'
 
 @ApiController({ path: 'backups' })
 @Auth()
@@ -87,9 +82,7 @@ export class BackupController {
 
   @Post(['/rollback/', '/'])
   @HttpCode(200)
-  @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 100 * 1024 * 1024 } }),
-  )
+  @UseInterceptors(BackupUploadInterceptor)
   async uploadAndRestore(
     @UploadedFile(requiredFilePipe) data: UploadedMultipartFile,
     @Body('decryptionKey') decryptionKey?: string,

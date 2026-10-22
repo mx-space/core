@@ -3,10 +3,23 @@ import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import FastifyMultipart from '@fastify/multipart'
+import {
+  FastifyAdapter,
+  type NestFastifyApplication,
+} from '@nestjs/platform-fastify'
+import { Test } from '@nestjs/testing'
 import JSZip from 'jszip'
 
+import { AppExceptionFilter } from '~/common/filters/app-exception.filter'
+import { AuthGuard } from '~/common/guards/auth.guard'
+import { BackupController } from '~/modules/backup/backup.controller'
 import { BackupService } from '~/modules/backup/backup.service'
 import { decryptBackup } from '~/modules/backup/backup-crypto'
+import { ConfigsService } from '~/modules/configs/configs.service'
+import { InitController } from '~/modules/init/init.controller'
+import { InitGuard } from '~/modules/init/init.guard'
+import { InitService } from '~/modules/init/init.service'
 import { S3Uploader } from '~/utils/s3.util'
 import { $throw } from '~/utils/shell.util'
 
@@ -229,3 +242,74 @@ it('creates ordinary ZIPs when encryption is disabled and needs a private key on
   )
   await service.saveTempBackupByUpload(backup.buffer)
 })
+
+it.each(['/init/restore', '/backups/rollback'])(
+  'restores encrypted multipart uploads and legacy ZIPs through %s',
+  async (url) => {
+    const backup = await service.backup()
+    const adapter = new FastifyAdapter()
+    adapter.register(FastifyMultipart)
+    const moduleRef = await Test.createTestingModule({
+      controllers: [InitController, BackupController],
+      providers: [
+        { provide: BackupService, useValue: service },
+        { provide: ConfigsService, useValue: {} },
+        { provide: InitService, useValue: { isInit: async () => false } },
+      ],
+    })
+      .overrideGuard(InitGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile()
+    const app = moduleRef.createNestApplication<NestFastifyApplication>(adapter)
+    app.useGlobalFilters(new AppExceptionFilter())
+    await app.init()
+    await adapter.getInstance().ready()
+    const upload = (
+      archive: Buffer,
+      key?: string,
+      mime = 'application/octet-stream',
+    ) =>
+      app.inject({
+        method: 'POST',
+        url,
+        headers: { 'content-type': 'multipart/form-data; boundary=boundary' },
+        payload: Buffer.concat([
+          Buffer.from(
+            key === undefined
+              ? ''
+              : `--boundary\r\nContent-Disposition: form-data; name="decryptionKey"\r\n\r\n${key}\r\n`,
+          ),
+          Buffer.from(
+            `--boundary\r\nContent-Disposition: form-data; name="file"; filename="backup.mxbackup"\r\nContent-Type: ${mime}\r\n\r\n`,
+          ),
+          archive,
+          Buffer.from('\r\n--boundary--\r\n'),
+        ]),
+      })
+    try {
+      fixture.database = 'changed'
+      for (const key of [undefined, 'wrong-key', 'x'.repeat(16_385)]) {
+        const rejected = await upload(backup.buffer, key)
+        expect(rejected.statusCode).toBeGreaterThanOrEqual(400)
+        expect(rejected.statusCode).toBeLessThan(500)
+        expect(fixture.database).toBe('changed')
+        expect(redis.cleanAllRedisKey).not.toHaveBeenCalled()
+      }
+      const encrypted = await upload(backup.buffer, keys.privateKey)
+      expect(encrypted.statusCode, encrypted.body).toBe(200)
+      expect(fixture.database).toBe('retained-database-credential')
+      fixture.database = 'changed again'
+      const zip = await upload(
+        decryptBackup(backup.buffer, keys.privateKey),
+        undefined,
+        'application/zip',
+      )
+      expect(zip.statusCode, zip.body).toBe(200)
+      expect(fixture.database).toBe('retained-database-credential')
+    } finally {
+      await app.close()
+    }
+  },
+)

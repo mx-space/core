@@ -42,18 +42,20 @@ export function rollbackBackup({
   )
 }
 
-export async function uploadAndRestoreBackup({
-  file,
-  decryptionKey,
-}: {
+export interface BackupRestoreInput {
   file: File
   decryptionKey?: string
-}) {
+}
+
+export async function uploadAndRestoreBackup(
+  { file, decryptionKey }: BackupRestoreInput,
+  endpoint = '/backups/rollback',
+) {
   const formData = new FormData()
   if (decryptionKey) formData.append('decryptionKey', decryptionKey)
   formData.append('file', file)
 
-  await requestJson<void>('/backups/rollback', {
+  await requestJson<void>(endpoint, {
     body: formData,
     method: 'POST',
   })

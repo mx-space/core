@@ -237,3 +237,14 @@ export function presentRestoreBackupKey(
 ) {
   return present(RestoreBackupKeyModal, { onRestore }, options)
 }
+
+export async function presentBackupRestore(
+  file: File,
+  onRestore: (decryptionKey?: string) => Promise<void>,
+) {
+  if ((await file.slice(0, 8).text()) === 'MXBACKUP') {
+    await presentRestoreBackupKey(onRestore)
+  } else {
+    await onRestore()
+  }
+}

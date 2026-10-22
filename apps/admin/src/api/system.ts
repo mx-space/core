@@ -1,13 +1,8 @@
 import { API_URL } from '~/constants/env'
 import type { AppInfo } from '~/models/system'
 
-import {
-  buildAdminRequestHeaders,
-  getJson,
-  patchJson,
-  postJson,
-  requestJson,
-} from './http'
+import { type BackupRestoreInput, uploadAndRestoreBackup } from './backups'
+import { buildAdminRequestHeaders, getJson, patchJson, postJson } from './http'
 
 export interface CreateOwnerData {
   avatar?: string
@@ -60,11 +55,8 @@ export function patchInitConfig<TData>(key: string, data: TData) {
   return patchJson<void, TData>(`/init/configs/${key}`, data)
 }
 
-export function restoreFromBackup(formData: FormData) {
-  return requestJson<void>('/init/restore', {
-    body: formData,
-    method: 'POST',
-  })
+export function restoreFromBackup(input: BackupRestoreInput) {
+  return uploadAndRestoreBackup(input, '/init/restore')
 }
 
 export function createOwner(data: CreateOwnerData) {
