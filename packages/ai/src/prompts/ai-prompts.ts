@@ -8,6 +8,8 @@ import {
   AI_SUMMARY_MAX_WORDS,
   DEFAULT_SUMMARY_LANG,
   LANGUAGE_CODE_TO_NAME,
+  resolveBaseLanguageCode,
+  resolveLanguageName,
 } from './constants'
 import COVER_SIGNAL_GEOMETRY_SYSTEM from './cover-signal-geometry.system.md?raw'
 import COVER_SIGNAL_GEOMETRY_FALLBACK from './cover-signal-geometry-fallback.partial.md?raw'
@@ -95,12 +97,13 @@ const TRANSLATION_CHUNK_LANG_PARTIALS: Record<string, string> = {
 const buildTranslationSystem = (targetLang: string, isStream: boolean) => {
   let system = TRANSLATION_BASE.trimEnd()
 
-  const langPartial = TRANSLATION_LANG_PARTIALS[targetLang]
+  const baseLang = resolveBaseLanguageCode(targetLang)
+  const langPartial = TRANSLATION_LANG_PARTIALS[baseLang]
   if (langPartial) {
     system += langPartial.trimEnd()
   }
 
-  if (targetLang === 'ja') {
+  if (baseLang === 'ja') {
     system += TRANSLATION_JAPANESE_RUBY.trimEnd()
   }
 
@@ -174,12 +177,13 @@ TAGS`
 const buildTranslationChunkSystem = (targetLang: string) => {
   let system = TRANSLATION_CHUNK_BASE.trimEnd()
 
-  const langPartial = TRANSLATION_CHUNK_LANG_PARTIALS[targetLang]
+  const baseLang = resolveBaseLanguageCode(targetLang)
+  const langPartial = TRANSLATION_CHUNK_LANG_PARTIALS[baseLang]
   if (langPartial) {
     system += langPartial.trimEnd()
   }
 
-  if (targetLang === 'ja') {
+  if (baseLang === 'ja') {
     system += TRANSLATION_CHUNK_JAPANESE_RUBY
   }
 
@@ -533,7 +537,7 @@ const buildCoverCompileSchema = (preset: CoverStylePreset) =>
 export const AI_PROMPTS = {
   summary: (lang: string, text: string) => {
     const targetLanguage =
-      LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
     return {
       systemPrompt: SUMMARY_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}
@@ -554,7 +558,7 @@ CONTENT`,
   },
   summaryStream: (lang: string, text: string) => {
     const targetLanguage =
-      LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
     return {
       systemPrompt: SUMMARY_STREAM_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}
@@ -567,7 +571,7 @@ CONTENT`,
   },
 
   summaryTranslation: (targetLang: string, sourceSummary: string) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
     return {
       systemPrompt: SUMMARY_TRANSLATION_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}
@@ -589,7 +593,7 @@ SOURCE_SUMMARY`,
     },
   ) => {
     const targetLanguage =
-      LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
     return {
       systemPrompt: buildInsightsSystem(false),
       prompt: buildInsightsPrompt(targetLanguage, article),
@@ -606,7 +610,7 @@ SOURCE_SUMMARY`,
     },
   ) => {
     const targetLanguage =
-      LANGUAGE_CODE_TO_NAME[lang] || LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
     return {
       systemPrompt: buildInsightsSystem(true),
       prompt: buildInsightsPrompt(targetLanguage, article),
@@ -615,8 +619,8 @@ SOURCE_SUMMARY`,
   },
 
   insightsTranslation: (targetLang: string, sourceMarkdown: string) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
-    const isJapanese = targetLang === 'ja'
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
+    const isJapanese = resolveBaseLanguageCode(targetLang) === 'ja'
     const systemPrompt = buildInsightsTranslationSystem(
       targetLanguage,
       isJapanese,
@@ -736,7 +740,7 @@ COMMENT`,
       styleHints?: string
     },
   ) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
 
     return {
       systemPrompt: buildTranslationSystem(targetLang, true),
@@ -753,7 +757,7 @@ COMMENT`,
       styleHints?: string
     },
   ) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
     return {
       systemPrompt: buildTranslationChunkSystem(targetLang),
       prompt: buildTranslationChunkPrompt(targetLanguage, chunk),
@@ -775,7 +779,7 @@ COMMENT`,
       styleHints?: string
     },
   ) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
     return {
       systemPrompt: TRANSLATION_REVIEWER_SYSTEM,
       prompt: buildTranslationReviewerPrompt(targetLanguage, payload),
@@ -797,7 +801,7 @@ COMMENT`,
       styleHints?: string
     },
   ) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
     return {
       systemPrompt: TRANSLATION_EDITOR_SYSTEM,
       prompt: buildTranslationEditorPrompt(targetLanguage, payload),
@@ -819,7 +823,7 @@ COMMENT`,
   },
 
   fieldTranslation: (targetLang: string, fields: Record<string, string>) => {
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
     return {
       systemPrompt: FIELD_TRANSLATION_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}\n\n## Fields to translate\n${JSON.stringify(fields)}`,

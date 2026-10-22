@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/ws-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Isomorphic raw WebSocket client shared by mx-core admin, Yohaku, and mx-tg-bot",
   "license": "MIT",
@@ -20,9 +20,11 @@
     "./protocol": {
       "types": "./src/protocol.ts",
       "import": "./src/protocol.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "publishConfig": {
+    "access": "public",
     "main": "./dist/index.mjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.mts",
@@ -34,7 +36,8 @@
       "./protocol": {
         "types": "./dist/protocol.d.mts",
         "import": "./dist/protocol.mjs"
-      }
+      },
+      "./package.json": "./package.json"
     }
   },
   "scripts": {
