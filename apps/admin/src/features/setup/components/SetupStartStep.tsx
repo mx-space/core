@@ -1,15 +1,11 @@
-import { Rocket } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { restoreFromBackup } from '~/api/system'
 import { useI18n } from '~/i18n'
+import { authDescriptionClassName } from '~/lib/auth-backdrop'
+import { Button } from '~/ui/primitives/button'
 
-import {
-  iconTileClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-} from '../constants'
 import { getErrorMessage } from '../utils/setup'
 
 export function SetupStartStep(props: { onNext: () => void }) {
@@ -38,31 +34,21 @@ export function SetupStartStep(props: { onNext: () => void }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className={iconTileClassName}>
-        <Rocket aria-hidden="true" className="size-12" />
-      </div>
+    <div>
+      <p className={authDescriptionClassName}>{t('setup.start.description')}</p>
 
-      <p className="mb-4 text-center text-sm text-fg-muted">
-        {t('setup.start.description')}
-      </p>
-
-      <div className="flex w-full max-w-xs gap-3">
-        <button
-          className={`${secondaryButtonClassName} flex-1`}
+      <div className="mt-6 flex justify-end gap-2">
+        <Button
           disabled={restoring}
           onClick={() => fileInputRef.current?.click()}
           type="button"
+          variant="secondary"
         >
           {t('setup.start.restoreButton')}
-        </button>
-        <button
-          className={`${primaryButtonClassName} flex-1`}
-          onClick={props.onNext}
-          type="button"
-        >
+        </Button>
+        <Button onClick={props.onNext} type="button">
           {t('setup.start.beginButton')}
-        </button>
+        </Button>
         <input
           accept=".zip"
           className="hidden"

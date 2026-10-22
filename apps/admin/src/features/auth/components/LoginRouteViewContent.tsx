@@ -8,8 +8,15 @@ import { toast } from 'sonner'
 import { getJson } from '~/api/http'
 import { SESSION_WITH_LOGIN } from '~/constants/keys'
 import { useI18n } from '~/i18n'
-import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
+import {
+  authBackdropClassName,
+  authBackdropStyle,
+  authCardClassName,
+  authIconTileClassName,
+  authTitleClassName,
+} from '~/lib/auth-backdrop'
 import type { UserModel } from '~/models/user'
+import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
 import { cn } from '~/utils/cn'
@@ -159,8 +166,10 @@ export function LoginRouteViewContent() {
       className={cn(authBackdropClassName, 'flex items-center justify-center')}
       style={authBackdropStyle}
     >
-      <section className="flex w-full max-w-sm flex-col items-center">
-        <div className="mb-4 size-[120px] overflow-hidden rounded-full bg-surface-card shadow-brand">
+      <section
+        className={cn(authCardClassName, 'flex max-w-sm flex-col items-center')}
+      >
+        <div className={authIconTileClassName}>
           {owner?.avatar ? (
             <img
               alt=""
@@ -169,48 +178,52 @@ export function LoginRouteViewContent() {
               src={owner.avatar}
             />
           ) : (
-            <div className="flex size-full items-center justify-center text-3xl font-medium text-accent">
-              {readInitial(owner)}
-            </div>
+            <span className="text-2xl font-semibold">{readInitial(owner)}</span>
           )}
         </div>
 
-        <h1 className="mb-6 text-xl font-medium tracking-wide">
+        <h1 className={cn(authTitleClassName, 'mt-4 text-center')}>
           {owner?.name || owner?.username || 'Admin'}
         </h1>
 
         {showPasswordInput ? (
-          <form className="w-full max-w-[280px]" onSubmit={handlePasswordLogin}>
-            <label className="sr-only" htmlFor="password-input">
-              {t('auth.login.passwordLabel')}
-            </label>
-            <div className="relative">
-              <TextInput
-                autoComplete="current-password"
-                controlClassName="h-[38px] rounded-full px-4 text-center text-sm focus-visible:ring-accent/25"
-                disabled={isLoggingIn}
-                id="password-input"
-                onChange={setPassword}
-                placeholder={t('auth.login.passwordPlaceholder')}
-                ref={inputRef}
-                type="password"
-                value={password}
-              />
-              <button className="sr-only" type="submit">
-                {t('auth.login.submit')}
-              </button>
-            </div>
+          <form
+            className="mt-6 flex w-full flex-col gap-3"
+            onSubmit={handlePasswordLogin}
+          >
+            <TextInput
+              aria-label={t('auth.login.passwordLabel')}
+              autoComplete="current-password"
+              disabled={isLoggingIn}
+              id="password-input"
+              onChange={setPassword}
+              placeholder={t('auth.login.passwordPlaceholder')}
+              ref={inputRef}
+              type="password"
+              value={password}
+            />
+            <Button className="w-full" disabled={isLoggingIn} type="submit">
+              {isLoggingIn ? (
+                <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+              ) : null}
+              {t('auth.login.submit')}
+            </Button>
           </form>
         ) : null}
 
         {hasAlternativeAuth ? (
-          <div className="mt-6 flex justify-center gap-4">
+          <div
+            className={cn(
+              'flex w-full justify-center gap-2',
+              showPasswordInput ? 'mt-6 border-t border-border pt-6' : 'mt-6',
+            )}
+          >
             {settings?.passkey ? (
               <LoginIconButton
                 label={t('auth.login.passkey')}
                 onClick={handlePasskeyLogin}
               >
-                <KeyRound aria-hidden="true" className="!size-5" />
+                <KeyRound aria-hidden="true" className="size-4" />
               </LoginIconButton>
             ) : null}
 
@@ -244,7 +257,7 @@ export function LoginRouteViewContent() {
         ) : null}
 
         {ownerQuery.isLoading || allowLoginQuery.isLoading ? (
-          <div className="mt-6 flex items-center gap-2 text-xs text-fg-muted">
+          <div className="mt-6 flex items-center gap-2 text-sm text-fg-muted">
             <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
             {t('auth.login.loadingProfile')}
           </div>

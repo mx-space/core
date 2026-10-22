@@ -8,7 +8,6 @@ import { patchInitConfig } from '~/api/system'
 import { useI18n } from '~/i18n'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { cardClassName, inputClassName, labelClassName } from '../constants'
 import type { SetupUrls } from '../types/setup'
 import { getErrorMessage } from '../utils/setup'
 import { StepActions, UrlInput } from './SetupPrimitives'
@@ -67,112 +66,104 @@ export function SetupSiteStep(props: {
   }
 
   return (
-    <div className={cardClassName}>
-      <form onSubmit={submit}>
-        <div className="space-y-4">
-          <TextInput
-            autoComplete="organization"
-            controlClassName={inputClassName}
-            label={t('setup.site.titleLabel')}
-            labelClassName={labelClassName}
-            onChange={setTitle}
-            placeholder={t('setup.site.titlePlaceholder')}
-            required
-            value={title}
-          />
+    <form onSubmit={submit}>
+      <div className="space-y-4">
+        <TextInput
+          autoComplete="organization"
+          label={t('setup.site.titleLabel')}
+          onChange={setTitle}
+          placeholder={t('setup.site.titlePlaceholder')}
+          required
+          value={title}
+        />
 
-          <TextInput
-            autoComplete="off"
-            controlClassName={inputClassName}
-            label={t('setup.site.descriptionLabel')}
-            labelClassName={labelClassName}
-            onChange={setDescription}
-            placeholder={t('setup.site.descriptionPlaceholder')}
-            required
-            value={description}
-          />
+        <TextInput
+          autoComplete="off"
+          label={t('setup.site.descriptionLabel')}
+          onChange={setDescription}
+          placeholder={t('setup.site.descriptionPlaceholder')}
+          required
+          value={description}
+        />
 
-          <div>
-            <label className={labelClassName}>
-              {t('setup.site.keywordsLabel')}
-            </label>
-            <div className="rounded-2xl border border-border bg-surface-inset p-2">
-              <div className="mb-2 flex flex-wrap gap-2">
-                {keywords.map((keyword) => (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-3 py-1 text-xs text-fg"
-                    key={keyword}
+        <div className="grid gap-1.5 text-sm">
+          <TextInput
+            label={t('setup.site.keywordsLabel')}
+            onChange={setKeywordInput}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                addKeyword()
+              }
+            }}
+            placeholder={t('setup.site.keywordPlaceholder')}
+            value={keywordInput}
+          />
+          {keywords.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {keywords.map((keyword) => (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs text-accent"
+                  key={keyword}
+                >
+                  {keyword}
+                  <button
+                    aria-label={t('setup.site.keywordRemoveLabel', {
+                      keyword,
+                    })}
+                    className="rounded-full transition-colors hover:text-accent-hover"
+                    onClick={() =>
+                      setKeywords((current) =>
+                        current.filter((item) => item !== keyword),
+                      )
+                    }
+                    type="button"
                   >
-                    {keyword}
-                    <button
-                      aria-label={t('setup.site.keywordRemoveLabel', {
-                        keyword,
-                      })}
-                      onClick={() =>
-                        setKeywords((current) =>
-                          current.filter((item) => item !== keyword),
-                        )
-                      }
-                      type="button"
-                    >
-                      <X aria-hidden="true" className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <TextInput
-                controlClassName="h-9 rounded-full px-3 text-sm focus-visible:ring-accent/25"
-                onChange={setKeywordInput}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    addKeyword()
-                  }
-                }}
-                placeholder={t('setup.site.keywordPlaceholder')}
-                value={keywordInput}
-              />
+                    <X aria-hidden="true" className="size-3" />
+                  </button>
+                </span>
+              ))}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <UrlInput
-              label={t('setup.site.webUrlLabel')}
-              onChange={(value) =>
-                setUrls((current) => ({ ...current, webUrl: value }))
-              }
-              value={urls.webUrl}
-            />
-            <UrlInput
-              label={t('setup.site.apiUrlLabel')}
-              onChange={(value) =>
-                setUrls((current) => ({ ...current, serverUrl: value }))
-              }
-              value={urls.serverUrl}
-            />
-            <UrlInput
-              label={t('setup.site.adminUrlLabel')}
-              onChange={(value) =>
-                setUrls((current) => ({ ...current, adminUrl: value }))
-              }
-              value={urls.adminUrl}
-            />
-            <UrlInput
-              label={t('setup.site.gatewayUrlLabel')}
-              onChange={(value) =>
-                setUrls((current) => ({ ...current, wsUrl: value }))
-              }
-              value={urls.wsUrl}
-            />
-          </div>
+          ) : null}
         </div>
 
-        <StepActions
-          canSubmit={canSubmit}
-          onPrev={props.onPrev}
-          submitting={submitting}
-        />
-      </form>
-    </div>
+        <div className="grid grid-cols-2 gap-3">
+          <UrlInput
+            label={t('setup.site.webUrlLabel')}
+            onChange={(value) =>
+              setUrls((current) => ({ ...current, webUrl: value }))
+            }
+            value={urls.webUrl}
+          />
+          <UrlInput
+            label={t('setup.site.apiUrlLabel')}
+            onChange={(value) =>
+              setUrls((current) => ({ ...current, serverUrl: value }))
+            }
+            value={urls.serverUrl}
+          />
+          <UrlInput
+            label={t('setup.site.adminUrlLabel')}
+            onChange={(value) =>
+              setUrls((current) => ({ ...current, adminUrl: value }))
+            }
+            value={urls.adminUrl}
+          />
+          <UrlInput
+            label={t('setup.site.gatewayUrlLabel')}
+            onChange={(value) =>
+              setUrls((current) => ({ ...current, wsUrl: value }))
+            }
+            value={urls.wsUrl}
+          />
+        </div>
+      </div>
+
+      <StepActions
+        canSubmit={canSubmit}
+        onPrev={props.onPrev}
+        submitting={submitting}
+      />
+    </form>
   )
 }

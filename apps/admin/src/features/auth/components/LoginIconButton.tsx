@@ -10,10 +10,11 @@ export function LoginIconButton(props: {
   return (
     <Button
       aria-label={props.label}
-      className="!size-10 rounded-full !p-0 focus-visible:ring-accent/30"
+      iconOnly
       onClick={props.onClick}
+      title={props.label}
       type="button"
-      variant="subtle"
+      variant="secondary"
     >
       {props.children}
     </Button>

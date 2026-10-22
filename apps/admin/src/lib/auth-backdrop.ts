@@ -12,3 +12,13 @@ export const authBackdropStyle: CSSProperties = {
   backgroundPosition: 'center',
   backgroundSize: 'cover',
 }
+
+export const authCardClassName =
+  'w-full rounded-lg border border-border bg-surface-card p-6 shadow-sm'
+
+export const authIconTileClassName =
+  'flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent-soft text-accent'
+
+export const authTitleClassName = 'text-2xl font-semibold text-fg'
+
+export const authDescriptionClassName = 'text-base text-fg-muted'

@@ -7,7 +7,6 @@ import { createOwner } from '~/api/system'
 import { useI18n } from '~/i18n'
 import { TextInput } from '~/ui/primitives/text-field'
 
-import { cardClassName, inputClassName, labelClassName } from '../constants'
 import { getErrorMessage, removeEmptyStrings } from '../utils/setup'
 import { StepActions, UrlInput } from './SetupPrimitives'
 
@@ -53,100 +52,86 @@ export function SetupOwnerStep(props: {
   }
 
   return (
-    <div className={cardClassName}>
-      <form onSubmit={submit}>
-        <div className="space-y-4">
+    <form onSubmit={submit}>
+      <div className="space-y-4">
+        <TextInput
+          autoComplete="username"
+          label={t('setup.owner.usernameLabel')}
+          onChange={(value) => updateOwner({ username: value })}
+          placeholder={t('setup.owner.usernamePlaceholder')}
+          required
+          value={owner.username}
+        />
+
+        <TextInput
+          autoComplete="name"
+          label={t('setup.owner.nicknameLabel')}
+          onChange={(value) => updateOwner({ name: value })}
+          placeholder={t('setup.owner.nicknamePlaceholder')}
+          value={owner.name ?? ''}
+        />
+
+        <TextInput
+          autoComplete="email"
+          label={t('setup.owner.emailLabel')}
+          onChange={(value) => updateOwner({ mail: value })}
+          placeholder={t('setup.owner.emailPlaceholder')}
+          required
+          type="email"
+          value={owner.mail}
+        />
+
+        <div className="grid grid-cols-2 gap-3">
           <TextInput
-            autoComplete="username"
-            controlClassName={inputClassName}
-            label={t('setup.owner.usernameLabel')}
-            labelClassName={labelClassName}
-            onChange={(value) => updateOwner({ username: value })}
-            placeholder={t('setup.owner.usernamePlaceholder')}
+            autoComplete="new-password"
+            label={t('setup.owner.passwordLabel')}
+            onChange={(value) => updateOwner({ password: value })}
+            placeholder={t('setup.owner.passwordPlaceholder')}
             required
-            value={owner.username}
+            type="password"
+            value={owner.password}
           />
 
           <TextInput
-            autoComplete="name"
-            controlClassName={inputClassName}
-            label={t('setup.owner.nicknameLabel')}
-            labelClassName={labelClassName}
-            onChange={(value) => updateOwner({ name: value })}
-            placeholder={t('setup.owner.nicknamePlaceholder')}
-            value={owner.name ?? ''}
-          />
-
-          <TextInput
-            autoComplete="email"
-            controlClassName={inputClassName}
-            label={t('setup.owner.emailLabel')}
-            labelClassName={labelClassName}
-            onChange={(value) => updateOwner({ mail: value })}
-            placeholder={t('setup.owner.emailPlaceholder')}
+            autoComplete="new-password"
+            label={t('setup.owner.confirmPasswordLabel')}
+            onChange={setConfirmPassword}
+            placeholder={t('setup.owner.confirmPasswordPlaceholder')}
             required
-            type="email"
-            value={owner.mail}
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <TextInput
-              autoComplete="new-password"
-              controlClassName={inputClassName}
-              label={t('setup.owner.passwordLabel')}
-              labelClassName={labelClassName}
-              onChange={(value) => updateOwner({ password: value })}
-              placeholder={t('setup.owner.passwordPlaceholder')}
-              required
-              type="password"
-              value={owner.password}
-            />
-
-            <TextInput
-              autoComplete="new-password"
-              controlClassName={inputClassName}
-              label={t('setup.owner.confirmPasswordLabel')}
-              labelClassName={labelClassName}
-              onChange={setConfirmPassword}
-              placeholder={t('setup.owner.confirmPasswordPlaceholder')}
-              required
-              type="password"
-              value={confirmPassword}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <UrlInput
-              label={t('setup.owner.homepageLabel')}
-              onChange={(value) => updateOwner({ url: value })}
-              placeholder="https://"
-              value={owner.url ?? ''}
-            />
-            <UrlInput
-              label={t('setup.owner.avatarLabel')}
-              onChange={(value) => updateOwner({ avatar: value })}
-              placeholder="https://"
-              value={owner.avatar ?? ''}
-            />
-          </div>
-
-          <TextInput
-            autoComplete="off"
-            controlClassName={inputClassName}
-            label={t('setup.owner.introduceLabel')}
-            labelClassName={labelClassName}
-            onChange={(value) => updateOwner({ introduce: value })}
-            placeholder={t('setup.owner.introducePlaceholder')}
-            value={owner.introduce ?? ''}
+            type="password"
+            value={confirmPassword}
           />
         </div>
 
-        <StepActions
-          canSubmit={canSubmit}
-          onPrev={props.onPrev}
-          submitting={submitting}
+        <div className="grid grid-cols-2 gap-3">
+          <UrlInput
+            label={t('setup.owner.homepageLabel')}
+            onChange={(value) => updateOwner({ url: value })}
+            placeholder="https://"
+            value={owner.url ?? ''}
+          />
+          <UrlInput
+            label={t('setup.owner.avatarLabel')}
+            onChange={(value) => updateOwner({ avatar: value })}
+            placeholder="https://"
+            value={owner.avatar ?? ''}
+          />
+        </div>
+
+        <TextInput
+          autoComplete="off"
+          label={t('setup.owner.introduceLabel')}
+          onChange={(value) => updateOwner({ introduce: value })}
+          placeholder={t('setup.owner.introducePlaceholder')}
+          value={owner.introduce ?? ''}
         />
-      </form>
-    </div>
+      </div>
+
+      <StepActions
+        canSubmit={canSubmit}
+        onPrev={props.onPrev}
+        submitting={submitting}
+      />
+    </form>
   )
 }

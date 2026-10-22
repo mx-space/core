@@ -2,7 +2,7 @@ export function GoogleIcon() {
   return (
     <svg
       aria-hidden="true"
-      className="!size-5"
+      className="size-4"
       fill="currentColor"
       viewBox="0 0 24 24"
     >

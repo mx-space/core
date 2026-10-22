@@ -3,19 +3,18 @@ import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
-import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
+import {
+  authBackdropClassName,
+  authBackdropStyle,
+  authCardClassName,
+  authDescriptionClassName,
+  authIconTileClassName,
+  authTitleClassName,
+} from '~/lib/auth-backdrop'
+import { Button } from '~/ui/primitives/button'
 import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
 import { cn } from '~/utils/cn'
-
-import {
-  cardClassName,
-  iconTileClassName,
-  inputClassName,
-  labelClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-} from '../constants'
 
 const storeApiUrlKey = 'mx-admin:setup-api:url'
 const storeGatewayUrlKey = 'mx-admin:setup-api:gateway'
@@ -87,40 +86,40 @@ export function SetupApiRouteViewContent() {
 
   return (
     <main
-      className={cn(
-        authBackdropClassName,
-        'flex flex-col items-center justify-center',
-      )}
+      className={cn(authBackdropClassName, 'flex items-center justify-center')}
       style={authBackdropStyle}
     >
-      <div className={iconTileClassName}>
-        <Server aria-hidden="true" className="size-10" />
-      </div>
-
-      <h1 className="mb-2 text-xl font-medium tracking-wide">
-        {t('setup.api.title')}
-      </h1>
-      <p className="mb-8 text-sm text-fg-muted">{t('setup.api.description')}</p>
-
       <form
-        className={cn(cardClassName, 'w-full max-w-md')}
+        className={cn(authCardClassName, 'max-w-md')}
         onSubmit={handleSubmit}
       >
-        <SetupInput
-          history={historyApiUrl}
-          label={t('setup.api.urlLabel')}
-          onChange={setApiUrl}
-          value={apiUrl}
-        />
+        <header className="mb-6 flex items-center gap-3">
+          <div className={authIconTileClassName}>
+            <Server aria-hidden="true" className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className={authTitleClassName}>{t('setup.api.title')}</h1>
+            <p className={authDescriptionClassName}>
+              {t('setup.api.description')}
+            </p>
+          </div>
+        </header>
 
-        <SetupInput
-          history={historyGatewayUrl}
-          label={t('setup.api.gatewayLabel')}
-          onChange={setGatewayUrl}
-          value={gatewayUrl}
-        />
+        <div className="space-y-4">
+          <SetupInput
+            history={historyApiUrl}
+            label={t('setup.api.urlLabel')}
+            onChange={setApiUrl}
+            value={apiUrl}
+          />
 
-        <div className="mb-6 text-fg">
+          <SetupInput
+            history={historyGatewayUrl}
+            label={t('setup.api.gatewayLabel')}
+            onChange={setGatewayUrl}
+            value={gatewayUrl}
+          />
+
           <FormSwitch
             checked={persist}
             label={t('setup.api.persistLabel')}
@@ -128,25 +127,19 @@ export function SetupApiRouteViewContent() {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <SetupActionButton
-            icon={Bug}
-            label={t('setup.api.actions.localDev')}
-            onClick={handleLocalDev}
-            type="button"
-          />
-          <SetupActionButton
-            icon={RotateCcw}
-            label={t('setup.api.actions.reset')}
-            onClick={handleReset}
-            type="button"
-          />
-          <SetupActionButton
-            icon={Check}
-            label={t('common.confirm')}
-            tone="primary"
-            type="submit"
-          />
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <Button onClick={handleLocalDev} type="button" variant="secondary">
+            <Bug aria-hidden="true" className="size-4" />
+            {t('setup.api.actions.localDev')}
+          </Button>
+          <Button onClick={handleReset} type="button" variant="secondary">
+            <RotateCcw aria-hidden="true" className="size-4" />
+            {t('setup.api.actions.reset')}
+          </Button>
+          <Button type="submit">
+            <Check aria-hidden="true" className="size-4" />
+            {t('common.confirm')}
+          </Button>
         </div>
       </form>
     </main>
@@ -164,10 +157,9 @@ function SetupInput(props: SetupInputProps) {
   const listId = `${props.label.replaceAll(/\s+/g, '-')}-history`
 
   return (
-    <div className="mb-4">
-      <label className={labelClassName}>{props.label}</label>
+    <>
       <TextInput
-        controlClassName={inputClassName}
+        label={props.label}
         list={listId}
         onChange={props.onChange}
         value={props.value}
@@ -177,38 +169,7 @@ function SetupInput(props: SetupInputProps) {
           <option key={item} value={item} />
         ))}
       </datalist>
-    </div>
-  )
-}
-
-interface SetupActionButtonProps {
-  icon: typeof Bug
-  label: string
-  onClick?: () => void
-  tone?: 'default' | 'primary'
-  type: 'button' | 'submit'
-}
-
-function SetupActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  tone = 'default',
-  type,
-}: SetupActionButtonProps) {
-  return (
-    <button
-      aria-label={label}
-      className={cn(
-        tone === 'primary' ? primaryButtonClassName : secondaryButtonClassName,
-        'gap-2 px-3',
-      )}
-      onClick={onClick}
-      type={type}
-    >
-      <Icon aria-hidden="true" className="size-4" />
-      <span>{label}</span>
-    </button>
+    </>
   )
 }
 

@@ -1,14 +1,8 @@
 import { ChevronLeft } from 'lucide-react'
 
 import { useI18n } from '~/i18n'
+import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
-
-import {
-  inputClassName,
-  labelClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-} from '../constants'
 
 export function UrlInput(props: {
   label: string
@@ -19,9 +13,7 @@ export function UrlInput(props: {
   return (
     <TextInput
       autoComplete="url"
-      controlClassName={inputClassName}
       label={props.label}
-      labelClassName={labelClassName}
       onChange={props.onChange}
       placeholder={props.placeholder}
       type="url"
@@ -38,21 +30,13 @@ export function StepActions(props: {
   const { t } = useI18n()
   return (
     <div className="mt-6 flex justify-between">
-      <button
-        className={secondaryButtonClassName}
-        onClick={props.onPrev}
-        type="button"
-      >
-        <ChevronLeft aria-hidden="true" className="mr-1 size-4" />
+      <Button onClick={props.onPrev} type="button" variant="secondary">
+        <ChevronLeft aria-hidden="true" className="size-4" />
         {t('common.back')}
-      </button>
-      <button
-        className={primaryButtonClassName}
-        disabled={!props.canSubmit || props.submitting}
-        type="submit"
-      >
+      </Button>
+      <Button disabled={!props.canSubmit || props.submitting} type="submit">
         {t('setup.step.next')}
-      </button>
+      </Button>
     </div>
   )
 }
