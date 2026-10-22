@@ -1,9 +1,10 @@
-import { Check } from 'lucide-react'
+import { Check, ChevronLeft } from 'lucide-react'
 import type { PropsWithChildren, ReactNode } from 'react'
 
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
 import { authBackdropStyle } from '~/lib/auth-backdrop'
+import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 import faviconUrl from '../../../../favicon.png'
@@ -101,7 +102,11 @@ function RailRow(props: {
 }
 
 export function OnboardingShell(
-  props: PropsWithChildren<{ aside?: ReactNode; step: OnboardingStep }>,
+  props: PropsWithChildren<{
+    aside?: ReactNode
+    onLater?: () => void
+    step: OnboardingStep
+  }>,
 ) {
   const { t } = useI18n()
 
@@ -136,8 +141,20 @@ export function OnboardingShell(
             )),
           ])}
         </ol>
+        {props.onLater ? (
+          <button
+            className="mt-auto hidden h-8 items-center rounded-sm px-3 text-left text-sm text-fg-muted transition-colors hover:bg-black/[0.04] hover:text-fg md:flex"
+            onClick={props.onLater}
+            type="button"
+          >
+            {t('setup.onboarding.action.later')}
+          </button>
+        ) : null}
         <a
-          className="mt-auto hidden px-3 text-sm text-accent hover:text-accent-hover md:block"
+          className={cn(
+            'hidden px-3 text-sm text-accent hover:text-accent-hover md:block',
+            !props.onLater && 'mt-auto',
+          )}
           href={deploymentDocsUrl}
           rel="noreferrer"
           target="_blank"
@@ -176,7 +193,7 @@ export function OnboardingCard(
       </header>
       <div className="px-6 py-5">{props.children}</div>
       {props.footer ? (
-        <footer className="flex items-center justify-end gap-2 rounded-b-lg border-t border-border bg-surface-page px-6 py-3">
+        <footer className="flex items-center justify-between gap-2 rounded-b-lg border-t border-border bg-surface-page px-6 py-3">
           {props.footer}
         </footer>
       ) : null}
@@ -188,4 +205,27 @@ export function OnboardingAsideTitle(props: PropsWithChildren) {
   return (
     <p className="mb-3 text-sm font-medium text-fg-muted">{props.children}</p>
   )
+}
+
+export function OnboardingFooter(
+  props: PropsWithChildren<{ meta?: ReactNode; onBack?: () => void }>,
+) {
+  const { t } = useI18n()
+  return (
+    <>
+      {props.onBack ? (
+        <Button onClick={props.onBack} type="button" variant="secondary">
+          <ChevronLeft aria-hidden="true" className="size-4" />
+          {t('setup.onboarding.action.back')}
+        </Button>
+      ) : (
+        <span className="text-sm text-fg-muted">{props.meta}</span>
+      )}
+      <div className="flex items-center gap-2">{props.children}</div>
+    </>
+  )
+}
+
+export function FieldHint(props: PropsWithChildren) {
+  return <p className="mt-1.5 text-sm text-fg-muted">{props.children}</p>
 }

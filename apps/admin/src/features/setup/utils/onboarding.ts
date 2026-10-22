@@ -1,3 +1,4 @@
+import type { ProviderModelsResponse } from '~/api/ai'
 import type {
   AIConfig,
   AIModelAssignment,
@@ -35,6 +36,14 @@ export function deriveServiceUrls(input: {
       '',
     ),
   }
+}
+
+export function resolveResumeStep(
+  progress: OnboardingProgress | null,
+): OnboardingStep {
+  if (!progress || progress.status === 'finished') return 'site'
+  if (progress.step === 'welcome' || progress.step === 'account') return 'site'
+  return progress.step
 }
 
 const progressKey = (ownerId: string) => `mx-admin:onboarding:${ownerId}`
@@ -100,3 +109,47 @@ export function applyModelPlan(config: AIConfig, plan: ModelPlan): AIConfig {
   }
   return next
 }
+
+export interface ModelOption {
+  label: string
+  value: string
+}
+
+const modelOptionSeparator = '::'
+
+export function buildModelOptions(
+  groups: Pick<
+    ProviderModelsResponse,
+    'models' | 'providerId' | 'providerName'
+  >[],
+): ModelOption[] {
+  return groups.flatMap((group) =>
+    group.models.map((model) => ({
+      label: `${group.providerName} · ${model.name || model.id}`,
+      value: `${group.providerId}${modelOptionSeparator}${model.id}`,
+    })),
+  )
+}
+
+export function parseModelOption(value: string): AIModelAssignment | null {
+  const index = value.indexOf(modelOptionSeparator)
+  if (index <= 0) return null
+  return {
+    model: value.slice(index + modelOptionSeparator.length),
+    providerId: value.slice(0, index),
+  }
+}
+
+export function toModelOption(assignment?: AIModelAssignment | null) {
+  if (!assignment?.providerId || !assignment.model) return ''
+  return `${assignment.providerId}${modelOptionSeparator}${assignment.model}`
+}
+
+export const onboardingLanguages = [
+  { code: 'en', label: 'English' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ko', label: '한국어' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'es', label: 'Español' },
+] as const

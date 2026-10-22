@@ -9,6 +9,7 @@ import {
   type GitHubUpdateVersions,
 } from '~/api/github-update'
 import { getAppInfo } from '~/api/system'
+import { OnboardingResumeBanner } from '~/features/setup/components/OnboardingResumeBanner'
 import { useI18n } from '~/i18n'
 import { EmptyState } from '~/ui/patterns/EmptyState'
 import { isNewerVersion } from '~/utils/version'
@@ -223,6 +224,8 @@ export function DashboardRouteViewContent() {
             ownerName={home.ownerName ?? undefined}
             todayMaxOnline={stat?.todayMaxOnline}
           />
+
+          <OnboardingResumeBanner className="mb-6 phone:order-2" />
 
           {resumeItem ? (
             <DeskResumeCard className="phone:order-3" item={resumeItem} />

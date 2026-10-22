@@ -1,1 +1,1 @@
-export { SetupRouteViewContent as SetupRouteView } from '../components/SetupRouteViewContent'
+export { OnboardingRouteViewContent as SetupRouteView } from '../components/OnboardingRouteViewContent'

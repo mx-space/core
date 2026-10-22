@@ -2,8 +2,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import {
   applyModelPlan,
+  buildModelOptions,
   deriveServiceUrls,
+  parseModelOption,
   readOnboardingProgress,
+  resolveResumeStep,
   writeOnboardingProgress,
 } from './onboarding'
 
@@ -86,5 +89,65 @@ describe('applyModelPlan', () => {
       { defaultModel, overrides: { ttsModel: speech } },
     )
     expect(next.tts).toEqual({ enable: false, model: speech, voice: 'alloy' })
+  })
+})
+
+describe('resolveResumeStep', () => {
+  it('starts authenticated onboarding at the site step without progress', () => {
+    expect(resolveResumeStep(null)).toBe('site')
+    expect(resolveResumeStep({ status: 'finished', step: 'ready' })).toBe(
+      'site',
+    )
+  })
+
+  it('resumes an active or dismissed run at its saved step', () => {
+    expect(resolveResumeStep({ status: 'active', step: 'ai-models' })).toBe(
+      'ai-models',
+    )
+    expect(resolveResumeStep({ status: 'dismissed', step: 'ready' })).toBe(
+      'ready',
+    )
+  })
+
+  it('never resumes into the unauthenticated steps', () => {
+    expect(resolveResumeStep({ status: 'active', step: 'account' })).toBe(
+      'site',
+    )
+  })
+})
+
+describe('model options', () => {
+  const groups = [
+    {
+      models: [
+        { id: 'claude-x', name: 'Claude X' },
+        { id: 'claude-y', name: '' },
+      ],
+      providerId: 'p1',
+      providerName: 'Anthropic',
+      providerType: 'anthropic',
+    },
+    {
+      error: 'boom',
+      models: [],
+      providerId: 'p2',
+      providerName: 'Broken',
+      providerType: 'openai-compatible',
+    },
+  ]
+
+  it('flattens provider model groups into labelled options', () => {
+    expect(buildModelOptions(groups)).toEqual([
+      { label: 'Anthropic · Claude X', value: 'p1::claude-x' },
+      { label: 'Anthropic · claude-y', value: 'p1::claude-y' },
+    ])
+  })
+
+  it('parses an option value back into an assignment', () => {
+    expect(parseModelOption('p1::org/model:free')).toEqual({
+      model: 'org/model:free',
+      providerId: 'p1',
+    })
+    expect(parseModelOption('')).toBeNull()
   })
 })
