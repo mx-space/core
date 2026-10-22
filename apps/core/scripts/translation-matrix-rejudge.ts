@@ -4,10 +4,10 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
-import { extractDocumentContext } from '../src/utils/content.util'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')

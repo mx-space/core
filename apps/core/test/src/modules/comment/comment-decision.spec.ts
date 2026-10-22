@@ -1,12 +1,12 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
 import {
   type DecisionAnswer,
   listDecisionModels,
   requestDecision,
-} from '~/modules/ai/decision/typesafe'
+} from '@mx-space/ai/decision'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 import {
   commentDecisionQuestions,

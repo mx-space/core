@@ -1,14 +1,16 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
+import type { TranslationUnit } from '@mx-space/ai/translation'
+import {
+  runTranslationAgent,
+  splitMarkdownIntoParagraphs,
+} from '@mx-space/ai/translation'
 import { describe, expect, it } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { runTranslationAgent } from '~/modules/ai/ai-translation/engine/translation-agent'
-import { splitMarkdownIntoParagraphs } from '~/modules/ai/ai-translation/markdown-paragraph-splitter'
 import type { PipelineMetrics } from '~/modules/ai/ai-translation/translation-strategy.interface'
-import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 const LIVE_ENABLED = process.env.RUN_LIVE_TESTS === '1'
 const API_KEY = process.env.OPENROUTER_API_KEY

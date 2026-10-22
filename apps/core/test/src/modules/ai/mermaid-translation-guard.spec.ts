@@ -1,6 +1,5 @@
+import { validateMermaidTranslation } from '@mx-space/ai/translation'
 import { describe, expect, it } from 'vitest'
-
-import { validateMermaidTranslation } from '~/modules/ai/ai-translation/mermaid-translation-guard'
 
 describe('validateMermaidTranslation', () => {
   it('accepts label-only translation that preserves syntax', () => {

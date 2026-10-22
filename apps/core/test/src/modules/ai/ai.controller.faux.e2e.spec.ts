@@ -1,4 +1,5 @@
 import { fauxAssistantMessage, fauxToolCall } from '@earendil-works/pi-ai'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
@@ -6,7 +7,6 @@ import { AppException } from '~/common/errors/exception.types'
 import { AiController } from '~/modules/ai/ai.controller'
 import type { AIProviderCapabilities } from '~/modules/ai/ai.types'
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 // Provider id MUST match a host-derivation entry so the adapter resolves the
 // faux model from the pi registry. Use api.openai.com -> 'openai'.

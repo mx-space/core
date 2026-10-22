@@ -8,15 +8,17 @@ import type {
   ToolCall,
   Usage,
 } from '@earendil-works/pi-ai'
+import type { RuntimeProviderInfo } from '@mx-space/ai/runtime'
+import {
+  convertJsonSchemaToTypeBox as convertJsonSchema,
+  createModelRuntime,
+} from '@mx-space/ai/runtime'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
 
 import type { AIProviderConfig } from '../ai.types'
-import type { RuntimeProviderInfo } from '../runtime'
-import { createModelRuntime } from '../runtime'
-import { convert as convertJsonSchema } from '../runtime/json-schema-to-typebox'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
 
 interface ChatToolInput {

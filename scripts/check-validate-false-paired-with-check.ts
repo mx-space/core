@@ -1,5 +1,5 @@
 /**
- * CI gate: every `validate: false` in apps/core/src MUST be paired with a
+ * CI gate: every `validate: false` in apps/core/src or packages/ai/src MUST be paired with a
  * subsequent `Value.Check(` within 30 source lines. The pi-runtime adapter
  * skips schema validation when `validate: false` is set, so callers post-
  * process the raw model output and MUST manually re-validate via TypeBox
@@ -10,7 +10,10 @@ import { join, relative, resolve } from 'node:path'
 
 const WINDOW = 30
 const repoRoot = resolve(import.meta.dirname, '..')
-const searchRoot = join(repoRoot, 'apps/core/src')
+const searchRoots = [
+  join(repoRoot, 'apps/core/src'),
+  join(repoRoot, 'packages/ai/src'),
+]
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -27,7 +30,7 @@ function walk(dir: string, out: string[] = []): string[] {
 
 const violations: string[] = []
 
-for (const file of walk(searchRoot)) {
+for (const file of searchRoots.flatMap((root) => walk(root))) {
   const source = readFileSync(file, 'utf8')
   const lines = source.split('\n')
   for (let i = 0; i < lines.length; i++) {

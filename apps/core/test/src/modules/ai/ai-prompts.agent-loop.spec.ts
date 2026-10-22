@@ -1,6 +1,5 @@
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { describe, expect, it } from 'vitest'
-
-import { AI_PROMPTS } from '~/modules/ai/ai.prompts'
 
 describe('AI_PROMPTS.translationAgent', () => {
   it('appends the agent-loop contract after the chunk system', () => {

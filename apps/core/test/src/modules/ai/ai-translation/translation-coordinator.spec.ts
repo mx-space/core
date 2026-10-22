@@ -1,12 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
-
-import { planTranslationChunks } from '~/modules/ai/ai-translation/engine/translation-chunk-planner'
+import type { TranslationUnit } from '@mx-space/ai/translation'
 import {
   createTranslationCoordinatorTools,
+  planTranslationChunks,
+  TRANSLATION_FILE,
   TRANSLATION_SUB_AGENT_CONCURRENCY,
-} from '~/modules/ai/ai-translation/engine/translation-coordinator'
-import { TRANSLATION_FILE } from '~/modules/ai/ai-translation/engine/translation-tools'
-import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
+} from '@mx-space/ai/translation'
+import { describe, expect, it, vi } from 'vitest'
 
 const runtimeFor = (
   handler: (prompt: string) => Promise<{

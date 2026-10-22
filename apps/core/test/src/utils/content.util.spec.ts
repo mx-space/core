@@ -1,8 +1,8 @@
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { describe, expect, it } from 'vitest'
 
 import {
   contentIdentityChanged,
-  extractDocumentContext,
   extractFileUrlsFromContent,
   extractTextFromContent,
 } from '~/utils/content.util'

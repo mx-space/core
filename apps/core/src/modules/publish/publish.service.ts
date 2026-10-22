@@ -1,3 +1,4 @@
+import { createAbortError, throwIfAborted } from '@mx-space/ai'
 import {
   BadRequestException,
   Injectable,
@@ -14,7 +15,6 @@ import {
 } from '~/processors/task-queue'
 import { parseEntityId } from '~/shared/id/entity-id'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createAbortError, throwIfAborted } from '~/utils/abort.util'
 
 import { AiTaskService } from '../ai/ai-task/ai-task.service'
 import { ContentMigrationService } from '../content-migration/content-migration.service'

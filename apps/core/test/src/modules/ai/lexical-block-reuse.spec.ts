@@ -1,17 +1,16 @@
-import { describe, expect, it, vi } from 'vitest'
-
-import {
-  backfillReusableBlockTranslations,
-  type BlockTranslationSegments,
-  canReuseBlockTranslations,
-  groupSegmentsByBlock,
-  guardMermaidTranslations,
-} from '~/modules/ai/ai-translation/lexical-block-reuse'
 import type {
+  BlockTranslationSegments,
   LexicalTranslationResult,
   PropertySegment,
   TranslationSegment,
-} from '~/modules/ai/ai-translation/lexical-translation-parser'
+} from '@mx-space/ai/translation'
+import {
+  backfillReusableBlockTranslations,
+  canReuseBlockTranslations,
+  groupSegmentsByBlock,
+  guardMermaidTranslations,
+} from '@mx-space/ai/translation'
+import { describe, expect, it, vi } from 'vitest'
 
 const textSegment = (
   id: string,

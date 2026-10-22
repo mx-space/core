@@ -1,0 +1,976 @@
+import type {
+  Api,
+  AssistantMessage,
+  AssistantMessageEventStream,
+  Context,
+  JsonObject,
+  Message as PiMessage,
+  Model,
+  ProviderStreamOptions,
+  Static,
+  Tool,
+  TSchema,
+} from '@earendil-works/pi-ai'
+import { isContextOverflow, validateToolCall } from '@earendil-works/pi-ai'
+import { complete, stream } from '@earendil-works/pi-ai/compat'
+import {
+  getBuiltinModel,
+  getBuiltinModels,
+} from '@earendil-works/pi-ai/providers/all'
+import { isPlainObject } from 'es-toolkit/compat'
+import { jsonrepair } from 'jsonrepair'
+import { Value } from 'typebox/value'
+
+import { createAiLogger, isAiDebugEnabled } from '../environment'
+import type { IModelRuntime } from './model-runtime.interface'
+import type { AIProviderCapability } from './provider.types'
+import { AIProviderType } from './provider.types'
+import type {
+  GenerateStructuredOptions,
+  GenerateStructuredResult,
+  GenerateTextOptions,
+  GenerateTextResult,
+  GenerateTextStreamOptions,
+  Message,
+  ModelInfo,
+  ReasoningEffort,
+  RuntimeConfig,
+  RuntimeProviderInfo,
+  StreamMessageOptions,
+  StructuredStreamChunk,
+  TextStreamChunk,
+} from './types'
+import { getVertexMediaModels } from './vertex/vertex-model-catalog'
+
+export { isContextOverflow }
+
+const STRUCTURED_TOOL_NAME = 'structured_output'
+const DEFAULT_CONTEXT_WINDOW = 128_000
+const DEFAULT_MAX_TOKENS = 8192
+const STRUCTURED_MAX_ITERATIONS = 5
+
+const HOSTNAME_TO_PROVIDER_ID: Record<string, string> = {
+  'openrouter.ai': 'openrouter',
+  'api.deepseek.com': 'deepseek',
+  'api.openai.com': 'openai',
+  'api.anthropic.com': 'anthropic',
+  'aiplatform.googleapis.com': 'google-vertex',
+}
+
+function fallbackProviderId(type: AIProviderType): string {
+  switch (type) {
+    case AIProviderType.Anthropic: {
+      return 'anthropic'
+    }
+    case AIProviderType.OpenAICompatible: {
+      return 'openai'
+    }
+    case AIProviderType.GoogleVertex: {
+      return 'google-vertex'
+    }
+    default: {
+      return 'openai-compat'
+    }
+  }
+}
+
+function normalizeModelPricing(
+  value: unknown,
+  capability: AIProviderCapability,
+  isOpenRouter: boolean,
+): ModelInfo['pricing'] | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const record = value as Record<string, unknown>
+  const declaredUnit =
+    record.unit === 'character' || record.unit === 'token'
+      ? record.unit
+      : undefined
+  if (!declaredUnit && !isOpenRouter) return undefined
+  const prompt = normalizePrice(record.prompt)
+  const completion = normalizePrice(record.completion)
+  const request = normalizePrice(record.request)
+  const image = normalizePrice(record.image)
+  if (
+    prompt === undefined &&
+    completion === undefined &&
+    request === undefined &&
+    image === undefined
+  ) {
+    return undefined
+  }
+
+  return {
+    ...(prompt === undefined ? {} : { prompt }),
+    ...(completion === undefined ? {} : { completion }),
+    ...(request === undefined ? {} : { request }),
+    ...(image === undefined ? {} : { image }),
+    unit: declaredUnit ?? (capability === 'speech' ? 'character' : 'token'),
+  }
+}
+
+function normalizePrice(value: unknown): string | undefined {
+  if (typeof value !== 'string' && typeof value !== 'number') return undefined
+  const normalized = String(value).trim()
+  if (!normalized) return undefined
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed >= 0 ? normalized : undefined
+}
+
+function normalizeSupportedVoices(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  const voices: string[] = []
+  for (const item of value) {
+    if (typeof item !== 'string') continue
+    const id = item.trim()
+    const key = id.toLowerCase()
+    if (!id || seen.has(key)) continue
+    seen.add(key)
+    voices.push(id)
+  }
+  return voices
+}
+
+function isOpenRouterUrl(value: string): boolean {
+  try {
+    return new URL(value).hostname.toLowerCase() === 'openrouter.ai'
+  } catch {
+    return false
+  }
+}
+
+export function deriveProviderId(
+  endpoint: string | undefined,
+  type: AIProviderType,
+): string {
+  if (!endpoint || !endpoint.trim()) {
+    return fallbackProviderId(type)
+  }
+  try {
+    const { hostname } = new URL(endpoint)
+    return HOSTNAME_TO_PROVIDER_ID[hostname] ?? fallbackProviderId(type)
+  } catch {
+    return fallbackProviderId(type)
+  }
+}
+
+export function resolveOpenAICompatibleBaseUrl(
+  endpoint: string | undefined,
+  appendV1 = true,
+): string {
+  const trimmed = endpoint?.trim().replace(/\/+$/, '')
+  if (!trimmed) return 'https://api.openai.com/v1'
+  if (appendV1 && !trimmed.endsWith('/v1')) return `${trimmed}/v1`
+  return trimmed
+}
+
+function isNonOpenAIHost(endpoint: string): boolean {
+  try {
+    return new URL(endpoint).hostname.toLowerCase() !== 'api.openai.com'
+  } catch {
+    return false
+  }
+}
+
+function providerTypeToApi(type: AIProviderType): Api {
+  switch (type) {
+    case AIProviderType.Anthropic: {
+      return 'anthropic-messages'
+    }
+    case AIProviderType.GoogleVertex: {
+      return 'google-vertex'
+    }
+    default: {
+      return 'openai-completions'
+    }
+  }
+}
+
+function resolveVertexScope(endpoint: string | undefined): {
+  location: string
+  projectId?: string
+} {
+  const fallback = { location: 'global' }
+  const trimmed = endpoint?.trim()
+  if (!trimmed) return fallback
+
+  try {
+    const pathname = new URL(trimmed).pathname
+    const projectMatch = pathname.match(/\/projects\/([^/]+)/)
+    const locationMatch = pathname.match(/\/locations\/([^/]+)/)
+    return {
+      location: locationMatch?.[1]
+        ? decodeURIComponent(locationMatch[1])
+        : fallback.location,
+      ...(projectMatch?.[1]
+        ? { projectId: decodeURIComponent(projectMatch[1]) }
+        : {}),
+    }
+  } catch {
+    return fallback
+  }
+}
+
+interface PiUsageLike {
+  input?: number
+  output?: number
+  cacheRead?: number
+  cacheWrite?: number
+  totalTokens?: number
+  cost?: {
+    input?: number
+    output?: number
+    cacheRead?: number
+    cacheWrite?: number
+    total?: number
+  }
+}
+
+type MappedUsage = NonNullable<GenerateTextResult['usage']>
+
+function mapUsage(usage: PiUsageLike | undefined): MappedUsage | undefined {
+  if (!usage || typeof usage !== 'object') return undefined
+  const costTotal = usage.cost?.total ?? 0
+  return {
+    promptTokens: usage.input,
+    completionTokens: usage.output,
+    inputTokens: usage.input,
+    outputTokens: usage.output,
+    cacheReadTokens: usage.cacheRead,
+    cacheWriteTokens: usage.cacheWrite,
+    totalTokens: usage.totalTokens,
+    cost: costTotal,
+    costBreakdown: {
+      input: usage.cost?.input,
+      output: usage.cost?.output,
+      cacheRead: usage.cost?.cacheRead,
+      cacheWrite: usage.cost?.cacheWrite,
+      total: usage.cost?.total,
+    },
+  }
+}
+
+export function runtimeUsageToGenerationUsage(usage: MappedUsage | undefined):
+  | {
+      inputTokens?: number
+      outputTokens?: number
+      cacheReadTokens?: number
+      cacheWriteTokens?: number
+      totalTokens?: number
+      cost?: {
+        input?: number
+        output?: number
+        cacheRead?: number
+        cacheWrite?: number
+        total?: number
+      }
+    }
+  | undefined {
+  if (!usage) return undefined
+  return {
+    inputTokens: usage.inputTokens ?? usage.promptTokens,
+    outputTokens: usage.outputTokens ?? usage.completionTokens,
+    cacheReadTokens: usage.cacheReadTokens,
+    cacheWriteTokens: usage.cacheWriteTokens,
+    totalTokens: usage.totalTokens,
+    cost: usage.costBreakdown ?? {
+      total: typeof usage.cost === 'number' ? usage.cost : undefined,
+    },
+  }
+}
+
+export function piUsageToGenerationUsage(usage: PiUsageLike | undefined) {
+  return runtimeUsageToGenerationUsage(mapUsage(usage))
+}
+
+interface ThinkingOptions {
+  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+  thinkingEnabled?: boolean
+  effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+}
+
+function mapReasoningEffort(
+  effort: ReasoningEffort | undefined,
+  api: Api,
+): ThinkingOptions {
+  if (!effort || effort === 'none') return {}
+  if (api === 'anthropic-messages') {
+    return { thinkingEnabled: true, effort }
+  }
+  return { reasoningEffort: effort }
+}
+
+interface PiRuntimeAdapterConfig extends RuntimeConfig {
+  contextWindow?: number | null
+  maxTokens?: number | null
+  reasoningEffort?: ReasoningEffort
+}
+
+export interface PiRuntimeAdapterOptions {
+  api?: Api
+}
+
+export class PiRuntimeAdapter implements IModelRuntime {
+  readonly providerInfo: RuntimeProviderInfo
+  private readonly logger = createAiLogger(PiRuntimeAdapter.name)
+  private readonly api: Api
+  private readonly piProviderId: string
+  private readonly model: Model<Api>
+  private readonly apiKey: string
+  private readonly modelListUrl?: string
+  private readonly inferredModelListUrl?: string
+  private readonly configuredReasoningEffort?: ReasoningEffort
+  private readonly providerType: AIProviderType
+  private readonly sessionId?: string
+  private readonly vertexLocation?: string
+  private readonly vertexProjectId?: string
+
+  constructor(
+    config: PiRuntimeAdapterConfig,
+    options: PiRuntimeAdapterOptions = {},
+  ) {
+    this.api = options.api ?? providerTypeToApi(config.providerType)
+    this.providerInfo = {
+      api: this.api,
+      id: config.providerId,
+      type: config.providerType,
+      model: config.model,
+    }
+    this.apiKey = config.apiKey
+    this.providerType = config.providerType
+    this.modelListUrl = config.modelListUrl?.trim() || undefined
+    this.piProviderId = deriveProviderId(config.endpoint, config.providerType)
+    this.inferredModelListUrl = this.inferModelListUrl(
+      config.endpoint,
+      config.appendV1 ?? true,
+    )
+    this.configuredReasoningEffort = config.reasoningEffort
+    this.sessionId = config.sessionId
+    if (this.api === 'google-vertex') {
+      const scope = resolveVertexScope(config.endpoint)
+      this.vertexLocation = scope.location
+      this.vertexProjectId = config.projectId?.trim() || scope.projectId
+    }
+    this.model = this.resolveModel(
+      config.model,
+      config.endpoint,
+      config.appendV1 ?? true,
+      config.contextWindow ?? undefined,
+      config.maxTokens ?? undefined,
+    )
+  }
+
+  private inferModelListUrl(
+    endpoint: string | undefined,
+    appendV1: boolean,
+  ): string | undefined {
+    if (this.providerType === AIProviderType.GoogleVertex) return undefined
+    if (this.api !== 'openai-completions') return undefined
+    const trimmed = endpoint?.trim()
+    if (!trimmed) return undefined
+    const baseUrl = resolveOpenAICompatibleBaseUrl(trimmed, appendV1)
+    return `${baseUrl.replace(/\/+$/, '')}/models`
+  }
+
+  private resolveModel(
+    modelId: string,
+    endpoint: string | undefined,
+    appendV1: boolean,
+    contextWindow?: number,
+    maxTokens?: number,
+  ): Model<Api> {
+    const trimmedEndpoint = endpoint?.trim()
+    // Vertex provider endpoints in persisted configuration point to Google's
+    // OpenAI-compatible facade. The native transport constructs the publisher
+    // generateContent URL itself, so forwarding that endpoint would append a
+    // native path below `/endpoints/openapi` and produce an invalid request.
+    const baseUrl =
+      this.api === 'google-vertex'
+        ? undefined
+        : trimmedEndpoint && this.api === 'openai-completions'
+          ? resolveOpenAICompatibleBaseUrl(trimmedEndpoint, appendV1)
+          : trimmedEndpoint
+    // pi treats provider 'openai' as genuine OpenAI and sends OpenAI-only
+    // fields (`store`) that compat endpoints like Gemini reject with 400.
+    // OpenRouter session affinity is opt-in in pi; enable its x-session-id
+    // format so a stable stream option can activate provider stickiness.
+    let compatOverride:
+      | {
+          sendSessionAffinityHeaders?: boolean
+          sessionAffinityFormat?: 'openrouter'
+          supportsStore?: boolean
+        }
+      | undefined
+    if (baseUrl && this.api === 'openai-completions') {
+      const override: NonNullable<typeof compatOverride> = {}
+      if (isNonOpenAIHost(baseUrl)) override.supportsStore = false
+      if (isOpenRouterUrl(baseUrl)) {
+        override.sendSessionAffinityHeaders = true
+        override.sessionAffinityFormat = 'openrouter'
+      }
+      if (Object.keys(override).length > 0) compatOverride = override
+    }
+    // OpenRouter rejects `reasoning: { effort: "none" }` on models whose
+    // reasoning is mandatory (e.g. Gemini 3.1 Pro); marking `off` unsupported
+    // makes pi omit the reasoning param instead of asking to disable it
+    const markReasoningOffUnsupported = (model: Model<Api>): Model<Api> =>
+      model.reasoning &&
+      (model.compat as { thinkingFormat?: string } | undefined)
+        ?.thinkingFormat === 'openrouter'
+        ? {
+            ...model,
+            thinkingLevelMap: { ...model.thinkingLevelMap, off: null },
+          }
+        : model
+    const catalogModelId =
+      this.providerType === AIProviderType.GoogleVertex
+        ? modelId.replace(/^google\//, '')
+        : modelId
+    try {
+      const registered = getBuiltinModel(
+        this.piProviderId as never,
+        catalogModelId as never,
+      ) as Model<Api> | undefined
+      if (registered) {
+        if (!baseUrl) return markReasoningOffUnsupported(registered)
+
+        return markReasoningOffUnsupported({
+          ...registered,
+          id: modelId,
+          api: this.api,
+          provider: this.piProviderId,
+          baseUrl,
+          compat: compatOverride
+            ? { ...registered.compat, ...compatOverride }
+            : registered.compat,
+        } as Model<Api>)
+      }
+    } catch {
+      // miss falls through to custom literal
+    }
+    return {
+      id: catalogModelId,
+      name: modelId,
+      api: this.api,
+      provider: this.piProviderId,
+      baseUrl: baseUrl ?? '',
+      reasoning: false,
+      input: ['text'],
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      contextWindow: contextWindow ?? DEFAULT_CONTEXT_WINDOW,
+      maxTokens: maxTokens ?? DEFAULT_MAX_TOKENS,
+      compat: compatOverride,
+    } as Model<Api>
+  }
+
+  private buildContext(options: {
+    prompt?: string
+    messages?: (Message | PiMessage)[]
+    systemPrompt?: string
+    tools?: Tool[]
+  }): Context {
+    const { prompt, messages, systemPrompt, tools } = options
+    const ts = Date.now()
+    const systemFromMessages = messages?.find(
+      (m): m is Message & { role: 'system' } =>
+        m.role === 'system' && typeof (m as Message).content === 'string',
+    )?.content
+    const list: PiMessage[] = messages
+      ? messages
+          .filter((m) => m.role !== 'system')
+          .map((m): PiMessage => {
+            if (this.isPiMessage(m)) return m
+            const thin = m as Message
+            if (thin.role === 'assistant') {
+              return {
+                role: 'assistant',
+                content: [{ type: 'text', text: thin.content }],
+                api: this.api,
+                provider: this.piProviderId,
+                model: this.providerInfo.model,
+                usage: undefined as never,
+                stopReason: 'stop',
+                timestamp: ts,
+              } as unknown as PiMessage
+            }
+            return {
+              role: 'user',
+              content: thin.content,
+              timestamp: ts,
+            } as PiMessage
+          })
+      : prompt !== undefined
+        ? [{ role: 'user', content: prompt, timestamp: ts } as PiMessage]
+        : []
+    return {
+      systemPrompt: systemPrompt ?? systemFromMessages,
+      messages: list,
+      tools,
+    }
+  }
+
+  private isPiMessage(value: Message | PiMessage): value is PiMessage {
+    if (value.role === 'user') {
+      return typeof (value as PiMessage).timestamp === 'number'
+    }
+    if (value.role === 'assistant') {
+      return Array.isArray((value as PiMessage & { role: 'assistant' }).content)
+    }
+    if ((value as PiMessage).role === 'toolResult') {
+      return true
+    }
+    return false
+  }
+
+  private buildStreamOptions(opts: {
+    temperature?: number
+    maxTokens?: number
+    maxRetries?: number
+    sessionId?: string
+    signal?: AbortSignal
+    reasoningEffort?: ReasoningEffort
+    toolChoice?: unknown
+  }): ProviderStreamOptions {
+    const reasoningEffort =
+      this.configuredReasoningEffort ?? opts.reasoningEffort
+    const thinking = mapReasoningEffort(reasoningEffort, this.api)
+    const result: ProviderStreamOptions = {
+      apiKey: this.apiKey,
+      temperature: opts.temperature,
+      maxTokens: opts.maxTokens,
+      maxRetries: opts.maxRetries,
+      sessionId: opts.sessionId ?? this.sessionId,
+      signal: opts.signal,
+      ...thinking,
+    }
+    if (this.api === 'google-vertex') {
+      result.location = this.vertexLocation
+      if (this.vertexProjectId) result.project = this.vertexProjectId
+    } else if (this.providerType === AIProviderType.GoogleVertex) {
+      result.headers = {
+        Authorization: null,
+        'x-goog-api-key': this.apiKey,
+      }
+    }
+    if (opts.toolChoice !== undefined) {
+      ;(result as Record<string, unknown>).toolChoice = opts.toolChoice
+    }
+    return result
+  }
+
+  private getStructuredToolChoice(): unknown {
+    if (this.api === 'anthropic-messages') {
+      return { type: 'tool', name: STRUCTURED_TOOL_NAME }
+    }
+    if (this.api === 'google-vertex') return 'any'
+    return { type: 'function', function: { name: STRUCTURED_TOOL_NAME } }
+  }
+
+  async generateText(
+    options: GenerateTextOptions,
+  ): Promise<GenerateTextResult> {
+    const context = this.buildContext({
+      prompt: options.prompt,
+      messages: options.messages,
+    })
+    const piOptions = this.buildStreamOptions({
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      maxRetries: options.maxRetries,
+      signal: options.signal,
+      reasoningEffort: options.reasoningEffort,
+    })
+
+    const message = await complete(this.model, context, piOptions)
+    if (message.stopReason === 'error' || message.stopReason === 'aborted') {
+      throw new Error(
+        message.errorMessage || `pi stream ended with ${message.stopReason}`,
+      )
+    }
+
+    const textParts: string[] = []
+    for (const block of message.content) {
+      if (block.type === 'text') {
+        textParts.push(block.text)
+      }
+    }
+    if (textParts.length === 0) {
+      throw new Error('pi response contained no text content blocks')
+    }
+    return {
+      text: textParts.join(''),
+      usage: mapUsage(message.usage),
+    }
+  }
+
+  async generateStructured<T extends TSchema>(
+    options: GenerateStructuredOptions<T>,
+  ): Promise<GenerateStructuredResult<Static<T>>> {
+    const typed = options
+
+    const tool: Tool = {
+      name: STRUCTURED_TOOL_NAME,
+      description: 'Generate structured output based on the given schema',
+      parameters: typed.schema,
+    }
+    const tools: Tool[] = [tool]
+
+    const baseContext = this.buildContext({
+      prompt: typed.prompt,
+      systemPrompt: typed.systemPrompt,
+      tools,
+    })
+
+    const piOptions = this.buildStreamOptions({
+      temperature: typed.temperature,
+      maxTokens: typed.maxTokens,
+      maxRetries: typed.maxRetries,
+      signal: typed.signal,
+      reasoningEffort: typed.reasoningEffort,
+      toolChoice: this.getStructuredToolChoice(),
+    })
+
+    const conversation: Context = {
+      ...baseContext,
+      messages: [...baseContext.messages],
+    }
+    const usageAccum: PiUsageLike = {
+      input: 0,
+      output: 0,
+      totalTokens: 0,
+      cost: { total: 0 },
+    }
+
+    for (let i = 0; i < STRUCTURED_MAX_ITERATIONS; i++) {
+      if (typed.signal?.aborted) {
+        const err = new Error('aborted')
+        err.name = 'AbortError'
+        throw err
+      }
+
+      const message = await complete(this.model, conversation, piOptions)
+
+      if (message.stopReason === 'error' || message.stopReason === 'aborted') {
+        throw new Error(
+          message.errorMessage || `pi stream ended with ${message.stopReason}`,
+        )
+      }
+
+      const u = message.usage as PiUsageLike | undefined
+      if (u) {
+        usageAccum.input = (usageAccum.input ?? 0) + (u.input ?? 0)
+        usageAccum.output = (usageAccum.output ?? 0) + (u.output ?? 0)
+        usageAccum.totalTokens =
+          (usageAccum.totalTokens ?? 0) + (u.totalTokens ?? 0)
+        usageAccum.cost = {
+          total: (usageAccum.cost?.total ?? 0) + (u.cost?.total ?? 0),
+        }
+      }
+
+      const toolCall = message.content.find((c) => c.type === 'toolCall') as
+        | {
+            type: 'toolCall'
+            id: string
+            name: string
+            arguments: unknown
+          }
+        | undefined
+
+      if (!toolCall) {
+        conversation.messages.push(message)
+        continue
+      }
+
+      let args: unknown = toolCall.arguments
+      if (typeof args === 'string') {
+        args = JSON.parse(args)
+      }
+      if (!isPlainObject(args)) {
+        throw new Error(
+          'pi tool call arguments are neither an object nor JSON-parseable string',
+        )
+      }
+
+      let output: unknown = args
+      if (typed.validate !== false) {
+        output = validateToolCall(tools, {
+          type: 'toolCall',
+          id: toolCall.id,
+          name: toolCall.name,
+          arguments: args as JsonObject,
+        })
+      }
+
+      return {
+        output: output as Static<T>,
+        usage: mapUsage(usageAccum),
+      }
+    }
+
+    throw new Error(
+      `Failed to get structured output after ${STRUCTURED_MAX_ITERATIONS} iterations`,
+    )
+  }
+
+  async *generateTextStream(
+    options: GenerateTextStreamOptions,
+  ): AsyncIterable<TextStreamChunk> {
+    const context = this.buildContext({
+      prompt: options.prompt,
+      messages: options.messages,
+    })
+    const piOptions = this.buildStreamOptions({
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      maxRetries: options.maxRetries,
+      signal: options.signal,
+      reasoningEffort: options.reasoningEffort,
+    })
+
+    const events = stream(this.model, context, piOptions)
+
+    for await (const event of events) {
+      if (event.type === 'error') {
+        const errMsg =
+          (event.error as AssistantMessage | undefined)?.errorMessage ||
+          `pi stream ended with ${event.reason}`
+        throw new Error(errMsg)
+      }
+      if (event.type !== 'text_delta') continue
+      const delta = (event as { delta?: unknown }).delta
+      if (typeof delta !== 'string' || delta.length === 0) continue
+      if (isAiDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(`[runtime:pi] chunk size=${delta.length}: ${delta}`)
+      }
+      yield { text: delta }
+    }
+  }
+
+  streamMessage(options: StreamMessageOptions): AssistantMessageEventStream {
+    const context = this.buildContext({
+      messages: options.messages,
+      systemPrompt: options.systemPrompt,
+      tools: options.tools,
+    })
+    const piOptions = this.buildStreamOptions({
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      maxRetries: options.maxRetries,
+      sessionId: options.sessionId,
+      signal: options.signal,
+      reasoningEffort: options.reasoningEffort,
+    })
+    return stream(this.model, context, piOptions)
+  }
+
+  async *streamStructured<T extends TSchema>(
+    options: GenerateStructuredOptions<T>,
+  ): AsyncIterable<StructuredStreamChunk<Static<T>>> {
+    const tool: Tool = {
+      name: STRUCTURED_TOOL_NAME,
+      description: 'Generate structured output based on the given schema',
+      parameters: options.schema,
+    }
+    const tools: Tool[] = [tool]
+
+    const context = this.buildContext({
+      prompt: options.prompt,
+      systemPrompt: options.systemPrompt,
+      tools,
+    })
+
+    const piOptions = this.buildStreamOptions({
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      maxRetries: options.maxRetries,
+      signal: options.signal,
+      reasoningEffort: options.reasoningEffort,
+      toolChoice: this.getStructuredToolChoice(),
+    })
+
+    const events = stream(this.model, context, piOptions)
+
+    let buffer = ''
+    let finalParsed: Record<string, unknown> | undefined
+    let terminalUsage: MappedUsage | undefined
+
+    for await (const event of events) {
+      if (event.type === 'error') {
+        const errMsg =
+          (event.error as AssistantMessage | undefined)?.errorMessage ||
+          `pi stream ended with ${event.reason}`
+        throw new Error(errMsg)
+      }
+
+      if (event.type === 'toolcall_delta') {
+        const delta = (event as { delta?: unknown }).delta
+        if (typeof delta !== 'string' || delta.length === 0) continue
+        buffer += delta
+        try {
+          const partial = JSON.parse(jsonrepair(buffer)) as Static<T>
+          yield { partial, delta }
+        } catch {
+          // incremental parse failed — keep accumulating
+        }
+        continue
+      }
+
+      if (event.type === 'toolcall_end') {
+        const evToolCall = (event as { toolCall?: { arguments?: unknown } })
+          .toolCall
+        const fromEvent = evToolCall?.arguments
+        let final: Record<string, unknown>
+        if (isPlainObject(fromEvent)) {
+          final = fromEvent as Record<string, unknown>
+        } else {
+          final = JSON.parse(jsonrepair(buffer)) as Record<string, unknown>
+        }
+        if (options.validate !== false && !Value.Check(options.schema, final)) {
+          const errMessages = [...Value.Errors(options.schema, final)]
+            .map((e) => `${e.instancePath}: ${e.message}`)
+            .join('; ')
+          throw new Error(`Invalid structured output: ${errMessages}`)
+        }
+        finalParsed = final
+        continue
+      }
+
+      if (event.type === 'done') {
+        terminalUsage = mapUsage(
+          (event.message as { usage?: PiUsageLike } | undefined)?.usage,
+        )
+        break
+      }
+    }
+
+    if (finalParsed === undefined) {
+      throw new Error('pi stream ended without a tool call result')
+    }
+
+    yield {
+      partial: finalParsed as Static<T>,
+      done: true,
+      final: finalParsed as Static<T>,
+      usage: terminalUsage,
+    }
+  }
+
+  async listModels(
+    capability: AIProviderCapability = 'text',
+  ): Promise<ModelInfo[]> {
+    if (
+      this.providerType === AIProviderType.GoogleVertex &&
+      (capability === 'image' || capability === 'speech')
+    ) {
+      return getVertexMediaModels(capability)
+    }
+    const remoteUrl = this.modelListUrl ?? this.inferredModelListUrl
+    if (remoteUrl) {
+      try {
+        return await this.fetchModelList(remoteUrl, capability)
+      } catch (error) {
+        if (this.modelListUrl) throw error
+        this.logger.warn(
+          `live model list failed for ${remoteUrl}, falling back to builtin: ${
+            (error as Error).message
+          }`,
+        )
+        if (capability !== 'text') return []
+      }
+    }
+    try {
+      const models = getBuiltinModels(
+        this.piProviderId as never,
+      ) as Model<Api>[]
+      return models.map((m) => ({
+        id:
+          this.providerType === AIProviderType.GoogleVertex
+            ? `google/${m.id}`
+            : m.id,
+        name: m.name,
+      }))
+    } catch (error) {
+      this.logger.warn(
+        `pi getBuiltinModels failed for provider ${this.piProviderId}: ${
+          (error as Error).message
+        }`,
+      )
+      return []
+    }
+  }
+
+  private async fetchModelList(
+    url: string,
+    capability: AIProviderCapability,
+  ): Promise<ModelInfo[]> {
+    const requestUrl = this.resolveModelListUrl(url, capability)
+    const response = await fetch(requestUrl, {
+      headers:
+        this.providerType === AIProviderType.GoogleVertex
+          ? { 'x-goog-api-key': this.apiKey }
+          : { Authorization: `Bearer ${this.apiKey}` },
+    })
+    if (!response.ok) {
+      throw new Error(
+        `Model list request failed with status ${response.status}`,
+      )
+    }
+    const payload = (await response.json()) as {
+      data?: Array<{
+        id?: unknown
+        name?: unknown
+        created?: unknown
+        pricing?: unknown
+        supported_voices?: unknown
+      }>
+    }
+    if (!Array.isArray(payload.data)) return []
+    return payload.data
+      .filter(
+        (
+          item,
+        ): item is {
+          id: string
+          name?: unknown
+          created?: unknown
+          pricing?: unknown
+          supported_voices?: unknown
+        } => typeof item.id === 'string' && item.id.length > 0,
+      )
+      .map((item) => {
+        const pricing = normalizeModelPricing(
+          item.pricing,
+          capability,
+          isOpenRouterUrl(requestUrl),
+        )
+        const supportedVoices = normalizeSupportedVoices(item.supported_voices)
+        return {
+          id: item.id,
+          name:
+            typeof item.name === 'string' && item.name.length > 0
+              ? item.name
+              : item.id,
+          created: typeof item.created === 'number' ? item.created : undefined,
+          ...(pricing ? { pricing } : {}),
+          ...(supportedVoices.length > 0 ? { supportedVoices } : {}),
+        }
+      })
+  }
+
+  private resolveModelListUrl(
+    url: string,
+    capability: AIProviderCapability,
+  ): string {
+    if (capability === 'text') return url
+
+    try {
+      const parsed = new URL(url)
+      if (parsed.hostname.toLowerCase() !== 'openrouter.ai') return url
+      parsed.searchParams.set('output_modalities', capability)
+      return parsed.toString()
+    } catch {
+      return url
+    }
+  }
+}

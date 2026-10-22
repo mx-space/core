@@ -1,7 +1,7 @@
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AI_FALLBACK_SLUG_MAX_LENGTH } from '../ai.constants'
-import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 
 @Injectable()

@@ -1,3 +1,6 @@
+import { createAbortError, throwIfAborted } from '@mx-space/ai'
+import type { IModelRuntime } from '@mx-space/ai/runtime'
+import { buildSourceMetaHashes } from '@mx-space/ai/translation'
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import pLimit from 'p-limit'
 
@@ -20,7 +23,6 @@ import {
   TaskStatus,
 } from '~/processors/task-queue'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { createAbortError, throwIfAborted } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'
@@ -53,7 +55,6 @@ import {
   type TranslationTaskPayload,
 } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
-import type { IModelRuntime } from '../runtime'
 import { AiTranslationRepository } from './ai-translation.repository'
 import type { GetTranslationsGroupedQueryDto } from './ai-translation.schema'
 import type {
@@ -67,7 +68,6 @@ import { BaseTranslationService } from './base-translation.service'
 import { LexicalPartialTranslationBuilder } from './lexical-partial-translation.builder'
 import { TranslationConsistencyService } from './translation-consistency.service'
 import type { TranslationSourceSnapshot } from './translation-consistency.types'
-import { buildSourceMetaHashes } from './translation-meta'
 import type { ITranslationStrategy } from './translation-strategy.interface'
 import {
   LEXICAL_TRANSLATION_STRATEGY,

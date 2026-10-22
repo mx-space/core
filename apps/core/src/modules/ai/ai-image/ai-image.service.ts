@@ -1,3 +1,5 @@
+import { throwIfAborted } from '@mx-space/ai'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import { extension } from 'mime-types'
 
@@ -8,12 +10,10 @@ import {
   type TaskExecuteContext,
   TaskQueueProcessor,
 } from '~/processors/task-queue'
-import { throwIfAborted } from '~/utils/abort.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { DraftRepository } from '../../draft/draft.repository'
 import { FileService } from '../../file/file.service'
-import { AI_PROMPTS } from '../ai.prompts'
 import { AiService } from '../ai.service'
 import {
   AITaskType,

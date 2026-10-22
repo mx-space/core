@@ -1,9 +1,9 @@
 import type { AssistantImages } from '@earendil-works/pi-ai'
+import { SIGNAL_GEOMETRY_PRESET } from '@mx-space/ai/prompts'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode } from '~/common/errors'
 import { CollectionRefTypes } from '~/constants/db.constant'
-import { SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
 import { AiImageService } from '~/modules/ai/ai-image/ai-image.service'
 import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 import type { TaskExecuteContext } from '~/processors/task-queue'

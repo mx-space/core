@@ -1,9 +1,9 @@
 import { fauxAssistantMessage, fauxToolCall } from '@earendil-works/pi-ai'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
 import { AIProviderType } from '~/modules/ai/ai.types'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 import { CommentSpamFilterService } from '~/modules/comment/comment.spam-filter'
 
 const PROVIDER_HOST = 'api.openai.com'

@@ -1,3 +1,4 @@
+import { extractLexicalTranslatableProperties } from '@mx-space/ai/translation'
 import { mxLexicalToMarkdown } from '@mx-space/editor'
 import { Injectable } from '@nestjs/common'
 import { nanoid } from 'nanoid'
@@ -7,7 +8,6 @@ import {
   NODE_STATE_KEY,
 } from '~/constants/lexical.constant'
 import { ContentFormat } from '~/shared/types/content-format.type'
-import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
 import { truncateAtBoundary } from '~/utils/text-summary.util'
 import { md5 } from '~/utils/tool.util'
 

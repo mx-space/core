@@ -1,3 +1,4 @@
+import { buildSourceMetaHashes } from '@mx-space/ai/translation'
 import {
   MX_MARKDOWN_CONVERTER_VERSION,
   type SerializedMxEditorState,
@@ -21,7 +22,6 @@ import {
   posts,
 } from '~/database/schema'
 import type { ArticleContent } from '~/modules/ai/ai-translation/ai-translation.types'
-import { buildSourceMetaHashes } from '~/modules/ai/ai-translation/translation-meta'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { LexicalService } from '~/processors/helper/helper.lexical.service'

@@ -1,7 +1,6 @@
 import type { AssistantMessage } from '@earendil-works/pi-ai'
+import { Conversation } from '@mx-space/ai/engine'
 import { describe, expect, it } from 'vitest'
-
-import { Conversation } from '~/modules/ai/message-engine/conversation/conversation'
 
 const assistant = (text: string): AssistantMessage =>
   ({

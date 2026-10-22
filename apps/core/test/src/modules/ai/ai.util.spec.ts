@@ -1,6 +1,5 @@
+import { createAbortError, throwIfAborted } from '@mx-space/ai'
 import { describe, expect, it } from 'vitest'
-
-import { createAbortError, throwIfAborted } from '~/utils/abort.util'
 
 describe('ai.util', () => {
   describe('createAbortError', () => {

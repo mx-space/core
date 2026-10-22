@@ -1,4 +1,4 @@
-import { extractLexicalTranslatableProperties } from '~/utils/lexical-translatable-property.util'
+import { extractLexicalTranslatableProperties } from '@mx-space/ai/translation'
 
 describe('lexical-translatable-property.util', () => {
   it('extracts properties only from whitelisted lexical node attributes', () => {

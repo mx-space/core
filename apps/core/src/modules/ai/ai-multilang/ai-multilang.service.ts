@@ -1,10 +1,10 @@
+import { createAbortError } from '@mx-space/ai'
 import { Injectable } from '@nestjs/common'
 import pLimit from 'p-limit'
 import removeMdCodeblock from 'remove-md-codeblock'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { type TaskExecuteContext, TaskStatus } from '~/processors/task-queue'
-import { createAbortError } from '~/utils/abort.util'
 import { md5 } from '~/utils/tool.util'
 
 import { ConfigsService } from '../../configs/configs.service'

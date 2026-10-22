@@ -1,4 +1,5 @@
 import { fauxAssistantMessage } from '@earendil-works/pi-ai'
+import { PiRuntimeAdapter } from '@mx-space/ai/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
@@ -6,7 +7,6 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import type { AiStreamEvent } from '~/modules/ai/ai-inflight/ai-inflight.types'
 import type { ArticleContent } from '~/modules/ai/ai-translation/ai-translation.types'
 import { MarkdownTranslationStrategy } from '~/modules/ai/ai-translation/strategies/markdown-translation.strategy'
-import { PiRuntimeAdapter } from '~/modules/ai/runtime/pi-runtime.adapter'
 
 const PROVIDER = 'faux-translation'
 const MODEL_ID = 'faux-translation-model'

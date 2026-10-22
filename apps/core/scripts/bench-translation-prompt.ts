@@ -4,11 +4,22 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import type {
+  GenerateStructuredOptions,
+  GenerateStructuredResult,
+  GenerateTextOptions,
+  GenerateTextResult,
+  GenerateTextStreamOptions,
+  IModelRuntime,
+  TextStreamChunk,
+} from '@mx-space/ai/runtime'
+import { createModelRuntime } from '@mx-space/ai/runtime'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 import type { z } from 'zod'
 
 import { LANGUAGE_CODE_TO_NAME } from '../src/modules/ai/ai.constants'
-import { AI_PROMPTS } from '../src/modules/ai/ai.prompts'
 import {
   type AIProviderConfig,
   AIProviderType,
@@ -16,21 +27,8 @@ import {
 import type { ArticleContent } from '../src/modules/ai/ai-translation/ai-translation.types'
 import { TranslationReviewerService } from '../src/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
-import {
-  createModelRuntime,
-  type IModelRuntime,
-} from '../src/modules/ai/runtime'
-import type {
-  GenerateStructuredOptions,
-  GenerateStructuredResult,
-  GenerateTextOptions,
-  GenerateTextResult,
-  GenerateTextStreamOptions,
-  TextStreamChunk,
-} from '../src/modules/ai/runtime/types'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '../src/utils/content.util'
 
 interface Options {
   dataDir: string

@@ -1,11 +1,11 @@
-import sharp from 'sharp'
-
 import {
   buildVertexPublisherModelUrl,
   getVertexHeaders,
   readVertexError,
   type VertexConnectionConfig,
-} from '../vertex/vertex-api'
+} from '@mx-space/ai/runtime'
+import sharp from 'sharp'
+
 import type {
   GeneratedImage,
   ImageGenerateOptions,

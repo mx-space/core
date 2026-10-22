@@ -13,7 +13,18 @@ The runtime, prompt-validation, and SSE-wire-format expectations below are
 load-bearing — drifting any of them silently breaks Shiro/Yohaku consumers or
 admin chat.
 
-### Runtime — `modules/ai/runtime/`
+The pure AI logic lives in the MIT package `packages/ai` (`@mx-space/ai`) so
+other projects can share it: `@mx-space/ai/runtime` (model runtime, vertex
+helpers, provider types), `/decision`, `/engine` (message engine), `/prompts`
+and `/translation` (Lexical parser, block reuse, review pipeline, translation
+engine and strategies). `modules/ai` keeps the NestJS services and wires the
+package through adapters: `registerAiEnvironment()` (`src/global/ai.global.ts`)
+routes package logs to the Nest `Logger`, and the Nest strategy classes pass
+`LexicalService` as the package's `LexicalDocumentAdapter`. `vite.config.ts`
+and `vitest.config.mts` dedupe the shared runtime deps so the package and the
+app load one copy of `pi-ai`.
+
+### Runtime — `@mx-space/ai/runtime` (`packages/ai/src/runtime/`)
 
 - `pi-runtime.adapter.ts` is the **single** `IModelRuntime` implementation.
   No `OpenAICompatibleRuntime` / `AnthropicRuntime` / `withRetry` /
@@ -33,7 +44,7 @@ admin chat.
   schema — the legacy Zod overload was deleted in step-7. Call sites use
   `Value.Check` / `Value.Errors` instead of `schema.parse`.
 
-### Prompts — `modules/ai/ai.prompts.ts`
+### Prompts — `@mx-space/ai/prompts` (`packages/ai/src/prompts/ai-prompts.ts`)
 
 - Every prompt schema is a TypeBox `Type.Object({...}, { additionalProperties: false })`.
 - `ai-prompts-schema.regression.spec.ts` pins byte-identical pass/fail

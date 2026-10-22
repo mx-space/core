@@ -1,8 +1,7 @@
+import { convertJsonSchemaToTypeBox as convert } from '@mx-space/ai/runtime'
 import { Logger } from '@nestjs/common'
 import { Value } from 'typebox/value'
 import { describe, expect, it, vi } from 'vitest'
-
-import { convert } from '~/modules/ai/runtime/json-schema-to-typebox'
 
 const insertNodeSchema = {
   type: 'object',

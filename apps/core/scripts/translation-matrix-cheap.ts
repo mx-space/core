@@ -4,9 +4,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import { createModelRuntime } from '@mx-space/ai/runtime'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 
-import { AI_PROMPTS } from '../src/modules/ai/ai.prompts'
 import {
   type AIProviderConfig,
   AIProviderType,
@@ -14,10 +16,8 @@ import {
 import type { ArticleContent } from '../src/modules/ai/ai-translation/ai-translation.types'
 import { TranslationReviewerService } from '../src/modules/ai/ai-translation/reviewer.service'
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
-import { createModelRuntime } from '../src/modules/ai/runtime'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '../src/utils/content.util'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
