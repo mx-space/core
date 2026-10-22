@@ -120,7 +120,8 @@ export function AiModelsStep(props: {
     if (feature === 'imageModel') {
       return toModelOption(configQuery.data?.imageGeneration?.model)
     }
-    return ''
+    const saved = toModelOption(configQuery.data?.[feature])
+    return saved === savedDefault ? '' : saved
   }
 
   const submit = async () => {

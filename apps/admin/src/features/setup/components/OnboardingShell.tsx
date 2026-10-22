@@ -4,6 +4,7 @@ import type { PropsWithChildren, ReactNode } from 'react'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
 import { authBackdropStyle } from '~/lib/auth-backdrop'
+import { FloatLayerProvider } from '~/ui/overlay/floating-layer'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -115,63 +116,65 @@ export function OnboardingShell(
       className="auth-light flex min-h-dvh flex-wrap bg-white text-fg"
       style={authBackdropStyle}
     >
-      <nav
-        aria-label={t('setup.onboarding.rail.label')}
-        className="flex w-full flex-col gap-5 border-b border-border bg-surface-page/70 px-3 py-5 md:w-60 md:border-r md:border-b-0"
-      >
-        <div className="flex items-center gap-2 px-3 text-base font-semibold">
-          <img alt="" className="size-6 rounded-md" src={faviconUrl} />
-          Mix Space
-        </div>
-        <ol className="flex flex-wrap gap-0.5 md:flex-col">
-          {railItems.flatMap((item, index) => [
-            <RailRow
-              item={item}
-              key={item.key}
-              number={index + 1}
-              state={itemState(item, props.step)}
-            />,
-            ...(item.children ?? []).map((child) => (
-              <RailRow
-                item={child}
-                key={child.key}
-                state={itemState(child, props.step)}
-                sub
-              />
-            )),
-          ])}
-        </ol>
-        {props.onLater ? (
-          <button
-            className="mt-auto hidden h-8 items-center rounded-sm px-3 text-left text-sm text-fg-muted transition-colors hover:bg-black/[0.04] hover:text-fg md:flex"
-            onClick={props.onLater}
-            type="button"
-          >
-            {t('setup.onboarding.action.later')}
-          </button>
-        ) : null}
-        <a
-          className={cn(
-            'hidden px-3 text-sm text-accent hover:text-accent-hover md:block',
-            !props.onLater && 'mt-auto',
-          )}
-          href={deploymentDocsUrl}
-          rel="noreferrer"
-          target="_blank"
+      <FloatLayerProvider>
+        <nav
+          aria-label={t('setup.onboarding.rail.label')}
+          className="flex w-full flex-col gap-5 border-b border-border bg-surface-page/70 px-3 py-5 md:w-60 md:border-r md:border-b-0"
         >
-          {t('setup.onboarding.rail.docs')}
-        </a>
-      </nav>
-      <main className="flex min-w-0 flex-1 justify-center px-4 py-6 md:px-12 md:py-16">
-        <div className="flex w-full max-w-[940px] flex-wrap items-start gap-6">
-          {props.children}
-          {props.aside ? (
-            <aside className="min-w-0 flex-[1_1_260px] rounded-lg border border-border bg-white/65 p-4 md:max-w-80">
-              {props.aside}
-            </aside>
+          <div className="flex items-center gap-2 px-3 text-base font-semibold">
+            <img alt="" className="size-6 rounded-md" src={faviconUrl} />
+            Mix Space
+          </div>
+          <ol className="flex flex-wrap gap-0.5 md:flex-col">
+            {railItems.flatMap((item, index) => [
+              <RailRow
+                item={item}
+                key={item.key}
+                number={index + 1}
+                state={itemState(item, props.step)}
+              />,
+              ...(item.children ?? []).map((child) => (
+                <RailRow
+                  item={child}
+                  key={child.key}
+                  state={itemState(child, props.step)}
+                  sub
+                />
+              )),
+            ])}
+          </ol>
+          {props.onLater ? (
+            <button
+              className="flex h-8 items-center rounded-sm px-3 text-left text-sm text-fg-muted transition-colors hover:bg-black/[0.04] hover:text-fg md:mt-auto"
+              onClick={props.onLater}
+              type="button"
+            >
+              {t('setup.onboarding.action.later')}
+            </button>
           ) : null}
-        </div>
-      </main>
+          <a
+            className={cn(
+              'hidden px-3 text-sm text-accent hover:text-accent-hover md:block',
+              !props.onLater && 'mt-auto',
+            )}
+            href={deploymentDocsUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {t('setup.onboarding.rail.docs')}
+          </a>
+        </nav>
+        <main className="flex min-w-0 flex-1 justify-center px-4 py-6 md:px-12 md:py-16">
+          <div className="flex w-full max-w-[940px] flex-wrap items-start gap-6">
+            {props.children}
+            {props.aside ? (
+              <aside className="min-w-0 flex-[1_1_260px] rounded-lg border border-border bg-white/65 p-4 md:max-w-80">
+                {props.aside}
+              </aside>
+            ) : null}
+          </div>
+        </main>
+      </FloatLayerProvider>
     </div>
   )
 }

@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { UrlOptions } from '~/api/options'
 import { getOption, getUrlOptions, patchOption } from '~/api/options'
-import { API_URL, GATEWAY_URL } from '~/constants/env'
+import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
@@ -23,15 +23,42 @@ import {
 
 type ServiceUrls = Omit<UrlOptions, 'webUrl'>
 
+const serviceKeys = ['serverUrl', 'adminUrl', 'wsUrl'] as const
+
+const seoQueryKey = ['onboarding', 'seo']
+
+function readGatewayOverride() {
+  try {
+    return (
+      sessionStorage.getItem('__gateway') ||
+      localStorage.getItem('__gateway') ||
+      ''
+    )
+  } catch {
+    return ''
+  }
+}
+
+function isConfiguredUrl(value?: string) {
+  if (!value) return false
+  try {
+    const { hostname } = new URL(value)
+    return hostname !== 'localhost' && hostname !== '127.0.0.1'
+  } catch {
+    return false
+  }
+}
+
 export function SiteStep(props: {
   onBack?: () => void
   onLater?: () => void
   onNext: () => void
 }) {
   const { t } = useI18n()
+  const queryClient = useQueryClient()
   const seoQuery = useQuery({
     queryFn: () => getOption<{ title?: string }>('seo'),
-    queryKey: ['onboarding', 'seo'],
+    queryKey: seoQueryKey,
   })
   const urlQuery = useQuery({
     queryFn: getUrlOptions,
@@ -42,7 +69,7 @@ export function SiteStep(props: {
       deriveServiceUrls({
         adminHref: location.href.split('#')[0],
         apiUrl: API_URL || location.origin,
-        gatewayUrl: GATEWAY_URL,
+        gatewayUrl: readGatewayOverride(),
       }),
     [],
   )
@@ -56,7 +83,16 @@ export function SiteStep(props: {
   }, [seoQuery.data])
 
   useEffect(() => {
-    if (urlQuery.data?.webUrl) setWebUrl(urlQuery.data.webUrl)
+    const saved = urlQuery.data
+    if (!saved) return
+    if (saved.webUrl) setWebUrl(saved.webUrl)
+    setServices((current) => {
+      const next = { ...current }
+      for (const key of serviceKeys) {
+        if (isConfiguredUrl(saved[key])) next[key] = saved[key]
+      }
+      return next
+    })
   }, [urlQuery.data])
 
   const submit = async (event: FormEvent) => {
@@ -64,10 +100,22 @@ export function SiteStep(props: {
     if (submitting) return
     setSubmitting(true)
     try {
-      if (siteName.trim()) {
-        await patchOption('seo', { title: siteName.trim() })
+      const title = siteName.trim()
+      if (title) {
+        await patchOption('seo', { title })
+        queryClient.setQueryData<{ title?: string }>(
+          seoQueryKey,
+          (current) => ({
+            ...current,
+            title,
+          }),
+        )
       }
-      await patchOption('url', { ...services, webUrl: webUrl.trim() })
+      const trimmedWebUrl = webUrl.trim()
+      await patchOption(
+        'url',
+        trimmedWebUrl ? { ...services, webUrl: trimmedWebUrl } : services,
+      )
       props.onNext()
     } catch (error) {
       toast.error(getErrorMessage(error, t('setup.onboarding.site.saveError')))
@@ -76,7 +124,10 @@ export function SiteStep(props: {
     }
   }
 
-  const serviceRows: Array<{ key: keyof ServiceUrls; label: string }> = [
+  const serviceRows: Array<{
+    key: (typeof serviceKeys)[number]
+    label: string
+  }> = [
     { key: 'serverUrl', label: t('setup.onboarding.site.serverUrl') },
     { key: 'adminUrl', label: t('setup.onboarding.site.adminUrl') },
     { key: 'wsUrl', label: t('setup.onboarding.site.wsUrl') },

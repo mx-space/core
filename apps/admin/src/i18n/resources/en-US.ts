@@ -3002,6 +3002,8 @@ export const enUS = {
   'setup.onboarding.ai.models.notConfigured': 'Not available',
   'setup.onboarding.ai.models.none': 'None',
   'setup.onboarding.account.avatarUpload': 'Upload avatar',
+  'setup.onboarding.account.usernameHint':
+    'At least 3 characters: letters, numbers, _ . -',
   'setup.onboarding.account.username': 'Username',
   'setup.onboarding.account.email': 'Email',
   'setup.onboarding.account.emailHint':

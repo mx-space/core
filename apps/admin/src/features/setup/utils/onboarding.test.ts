@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   applyModelPlan,
   buildModelOptions,
+  claimPendingOnboarding,
   deriveServiceUrls,
+  isValidOnboardingUsername,
+  markOnboardingPending,
   parseModelOption,
   readOnboardingProgress,
   resolveResumeStep,
@@ -93,11 +96,9 @@ describe('applyModelPlan', () => {
 })
 
 describe('resolveResumeStep', () => {
-  it('starts authenticated onboarding at the site step without progress', () => {
-    expect(resolveResumeStep(null)).toBe('site')
-    expect(resolveResumeStep({ status: 'finished', step: 'ready' })).toBe(
-      'site',
-    )
+  it('keeps installs without an active run out of onboarding', () => {
+    expect(resolveResumeStep(null)).toBeNull()
+    expect(resolveResumeStep({ status: 'finished', step: 'ready' })).toBeNull()
   })
 
   it('resumes an active or dismissed run at its saved step', () => {
@@ -113,6 +114,37 @@ describe('resolveResumeStep', () => {
     expect(resolveResumeStep({ status: 'active', step: 'account' })).toBe(
       'site',
     )
+  })
+})
+
+describe('pending onboarding', () => {
+  afterEach(() => localStorage.clear())
+
+  it('hands a run started before sign-in to the owner who signs in', () => {
+    markOnboardingPending()
+    expect(claimPendingOnboarding('owner-1')).toEqual({
+      status: 'active',
+      step: 'site',
+    })
+    expect(readOnboardingProgress('owner-1')).toEqual({
+      status: 'active',
+      step: 'site',
+    })
+    expect(claimPendingOnboarding('owner-1')).toBeNull()
+  })
+})
+
+describe('isValidOnboardingUsername', () => {
+  it('accepts what username sign-in accepts', () => {
+    expect(isValidOnboardingUsername('innei')).toBe(true)
+    expect(isValidOnboardingUsername('in.nei-_1')).toBe(true)
+  })
+
+  it('rejects names sign-in would refuse', () => {
+    expect(isValidOnboardingUsername('ab')).toBe(false)
+    expect(isValidOnboardingUsername('张三')).toBe(false)
+    expect(isValidOnboardingUsername('Innei Li')).toBe(false)
+    expect(isValidOnboardingUsername('a'.repeat(31))).toBe(false)
   })
 })
 

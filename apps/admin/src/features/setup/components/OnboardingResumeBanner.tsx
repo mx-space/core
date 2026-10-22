@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 import {
+  claimPendingOnboarding,
   readOnboardingProgress,
   writeOnboardingProgress,
 } from '../utils/onboarding'
@@ -18,7 +19,9 @@ export function OnboardingResumeBanner(props: { className?: string }) {
   const ownerQuery = useQuery({ queryFn: getOwner, queryKey: ownerQueryKey })
   const [dismissed, setDismissed] = useState(false)
   const ownerId = ownerQuery.data?.id
-  const progress = ownerId ? readOnboardingProgress(ownerId) : null
+  const progress = ownerId
+    ? (readOnboardingProgress(ownerId) ?? claimPendingOnboarding(ownerId))
+    : null
 
   if (!ownerId || !progress || progress.status !== 'active' || dismissed) {
     return null

@@ -2,11 +2,12 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Fingerprint, ImagePlus, Link2 } from 'lucide-react'
 import type { FormEvent, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { uploadFile } from '~/api/files'
 import { getOwner, updateOwner } from '~/api/options'
-import { createOwner } from '~/api/system'
+import { checkInit, createOwner } from '~/api/system'
 import { SESSION_WITH_LOGIN } from '~/constants/keys'
 import { loggedStatusQueryKey } from '~/features/auth/constants'
 import { useI18n } from '~/i18n'
@@ -14,6 +15,10 @@ import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 import { authClient } from '~/utils/authjs/auth'
 
+import {
+  isValidOnboardingUsername,
+  markOnboardingPending,
+} from '../utils/onboarding'
 import { getErrorMessage } from '../utils/setup'
 import {
   FieldHint,
@@ -31,6 +36,7 @@ export function AccountStep(props: {
 }) {
   const { t } = useI18n()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [username, setUsername] = useState('')
   const [mail, setMail] = useState('')
@@ -46,10 +52,16 @@ export function AccountStep(props: {
     return () => URL.revokeObjectURL(url)
   }, [avatar])
 
+  const usernameValid = isValidOnboardingUsername(username.trim())
   const canSubmit =
-    username.trim() !== '' &&
-    mail.trim() !== '' &&
-    password.length >= minPasswordLength
+    usernameValid && mail.trim() !== '' && password.length >= minPasswordLength
+
+  const continueAtLogin = () => {
+    window.injectData.INIT = true
+    markOnboardingPending()
+    toast.error(t('setup.onboarding.account.signInError'))
+    navigate(`/login?from=${encodeURIComponent('/setup')}`, { replace: true })
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -60,12 +72,18 @@ export function AccountStep(props: {
     try {
       await createOwner({ mail: mail.trim(), name, password, username: name })
     } catch (error) {
+      const status = await checkInit().catch(() => null)
+      if (status?.isInit) {
+        continueAtLogin()
+        return
+      }
       toast.error(
         getErrorMessage(error, t('setup.onboarding.account.createError')),
       )
       setSubmitting(false)
       return
     }
+    window.injectData.INIT = true
 
     try {
       const result = await authClient.signIn.username({
@@ -73,25 +91,29 @@ export function AccountStep(props: {
         username: name,
       })
       if (result.error) throw new Error(result.error.message)
-      sessionStorage.setItem(SESSION_WITH_LOGIN, '1')
-      queryClient.removeQueries({ queryKey: loggedStatusQueryKey })
+    } catch {
+      continueAtLogin()
+      return
+    }
+    sessionStorage.setItem(SESSION_WITH_LOGIN, '1')
+    queryClient.removeQueries({ queryKey: loggedStatusQueryKey })
 
-      if (avatar) {
-        try {
-          const uploaded = await uploadFile(avatar, 'avatar')
-          await updateOwner({ avatar: uploaded.url })
-        } catch (error) {
-          toast.error(
-            getErrorMessage(error, t('setup.onboarding.account.avatarError')),
-          )
-        }
+    if (avatar) {
+      try {
+        const uploaded = await uploadFile(avatar, 'avatar')
+        await updateOwner({ avatar: uploaded.url })
+      } catch (error) {
+        toast.error(
+          getErrorMessage(error, t('setup.onboarding.account.avatarError')),
+        )
       }
+    }
 
+    try {
       const owner = await getOwner()
       props.onCreated(owner.id)
     } catch {
-      toast.error(t('setup.onboarding.account.signInError'))
-      location.hash = '/login'
+      continueAtLogin()
     } finally {
       setSubmitting(false)
     }
@@ -165,15 +187,26 @@ export function AccountStep(props: {
                 type="file"
               />
             </div>
-            <TextInput
-              autoComplete="username"
-              autoFocus
-              label={t('setup.onboarding.account.username')}
-              name="username"
-              onChange={setUsername}
-              required
-              value={username}
-            />
+            <div>
+              <TextInput
+                autoComplete="username"
+                autoFocus
+                label={t('setup.onboarding.account.username')}
+                name="username"
+                onChange={setUsername}
+                required
+                value={username}
+              />
+              <FieldHint>
+                <span
+                  className={
+                    username && !usernameValid ? 'text-red-600' : undefined
+                  }
+                >
+                  {t('setup.onboarding.account.usernameHint')}
+                </span>
+              </FieldHint>
+            </div>
             <div>
               <TextInput
                 autoComplete="email"

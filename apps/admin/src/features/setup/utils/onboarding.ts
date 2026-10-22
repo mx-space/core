@@ -40,10 +40,25 @@ export function deriveServiceUrls(input: {
 
 export function resolveResumeStep(
   progress: OnboardingProgress | null,
-): OnboardingStep {
-  if (!progress || progress.status === 'finished') return 'site'
+): OnboardingStep | null {
+  if (!progress || progress.status === 'finished') return null
   if (progress.step === 'welcome' || progress.step === 'account') return 'site'
   return progress.step
+}
+
+const usernamePattern = /^[\w.-]{3,30}$/
+
+export function isValidOnboardingUsername(username: string) {
+  return usernamePattern.test(username)
+}
+
+function storeValue(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 const progressKey = (ownerId: string) => `mx-admin:onboarding:${ownerId}`
@@ -71,9 +86,27 @@ export function writeOnboardingProgress(
   ownerId: string,
   progress: OnboardingProgress,
 ) {
+  storeValue(progressKey(ownerId), JSON.stringify(progress))
+}
+
+const pendingKey = 'mx-admin:onboarding:pending'
+
+export function markOnboardingPending() {
+  storeValue(pendingKey, '1')
+}
+
+export function claimPendingOnboarding(
+  ownerId: string,
+): OnboardingProgress | null {
   try {
-    localStorage.setItem(progressKey(ownerId), JSON.stringify(progress))
-  } catch {}
+    if (!localStorage.getItem(pendingKey)) return null
+    localStorage.removeItem(pendingKey)
+  } catch {
+    return null
+  }
+  const progress: OnboardingProgress = { status: 'active', step: 'site' }
+  writeOnboardingProgress(ownerId, progress)
+  return progress
 }
 
 export const textModelFeatures = [

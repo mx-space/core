@@ -10,6 +10,7 @@ import { cn } from '~/utils/cn'
 
 import type { OnboardingStep } from '../utils/onboarding'
 import {
+  claimPendingOnboarding,
   readOnboardingProgress,
   resolveResumeStep,
   writeOnboardingProgress,
@@ -48,14 +49,28 @@ export function OnboardingRouteViewContent() {
       }
 
       const logged = await checkLogged().catch(() => null)
+      if (cancelled) return
       if (!logged?.ok) {
+        navigate(`/login?from=${encodeURIComponent('/setup')}`, {
+          replace: true,
+        })
+        return
+      }
+      const owner = await getOwner().catch(() => null)
+      if (cancelled) return
+      if (!owner) {
         navigate('/login', { replace: true })
         return
       }
-      const owner = await getOwner()
-      if (cancelled) return
+      const resumeStep = resolveResumeStep(
+        readOnboardingProgress(owner.id) ?? claimPendingOnboarding(owner.id),
+      )
+      if (!resumeStep) {
+        navigate('/dashboard', { replace: true })
+        return
+      }
       setOwnerId(owner.id)
-      setStep(resolveResumeStep(readOnboardingProgress(owner.id)))
+      setStep(resumeStep)
     }
 
     void boot()

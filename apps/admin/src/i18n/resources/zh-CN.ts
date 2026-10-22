@@ -2851,6 +2851,8 @@ export const zhCN = {
   'setup.onboarding.ai.models.notConfigured': '未配置',
   'setup.onboarding.ai.models.none': '不使用',
   'setup.onboarding.account.avatarUpload': '上传头像',
+  'setup.onboarding.account.usernameHint':
+    '至少 3 位，只能用字母、数字和 _ . -',
   'setup.onboarding.account.username': '用户名',
   'setup.onboarding.account.email': '邮箱',
   'setup.onboarding.account.emailHint': '用于找回密码和接收通知。',
