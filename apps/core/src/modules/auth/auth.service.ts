@@ -172,6 +172,8 @@ export class AuthService {
         name: body.name,
         userId: ownerId,
         configId: SECRET_STORAGE_V2 ? HASHED_API_KEY_CONFIG_ID : 'default',
+        // Owner automation keys must not inherit the provider's 10-request daily quota.
+        rateLimitEnabled: false,
         ...(expiresIn ? { expiresIn } : {}),
       },
     })

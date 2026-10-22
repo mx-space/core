@@ -1,6 +1,10 @@
+import { apiKey } from '@better-auth/api-key'
+import { betterAuth } from 'better-auth'
+import { memoryAdapter } from 'better-auth/adapters/memory'
 import { describe, expect, it, vi } from 'vitest'
 
 import { AppException } from '~/common/errors/exception.types'
+import { HASHED_API_KEY_CONFIG_ID } from '~/modules/auth/auth.constant'
 import { AuthService } from '~/modules/auth/auth.service'
 import { REVIEW_DEMO_EMAIL } from '~/modules/auth/review-demo.constants'
 
@@ -93,7 +97,12 @@ describe('AuthService', () => {
     })
 
     expect(auth.api.createApiKey).toHaveBeenCalledWith({
-      body: { name: 'deploy', userId: 'owner-1', configId: 'mx-hashed-v1' },
+      body: {
+        name: 'deploy',
+        userId: 'owner-1',
+        configId: 'mx-hashed-v1',
+        rateLimitEnabled: false,
+      },
     })
   })
 
@@ -104,6 +113,44 @@ describe('AuthService', () => {
     await expect(
       service.createAccessToken({ name: 'deploy' } as any),
     ).rejects.toThrow(AppException)
+  })
+
+  it('keeps owner automation tokens usable beyond the provider default daily quota', async () => {
+    const { authInstance, service } = createService()
+    const now = new Date()
+    const auth = betterAuth({
+      secret: 'owner-token-quota-regression-test-secret',
+      baseURL: 'http://localhost:2333',
+      database: memoryAdapter({
+        user: [
+          {
+            id: 'owner-1',
+            name: 'Owner',
+            email: 'owner@example.com',
+            emailVerified: true,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        apikey: [],
+      }),
+      plugins: [
+        apiKey([
+          { configId: 'default', disableKeyHashing: true },
+          { configId: HASHED_API_KEY_CONFIG_ID },
+        ]),
+      ],
+      logger: { disabled: true },
+    })
+    authInstance.get.mockReturnValue(auth as any)
+    const { token } = await service.createAccessToken({ name: 'bot' } as any)
+
+    for (let index = 0; index < 12; index++) {
+      const result = await auth.api.verifyApiKey({
+        body: { key: token, configId: HASHED_API_KEY_CONFIG_ID },
+      })
+      expect(result.valid).toBe(true)
+    }
   })
 
   it('extracts API keys from the x-api-key header only', () => {
