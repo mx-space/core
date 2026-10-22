@@ -6,6 +6,7 @@ import { getModelsByCapability } from '~/api/ai'
 import type { AIProviderCapability } from '~/features/settings/types/settings'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { SelectField } from '~/ui/primitives/select'
 
@@ -82,7 +83,7 @@ function useModelOptions(capability: AIProviderCapability) {
   return useQuery({
     queryFn: async () =>
       buildModelOptions(await getModelsByCapability(capability)),
-    queryKey: ['onboarding', 'models', capability],
+    queryKey: adminQueryKeys.onboarding.models(capability),
   })
 }
 
@@ -94,12 +95,17 @@ export function AiModelsStep(props: {
   const { t } = useI18n()
   const configQuery = useOnboardingAiConfig()
   const save = useSaveOnboardingAiConfig()
+  const imageQuery = useModelOptions('image')
+  const speechQuery = useModelOptions('speech')
+  const textQuery = useModelOptions('text')
   const optionsByCapability: Record<AIProviderCapability, ModelOption[]> = {
     decision: [],
-    image: useModelOptions('image').data ?? [],
-    speech: useModelOptions('speech').data ?? [],
-    text: useModelOptions('text').data ?? [],
+    image: imageQuery.data ?? [],
+    speech: speechQuery.data ?? [],
+    text: textQuery.data ?? [],
   }
+  const modelsLoading =
+    imageQuery.isPending || speechQuery.isPending || textQuery.isPending
   const textOptions = optionsByCapability.text
   const [defaultChoice, setDefaultChoice] = useState<string | null>(null)
   const [overrides, setOverrides] = useState<
@@ -173,7 +179,7 @@ export function AiModelsStep(props: {
           <OnboardingFooter onBack={props.onBack}>
             <Button
               data-testid="onboarding-submit"
-              disabled={submitting || !configQuery.data}
+              disabled={submitting || modelsLoading || !configQuery.data}
               onClick={() => void submit()}
               type="button"
             >

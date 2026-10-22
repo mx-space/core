@@ -3099,9 +3099,11 @@ export const enUS = {
   'setup.onboarding.ai.features.submit': 'Finish AI setup',
   'setup.onboarding.ai.features.saveError': 'Could not save feature settings',
   'setup.onboarding.ai.features.asideTitle': 'What readers see',
+  'setup.onboarding.ai.features.asideSource': 'Original',
   'setup.onboarding.ai.features.asideSummary': 'AI summary',
   'setup.onboarding.ai.features.asidePlaceholder':
     'The summary generated on publish shows here',
+  'setup.onboarding.ready.separator': ', ',
   'setup.onboarding.ready.title': "You're all set",
   'setup.onboarding.ready.description':
     '{name} is ready. Pick something to start with, or go to the dashboard.',

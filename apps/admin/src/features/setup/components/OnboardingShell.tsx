@@ -82,7 +82,7 @@ function RailRow(props: {
         <span
           aria-hidden="true"
           className={cn(
-            'inline-flex size-4 shrink-0 items-center justify-center rounded-full border text-[10px] leading-none',
+            'inline-flex size-4 shrink-0 items-center justify-center rounded-full border text-xs leading-none',
             state === 'done'
               ? 'border-accent bg-accent text-white'
               : state === 'pending'

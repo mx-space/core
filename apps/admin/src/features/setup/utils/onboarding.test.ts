@@ -7,8 +7,10 @@ import {
   deriveServiceUrls,
   isValidOnboardingUsername,
   markOnboardingPending,
+  nextSummaryLanguages,
   parseModelOption,
   readOnboardingProgress,
+  removeProviderFromConfig,
   resolveResumeStep,
   writeOnboardingProgress,
 } from './onboarding'
@@ -181,5 +183,79 @@ describe('model options', () => {
       providerId: 'p1',
     })
     expect(parseModelOption('')).toBeNull()
+  })
+})
+
+describe('applyModelPlan clearing media models', () => {
+  it('clears a saved speech model when the plan sets it to none', () => {
+    const speech = { model: 'tts-1', providerId: 'p2' }
+    const next = applyModelPlan(
+      { tts: { enable: true, model: speech } },
+      { defaultModel: null, overrides: { ttsModel: null } },
+    )
+    expect(next.tts?.model).toBeNull()
+  })
+})
+
+describe('removeProviderFromConfig', () => {
+  it('drops the provider and every assignment that points at it', () => {
+    const gone = { model: 'x', providerId: 'p1' }
+    const kept = { model: 'y', providerId: 'p2' }
+    const next = removeProviderFromConfig(
+      {
+        imageGeneration: { model: gone },
+        providers: [
+          {
+            apiKey: '',
+            defaultModel: 'x',
+            enabled: true,
+            id: 'p1',
+            name: 'A',
+            type: 'anthropic',
+          },
+          {
+            apiKey: '',
+            defaultModel: 'y',
+            enabled: true,
+            id: 'p2',
+            name: 'B',
+            type: 'anthropic',
+          },
+        ],
+        summaryModel: kept,
+        tts: { enable: true, model: gone },
+        writerModel: gone,
+      },
+      'p1',
+    )
+    expect(next.providers?.map((provider) => provider.id)).toEqual(['p2'])
+    expect(next.writerModel).toBeNull()
+    expect(next.summaryModel).toEqual(kept)
+    expect(next.tts?.model).toBeNull()
+    expect(next.imageGeneration?.model).toBeNull()
+  })
+})
+
+describe('nextSummaryLanguages', () => {
+  it('follows the translation languages while summary has no own list', () => {
+    expect(nextSummaryLanguages({}, ['en', 'ja'])).toEqual(['en', 'ja'])
+  })
+
+  it('keeps following after the lists were synced once', () => {
+    expect(
+      nextSummaryLanguages(
+        { summaryTargetLanguages: ['en'], translationTargetLanguages: ['en'] },
+        ['en', 'ja'],
+      ),
+    ).toEqual(['en', 'ja'])
+  })
+
+  it('keeps a summary list that was set separately', () => {
+    expect(
+      nextSummaryLanguages(
+        { summaryTargetLanguages: ['fr'], translationTargetLanguages: ['en'] },
+        ['en', 'ja'],
+      ),
+    ).toEqual(['fr'])
   })
 })

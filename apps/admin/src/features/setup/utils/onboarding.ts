@@ -131,16 +131,70 @@ export function applyModelPlan(config: AIConfig, plan: ModelPlan): AIConfig {
     const assignment = plan.overrides[feature] ?? plan.defaultModel
     if (assignment) next[feature] = assignment
   }
-  if (plan.overrides.ttsModel) {
-    next.tts = { ...config.tts, model: plan.overrides.ttsModel }
+  if ('ttsModel' in plan.overrides) {
+    next.tts = { ...config.tts, model: plan.overrides.ttsModel ?? null }
   }
-  if (plan.overrides.imageModel) {
+  if ('imageModel' in plan.overrides) {
     next.imageGeneration = {
       ...config.imageGeneration,
-      model: plan.overrides.imageModel,
+      model: plan.overrides.imageModel ?? null,
     }
   }
   return next
+}
+
+const assignmentFields = [
+  'commentReviewModel',
+  'decisionModel',
+  'fieldTranslationModel',
+  'insightsModel',
+  'insightsTranslationModel',
+  'summaryModel',
+  'translationModel',
+  'translationReviewModel',
+  'writerModel',
+] as const
+
+export function removeProviderFromConfig(
+  config: AIConfig,
+  providerId: string,
+): AIConfig {
+  const pointsAtProvider = (assignment?: AIModelAssignment | null) =>
+    assignment?.providerId === providerId
+  const next: AIConfig = {
+    ...config,
+    providers: (config.providers ?? []).filter(
+      (provider) => provider.id !== providerId,
+    ),
+  }
+  for (const field of assignmentFields) {
+    if (pointsAtProvider(config[field])) next[field] = null
+  }
+  if (config.tts && pointsAtProvider(config.tts.model)) {
+    next.tts = { ...config.tts, model: null }
+  }
+  if (
+    config.imageGeneration &&
+    pointsAtProvider(config.imageGeneration.model)
+  ) {
+    next.imageGeneration = { ...config.imageGeneration, model: null }
+  }
+  return next
+}
+
+function sameLanguages(left: string[], right: string[]) {
+  return (
+    left.length === right.length &&
+    left.every((language) => right.includes(language))
+  )
+}
+
+export function nextSummaryLanguages(config: AIConfig, languages: string[]) {
+  const summary = config.summaryTargetLanguages ?? []
+  const following =
+    summary.length === 0 ||
+    sameLanguages(summary, config.translationTargetLanguages ?? [])
+  return following ? languages : summary
 }
 
 export interface ModelOption {

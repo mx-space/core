@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { getAppInfo, restoreFromBackup } from '~/api/system'
 import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
@@ -31,7 +32,7 @@ export function WelcomeStep(props: {
   const infoQuery = useQuery({
     enabled: props.connected,
     queryFn: getAppInfo,
-    queryKey: ['onboarding', 'info'],
+    queryKey: adminQueryKeys.onboarding.info(),
     retry: false,
   })
   const apiLabel = API_URL || location.origin

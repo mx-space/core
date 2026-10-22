@@ -2940,9 +2940,11 @@ export const zhCN = {
   'setup.onboarding.ai.features.submit': '完成 AI 设置',
   'setup.onboarding.ai.features.saveError': '保存功能设置失败',
   'setup.onboarding.ai.features.asideTitle': '读者看到的效果',
+  'setup.onboarding.ai.features.asideSource': '原文',
   'setup.onboarding.ai.features.asideSummary': 'AI 摘要',
   'setup.onboarding.ai.features.asidePlaceholder':
     '发布时生成的摘要会显示在这里',
+  'setup.onboarding.ready.separator': '、',
   'setup.onboarding.ready.title': '一切就绪',
   'setup.onboarding.ready.description':
     '{name} 已经可以使用。挑一件开始，或者直接进入后台。',

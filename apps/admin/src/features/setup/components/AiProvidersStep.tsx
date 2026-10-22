@@ -17,6 +17,7 @@ import {
   useOnboardingAiConfig,
   useSaveOnboardingAiConfig,
 } from '../hooks/use-onboarding-ai'
+import { removeProviderFromConfig } from '../utils/onboarding'
 import { getErrorMessage } from '../utils/setup'
 import {
   FieldHint,
@@ -120,10 +121,7 @@ export function AiProvidersStep(props: {
   const removeProvider = async (id: string) => {
     if (!configQuery.data) return
     try {
-      await save({
-        ...configQuery.data,
-        providers: providers.filter((provider) => provider.id !== id),
-      })
+      await save(removeProviderFromConfig(configQuery.data, id))
     } catch (error) {
       toast.error(
         getErrorMessage(error, t('setup.onboarding.ai.providers.saveError')),
@@ -164,6 +162,7 @@ export function AiProvidersStep(props: {
                       'flex size-6 shrink-0 items-center justify-center rounded-sm text-fg-subtle hover:bg-surface-inset hover:text-fg',
                       !modelCounts[provider.id] && 'ml-auto',
                     )}
+                    data-testid={`onboarding-provider-remove-${provider.id}`}
                     onClick={() => void removeProvider(provider.id)}
                     type="button"
                   >

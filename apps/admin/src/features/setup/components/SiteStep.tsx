@@ -7,6 +7,7 @@ import type { UrlOptions } from '~/api/options'
 import { getOption, getUrlOptions, patchOption } from '~/api/options'
 import { API_URL } from '~/constants/env'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
@@ -25,7 +26,7 @@ type ServiceUrls = Omit<UrlOptions, 'webUrl'>
 
 const serviceKeys = ['serverUrl', 'adminUrl', 'wsUrl'] as const
 
-const seoQueryKey = ['onboarding', 'seo']
+const seoQueryKey = adminQueryKeys.onboarding.seo()
 
 function readGatewayOverride() {
   try {
@@ -62,7 +63,7 @@ export function SiteStep(props: {
   })
   const urlQuery = useQuery({
     queryFn: getUrlOptions,
-    queryKey: ['onboarding', 'url'],
+    queryKey: adminQueryKeys.onboarding.url(),
   })
   const derived = useMemo(
     () =>
@@ -85,7 +86,7 @@ export function SiteStep(props: {
   useEffect(() => {
     const saved = urlQuery.data
     if (!saved) return
-    if (saved.webUrl) setWebUrl(saved.webUrl)
+    if (isConfiguredUrl(saved.webUrl)) setWebUrl(saved.webUrl)
     setServices((current) => {
       const next = { ...current }
       for (const key of serviceKeys) {
@@ -116,6 +117,9 @@ export function SiteStep(props: {
         'url',
         trimmedWebUrl ? { ...services, webUrl: trimmedWebUrl } : services,
       )
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.settings.root,
+      })
       props.onNext()
     } catch (error) {
       toast.error(getErrorMessage(error, t('setup.onboarding.site.saveError')))

@@ -11,7 +11,7 @@ import {
   useOnboardingAiConfig,
   useSaveOnboardingAiConfig,
 } from '../hooks/use-onboarding-ai'
-import { onboardingLanguages } from '../utils/onboarding'
+import { nextSummaryLanguages, onboardingLanguages } from '../utils/onboarding'
 import { getErrorMessage } from '../utils/setup'
 import {
   OnboardingAsideTitle,
@@ -75,9 +75,7 @@ export function AiFeaturesStep(props: {
         enableInsights: draft.insights,
         enableSummary: draft.summary,
         enableTranslation: draft.translation,
-        summaryTargetLanguages: config.summaryTargetLanguages?.length
-          ? config.summaryTargetLanguages
-          : draft.languages,
+        summaryTargetLanguages: nextSummaryLanguages(config, draft.languages),
         translationTargetLanguages: draft.languages,
         tts: { ...config.tts, enable: ttsAvailable && draft.tts },
       })
@@ -105,7 +103,9 @@ export function AiFeaturesStep(props: {
           <div className="flex flex-col gap-2 rounded-sm border border-border bg-white p-3 shadow-xs">
             {draft?.translation && previewLanguages.length > 0 ? (
               <div className="flex flex-wrap gap-1">
-                <LanguageTag active>中文</LanguageTag>
+                <LanguageTag active>
+                  {t('setup.onboarding.ai.features.asideSource')}
+                </LanguageTag>
                 {previewLanguages.map((language) => (
                   <LanguageTag key={language.code}>
                     {language.label}

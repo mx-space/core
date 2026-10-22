@@ -172,6 +172,16 @@ export const adminQueryKeys = {
     stateCount: () => ['links', 'state-count'] as const,
     root: ['links'] as const,
   },
+  onboarding: {
+    ai: () => ['onboarding', 'ai'] as const,
+    info: () => ['onboarding', 'info'] as const,
+    models: (capability: string) =>
+      ['onboarding', 'models', capability] as const,
+    modelsRoot: ['onboarding', 'models'] as const,
+    owner: () => ['onboarding', 'owner'] as const,
+    seo: () => ['onboarding', 'seo'] as const,
+    url: () => ['onboarding', 'url'] as const,
+  },
   notes: {
     list: (params: {
       filter: string
