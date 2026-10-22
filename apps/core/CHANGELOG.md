@@ -1,3 +1,14 @@
+## [15.1.0](https://github.com/mx-space/core/compare/v15.0.1...v15.1.0) (2026-10-23)
+
+### Features
+
+* **admin:** guide initial setup through account, site, AI and ready steps ([a9988f2](https://github.com/mx-space/core/commit/a9988f2a3))
+
+### Bug Fixes
+
+* **backup:** restore encrypted backups during onboarding ([a8099ce](https://github.com/mx-space/core/commit/a8099ce88c37f76238deb73b290328658af7787e))
+* **admin:** resume onboarding reliably and retain saved account and site settings ([9930478](https://github.com/mx-space/core/commit/993047805))
+
 ## [15.0.1](https://github.com/mx-space/core/compare/v15.0.0...v15.0.1) (2026-10-22)
 
 ### Bug Fixes
