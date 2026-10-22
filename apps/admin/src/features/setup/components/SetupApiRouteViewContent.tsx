@@ -3,8 +3,19 @@ import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
+import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
 import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
+import { cn } from '~/utils/cn'
+
+import {
+  cardClassName,
+  iconTileClassName,
+  inputClassName,
+  labelClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from '../constants'
 
 const storeApiUrlKey = 'mx-admin:setup-api:url'
 const storeGatewayUrlKey = 'mx-admin:setup-api:gateway'
@@ -75,18 +86,24 @@ export function SetupApiRouteViewContent() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-neutral-950 p-4 text-white">
-      <div className="mb-4 flex size-20 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md">
+    <main
+      className={cn(
+        authBackdropClassName,
+        'flex flex-col items-center justify-center',
+      )}
+      style={authBackdropStyle}
+    >
+      <div className={iconTileClassName}>
         <Server aria-hidden="true" className="size-10" />
       </div>
 
       <h1 className="mb-2 text-xl font-medium tracking-wide">
         {t('setup.api.title')}
       </h1>
-      <p className="mb-8 text-sm text-white/70">{t('setup.api.description')}</p>
+      <p className="mb-8 text-sm text-fg-muted">{t('setup.api.description')}</p>
 
       <form
-        className="w-full max-w-md rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-xl"
+        className={cn(cardClassName, 'w-full max-w-md')}
         onSubmit={handleSubmit}
       >
         <SetupInput
@@ -103,7 +120,7 @@ export function SetupApiRouteViewContent() {
           value={gatewayUrl}
         />
 
-        <div className="mb-6 text-white/90">
+        <div className="mb-6 text-fg">
           <FormSwitch
             checked={persist}
             label={t('setup.api.persistLabel')}
@@ -148,11 +165,9 @@ function SetupInput(props: SetupInputProps) {
 
   return (
     <div className="mb-4">
-      <label className="mb-2 block text-sm font-medium text-white/90">
-        {props.label}
-      </label>
+      <label className={labelClassName}>{props.label}</label>
       <TextInput
-        controlClassName="border-white/15 bg-white/15 text-white placeholder:text-white/40 focus:border-white/50 focus:bg-white/20 dark:border-white/15 dark:bg-white/15 dark:text-white"
+        controlClassName={inputClassName}
         list={listId}
         onChange={props.onChange}
         value={props.value}
@@ -184,11 +199,10 @@ function SetupActionButton({
   return (
     <button
       aria-label={label}
-      className={
-        tone === 'primary'
-          ? 'focus-visible:outline-hidden flex h-10 items-center justify-center gap-2 rounded-full bg-white/90 text-sm font-medium text-neutral-950 transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white/50'
-          : 'focus-visible:outline-hidden flex h-10 items-center justify-center gap-2 rounded-full bg-white/15 text-sm text-white/90 transition-colors hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white/50'
-      }
+      className={cn(
+        tone === 'primary' ? primaryButtonClassName : secondaryButtonClassName,
+        'gap-2 px-3',
+      )}
       onClick={onClick}
       type={type}
     >
