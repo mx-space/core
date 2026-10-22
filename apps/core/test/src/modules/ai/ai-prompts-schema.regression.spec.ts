@@ -5,7 +5,7 @@ import { Value } from 'typebox/value'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
-import { AI_PROMPTS, SIGNAL_GEOMETRY_PRESET } from '~/modules/ai/ai.prompts'
+import { AI_PROMPTS, SIGNAL_GEOMETRY_PRESET } from '@mx-space/ai/prompts'
 
 const FIXTURE_DIR = resolve(__dirname, '../../../fixtures/ai-prompts')
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { AI_PROMPTS } from '~/modules/ai/ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { planTranslationChunks } from '~/modules/ai/ai-translation/engine/translation-chunk-planner'
 import {
   createTranslationConversation,

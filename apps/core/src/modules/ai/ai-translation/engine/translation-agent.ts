@@ -1,9 +1,9 @@
 import { Logger } from '@nestjs/common'
 
-import { AI_PROMPTS } from '../../ai.prompts'
-import { runEngineLoop } from '../../message-engine/loop/agent-loop'
-import type { SubAgentSpec } from '../../message-engine/tools/sub-agent'
-import { VirtualFs } from '../../message-engine/vfs/virtual-fs'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import { runEngineLoop } from '@mx-space/ai/engine'
+import type { SubAgentSpec } from '@mx-space/ai/engine'
+import { VirtualFs } from '@mx-space/ai/engine'
 import type { IModelRuntime } from '@mx-space/ai/runtime'
 import {
   buildReviewerMetrics,

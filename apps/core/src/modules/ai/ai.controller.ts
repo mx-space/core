@@ -12,7 +12,7 @@ import {
   resolveCommentDecision,
 } from '../comment/comment-decision'
 import { ConfigsService } from '../configs/configs.service'
-import { AI_PROMPTS } from './ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import {
   type RegistryModelsQueryDto,
   RegistryModelsQuerySchema,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { VirtualFs } from '~/modules/ai/message-engine/vfs/virtual-fs'
+import { VirtualFs } from '@mx-space/ai/engine'
 
 describe('VirtualFs', () => {
   it('write then read returns a defensive copy', () => {

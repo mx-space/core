@@ -8,7 +8,7 @@ import { config as loadEnv } from 'dotenv'
 import type { z } from 'zod'
 
 import { LANGUAGE_CODE_TO_NAME } from '../src/modules/ai/ai.constants'
-import { AI_PROMPTS } from '../src/modules/ai/ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import {
   type AIProviderConfig,
   AIProviderType,

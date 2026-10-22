@@ -1,8 +1,8 @@
 import { Type } from 'typebox'
 import { describe, expect, it, vi } from 'vitest'
 
-import { invokeSubAgent } from '~/modules/ai/message-engine/tools/sub-agent'
-import { firstSchemaFailure } from '~/modules/ai/message-engine/tools/tool.types'
+import { invokeSubAgent } from '@mx-space/ai/engine'
+import { firstSchemaFailure } from '@mx-space/ai/engine'
 
 const schema = Type.Object(
   { issues: Type.Array(Type.String()) },

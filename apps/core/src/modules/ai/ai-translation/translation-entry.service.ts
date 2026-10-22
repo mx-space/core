@@ -11,7 +11,7 @@ import { normalizeLanguageCode } from '~/utils/lang.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { AI_PROMPTS } from '../ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { AiService } from '../ai.service'
 import { TranslationEntryRepository } from './ai-translation.repository'
 import {

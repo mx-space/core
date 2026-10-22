@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { config as loadEnv } from 'dotenv'
 
-import { AI_PROMPTS } from '../src/modules/ai/ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import {
   type AIProviderConfig,
   AIProviderType,

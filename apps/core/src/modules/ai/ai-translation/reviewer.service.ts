@@ -5,7 +5,7 @@ import { Value } from 'typebox/value'
 
 import { extractFirstJsonObject } from '~/utils/json.util'
 
-import { AI_PROMPTS } from '../ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import type { IModelRuntime } from '@mx-space/ai/runtime'
 import { firstValidationFailure } from './strategies/base-translation-strategy'
 

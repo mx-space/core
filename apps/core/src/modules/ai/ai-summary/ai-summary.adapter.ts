@@ -9,7 +9,7 @@ import { DatabaseService } from '~/processors/database/database.service'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { EntitlementService } from '../../membership/entitlement.service'
-import { AI_PROMPTS } from '../ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { AiService } from '../ai.service'
 import {
   type ArticleViewer,

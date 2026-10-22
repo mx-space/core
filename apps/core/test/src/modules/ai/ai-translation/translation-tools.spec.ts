@@ -5,7 +5,7 @@ import {
   TRANSLATION_FILE,
 } from '~/modules/ai/ai-translation/engine/translation-tools'
 import type { TranslationUnit } from '~/modules/ai/ai-translation/translation-unit.types'
-import { VirtualFs } from '~/modules/ai/message-engine/vfs/virtual-fs'
+import { VirtualFs } from '@mx-space/ai/engine'
 
 const units: TranslationUnit[] = [
   { id: 'text:p1', payload: '你好', meta: 'text' },

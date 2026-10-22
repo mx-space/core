@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 
 import { hasChinese } from '~/utils/tool.util'
 
-import { AI_PROMPTS } from '../ai/ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { AiService } from '../ai/ai.service'
 import { ConfigsService } from '../configs/configs.service'
 import { OwnerService } from '../owner/owner.service'

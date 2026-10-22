@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 
 import { throwIfAborted } from '~/utils/abort.util'
 
-import { AI_PROMPTS } from '../../ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import type { IModelRuntime } from '@mx-space/ai/runtime'
 import type { ArticleContent } from '../ai-translation.types'
 import {

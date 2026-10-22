@@ -1,4 +1,4 @@
-import { AI_PROMPTS } from '../ai/ai.prompts'
+import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import type { DecisionAnswer, DecisionQuestion } from '@mx-space/ai/decision'
 
 export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'manual'
