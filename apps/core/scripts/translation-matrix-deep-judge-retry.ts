@@ -8,7 +8,7 @@ import { config as loadEnv } from 'dotenv'
 import { jsonrepair } from 'jsonrepair'
 
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
-import { extractDocumentContext } from '../src/utils/content.util'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')

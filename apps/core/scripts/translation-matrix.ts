@@ -17,7 +17,7 @@ import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/str
 import { createModelRuntime } from '@mx-space/ai/runtime'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '../src/utils/content.util'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')

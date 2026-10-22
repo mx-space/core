@@ -17,7 +17,7 @@ import { TranslationReviewerService } from '../src/modules/ai/ai-translation/rev
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '../src/utils/content.util'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, '../../..')
@@ -231,10 +231,9 @@ async function main() {
       console.log(
         `ok=true ms=${r.durationMs} title=${JSON.stringify(r.translatedTitle)} leaves=${r.textLeaves} nodeDiff=${r.nodeTypeDiff.join(',') || 'none'}`,
       )
-    else
-      console.log(`ok=false ms=${r.durationMs} error=${r.error?.slice(0, 400)}`)
+    else console.log(`ok=false ms=${r.durationMs} error=${r.error?.slice(0,400)}`)
     if (r.translatedLexical) {
-      const safe = r.label.toLowerCase().replaceAll(/[^\da-z]+/g, '-')
+      const safe = r.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')
       await writeFile(
         resolve(OUT, `lexical-${safe}.json`),
         `${JSON.stringify(r.translatedLexical, null, 2)}\n`,

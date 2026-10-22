@@ -28,7 +28,7 @@ import { TranslationReviewerService } from '../src/modules/ai/ai-translation/rev
 import { LexicalTranslationStrategy } from '../src/modules/ai/ai-translation/strategies/lexical-translation.strategy'
 import { LexicalService } from '../src/processors/helper/helper.lexical.service'
 import { ContentFormat } from '../src/shared/types/content-format.type'
-import { extractDocumentContext } from '../src/utils/content.util'
+import { extractDocumentContext } from '@mx-space/ai/translation'
 
 interface Options {
   dataDir: string

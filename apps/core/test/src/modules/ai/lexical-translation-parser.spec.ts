@@ -1,10 +1,9 @@
 import {
+  extractDocumentContext,
   parseLexicalForTranslation,
   restoreLexicalTranslation,
 } from '@mx-space/ai/translation'
 import { describe, expect, it } from 'vitest'
-
-import { extractDocumentContext } from '~/utils/content.util'
 
 const makeEditorState = (children: any[]) =>
   JSON.stringify({ root: { children, type: 'root', direction: 'ltr' } })

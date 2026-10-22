@@ -80,3 +80,85 @@ export function isNestedLexicalEditorState(
     Array.isArray(value.root.children)
   )
 }
+
+const LEXICAL_CONTEXT_BLOCK_TYPES = new Set([
+  'listitem',
+  'tablecell',
+  'tablerow',
+  'details',
+  'list',
+  'table',
+  'root',
+])
+
+export function extractExcalidrawTextForContext(node: any): string {
+  if (!node.snapshot || typeof node.snapshot !== 'string') return ''
+  try {
+    const parsed = JSON.parse(node.snapshot)
+    if (!parsed.store) return ''
+    const texts: string[] = []
+    for (const value of Object.values(parsed.store)) {
+      const shape = value as any
+      if (
+        shape?.props?.text &&
+        typeof shape.props.text === 'string' &&
+        shape.props.text.trim()
+      ) {
+        texts.push(shape.props.text)
+      }
+    }
+    return texts.join('\n')
+  } catch {
+    return ''
+  }
+}
+
+export function extractLexicalContextBlockText(node: any): string {
+  if (!node) return ''
+  if (node.type === LEXICAL_CONTEXT_EXCALIDRAW_TYPE) {
+    return extractExcalidrawTextForContext(node)
+  }
+  if (LEXICAL_CONTEXT_SKIP_BLOCKS.has(node.type)) return ''
+  if (LEXICAL_CONTEXT_SKIP_INLINE.has(node.type)) return ''
+  if (node.type === 'text') return node.text ?? ''
+  if (node.type === 'linebreak') return '\n'
+
+  const parts: string[] = []
+
+  if (Array.isArray(node.children)) {
+    const sep = LEXICAL_CONTEXT_BLOCK_TYPES.has(node.type) ? '\n' : ''
+    const joined = node.children
+      .map(extractLexicalContextBlockText)
+      .filter(Boolean)
+      .join(sep)
+    if (joined) parts.push(joined)
+  }
+
+  for (const [propName, propValue] of Object.entries(node)) {
+    if (KNOWN_LEXICAL_STRUCTURAL_PROPS.has(propName)) continue
+    if (isNestedLexicalEditorState(propValue)) {
+      const nested = propValue.root.children
+        .map(extractLexicalContextBlockText)
+        .filter(Boolean)
+      if (nested.length) parts.push(nested.join('\n'))
+    }
+    if (Array.isArray(propValue)) {
+      for (const item of propValue) {
+        if (!isNestedLexicalEditorState(item)) continue
+        const nested = item.root.children
+          .map(extractLexicalContextBlockText)
+          .filter(Boolean)
+        if (nested.length) parts.push(nested.join('\n'))
+      }
+    }
+  }
+
+  return parts.join('\n')
+}
+
+export function extractDocumentContext(rootChildren: any[]): string {
+  return rootChildren
+    .map(extractLexicalContextBlockText)
+    .filter(Boolean)
+    .join('\n\n')
+}
