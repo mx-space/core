@@ -1,3 +1,10 @@
+## [15.0.1](https://github.com/mx-space/core/compare/v15.0.0...v15.0.1) (2026-10-22)
+
+### Bug Fixes
+
+* **admin,core:** stop sending and tolerate empty image accent ([#2854](https://github.com/mx-space/core/pull/2854)) ([6404db9](https://github.com/mx-space/core/commit/6404db976accc9004ec17a1bdb38637287c7a5d3))
+* **auth:** keep owner API keys usable beyond default quota ([eac0330](https://github.com/mx-space/core/commit/eac0330d1c29e261cc5a7b4907dcd68b483b2469))
+
 # [15.0.0](https://github.com/mx-space/core/compare/v14.16.0...v15.0.0) (2026-10-22)
 
 
