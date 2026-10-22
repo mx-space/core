@@ -1,31 +1,69 @@
 # @mx-space/ai
 
-Shared AI contracts for mx-space — the single source of truth for wire formats exchanged between the server ([`apps/core`](../../apps/core)) and its clients ([`apps/admin`](../../apps/admin)).
+Shared AI building blocks for mx-space: wire contracts, language codes, the model runtime, prompt templates and the translation engine. The package contains pure logic only. It has no NestJS, database or config coupling, so any server can consume it. Data and side effects reach it through small adapter interfaces that the host app implements.
 
-> [!NOTE]
-> This package is private to the monorepo and consumed as TypeScript source via workspace exports.
+Licensed under MIT.
 
-## Contents
+## Entry points
 
-Currently the package contains one contract:
+| Import | Contents |
+|--------|----------|
+| `@mx-space/ai` | AI agent SSE event schema (`AiAgentSseEvent`), language normalization (`normalizeLanguageCode`, `normalizeTargetLang`), environment hooks (`configureAiEnvironment`, `createAiLogger`), `throwIfAborted`, JSON object extraction helpers |
+| `@mx-space/ai/runtime` | `IModelRuntime`, `PiRuntimeAdapter`, `createModelRuntime`, provider types (`AIProviderType`, `AIProviderConfig`, ...), protocol adapter registry, JSON Schema to TypeBox conversion, Vertex helpers |
+| `@mx-space/ai/decision` | `requestDecision` / `listDecisionModels` for decision (classifier) providers |
+| `@mx-space/ai/engine` | Message engine: `Conversation`, `runEngineLoop`, sub-agent tools, `VirtualFs` |
+| `@mx-space/ai/prompts` | `AI_PROMPTS`, prompt templates, `renderPromptTemplate`, language name table |
+| `@mx-space/ai/translation` | Lexical translation parser, block reuse, Mermaid guard, Markdown paragraph splitter, review pipeline (`TranslationReviewer`), translation agent and coordinator, `LexicalTranslationStrategy`, `MarkdownTranslationStrategy`, `LexicalPartialTranslationBuilder` |
 
-- **AI agent SSE events** (`src/ai-agent-sse.ts`) — a TypeBox union, `AiAgentSseEvent`, describing the server-sent event frames streamed by the AI agent: `text`, `thinking`, `toolcall`, `done`, and `error`. Exports `AiAgentSseEventSchema` (runtime validation) and the `AiAgentSseEvent` type.
+The root entry has no Node-only dependencies and is safe to bundle for the browser. The other entries target Node.
 
-## Usage
+## Host integration
+
+### Logging and debug output
+
+The package logs through `createAiLogger(context)`, which uses `console` until the host registers its own logger:
 
 ```ts
-// apps/core — server emits JSON-framed SSE
-import type { AiAgentSseEvent } from '@mx-space/ai'
+import { configureAiEnvironment } from '@mx-space/ai'
 
-// apps/admin — client transport parses the same union
-import type { AiAgentSseEvent } from '@mx-space/ai'
+configureAiEnvironment({
+  debug: process.env.NODE_ENV === 'development',
+  loggerFactory: (context) => new Logger(context),
+})
 ```
 
-Both sides import the same schema so neither defines the shape locally — a change here is a breaking change for server and client simultaneously, by design.
+### Translation strategies
+
+The strategies need two things from the host: a `LexicalDocumentAdapter` (`extractRootBlocks` and `lexicalToMarkdown` for the host's Lexical setup) and a `TranslationReviewer`.
+
+```ts
+import {
+  LexicalTranslationStrategy,
+  TranslationReviewer,
+} from '@mx-space/ai/translation'
+
+const strategy = new LexicalTranslationStrategy(lexicalAdapter, new TranslationReviewer())
+const result = await strategy.translate(article, 'ja', runtime, info, {
+  existing: previousTranslation,
+})
+```
+
+`existing` is any record shaped like `ExistingTranslation`, so each host keeps its own translation table.
+
+### Regional locales
+
+`normalizeLanguageCode` and `normalizeTargetLang` fold regional variants by default (`zh-CN`, `zh-TW` to `zh`; `pt-BR` to `pt`). Pass `{ foldRegion: false }` to keep them distinct; tags then come back in BCP 47 casing (`zh-TW`, `pt-BR`, `zh-Hant`).
+
+### Workspace consumers
+
+Inside a pnpm workspace the package can resolve its own copy of peer-sensitive dependencies. A bundler that loads the source directly must dedupe `@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`, `@innei/message-engine`, `@haklex/rich-headless`, `lexical`, `typebox` and `zod`, or provider registrations end up split across two copies. See `apps/core/vite.config.ts`.
 
 ## Development
 
 | Command | Description |
 |---------|-------------|
-| `pnpm build` | Build with tsdown (ESM + d.ts) |
+| `pnpm build` | Build with tsdown (ESM + d.ts, `.md?raw` prompt templates inlined) |
+| `pnpm test` | Run the package tests with Vitest |
 | `pnpm typecheck` | TypeScript type checking |
+
+Most behaviour tests still live in `apps/core/test/src/modules/ai` and import from this package.
