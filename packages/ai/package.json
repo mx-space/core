@@ -1,6 +1,6 @@
 {
   "name": "@mx-space/ai",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Shared AI building blocks for mx-space: SSE contracts, language codes, model runtime, prompts and translation engine",
   "license": "MIT",
