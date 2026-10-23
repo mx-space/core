@@ -5,6 +5,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { ApiRequestError } from '~/api/http'
 
 import {
+  buildDynamicCatalogSystemMessage,
   currentCatalogEntries,
   isAllowedDynamicUrl,
   registerDynamicComponent,
@@ -200,4 +201,18 @@ it('stops on a parentUrl cycle', () => {
     parentUrl: 'https://cdn.example/a.js',
   }
   expect(resolveCatalogEntry([a, b], a.url)?.entry.url).toMatch(/[ab]\.js$/)
+})
+
+it('lists only current versions in the agent catalog and asks it to reuse them', () => {
+  const message = buildDynamicCatalogSystemMessage({
+    version: 1,
+    components: [v1, v2, v3, other],
+  })
+  const content = 'content' in message ? String(message.content) : ''
+
+  expect(content).toContain(v3.url)
+  expect(content).toContain(other.url)
+  expect(content).not.toContain(`url: ${v1.url}`)
+  expect(content).not.toContain(`url: ${v2.url}`)
+  expect(content).toMatch(/reuse/i)
 })

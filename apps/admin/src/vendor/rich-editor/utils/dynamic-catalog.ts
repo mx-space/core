@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import type {
   DynamicCatalog,
   DynamicCatalogEntry,
+  DynamicCatalogEntryPatch,
 } from '~/api/dynamic-components'
 import {
   getDynamicCatalogUrl,
   getDynamicComponents,
   registerDynamicComponentEntry,
+  updateDynamicComponentEntry,
 } from '~/api/dynamic-components'
 import { ApiRequestError } from '~/api/http'
 import { API_URL } from '~/constants/env'
@@ -96,7 +98,7 @@ export function isAllowedDynamicUrl(url: string): boolean {
 export function buildDynamicCatalogSystemMessage(
   catalog: DynamicCatalog,
 ): ChatMessage {
-  const entries = catalog.components
+  const entries = currentCatalogEntries(catalog.components)
     .map(
       (c) =>
         `- ${c.name}: ${c.description}\n  url: ${c.url}\n  initial-height: ${c.initialHeight}\n  props schema: ${JSON.stringify(c.propsSchema)}`,
@@ -105,7 +107,7 @@ export function buildDynamicCatalogSystemMessage(
 
   return {
     role: 'system',
-    content: `## Dynamic Component Catalog\n\nThe following interactive components are available for <dynamic> nodes. Use exactly these URLs and the listed initial-height; props must conform to each schema.\n\n${entries}`,
+    content: `## Dynamic Component Catalog\n\nThe following interactive components are available for <dynamic> nodes. Use exactly these URLs and the listed initial-height; props must conform to each schema. Reuse a listed component whenever it fits, passing the post's content through props, before writing a new one with preview_dynamic_component.\n\n${entries}`,
   }
 }
 
@@ -116,13 +118,18 @@ function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
   return cachedCatalogPromise
 }
 
-export async function findCatalogEntryForUrl(
+export async function resolveCatalogUrl(
   url: string,
-): Promise<DynamicCatalogEntry | null> {
+): Promise<ReturnType<typeof resolveCatalogEntry>> {
   const catalog = await fetchDynamicCatalog()
-  return catalog
-    ? (resolveCatalogEntry(catalog.components, url)?.entry ?? null)
-    : null
+  return catalog ? resolveCatalogEntry(catalog.components, url) : null
+}
+
+export async function reviseDynamicComponent(
+  entry: DynamicCatalogEntry & { id: string },
+  patch: DynamicCatalogEntryPatch,
+): Promise<void> {
+  primeDynamicCatalog(await updateDynamicComponentEntry(entry.id, patch))
 }
 
 export function useDynamicCatalog(): DynamicCatalog | null {

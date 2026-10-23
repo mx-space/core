@@ -5,6 +5,7 @@ import { createAgentStore } from '@haklex/rich-agent-core'
 import { blockIdState } from '@haklex/rich-editor'
 import {
   $createDynamicEditNode,
+  $isDynamicNode,
   DynamicEditNode,
 } from '@haklex/rich-ext-dynamic'
 import type { LexicalEditor } from 'lexical'
@@ -22,14 +23,17 @@ import { createDynamicPublisher } from './publish-dynamic-component'
 
 const uploadFile = vi.fn()
 const registerDynamicComponent = vi.fn()
-const findCatalogEntryForUrl = vi.fn()
+const reviseDynamicComponent = vi.fn()
+const resolveCatalogUrl = vi.fn()
 vi.mock('~/api/files', () => ({
   uploadFile: (...args: unknown[]) => uploadFile(...args),
 }))
 vi.mock('~/vendor/rich-editor/utils/dynamic-catalog', () => ({
-  findCatalogEntryForUrl: (url: string) => findCatalogEntryForUrl(url),
   registerDynamicComponent: (...args: unknown[]) =>
     registerDynamicComponent(...args),
+  resolveCatalogUrl: (url: string) => resolveCatalogUrl(url),
+  reviseDynamicComponent: (...args: unknown[]) =>
+    reviseDynamicComponent(...args),
 }))
 vi.mock('~/i18n/translate', () => ({ translate: (key: string) => key }))
 
@@ -37,10 +41,10 @@ beforeEach(() => {
   vi.resetAllMocks()
   uploadFile.mockResolvedValue({ url: 'https://files.example/widget.js' })
   registerDynamicComponent.mockResolvedValue(undefined)
-  findCatalogEntryForUrl.mockResolvedValue(null)
+  resolveCatalogUrl.mockResolvedValue(null)
 })
 
-async function setup() {
+async function setup(extra: Record<string, unknown> = {}) {
   const tool = buildDynamicTools()[0]
   const params = {
     name: 'Counter',
@@ -48,6 +52,7 @@ async function setup() {
       'export default { mount(container) { container.textContent = "Counter"; return { unmount() { container.replaceChildren() } } } }',
     props: { start_count: 3 },
     initialHeight: 240,
+    ...extra,
   }
   const result = await tool.execute(params)
   if (!result.ok) throw new Error('tool failed')
@@ -86,6 +91,7 @@ it('rejects invalid tool inputs and keeps a valid draft serializable without upl
     { name: 'x', source: '' },
     { name: 'x', source: 'export default {}', props: [] },
     { name: 'x', source: 'x', initialHeight: -1 },
+    { name: 'x', source: 'x', propsSchema: [] },
   ]) {
     expect((await tool.execute(params)).ok).toBe(false)
   }
@@ -122,6 +128,26 @@ it('uploads the exact preview source, registers it, then inserts once', async ()
   await publish(current())
   expect(dispatchCommand).toHaveBeenCalledTimes(1)
   expect(uploadFile).toHaveBeenCalledTimes(1)
+})
+
+it('registers a new component with the description and props schema the agent wrote', async () => {
+  const propsSchema = {
+    type: 'object',
+    properties: { start_count: { type: 'integer', default: 0 } },
+  }
+  const { item, publish } = await setup({
+    description: 'Click counter. Use to let readers count along.',
+    propsSchema,
+  })
+
+  await publish(item)
+
+  expect(registerDynamicComponent).toHaveBeenCalledWith(
+    expect.objectContaining({
+      description: 'Click counter. Use to let readers count along.',
+      propsSchema,
+    }),
+  )
 })
 
 it('leaves the document alone on upload failure and reuses a successful upload when catalog registration is retried', async () => {
@@ -187,14 +213,17 @@ it('reads an existing version, replaces only its block, and rejects stale propos
     'https://files.example/v1.js',
   )
   const parentSchema = { properties: { start_count: { type: 'number' } } }
-  findCatalogEntryForUrl.mockImplementation(async (url: string) =>
+  resolveCatalogUrl.mockImplementation(async (url: string) =>
     url === 'https://files.example/v1.js'
       ? {
-          name: 'Counter',
-          description: 'Counts clicks',
-          url,
-          initialHeight: 240,
-          propsSchema: parentSchema,
+          entry: {
+            name: 'Counter',
+            description: 'Counts clicks',
+            url: 'https://files.example/v0.js',
+            initialHeight: 240,
+            propsSchema: parentSchema,
+          },
+          outdated: true,
         }
       : null,
   )
@@ -260,4 +289,180 @@ it('reads an existing version, replaces only its block, and rejects stale propos
   } finally {
     vi.unstubAllGlobals()
   }
+})
+
+async function setupRevision(params: Record<string, unknown> = {}) {
+  const editor = createEditor({
+    nodes: [DynamicEditNode],
+    onError: (error) => {
+      throw error
+    },
+  })
+  editor.update(
+    () => {
+      const node = $createDynamicEditNode({
+        url: 'https://files.example/v1.js',
+        props: {},
+        initialHeight: 240,
+      })
+      $setState(node, blockIdState, 'block')
+      $getRoot().append(node)
+    },
+    { discrete: true },
+  )
+  const [preview] = buildDynamicTools(() => editor)
+  const fullParams = {
+    target: readDynamicTarget(editor, 'block'),
+    name: 'Counter v2',
+    source: 'export default { mount() {} }',
+    initialHeight: 300,
+    ...params,
+  }
+  const proposal = await preview.execute(fullParams)
+  if (!proposal.ok) throw new Error('preview failed')
+  const item: ToolCallGroupItem = {
+    id: 'revision',
+    toolName: preview.name,
+    params: fullParams,
+    status: 'completed',
+    result: proposal.content,
+  }
+  const store = createAgentStore()
+  store.setState({
+    bubbles: [{ type: 'tool_call_group', id: 'group', items: [item] }],
+    status: 'idle',
+  })
+  return {
+    editor,
+    publish: () => createDynamicPublisher(store, () => editor)(item),
+  }
+}
+
+const catalogEntry = {
+  id: '7',
+  name: 'Counter',
+  description: 'Counts clicks',
+  url: 'https://files.example/v1.js',
+  initialHeight: 240,
+  propsSchema: {},
+}
+
+it('saves a revision of the current catalog version as a new version of that entry', async () => {
+  resolveCatalogUrl.mockResolvedValue({ entry: catalogEntry, outdated: false })
+  const propsSchema = { properties: { step: { type: 'number' } } }
+  const { editor, publish } = await setupRevision({ propsSchema })
+
+  await publish()
+
+  expect(reviseDynamicComponent).toHaveBeenCalledWith(catalogEntry, {
+    url: 'https://files.example/widget.js',
+    parentUrl: catalogEntry.url,
+    initialHeight: 300,
+    propsSchema,
+  })
+  expect(registerDynamicComponent).not.toHaveBeenCalled()
+  expect(readDynamicTarget(editor, 'block').url).toBe(
+    'https://files.example/widget.js',
+  )
+})
+
+it('skips the catalog write when a retried adoption already moved the entry to the upload', async () => {
+  resolveCatalogUrl.mockResolvedValue({
+    entry: { ...catalogEntry, url: 'https://files.example/widget.js' },
+    outdated: true,
+  })
+  const { editor, publish } = await setupRevision()
+
+  await publish()
+
+  expect(reviseDynamicComponent).not.toHaveBeenCalled()
+  expect(registerDynamicComponent).not.toHaveBeenCalled()
+  expect(readDynamicTarget(editor, 'block').url).toBe(
+    'https://files.example/widget.js',
+  )
+})
+
+it('lifts draft fields a model nested inside propsSchema back to the top level', async () => {
+  const tool = buildDynamicTools()[0]
+  const source = 'export default { mount() {} }'
+
+  const result = await tool.execute({
+    name: 'Counter',
+    description: 'Counts clicks',
+    propsSchema: {
+      type: 'object',
+      properties: { step: { type: 'number' } },
+      props: { step: 2 },
+      initialHeight: 400,
+      source,
+    },
+  })
+
+  expect(result.ok).toBe(true)
+  if (!result.ok) throw new Error('tool failed')
+  expect(JSON.parse(result.content).draft).toMatchObject({
+    source,
+    props: { step: 2 },
+    initialHeight: 400,
+    propsSchema: { type: 'object', properties: { step: { type: 'number' } } },
+  })
+  expect(JSON.parse(result.content).draft.propsSchema).not.toHaveProperty(
+    'source',
+  )
+})
+
+it('accepts a revision whose target carries edited props, matching the block by id and url', async () => {
+  resolveCatalogUrl.mockResolvedValue(null)
+  const editor = createEditor({
+    nodes: [DynamicEditNode],
+    onError: (error) => {
+      throw error
+    },
+  })
+  editor.update(
+    () => {
+      const node = $createDynamicEditNode({
+        url: 'https://files.example/v1.js',
+        props: { years: 20 },
+        initialHeight: 240,
+      })
+      $setState(node, blockIdState, 'block')
+      $getRoot().append(node)
+    },
+    { discrete: true },
+  )
+  const [preview] = buildDynamicTools(() => editor)
+
+  const result = await preview.execute({
+    target: {
+      ...readDynamicTarget(editor, 'block'),
+      props: { years: 30 },
+      initialHeight: 300,
+    },
+    name: 'Counter',
+    source: 'export default { mount() {} }',
+    props: { years: 30 },
+  })
+
+  expect(result.ok).toBe(true)
+})
+
+it('still adopts a revision after the writer tweaked the block props', async () => {
+  resolveCatalogUrl.mockResolvedValue({ entry: catalogEntry, outdated: false })
+  const { editor, publish } = await setupRevision({ props: { step: 5 } })
+  editor.update(
+    () => {
+      const node = $getRoot().getFirstChild()
+      if (!$isDynamicNode(node)) throw new Error('missing node')
+      node.setProps({ step: 9 })
+    },
+    { discrete: true },
+  )
+
+  await publish()
+
+  expect(readDynamicTarget(editor, 'block')).toMatchObject({
+    url: 'https://files.example/widget.js',
+    props: { step: 5 },
+  })
 })

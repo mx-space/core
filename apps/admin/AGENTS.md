@@ -304,3 +304,7 @@ as id) and records every replaced URL in `previousUrls`.
   `$createDynamicEditNode`, or Lexical rejects the class.
 - Props forms are generated from `propsSchema` by `src/lib/dynamic-props.ts` and
   `src/ui/patterns/PropsEditor.tsx`.
+- The write agent's `preview_dynamic_component` drafts carry `description` and `propsSchema`.
+  Adopting a revision of a block on the current catalog version saves a new version of that
+  entry (`reviseDynamicComponent`); a new component or a revision of an older version
+  registers a new entry.

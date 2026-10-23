@@ -30,11 +30,50 @@ export function readDynamicTarget(editor: LexicalEditor, blockId: string) {
   })
 }
 
+export function isSameDynamicTarget(
+  a: { blockId: string; url: string },
+  b: { blockId: string; url: string },
+) {
+  return a.blockId === b.blockId && a.url === b.url
+}
+
 export const DYNAMIC_PREVIEW_TOOL = 'preview_dynamic_component'
+
+const DRAFT_FIELDS_OUTSIDE_SCHEMA = [
+  'source',
+  'props',
+  'initialHeight',
+  'target',
+] as const
+
+// Models writing a large propsSchema often close it one brace late, which
+// nests the remaining draft fields inside it. None of these names are JSON
+// Schema keywords, so moving them back cannot misread a real schema.
+function liftMisplacedDraftFields(params: unknown): unknown {
+  if (!params || typeof params !== 'object' || Array.isArray(params))
+    return params
+  const record = params as Record<string, unknown>
+  const schema = record.propsSchema
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema))
+    return params
+  const nested = { ...(schema as Record<string, unknown>) }
+  const lifted: Record<string, unknown> = {}
+  for (const key of DRAFT_FIELDS_OUTSIDE_SCHEMA) {
+    if (key in nested && !(key in record)) {
+      lifted[key] = nested[key]
+      delete nested[key]
+    }
+  }
+  return Object.keys(lifted).length
+    ? { ...record, ...lifted, propsSchema: nested }
+    : params
+}
 
 const draftSchema = z.object({
   target: targetSchema.optional(),
   name: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(500).optional(),
+  propsSchema: z.record(z.string(), z.json()).optional(),
   source: z.string().trim().min(1).max(200_000),
   props: z.record(z.string(), z.json()).default({}),
   initialHeight: z.number().int().min(80).max(2000).default(320),
@@ -73,6 +112,7 @@ export function buildDynamicTools(
     {
       name: DYNAMIC_PREVIEW_TOOL,
       description: `Create or revise an interactive JS component for the user to preview in this conversation. Supply the COMPLETE source on every revision; previous versions remain available. This tool does not upload or edit the article. The user must click Upload and insert to adopt it; do not insert a temporary URL yourself.
+Adopted components join the site's component catalog and are reused across posts. Before writing a new one, check the Dynamic Component Catalog: if a listed component fits, insert it with a <dynamic> node and props instead of calling this tool. Write new components to be reusable: take every piece of post-specific content (labels, data, text) from props rather than hardcoding it, give props sensible defaults, and pass description (what it shows and when to use it) and propsSchema (a JSON Schema object whose properties describe each prop; string, enum, number, integer and boolean properties with title, description and default become a form writers fill in).
 To edit a component already in the article, first call read_dynamic_component with its blockId from the document snapshot, then pass the returned target unchanged in every revision. Adoption replaces only that block in the current draft; a new URL is created and the published article keeps the old version until republished. Never edit or overwrite an uploaded file.
 Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScript, npm/bare or relative imports). Prefer native DOM, CSS and SVG. Default export: { mount(container, { props, host: { theme } }) { /* render inside container */ return { update(input) { /* optional: props/theme changes */ }, unmount() { /* remove listeners, timers, animation frames and DOM */ } } }. mount is synchronous. Put styles INSIDE container: it lives in a Shadow DOM for CSS isolation. Do not modify document/head/body, use global CSS, or rely on admin libraries. Support light/dark theme and responsive width. Include accessible control labels. To fix an error or change the design, call this tool again with revised complete source.`,
       parameters: {
@@ -82,7 +122,7 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
           target: {
             type: 'object',
             description:
-              'Exact target returned by read_dynamic_component, required when revising an existing article component',
+              'Exact target returned by read_dynamic_component, required when revising an existing article component. It identifies the block; never edit it. Put new props and height in the top-level props and initialHeight',
             properties: {
               blockId: { type: 'string' },
               url: { type: 'string' },
@@ -92,6 +132,16 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
             required: ['blockId', 'url', 'props', 'initialHeight'],
           },
           name: { type: 'string', description: 'Short component title' },
+          description: {
+            type: 'string',
+            description:
+              'What the component shows and when to use it; the catalog shows this to writers and future agents',
+          },
+          propsSchema: {
+            type: 'object',
+            description:
+              'JSON Schema ({ type: "object", properties, required }) for props. Omit when revising to keep the current schema',
+          },
           source: {
             type: 'string',
             description: 'Complete standalone ES module source',
@@ -105,7 +155,7 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
         required: ['name', 'source'],
       },
       execute: async (params) => {
-        const parsed = draftSchema.safeParse(params)
+        const parsed = draftSchema.safeParse(liftMisplacedDraftFields(params))
         if (!parsed.success)
           return {
             ok: false,
@@ -116,13 +166,13 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
             const editor = getEditor()
             if (
               !editor ||
-              !isEqual(
+              !isSameDynamicTarget(
                 readDynamicTarget(editor, parsed.data.target.blockId),
                 parsed.data.target,
               )
             )
               throw new Error(
-                'Component changed; read it again before revising',
+                'Component changed; read it again before revising. Pass the target exactly as read_dynamic_component returned it; new values go in the top-level props and initialHeight',
               )
           } catch (error) {
             return {

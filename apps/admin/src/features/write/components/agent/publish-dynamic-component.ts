@@ -3,17 +3,18 @@ import {
   $isDynamicNode,
   INSERT_DYNAMIC_COMMAND,
 } from '@haklex/rich-ext-dynamic'
-import { isEqual } from 'es-toolkit'
 import type { LexicalEditor } from 'lexical'
 
 import { uploadFile } from '~/api/files'
 import { translate } from '~/i18n/translate'
 import { $findBlockByBlockId } from '~/vendor/rich-editor/utils/apply-agent-review-batch'
 import {
-  findCatalogEntryForUrl,
   registerDynamicComponent,
+  resolveCatalogUrl,
+  reviseDynamicComponent,
 } from '~/vendor/rich-editor/utils/dynamic-catalog'
 import {
+  isSameDynamicTarget,
   readDynamicDraft,
   readDynamicReceipt,
   readDynamicTarget,
@@ -76,7 +77,10 @@ export function createDynamicPublisher(
     const assertTarget = () => {
       if (
         draft.target &&
-        !isEqual(readDynamicTarget(editor, draft.target.blockId), draft.target)
+        !isSameDynamicTarget(
+          readDynamicTarget(editor, draft.target.blockId),
+          draft.target,
+        )
       ) {
         throw new Error(translate('write.agent.dynamic.targetChanged'))
       }
@@ -97,17 +101,32 @@ export function createDynamicPublisher(
         ).url
       assertCurrent()
       saveReceipt(url, false)
-      const parent = draft.target
-        ? await findCatalogEntryForUrl(draft.target.url)
+      const resolved = draft.target
+        ? await resolveCatalogUrl(draft.target.url)
         : null
-      await registerDynamicComponent({
-        parentUrl: draft.target?.url,
-        name: draft.name,
-        description: parent?.description || draft.name,
-        url,
-        initialHeight: draft.initialHeight,
-        propsSchema: parent?.propsSchema ?? {},
-      })
+      const parent = resolved?.entry
+      const alreadyCataloged = parent?.url === url
+      if (!alreadyCataloged && parent?.id && !resolved?.outdated) {
+        await reviseDynamicComponent(
+          { ...parent, id: parent.id },
+          {
+            url,
+            parentUrl: parent.url,
+            initialHeight: draft.initialHeight,
+            ...(draft.description ? { description: draft.description } : {}),
+            ...(draft.propsSchema ? { propsSchema: draft.propsSchema } : {}),
+          },
+        )
+      } else if (!alreadyCataloged) {
+        await registerDynamicComponent({
+          parentUrl: draft.target?.url,
+          name: draft.name,
+          description: draft.description || parent?.description || draft.name,
+          url,
+          initialHeight: draft.initialHeight,
+          propsSchema: draft.propsSchema ?? parent?.propsSchema ?? {},
+        })
+      }
       assertCurrent()
       assertTarget()
       if (draft.target) {
