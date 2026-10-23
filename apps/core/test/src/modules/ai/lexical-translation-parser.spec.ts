@@ -727,6 +727,34 @@ describe('lexical-translation-parser', () => {
   })
 
   describe('extractDocumentContext', () => {
+    it('steps node → each step title followed by its content', () => {
+      const step = (id: string, title: string, body: string) => ({
+        id,
+        title,
+        content: {
+          root: {
+            children: [paragraph(textNode(body))],
+            type: 'root',
+            direction: 'ltr',
+          },
+        },
+      })
+      const json = makeEditorState([
+        {
+          type: 'steps',
+          version: 1,
+          steps: [
+            step('a', 'Install', 'Download it'),
+            step('b', 'Configure', 'Add the key'),
+          ],
+        },
+      ])
+      const editorState = JSON.parse(json)
+      const context = extractDocumentContext(editorState.root.children)
+
+      expect(context).toBe('Install\nDownload it\nConfigure\nAdd the key')
+    })
+
     it('headings and paragraphs → separated by \\n\\n', () => {
       const json = makeEditorState([
         heading('h1', textNode('Title')),

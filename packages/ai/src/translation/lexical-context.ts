@@ -144,11 +144,24 @@ export function extractLexicalContextBlockText(node: any): string {
     }
     if (Array.isArray(propValue)) {
       for (const item of propValue) {
-        if (!isNestedLexicalEditorState(item)) continue
-        const nested = item.root.children
-          .map(extractLexicalContextBlockText)
-          .filter(Boolean)
-        if (nested.length) parts.push(nested.join('\n'))
+        const states = isNestedLexicalEditorState(item)
+          ? [item]
+          : item && typeof item === 'object' && !Array.isArray(item)
+            ? Object.values(item).filter(isNestedLexicalEditorState)
+            : []
+        if (
+          node.type === 'steps' &&
+          typeof item?.title === 'string' &&
+          item.title.trim()
+        ) {
+          parts.push(item.title)
+        }
+        for (const state of states) {
+          const nested = state.root.children
+            .map(extractLexicalContextBlockText)
+            .filter(Boolean)
+          if (nested.length) parts.push(nested.join('\n'))
+        }
       }
     }
   }
