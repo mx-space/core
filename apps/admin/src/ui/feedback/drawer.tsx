@@ -89,7 +89,7 @@ export function Drawer(props: {
               aria-labelledby={showHeader ? titleId : undefined}
               aria-modal="true"
               className={cn(
-                'outline-hidden shadow-lg absolute bottom-0 top-0 flex flex-col bg-surface-card',
+                'outline-hidden shadow-lg absolute bottom-0 top-0 flex flex-col bg-surface-card text-fg',
                 side === 'right' ? 'right-0' : 'left-0',
                 widthClassName,
                 props.className,

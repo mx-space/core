@@ -408,7 +408,7 @@ export function BottomSheet(props: BottomSheetProps) {
         >
           <motion.div
             className={cn(
-              'shadow-lg flex h-full w-full flex-col bg-surface-card will-change-transform',
+              'shadow-lg flex h-full w-full flex-col bg-surface-card text-fg will-change-transform',
               props.className,
             )}
             style={{

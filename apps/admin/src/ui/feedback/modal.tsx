@@ -68,7 +68,7 @@ export function Modal(props: ModalProps) {
             />
             <Dialog.Popup
               className={cn(
-                'outline-hidden shadow-lg fixed left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface-card',
+                'outline-hidden shadow-lg fixed left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-surface-card text-fg',
                 props.className,
               )}
               initialFocus={props.initialFocus}
