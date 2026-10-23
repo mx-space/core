@@ -10,6 +10,7 @@ pub const FANOUT_DELIVERY_INSERT_SQL: &str = "INSERT INTO push_deliveries
          JOIN push_installations i ON i.id = b.installation_id
          WHERE b.source_id = ?2 AND b.revoked_at IS NULL AND i.revoked_at IS NULL
            AND i.app_id = ?4
+           AND (i.app_id <> 'space' OR b.owner_authorized = 1)
            AND (?5 IS NULL OR b.reader_id = ?5)
            AND (?6 IS NULL OR COALESCE(json_extract(b.preferences, '$.' || ?6), 0) = 1)";
 

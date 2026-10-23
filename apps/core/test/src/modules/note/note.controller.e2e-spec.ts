@@ -399,14 +399,9 @@ describe('NoteController', () => {
         },
       })
 
-      const response = await controller.getNoteByNid(
-        { nid: 1 } as any,
-        false,
-        {} as any,
-        'fake-ip',
-      )
-
-      expect(response.meta.tts).toEqual({ available: false })
+      await expect(
+        controller.getNoteByNid({ nid: 1 } as any, false, {} as any, 'fake-ip'),
+      ).rejects.toThrow()
     })
 
     it('keeps meta.tts for the owner of a future-dated secret note', async () => {
@@ -527,5 +522,45 @@ describe('NoteController', () => {
       expect(response.meta.translation['list-2']).toBeDefined()
       expect(response.meta.translation['list-3']).toBeUndefined()
     })
+  })
+})
+
+describe('note confidentiality', () => {
+  it('blocks password-protected direct ID reads', async () => {
+    const { controller } = createController({
+      noteService: {
+        findById: vi.fn().mockResolvedValue(makeNote({ hasPassword: true })),
+        checkPasswordToAccess: vi.fn().mockResolvedValue(false),
+      },
+    })
+    await expect(
+      controller.getOneNote({ id: 'note-1' } as any, false),
+    ).rejects.toThrow()
+  })
+  it('blocks scheduled bodies before translation or enrichment', async () => {
+    const { controller } = createController({
+      noteService: {
+        findByNid: vi
+          .fn()
+          .mockResolvedValue(makeNote({ content: 'secret lexical body' })),
+        checkNoteIsSecret: vi.fn().mockReturnValue(true),
+      },
+    })
+    await expect(
+      controller.getNoteByNid({ nid: 1 } as any, false, {} as any, 'ip'),
+    ).rejects.toThrow()
+  })
+  it('does not include a protected anchor note in public navigation lists', async () => {
+    const { controller } = createController({
+      noteService: {
+        findById: vi.fn().mockResolvedValue(makeNote({ hasPassword: true })),
+      },
+    })
+    const result = await controller.getNoteList(
+      { size: 10 } as any,
+      { id: 'note-1' } as any,
+      false,
+    )
+    expect(result.data).toEqual([])
   })
 })

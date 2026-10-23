@@ -162,7 +162,6 @@ describe('Yohaku contract — comment thread (e2e)', () => {
       'author',
       'text',
       'avatar',
-      'state',
       'pin',
       'parent_comment_id',
       'reply_count',
@@ -182,6 +181,6 @@ describe('Yohaku contract — comment thread (e2e)', () => {
     const body = res.json()
 
     assertNoLegacyKeys(body, { allowed: allowedCommentKeys })
-    assertHasKeys(body.data, ['id', 'author', 'text', 'created_at', 'state'])
+    assertHasKeys(body.data, ['id', 'author', 'text', 'created_at'])
   })
 })

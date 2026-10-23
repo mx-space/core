@@ -204,7 +204,7 @@ export const RegisterInstallationSchema = z
   .object({
     app_id: z.string().min(1).max(64),
     apns_environment: z.enum(['development', 'production']),
-    apns_token: z.string().regex(/^[\da-f]{64,}$/i),
+    apns_token: z.string().regex(/^(?:[\da-f]{2}){32,256}$/i),
   })
   .strict()
 
@@ -220,6 +220,8 @@ export const ClaimSourceActivationSchema = z
     source_label: z.string().trim().min(1).max(128).optional(),
     reader_id: resourceId.optional(),
     preferences: PushPreferencesSchema.optional(),
+    owner_authorized: z.boolean().optional(),
+    enrollment_token: z.string().min(32).max(256).optional(),
   })
   .strict()
 

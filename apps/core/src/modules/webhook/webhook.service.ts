@@ -12,7 +12,7 @@ import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { EventPayloadEnricherService } from '~/processors/helper/helper.event-payload.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
 import type { BasicPagerDto } from '~/shared/dto/pager.dto'
-import { isPrivateIp } from '~/utils/ssrf.util'
+import { isPrivateIp, publicHttpDispatcher } from '~/utils/ssrf.util'
 
 import { WebhookRepository } from './webhook.repository'
 import type { WebhookModel, WebhookRow } from './webhook.types'
@@ -185,6 +185,7 @@ export class WebhookService implements OnModuleInit, OnModuleDestroy {
     try {
       const response = await this.httpService.fetch.raw(webhook.payloadUrl, {
         method: 'POST',
+        dispatcher: publicHttpDispatcher,
         body: clonedPayload,
         headers,
         redirect: 'error',
@@ -266,11 +267,7 @@ function isBlockedIP(rawIp: string): boolean {
  * webhook target that points at loopback / link-local / private / metadata
  * addresses. Returns the resolved IP that the request will actually hit.
  *
- * NOTE: this is checked at delivery time (the real gate). A DNS-rebinding
- * attacker can still pass this check and then re-point the hostname before the
- * HTTP socket connects; `maxRedirects: 0` removes the redirect-based bypass but
- * not rebinding. Pinning the connection to `resolvedIp` would be needed to
- * fully close that window.
+ * Delivery also validates DNS in publicHttpDispatcher at socket connection time.
  */
 async function assertWebhookTargetIsPublic(rawUrl: string): Promise<string> {
   let url: URL

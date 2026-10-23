@@ -3,6 +3,7 @@ import type { IController } from '~/interfaces/controller'
 import type { IRequestHandler } from '~/interfaces/request'
 import type { SubscribeType } from '~/models/subscribe'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '@mx-space/api-client' {
@@ -38,6 +39,7 @@ export class SubscribeController<ResponseWrapper> implements IController {
     }>()
   }
 
+  /** Sends a confirmation email. Preferences change only after the recipient confirms. */
   subscribe(email: string, types: SubscribeType[]) {
     return this.proxy.post<never>({
       data: {

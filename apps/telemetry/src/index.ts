@@ -1,5 +1,8 @@
 interface Env {
   DB: D1Database
+  COLLECT_LIMITER: {
+    limit: (input: { key: string }) => Promise<{ success: boolean }>
+  }
 }
 
 interface TelemetryPayload {
@@ -35,7 +38,42 @@ function safeJsonStringify(value: unknown): string {
 
 async function handleCollect(request: Request, env: Env): Promise<Response> {
   try {
-    const payload = (await request.json()) as TelemetryPayload
+    const admission = await env.COLLECT_LIMITER.limit({
+      key: request.headers.get('CF-Connecting-IP') || 'unknown',
+    })
+    if (!admission.success) return jsonResponse({ error: 'Rate limited' }, 429)
+    const reader = request.body?.getReader()
+    if (!reader) return jsonResponse({ error: 'Missing body' }, 400)
+    const chunks: Uint8Array[] = []
+    let size = 0
+    try {
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (done) break
+        size += value.byteLength
+        if (size > 1024) return jsonResponse({ error: 'Body too large' }, 413)
+        chunks.push(value)
+      }
+    } finally {
+      await reader.cancel()
+      reader.releaseLock()
+    }
+    let payload: TelemetryPayload
+    try {
+      payload = JSON.parse(await new Blob(chunks).text())
+    } catch {
+      return jsonResponse({ error: 'Invalid JSON' }, 400)
+    }
+    if (
+      !payload ||
+      typeof payload.instanceId !== 'string' ||
+      typeof payload.version !== 'string' ||
+      typeof payload.event !== 'string' ||
+      (payload.nodeVersion !== undefined &&
+        typeof payload.nodeVersion !== 'string')
+    ) {
+      return jsonResponse({ error: 'Invalid fields' }, 400)
+    }
 
     if (!payload.instanceId || !payload.version || !payload.event) {
       return jsonResponse({ error: 'Missing required fields' }, 400)
@@ -56,17 +94,24 @@ async function handleCollect(request: Request, env: Env): Promise<Response> {
       return jsonResponse({ error: 'Field too long' }, 400)
     }
 
-    await env.DB.prepare(
-      'INSERT INTO telemetry (instance_id, version, node_version, event) VALUES (?, ?, ?, ?)',
+    const result = await env.DB.prepare(
+      `INSERT INTO telemetry (instance_id, version, node_version, event) SELECT ?, ?, ?, ?
+       WHERE (SELECT count(*) FROM telemetry) < 100000
+         AND (SELECT count(*) FROM telemetry WHERE created_at >= datetime('now', '-1 day')) < 10000
+         AND NOT EXISTS (SELECT 1 FROM telemetry WHERE instance_id = ? AND event = ? AND created_at >= datetime('now', '-1 minute'))`,
     )
       .bind(
         payload.instanceId,
         payload.version,
         payload.nodeVersion || null,
         payload.event,
+        payload.instanceId,
+        payload.event,
       )
       .run()
 
+    if (result.meta.changes === 0)
+      return jsonResponse({ error: 'Collection budget exceeded' }, 429)
     return jsonResponse({ success: true })
   } catch (error) {
     console.error('Collect error:', error)

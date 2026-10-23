@@ -17,8 +17,10 @@ import Testing
         "http://172.16.0.1",
         "http://127.0.0.1:2333",
     ])
-    func allowsPlaintextOnLocalNetworks(_ raw: String) throws {
-        _ = try ServerEndpoint(baseURL: URL(string: raw)!)
+    func refusesPlaintextOnLocalNetworks(_ raw: String) {
+        #expect(throws: SpaceTransportError.self) {
+            _ = try ServerEndpoint(baseURL: URL(string: raw)!)
+        }
     }
 
     @Test(arguments: ["http://example.com", "http://172.32.0.1", "http://8.8.8.8"])
@@ -50,5 +52,18 @@ import Testing
         let url = servers?.first?["url"] as? String
 
         #expect(url == ServerEndpoint.pathPrefix)
+    }
+}
+
+@Suite struct CredentialOriginTests {
+    @Test func canonicalizesTheOriginWithoutPathOrDefaultPort() throws {
+        let first = try ServerEndpoint(baseURL: URL(string: "https://EXAMPLE.com:443/old/path")!)
+        let second = try ServerEndpoint(baseURL: URL(string: "https://example.com")!)
+        #expect(first.credentialOrigin == second.credentialOrigin)
+        #expect(first.credentialOrigin != (try ServerEndpoint(baseURL: URL(string: "https://example.com:8443")!)).credentialOrigin)
+    }
+    @Test func acceptsAnHTTPSIPv6Origin() throws {
+        let endpoint = try ServerEndpoint(baseURL: URL(string: "https://[::1]:8443")!)
+        #expect(URL(string: endpoint.credentialOrigin)?.port == 8443)
     }
 }

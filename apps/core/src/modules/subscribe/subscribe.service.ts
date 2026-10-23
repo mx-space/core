@@ -1,5 +1,10 @@
 import cluster from 'node:cluster'
-import { randomBytes } from 'node:crypto'
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto'
 
 import type { CoAction } from '@innei/next-async'
 import { Co } from '@innei/next-async'
@@ -9,6 +14,7 @@ import ejs from 'ejs'
 import { LRUCache } from 'lru-cache'
 import type Mail from 'nodemailer/lib/mailer'
 
+import { apiRoutePrefix } from '~/common/decorators/api-controller.decorator'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { BusinessEvents, EventScope } from '~/constants/business-event.constant'
 import { isMainProcess } from '~/global/env.global'
@@ -17,6 +23,8 @@ import { EmailService } from '~/processors/helper/helper.email.service'
 import type { IEventManagerHandlerDisposer } from '~/processors/helper/helper.event.service'
 import { EventManagerService } from '~/processors/helper/helper.event.service'
 import { UrlBuilderService } from '~/processors/helper/helper.url-builder.service'
+import { RedisService } from '~/processors/redis/redis.service'
+import { getRedisKey } from '~/utils/redis.util'
 import { truncateAtBoundary } from '~/utils/text-summary.util'
 
 import { ConfigsService } from '../configs/configs.service'
@@ -33,9 +41,6 @@ import { defaultSubscribeForRenderProps } from './subscribe.email.default'
 import { SubscribeRepository } from './subscribe.repository'
 import { SubscribeMailType } from './subscribe-mail.enum'
 
-type Email = string
-type SubscriberEntry = { subscribe: number; cancelToken: string }
-
 @Injectable()
 export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   constructor(
@@ -46,9 +51,8 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     private readonly urlBuilderService: UrlBuilderService,
     private readonly emailService: EmailService,
     private readonly ownerService: OwnerService,
+    private readonly redis: RedisService,
   ) {}
-
-  private subscribeMap = new Map<Email, SubscriberEntry>()
 
   public get repository() {
     return this.subscribeRepository
@@ -92,15 +96,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   private async observeEvents() {
     if (!isMainProcess && cluster.isWorker && cluster.worker?.id !== 1) return
 
-    const docs = await this.subscribeRepository.findAll()
-
-    for (const doc of docs) {
-      this.subscribeMap.set(doc.email, {
-        subscribe: doc.subscribe,
-        cancelToken: doc.cancelToken,
-      })
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this
 
@@ -121,12 +116,11 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
       const { serverUrl } = await self.configService.get('url')
       const detailLink =
         await self.urlBuilderService.buildWithBaseUrl(noteOrPost)
-      for (const [
-        email,
-        { subscribe, cancelToken },
-      ] of self.subscribeMap.entries()) {
+      const subscribers = await self.subscribeRepository.findAll()
+      for (const { email, subscribe, cancelToken, verified } of subscribers) {
+        if (!verified) continue
         if (!(subscribe & subscribeBit)) continue
-        const unsubscribeLink = `${serverUrl}/subscribe/unsubscribe?email=${encodeURIComponent(email)}&cancelToken=${encodeURIComponent(cancelToken)}`
+        const unsubscribeLink = `${serverUrl.replace(/\/$/, '')}${apiRoutePrefix}/subscribe/unsubscribe?email=${encodeURIComponent(email)}&cancelToken=${encodeURIComponent(cancelToken)}`
         self.sendEmail(
           email,
           {
@@ -195,20 +189,72 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   }
 
   async subscribe(email: string, subscribe: number) {
-    const isExist = await this.subscribeRepository.findByEmail(email)
-    let cancelToken: string
-    if (isExist) {
-      await this.subscribeRepository.updateByEmail(email, { subscribe })
-      cancelToken = isExist.cancelToken
-    } else {
-      cancelToken = String(this.createCancelToken(email))
-      await this.subscribeRepository.create({
+    email = email.trim().toLowerCase()
+    const emailHash = createHash('sha256').update(email).digest('hex')
+    const admitted = await this.redis
+      .getClient()
+      .set(getRedisKey(`subscribe:confirm:${emailHash}`), '1', 'EX', 60, 'NX')
+    if (!admitted) return
+    let subscriber = await this.subscribeRepository.findByEmail(email)
+    if (!subscriber) {
+      subscriber = await this.subscribeRepository.create({
         email,
-        cancelToken,
-        subscribe,
+        cancelToken: this.createCancelToken(email),
+        subscribe: 0,
+        verified: false,
       })
     }
-    this.subscribeMap.set(email, { subscribe, cancelToken })
+    const expires = Date.now() + 15 * 60_000
+    const payload = `${expires}.${subscribe}`
+    const signature = createHmac('sha256', subscriber.cancelToken)
+      .update(`${email}.${payload}`)
+      .digest('hex')
+    const { serverUrl } = await this.configService.get('url')
+    const { mailOptions } = await this.configService.waitForConfigReady()
+    const url = new URL(
+      `${serverUrl.replace(/\/$/, '')}${apiRoutePrefix}/subscribe/confirm`,
+    )
+    url.searchParams.set('email', email)
+    url.searchParams.set('token', `${payload}.${signature}`)
+    await this.emailService.send({
+      from: mailOptions.from || mailOptions.smtp?.user,
+      to: email,
+      subject: 'Confirm your email subscription',
+      text: `Confirm your subscription or preference change within 15 minutes:\n${url.toString()}\nIgnore this email if you did not request it.`,
+    })
+  }
+
+  async confirm(email: string, token: string) {
+    email = email.trim().toLowerCase()
+    const subscriber = await this.subscribeRepository.findByEmail(email)
+    const [expires, bit, signature] = token.split('.')
+    const subscribe = Number(bit)
+    const allowedBits = Object.values(SubscribeTypeToBitMap).reduce(
+      (a, b) => a | b,
+      0,
+    )
+    if (
+      !subscriber ||
+      !/^\d+$/.test(expires) ||
+      Number(expires) <= Date.now() ||
+      !Number.isSafeInteger(subscribe) ||
+      subscribe <= 0 ||
+      subscribe > allowedBits ||
+      (subscribe & ~allowedBits) !== 0 ||
+      !/^[\da-f]{64}$/.test(signature ?? '')
+    ) {
+      throw createAppException(AppErrorCode.INVALID_PARAMETER)
+    }
+    const expected = createHmac('sha256', subscriber.cancelToken)
+      .update(`${email}.${expires}.${bit}`)
+      .digest()
+    if (!timingSafeEqual(expected, Buffer.from(signature, 'hex')))
+      throw createAppException(AppErrorCode.INVALID_PARAMETER)
+    await this.subscribeRepository.updateByEmail(email, {
+      subscribe,
+      verified: true,
+    })
+    return true
   }
 
   async unsubscribe(email: string, token: string) {
@@ -216,7 +262,6 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
     if (!model) return false
     if (model.cancelToken === token) {
       await this.subscribeRepository.deleteByEmail(email)
-      this.subscribeMap.delete(email)
       return true
     }
     return false
@@ -225,15 +270,11 @@ export class SubscribeService implements OnModuleInit, OnModuleDestroy {
   async unsubscribeBatch(emails?: string[], all?: boolean) {
     if (all) {
       const count = await this.subscribeRepository.deleteAll()
-      this.subscribeMap.clear()
       return count
     }
     if (!emails?.length) return 0
 
     const count = await this.subscribeRepository.deleteByEmails(emails)
-    for (const email of emails) {
-      this.subscribeMap.delete(email)
-    }
     return count
   }
 

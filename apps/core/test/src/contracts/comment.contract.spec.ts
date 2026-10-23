@@ -30,15 +30,12 @@ const EXPECTED_COMMENT_MODEL_KEYS = [
   'created_at',
   'ref_type',
   'ref_id',
-  'state',
   'author',
   'text',
   // `mail` is admin-only; CommentFilterEmailInterceptor strips it on
   // unauthenticated endpoints, so SDK marks it optional. Asserted separately
   // on the admin list test below.
   'url',
-  'ip',
-  'agent',
   'pin',
   'avatar',
   'parent_comment_id',
@@ -46,9 +43,7 @@ const EXPECTED_COMMENT_MODEL_KEYS = [
   'reply_count',
   'latest_reply_at',
   'is_deleted',
-  'deleted_at',
   'is_whispers',
-  'location',
   'auth_provider',
   'reader_id',
   'edited_at',

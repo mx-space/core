@@ -43,3 +43,30 @@ import Testing
 private final class Captured: @unchecked Sendable {
     var request: HTTPRequest?
 }
+
+@Suite struct PairingCredentialPrivacyTests {
+    @Test(arguments: ["requestDeviceCode", "pollDeviceToken"])
+    func pairingNeverSendsAPreviousToken(_ operation: String) async throws {
+        let middleware = AuthenticationMiddleware(tokenStore: InMemoryTokenStore(token: "previous-owner-secret"))
+        _ = try await middleware.intercept(
+            HTTPRequest(method: .post, scheme: nil, authority: nil, path: "/device"),
+            body: nil, baseURL: URL(string: "https://different.example/api/v3")!, operationID: operation
+        ) { request, _, _ in
+            #expect(request.headerFields[.authorization] == nil)
+            return (HTTPResponse(status: .ok), nil)
+        }
+    }
+}
+
+@Suite struct CredentialTransportBoundaryTests {
+    @Test(arguments: ["requestDeviceCode", "pollDeviceToken"])
+    func removesPreviouslyAttachedHeadersFromPairing(_ operation: String) async throws {
+        let middleware = AuthenticationMiddleware(tokenStore: InMemoryTokenStore(token: "old-token"))
+        var request = HTTPRequest(method: .post, scheme: nil, authority: nil, path: "/device")
+        request.headerFields[.authorization] = "Bearer previous-header"
+        _ = try await middleware.intercept(request, body: nil, baseURL: URL(string: "https://different.example")!, operationID: operation) { request, _, _ in
+            #expect(request.headerFields[.authorization] == nil)
+            return (HTTPResponse(status: .ok), nil)
+        }
+    }
+}

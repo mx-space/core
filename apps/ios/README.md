@@ -44,10 +44,12 @@ PG_URL="postgres://mx:mx@127.0.0.1:5433/mx_verify" NODE_ENV=production \
   REDIS_HOST=127.0.0.1 REDIS_PORT=6380 SNOWFLAKE_WORKER_ID=7 \
   JWT_SECRET=<32+ chars> PORT=2444 node ../core/out/main.mjs
 
-make verify SPACE_SERVER=http://127.0.0.1:2444 \
+make verify SPACE_SERVER=https://mx-verify.example.com \
             SPACE_USERNAME=<owner> SPACE_PASSWORD=<password> \
             PG_DATABASE=mx_verify
 ```
+
+Expose the local verification server through a trusted HTTPS reverse proxy at the address passed as `SPACE_SERVER`. The app requires HTTPS on local networks too.
 
 The suite skips itself when `SPACE_TEST_SERVER` is unset, so `make test` stays
 green without a server.
@@ -105,7 +107,9 @@ To add an endpoint: register it in
 
 ## Transport policy
 
-`ServerEndpoint` refuses plaintext HTTP for public hosts and allows it only for
-`localhost`, `*.local`, and RFC1918 addresses — matching the
-`NSAllowsLocalNetworking` exception in `Info.plist`. `NSAllowsArbitraryLoads`
-is deliberately absent; enabling it invites an App Review question.
+`ServerEndpoint` requires HTTPS on every host, including loopback, `.local`,
+and private addresses. Use a trusted certificate for LAN development.
+Session tokens are stored in Keychain accounts keyed by the canonical HTTPS
+origin. Upgrading from the global token record requires pairing again; legacy
+tokens are never automatically attached to a newly selected server. Pairing
+requests never carry an existing bearer token.

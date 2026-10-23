@@ -71,14 +71,14 @@ export interface CommentModel {
   createdAt: string
   refType: CollectionRefTypes
   refId: string
-  state: number
+  state?: number
   author: string | null
   text: string
   /** 仅鉴权 admin 端点附带；公开端点由 `CommentFilterEmailInterceptor` 剥离。 */
   mail?: string | null
   url: string | null
-  ip: string | null
-  agent: string | null
+  ip?: string | null
+  agent?: string | null
   pin: boolean
 
   avatar: string | null
@@ -88,10 +88,10 @@ export interface CommentModel {
   replyCount: number
   latestReplyAt: string | null
   isDeleted: boolean
-  deletedAt: string | null
+  deletedAt?: string | null
 
   isWhispers: boolean
-  location: string | null
+  location?: string | null
 
   authProvider: string | null
   readerId: string | null

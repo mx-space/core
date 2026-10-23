@@ -22,11 +22,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 	<key>SpaceAPNsEnvironment</key>
 	<string>$(SPACE_APNS_ENVIRONMENT)</string>
 	<key>SpacePushAppID</key>

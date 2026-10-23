@@ -5,6 +5,10 @@
 set -euo pipefail
 
 SERVER=${SPACE_SERVER:?SPACE_SERVER is required}
+if [[ "$SERVER" != https://* ]]; then
+  printf 'SPACE_SERVER must use HTTPS\n' >&2
+  exit 1
+fi
 USERNAME=${SPACE_USERNAME:?SPACE_USERNAME is required}
 PASSWORD=${SPACE_PASSWORD:?SPACE_PASSWORD is required}
 LINK=${SEED_LINK:-https://bgm.tv/subject/265}

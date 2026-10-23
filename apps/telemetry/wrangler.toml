@@ -10,3 +10,8 @@ crons = ["0 3 * * *"]
 binding = "DB"
 database_name = "mx-telemetry"
 database_id = "26369d03-d91b-48e5-97c6-0523c0b51417"
+
+[[ratelimits]]
+name = "COLLECT_LIMITER"
+namespace_id = "1002"
+simple = { limit = 10, period = 60 }

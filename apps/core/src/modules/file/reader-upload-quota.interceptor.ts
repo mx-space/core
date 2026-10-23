@@ -4,7 +4,7 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable, Logger, PayloadTooLargeException } from '@nestjs/common'
-import { catchError } from 'rxjs'
+import { catchError, defer, from, lastValueFrom } from 'rxjs'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { CommentRepository } from '~/modules/comment/comment.repository'
@@ -77,27 +77,40 @@ export class ReaderUploadQuotaInterceptor implements NestInterceptor {
       }
     }
 
-    const hourlyLimit = config.readerHourlyUploadCount ?? 10
-    if (hourlyLimit > 0) {
-      const since = new Date(Date.now() - 60 * 60 * 1000)
-      const count = await this.fileReferenceService.countReaderUploadsSince(
-        readerId,
-        since,
-      )
-      if (count >= hourlyLimit) {
-        throw createAppException(AppErrorCode.COMMENT_UPLOAD_RATE_LIMITED)
-      }
-    }
+    return defer(() =>
+      from(
+        this.fileReferenceService.withReaderUploadLock(readerId, async () => {
+          const hourlyLimit = config.readerHourlyUploadCount ?? 10
+          if (hourlyLimit > 0) {
+            const since = new Date(Date.now() - 60 * 60 * 1000)
+            const count =
+              await this.fileReferenceService.countReaderUploadsSince(
+                readerId,
+                since,
+              )
+            if (count >= hourlyLimit) {
+              throw createAppException(AppErrorCode.COMMENT_UPLOAD_RATE_LIMITED)
+            }
+          }
 
-    const totalBytesLimitMB = config.readerTotalActiveBytesMB ?? 50
-    if (totalBytesLimitMB > 0) {
-      const totalBytes =
-        await this.fileReferenceService.sumReaderActiveBytes(readerId)
-      if (totalBytes >= totalBytesLimitMB * 1024 * 1024) {
-        throw createAppException(AppErrorCode.COMMENT_UPLOAD_QUOTA_EXCEEDED)
-      }
-    }
+          const totalBytesLimitMB = config.readerTotalActiveBytesMB ?? 50
+          if (totalBytesLimitMB > 0) {
+            const totalBytes =
+              await this.fileReferenceService.sumReaderActiveBytes(readerId)
+            request.commentUploadMaxFileSize = Math.min(
+              request.commentUploadMaxFileSize!,
+              Math.max(0, totalBytesLimitMB * 1024 * 1024 - totalBytes),
+            )
+            if (totalBytes >= totalBytesLimitMB * 1024 * 1024) {
+              throw createAppException(
+                AppErrorCode.COMMENT_UPLOAD_QUOTA_EXCEEDED,
+              )
+            }
+          }
 
-    return handleUpload()
+          return lastValueFrom(handleUpload())
+        }),
+      ),
+    )
   }
 }

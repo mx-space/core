@@ -1,5 +1,11 @@
+import { lookup } from 'node:dns/promises'
+
+import { Agent } from 'undici'
+
+import { isDev } from '~/global/env.global'
 import {
   assertHostnameSafe,
+  isPrivateIp,
   parseAndValidateUrl,
   UnsafeUrlError,
 } from '~/processors/agent-browser/url-guard'
@@ -29,11 +35,7 @@ export interface AssertPublicHttpUrlOptions {
  * is a single source of truth shared with the agent-browser and Open Graph
  * fetchers.
  *
- * NOTE (DNS rebinding): this is a TOCTOU check. A rebinding attacker can pass
- * the lookup here and then re-point the hostname before the HTTP socket
- * connects. Callers MUST additionally disable redirect following
- * (`maxRedirects: 0`) to remove the redirect-based bypass. Fully closing the
- * rebinding window would require pinning the connection to the resolved IP.
+ * Requests must use publicHttpDispatcher so DNS is validated at connection time.
  */
 export async function assertPublicHttpUrl(
   rawUrl: string,
@@ -46,3 +48,31 @@ export async function assertPublicHttpUrl(
   await assertHostnameSafe(url.hostname)
   return url
 }
+
+/** The checked DNS answers are the exact addresses handed to the socket. */
+export const publicHttpDispatcher = new Agent({
+  connect: {
+    lookup(hostname, options, callback) {
+      lookup(hostname, { all: true, family: options.family }).then(
+        (addresses) => {
+          if (
+            !addresses.length ||
+            (!isDev &&
+              addresses.some((entry) =>
+                isPrivateIp(entry.address, entry.family),
+              ))
+          ) {
+            callback(new UnsafeUrlError('Blocked outbound DNS address'), '', 0)
+            return
+          }
+          callback(
+            null,
+            options.all ? addresses : addresses[0].address,
+            addresses[0].family,
+          )
+        },
+        (error) => callback(error, '', 0),
+      )
+    },
+  },
+})

@@ -43,6 +43,10 @@ export interface ReaderImageDiff {
 
 @Injectable()
 export class FileReferenceService {
+  withReaderUploadLock<T>(readerId: string, upload: () => Promise<T>) {
+    return this.fileReferenceRepository.withReaderUploadLock(readerId, upload)
+  }
+
   private readonly logger = new Logger(FileReferenceService.name)
   private readonly storageRoot: string
 

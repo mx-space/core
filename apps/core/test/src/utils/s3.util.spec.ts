@@ -671,3 +671,42 @@ describe('S3Uploader.objectExists', () => {
     }
   })
 })
+
+describe('S3 response admission', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  it('disables redirects and bounds the complete response lifetime', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', fetch)
+    const uploader = new S3Uploader({
+      endpoint: 'https://storage.example.com',
+      accessKey: 'test',
+      secretKey: 'test',
+      bucket: 'test',
+      region: 'auto',
+    })
+    await uploader.uploadBuffer(Buffer.from('test'), 'test.txt', 'text/plain')
+    expect(fetch.mock.calls[0][1].redirect).toBe('error')
+    expect(fetch.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal)
+  })
+  it('rejects oversized storage responses before buffering', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('oops', {
+          status: 500,
+          headers: { 'content-length': '999999999' },
+        }),
+      ),
+    )
+    const uploader = new S3Uploader({
+      endpoint: 'https://storage.example.com',
+      accessKey: 'test',
+      secretKey: 'test',
+      bucket: 'test',
+      region: 'auto',
+    })
+    await expect(
+      uploader.uploadBuffer(Buffer.from('test'), 'test.txt', 'text/plain'),
+    ).rejects.toThrow(/exceed|transport/i)
+  })
+})

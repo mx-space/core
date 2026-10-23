@@ -13,14 +13,12 @@ public struct ServerEndpoint: Sendable, Equatable {
         baseURL.appending(path: ServerEndpoint.pathPrefix.dropFirst())
     }
 
-    /// Plaintext HTTP is accepted only for private and `.local` hosts, matching
-    /// the `NSAllowsLocalNetworking` exception the app ships with. Public
-    /// plaintext is refused outright rather than degraded.
+    /// Owner credentials require TLS on public and local networks.
     public init(baseURL: URL) throws {
         guard let scheme = baseURL.scheme?.lowercased(), let host = baseURL.host() else {
             throw SpaceTransportError.invalidServerURL(baseURL.absoluteString)
         }
-        if scheme == "http", !ServerEndpoint.isLocalHost(host) {
+        if scheme == "http" {
             throw SpaceTransportError.insecureScheme(host)
         }
         guard scheme == "http" || scheme == "https" else {
@@ -29,18 +27,16 @@ public struct ServerEndpoint: Sendable, Equatable {
         self.baseURL = baseURL
     }
 
-    static func isLocalHost(_ host: String) -> Bool {
-        if host == "localhost" || host.hasSuffix(".local") { return true }
-        let parts = host.split(separator: ".").compactMap { Int($0) }
-        guard parts.count == 4, parts.allSatisfy({ (0...255).contains($0) }) else {
-            return false
-        }
-        switch (parts[0], parts[1]) {
-        case (10, _): return true
-        case (127, _): return true
-        case (192, 168): return true
-        case (172, 16...31): return true
-        default: return false
-        }
+    public var credentialOrigin: String {
+        var origin = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        origin.scheme = origin.scheme?.lowercased()
+        origin.host = origin.host?.lowercased()
+        origin.user = nil
+        origin.password = nil
+        origin.path = ""
+        origin.query = nil
+        origin.fragment = nil
+        origin.port = baseURL.port == 443 ? nil : baseURL.port
+        return origin.string!
     }
 }

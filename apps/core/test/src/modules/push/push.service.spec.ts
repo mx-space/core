@@ -660,6 +660,7 @@ describe('PushService', () => {
     const [, init] = fetchMock.mock.calls[0]!
     expect(JSON.parse(String(init.body))).toEqual({
       ticket: 't'.repeat(32),
+      owner_authorized: false,
       source_origin: 'https://core.example.com',
       source_label: 'core.example.com',
     })
@@ -681,6 +682,7 @@ describe('PushService', () => {
 
     expect(JSON.parse(String(fetchMock.mock.calls[0]![1].body))).toEqual({
       ticket: 't'.repeat(32),
+      owner_authorized: false,
       source_origin: 'https://core.example.com',
       source_label: 'core.example.com',
       reader_id: 'reader-1',

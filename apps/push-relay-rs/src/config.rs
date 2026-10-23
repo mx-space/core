@@ -60,6 +60,7 @@ pub struct Config {
     pub public_url: String,
     pub database_path: String,
     pub data_key: String,
+    pub enrollment_token: Option<String>,
     pub apps: HashMap<String, ApnsApp>,
 }
 
@@ -183,6 +184,9 @@ pub fn load() -> Result<Config, String> {
             .to_string(),
         database_path: database_path()?,
         data_key: required("PUSH_RELAY_DATA_KEY")?,
+        enrollment_token: env::var("PUSH_RELAY_ENROLLMENT_TOKEN")
+            .ok()
+            .filter(|token| token.len() >= 32 && token.len() <= 256),
         apps,
     })
 }

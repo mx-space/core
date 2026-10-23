@@ -111,6 +111,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
   async activate(
     readerId: string | undefined,
     input: PushActivationRequestDto,
+    ownerAuthorized = false,
   ) {
     PushSecretVault.assertConfigured()
     const relayUrl = resolveAllowedPushRelayOrigin(input.relayUrl)
@@ -118,6 +119,10 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     const sourceOrigin = await this.sourceOrigin()
     const claimBody: Record<string, unknown> = {
       ticket: input.activationTicket,
+      owner_authorized: ownerAuthorized,
+      ...(!existing && process.env.MX_PUSH_RELAY_ENROLLMENT_TOKEN
+        ? { enrollment_token: process.env.MX_PUSH_RELAY_ENROLLMENT_TOKEN }
+        : {}),
       source_origin: sourceOrigin,
       source_label: new URL(sourceOrigin).hostname,
     }

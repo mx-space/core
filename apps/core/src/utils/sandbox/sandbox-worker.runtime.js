@@ -51,39 +51,46 @@ function ipv4ToParts(ip) {
 
 function isPrivateIpv4(ip) {
   const p = ipv4ToParts(ip)
-  if (!p) return false
+  if (!p) return true
   const [a, b] = p
   if (a === 0) return true // 0.0.0.0/8
   if (a === 10) return true // 10.0.0.0/8 RFC1918
   if (a === 127) return true // 127.0.0.0/8 loopback
   if (a === 169 && b === 254) return true // 169.254.0.0/16 link-local (+ metadata 169.254.169.254)
   if (a === 172 && b >= 16 && b <= 31) return true // 172.16.0.0/12 RFC1918
+  if (a === 192 && b === 0) return true
+  if (a === 198 && (b === 18 || b === 19)) return true
   if (a === 192 && b === 168) return true // 192.168.0.0/16 RFC1918
   if (a === 100 && b >= 64 && b <= 127) return true // 100.64.0.0/10 CGNAT
   if (a >= 224) return true // 224.0.0.0/4 multicast + 240.0.0.0/4 reserved
   return false
 }
 
-function isPrivateIpv6(ip) {
-  let addr = ip.toLowerCase()
-  if (addr.startsWith('[') && addr.endsWith(']')) addr = addr.slice(1, -1)
-  // strip zone id
-  const pct = addr.indexOf('%')
-  if (pct !== -1) addr = addr.slice(0, pct)
-  if (addr === '::1' || addr === '::') return true // loopback / unspecified
+function isPrivateIpv6(addr) {
+  if (net.isIP(addr) !== 6 || addr.includes('%')) return true
+  const normalized = new URL(`http://[${addr}]/`).hostname.slice(1, -1)
+  const [left, right] = normalized.split('::')
+  const head = left ? left.split(':') : []
+  const tail = right ? right.split(':') : []
+  const words =
+    right === undefined
+      ? head
+      : [...head, ...Array(8 - head.length - tail.length).fill('0'), ...tail]
+  const parts = words.map((word) => Number.parseInt(word, 16))
   if (
-    addr.startsWith('fe8') ||
-    addr.startsWith('fe9') ||
-    addr.startsWith('fea') ||
-    addr.startsWith('feb')
+    parts.slice(0, 5).every((word) => word === 0) &&
+    (parts[5] === 0 || parts[5] === 0xffff)
+  ) {
+    return isPrivateIpv4(
+      `${parts[6] >> 8}.${parts[6] & 255}.${parts[7] >> 8}.${parts[7] & 255}`,
+    )
+  }
+  // Only globally routable unicast; reject tunneling ranges as well.
+  return (
+    (parts[0] & 0xe000) !== 0x2000 ||
+    parts[0] === 0x2002 ||
+    (parts[0] === 0x2001 && parts[1] === 0)
   )
-    return true // fe80::/10 link-local
-  if (addr.startsWith('fc') || addr.startsWith('fd')) return true // fc00::/7 ULA
-  if (addr.startsWith('ff')) return true // ff00::/8 multicast
-  // IPv4-mapped / -compatible: ::ffff:a.b.c.d or ::a.b.c.d
-  const mapped = addr.match(/(?:::ffff:|::)(\d+\.\d+\.\d+\.\d+)$/)
-  if (mapped) return isPrivateIpv4(mapped[1])
-  return false
 }
 
 function isPrivateIp(ip) {
@@ -91,8 +98,34 @@ function isPrivateIp(ip) {
   if (kind === 4) return isPrivateIpv4(ip)
   if (kind === 6) return isPrivateIpv6(ip)
   // Not a literal IP — be conservative if it somehow reaches here.
-  return false
+  return true
 }
+
+const { Agent, fetch: realFetch, WebSocket: RealWebSocket } = require(
+  workerData.undiciPath,
+)
+const egressDispatcher = new Agent({
+  connect: {
+    lookup(hostname, options, callback) {
+      dnsPromises.lookup(hostname, { all: true, family: options.family }).then(
+        (addresses) => {
+          if (
+            !addresses.length ||
+            addresses.some((entry) => isPrivateIp(entry.address))
+          ) {
+            return callback(new Error('SSRF guard: blocked DNS address'), '', 0)
+          }
+          callback(
+            null,
+            options.all ? addresses : addresses[0].address,
+            addresses[0].family,
+          )
+        },
+        (error) => callback(error, '', 0),
+      )
+    },
+  },
+})
 
 async function assertEgressUrlSafe(input) {
   let url
@@ -164,7 +197,6 @@ const MAX_REDIRECTS = 20
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 
 function createGuardedFetch() {
-  const realFetch = globalThis.fetch
   if (typeof realFetch !== 'function') return realFetch
   return async function guardedFetch(input, init) {
     const userRedirect = init && init.redirect
@@ -174,7 +206,7 @@ function createGuardedFetch() {
     // error: undici throws on redirect).
     if (userRedirect === 'manual' || userRedirect === 'error') {
       await assertEgressUrlSafe(input)
-      return realFetch(input, init)
+      return realFetch(input, { ...init, dispatcher: egressDispatcher })
     }
 
     // Auto-follow path (redirect unspecified or 'follow').
@@ -190,7 +222,10 @@ function createGuardedFetch() {
 
     for (let hop = 0; ; hop++) {
       await assertEgressUrlSafe(currentUrl)
-      const res = await realFetch(currentInput, currentInit)
+      const res = await realFetch(currentInput, {
+        ...currentInit,
+        dispatcher: egressDispatcher,
+      })
 
       const location = res.headers.get('location')
       if (!REDIRECT_STATUSES.has(res.status) || !location) {
@@ -237,7 +272,6 @@ function createGuardedFetch() {
 
 // Wrap WebSocket so the connection target is validated before the handshake.
 function createGuardedWebSocket() {
-  const RealWebSocket = globalThis.WebSocket
   if (typeof RealWebSocket !== 'function') return RealWebSocket
   return new Proxy(RealWebSocket, {
     construct(target, args) {
@@ -256,10 +290,17 @@ function createGuardedWebSocket() {
           'SSRF guard: blocked private WebSocket target ' + hostname,
         )
       }
-      // Async DNS resolution can't be awaited in a synchronous constructor;
-      // literal-IP targets are blocked above, hostnames pass through. The
-      // fetch path remains the fully-guarded egress channel.
-      return Reflect.construct(target, args)
+      if (
+        !['ws:', 'wss:'].includes(url.protocol) ||
+        hostname.toLowerCase().replace(/\.$/, '') === 'localhost' ||
+        /\.(localhost|local|internal)\.?$/i.test(hostname)
+      ) {
+        throw new Error('SSRF guard: blocked WebSocket target')
+      }
+      return Reflect.construct(target, [
+        rawUrl,
+        { protocols: args[1], dispatcher: egressDispatcher },
+      ])
     },
   })
 }
@@ -387,11 +428,17 @@ function createSandboxRequire(basePath) {
       // '@mx-space/extra'). Requiring user-installed packages from the data
       // dir's node_modules is a documented snippet feature, so resolve it
       // through the normal resolver jailed to requireBasePath.
+      if (
+        moduleId.includes('\\') ||
+        moduleId.includes(':') ||
+        moduleId.split('/').some((part) => part === '.' || part === '..')
+      ) {
+        throw new Error('require: invalid package specifier')
+      }
       return baseRequire(moduleId)
     }
 
-    // Relative / absolute paths resolve against requireBasePath as before.
-    return baseRequire(moduleId)
+    throw new Error('require: relative and absolute paths are not allowed')
   }
 }
 

@@ -12,7 +12,7 @@ const activationBody = {
 
 const contextWith = (request: Record<string, unknown>) =>
   ({
-    switchToHttp: () => ({ getRequest: () => request }),
+    switchToHttp: () => ({ getRequest: () => ({ headers: {}, ...request }) }),
   }) as unknown as ExecutionContext
 
 const customParamFactories = (methodName: string) => {
@@ -49,9 +49,13 @@ describe('PushController', () => {
 
   it('resolves the reader id from the request without demanding a session', () => {
     const factories = customParamFactories('activate')
-    expect(factories).toHaveLength(1)
+    expect(factories).toHaveLength(2)
 
-    const factory = factories[0]!.factory!
+    const factory = factories.find(
+      (entry) =>
+        entry.factory!(undefined, contextWith({ readerId: 'reader-1' })) ===
+        'reader-1',
+    )!.factory!
     expect(factory(undefined, contextWith({ readerId: 'reader-1' }))).toBe(
       'reader-1',
     )
@@ -68,7 +72,11 @@ describe('PushController', () => {
       relayUrl: 'https://push.example.com',
       bindingId: 'bnd_remote',
     })
-    expect(service.activate).toHaveBeenCalledWith('reader-1', activationBody)
+    expect(service.activate).toHaveBeenCalledWith(
+      'reader-1',
+      activationBody,
+      false,
+    )
   })
 
   it('activates anonymously when no reader session is present', async () => {
@@ -76,7 +84,11 @@ describe('PushController', () => {
 
     await controller.activate(activationBody)
 
-    expect(service.activate).toHaveBeenCalledWith(undefined, activationBody)
+    expect(service.activate).toHaveBeenCalledWith(
+      undefined,
+      activationBody,
+      false,
+    )
   })
 
   it('no longer exposes the reader-scoped endpoints Relay owns', () => {

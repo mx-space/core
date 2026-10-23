@@ -52,6 +52,7 @@ async fn serve() -> Result<(), String> {
         DataVault::new(&config.data_key)?,
         config.public_url.clone(),
         app_ids,
+        config.enrollment_token.clone(),
     ));
     let worker = DeliveryWorker::new(
         store,

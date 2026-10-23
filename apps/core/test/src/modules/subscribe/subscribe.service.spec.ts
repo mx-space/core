@@ -65,6 +65,7 @@ describe('SubscribeService public content mail', () => {
       urlBuilderService as never,
       emailService as never,
       ownerService as never,
+      { getClient: () => ({ set: async () => 'OK' }) } as never,
     )
 
   beforeEach(() => {
@@ -73,6 +74,7 @@ describe('SubscribeService public content mail', () => {
     subscribeRepository.findAll.mockResolvedValue([
       {
         email: 'reader@example.com',
+        verified: true,
         subscribe: SubscribePostCreateBit,
         cancelToken: 'token-1',
       },
@@ -133,5 +135,56 @@ describe('SubscribeService public content mail', () => {
     expect(databaseService.findGlobalById).not.toHaveBeenCalled()
     expect(emailService.send).not.toHaveBeenCalled()
     await service.onModuleDestroy()
+  })
+})
+
+describe('subscription email ownership', () => {
+  it('leaves existing preferences unchanged until the mailbox link is confirmed', async () => {
+    const row = {
+      email: 'reader@example.com',
+      subscribe: 1,
+      verified: true,
+      cancelToken: 'secret-token',
+    }
+    const repository = {
+      findByEmail: vi.fn(async () => row),
+      updateByEmail: vi.fn(),
+    }
+    const email = { send: vi.fn() }
+    const admission = vi
+      .fn()
+      .mockResolvedValueOnce('OK')
+      .mockResolvedValue(null)
+    const service = new SubscribeService(
+      repository as any,
+      {} as any,
+      {} as any,
+      {
+        get: async () => ({ serverUrl: 'https://example.com' }),
+        waitForConfigReady: async () => ({
+          mailOptions: { from: 'blog@example.com' },
+          seo: { title: 'Blog' },
+        }),
+      } as any,
+      {} as any,
+      email as any,
+      {} as any,
+      { getClient: () => ({ set: admission }) } as any,
+    )
+    await service.subscribe(row.email, 2)
+    await service.subscribe(row.email, 1)
+    expect(repository.updateByEmail).not.toHaveBeenCalled()
+    expect(email.send).toHaveBeenCalledOnce()
+    const link = new URL(
+      email.send.mock.calls[0][0].text.match(/https:\/\/\S+/)[0],
+    )
+    await (service as any).confirm(row.email, link.searchParams.get('token'))
+    expect(repository.updateByEmail).toHaveBeenCalledWith(row.email, {
+      subscribe: 2,
+      verified: true,
+    })
+    await expect(
+      (service as any).confirm(row.email, 'forged'),
+    ).rejects.toThrow()
   })
 })

@@ -24,7 +24,15 @@ pub enum RelayError {
 
 impl From<DbError> for RelayError {
     fn from(error: DbError) -> Self {
-        Self::Internal(error.0)
+        if error.0.contains("relay_admission_limited") {
+            http(
+                429,
+                "relay_admission_limited",
+                "Relay registration or delivery budget exceeded",
+            )
+        } else {
+            Self::Internal(error.0)
+        }
     }
 }
 
@@ -67,6 +75,7 @@ pub struct RelayService {
     vault: DataVault,
     public_url: String,
     app_ids: HashSet<String>,
+    enrollment_token_hash: Option<String>,
 }
 
 impl RelayService {
@@ -75,12 +84,14 @@ impl RelayService {
         vault: DataVault,
         public_url: String,
         app_ids: HashSet<String>,
+        enrollment_token: Option<String>,
     ) -> Self {
         Self {
             store,
             vault,
             public_url,
             app_ids,
+            enrollment_token_hash: enrollment_token.map(|token| credential_hash(&token)),
         }
     }
 
@@ -184,6 +195,20 @@ impl RelayService {
             None => None,
         };
 
+        if existing_source.is_none()
+            && !self
+                .enrollment_token_hash
+                .as_ref()
+                .zip(parsed.enrollment_token.as_ref())
+                .is_some_and(|(expected, token)| credentials_match(token, expected))
+        {
+            return Err(http(
+                403,
+                "source_enrollment_required",
+                "Source creation requires operator enrollment approval",
+            ));
+        }
+
         let installation_id = self
             .store
             .claim_activation_ticket(&credential_hash(&parsed.ticket), now)
@@ -195,6 +220,21 @@ impl RelayService {
                     "Activation ticket is expired or already claimed",
                 )
             })?;
+
+        let installation = self
+            .store
+            .find_installation(&installation_id)
+            .await?
+            .ok_or_else(|| http(410, "installation_invalid", "Installation is unavailable"))?;
+        if installation.app_id == crate::fanout::SPACE_APP_ID
+            && (!parsed.owner_authorized || parsed.reader_id.is_none())
+        {
+            return Err(http(
+                403,
+                "owner_required",
+                "Space notifications require an authenticated owner",
+            ));
+        }
 
         let (source_id, source_secret) = match existing_source {
             Some(source) if source.origin != parsed.source_origin => {
@@ -228,6 +268,7 @@ impl RelayService {
                 installation_id: &installation_id,
                 reader_id: parsed.reader_id.as_deref(),
                 preferences: &parsed.preferences.unwrap_or_default(),
+                owner_authorized: parsed.owner_authorized,
             })
             .await?;
 
@@ -410,6 +451,62 @@ impl RelayService {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn self_enrolled_installation_cannot_mint_a_source() {
+        let store = Store::open(":memory:").await.unwrap();
+        store.migrate().await.unwrap();
+        let relay = RelayService::new(
+            store,
+            DataVault::new(&"11".repeat(32)).unwrap(),
+            "https://relay.test".into(),
+            HashSet::from(["space".into()]),
+            None,
+        );
+        let result = relay
+            .claim_source_activation(
+                None,
+                json!({ "ticket": "t".repeat(32), "source_origin": "https://victim.test" }),
+            )
+            .await;
+        assert!(matches!(result, Err(RelayError::Http { status: 403, .. })));
+    }
+
+    #[tokio::test]
+    async fn approved_sources_still_need_owner_authority_for_space() {
+        let store = Store::open(":memory:").await.unwrap();
+        store.migrate().await.unwrap();
+        let relay = RelayService::new(
+            store.clone(),
+            DataVault::new(&"11".repeat(32)).unwrap(),
+            "https://relay.test".into(),
+            HashSet::from(["space".into()]),
+            Some("operator-approval-token-32-characters".into()),
+        );
+        let installation = relay.register_installation(json!({ "app_id": "space", "apns_environment": "production", "apns_token": "ab".repeat(32) })).await.ok().unwrap();
+        let authorization = format!(
+            "Installation {}.{}",
+            installation["installation_id"].as_str().unwrap(),
+            installation["installation_secret"].as_str().unwrap()
+        );
+        let ticket = relay
+            .create_activation_ticket(Some(&authorization))
+            .await
+            .ok()
+            .unwrap();
+        let rejected = relay.claim_source_activation(None, json!({ "ticket": ticket["ticket"], "source_origin": "https://core.test", "enrollment_token": "operator-approval-token-32-characters" })).await;
+        assert!(matches!(
+            rejected,
+            Err(RelayError::Http { status: 403, .. })
+        ));
+        let ticket = relay
+            .create_activation_ticket(Some(&authorization))
+            .await
+            .ok()
+            .unwrap();
+        let accepted = relay.claim_source_activation(None, json!({ "ticket": ticket["ticket"], "source_origin": "https://core.test", "enrollment_token": "operator-approval-token-32-characters", "owner_authorized": true, "reader_id": "owner" })).await;
+        assert!(accepted.is_ok());
+    }
 
     #[test]
     fn parses_authorization() {

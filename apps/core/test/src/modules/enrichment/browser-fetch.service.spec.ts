@@ -269,7 +269,7 @@ describe('BrowserFetchService', () => {
       )
       expect(headers['Accept-Language']).toBe(OG_ACCEPT_LANGUAGE)
       expect(navCall.args).toContain('--args')
-      expect(navCall.args[navCall.args.indexOf('--args') + 1]).toBe(
+      expect(navCall.args[navCall.args.indexOf('--args') + 1]).toContain(
         OG_LAUNCH_ARGS,
       )
       const navBatchCommands = parseBatchArgs(navCall.args).subCommands

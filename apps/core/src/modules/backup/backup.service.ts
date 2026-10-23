@@ -9,6 +9,7 @@ import {
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path, { join, resolve } from 'node:path'
+import { Readable } from 'node:stream'
 
 import {
   Injectable,
@@ -114,6 +115,9 @@ export class BackupService {
     const zip = await new JSZip().loadAsync(buffer)
 
     const entries = Object.values(zip.files)
+    if (entries.length > 10_000)
+      throw new Error('Backup exceeds entry count limit')
+    let expandedBytes = 0
     for (const entry of entries) {
       const name = entry.name
       if (path.isAbsolute(name) || /^[a-z]:[/\\]/i.test(name)) {
@@ -139,8 +143,23 @@ export class BackupService {
         continue
       }
       await mkdir(path.dirname(target), { recursive: true })
-      const content = await entry.async('nodebuffer')
-      await writeFile(target, Uint8Array.from(content))
+      async function* boundedContent() {
+        let entryBytes = 0
+        for await (const chunk of new Readable().wrap(
+          entry.nodeStream('nodebuffer'),
+        )) {
+          entryBytes += chunk.length
+          expandedBytes += chunk.length
+          if (
+            entryBytes > 256 * 1024 * 1024 ||
+            expandedBytes > 1024 * 1024 * 1024
+          ) {
+            throw new Error('Backup exceeds expanded size limit')
+          }
+          yield chunk
+        }
+      }
+      await writeFile(target, boundedContent())
     }
   }
 
@@ -437,20 +456,18 @@ export class BackupService {
 
       const backupDataDirFilenames = await readdir(backupDataDir)
 
-      await Promise.all(
-        backupDataDirFilenames.map(async (filename) => {
-          // Containment: source must stay within the extracted backup_data dir,
-          // destination within DATA_DIR. Rejects `..`/absolute filenames.
-          const fullpath = this.assertContained(backupDataDir, filename)
-          const targetPath = this.assertContained(DATA_DIR, filename)
+      for (const filename of backupDataDirFilenames) {
+        // Containment: source must stay within the extracted backup_data dir,
+        // destination within DATA_DIR. Rejects `..`/absolute filenames.
+        const fullpath = this.assertContained(backupDataDir, filename)
+        const targetPath = this.assertContained(DATA_DIR, filename)
 
-          await rm(targetPath, { recursive: true, force: true })
+        await rm(targetPath, { recursive: true, force: true })
 
-          await $throw(
-            `cp -r ${this.shellQuote(fullpath)} ${this.shellQuote(targetPath)}`,
-          )
-        }),
-      )
+        await $throw(
+          `cp -r ${this.shellQuote(fullpath)} ${this.shellQuote(targetPath)}`,
+        )
+      }
 
       // SECURITY: never auto-install dependencies from a restored archive.
       // An uploaded archive is attacker-controlled; running `npm install` on its

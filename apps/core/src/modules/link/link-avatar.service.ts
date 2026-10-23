@@ -8,9 +8,10 @@ import type { FetchResponse } from 'ofetch'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { alphabet } from '~/constants/other.constant'
 import { HttpService } from '~/processors/helper/helper.http.service'
+import { readResponseBuffer } from '~/utils/http-response.util'
 import { validateImageBuffer } from '~/utils/image.util'
 import { AsyncQueue } from '~/utils/queue.util'
-import { assertPublicHttpUrl } from '~/utils/ssrf.util'
+import { assertPublicHttpUrl, publicHttpDispatcher } from '~/utils/ssrf.util'
 
 import { ConfigsService } from '../configs/configs.service'
 import { FileService } from '../file/file.service'
@@ -102,10 +103,16 @@ export class LinkAvatarService {
       return false
     }
 
-    let response: FetchResponse<ArrayBuffer>
+    let response: FetchResponse<ReadableStream<Uint8Array>>
+    let buffer: Buffer
     try {
-      response = await this.http.fetch.raw<ArrayBuffer, 'arrayBuffer'>(avatar, {
-        responseType: 'arrayBuffer',
+      response = await this.http.fetch.raw<
+        ReadableStream<Uint8Array>,
+        'stream'
+      >(avatar, {
+        responseType: 'stream',
+        dispatcher: publicHttpDispatcher,
+        signal: AbortSignal.timeout(10_000),
         timeout: 10_000,
         redirect: 'error',
         retry: 0,
@@ -115,6 +122,10 @@ export class LinkAvatarService {
           referer: refererHeader,
         },
       })
+      buffer = await readResponseBuffer(
+        new Response(response._data, { headers: response.headers }),
+        8 * 1024 * 1024,
+      )
     } catch (error: any) {
       this.logger.warn(
         `Failed to fetch friend link ${doc.id} avatar; skipping internalization: ${error?.message || String(error)}`,
@@ -122,7 +133,6 @@ export class LinkAvatarService {
       return false
     }
 
-    const buffer = Buffer.from(response._data as ArrayBuffer)
     const contentType = response.headers.get('content-type') ?? undefined
     const normalizedContentType = this.normalizeMimeType(contentType)
 

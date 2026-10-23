@@ -16,6 +16,10 @@ import {
   AGENT_BROWSER_DEFAULT_MAX_SIZE,
   describeAgentBrowserError,
 } from './agent-browser.constants'
+import {
+  type BrowserEgressProxy,
+  createBrowserEgressProxy,
+} from './browser-egress-proxy'
 
 const execFileAsync = promisify(execFile)
 
@@ -77,6 +81,13 @@ export class AgentBrowserSessionPool implements OnModuleDestroy {
   private shuttingDown = false
   private readonly sessionPrefix = `agent-browser-${process.pid}-${randomUUID()}`
   private nextSession = 0
+  private proxy?: Promise<BrowserEgressProxy>
+
+  async getProxyUrl(): Promise<string> {
+    if (this.shuttingDown) throw new Error('Browser pool shut down')
+    this.proxy ??= createBrowserEgressProxy()
+    return (await this.proxy).url
+  }
 
   constructor(@Optional() options?: AgentBrowserSessionPoolOptions) {
     const maxSize = options?.maxSize ?? AGENT_BROWSER_DEFAULT_MAX_SIZE
@@ -190,6 +201,7 @@ export class AgentBrowserSessionPool implements OnModuleDestroy {
     if (this.inFlightCloses.size > 0) {
       await Promise.all(this.inFlightCloses)
     }
+    if (this.proxy) await (await this.proxy).close()
   }
 
   /** Mark before launching: a failed CLI may already have created its daemon. */
