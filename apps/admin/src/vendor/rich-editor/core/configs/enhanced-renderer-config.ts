@@ -19,6 +19,8 @@ import { CodeSnippetRenderer } from '@haklex/rich-ext-code-snippet/renderer'
 import { DYNAMIC_NODE_KEY } from '@haklex/rich-ext-dynamic/static'
 import { GALLERY_NODE_KEY } from '@haklex/rich-ext-gallery/node'
 import { GalleryRenderer } from '@haklex/rich-ext-gallery/renderer'
+import { STEPS_NODE_KEY } from '@haklex/rich-ext-steps/node'
+import { StepsRenderer } from '@haklex/rich-ext-steps/renderer'
 import { AlertRenderer } from '@haklex/rich-renderer-alert/static'
 import { BannerRenderer } from '@haklex/rich-renderer-banner/static'
 import { CodeBlockRenderer } from '@haklex/rich-renderer-codeblock/static'
@@ -39,6 +41,7 @@ export const enhancedRendererConfig: RendererConfig = {
   [ALERT_NODE_KEY]: AlertRenderer,
   [BANNER_NODE_KEY]: BannerRenderer,
   [CHAT_NODE_KEY]: ChatRenderer,
+  [STEPS_NODE_KEY]: StepsRenderer,
   [CODE_BLOCK_NODE_KEY]: CodeBlockRenderer,
   [CODE_SNIPPET_NODE_KEY]: CodeSnippetRenderer,
   [DYNAMIC_NODE_KEY]: MxDynamicRenderer,

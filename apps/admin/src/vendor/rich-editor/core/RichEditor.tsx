@@ -12,6 +12,7 @@ import {
   ExcalidrawPlugin,
 } from '@haklex/rich-ext-excalidraw'
 import { galleryEditNodes } from '@haklex/rich-ext-gallery'
+import { stepsEditNodes } from '@haklex/rich-ext-steps/edit'
 import { BlockHandlePlugin } from '@haklex/rich-plugin-block-handle'
 import { FloatingToolbarPlugin } from '@haklex/rich-plugin-floating-toolbar'
 import { FloatingLinkEditorPlugin } from '@haklex/rich-plugin-link-edit'
@@ -49,6 +50,7 @@ const defaultExtraNodes = [
   ...galleryEditNodes,
   ...codeSnippetEditNodes,
   ...chatEditNodes,
+  ...stepsEditNodes,
   AfilmoryNode,
   MapNode,
   StockNode,
