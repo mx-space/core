@@ -9,7 +9,10 @@ import type { LexicalEditor } from 'lexical'
 import { uploadFile } from '~/api/files'
 import { translate } from '~/i18n/translate'
 import { $findBlockByBlockId } from '~/vendor/rich-editor/utils/apply-agent-review-batch'
-import { registerDynamicComponent } from '~/vendor/rich-editor/utils/dynamic-catalog'
+import {
+  findCatalogEntryForUrl,
+  registerDynamicComponent,
+} from '~/vendor/rich-editor/utils/dynamic-catalog'
 import {
   readDynamicDraft,
   readDynamicReceipt,
@@ -94,13 +97,16 @@ export function createDynamicPublisher(
         ).url
       assertCurrent()
       saveReceipt(url, false)
+      const parent = draft.target
+        ? await findCatalogEntryForUrl(draft.target.url)
+        : null
       await registerDynamicComponent({
         parentUrl: draft.target?.url,
         name: draft.name,
-        description: draft.name,
+        description: parent?.description || draft.name,
         url,
         initialHeight: draft.initialHeight,
-        propsSchema: {},
+        propsSchema: parent?.propsSchema ?? {},
       })
       assertCurrent()
       assertTarget()

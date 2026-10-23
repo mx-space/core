@@ -283,3 +283,24 @@ See `apps/core/CLAUDE.md` for the server-side wire-format invariants.
 ### Rich Editor Integration
 
 Rich editor work is integrated as ordinary React components.
+
+### Dynamic Component Catalog
+
+The catalog lives in the public JSON data snippet `dynamic-widgets-catalog`
+(`{ version, components }`), which the frontend also reads at `/s/dynamic-widgets-catalog`.
+`src/api/dynamic-components.ts` is the only module that reads or writes it. Each write is a
+read-modify-write of the snippet; it persists an `id` per entry (legacy entries get their URL
+as id) and records every replaced URL in `previousUrls`.
+
+- `src/vendor/rich-editor/utils/dynamic-catalog.ts` keeps the editor-facing interface
+  (`registerDynamicComponent`, `isAllowedDynamicUrl`, the agent system message, and the version
+  helpers `currentCatalogEntries` / `resolveCatalogEntry`).
+- The catalog is managed at `#/dynamic-components` (`src/features/dynamic-components/`),
+  including a Source tab that saves edits as a new immutable file and keeps the previous URL
+  as `parentUrl`.
+- The editor registers `CatalogDynamicEditNode` (`src/vendor/rich-editor/dynamic/`) in place of
+  haklex's `DynamicEditNode`, with the same `dynamic` type. Create dynamic nodes through
+  `$createCatalogDynamicEditNode` or `INSERT_DYNAMIC_COMMAND`, never haklex's
+  `$createDynamicEditNode`, or Lexical rejects the class.
+- Props forms are generated from `propsSchema` by `src/lib/dynamic-props.ts` and
+  `src/ui/patterns/PropsEditor.tsx`.

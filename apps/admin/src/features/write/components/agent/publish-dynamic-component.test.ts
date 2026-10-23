@@ -22,10 +22,12 @@ import { createDynamicPublisher } from './publish-dynamic-component'
 
 const uploadFile = vi.fn()
 const registerDynamicComponent = vi.fn()
+const findCatalogEntryForUrl = vi.fn()
 vi.mock('~/api/files', () => ({
   uploadFile: (...args: unknown[]) => uploadFile(...args),
 }))
 vi.mock('~/vendor/rich-editor/utils/dynamic-catalog', () => ({
+  findCatalogEntryForUrl: (url: string) => findCatalogEntryForUrl(url),
   registerDynamicComponent: (...args: unknown[]) =>
     registerDynamicComponent(...args),
 }))
@@ -35,6 +37,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   uploadFile.mockResolvedValue({ url: 'https://files.example/widget.js' })
   registerDynamicComponent.mockResolvedValue(undefined)
+  findCatalogEntryForUrl.mockResolvedValue(null)
 })
 
 async function setup() {
@@ -183,6 +186,18 @@ it('reads an existing version, replaces only its block, and rejects stale propos
   expect(readDynamicTarget(editor, 'first').url).toBe(
     'https://files.example/v1.js',
   )
+  const parentSchema = { properties: { start_count: { type: 'number' } } }
+  findCatalogEntryForUrl.mockImplementation(async (url: string) =>
+    url === 'https://files.example/v1.js'
+      ? {
+          name: 'Counter',
+          description: 'Counts clicks',
+          url,
+          initialHeight: 240,
+          propsSchema: parentSchema,
+        }
+      : null,
+  )
   const fetchMock = vi.fn().mockResolvedValue(new Response('export default {}'))
   vi.stubGlobal('fetch', fetchMock)
   try {
@@ -229,7 +244,11 @@ it('reads an existing version, replaces only its block, and rejects stale propos
     expect(JSON.stringify(publishedState)).not.toContain('widget.js')
     expect(editor.getEditorState().toJSON().root.children).toHaveLength(2)
     expect(registerDynamicComponent).toHaveBeenCalledWith(
-      expect.objectContaining({ parentUrl: target.url }),
+      expect.objectContaining({
+        description: 'Counts clicks',
+        parentUrl: target.url,
+        propsSchema: parentSchema,
+      }),
     )
     expect(uploadFile).toHaveBeenCalledWith(expect.any(File), 'file', true)
     expect((await preview.execute(params)).ok).toBe(false)

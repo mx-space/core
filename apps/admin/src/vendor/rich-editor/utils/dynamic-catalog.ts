@@ -1,66 +1,80 @@
 import type { ChatMessage } from '@haklex/rich-agent-core'
 import { useEffect, useState } from 'react'
 
-import { createSnippet, getSnippetByPath, updateSnippet } from '~/api/snippets'
+import type {
+  DynamicCatalog,
+  DynamicCatalogEntry,
+} from '~/api/dynamic-components'
+import {
+  getDynamicCatalogUrl,
+  getDynamicComponents,
+  registerDynamicComponentEntry,
+} from '~/api/dynamic-components'
+import { ApiRequestError } from '~/api/http'
 import { API_URL } from '~/constants/env'
-import { SnippetType } from '~/models/snippet'
 
-export interface DynamicCatalogEntry {
-  parentUrl?: string
-  description: string
-  initialHeight: number
-  name: string
-  propsSchema: Record<string, unknown>
-  url: string
-}
-
-export interface DynamicCatalog {
-  components: DynamicCatalogEntry[]
-  version: number
-}
-
-// Data snippet (admin-editable JSON) with this customPath. Snippets serve
-// fresh on every edit; the file module's year-long strong cache would make
-// a file-hosted catalog effectively immutable.
-const CATALOG_SNIPPET_PATH = 'dynamic-widgets-catalog'
-
-export function getDynamicCatalogUrl(): string {
-  return `${API_URL}/s/${CATALOG_SNIPPET_PATH}`
-}
+export type { DynamicCatalog, DynamicCatalogEntry }
+export { getDynamicCatalogUrl }
 
 const catalogUrls = new Set<string>()
+
+let cachedCatalogPromise: Promise<DynamicCatalog | null> | null = null
+
+function rememberCatalog(catalog: DynamicCatalog | null) {
+  for (const c of catalog?.components ?? []) {
+    catalogUrls.add(c.url)
+    if (c.parentUrl) catalogUrls.add(c.parentUrl)
+    for (const url of c.previousUrls ?? []) catalogUrls.add(url)
+  }
+  return catalog
+}
+
+export function currentCatalogEntries(
+  entries: DynamicCatalogEntry[],
+): DynamicCatalogEntry[] {
+  const superseded = new Set(entries.map((entry) => entry.parentUrl))
+  return entries.filter((entry) => !superseded.has(entry.url))
+}
+
+export function resolveCatalogEntry(
+  entries: DynamicCatalogEntry[],
+  url: string,
+): { entry: DynamicCatalogEntry; outdated: boolean } | null {
+  const successorOf = (target: string) =>
+    entries.find((entry) => entry.parentUrl === target)
+  let entry =
+    entries.find((item) => item.url === url) ??
+    successorOf(url) ??
+    entries.find((item) => item.previousUrls?.includes(url))
+  if (!entry) return null
+  const visited = new Set([entry.url])
+  for (let next = successorOf(entry.url); next; next = successorOf(entry.url)) {
+    if (visited.has(next.url)) break
+    visited.add(next.url)
+    entry = next
+  }
+  return { entry, outdated: entry.url !== url }
+}
+
+const URL_CONFLICT_CODE = 'DYNAMIC_COMPONENT_URL_CONFLICT'
 
 export async function registerDynamicComponent(
   entry: DynamicCatalogEntry,
 ): Promise<void> {
-  const snippet = await getSnippetByPath(CATALOG_SNIPPET_PATH)
-  const catalog: DynamicCatalog = snippet
-    ? JSON.parse(snippet.raw)
-    : { version: 1, components: [] }
-  if (
-    !Array.isArray(catalog.components) ||
-    typeof catalog.version !== 'number'
-  ) {
-    throw new Error('Invalid dynamic component catalog')
+  let catalog: DynamicCatalog
+  try {
+    catalog = await registerDynamicComponentEntry(entry)
+  } catch (error) {
+    if (!(error instanceof ApiRequestError && error.code === URL_CONFLICT_CODE))
+      throw error
+    catalog = await getDynamicComponents()
   }
-  if (!catalog.components.some((item) => item.url === entry.url)) {
-    catalog.components.push(entry)
-    const raw = JSON.stringify(catalog, null, 2)
-    if (snippet)
-      await updateSnippet(snippet.id, {
-        raw,
-        path: snippet.path,
-        type: snippet.type,
-      })
-    else
-      await createSnippet({
-        path: CATALOG_SNIPPET_PATH,
-        type: SnippetType.JSON,
-        raw,
-        private: false,
-      })
-  }
+  primeDynamicCatalog(catalog)
   catalogUrls.add(entry.url)
+}
+
+export function primeDynamicCatalog(catalog: DynamicCatalog) {
+  rememberCatalog(catalog)
   cachedCatalogPromise = Promise.resolve(catalog)
 }
 
@@ -95,31 +109,36 @@ export function buildDynamicCatalogSystemMessage(
   }
 }
 
-let cachedCatalogPromise: Promise<DynamicCatalog | null> | null = null
-
-async function requestCatalog(url: string): Promise<DynamicCatalog | null> {
-  try {
-    const res = await fetch(url, { cache: 'no-store' })
-    return res.ok ? ((await res.json()) as DynamicCatalog) : null
-  } catch {
-    return null
-  }
+function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
+  cachedCatalogPromise ??= getDynamicComponents()
+    .catch(() => null)
+    .then(rememberCatalog)
+  return cachedCatalogPromise
 }
 
-function fetchDynamicCatalog(): Promise<DynamicCatalog | null> {
-  // no-store beats the browser cache; the random query beats any CDN in
-  // front of the API that ignores request cache directives. Servers
-  // predating the snippet-route query-strip fix 404 on the query form, so
-  // fall back to the bare URL.
-  cachedCatalogPromise ??= requestCatalog(
-    `${getDynamicCatalogUrl()}?_t=${Date.now()}`,
-  )
-    .then((catalog) => catalog ?? requestCatalog(getDynamicCatalogUrl()))
-    .then((catalog) => {
-      for (const c of catalog?.components ?? []) catalogUrls.add(c.url)
-      return catalog
+export async function findCatalogEntryForUrl(
+  url: string,
+): Promise<DynamicCatalogEntry | null> {
+  const catalog = await fetchDynamicCatalog()
+  return catalog
+    ? (resolveCatalogEntry(catalog.components, url)?.entry ?? null)
+    : null
+}
+
+export function useDynamicCatalog(): DynamicCatalog | null {
+  const [catalog, setCatalog] = useState<DynamicCatalog | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchDynamicCatalog().then((next) => {
+      if (!cancelled) setCatalog(next)
     })
-  return cachedCatalogPromise
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return catalog
 }
 
 export function useDynamicCatalogSystemMessages(): ChatMessage[] {

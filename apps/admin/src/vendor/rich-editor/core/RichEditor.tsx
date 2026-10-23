@@ -5,7 +5,6 @@ import {
 } from '@haklex/rich-editor'
 import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
-import { DynamicEditNode, DynamicPlugin } from '@haklex/rich-ext-dynamic'
 import { embedEditNodes, EmbedPlugin } from '@haklex/rich-ext-embed'
 import {
   ExcalidrawEditNode,
@@ -34,6 +33,8 @@ import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
 import type { ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 
+import { CatalogDynamicEditNode } from '../dynamic/CatalogDynamicEditNode'
+import { DynamicInsertPlugin } from '../dynamic/DynamicInsertPlugin'
 import { AfilmoryNode, AfilmoryPlugin } from '../extensions/afilmory'
 import { MapNode, MapPlugin } from '../extensions/map'
 import { StockNode, StockPlugin } from '../extensions/stock'
@@ -42,7 +43,7 @@ import { enhancedEditRendererConfig } from './configs/enhanced-edit-renderer-con
 import { RichRenderer } from './RichRenderer'
 
 const defaultExtraNodes = [
-  DynamicEditNode,
+  CatalogDynamicEditNode,
   ExcalidrawEditNode,
   ...embedEditNodes,
   ...linkCardEditNodes,
@@ -138,7 +139,7 @@ export function RichEditor({
         <LiteXmlPastePlugin />
         <FloatingToolbarPlugin actions={floatingToolbarActions} />
         <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
-        <DynamicPlugin />
+        <DynamicInsertPlugin />
         <ExcalidrawPlugin />
         <EmbedPlugin selfHostnames={selfHostnames} />
         <MapPlugin trackUpload={trackUpload} />

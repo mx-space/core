@@ -2,7 +2,7 @@ import type { OnMount } from '@monaco-editor/react'
 import Editor, { loader } from '@monaco-editor/react'
 import { AlertCircle, CheckCircle2, Code2, Loader2, Save } from 'lucide-react'
 import * as monaco from 'monaco-editor'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { useI18n } from '~/i18n'
 import { useThemeMode } from '~/theme'
@@ -48,14 +48,21 @@ export function CodeEditor({
     ensureGithubThemesRegistered()
   }, [])
 
+  const onSaveRef = useRef(onSave)
+  useEffect(() => {
+    onSaveRef.current = onSave
+  }, [onSave])
+
   const resolvedTheme = isDark ? GITHUB_DARK_THEME : GITHUB_LIGHT_THEME
 
   const handleMount: OnMount = (editor, monacoInstance) => {
     if (!onSave) return
 
+    // Monaco keeps the command registered at mount; route it through a ref so
+    // it always reaches the current onSave instead of the first render's.
     editor.addCommand(
       monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
-      () => onSave(),
+      () => onSaveRef.current?.(),
     )
   }
 
