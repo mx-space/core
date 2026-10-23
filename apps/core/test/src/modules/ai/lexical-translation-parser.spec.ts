@@ -428,6 +428,64 @@ describe('lexical-translation-parser', () => {
       expect(segments[1].text).toBe('Cell B')
     })
 
+    it('steps node: step titles and step content are both collected', () => {
+      const stepsNode = {
+        type: 'steps',
+        version: 1,
+        steps: [
+          {
+            id: 's_a',
+            title: 'Install',
+            content: {
+              root: {
+                children: [paragraph(textNode('Download it'))],
+                type: 'root',
+                direction: 'ltr',
+              },
+            },
+          },
+          {
+            id: 's_b',
+            title: 'Configure',
+            content: {
+              root: {
+                children: [paragraph(textNode('Add the key'))],
+                type: 'root',
+                direction: 'ltr',
+              },
+            },
+          },
+        ],
+      }
+      const result = parseLexicalForTranslation(makeEditorState([stepsNode]))
+
+      expect(result.segments.map((s) => s.text)).toEqual([
+        'Download it',
+        'Add the key',
+      ])
+      expect(result.propertySegments.map((p) => [p.property, p.text])).toEqual([
+        ['title', 'Install'],
+        ['title', 'Configure'],
+      ])
+
+      const translations = new Map<string, string>([
+        ['t_0', '下载'],
+        ['t_1', '填入密钥'],
+        ['p_0', '安装'],
+        ['p_1', '配置'],
+      ])
+      const restored = JSON.parse(
+        restoreLexicalTranslation(result, translations),
+      )
+      const steps = restored.root.children[0].steps
+      expect(steps.map((s: any) => s.id)).toEqual(['s_a', 's_b'])
+      expect(steps.map((s: any) => s.title)).toEqual(['安装', '配置'])
+      expect(steps[0].content.root.children[0].children[0].text).toBe('下载')
+      expect(steps[1].content.root.children[0].children[0].text).toBe(
+        '填入密钥',
+      )
+    })
+
     it('ignores lexical node state key "$" (blockId metadata)', () => {
       const json = makeEditorState([
         {

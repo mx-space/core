@@ -248,6 +248,12 @@ function walkNode(
     })
   }
 
+  if (node.type === 'steps' && Array.isArray(node.steps)) {
+    for (const step of node.steps) {
+      pushStringProperty(step, 'title', propertySegments, counter, ctx)
+    }
+  }
+
   const nextFlowId =
     currentFlowId ??
     (INLINE_FLOW_ROOT_TYPES.has(node.type) ? `f_${counter.f++}` : null)
@@ -297,11 +303,19 @@ function scanNestedEditorStates(
       continue
     }
 
-    // Array of nested editor states
+    // Array of nested editor states, or of objects holding them
     if (Array.isArray(propValue)) {
       for (const item of propValue) {
         if (isNestedLexicalEditorState(item)) {
           for (const child of item.root.children) {
+            walkNode(child, segments, propertySegments, counter, ctx, null)
+          }
+          continue
+        }
+        if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+        for (const itemValue of Object.values(item)) {
+          if (!isNestedLexicalEditorState(itemValue)) continue
+          for (const child of itemValue.root.children) {
             walkNode(child, segments, propertySegments, counter, ctx, null)
           }
         }
