@@ -514,3 +514,75 @@ describe('SandboxService', () => {
     })
   })
 })
+
+describe('sandbox authority boundaries', () => {
+  const context = {
+    req: {},
+    res: {},
+    isAuthenticated: false,
+    model: { id: '1', name: 'test', reference: 'test' },
+  }
+  test('rejects execution of writable files outside the VM', async () => {
+    const { mkdtemp, writeFile, rm } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const dir = await mkdtemp(`${tmpdir()}/mx-sandbox-security-`)
+    const sandbox = new SandboxService({
+      maxWorkers: 1,
+      bridgeHandlers: {},
+      requireBasePath: `${dir}/`,
+    })
+    try {
+      await writeFile(`${dir}/escape.cjs`, 'module.exports = typeof process')
+      const result = await sandbox.execute(
+        `async function handler(ctx, require) { return await require(${JSON.stringify(`${dir}/escape.cjs`)}) }`,
+        context,
+      )
+      expect(result.success).toBe(false)
+    } finally {
+      await sandbox.shutdown()
+      await rm(dir, { recursive: true })
+    }
+  })
+  test('rejects overload without accumulating waiting requests', async () => {
+    const sandbox = new SandboxService({ maxWorkers: 1, bridgeHandlers: {} })
+    await sandbox.initialize()
+    const first = sandbox.execute(
+      'async function handler() { await new Promise(r => setTimeout(r, 200)); return 1 }',
+      context,
+    )
+    try {
+      const queued = Promise.allSettled(
+        Array.from({ length: 4 }, () =>
+          sandbox.execute('function handler() { return 2 }', context),
+        ),
+      )
+      const result = sandbox.execute('function handler() { return 2 }', context)
+      await expect(
+        Promise.race([
+          result,
+          new Promise((resolve) => setTimeout(() => resolve('queued'), 50)),
+        ]),
+      ).rejects.toThrow(/capacity|busy/i)
+      expect((await first).success).toBe(true)
+      await queued
+    } finally {
+      await first
+      await sandbox.shutdown()
+    }
+  })
+  test.each(['ws://localhost:9', 'ws://127.0.0.1:9', 'ws://[::ffff:7f00:1]:9'])(
+    'blocks private WebSocket target %s',
+    async (url) => {
+      const sandbox = new SandboxService({ maxWorkers: 1, bridgeHandlers: {} })
+      try {
+        const result = await sandbox.execute(
+          `function handler() { new WebSocket(${JSON.stringify(url)}); return 'connected' }`,
+          context,
+        )
+        expect(result.success).toBe(false)
+      } finally {
+        await sandbox.shutdown()
+      }
+    },
+  )
+})

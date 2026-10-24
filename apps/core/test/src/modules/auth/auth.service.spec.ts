@@ -52,6 +52,7 @@ const createService = () => {
     ownerRepository as any,
     authInstance as any,
     snowflakeService as any,
+    { emit: vi.fn() } as any,
   )
   return { authInstance, authRepository, readerRepository, service }
 }

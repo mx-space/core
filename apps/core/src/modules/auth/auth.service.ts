@@ -6,6 +6,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { hashPassword } from 'better-auth/crypto'
 import { omit } from 'es-toolkit/compat'
 import { customAlphabet } from 'nanoid'
@@ -13,6 +14,7 @@ import { customAlphabet } from 'nanoid'
 import { SECRET_STORAGE_V2 } from '~/app.config'
 import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { EventBusEvents } from '~/constants/event-bus.constant'
 import { alphabet } from '~/constants/other.constant'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { getAvatar } from '~/utils/tool.util'
@@ -49,6 +51,7 @@ export class AuthService {
     @Inject(AuthInstanceInjectKey)
     private readonly authInstance: InjectAuthInstance,
     private readonly snowflakeService: SnowflakeService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private normalizeOptional(value?: string | null) {
@@ -375,7 +378,7 @@ export class AuthService {
       if (reader?.bannedAt) {
         return null
       }
-      if (reader?.role && !sessionUser.role) {
+      if (reader?.role) {
         sessionUser = { ...sessionUser, role: reader.role }
       }
     }
@@ -418,6 +421,7 @@ export class AuthService {
 
     await this.readerRepository.setOwnersExceptToReader(target.id)
     await this.readerRepository.setRole(target.id, 'owner')
+    this.eventEmitter.emit(EventBusEvents.OwnerRolesChanged)
 
     const ownerCount = await this.readerRepository.countOwners()
     if (ownerCount !== 1) {
@@ -445,6 +449,7 @@ export class AuthService {
     }
 
     await this.readerRepository.setRole(target.id, 'reader')
+    this.eventEmitter.emit(EventBusEvents.OwnerRolesChanged)
     return 'OK'
   }
 

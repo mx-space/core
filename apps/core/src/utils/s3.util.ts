@@ -3,6 +3,8 @@ import type { Readable } from 'node:stream'
 
 import { isDev } from '~/global/env.global'
 
+import { readResponseBuffer } from './http-response.util'
+
 export interface S3UploaderOptions {
   bucket: string
   region: string
@@ -593,6 +595,29 @@ export class S3Uploader {
     }
   }
 
+  private async fetchResponse(
+    url: string,
+    options: RequestInit,
+  ): Promise<Response> {
+    const response = await fetch(url, {
+      ...options,
+      redirect: 'error',
+      signal: AbortSignal.timeout(60_000),
+    })
+    // S3 control/error responses are small; never buffer an arbitrary endpoint's body.
+    const bytes = await readResponseBuffer(response, 1024 * 1024)
+    return new Response(
+      options.method === 'HEAD' || [204, 205, 304].includes(response.status)
+        ? null
+        : new Uint8Array(bytes),
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      },
+    )
+  }
+
   private async signedRequest(options: {
     method: string
     objectKey: string
@@ -704,7 +729,7 @@ export class S3Uploader {
     }
 
     try {
-      return await fetch(requestUrl, fetchOptions)
+      return await this.fetchResponse(requestUrl, fetchOptions)
     } finally {
       if (isDev) {
         if (originalTlsReject === undefined) {
@@ -813,7 +838,10 @@ export class S3Uploader {
     }
 
     try {
-      const response = await fetch(requestUrl, fetchOptions as RequestInit)
+      const response = await this.fetchResponse(
+        requestUrl,
+        fetchOptions as RequestInit,
+      )
 
       if (response.status === 404) return
       if (!response.ok) {
@@ -933,7 +961,10 @@ export class S3Uploader {
     try {
       let response: Response
       try {
-        response = await fetch(requestUrl, fetchOptions as RequestInit)
+        response = await this.fetchResponse(
+          requestUrl,
+          fetchOptions as RequestInit,
+        )
       } catch (error) {
         throw createS3TransportError(error)
       }

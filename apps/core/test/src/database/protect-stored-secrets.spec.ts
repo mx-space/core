@@ -86,6 +86,7 @@ it('upgrades real credential rows without changing their usable values, and can 
       new OwnerRepository(context.db, snowflake),
       { get: () => auth } as any,
       snowflake,
+      { emit: () => false } as any,
     )
     expect(await service.verifyApiKey('legacy-raw-api-key')).toMatchObject({
       id: 'legacy-key',

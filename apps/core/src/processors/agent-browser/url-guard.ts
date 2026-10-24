@@ -104,14 +104,32 @@ function isPrivateIpv4(addr: string): boolean {
 }
 
 function isPrivateIpv6(addr: string): boolean {
-  const lower = addr.toLowerCase()
-  if (lower === '::' || lower === '::1') return true
-  // IPv4-mapped (::ffff:a.b.c.d) and IPv4-compatible (::a.b.c.d) forms
-  const v4mapped = /^::(?:ffff:)?((?:\d+\.){3}\d+)$/i.exec(addr)
-  if (v4mapped) return isPrivateIpv4(v4mapped[1])
-  if (lower.startsWith('fe8') || lower.startsWith('fe9')) return true
-  if (lower.startsWith('fea') || lower.startsWith('feb')) return true
-  if (lower.startsWith('fc') || lower.startsWith('fd')) return true
-  if (lower.startsWith('ff')) return true
-  return false
+  if (isIP(addr) !== 6 || addr.includes('%')) return true
+  const normalized = new URL(`http://[${addr}]/`).hostname.slice(1, -1)
+  const [left, right] = normalized.split('::')
+  const head = left ? left.split(':') : []
+  const tail = right ? right.split(':') : []
+  const words =
+    right === undefined
+      ? head
+      : [
+          ...head,
+          ...Array.from({ length: 8 - head.length - tail.length }, () => '0'),
+          ...tail,
+        ]
+  const parts = words.map((word) => Number.parseInt(word, 16))
+  if (
+    parts.slice(0, 5).every((word) => word === 0) &&
+    (parts[5] === 0 || parts[5] === 0xffff)
+  ) {
+    return isPrivateIpv4(
+      `${parts[6] >> 8}.${parts[6] & 255}.${parts[7] >> 8}.${parts[7] & 255}`,
+    )
+  }
+  // Only globally routable unicast; reject tunneling ranges as well.
+  return (
+    (parts[0] & 0xe000) !== 0x2000 ||
+    parts[0] === 0x2002 ||
+    (parts[0] === 0x2001 && parts[1] === 0)
+  )
 }

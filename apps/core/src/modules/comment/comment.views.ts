@@ -87,6 +87,57 @@ const AuthorActivityItemSchema = z.object({
 })
 
 export const CommentViews = {
+  public: CommentDetailSchema.omit({
+    mail: true,
+    ip: true,
+    agent: true,
+    location: true,
+    state: true,
+  })
+    .extend({
+      ref: CommentRefSummarySchema.strip().nullable().optional(),
+      moderation: z
+        .object({
+          status: z.enum(['published', 'pending', 'rejected']),
+          reviewer: z.enum(['ai', 'owner']).optional(),
+          receipt: z.string().optional(),
+        })
+        .optional(),
+      replyWindow: z
+        .object({
+          total: z.number(),
+          returned: z.number(),
+          threshold: z.number(),
+          hasHidden: z.boolean(),
+          hiddenCount: z.number(),
+          nextCursor: z.string().optional(),
+        })
+        .optional(),
+      anchor: z.unknown().optional(),
+      reader: z
+        .object({
+          id: z.string(),
+          isMember: z.boolean().optional(),
+          name: z.string().nullable().optional(),
+          handle: z.string().nullable().optional(),
+          username: z.string().nullable().optional(),
+          displayUsername: z.string().nullable().optional(),
+          image: z.string().nullable().optional(),
+          membership: z
+            .object({
+              status: z.string(),
+              plan: z.string(),
+            })
+            .nullable()
+            .optional(),
+        })
+        .nullable()
+        .optional(),
+      replies: z.array(z.unknown()).optional(),
+      children: z.array(z.unknown()).optional(),
+      parent: CommentParentPreviewSchema.nullable().optional(),
+    })
+    .strip(),
   moderation: z.object({
     status: z.enum(['published', 'pending', 'rejected']),
     reviewer: z.enum(['ai', 'owner']).optional(),

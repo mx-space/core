@@ -1,4 +1,6 @@
 import { Body, Delete, Get, Post, Query } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
+import { z } from 'zod'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -46,7 +48,23 @@ export class SubscribeController {
     )
   }
 
+  @Get('/confirm')
+  @HTTPDecorators.RawResponse
+  async confirm(
+    @Query({
+      schema: z.object({ email: z.email(), token: z.string().max(256) }),
+    })
+    query: {
+      email: string
+      token: string
+    },
+  ) {
+    await this.service.confirm(query.email, query.token)
+    return 'Subscription confirmed'
+  }
+
   @Post('/')
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   async subscribe(@Body({ schema: SubscribeSchema }) body: SubscribeDto) {
     if (!(await this.service.checkEnable())) {
       throw createAppException(AppErrorCode.SUBSCRIBE_NOT_ENABLED)

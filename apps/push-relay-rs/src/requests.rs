@@ -5,7 +5,9 @@ use crate::protocol::{ApnsEnvironment, Issue, PushPreferences};
 use crate::validate::{Checker, decode, is_url};
 
 fn is_apns_token(value: &str) -> bool {
-    value.len() >= 64 && value.bytes().all(|b| b.is_ascii_hexdigit())
+    (64..=512).contains(&value.len())
+        && value.len() % 2 == 0
+        && value.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 #[derive(Deserialize, Debug)]
@@ -58,6 +60,9 @@ pub struct ClaimSourceActivation {
     pub source_label: Option<String>,
     pub reader_id: Option<String>,
     pub preferences: Option<PushPreferences>,
+    #[serde(default)]
+    pub owner_authorized: bool,
+    pub enrollment_token: Option<String>,
 }
 
 impl ClaimSourceActivation {
@@ -83,6 +88,11 @@ impl ClaimSourceActivation {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn rejects_oversized_apns_tokens() {
+        assert!(RegisterInstallation::parse(json!({ "app_id": "space", "apns_environment": "development", "apns_token": "ab".repeat(4096) })).is_err());
+    }
 
     #[test]
     fn register_installation_validation() {

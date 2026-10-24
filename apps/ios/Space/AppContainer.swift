@@ -7,7 +7,9 @@ import UIKit
 final class AppContainer {
     static let shared = AppContainer()
 
-    let tokenStore: any TokenStore = KeychainTokenStore()
+    private func tokenStore(for endpoint: ServerEndpoint) -> any TokenStore {
+        KeychainTokenStore(account: endpoint.credentialOrigin)
+    }
     let serverStore = ServerStore()
 
     private var pushManager: PushNotificationManager?
@@ -16,8 +18,9 @@ final class AppContainer {
     private init() {}
 
     private var pairedEndpoint: ServerEndpoint? {
-        let hasToken = ((try? tokenStore.read()) ?? nil)?.isEmpty == false
-        return hasToken ? serverStore.read() : nil
+        guard let endpoint = serverStore.read() else { return nil }
+        let hasToken = ((try? tokenStore(for: endpoint).read()) ?? nil)?.isEmpty == false
+        return hasToken ? endpoint : nil
     }
 
     func makeRootViewController() -> UIViewController {
@@ -46,7 +49,7 @@ final class AppContainer {
     }
 
     func makeClient(_ endpoint: ServerEndpoint) -> SpaceClient {
-        SpaceClient(endpoint: endpoint, tokenStore: tokenStore)
+        SpaceClient(endpoint: endpoint, tokenStore: tokenStore(for: endpoint))
     }
 
     func makePairingFlow() -> UIViewController {
@@ -61,7 +64,7 @@ final class AppContainer {
         let client = makeClient(endpoint)
         let controller = PairingCodeViewController(
             endpoint: endpoint,
-            pairing: PairingService(spaceClient: client, tokenStore: tokenStore)
+            pairing: PairingService(spaceClient: client, tokenStore: tokenStore(for: endpoint))
         ) { [weak self] in
             self?.serverStore.write(endpoint)
             self?.swapRoot()
@@ -89,7 +92,7 @@ final class AppContainer {
     }
 
     func clearPairing() {
-        try? tokenStore.clear()
+        if let endpoint = serverStore.read() { try? tokenStore(for: endpoint).clear() }
         serverStore.clear()
         pushManager = nil
     }

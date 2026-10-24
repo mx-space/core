@@ -5,9 +5,10 @@ import { rgbaToThumbHash } from 'thumbhash'
 
 import { ConfigsService } from '~/modules/configs/configs.service'
 import type { ImageModel } from '~/shared/types/legacy-model.type'
+import { readResponseBuffer } from '~/utils/http-response.util'
 import { pickImagesFromMarkdown } from '~/utils/pic.util'
 import { AsyncQueue } from '~/utils/queue.util'
-import { assertPublicHttpUrl } from '~/utils/ssrf.util'
+import { assertPublicHttpUrl, publicHttpDispatcher } from '~/utils/ssrf.util'
 import { requireDepsWithInstall } from '~/utils/tool.util'
 
 import { HttpService } from './helper.http.service'
@@ -117,10 +118,12 @@ export class ImageService implements OnModuleInit {
     // disable redirect following so a public host cannot 30x us into one.
     await assertPublicHttpUrl(image, { allowHttp: true })
     const response = await this.httpService.fetch.raw<
-      ArrayBuffer,
-      'arrayBuffer'
+      ReadableStream<Uint8Array>,
+      'stream'
     >(image, {
-      responseType: 'arrayBuffer',
+      responseType: 'stream',
+      dispatcher: publicHttpDispatcher,
+      signal: AbortSignal.timeout(10_000),
       timeout: 10_000,
       redirect: 'error',
       retry: 0,
@@ -133,9 +136,12 @@ export class ImageService implements OnModuleInit {
 
     const imageType = response.headers.get('content-type') ?? ''
 
-    const buffer = Buffer.from(response._data as ArrayBuffer)
+    const buffer = await readResponseBuffer(
+      new Response(response._data, { headers: response.headers }),
+      8 * 1024 * 1024,
+    )
     const sharp = await requireDepsWithInstall('sharp')
-    const sharped = sharp(buffer) as Sharp
+    const sharped = sharp(buffer, { limitInputPixels: 40_000_000 }) as Sharp
     const metadata = await sharped.metadata()
     const size = {
       height: metadata.height,

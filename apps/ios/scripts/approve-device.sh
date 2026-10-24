@@ -2,13 +2,17 @@
 # Stands in for the operator approving a pairing code in a browser: signs in as
 # the owner, waits for a pending device code, and approves it.
 #
-#   SPACE_SERVER=http://127.0.0.1:2444 \
+#   SPACE_SERVER=https://mx-verify.example.com \
 #   SPACE_USERNAME=innei SPACE_PASSWORD=... \
 #   PG_CONTAINER=mx-pg-dev PG_DATABASE=mx_ios_verify \
 #   ./scripts/approve-device.sh
 set -euo pipefail
 
 SERVER=${SPACE_SERVER:?SPACE_SERVER is required}
+if [[ "$SERVER" != https://* ]]; then
+  printf 'SPACE_SERVER must use HTTPS\n' >&2
+  exit 1
+fi
 USERNAME=${SPACE_USERNAME:?SPACE_USERNAME is required}
 PASSWORD=${SPACE_PASSWORD:?SPACE_PASSWORD is required}
 PG_CONTAINER=${PG_CONTAINER:-mx-pg-dev}

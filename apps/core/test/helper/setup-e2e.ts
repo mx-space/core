@@ -21,6 +21,14 @@ export const setupE2EApp = async (module: TestingModule | ModuleMetadata) => {
 
   const app =
     nextModule.createNestApplication<NestFastifyApplication>(fastifyApp)
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook('onRequest', async (request) => {
+      // Mirror the global role annotation on public routes as well as @Auth routes.
+      request.hasAdminAccess = Boolean(request.headers['test-token'])
+      request.isAuthenticated = request.hasAdminAccess
+    })
   app.useGlobalPipes(
     requestCaseNormalizationPipeInstance,
     standardSchemaValidationPipeInstance,

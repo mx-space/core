@@ -101,7 +101,7 @@ export class AgentBrowserService {
     try {
       slot = await this.pool.acquire({ signal: ac.signal })
       this.pool.markLive(slot)
-      const baseArgs = this.buildBaseArgs(slot)
+      const baseArgs = await this.buildBaseArgs(slot)
       const finalUrl = await this.runNavigation(
         executable,
         baseArgs,
@@ -176,10 +176,14 @@ export class AgentBrowserService {
     }
   }
 
-  private buildBaseArgs(slot: PoolSlot): string[] {
+  private async buildBaseArgs(slot: PoolSlot): Promise<string[]> {
     return [
       '--session',
       slot.name,
+      '--proxy',
+      await this.pool.getProxyUrl(),
+      '--proxy-bypass',
+      '<-loopback>',
       '--user-agent',
       AGENT_BROWSER_DEFAULT_UA,
       '--headers',
@@ -187,7 +191,7 @@ export class AgentBrowserService {
         'Accept-Language': AGENT_BROWSER_DEFAULT_ACCEPT_LANGUAGE,
       }),
       '--args',
-      AGENT_BROWSER_DEFAULT_LAUNCH_ARGS,
+      `${AGENT_BROWSER_DEFAULT_LAUNCH_ARGS},--disable-quic,--force-webrtc-ip-handling-policy=disable_non_proxied_udp`,
     ]
   }
 

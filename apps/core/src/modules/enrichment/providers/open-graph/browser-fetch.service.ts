@@ -252,16 +252,20 @@ export class BrowserFetchService {
     }
   }
 
-  private buildBaseArgs(slot: PoolSlot): string[] {
+  private async buildBaseArgs(slot: PoolSlot): Promise<string[]> {
     return [
       '--session',
       slot.name,
+      '--proxy',
+      await this.pool.getProxyUrl(),
+      '--proxy-bypass',
+      '<-loopback>',
       '--user-agent',
       OG_USER_AGENT,
       '--headers',
       JSON.stringify({ 'Accept-Language': OG_ACCEPT_LANGUAGE }),
       '--args',
-      OG_LAUNCH_ARGS,
+      `${OG_LAUNCH_ARGS},--disable-quic,--force-webrtc-ip-handling-policy=disable_non_proxied_udp`,
     ]
   }
 
@@ -275,7 +279,7 @@ export class BrowserFetchService {
     const { stdout } = await execFileAsync(
       executable,
       [
-        ...this.buildBaseArgs(slot),
+        ...(await this.buildBaseArgs(slot)),
         'batch',
         '--bail',
         '--json',
@@ -303,7 +307,7 @@ export class BrowserFetchService {
     const { stdout } = await execFileAsync(
       executable,
       [
-        ...this.buildBaseArgs(slot),
+        ...(await this.buildBaseArgs(slot)),
         'batch',
         '--bail',
         '--json',
@@ -334,7 +338,7 @@ export class BrowserFetchService {
       const res = await execFileAsync(
         executable,
         [
-          ...this.buildBaseArgs(slot),
+          ...(await this.buildBaseArgs(slot)),
           'network',
           'requests',
           '--filter',
@@ -416,7 +420,7 @@ export class BrowserFetchService {
         await execFileAsync(
           executable,
           [
-            ...this.buildBaseArgs(slot),
+            ...(await this.buildBaseArgs(slot)),
             'set',
             'viewport',
             String(SCREENSHOT_VIEWPORT_WIDTH),
@@ -433,7 +437,7 @@ export class BrowserFetchService {
         await execFileAsync(
           executable,
           [
-            ...this.buildBaseArgs(slot),
+            ...(await this.buildBaseArgs(slot)),
             'screenshot',
             '--screenshot-format',
             SCREENSHOT_CLI_FORMAT,

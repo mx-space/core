@@ -12,6 +12,7 @@ import {
   sql,
 } from 'drizzle-orm'
 
+import { AppErrorCode, createAppException } from '~/common/errors'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiTtsBlocks, fileReferences, fileUsages } from '~/database/schema'
 import {
@@ -48,6 +49,21 @@ const mapRow = (row: typeof fileReferences.$inferSelect): FileReferenceRow => ({
 
 @Injectable()
 export class FileReferenceRepository extends BaseRepository {
+  async withReaderUploadLock<T>(
+    readerId: string,
+    upload: () => Promise<T>,
+  ): Promise<T> {
+    return this.db.transaction(async (tx) => {
+      const result = await tx.execute(
+        sql`SELECT pg_try_advisory_xact_lock(hashtextextended(${`reader-upload:${readerId}`}, 0)) AS acquired`,
+      )
+      if (!result.rows[0]?.acquired) {
+        throw createAppException(AppErrorCode.COMMENT_UPLOAD_RATE_LIMITED)
+      }
+      return upload()
+    })
+  }
+
   constructor(
     @Inject(PG_DB_TOKEN) db: AppDatabase,
     private readonly snowflake: SnowflakeService,

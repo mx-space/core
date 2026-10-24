@@ -9,6 +9,10 @@ const MIGRATIONS: &[(&str, &str)] = &[
         "0002_binding_reader_preferences.sql",
         include_str!("../migrations/0002_binding_reader_preferences.sql"),
     ),
+    (
+        "0003_binding_owner_authorization.sql",
+        include_str!("../migrations/0003_binding_owner_authorization.sql"),
+    ),
 ];
 
 pub fn run(connection: &mut Connection) -> rusqlite::Result<()> {

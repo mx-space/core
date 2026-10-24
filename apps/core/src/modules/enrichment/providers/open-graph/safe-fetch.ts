@@ -1,8 +1,7 @@
-import { isDev } from '~/global/env.global'
-import {
-  assertHostnameSafe,
-  parseAndValidateUrl,
-} from '~/processors/agent-browser/url-guard'
+import { fetch, type Response } from 'undici'
+
+import { parseAndValidateUrl } from '~/processors/agent-browser/url-guard'
+import { publicHttpDispatcher } from '~/utils/ssrf.util'
 
 export {
   isPrivateIp,
@@ -44,7 +43,7 @@ export class FetchSizeExceededError extends Error {
  * Hardened HTTP fetcher for arbitrary user-supplied URLs. Defends against:
  *
  * - non-http(s) schemes
- * - private/loopback/link-local DNS resolution (best-effort; TOCTOU window)
+ * - private/loopback/link-local DNS resolution at socket connection
  * - oversized response bodies (streamed truncation)
  * - slow / hung peers (AbortSignal timeout)
  * - redirect loops + cross-host redirects to internal targets
@@ -61,7 +60,6 @@ export async function safeFetch(
   let currentUrl = rawUrl
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const parsed = parseAndValidateUrl(currentUrl)
-    if (!isDev) await assertHostnameSafe(parsed.hostname)
 
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), opts.timeoutMs)
@@ -69,53 +67,55 @@ export async function safeFetch(
     let res: Response
     try {
       res = await fetch(parsed, {
+        dispatcher: publicHttpDispatcher,
         method: 'GET',
         redirect: 'manual',
         signal: ac.signal,
         headers: buildRequestHeaders(accept, opts.userAgent ?? DEFAULT_UA, hop),
       })
+
+      if (isRedirect(res.status)) {
+        const loc = res.headers.get('location')
+        if (!loc)
+          throw new Error(`Redirect without location header (${res.status})`)
+        try {
+          await res.body?.cancel()
+        } catch {
+          // ignore — the body will be GC'd
+        }
+        currentUrl = new URL(loc, parsed).toString()
+        continue
+      }
+
+      if (!res.ok) {
+        try {
+          await res.body?.cancel()
+        } catch {
+          // ignore
+        }
+        throw new Error(`HTTP ${res.status} for ${parsed.toString()}`)
+      }
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase()
+      if (!accept.some((prefix) => contentType.startsWith(prefix))) {
+        try {
+          await res.body?.cancel()
+        } catch {
+          // ignore
+        }
+        throw new Error(`Unsupported content-type: ${contentType || '∅'}`)
+      }
+
+      const { body, truncated } = await readWithLimit(res, opts.maxBodyBytes)
+      return {
+        finalUrl: parsed.toString(),
+        contentType,
+        body,
+        truncated,
+      }
     } finally {
+      ac.abort()
       clearTimeout(timer)
-    }
-
-    if (isRedirect(res.status)) {
-      const loc = res.headers.get('location')
-      if (!loc)
-        throw new Error(`Redirect without location header (${res.status})`)
-      try {
-        await res.body?.cancel()
-      } catch {
-        // ignore — the body will be GC'd
-      }
-      currentUrl = new URL(loc, parsed).toString()
-      continue
-    }
-
-    if (!res.ok) {
-      try {
-        await res.body?.cancel()
-      } catch {
-        // ignore
-      }
-      throw new Error(`HTTP ${res.status} for ${parsed.toString()}`)
-    }
-
-    const contentType = (res.headers.get('content-type') || '').toLowerCase()
-    if (!accept.some((prefix) => contentType.startsWith(prefix))) {
-      try {
-        await res.body?.cancel()
-      } catch {
-        // ignore
-      }
-      throw new Error(`Unsupported content-type: ${contentType || '∅'}`)
-    }
-
-    const { body, truncated } = await readWithLimit(res, opts.maxBodyBytes)
-    return {
-      finalUrl: parsed.toString(),
-      contentType,
-      body,
-      truncated,
     }
   }
 

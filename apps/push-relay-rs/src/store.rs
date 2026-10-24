@@ -35,6 +35,7 @@ type Result<T> = std::result::Result<T, DbError>;
 pub struct InstallationRecord {
     pub id: String,
     pub secret_hash: String,
+    pub app_id: String,
     pub revoked_at: Option<i64>,
 }
 
@@ -78,6 +79,7 @@ pub struct NewBinding<'a> {
     pub installation_id: &'a str,
     pub reader_id: Option<&'a str>,
     pub preferences: &'a PushPreferences,
+    pub owner_authorized: bool,
 }
 
 fn delivery(row: &Row<'_>) -> rusqlite::Result<DeliveryRecord> {
@@ -104,6 +106,10 @@ fn delivery(row: &Row<'_>) -> rusqlite::Result<DeliveryRecord> {
 #[derive(Clone)]
 pub struct Store {
     connection: Connection,
+}
+
+fn admission_error() -> rusqlite::Error {
+    rusqlite::Error::InvalidParameterName("relay_admission_limited".into())
 }
 
 impl Store {
@@ -151,6 +157,14 @@ impl Store {
         );
         self.connection
             .call(move |conn| {
+                conn.execute("DELETE FROM push_installations WHERE updated_at < (unixepoch() - 86400) * 1000 AND NOT EXISTS (SELECT 1 FROM push_bindings WHERE installation_id = push_installations.id AND revoked_at IS NULL)", [])?;
+                let admitted: bool = conn.query_row(
+                    "SELECT (SELECT count(*) FROM push_installations) < 100000
+                       AND (SELECT count(*) FROM push_installations WHERE created_at >= (unixepoch() - 3600) * 1000) < 1000
+                       AND NOT EXISTS (SELECT 1 FROM push_installations WHERE app_id = ?1 AND apns_environment = ?2 AND token_hash = ?3 AND revoked_at IS NULL)",
+                    params![values.1, values.2, values.3], |row| row.get(0),
+                )?;
+                if !admitted { return Err(admission_error()); }
                 conn.execute(
                     "INSERT INTO push_installations
                      (id, app_id, apns_environment, token_hash, token_ciphertext, secret_hash)
@@ -168,12 +182,13 @@ impl Store {
         self.connection
             .call(move |conn| {
                 conn.query_row(
-                    "SELECT id, secret_hash, revoked_at FROM push_installations WHERE id = ?1",
+                    "SELECT id, secret_hash, app_id, revoked_at FROM push_installations WHERE id = ?1",
                     [id],
                     |row| {
                         Ok(InstallationRecord {
                             id: row.get("id")?,
                             secret_hash: row.get("secret_hash")?,
+                            app_id: row.get("app_id")?,
                             revoked_at: row.get("revoked_at")?,
                         })
                     },
@@ -226,6 +241,9 @@ impl Store {
         );
         self.connection
             .call(move |conn| {
+                conn.execute("DELETE FROM push_activation_tickets WHERE expires_at < unixepoch() * 1000", [])?;
+                let count: i64 = conn.query_row("SELECT count(*) FROM push_activation_tickets WHERE installation_id = ?1", [&values.2], |row| row.get(0))?;
+                if count >= 10 { return Err(admission_error()); }
                 conn.execute(
                     "INSERT INTO push_activation_tickets (id, ticket_hash, installation_id, expires_at)
                      VALUES (?1, ?2, ?3, ?4)",
@@ -273,6 +291,8 @@ impl Store {
         );
         self.connection
             .call(move |conn| {
+                let count: i64 = conn.query_row("SELECT count(*) FROM push_sources", [], |row| row.get(0))?;
+                if count >= 10000 { return Err(admission_error()); }
                 conn.execute(
                     "INSERT INTO push_sources (id, origin, label, secret_ciphertext) VALUES (?1, ?2, ?3, ?4)",
                     values,
@@ -309,14 +329,20 @@ impl Store {
             input.installation_id.to_owned(),
             input.reader_id.map(str::to_owned),
             serde_json::to_value(input.preferences).map_err(|e| DbError(e.to_string()))?,
+            input.owner_authorized,
         );
         self.connection
             .call(move |conn| {
+                let existing: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM push_bindings WHERE source_id = ?1 AND installation_id = ?2)", params![values.1, values.2], |row| row.get(0))?;
+                if !existing {
+                    let allowed: bool = conn.query_row("SELECT (SELECT count(*) FROM push_bindings WHERE source_id = ?1) < 1000 AND (SELECT count(*) FROM push_bindings WHERE installation_id = ?2) < 32 AND (SELECT count(*) FROM push_bindings) < 100000", params![values.1, values.2], |row| row.get(0))?;
+                    if !allowed { return Err(admission_error()); }
+                }
                 conn.query_row(
-                    "INSERT INTO push_bindings (id, source_id, installation_id, reader_id, preferences)
-                     VALUES (?1, ?2, ?3, ?4, ?5)
+                    "INSERT INTO push_bindings (id, source_id, installation_id, reader_id, preferences, owner_authorized)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
                      ON CONFLICT (source_id, installation_id)
-                     DO UPDATE SET revoked_at = NULL, reader_id = excluded.reader_id,
+                     DO UPDATE SET revoked_at = NULL, reader_id = excluded.reader_id, owner_authorized = excluded.owner_authorized,
                          updated_at = unixepoch() * 1000
                      RETURNING id",
                     values,
@@ -431,6 +457,19 @@ impl Store {
             .call(move |conn| {
                 let tx = conn.transaction()?;
                 let (event_id, source_id, delivery_id, event_type, subject) = values;
+                tx.execute("DELETE FROM push_events WHERE created_at < ?1", [now - 30 * 24 * 60 * 60 * 1000])?;
+                let existing: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM push_events WHERE source_id = ?1 AND id = ?2)", params![source_id, event_id], |row| row.get(0))?;
+                if !existing {
+                    let admitted: bool = tx.query_row(
+                        "SELECT (SELECT count(*) FROM push_events WHERE source_id = ?1 AND created_at >= ?2) < 60
+                           AND (SELECT count(*) FROM push_events WHERE source_id = ?1 AND created_at >= ?3) < 1000
+                           AND (SELECT count(*) FROM push_events WHERE created_at >= ?3) < 10000
+                           AND (SELECT count(*) FROM push_deliveries WHERE status IN ('pending', 'processing', 'retrying')) < 10000
+                           AND (SELECT count(*) FROM push_deliveries WHERE created_at >= ?3) < 100000",
+                        params![source_id, now - 60000, now - 86400000], |row| row.get(0),
+                    )?;
+                    if !admitted { return Err(admission_error()); }
+                }
                 let inserted = tx.execute(
                     "INSERT INTO push_events
                      (id, source_id, delivery_id, event_type, subject, payload, event_time, created_at)
@@ -447,6 +486,8 @@ impl Store {
                 } else {
                     tx.execute(FANOUT_DELIVERY_INSERT_SQL, params![event_id, source_id, now, app_id, reader_id, preference_key])? as u64
                 };
+                let within_budget: bool = tx.query_row("SELECT (SELECT count(*) FROM push_deliveries WHERE status IN ('pending', 'processing', 'retrying')) <= 10000 AND (SELECT count(*) FROM push_deliveries WHERE created_at >= ?1) <= 100000", [now - 86400000], |row| row.get(0))?;
+                if !within_budget { return Err(admission_error()); }
                 tx.commit()?;
                 Ok(deliveries)
             })
@@ -591,7 +632,7 @@ mod tests {
                 id,
                 app_id: app,
                 apns_environment: ApnsEnvironment::Production,
-                token_hash: &"a".repeat(64),
+                token_hash: &crate::crypto::credential_hash(id),
                 token_ciphertext: "encrypted-token",
                 secret_hash: &"b".repeat(64),
             })
@@ -604,6 +645,7 @@ mod tests {
                 installation_id: id,
                 reader_id: reader,
                 preferences,
+                owner_authorized: app == "space" && reader.is_some(),
             })
             .await
             .unwrap();
@@ -629,7 +671,14 @@ mod tests {
     #[tokio::test]
     async fn activation_tickets_are_single_use_and_expire_at_the_boundary() {
         let store = store().await;
-        bind(&store, "ins_1", "space", None, &PushPreferences::default()).await;
+        bind(
+            &store,
+            "ins_1",
+            "space",
+            Some("owner"),
+            &PushPreferences::default(),
+        )
+        .await;
         let now = Utc::now();
         let expires = now + TimeDelta::minutes(10);
         let hash = "c".repeat(64);
@@ -676,7 +725,7 @@ mod tests {
     async fn events_route_by_app_reader_preferences_and_revocation_without_duplicates() {
         let store = store().await;
         let preferences = PushPreferences::default();
-        bind(&store, "space", "space", None, &preferences).await;
+        bind(&store, "space", "space", Some("owner"), &preferences).await;
         bind(&store, "r1", "yohaku", Some("reader1"), &preferences).await;
         bind(&store, "r2", "yohaku", Some("reader2"), &preferences).await;
         let disabled = PushPreferences {
@@ -784,6 +833,7 @@ mod tests {
                 installation_id: "r1",
                 reader_id: Some("reader3"),
                 preferences: &preferences,
+                owner_authorized: false,
             })
             .await
             .unwrap();
@@ -800,7 +850,14 @@ mod tests {
     #[tokio::test]
     async fn event_acceptance_rolls_back_when_fanout_fails() {
         let store = store().await;
-        bind(&store, "ins_1", "space", None, &PushPreferences::default()).await;
+        bind(
+            &store,
+            "ins_1",
+            "space",
+            Some("owner"),
+            &PushPreferences::default(),
+        )
+        .await;
         store.connection.call(|conn| conn.execute_batch(
             "CREATE TRIGGER reject_delivery BEFORE INSERT ON push_deliveries BEGIN SELECT RAISE(ABORT, 'disk failure fixture'); END;"
         )).await.unwrap();
@@ -828,7 +885,14 @@ mod tests {
     #[tokio::test]
     async fn claims_do_not_overlap_and_retries_wait_until_due() {
         let store = store().await;
-        bind(&store, "ins_1", "space", None, &PushPreferences::default()).await;
+        bind(
+            &store,
+            "ins_1",
+            "space",
+            Some("owner"),
+            &PushPreferences::default(),
+        )
+        .await;
         let now = Utc::now();
         store
             .accept_event("src_1", "d1", &comment("c1"), now)
@@ -939,5 +1003,90 @@ mod tests {
         assert_eq!(resumed[0].token_ciphertext, "encrypted-token");
         store.connection.close().await.unwrap();
         std::fs::remove_file(path).unwrap();
+    }
+    #[tokio::test]
+    async fn unauthorized_space_binding_never_receives_owner_notifications() {
+        let store = store().await;
+        bind(
+            &store,
+            "anonymous",
+            "space",
+            None,
+            &PushPreferences::default(),
+        )
+        .await;
+        assert_eq!(
+            store
+                .accept_event("src_1", "d1", &comment("private"), Utc::now())
+                .await
+                .unwrap(),
+            0
+        );
+    }
+
+    #[tokio::test]
+    async fn event_budget_is_atomic_and_retries_remain_idempotent() {
+        let store = store().await;
+        let now = Utc::now();
+        for i in 0..60 {
+            store
+                .accept_event("src_1", &format!("d{i}"), &comment(&format!("e{i}")), now)
+                .await
+                .unwrap();
+        }
+        assert!(
+            store
+                .accept_event("src_1", "overflow", &comment("overflow"), now)
+                .await
+                .is_err()
+        );
+        assert!(
+            store
+                .accept_event("src_1", "retry", &comment("e0"), now)
+                .await
+                .is_ok()
+        );
+        assert!(
+            store
+                .accept_event(
+                    "src_1",
+                    "later",
+                    &comment("later"),
+                    now + TimeDelta::seconds(61)
+                )
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn repeated_device_tokens_cannot_allocate_more_rows() {
+        let store = store().await;
+        bind(
+            &store,
+            "device",
+            "space",
+            Some("owner"),
+            &PushPreferences::default(),
+        )
+        .await;
+        let result = store
+            .create_installation(NewInstallation {
+                id: "duplicate",
+                app_id: "space",
+                apns_environment: ApnsEnvironment::Production,
+                token_hash: &crate::crypto::credential_hash("device"),
+                token_ciphertext: "ciphertext",
+                secret_hash: &"c".repeat(64),
+            })
+            .await;
+        assert!(result.is_err());
+        assert!(
+            store
+                .find_installation("duplicate")
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }

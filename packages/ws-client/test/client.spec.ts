@@ -118,7 +118,7 @@ describe('createWsClient', () => {
 
     const client = createWsClient({
       url: `ws://127.0.0.1:${port}`,
-      query: { token: 'abc', room: '1' },
+      query: { trace: 'abc', room: '1' },
       webSocketImpl: NodeWebSocket as unknown as typeof WebSocket,
       pingIntervalMs: 60_000,
     })
@@ -127,7 +127,7 @@ describe('createWsClient', () => {
     })
 
     const url = await requestUrl
-    expect(url).toContain('token=abc')
+    expect(url).toContain('trace=abc')
     expect(url).toContain('room=1')
   })
 

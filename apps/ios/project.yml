@@ -43,8 +43,6 @@ targets:
             UIWindowSceneSessionRoleApplication:
               - UISceneConfigurationName: Default Configuration
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
-        NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
         SpacePushRelayURL: $(SPACE_PUSH_RELAY_URL)
         SpacePushAppID: $(SPACE_PUSH_APP_ID)
         SpaceAPNsEnvironment: $(SPACE_APNS_ENVIRONMENT)

@@ -4,53 +4,39 @@ import type {
   NestInterceptor,
 } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
-import { isNotNil } from 'es-toolkit'
-import { cloneDeep, isArrayLike, isObjectLike } from 'es-toolkit/compat'
 import { map } from 'rxjs'
 
 import { getNestExecutionContextRequest } from '~/transformers/get-req.transformer'
 import { getAvatar } from '~/utils/tool.util'
 
+import { CommentViews } from './comment.views'
+
 @Injectable()
 export class CommentFilterEmailInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = this.getRequest(context)
-    // Already authenticated — skip filtering
-    const isAuthenticated = request.user
-    if (isAuthenticated) {
-      return next.handle()
+    if (request.hasAdminAccess ?? request.isAuthenticated) return next.handle()
+    return next.handle().pipe(map((data) => this.projectPublic(data)))
+  }
+
+  private projectPublic(value: any): any {
+    if (!value || typeof value !== 'object' || value instanceof Date)
+      return value
+    if (Array.isArray(value))
+      return value.map((item) => this.projectPublic(item))
+    if ('id' in value && 'text' in value && 'refType' in value) {
+      return CommentViews.public.parse({
+        ...value,
+        avatar: value.avatar || (value.mail ? getAvatar(value.mail) : null),
+        replies: value.replies?.map((item: any) => this.projectPublic(item)),
+        children: value.children?.map((item: any) => this.projectPublic(item)),
+        parent: value.parent,
+      })
     }
-    return next.handle().pipe(
-      map(function handle(data: any) {
-        if (!data) {
-          return data
-        }
-        try {
-          if (isArrayLike(data?.data)) {
-            data?.data?.forEach((item: any, i: number) => {
-              if (isNotNil(item.mail)) {
-                data.data[i].avatar = getAvatar(item.mail)
-                delete data.data[i].mail
-              }
-              if (item.replies) {
-                handle({ data: data.data[i].replies })
-              }
-            })
-          }
-
-          if (isObjectLike(data)) {
-            Reflect.deleteProperty(data, 'mail')
-          }
-
-          return cloneDeep(data)
-        } catch (error) {
-          if (isDev) {
-            console.error(error)
-          }
-          return cloneDeep(data)
-        }
-      }),
-    )
+    // Keep the explicit-envelope symbol and pagination metadata intact.
+    for (const key of Object.keys(value))
+      value[key] = this.projectPublic(value[key])
+    return value
   }
 
   get getRequest() {

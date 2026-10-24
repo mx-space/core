@@ -199,15 +199,14 @@ export class NoteController {
     const { password, single: isSingle } = query
     const visibleOnly = !isAuthenticated
 
+    if (!isAuthenticated && this.noteService.checkNoteIsSecret(current)) {
+      throw createAppException(AppErrorCode.NOTE_NOT_FOUND)
+    }
+
     if (!isAuthenticated) {
       current.location = null
       current.coordinates = null
     }
-
-    current.text =
-      !isAuthenticated && this.noteService.checkNoteIsSecret(current)
-        ? ''
-        : current.text
 
     if (
       !(await this.noteService.checkPasswordToAccess(current.id, password)) &&
@@ -456,11 +455,17 @@ export class NoteController {
       throw createAppException(AppErrorCode.NOTE_NOT_FOUND, { id })
     }
 
-    if (!isAuthenticated && !current.isPublished) {
+    if (
+      !isAuthenticated &&
+      (!current.isPublished || this.noteService.checkNoteIsSecret(current))
+    ) {
       throw createAppException(AppErrorCode.NOTE_NOT_FOUND, { id })
     }
 
     if (!isAuthenticated) {
+      if (!(await this.noteService.checkPasswordToAccess(id))) {
+        throw createAppException(AppErrorCode.NOTE_FORBIDDEN)
+      }
       current.location = null
       current.coordinates = null
     }
@@ -515,7 +520,13 @@ export class NoteController {
     const { id } = params
 
     const currentDocument = await this.noteService.findById(id)
-    if (!currentDocument) {
+    if (
+      !currentDocument ||
+      (!isAuthenticated &&
+        (!currentDocument.isPublished ||
+          currentDocument.hasPassword ||
+          this.noteService.checkNoteIsSecret(currentDocument)))
+    ) {
       return withMeta([], new MetaObjectBuilder().view('card').build())
     }
 

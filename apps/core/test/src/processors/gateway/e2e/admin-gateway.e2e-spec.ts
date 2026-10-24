@@ -71,18 +71,36 @@ describe('AdminEventsGateway e2e', () => {
     }
   })
 
-  it('connects via a valid query token', async () => {
+  it('rejects reusable credentials in URL queries', async () => {
     testApp.authService.verifyApiKey.mockResolvedValueOnce({
-      referenceId: 'reader-2',
+      id: 'key-id',
+      referenceId: 'owner',
     })
     testApp.authService.isOwnerReaderId.mockResolvedValueOnce(true)
-
     const client = await WsTestClient.connect(
       testApp.adminUrl('token=valid-query-token'),
     )
     try {
+      expect((await client.waitForClose()).code).toBe(4401)
+    } finally {
+      await client.closeAndWait()
+      testApp.authService.verifyApiKey.mockReset()
+      testApp.authService.isOwnerReaderId.mockReset()
+    }
+  })
+
+  it('closes established admin sockets when owner roles change', async () => {
+    testApp.authService.getSessionUserFromHeaders.mockResolvedValueOnce({
+      user: { id: 'owner', role: 'owner' },
+      session: { token: 'role-token' },
+    })
+    const client = await WsTestClient.connect(testApp.adminUrl(), {
+      headers: { cookie: 'session=owner' },
+    })
+    try {
       await client.waitFor((e) => e.event === BusinessEvents.GATEWAY_CONNECT)
-      await assertLiveConnection(client)
+      testApp.eventEmitter.emit('auth.owner-roles-changed')
+      expect((await client.waitForClose()).code).toBe(4401)
     } finally {
       await client.closeAndWait()
     }

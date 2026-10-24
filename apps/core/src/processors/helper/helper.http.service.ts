@@ -3,7 +3,7 @@ import { inspect } from 'node:util'
 import { Injectable, Logger } from '@nestjs/common'
 import { $Fetch, createFetch, FetchOptions } from 'ofetch'
 import pc from 'picocolors'
-import { Agent } from 'undici'
+import { Agent, fetch } from 'undici'
 
 import { DEBUG_MODE } from '~/app.config'
 import { isDev } from '~/global/env.global'
@@ -85,7 +85,10 @@ body: ${this.prettyStringify(ctx.options.body)}`,
       },
     }
 
-    return createFetch({ defaults })
+    return createFetch({
+      defaults,
+      fetch: fetch as unknown as typeof globalThis.fetch,
+    })
   }
 
   private prettyStringify(data: unknown) {

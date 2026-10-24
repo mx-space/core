@@ -43,3 +43,16 @@ describe('BackupService path validation', () => {
     expect(rm).not.toHaveBeenCalled()
   })
 })
+
+it('rejects a ZIP with too many expanded entries before extraction', async () => {
+  const JSZip = (await import('jszip')).default
+  const zip = new JSZip()
+  for (let i = 0; i < 10001; i++) zip.file(`entry-${i}`, '')
+  const service = new BackupService({} as any, {} as any, {} as any)
+  await expect(
+    (service as any).safeUnzip(
+      await zip.generateAsync({ type: 'nodebuffer' }),
+      '/tmp/mx-security-archive-limit',
+    ),
+  ).rejects.toThrow(/entries|limit/i)
+})

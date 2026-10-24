@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import { Worker } from 'node:worker_threads'
 
 import type {
@@ -76,6 +77,9 @@ export class SandboxService {
   private options: Required<SandboxServiceOptions>
   private workerCode = sandboxWorkerCode
   private initialized = false
+  private initialization?: Promise<void>
+  private creatingWorkers = 0
+  private waitingExecutions = 0
   private idleCleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor(options: SandboxServiceOptions) {
@@ -92,6 +96,12 @@ export class SandboxService {
   async initialize(): Promise<void> {
     if (this.initialized) return
 
+    if (this.initialization) return this.initialization
+    this.initialization = this.initializePool()
+    return this.initialization
+  }
+
+  private async initializePool(): Promise<void> {
     // Create the minimum number of Workers
     const initPromises: Promise<void>[] = []
     for (let i = 0; i < this.options.minWorkers; i++) {
@@ -153,6 +163,7 @@ export class SandboxService {
         eval: true,
         workerData: {
           requireBasePath: this.options.requireBasePath,
+          undiciPath: createRequire(import.meta.url).resolve('undici'),
         },
         // Cap each Worker's resource usage so it does not impact the main process
         resourceLimits: {
@@ -281,28 +292,53 @@ export class SandboxService {
     }
   }
 
-  private async getAvailableWorker(): Promise<PooledWorker> {
-    let worker = this.workers.find((w) => !w.busy)
-
-    if (!worker && this.workers.length < this.options.maxWorkers) {
-      worker = await this.createWorker()
-      this.workers.push(worker)
+  private async getAvailableWorker(timeout: number): Promise<PooledWorker> {
+    const reserve = () => {
+      const worker = this.workers.find((w) => !w.busy && !w.terminating)
+      if (worker) worker.busy = true
+      return worker
     }
-
-    if (!worker) {
-      await new Promise<void>((resolve) => {
-        const checkInterval = setInterval(() => {
-          const available = this.workers.find((w) => !w.busy)
-          if (available) {
-            clearInterval(checkInterval)
-            resolve()
+    const available = reserve()
+    if (available) return available
+    if (this.workers.length + this.creatingWorkers < this.options.maxWorkers) {
+      this.creatingWorkers++
+      try {
+        const worker = await this.createWorker()
+        worker.busy = true
+        this.workers.push(worker)
+        return worker
+      } finally {
+        this.creatingWorkers--
+      }
+    }
+    if (this.waitingExecutions >= this.options.maxWorkers * 4) {
+      throw new Error('Sandbox capacity exhausted')
+    }
+    this.waitingExecutions++
+    try {
+      return await new Promise<PooledWorker>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          clearInterval(poll)
+          reject(new Error('Sandbox capacity wait timeout'))
+        }, timeout)
+        const poll = setInterval(() => {
+          if (!this.initialized) {
+            clearInterval(poll)
+            clearTimeout(timer)
+            reject(new Error('Sandbox shut down'))
+            return
           }
-        }, 100)
+          const worker = reserve()
+          if (worker) {
+            clearInterval(poll)
+            clearTimeout(timer)
+            resolve(worker)
+          }
+        }, 10)
       })
-      worker = this.workers.find((w) => !w.busy)!
+    } finally {
+      this.waitingExecutions--
     }
-
-    return worker
   }
 
   async execute(
@@ -317,11 +353,12 @@ export class SandboxService {
       await this.initialize()
     }
 
-    const pooledWorker = await this.getAvailableWorker()
-    pooledWorker.busy = true
+    const started = Date.now()
+    const requestedTimeout = options?.timeout ?? this.options.defaultTimeout
+    const pooledWorker = await this.getAvailableWorker(requestedTimeout)
 
     const id = generateId()
-    const timeout = options?.timeout ?? this.options.defaultTimeout
+    const timeout = Math.max(1, requestedTimeout - (Date.now() - started))
     const namespace =
       options?.namespace ?? `${context.model.reference}/${context.model.name}`
 
@@ -376,6 +413,7 @@ export class SandboxService {
     this.workers = []
     this.pendingExecutions.clear()
     this.initialized = false
+    this.initialization = undefined
   }
 
   getStats(): {

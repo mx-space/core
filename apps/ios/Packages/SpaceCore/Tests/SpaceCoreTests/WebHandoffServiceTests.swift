@@ -13,11 +13,11 @@ import Testing
             ),
         ])
         let client = Client(
-            serverURL: URL(string: "http://127.0.0.1:2444/api/v3")!,
+            serverURL: URL(string: "https://127.0.0.1:2444/api/v3")!,
             configuration: SpaceClient.configuration,
             transport: transport
         )
-        let endpoint = try ServerEndpoint(baseURL: URL(string: "http://127.0.0.1:2444")!)
+        let endpoint = try ServerEndpoint(baseURL: URL(string: "https://127.0.0.1:2444")!)
         let service = WebHandoffService(client: client, endpoint: endpoint)
 
         let url = try await service.makeURL(for: .comments)

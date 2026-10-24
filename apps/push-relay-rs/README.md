@@ -10,6 +10,7 @@ on a dedicated thread, with foreign keys enabled and WAL journaling.
 export PUSH_RELAY_DATABASE_PATH=./push-relay.sqlite3
 export PUSH_RELAY_PUBLIC_URL=http://localhost:8787
 export PUSH_RELAY_DATA_KEY="$(openssl rand -hex 32)"
+export PUSH_RELAY_ENROLLMENT_TOKEN="$(openssl rand -hex 32)"
 export PUSH_RELAY_APPS_JSON='[{"id":"space","bundleId":"your.bundle.id","teamId":"YOUR_TEAM","keyId":"YOUR_KEY","privateKeyPath":"/path/to/AuthKey.p8"}]'
 cargo run --release -- migrate
 cargo run --release
@@ -45,6 +46,33 @@ Run only one relay process per database file. Pending and scheduled retries
 survive restarts; interrupted `processing` deliveries are requeued on startup.
 Delivery remains at least once: a crash after APNs accepts a message but before
 the result is saved may cause that notification to be sent again.
+
+## Enrollment and admission limits
+
+Set the same secret (32–256 characters) as `PUSH_RELAY_ENROLLMENT_TOKEN` on
+Relay and `MX_PUSH_RELAY_ENROLLMENT_TOKEN` on each approved Core. It authorizes
+the first source claim. When it is unset, new sources are refused; existing
+sources continue using their source credentials. Keep this operator secret
+out of client applications. Deploy Relay and Core together.
+
+Space administrative bindings now require Core to attest owner authority.
+Migration `0003_binding_owner_authorization.sql` leaves old bindings without
+that grant. Reactivate Space push from a newly paired owner session after
+upgrading. Yohaku reader/public subscription bindings remain available.
+
+Registration rejects active duplicate app/environment/token combinations and
+caps token encodings at 256 bytes. Storage is bounded at 100,000 installations,
+1,000 new installations per hour, 10,000 sources, 100,000 bindings, 1,000
+bindings per source, and 32 per installation. Unbound installations expire
+after a day; expired activation tickets are removed and each installation
+can retain at most ten tickets.
+
+Events are admitted atomically: 60 per source per minute, 1,000 per source
+per day, and 10,000 globally per day. Pending deliveries are capped at 10,000
+and daily fanout at 100,000. Budget failures return HTTP 429; retries of an
+already accepted event remain idempotent. Events and their deliveries expire
+after 30 days when new events are accepted. These are fixed safety ceilings;
+review capacity before changing them.
 
 ## Upgrading from PostgreSQL
 
