@@ -1,29 +1,29 @@
 ## TL;DR
 
-This release adds Steps-aware AI and reusable Admin components, improves editing reliability, and strengthens privacy, subscription confirmation, and resource safeguards.
+The write-page AI agent now runs on the server with mid-run steering and visible usage, and LobeHub Cloud joins as an AI provider.
 
 ## Highlights
 
-Steps blocks now participate in AI translation, document context, and search text, including their titles and nested content. The bundled Admin adds a catalog for managing, previewing, and inserting reusable dynamic components, and the write agent can register components for later use. Nested editor updates also reach the parent document reliably without marking unchanged content as edited.
+The write-page AI agent now runs its tool loop on the server and talks to the editor over the admin WebSocket. Article search and reading happen server-side, while editor edits stay in the browser for review. You can send a new message while the agent is working and it picks the message up before its next step, instead of waiting for the run to end.
 
-Public responses now protect comment contact information and restricted notes more consistently. Email subscription requests require the recipient to confirm before preferences change. Outbound requests, browser access, backup extraction, uploads, and sandbox execution have tighter access and resource boundaries, reducing the impact of untrusted URLs, oversized responses, and competing work.
+Proposals from the agent are now cumulative: a newer edit replaces earlier unreviewed suggestions rather than piling up conflicting batches, and the agent sees your accepts and rejects as document changes. Each agent reply shows its token usage, prompt cache hit rate, and cost. Conversation history is stored so replayed tool calls keep their exact form, which keeps the provider prompt cache hit across turns.
+
+LobeHub Cloud can be added under Settings → AI as an aggregated provider. Sign in through a device-code flow, pick a default model, and see per-model input, output, and cache pricing. Usage statistics record the cost LobeHub reports and count cache reads and writes separately.
 
 ## Changes
 
 ### Features
+- The write-page agent runs on the server over WebSocket, with steering, cumulative proposals, and a single active run per conversation ([2939e48](https://github.com/mx-space/core/commit/2939e48d177977ac3351d0df5144954d515a9221))
+- Agent replies show token usage, cache hit rate, and cost, with tighter Markdown typography ([2939e48](https://github.com/mx-space/core/commit/2939e48d177977ac3351d0df5144954d515a9221))
+- LobeHub Cloud provider with device-flow sign-in, model pricing, and cost-aware usage statistics ([b0878bb](https://github.com/mx-space/core/commit/b0878bb3caf420a480a47665fea19789d70f8081))
 
-- Translate Steps titles and nested step content, and include Steps in AI document context and search text. ([b5f7db3](https://github.com/mx-space/core/commit/b5f7db3093a16d17071119e2ea49ea8efd1529c7), [c06c1a5](https://github.com/mx-space/core/commit/c06c1a5b46c316531b490defab21a075096fd957))
-- Manage, preview, edit, and insert reusable dynamic components from the bundled Admin catalog. ([5821f42](https://github.com/mx-space/core/commit/5821f427844419e676549a7ce82dee7a785b099a))
-- Let the Admin write agent register reusable components in the catalog. ([a86f9d4](https://github.com/mx-space/core/commit/a86f9d4fb9b1c8e7b54352ff984dc64eaba21202))
+### Other
+- Dynamic components inside the admin editor no longer inherit the editor's text wrapping styles (`@haklex/*` 0.54.4) ([b55f0dc](https://github.com/mx-space/core/commit/b55f0dc5ac112924f92333689e48a081d3e72fbe))
 
-### Bug Fixes
+## Upgrade Notes
 
-- Protect comment contact details, restricted notes, push activation, and authenticated WebSocket access. ([#2858](https://github.com/mx-space/core/pull/2858))
-- Require email confirmation before applying subscription preferences, and generate confirmation and unsubscribe links with the API route prefix. ([#2858](https://github.com/mx-space/core/pull/2858))
-- Bound outbound responses, browser network access, backup extraction, upload concurrency, and sandbox capacity. ([#2858](https://github.com/mx-space/core/pull/2858))
-- Preserve spaces beside inline strikethrough tags, propagate nested editor changes immediately, and avoid false edits when opening nested lists. ([fe194e2](https://github.com/mx-space/core/commit/fe194e2a22ea7040614d96e3dd9d48cca8728ad5), [4fedcbe](https://github.com/mx-space/core/commit/4fedcbed257b1247d4e2952d8afc00e1c3d69f33), [c6cb493](https://github.com/mx-space/core/commit/c6cb493725e594d263effec10aeb177895a9773e))
-- Keep text readable in Admin modals, drawers, and bottom sheets by inheriting the surface foreground color. ([038657b](https://github.com/mx-space/core/commit/038657b8c995cff0cd769ef7ed16dd209a4aea2f))
+This release adds migration `0042_agent_transcript` (a nullable `transcript` column on `ai_agent_conversations`). Run the `mx-migrate` step before starting the new image, as with any schema release.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v15.1.0...v15.2.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v15.2.0...v15.3.0

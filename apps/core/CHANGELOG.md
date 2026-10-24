@@ -1,3 +1,10 @@
+## [15.3.0](https://github.com/mx-space/core/compare/v15.2.0...v15.3.0) (2026-10-25)
+
+### Features
+
+* **ai:** integrate LobeHub Cloud device flow and pricing ([b0878bb](https://github.com/mx-space/core/commit/b0878bb3caf420a480a47665fea19789d70f8081))
+* **ai:** run write agent loop on the server over WebSocket ([2939e48](https://github.com/mx-space/core/commit/2939e48d177977ac3351d0df5144954d515a9221))
+
 ## [15.2.0](https://github.com/mx-space/core/compare/v15.1.0...v15.2.0) (2026-10-24)
 
 ### Bug Fixes
