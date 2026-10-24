@@ -1,3 +1,14 @@
+## [15.2.0](https://github.com/mx-space/core/compare/v15.1.0...v15.2.0) (2026-10-24)
+
+### Bug Fixes
+
+* **ai:** include steps in document context and search text ([c06c1a5](https://github.com/mx-space/core/commit/c06c1a5b46c316531b490defab21a075096fd957))
+* **security:** harden access and resource boundaries ([#2858](https://github.com/mx-space/core/pull/2858)) ([1e5978d](https://github.com/mx-space/core/commit/1e5978db555278d9ff2aa1e487bd41df5b654e81))
+
+### Features
+
+* **ai:** translate steps titles and nested step content ([b5f7db3](https://github.com/mx-space/core/commit/b5f7db3093a16d17071119e2ea49ea8efd1529c7))
+
 ## [15.1.0](https://github.com/mx-space/core/compare/v15.0.1...v15.1.0) (2026-10-23)
 
 ### Features

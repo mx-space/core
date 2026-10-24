@@ -1,29 +1,29 @@
 ## TL;DR
 
-This release introduces guided onboarding, restores encrypted backups during setup, and improves translation language handling for regional targets.
+This release adds Steps-aware AI and reusable Admin components, improves editing reliability, and strengthens privacy, subscription confirmation, and resource safeguards.
 
 ## Highlights
 
-New installations now follow a guided setup flow covering the administrator account, site details, AI providers, model assignments, and feature languages. Progress can be resumed, saved settings stay consistent when revisiting steps, and the setup and sign-in screens use the dashboard's shared design system.
+Steps blocks now participate in AI translation, document context, and search text, including their titles and nested content. The bundled Admin adds a catalog for managing, previewing, and inserting reusable dynamic components, and the write agent can register components for later use. Nested editor updates also reach the parent document reliably without marking unchanged content as edited.
 
-Encrypted `.mxbackup` files can now be restored during initial setup using the same recovery-key workflow as the backup settings page. Incorrect keys keep the dialog open for a retry, recovery keys can be imported from a file, and older ZIP archives remain supported. Translation prompts also use region-specific language names when regional targets are supplied.
+Public responses now protect comment contact information and restricted notes more consistently. Email subscription requests require the recipient to confirm before preferences change. Outbound requests, browser access, backup extraction, uploads, and sandbox execution have tighter access and resource boundaries, reducing the impact of untrusted URLs, oversized responses, and competing work.
 
 ## Changes
 
 ### Features
 
-- Set up a new instance through guided account, site, AI provider, model, and feature steps. ([a9988f2](https://github.com/mx-space/core/commit/a9988f2a3))
+- Translate Steps titles and nested step content, and include Steps in AI document context and search text. ([b5f7db3](https://github.com/mx-space/core/commit/b5f7db3093a16d17071119e2ea49ea8efd1529c7), [c06c1a5](https://github.com/mx-space/core/commit/c06c1a5b46c316531b490defab21a075096fd957))
+- Manage, preview, edit, and insert reusable dynamic components from the bundled Admin catalog. ([5821f42](https://github.com/mx-space/core/commit/5821f427844419e676549a7ce82dee7a785b099a))
+- Let the Admin write agent register reusable components in the catalog. ([a86f9d4](https://github.com/mx-space/core/commit/a86f9d4fb9b1c8e7b54352ff984dc64eaba21202))
 
 ### Bug Fixes
 
-- Restore encrypted backups during initial setup, with recovery-key import and retry support shared with the backup settings page. ([#2856](https://github.com/mx-space/core/issues/2856))
-- Resume setup reliably and preserve saved account and site settings when revisiting earlier steps. ([9930478](https://github.com/mx-space/core/commit/993047805))
-- Handle onboarding edge cases and clarify setup instructions. ([c0a81f1](https://github.com/mx-space/core/commit/c0a81f143))
-
-### Other
-
-- Use regional language names such as Traditional Chinese and Brazilian Portuguese for translation targets, with base-language fallback. ([#2857](https://github.com/mx-space/core/pull/2857))
+- Protect comment contact details, restricted notes, push activation, and authenticated WebSocket access. ([#2858](https://github.com/mx-space/core/pull/2858))
+- Require email confirmation before applying subscription preferences, and generate confirmation and unsubscribe links with the API route prefix. ([#2858](https://github.com/mx-space/core/pull/2858))
+- Bound outbound responses, browser network access, backup extraction, upload concurrency, and sandbox capacity. ([#2858](https://github.com/mx-space/core/pull/2858))
+- Preserve spaces beside inline strikethrough tags, propagate nested editor changes immediately, and avoid false edits when opening nested lists. ([fe194e2](https://github.com/mx-space/core/commit/fe194e2a22ea7040614d96e3dd9d48cca8728ad5), [4fedcbe](https://github.com/mx-space/core/commit/4fedcbed257b1247d4e2952d8afc00e1c3d69f33), [c6cb493](https://github.com/mx-space/core/commit/c6cb493725e594d263effec10aeb177895a9773e))
+- Keep text readable in Admin modals, drawers, and bottom sheets by inheriting the surface foreground color. ([038657b](https://github.com/mx-space/core/commit/038657b8c995cff0cd769ef7ed16dd209a4aea2f))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v15.0.1...v15.1.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v15.1.0...v15.2.0
