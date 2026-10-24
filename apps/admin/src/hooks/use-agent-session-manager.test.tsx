@@ -84,3 +84,68 @@ it('persists tool results that arrive before conversation creation completes', a
     act(() => root.unmount())
   }
 })
+
+function renderManager(sessionId: string | undefined) {
+  const store = createAgentStore()
+  const api: { current?: ReturnType<typeof useAgentSessionManager> } = {}
+  function Harness() {
+    api.current = useAgentSessionManager({
+      store,
+      sessionId,
+      abort: () => {},
+      getModel: () => 'test',
+      getProviderId: () => 'test',
+    })
+    return null
+  }
+  const container = document.createElement('div')
+  const root = createRoot(container)
+  return { api, root, store, render: () => root.render(<Harness />) }
+}
+
+it('ensureConversation joins the creation started by the first bubble', async () => {
+  mocks.create.mockReset()
+  mocks.list.mockResolvedValue([])
+  mocks.replace.mockResolvedValue(null)
+  let finish!: (value: unknown) => void
+  mocks.create.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+  )
+  const { api, root, store, render } = renderManager('post:1')
+  try {
+    await act(async () => render())
+    act(() => {
+      store.setState({ bubbles: [{ type: 'user', content: 'hi' }] })
+    })
+    const ensured = api.current!.ensureConversation()
+    await act(async () => {
+      finish({
+        id: 'conv-1',
+        sessionId: 'post:1',
+        title: null,
+        createdAt: '',
+        updatedAt: '',
+      })
+    })
+
+    await expect(ensured).resolves.toBe('conv-1')
+    expect(mocks.create).toHaveBeenCalledTimes(1)
+  } finally {
+    act(() => root.unmount())
+  }
+})
+
+it('ensureConversation returns null for a document without a session id', async () => {
+  mocks.create.mockReset()
+  const { api, root, render } = renderManager(undefined)
+  try {
+    await act(async () => render())
+    await expect(api.current!.ensureConversation()).resolves.toBeNull()
+    expect(mocks.create).not.toHaveBeenCalled()
+  } finally {
+    act(() => root.unmount())
+  }
+})

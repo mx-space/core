@@ -19,7 +19,7 @@ import { PostService } from './post.service'
   imports: [
     SlugTrackerModule,
     DraftModule,
-    AiModule,
+    forwardRef(() => AiModule),
     EnrichmentModule,
     SnippetModule,
     MembershipModule,

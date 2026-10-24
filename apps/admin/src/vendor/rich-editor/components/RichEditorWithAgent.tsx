@@ -1,9 +1,7 @@
 import type {
-  AgentExecutorPlugin,
   AgentStore,
   AgentToolConfig,
   ChatMessage,
-  LLMProvider,
 } from '@haklex/rich-agent-core'
 import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
 import type { LexicalEditor, SerializedEditorState } from 'lexical'
@@ -17,8 +15,8 @@ import {
 } from 'react'
 
 import type {
-  AgentLitexmlRegistryProvider,
   AgentLoopHandle,
+  AgentRuntime,
   SaveExcalidrawSnapshot,
 } from '../types'
 import type { BuildRichEditorPropsInput } from '../utils/build-rich-editor-props'
@@ -35,16 +33,12 @@ export interface RichEditorWithAgentProps extends BuildRichEditorPropsInput {
   onPinSelection?: () => void
   onSubmit?: () => void
   onTextChange?: (text: string) => void
-  provider: LLMProvider | null
+  agentRuntime: AgentRuntime | null
   saveExcalidrawSnapshot: SaveExcalidrawSnapshot
   store: AgentStore
-  injectDocumentXml?: boolean
-  litexmlRegistry?: AgentLitexmlRegistryProvider
-  plugins?: AgentExecutorPlugin[]
   systemMessages?: ChatMessage[]
   theme: 'dark' | 'light'
   tools?: AgentToolConfig[]
-  toolSystemRole?: string | false
 }
 
 export interface RichEditorWithAgentRef {
@@ -139,20 +133,16 @@ export const RichEditorWithAgent = forwardRef<
       editorProps={editorProps}
       fetchEnrichment={props.fetchEnrichment}
       key={editorKey}
-      injectDocumentXml={props.injectDocumentXml}
       onAgentLoopReady={handleAgentLoopReady}
       onChange={handleChange}
       onEditorReady={handleEditorReady}
       onPinSelection={props.onPinSelection}
       onSubmit={handleSubmit}
-      plugins={props.plugins}
-      provider={props.provider}
+      agentRuntime={props.agentRuntime}
       saveExcalidrawSnapshot={props.saveExcalidrawSnapshot}
       store={props.store}
       systemMessages={props.systemMessages}
       tools={props.tools}
-      toolSystemRole={props.toolSystemRole}
-      litexmlRegistry={props.litexmlRegistry}
     />
   )
 })

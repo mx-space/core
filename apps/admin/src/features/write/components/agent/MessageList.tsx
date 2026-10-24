@@ -70,7 +70,7 @@ export function MessageList(props: MessageListProps) {
           {t('write.agent.empty')}
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {orderedBubbles.map(({ bubble, index }) => (
             <div key={getAgentBubbleKey(bubble, index)} className="space-y-2">
               <AgentMessageItem

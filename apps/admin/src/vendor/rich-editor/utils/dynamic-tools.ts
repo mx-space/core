@@ -113,7 +113,7 @@ export function buildDynamicTools(
       name: DYNAMIC_PREVIEW_TOOL,
       description: `Create or revise an interactive JS component for the user to preview in this conversation. Supply the COMPLETE source on every revision; previous versions remain available. This tool does not upload or edit the article. The user must click Upload and insert to adopt it; do not insert a temporary URL yourself.
 Adopted components join the site's component catalog and are reused across posts. Before writing a new one, check the Dynamic Component Catalog: if a listed component fits, insert it with a <dynamic> node and props instead of calling this tool. Write new components to be reusable: take every piece of post-specific content (labels, data, text) from props rather than hardcoding it, give props sensible defaults, and pass description (what it shows and when to use it) and propsSchema (a JSON Schema object whose properties describe each prop; string, enum, number, integer and boolean properties with title, description and default become a form writers fill in).
-To edit a component already in the article, first call read_dynamic_component with its blockId from the document snapshot, then pass the returned target unchanged in every revision. Adoption replaces only that block in the current draft; a new URL is created and the published article keeps the old version until republished. Never edit or overwrite an uploaded file.
+To edit a component already in the article, first call read_dynamic_component with its blockId from /doc.xml, then pass the returned target unchanged in every revision. Adoption replaces only that block in the current draft; a new URL is created and the published article keeps the old version until republished. Never edit or overwrite an uploaded file.
 Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScript, npm/bare or relative imports). Prefer native DOM, CSS and SVG. Default export: { mount(container, { props, host: { theme } }) { /* render inside container */ return { update(input) { /* optional: props/theme changes */ }, unmount() { /* remove listeners, timers, animation frames and DOM */ } } }. mount is synchronous. Put styles INSIDE container: it lives in a Shadow DOM for CSS isolation. Do not modify document/head/body, use global CSS, or rely on admin libraries. Support light/dark theme and responsive width. Include accessible control labels. To fix an error or change the design, call this tool again with revised complete source.`,
       parameters: {
         type: 'object',
@@ -198,7 +198,7 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
     {
       name: 'read_dynamic_component',
       description:
-        'Read the current source and immutable version target of an embedded component. Use the blockId from the document snapshot. Pass the returned target unchanged to preview_dynamic_component when revising it.',
+        'Read the current source and immutable version target of an embedded component. Use the blockId from /doc.xml. Pass the returned target unchanged to preview_dynamic_component when revising it.',
       parameters: {
         type: 'object',
         properties: { blockId: { type: 'string' } },

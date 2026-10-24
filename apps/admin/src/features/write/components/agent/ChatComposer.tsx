@@ -50,8 +50,8 @@ export function ChatComposer({
   const [isComposing, setIsComposing] = useState(false)
 
   const isRunning = status !== 'idle' && status !== 'done'
-  const canSend =
-    !isRunning && agentReady && Boolean(selectedModel) && Boolean(value.trim())
+  const hasDraft = Boolean(value.trim())
+  const canSend = agentReady && Boolean(selectedModel) && hasDraft
 
   useEffect(() => {
     if (!value) {
@@ -143,7 +143,7 @@ export function ChatComposer({
           )}
         </div>
 
-        {isRunning ? (
+        {isRunning && !hasDraft ? (
           <button
             type="button"
             aria-label={t('write.agent.aborting')}

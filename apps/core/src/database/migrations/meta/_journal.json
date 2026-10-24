@@ -295,6 +295,13 @@
       "when": 1790877150039,
       "tag": "0041_publish_ai_resources",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792900000000,
+      "tag": "0042_agent_transcript",
+      "breakpoints": true
     }
   ]
 }

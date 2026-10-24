@@ -1,3 +1,5 @@
+import './agent-markdown.css'
+
 import type {
   ChatBubble,
   ReviewBatch,
@@ -10,9 +12,10 @@ import remarkGfm from 'remark-gfm'
 import { useI18n } from '~/i18n'
 import { Button } from '~/ui/primitives/button'
 
+import { type AgentTurnUsage, describeAgentUsage } from './agent-usage'
 import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallGroupView } from './ToolCallView'
-import type { UserChatBubble } from './types'
+import type { AssistantChatBubble, UserChatBubble } from './types'
 
 const remarkPlugins = [remarkGfm]
 
@@ -35,7 +38,7 @@ export function AgentMessageItem(props: AgentMessageItemProps) {
       const selection = (bubble as UserChatBubble).selection
       return (
         <div className="flex justify-end">
-          <div className="max-w-[82%] rounded-md bg-accent-soft px-2.5 py-1.5 text-sm leading-relaxed text-fg">
+          <div className="max-w-[82%] rounded-lg bg-accent-soft px-3 py-1.5 text-sm leading-[1.75] text-fg">
             {selection && (
               <div className="mb-1 truncate border-l-2 border-border pl-2 text-xs text-fg-muted">
                 {selection.type === 'text'
@@ -54,13 +57,17 @@ export function AgentMessageItem(props: AgentMessageItemProps) {
     }
 
     case 'assistant': {
+      const { usage } = bubble as AssistantChatBubble
       return (
-        <div className="prose prose-sm max-w-none text-sm leading-relaxed text-fg dark:prose-invert">
-          <Streamdown
-            content={bubble.content}
-            granularity="char"
-            remarkPlugins={remarkPlugins}
-          />
+        <div>
+          <div className="agent-md">
+            <Streamdown
+              content={bubble.content}
+              granularity="char"
+              remarkPlugins={remarkPlugins}
+            />
+          </div>
+          {usage ? <AgentUsageLine usage={usage} /> : null}
         </div>
       )
     }
@@ -183,4 +190,38 @@ export function AgentMessageItem(props: AgentMessageItemProps) {
       return null
     }
   }
+}
+
+function AgentUsageLine({ usage }: { usage: AgentTurnUsage }) {
+  const { t } = useI18n()
+  const view = describeAgentUsage(usage)
+  const parts = [
+    t('write.agent.usage.input', { value: view.input }),
+    t('write.agent.usage.output', { value: view.output }),
+    view.hitRate
+      ? t('write.agent.usage.cacheHit', { value: view.hitRate })
+      : null,
+    view.cost,
+  ].filter((part): part is string => Boolean(part))
+
+  return (
+    <div
+      className="mt-2 flex flex-wrap items-center gap-x-1.5 text-xs tabular-nums text-fg-subtle"
+      data-agent-usage=""
+      title={t('write.agent.usage.detail', {
+        cacheRead: usage.cacheRead.toLocaleString(),
+        cacheWrite: usage.cacheWrite.toLocaleString(),
+        calls: usage.calls,
+        input: usage.input.toLocaleString(),
+        output: usage.output.toLocaleString(),
+      })}
+    >
+      {parts.map((part, index) => (
+        <span key={part} className="flex items-center gap-x-1.5">
+          {index > 0 ? <span aria-hidden="true">·</span> : null}
+          {part}
+        </span>
+      ))}
+    </div>
+  )
 }

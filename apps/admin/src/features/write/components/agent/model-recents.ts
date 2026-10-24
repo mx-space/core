@@ -1,4 +1,5 @@
 import type { ProviderModelsResponse } from '~/api/ai'
+
 import type { SelectedAgentModel } from './types'
 
 const STORAGE_KEY = 'agent-chat:recent-models'

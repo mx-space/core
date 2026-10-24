@@ -3688,6 +3688,15 @@ export const enUS = {
   'write.agent.review.summary':
     '{pending} pending · {accepted} applied · {rejected} rejected',
   'write.agent.selectModelFirst': 'Please pick an AI model first',
+  'write.agent.socketUnavailable':
+    'The live connection to the server is not ready. Try again in a moment.',
+  'write.agent.connectionLost':
+    'The connection to the server dropped and this turn was interrupted. Send it again to retry.',
+  'write.agent.usage.input': 'In {value}',
+  'write.agent.usage.output': 'Out {value}',
+  'write.agent.usage.cacheHit': 'Cache hit {value}',
+  'write.agent.usage.detail':
+    '{calls} model call(s) · input {input} (plus cache read {cacheRead}, cache write {cacheWrite}) · output {output}',
   'write.agent.selection.blocks': '{count} block(s) selected',
   'write.agent.selection.dismiss': 'Dismiss selection',
   'write.agent.session.deleteTitle': 'Delete session',

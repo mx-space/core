@@ -1,0 +1,145 @@
+.agent-md {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--color-fg);
+  overflow-wrap: anywhere;
+}
+
+.agent-md :where(p, ul, ol, blockquote, pre, table, hr) {
+  margin: 0 0 0.6em;
+}
+
+.agent-md :where(p, ul, ol, blockquote, pre, table):last-child {
+  margin-bottom: 0;
+}
+
+.agent-md :where(h1, h2, h3, h4, h5, h6) {
+  margin: 1em 0 0.4em;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.agent-md :where(h1, h2, h3) {
+  font-size: 15px;
+}
+
+.agent-md > :where(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+}
+
+.agent-md :where(strong) {
+  font-weight: 600;
+}
+
+/* CJK fonts have no true italic; browsers fake a slant that reads as broken. */
+.agent-md :where(em) {
+  font-style: normal;
+  font-weight: 500;
+}
+
+.agent-md :where(a) {
+  color: var(--color-accent);
+}
+
+.agent-md :where(a):hover {
+  text-decoration: underline;
+}
+
+.agent-md :where(ul) {
+  padding-left: 1.25em;
+  list-style: disc;
+}
+
+.agent-md :where(ol) {
+  padding-left: 1.5em;
+  list-style: decimal;
+}
+
+.agent-md :where(li ul) {
+  list-style: circle;
+}
+
+.agent-md :where(li) {
+  padding-left: 0.15em;
+}
+
+.agent-md :where(li + li) {
+  margin-top: 0.25em;
+}
+
+.agent-md :where(li > ul, li > ol) {
+  margin: 0.25em 0 0;
+}
+
+.agent-md :where(li)::marker {
+  color: var(--color-fg-subtle);
+}
+
+.agent-md :where(li:has(> input[type='checkbox'])) {
+  margin-left: -1.25em;
+  padding-left: 0;
+  list-style: none;
+}
+
+.agent-md :where(li > input[type='checkbox']) {
+  margin: 0 0.5em 0 0;
+  vertical-align: -0.1em;
+}
+
+.agent-md :where(blockquote) {
+  padding-left: 0.75em;
+  border-left: 2px solid color-mix(in srgb, var(--color-fg) 14%, transparent);
+  color: var(--color-fg-muted);
+}
+
+.agent-md :where(code) {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.agent-md :where(:not(pre) > code) {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-fg) 7%, transparent);
+}
+
+.agent-md :where(pre) {
+  overflow-x: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.agent-md :where(pre code) {
+  font-size: inherit;
+}
+
+.agent-md :where(table) {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.agent-md :where(th, td) {
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-strong);
+  text-align: left;
+}
+
+.agent-md :where(th) {
+  font-weight: 600;
+  background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+}
+
+.agent-md :where(hr) {
+  margin: 1em 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-strong);
+}

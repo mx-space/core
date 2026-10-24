@@ -127,8 +127,11 @@ export class SearchService {
     }
   }
 
-  async search(searchOption: SearchDto) {
-    return this.searchIndex(searchOption, undefined)
+  async search(
+    searchOption: SearchDto,
+    options?: { asAdmin?: boolean; refType?: SearchDocumentRefType },
+  ) {
+    return this.searchIndex(searchOption, options?.refType, options?.asAdmin)
   }
 
   async searchNote(searchOption: SearchDto) {
@@ -575,8 +578,9 @@ export class SearchService {
   private async searchIndex(
     searchOption: SearchDto,
     refType: SearchDocumentRefType | undefined,
+    asAdmin?: boolean,
   ): Promise<PaginationResult<any>> {
-    const hasAdminAccess = RequestContext.hasAdminAccess()
+    const hasAdminAccess = asAdmin ?? RequestContext.hasAdminAccess()
     const { keyword, page, size } = searchOption
     const searchTerms = this.buildSearchTerms(keyword)
     const highlightKeywordFragments =

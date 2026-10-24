@@ -102,6 +102,7 @@
     "cache-manager": "7.2.9",
     "commander": "15.0.0",
     "dayjs": "1.11.23",
+    "diff": "9.0.0",
     "diff-match-patch": "^1.0.5",
     "dodopayments": "^2.53.0",
     "dotenv": "^18.0.5",

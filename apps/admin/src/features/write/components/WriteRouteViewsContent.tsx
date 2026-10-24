@@ -1,9 +1,5 @@
 import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent/static'
-import {
-  analyzeMxMarkdown,
-  createMxLitexmlRegistry,
-  mxLexicalToMarkdown,
-} from '@mx-space/editor'
+import { analyzeMxMarkdown, mxLexicalToMarkdown } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
 import type { SerializedEditorState } from 'lexical'
@@ -5205,9 +5201,6 @@ function RichWriteSurface(props: {
       return { src: result.url }
     },
     initialValue: parseSerializedEditorState(props.content),
-    injectDocumentXml: false,
-    litexmlRegistry: createMxLitexmlRegistry,
-    plugins: [],
     systemMessages: [
       ...buildDocumentBashSystemMessages(),
       ...dynamicCatalogMessages,
@@ -5231,7 +5224,6 @@ function RichWriteSurface(props: {
         ? buildImageTools({ refId: props.refId })
         : []),
     ],
-    toolSystemRole: false,
     onAgentLoopReady: agent.onAgentLoopReady,
     onChange: (value) => {
       latestCallbacks.current.onContentChange(JSON.stringify(value))
@@ -5242,7 +5234,7 @@ function RichWriteSurface(props: {
       latestCallbacks.current.onTextChange(text)
     },
     placeholder: t('write.richEditor.placeholder'),
-    provider: agent.provider,
+    agentRuntime: agent.agentRuntime,
     saveExcalidrawSnapshot,
     store: agent.store,
     theme: getColorScheme(),

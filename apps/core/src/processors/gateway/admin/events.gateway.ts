@@ -1,4 +1,9 @@
-import type { WsEnvelope } from '@mx-space/ws-client/protocol'
+import { AgentWsEvents } from '@mx-space/ai'
+import {
+  buildEnvelope,
+  type WsAckPayload,
+  type WsEnvelope,
+} from '@mx-space/ws-client/protocol'
 import { forwardRef, Inject } from '@nestjs/common'
 import type {
   OnGatewayConnection,
@@ -17,7 +22,7 @@ import { RoomSubsService } from '~/processors/task-queue/task-queue.room-subs.se
 import { AuthService } from '../../../modules/auth/auth.service'
 import { createAuthGateway } from '../shared/auth.gateway'
 import { WsBusService } from '../ws/ws-bus.service'
-import { buildAck } from '../ws/ws-envelope'
+import { buildAck, serializeEnvelope } from '../ws/ws-envelope'
 import {
   aiAgentPayloadSchema,
   type AiTaskPayload,
@@ -25,6 +30,7 @@ import {
   WsInboundEvents,
 } from '../ws/ws-events'
 import { WsPresenceService } from '../ws/ws-presence.service'
+import { AdminWsHandlerRegistry } from './admin-ws-handler.registry'
 
 const AI_TASK_ROOM_PREFIX = 'ai-task:'
 
@@ -39,6 +45,7 @@ export class AdminEventsGateway
     @Inject(forwardRef(() => AuthService))
     protected readonly authService: AuthService,
     private readonly roomSubs: RoomSubsService,
+    private readonly handlers: AdminWsHandlerRegistry,
     bus: WsBusService,
     presence: WsPresenceService,
   ) {
@@ -54,7 +61,61 @@ export class AdminEventsGateway
       .filter((room) => room.startsWith(AI_TASK_ROOM_PREFIX))
 
     await super.handleDisconnect(ws)
+    this.handlers.notifyDisconnect(conn.id)
     await this.dropEmptyRoomSubs(aiTaskRooms, conn.id)
+  }
+
+  @SubscribeMessage(AgentWsEvents.run)
+  handleAgentRun(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(AgentWsEvents.run, envelope, ws)
+  }
+
+  @SubscribeMessage(AgentWsEvents.toolResult)
+  handleAgentToolResult(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(AgentWsEvents.toolResult, envelope, ws)
+  }
+
+  @SubscribeMessage(AgentWsEvents.cancel)
+  handleAgentCancel(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(AgentWsEvents.cancel, envelope, ws)
+  }
+
+  @SubscribeMessage(AgentWsEvents.steer)
+  handleAgentSteer(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(AgentWsEvents.steer, envelope, ws)
+  }
+
+  private async dispatchExtension(
+    event: string,
+    envelope: WsEnvelope,
+    ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    if (!conn) return ack(envelope, { ok: false, code: 'NOT_CONNECTED' })
+    const result = await this.handlers.dispatch(
+      event,
+      {
+        connectionId: conn.id,
+        send: (name, payload) => {
+          if (conn.ws.readyState !== conn.ws.OPEN) return
+          conn.ws.send(serializeEnvelope(buildEnvelope(name, payload)))
+        },
+      },
+      envelope.payload,
+    )
+    return ack(envelope, result)
   }
 
   @SubscribeMessage(WsInboundEvents.aiAgentJoin)
@@ -162,7 +223,7 @@ export class AdminEventsGateway
   }
 }
 
-function ack(envelope: WsEnvelope, payload: { ok: boolean; code?: string }) {
+function ack(envelope: WsEnvelope, payload: WsAckPayload) {
   return envelope.id ? buildAck(envelope.id, payload) : undefined
 }
 

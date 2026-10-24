@@ -1,15 +1,20 @@
 import type { AgentToolConfig, AgentToolResult } from '@haklex/rich-agent-core'
+import type { AgentFileSnapshot } from '@mx-space/ai'
 import {
   deserializeMxLitexmlToLexical,
   serializeMxLexicalToLitexml,
 } from '@mx-space/editor'
-import { Bash, type CommandName, defineCommand } from 'just-bash'
+import { Bash, type CommandName, defineCommand, InMemoryFs } from 'just-bash'
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
 
 import { diffDocumentStates } from './diff-document-states'
 
 const DOC_PATH = '/doc.xml'
 const OUTLINE_PATH = '/.meta/outline'
+const SELECTION_PATH = '/selection.xml'
+const REVIEW_PATH = '/review.xml'
+const TRACKED_PATHS = [DOC_PATH, SELECTION_PATH, OUTLINE_PATH, REVIEW_PATH]
+const ATTACHED_PATHS = new Set([SELECTION_PATH, REVIEW_PATH])
 
 const ALLOWED_COMMANDS: CommandName[] = [
   'awk',
@@ -70,11 +75,72 @@ type NodeRecord = SerializedLexicalNode & {
 
 export type DocumentBashWorkspace = {
   beginRun: () => void
+  snapshotFiles: () => AgentFileSnapshot[]
   tool: AgentToolConfig
+  touchedFiles: () => AgentFileSnapshot[]
 }
 
 export type CreateDocumentBashWorkspaceOptions = {
   getEditorState: () => SerializedEditorState | null
+  getBaseState?: () => SerializedEditorState | null
+  getSelectionXml?: () => string
+  getReviewXml?: () => string
+}
+
+class TrackingFs extends InMemoryFs {
+  touched: Set<string> | null = null
+
+  private async mark(...paths: string[]) {
+    const touched = this.touched
+    if (!touched) return
+    for (const path of paths) {
+      touched.add(path)
+      try {
+        touched.add(await this.realpath(path))
+      } catch {
+        // A destination that does not exist yet has no real path.
+      }
+    }
+  }
+
+  override async readFile(...args: Parameters<InMemoryFs['readFile']>) {
+    await this.mark(args[0])
+    return super.readFile(...args)
+  }
+
+  override async readFileBytes(
+    ...args: Parameters<InMemoryFs['readFileBytes']>
+  ) {
+    await this.mark(args[0])
+    return super.readFileBytes(...args)
+  }
+
+  override async readFileBuffer(
+    ...args: Parameters<InMemoryFs['readFileBuffer']>
+  ) {
+    await this.mark(args[0])
+    return super.readFileBuffer(...args)
+  }
+
+  override async writeFile(...args: Parameters<InMemoryFs['writeFile']>) {
+    await this.mark(args[0])
+    return super.writeFile(...args)
+  }
+
+  override async appendFile(...args: Parameters<InMemoryFs['appendFile']>) {
+    await this.mark(args[0])
+    return super.appendFile(...args)
+  }
+
+  override async cp(...args: Parameters<InMemoryFs['cp']>) {
+    await this.mark(args[0], args[1])
+    return super.cp(...args)
+  }
+
+  override async mv(...args: Parameters<InMemoryFs['mv']>) {
+    await this.mark(args[0], args[1])
+    return super.mv(...args)
+  }
 }
 
 function extractText(node: SerializedLexicalNode): string {
@@ -133,35 +199,64 @@ export function createDocumentBashWorkspace(
 ): DocumentBashWorkspace {
   let session: {
     base: SerializedEditorState
+    view: SerializedEditorState
     bash: Bash
     emittedOperations: boolean
+    fs: TrackingFs
     lastEmittedXml: string
   } | null = null
+  let lastTouched = new Set<string>()
 
   const beginRun = () => {
     session = null
+    lastTouched = new Set()
   }
+
+  const seedFiles = (editorState: SerializedEditorState) => ({
+    [DOC_PATH]: serializeMxLexicalToLitexml(editorState, { compact: false }),
+    [OUTLINE_PATH]: buildOutline(editorState),
+    [SELECTION_PATH]: options.getSelectionXml?.() ?? '',
+    [REVIEW_PATH]: options.getReviewXml?.() ?? '',
+  })
+
+  const snapshotFiles = (): AgentFileSnapshot[] => {
+    const editorState = options.getEditorState()
+    if (!editorState) return []
+    const files = seedFiles(editorState)
+    return TRACKED_PATHS.map((path) =>
+      ATTACHED_PATHS.has(path)
+        ? { attach: true, content: files[path], path }
+        : { content: files[path], path },
+    )
+  }
+
+  // Report the files as the editor now holds them, not the working copy: a
+  // write that failed to apply never reached the document, and the next
+  // turn's snapshot must match what is recorded here byte for byte.
+  const touchedFiles = () =>
+    snapshotFiles().filter((file) => lastTouched.has(file.path))
 
   const ensureSession = async () => {
     if (session) return session
     const editorState = options.getEditorState()
-    if (!editorState) return null
-    const xml = serializeMxLexicalToLitexml(editorState, { compact: false })
+    const base = options.getBaseState?.() ?? editorState
+    if (!editorState || !base) return null
+    const files = seedFiles(editorState)
+    const fs = new TrackingFs(files)
     const bash = new Bash({
       commands: ALLOWED_COMMANDS,
       cwd: '/',
       customCommands: STUB_COMMANDS.map((name) => stubCommand(name)),
-      files: {
-        [DOC_PATH]: xml,
-        [OUTLINE_PATH]: buildOutline(editorState),
-      },
+      fs,
     })
     await bash.exec('mkdir -p /tmp')
     session = {
-      base: editorState,
+      base,
       bash,
+      view: editorState,
       emittedOperations: false,
-      lastEmittedXml: xml,
+      fs,
+      lastEmittedXml: files[DOC_PATH],
     }
     return session
   }
@@ -177,6 +272,13 @@ export function createDocumentBashWorkspace(
     const xml = await current.bash.readFile(DOC_PATH)
     if (xml === current.lastEmittedXml) return {}
 
+    const rootEnd = xml.lastIndexOf('</doc>')
+    if (rootEnd !== -1 && xml.slice(rootEnd + '</doc>'.length).trim()) {
+      throw new Error(
+        `${DOC_PATH} has content after </doc>, which is outside the document and was not applied. Put new blocks before </doc>, for example: sed -i 's|</doc>|  <p>…</p>\\n</doc>|' ${DOC_PATH}`,
+      )
+    }
+
     let parsed: SerializedEditorState
     try {
       parsed = deserializeMxLitexmlToLexical(xml)
@@ -188,6 +290,8 @@ export function createDocumentBashWorkspace(
     if (!diff.ok) {
       throw new Error(diff.message)
     }
+    const viewDiff = diffDocumentStates(current.view, parsed)
+    const unchangedFromView = viewDiff.ok && viewDiff.operations.length === 0
 
     if (diff.mintedIds.length > 0) {
       const rewritten = serializeMxLexicalToLitexml(diff.nextState, {
@@ -200,13 +304,13 @@ export function createDocumentBashWorkspace(
     }
     await current.bash.writeFile(OUTLINE_PATH, buildOutline(diff.nextState))
 
-    if (diff.operations.length === 0 && !current.emittedOperations) {
+    if (unchangedFromView && !current.emittedOperations) {
       return {
         note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
       }
     }
 
-    current.emittedOperations = diff.operations.length > 0
+    current.emittedOperations = true
     return {
       operations: diff.operations,
       operationsMode: 'replace',
@@ -217,7 +321,7 @@ export function createDocumentBashWorkspace(
     name: 'bash',
     description: [
       'Execute a command in the virtual document workspace.',
-      `The article is ${DOC_PATH} (pretty LiteXML). Outline: ${OUTLINE_PATH}.`,
+      `The article is ${DOC_PATH} (pretty LiteXML). Outline: ${OUTLINE_PATH}. User selection: ${SELECTION_PATH}.`,
       'This is not a host shell. No Python or Node.',
       AVAILABLE,
     ].join(' '),
@@ -260,9 +364,19 @@ export function createDocumentBashWorkspace(
         }
       }
 
-      const execResult = await current.bash.exec(command)
+      const touched = new Set<string>()
+      current.fs.touched = touched
+      let execResult: Awaited<ReturnType<Bash['exec']>>
       try {
+        execResult = await current.bash.exec(command)
+      } finally {
+        current.fs.touched = null
+      }
+      lastTouched = new Set(TRACKED_PATHS.filter((path) => touched.has(path)))
+      try {
+        const xmlBefore = current.lastEmittedXml
         const { note, ...projection } = await projectDocument(current)
+        if (current.lastEmittedXml !== xmlBefore) lastTouched.add(REVIEW_PATH)
         const content = formatExec(execResult)
         return {
           content: note ? `${content}\n${note}`.trim() : content,
@@ -279,5 +393,5 @@ export function createDocumentBashWorkspace(
     },
   }
 
-  return { beginRun, tool }
+  return { beginRun, snapshotFiles, tool, touchedFiles }
 }

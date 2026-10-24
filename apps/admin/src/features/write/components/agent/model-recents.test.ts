@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+
 import type { ProviderModelsResponse } from '~/api/ai'
-import type { SelectedAgentModel } from './types'
 
 import {
   filterRecentModelsWithin,
@@ -9,6 +9,7 @@ import {
   toModelValue,
   writeRecentModels,
 } from './model-recents'
+import type { SelectedAgentModel } from './types'
 
 const STORAGE_KEY = 'agent-chat:recent-models'
 

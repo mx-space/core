@@ -3499,6 +3499,13 @@ export const zhCN = {
   'write.agent.review.summary':
     '待确认 {pending} · 已应用 {accepted} · 已拒绝 {rejected}',
   'write.agent.selectModelFirst': '请先选择 AI 模型',
+  'write.agent.socketUnavailable': '与服务器的实时连接未就绪，请稍后重试',
+  'write.agent.connectionLost': '与服务器的连接已断开，本轮已中断，可重新发送',
+  'write.agent.usage.input': '输入 {value}',
+  'write.agent.usage.output': '输出 {value}',
+  'write.agent.usage.cacheHit': '缓存命中 {value}',
+  'write.agent.usage.detail':
+    '{calls} 次模型调用 · 输入 {input}（另有缓存读 {cacheRead}、缓存写 {cacheWrite}）· 输出 {output}',
   'write.agent.selection.blocks': '已选 {count} 个区块',
   'write.agent.selection.dismiss': '取消选区',
   'write.agent.session.deleteTitle': '删除对话',

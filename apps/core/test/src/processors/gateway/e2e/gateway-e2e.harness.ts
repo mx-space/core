@@ -7,6 +7,7 @@ import {
   isWsEnvelope,
   type WsEnvelope,
 } from '@mx-space/ws-client/protocol'
+import type { Provider } from '@nestjs/common'
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter'
 import {
@@ -23,6 +24,7 @@ import { IdempotenceInterceptor } from '~/common/interceptors/idempotence.interc
 import { ResponseInterceptor } from '~/common/interceptors/response.interceptor'
 import { AuthService } from '~/modules/auth/auth.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { AdminWsHandlerRegistry } from '~/processors/gateway/admin/admin-ws-handler.registry'
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
@@ -89,6 +91,7 @@ export interface GatewayTestApp {
 
 export async function createGatewayApp(
   redisConn: RedisConn,
+  extraProviders: Provider[] = [],
 ): Promise<GatewayTestApp> {
   const redisClient = new IORedis(redisConn.port, redisConn.host, {
     commandTimeout: REDIS_CLIENT_OPTIONS.commandTimeout,
@@ -111,6 +114,8 @@ export async function createGatewayApp(
       { provide: APP_GUARD, useClass: RolesGuard },
       { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
       { provide: APP_INTERCEPTOR, useClass: IdempotenceInterceptor },
+      AdminWsHandlerRegistry,
+      ...extraProviders,
     ],
   })
     .overrideProvider(RedisService)

@@ -8,6 +8,7 @@
  */
 import { Global, Module } from '@nestjs/common'
 
+import { AdminWsHandlerRegistry } from './admin/admin-ws-handler.registry'
 import { AdminEventsGateway } from './admin/events.gateway'
 import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
@@ -21,6 +22,7 @@ import { WsPresenceService } from './ws/ws-presence.service'
   imports: [],
   providers: [
     AdminEventsGateway,
+    AdminWsHandlerRegistry,
     WebEventsGateway,
     SharedGateway,
 
@@ -33,6 +35,7 @@ import { WsPresenceService } from './ws/ws-presence.service'
   ],
   exports: [
     AdminEventsGateway,
+    AdminWsHandlerRegistry,
     WebEventsGateway,
     SharedGateway,
 

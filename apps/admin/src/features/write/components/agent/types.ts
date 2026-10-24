@@ -1,7 +1,13 @@
 import type { CapturedSelection, ChatBubble } from '@haklex/rich-agent-core'
 
+import type { AgentTurnUsage } from './agent-usage'
+
 export type UserChatBubble = Extract<ChatBubble, { type: 'user' }> & {
   selection?: CapturedSelection
+}
+
+export type AssistantChatBubble = Extract<ChatBubble, { type: 'assistant' }> & {
+  usage?: AgentTurnUsage
 }
 
 export interface SelectedAgentModel {

@@ -162,6 +162,10 @@ export function useAgentSessionManager({
   const isHydratingRef = useRef(false)
   const isCreatingSessionRef = useRef(false)
   const isPendingCreationRef = useRef(false)
+  const creationRef = useRef<{
+    epoch: number
+    promise: Promise<string | null>
+  } | null>(null)
   const loadSessionsRef = useRef<() => Promise<void>>(async () => {})
   const sessionIdRef = useRef(sessionId)
   const prevSessionIdRef = useRef(sessionId)
@@ -396,6 +400,47 @@ export function useAgentSessionManager({
     [syncMessages],
   )
 
+  const startCreation = useCallback(
+    (
+      currentSessionId: string,
+      messages: Record<string, unknown>[],
+      epoch: number,
+    ): Promise<string | null> => {
+      isCreatingSessionRef.current = true
+      isPendingCreationRef.current = true
+      const creation = createAgentConversation({
+        messages,
+        model: getModelRef.current(),
+        providerId: getProviderIdRef.current(),
+        sessionId: currentSessionId,
+      })
+        .then((conversation) => {
+          if (epoch !== sessionEpochRef.current) return null
+          activeSessionIdRef.current = conversation.id
+          setActiveSessionId(conversation.id)
+          isCreatingSessionRef.current = false
+          isPendingCreationRef.current = false
+          setSessions((current) => [toSessionMeta(conversation), ...current])
+          // Tool results may arrive while conversation creation is in flight.
+          syncMessages(conversation.id)
+          return conversation.id
+        })
+        .catch(() => {
+          isCreatingSessionRef.current = false
+          isPendingCreationRef.current = false
+          return null
+        })
+        .finally(() => {
+          if (creationRef.current?.promise === creation) {
+            creationRef.current = null
+          }
+        })
+      creationRef.current = { epoch, promise: creation }
+      return creation
+    },
+    [syncMessages],
+  )
+
   useEffect(() => {
     return store.subscribe((state) => {
       if (isHydratingRef.current) return
@@ -412,35 +457,32 @@ export function useAgentSessionManager({
 
       if (!activeSessionIdRef.current) {
         if (isCreatingSessionRef.current) return
-
-        isCreatingSessionRef.current = true
-        isPendingCreationRef.current = true
-        createAgentConversation({
-          messages,
-          model: getModelRef.current(),
-          providerId: getProviderIdRef.current(),
-          sessionId: currentSessionId,
-        })
-          .then((conversation) => {
-            if (epoch !== sessionEpochRef.current) return
-            activeSessionIdRef.current = conversation.id
-            setActiveSessionId(conversation.id)
-            isCreatingSessionRef.current = false
-            isPendingCreationRef.current = false
-            setSessions((current) => [toSessionMeta(conversation), ...current])
-            // Tool results may arrive while conversation creation is in flight.
-            syncMessages(conversation.id)
-          })
-          .catch(() => {
-            isCreatingSessionRef.current = false
-            isPendingCreationRef.current = false
-          })
+        void startCreation(currentSessionId, messages, epoch)
         return
       }
 
       scheduleMessagesSync(activeSessionIdRef.current)
     })
-  }, [scheduleMessagesSync, store, syncMessages])
+  }, [scheduleMessagesSync, startCreation, store])
+
+  const ensureConversation = useCallback(async (): Promise<string | null> => {
+    if (activeSessionIdRef.current) return activeSessionIdRef.current
+    const pending = creationRef.current
+    if (pending && pending.epoch === sessionEpochRef.current) {
+      return pending.promise
+    }
+    const currentSessionId = sessionIdRef.current
+    if (!currentSessionId) return null
+    const state = store.getState()
+    return startCreation(
+      currentSessionId,
+      withEmbeddedReviewState(
+        state.bubbles as unknown as Record<string, unknown>[],
+        state.reviewState,
+      ),
+      sessionEpochRef.current,
+    )
+  }, [startCreation, store])
 
   useEffect(() => {
     const previousSessionId = prevSessionIdRef.current
@@ -478,6 +520,7 @@ export function useAgentSessionManager({
     activeSessionId,
     createSession,
     deleteSession,
+    ensureConversation,
     isHydrating,
     isLoading,
     loadError,

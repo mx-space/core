@@ -1,5 +1,8 @@
-import type { LitexmlRegistryProvider } from '@haklex/rich-agent-core'
-import type { useAgentLoop } from '@haklex/rich-ext-ai-agent'
+import type {
+  AgentOperation,
+  AgentToolConfig,
+  LitexmlRegistryProvider,
+} from '@haklex/rich-agent-core'
 
 import type { RichEditorProps } from './core'
 
@@ -23,7 +26,24 @@ export type FileUpload = (
   opts?: { onProgress?: (percent: number) => void },
 ) => Promise<{ src: string }>
 
-export type AgentLoopHandle = ReturnType<typeof useAgentLoop>
+export interface AgentLoopHandle {
+  run: (userInput: string) => Promise<void>
+  steer: (userInput: string) => Promise<boolean>
+  abort: () => void
+}
+
+export interface AgentRuntimeRunRequest {
+  userInput: string
+  systemMessages: string[]
+  tools: AgentToolConfig[]
+  onOperationsChanged: (operations: AgentOperation[]) => void
+  signal: AbortSignal
+}
+
+export interface AgentRuntime {
+  run: (request: AgentRuntimeRunRequest) => Promise<void>
+  steer: (userInput: string) => Promise<boolean>
+}
 
 export type AgentLitexmlRegistryProvider = LitexmlRegistryProvider
 

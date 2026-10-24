@@ -1,3 +1,4 @@
+export * from './agent-ws'
 export * from './ai-agent-sse'
 export * from './environment'
 export * from './lang'

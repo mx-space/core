@@ -106,6 +106,35 @@ export class AiAgentConversationRepository extends BaseRepository {
     return row ? mapRow(row) : null
   }
 
+  async findWithTranscript(id: EntityId | string): Promise<{
+    messages: unknown[]
+    transcript: Record<string, unknown> | null
+  } | null> {
+    const [row] = await this.db
+      .select({
+        messages: aiAgentConversations.messages,
+        transcript: aiAgentConversations.transcript,
+      })
+      .from(aiAgentConversations)
+      .where(eq(aiAgentConversations.id, parseEntityId(id)))
+      .limit(1)
+    if (!row) return null
+    return {
+      messages: (row.messages as unknown[] | null) ?? [],
+      transcript: row.transcript ?? null,
+    }
+  }
+
+  async saveTranscript(
+    id: EntityId | string,
+    transcript: Record<string, unknown>,
+  ): Promise<void> {
+    await this.db
+      .update(aiAgentConversations)
+      .set({ transcript, updatedAt: new Date() })
+      .where(eq(aiAgentConversations.id, parseEntityId(id)))
+  }
+
   async appendMessage(
     id: EntityId | string,
     message: unknown,
