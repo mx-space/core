@@ -35,7 +35,7 @@ export default defineConfig({
       neverBundle: (id) => isThirdPartyPackageId(id),
     },
   },
-  dts: { eager: true },
+  dts: { eager: true, resolver: 'tsc' },
   format: ['cjs', 'esm'],
   onSuccess() {
     // Module augmentations for HTTPClient must live in the root entry d.ts so
