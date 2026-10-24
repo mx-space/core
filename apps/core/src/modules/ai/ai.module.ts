@@ -55,6 +55,8 @@ import { TtsVoiceCatalogService } from './ai-tts/tts-voice-catalog.service'
 import { AiSlugBackfillService } from './ai-writer/ai-slug-backfill.service'
 import { AiWriterController } from './ai-writer/ai-writer.controller'
 import { AiWriterService } from './ai-writer/ai-writer.service'
+import { LobeHubController } from './lobehub/lobehub.controller'
+import { LobeHubService } from './lobehub/lobehub.service'
 
 @Module({
   imports: [
@@ -65,6 +67,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     forwardRef(() => NoteModule),
   ],
   providers: [
+    LobeHubService,
     MultilangGenerationService,
     AiSummaryService,
     AiSummaryRepository,
@@ -107,6 +110,7 @@ import { AiWriterService } from './ai-writer/ai-writer.service'
     TtsVoiceCatalogService,
   ],
   controllers: [
+    LobeHubController,
     AiController,
     AiImageController,
     AiSummaryController,

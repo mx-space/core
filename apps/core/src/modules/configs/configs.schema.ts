@@ -797,7 +797,7 @@ const AIProviderConfigSchema = withMeta(
     type: field.plain(z.enum(AIProviderType), 'Provider type', {
       description: 'openai | openai-compatible | anthropic | openrouter',
     }),
-    apiKey: field.password(z.string().min(1), 'API Key'),
+    apiKey: field.password(z.string(), 'API Key'),
     endpoint: field.plain(z.string().optional(), 'Custom endpoint', {
       description:
         'Required for OpenAI-compatible services, e.g. https://api.deepseek.com',
@@ -847,7 +847,15 @@ const AIProviderConfigSchema = withMeta(
     ),
   }),
   { title: 'AI provider configuration', 'ui:options': { type: 'hidden' } },
-)
+).superRefine((provider, ctx) => {
+  if (provider.type !== AIProviderType.LobeHub && !provider.apiKey) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['apiKey'],
+      message: 'API Key is required',
+    })
+  }
+})
 
 const AIModelAssignmentSchema = withMeta(
   z.object({

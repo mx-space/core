@@ -24,7 +24,6 @@ import type {
   AIProviderModel,
   AIProviderType,
 } from '../../types/settings'
-import { formatAIModelPricing } from '../../utils/aiModelPricing'
 import {
   formatAIProviderLabel,
   getAIProviderKeyPlaceholder,
@@ -37,6 +36,8 @@ import {
   resolvePiProviderId,
 } from '../../utils/settings'
 import { FieldShell } from '../SettingsPrimitives'
+import { AIModelOption, openHighlightedModelPricing } from './AIModelOption'
+import { LobeHubConnection } from './LobeHubConnection'
 
 const BUILD_HASH =
   (typeof window !== 'undefined' && (window as any).version) || 'dev'
@@ -53,13 +54,15 @@ export function AIProviderDrawer(props: {
   const queryClient = useQueryClient()
   const [fetching, setFetching] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [lobeHubConnected, setLobeHubConnected] = useState(false)
   const provider = props.provider
   const decisionEnabled = provider?.type === 'typesafe'
   const textEnabled = provider?.capabilities?.text ?? true
   const matchedPreset = provider ? findAIProviderPreset(provider) : undefined
   const isGoogleVertex = provider?.type === 'google-vertex'
+  const isLobeHub = provider?.type === 'lobehub'
 
-  const showEndpoint = Boolean(provider)
+  const showEndpoint = Boolean(provider) && !isLobeHub
   const piProviderId =
     provider && textEnabled ? resolvePiProviderId(provider) : null
 
@@ -86,8 +89,9 @@ export function AIProviderDrawer(props: {
     () => mergeModelOptions(props.providerModels, registryModels),
     [props.providerModels, registryModels],
   )
-  const modelsDisabled =
-    !decisionEnabled && piProviderId === null && modelOptions.length === 0
+  const modelsDisabled = isLobeHub
+    ? !lobeHubConnected
+    : !decisionEnabled && piProviderId === null && modelOptions.length === 0
   const modelMatch = useMemo(
     () =>
       provider
@@ -96,7 +100,11 @@ export function AIProviderDrawer(props: {
     [registryModels, provider],
   )
   const showCustomTokenFields = Boolean(
-    provider && !decisionEnabled && provider.defaultModel.trim() && !modelMatch,
+    provider &&
+    !decisionEnabled &&
+    !isLobeHub &&
+    provider.defaultModel.trim() &&
+    !modelMatch,
   )
 
   const refreshModels = async () => {
@@ -168,7 +176,7 @@ export function AIProviderDrawer(props: {
             {textEnabled || decisionEnabled ? (
               <>
                 <Button
-                  disabled={fetching}
+                  disabled={fetching || (isLobeHub && !lobeHubConnected)}
                   onClick={() => void refreshModels()}
                   type="button"
                   variant="subtle"
@@ -182,7 +190,7 @@ export function AIProviderDrawer(props: {
                   {t('settings.ai.action.fetchModels')}
                 </Button>
                 <Button
-                  disabled={testing}
+                  disabled={testing || (isLobeHub && !lobeHubConnected)}
                   onClick={() => void testProvider()}
                   type="button"
                   variant="subtle"
@@ -216,58 +224,60 @@ export function AIProviderDrawer(props: {
             label={t('settings.oauth.switch.enabled')}
             onCheckedChange={(enabled) => props.onChange({ enabled })}
           />
-          <div className="space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
-            {decisionEnabled ? (
-              <p className="text-sm text-fg">
-                {t('settings.ai.capability.decision')}
-              </p>
-            ) : (
-              <>
-                <div className="text-sm font-medium text-fg">
-                  {t('settings.ai.field.capabilities')}
-                </div>
-                <FormSwitch
-                  checked={provider.capabilities?.text ?? true}
-                  label={t('settings.ai.capability.text')}
-                  onCheckedChange={(text) =>
-                    props.onChange({
-                      capabilities: {
-                        text,
-                        image: provider.capabilities?.image ?? false,
-                        speech: provider.capabilities?.speech ?? false,
-                      },
-                    })
-                  }
-                />
-                <FormSwitch
-                  checked={provider.capabilities?.image ?? false}
-                  label={t('settings.ai.capability.image')}
-                  onCheckedChange={(image) =>
-                    props.onChange({
-                      capabilities: {
-                        text: provider.capabilities?.text ?? true,
-                        image,
-                        speech: provider.capabilities?.speech ?? false,
-                      },
-                    })
-                  }
-                />
-                <FormSwitch
-                  checked={provider.capabilities?.speech ?? false}
-                  label={t('settings.ai.capability.speech')}
-                  onCheckedChange={(speech) =>
-                    props.onChange({
-                      capabilities: {
-                        text: provider.capabilities?.text ?? true,
-                        image: provider.capabilities?.image ?? false,
-                        speech,
-                      },
-                    })
-                  }
-                />
-              </>
-            )}
-          </div>
+          {!isLobeHub ? (
+            <div className="space-y-3 rounded-xl border border-neutral-200 p-3 dark:border-neutral-800">
+              {decisionEnabled ? (
+                <p className="text-sm text-fg">
+                  {t('settings.ai.capability.decision')}
+                </p>
+              ) : (
+                <>
+                  <div className="text-sm font-medium text-fg">
+                    {t('settings.ai.field.capabilities')}
+                  </div>
+                  <FormSwitch
+                    checked={provider.capabilities?.text ?? true}
+                    label={t('settings.ai.capability.text')}
+                    onCheckedChange={(text) =>
+                      props.onChange({
+                        capabilities: {
+                          text,
+                          image: provider.capabilities?.image ?? false,
+                          speech: provider.capabilities?.speech ?? false,
+                        },
+                      })
+                    }
+                  />
+                  <FormSwitch
+                    checked={provider.capabilities?.image ?? false}
+                    label={t('settings.ai.capability.image')}
+                    onCheckedChange={(image) =>
+                      props.onChange({
+                        capabilities: {
+                          text: provider.capabilities?.text ?? true,
+                          image,
+                          speech: provider.capabilities?.speech ?? false,
+                        },
+                      })
+                    }
+                  />
+                  <FormSwitch
+                    checked={provider.capabilities?.speech ?? false}
+                    label={t('settings.ai.capability.speech')}
+                    onCheckedChange={(speech) =>
+                      props.onChange({
+                        capabilities: {
+                          text: provider.capabilities?.text ?? true,
+                          image: provider.capabilities?.image ?? false,
+                          speech,
+                        },
+                      })
+                    }
+                  />
+                </>
+              )}
+            </div>
+          ) : null}
           <FieldShell label={t('settings.ai.field.providerType')}>
             <SelectField<AIProviderType>
               aria-label={t('settings.ai.field.providerType')}
@@ -284,6 +294,15 @@ export function AIProviderDrawer(props: {
                   ...(type === 'typesafe'
                     ? { endpoint: 'https://api.typesafe.ai/v1' }
                     : {}),
+                  ...(type === 'lobehub'
+                    ? {
+                        apiKey: '',
+                        endpoint: '',
+                        modelListUrl: '',
+                        voiceListUrl: '',
+                        appendV1: false,
+                      }
+                    : {}),
                 })
               }
               options={aiProviderTypeOptions.map((option) => ({
@@ -299,13 +318,30 @@ export function AIProviderDrawer(props: {
             placeholder={getAIProviderNamePlaceholder(t, provider.type)}
             value={provider.name}
           />
-          <TextInput
-            label={t('settings.ai.field.apiKey')}
-            onChange={(apiKey) => props.onChange({ apiKey })}
-            placeholder={getAIProviderKeyPlaceholder(provider.type)}
-            type="password"
-            value={provider.apiKey}
-          />
+          {isLobeHub ? (
+            <LobeHubConnection
+              key={provider.id}
+              onConnected={refreshModels}
+              onDisconnected={() => {
+                queryClient.setQueryData<Record<string, AIProviderModel[]>>(
+                  props.modelCacheKey,
+                  (current) => ({ ...current, [provider.id]: [] }),
+                )
+                void queryClient.invalidateQueries({
+                  queryKey: props.modelCacheKey,
+                })
+              }}
+              onStatusChange={setLobeHubConnected}
+            />
+          ) : (
+            <TextInput
+              label={t('settings.ai.field.apiKey')}
+              onChange={(apiKey) => props.onChange({ apiKey })}
+              placeholder={getAIProviderKeyPlaceholder(provider.type)}
+              type="password"
+              value={provider.apiKey}
+            />
+          )}
           {matchedPreset?.apiKeyUrl || matchedPreset?.websiteUrl ? (
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
               {matchedPreset.apiKeyUrl ? (
@@ -364,7 +400,10 @@ export function AIProviderDrawer(props: {
               value={provider.endpoint ?? ''}
             />
           ) : null}
-          {textEnabled && provider.type !== 'anthropic' && !isGoogleVertex ? (
+          {textEnabled &&
+          provider.type !== 'anthropic' &&
+          !isGoogleVertex &&
+          !isLobeHub ? (
             <>
               <TextInput
                 label={t('settings.ai.field.modelListUrl')}
@@ -379,7 +418,7 @@ export function AIProviderDrawer(props: {
               />
             </>
           ) : null}
-          {provider.capabilities?.speech && !isGoogleVertex ? (
+          {provider.capabilities?.speech && !isGoogleVertex && !isLobeHub ? (
             <TextInput
               label={t('settings.ai.field.voiceListUrl')}
               onChange={(voiceListUrl) => props.onChange({ voiceListUrl })}
@@ -450,6 +489,7 @@ function ModelCombobox(props: {
   value: string
 }) {
   const { t } = useI18n()
+  const [pricingModelId, setPricingModelId] = useState<string | null>(null)
   const modelIds = useMemo(
     () => props.models.map((model) => model.id),
     [props.models],
@@ -477,13 +517,34 @@ function ModelCombobox(props: {
       filter={filterModel}
       inputValue={props.value}
       items={modelIds}
-      onInputValueChange={(next) => props.onChange(next)}
+      onInputValueChange={(next) => {
+        setPricingModelId(null)
+        props.onChange(next)
+      }}
+      onItemHighlighted={(value) =>
+        setPricingModelId((current) => (current === value ? current : null))
+      }
+      onOpenChange={(open, details) => {
+        if (!open) {
+          if (details.reason === 'escape-key' && pricingModelId)
+            details.cancel()
+          setPricingModelId(null)
+        }
+      }}
       onValueChange={(next) => {
         if (typeof next === 'string') props.onChange(next)
       }}
     >
       <Combobox.Control>
-        <Combobox.Input placeholder={props.placeholder} />
+        <Combobox.Input
+          aria-description={
+            props.models.some((model) => model.pricing)
+              ? t('settings.ai.pricing.keyboardHint')
+              : undefined
+          }
+          onKeyDown={openHighlightedModelPricing}
+          placeholder={props.placeholder}
+        />
         <Combobox.Trigger aria-label="Open model list">
           {props.loading ? (
             <Loader2 aria-hidden="true" className="size-4 animate-spin" />
@@ -502,26 +563,14 @@ function ModelCombobox(props: {
           <Combobox.List>
             {(id: string) => {
               const model = modelById.get(id)
-              const name = model?.name || id
-              const pricing = formatAIModelPricing(model?.pricing, t)
               return (
-                <Combobox.Item key={id} value={id}>
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span className="min-w-0 flex-1 truncate">
-                      <span>{name}</span>
-                      {name !== id ? (
-                        <span className="ml-2 text-xs text-fg-subtle">
-                          {id}
-                        </span>
-                      ) : null}
-                    </span>
-                    {pricing ? (
-                      <span className="shrink-0 text-xs tabular-nums text-fg-muted">
-                        {pricing}
-                      </span>
-                    ) : null}
-                  </span>
-                </Combobox.Item>
+                <AIModelOption
+                  id={id}
+                  key={id}
+                  model={model}
+                  open={pricingModelId === id}
+                  onOpenChange={(open) => setPricingModelId(open ? id : null)}
+                />
               )
             }}
           </Combobox.List>

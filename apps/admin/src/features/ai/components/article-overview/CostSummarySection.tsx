@@ -1,4 +1,4 @@
-import type { AiOverviewDetail } from '~/api/ai-overview'
+import type { AiOverviewDetail, CostBucket } from '~/api/ai-overview'
 import { AI_OVERVIEW_CAPABILITIES } from '~/api/ai-overview'
 import { useI18n } from '~/i18n'
 
@@ -16,6 +16,12 @@ function formatTokens(value: number) {
 export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
   const { t } = useI18n()
   const { total, byResourceType, models } = props.cost
+  const formatCost = (bucket: CostBucket) => {
+    if (!bucket.unknownCostCount) return formatUsd(bucket.costTotalUsd)
+    return bucket.unknownCostCount >= bucket.generationCount
+      ? t('ai.metrics.costUnknown')
+      : t('ai.overview.costKnownPart', { cost: formatUsd(bucket.costTotalUsd) })
+  }
 
   const breakdown = AI_OVERVIEW_CAPABILITIES.filter(
     (capability) => byResourceType[capability]?.generationCount,
@@ -24,10 +30,7 @@ export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
   return (
     <>
       <div className="flex flex-wrap gap-x-6 gap-y-2">
-        <Stat
-          label={t('ai.overview.costTotal')}
-          value={formatUsd(total.costTotalUsd)}
-        />
+        <Stat label={t('ai.overview.costTotal')} value={formatCost(total)} />
         <Stat
           label={t('ai.overview.costTokens')}
           value={formatTokens(total.totalTokens)}
@@ -37,6 +40,11 @@ export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
           value={String(total.generationCount)}
         />
       </div>
+      {total.unknownCostCount ? (
+        <p className="mt-2 text-xs text-fg-muted">
+          {t('ai.overview.costUnknownRuns', { count: total.unknownCostCount })}
+        </p>
+      ) : null}
 
       {breakdown.length ? (
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
@@ -50,7 +58,7 @@ export function CostSummarySection(props: { cost: AiOverviewDetail['cost'] }) {
                   {t(meta.labelKey)}
                 </dt>
                 <dd className="tabular-nums text-fg">
-                  {formatUsd(byResourceType[capability].costTotalUsd)}
+                  {formatCost(byResourceType[capability])}
                   <span className="ml-2 text-fg-subtle">
                     {t('ai.overview.costRunCount', {
                       count: byResourceType[capability].generationCount,

@@ -1,5 +1,5 @@
 import { ChevronDown } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import { useI18n } from '~/i18n'
 import { Combobox } from '~/ui/primitives/combobox'
@@ -13,8 +13,8 @@ import type {
   AIProviderModel,
   AIReasoningEffort,
 } from '../../types/settings'
-import { formatAIModelPricing } from '../../utils/aiModelPricing'
 import { formatAIProviderLabel } from '../../utils/settings'
+import { AIModelOption, openHighlightedModelPricing } from './AIModelOption'
 
 const REASONING_EFFORTS: AIReasoningEffort[] = ['none', 'low', 'medium', 'high']
 
@@ -29,6 +29,7 @@ export function AIModelAssignmentField(props: {
   value?: AIModelAssignment | null
 }) {
   const { t } = useI18n()
+  const [pricingModelId, setPricingModelId] = useState<string | null>(null)
   const providerId = props.value?.providerId ?? ''
   const modelValue = props.value?.model ?? ''
   const providerModels = providerId ? (props.models[providerId] ?? []) : []
@@ -121,13 +122,32 @@ export function AIModelAssignmentField(props: {
           filter={filterModel}
           inputValue={modelValue}
           items={modelIds}
-          onInputValueChange={(next) => patch({ model: next })}
+          onInputValueChange={(next) => {
+            setPricingModelId(null)
+            patch({ model: next })
+          }}
+          onItemHighlighted={(value) =>
+            setPricingModelId((current) => (current === value ? current : null))
+          }
+          onOpenChange={(open, details) => {
+            if (!open) {
+              if (details.reason === 'escape-key' && pricingModelId)
+                details.cancel()
+              setPricingModelId(null)
+            }
+          }}
           onValueChange={(next) => {
             if (typeof next === 'string') patch({ model: next })
           }}
         >
           <Combobox.Control>
             <Combobox.Input
+              aria-description={
+                providerModels.some((model) => model.pricing)
+                  ? t('settings.ai.pricing.keyboardHint')
+                  : undefined
+              }
+              onKeyDown={openHighlightedModelPricing}
               aria-label={t('settings.ai.assignment.modelAriaLabel', {
                 label: props.label,
               })}
@@ -152,26 +172,16 @@ export function AIModelAssignmentField(props: {
               <Combobox.List>
                 {(id: string) => {
                   const model = modelById.get(id)
-                  const name = model?.name || id
-                  const pricing = formatAIModelPricing(model?.pricing, t)
                   return (
-                    <Combobox.Item key={id} value={id}>
-                      <span className="flex min-w-0 items-center gap-3">
-                        <span className="min-w-0 flex-1 truncate">
-                          <span>{name}</span>
-                          {name !== id ? (
-                            <span className="ml-2 text-xs text-fg-subtle">
-                              {id}
-                            </span>
-                          ) : null}
-                        </span>
-                        {pricing ? (
-                          <span className="shrink-0 text-xs tabular-nums text-fg-muted">
-                            {pricing}
-                          </span>
-                        ) : null}
-                      </span>
-                    </Combobox.Item>
+                    <AIModelOption
+                      id={id}
+                      key={id}
+                      model={model}
+                      open={pricingModelId === id}
+                      onOpenChange={(open) =>
+                        setPricingModelId(open ? id : null)
+                      }
+                    />
                   )
                 }}
               </Combobox.List>

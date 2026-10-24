@@ -98,7 +98,7 @@ export class AiController {
     for (const provider of aiConfig.providers) {
       if (
         !provider.enabled ||
-        !provider.apiKey ||
+        (!provider.apiKey && provider.type !== AIProviderType.LobeHub) ||
         !(requestedCapability === 'text'
           ? (provider.capabilities?.text ?? true)
           : provider.capabilities?.[requestedCapability])
@@ -156,7 +156,7 @@ export class AiController {
       })
     }
 
-    if (!apiKey) {
+    if (!apiKey && type !== AIProviderType.LobeHub) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
         message: 'API key is required',
       })
@@ -164,10 +164,12 @@ export class AiController {
 
     try {
       if (type === AIProviderType.TypeSafe)
-        return { models: await listDecisionModels({ apiKey, endpoint }) }
+        return {
+          models: await listDecisionModels({ apiKey: apiKey || '', endpoint }),
+        }
       const runtime = createRuntimeForModelList(
         type,
-        apiKey,
+        apiKey || '',
         endpoint,
         modelListUrl,
       )
@@ -197,7 +199,7 @@ export class AiController {
       })
     }
 
-    if (!apiKey) {
+    if (!apiKey && type !== AIProviderType.LobeHub) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
         message: 'API key is required',
       })
@@ -212,7 +214,7 @@ export class AiController {
     try {
       if (type === AIProviderType.TypeSafe) {
         await requestDecision(
-          { apiKey, endpoint, defaultModel: model },
+          { apiKey: apiKey || '', endpoint, defaultModel: model },
           'Hello',
           {
             language: {
@@ -229,7 +231,7 @@ export class AiController {
         id: providerId || 'test',
         name: providerId || 'test',
         type,
-        apiKey,
+        apiKey: apiKey || '',
         endpoint,
         appendV1,
         defaultModel: model,
@@ -401,7 +403,7 @@ export class AiController {
       })
     }
 
-    if (!provider.apiKey) {
+    if (!provider.apiKey && provider.type !== AIProviderType.LobeHub) {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED, {
         message: `Provider ${providerId} has no API key configured`,
       })

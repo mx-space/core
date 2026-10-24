@@ -4,6 +4,7 @@ export enum AIProviderType {
   Anthropic = 'anthropic',
   Generic = 'generic',
   GoogleVertex = 'google-vertex',
+  LobeHub = 'lobehub',
 }
 
 export type AIProviderCapability = 'decision' | 'image' | 'speech' | 'text'

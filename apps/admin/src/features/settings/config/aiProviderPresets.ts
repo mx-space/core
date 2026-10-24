@@ -42,6 +42,14 @@ const ALL_CAPABILITIES: AIProviderConfig['capabilities'] = {
 
 export const aiProviderPresets: readonly AIProviderPreset[] = [
   {
+    id: 'lobehub',
+    name: 'LobeHub Cloud',
+    type: 'lobehub',
+    defaultModel: '',
+    category: 'aggregator',
+    capabilities: TEXT_ONLY,
+  },
+  {
     id: 'typesafe',
     name: 'TypeSafe / Jev',
     type: 'typesafe',

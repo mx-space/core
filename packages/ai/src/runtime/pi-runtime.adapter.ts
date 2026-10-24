@@ -68,6 +68,9 @@ function fallbackProviderId(type: AIProviderType): string {
     case AIProviderType.GoogleVertex: {
       return 'google-vertex'
     }
+    case AIProviderType.LobeHub: {
+      return 'lobehub'
+    }
     default: {
       return 'openai-compat'
     }
@@ -224,13 +227,15 @@ interface PiUsageLike {
     cacheWrite?: number
     total?: number
   }
+  reportedCost?: PiUsageLike['cost'] | null
 }
 
 type MappedUsage = NonNullable<GenerateTextResult['usage']>
 
 function mapUsage(usage: PiUsageLike | undefined): MappedUsage | undefined {
   if (!usage || typeof usage !== 'object') return undefined
-  const costTotal = usage.cost?.total ?? 0
+  const cost =
+    usage.reportedCost === undefined ? usage.cost : usage.reportedCost
   return {
     promptTokens: usage.input,
     completionTokens: usage.output,
@@ -239,14 +244,8 @@ function mapUsage(usage: PiUsageLike | undefined): MappedUsage | undefined {
     cacheReadTokens: usage.cacheRead,
     cacheWriteTokens: usage.cacheWrite,
     totalTokens: usage.totalTokens,
-    cost: costTotal,
-    costBreakdown: {
-      input: usage.cost?.input,
-      output: usage.cost?.output,
-      cacheRead: usage.cost?.cacheRead,
-      cacheWrite: usage.cost?.cacheWrite,
-      total: usage.cost?.total,
-    },
+    cost: cost?.total,
+    costBreakdown: cost ?? null,
   }
 }
 
@@ -263,7 +262,7 @@ export function runtimeUsageToGenerationUsage(usage: MappedUsage | undefined):
         cacheRead?: number
         cacheWrite?: number
         total?: number
-      }
+      } | null
     }
   | undefined {
   if (!usage) return undefined
@@ -273,9 +272,12 @@ export function runtimeUsageToGenerationUsage(usage: MappedUsage | undefined):
     cacheReadTokens: usage.cacheReadTokens,
     cacheWriteTokens: usage.cacheWriteTokens,
     totalTokens: usage.totalTokens,
-    cost: usage.costBreakdown ?? {
-      total: typeof usage.cost === 'number' ? usage.cost : undefined,
-    },
+    cost:
+      usage.costBreakdown !== undefined
+        ? usage.costBreakdown
+        : typeof usage.cost === 'number'
+          ? { total: usage.cost }
+          : null,
   }
 }
 
@@ -308,6 +310,8 @@ interface PiRuntimeAdapterConfig extends RuntimeConfig {
 
 export interface PiRuntimeAdapterOptions {
   api?: Api
+  stream?: typeof stream
+  listModels?: (capability: AIProviderCapability) => Promise<ModelInfo[]>
 }
 
 export class PiRuntimeAdapter implements IModelRuntime {
@@ -324,11 +328,34 @@ export class PiRuntimeAdapter implements IModelRuntime {
   private readonly sessionId?: string
   private readonly vertexLocation?: string
   private readonly vertexProjectId?: string
+  private readonly streamModel: typeof stream
+  private readonly completeModel: typeof complete
+  private readonly listModelsOverride?: PiRuntimeAdapterOptions['listModels']
 
   constructor(
     config: PiRuntimeAdapterConfig,
     options: PiRuntimeAdapterOptions = {},
   ) {
+    const providerStream = options.stream ?? stream
+    this.streamModel = (model, context, opts) => {
+      const events = providerStream(model, context, opts)
+      if (config.onUsage) {
+        // The SDK resolves result before delivering its terminal event to consumers.
+        void events
+          .result()
+          .then((message) => config.onUsage!(mapUsage(message.usage)))
+          .catch((error) => this.logger.warn('Usage observer failed', error))
+      }
+      return events
+    }
+    this.completeModel = async (model, context, opts) => {
+      const message = await (options.stream
+        ? providerStream(model, context, opts).result()
+        : complete(model, context, opts))
+      config.onUsage?.(mapUsage(message.usage))
+      return message
+    }
+    this.listModelsOverride = options.listModels
     this.api = options.api ?? providerTypeToApi(config.providerType)
     this.providerInfo = {
       api: this.api,
@@ -581,7 +608,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       reasoningEffort: options.reasoningEffort,
     })
 
-    const message = await complete(this.model, context, piOptions)
+    const message = await this.completeModel(this.model, context, piOptions)
     if (message.stopReason === 'error' || message.stopReason === 'aborted') {
       throw new Error(
         message.errorMessage || `pi stream ended with ${message.stopReason}`,
@@ -638,8 +665,8 @@ export class PiRuntimeAdapter implements IModelRuntime {
       input: 0,
       output: 0,
       totalTokens: 0,
-      cost: { total: 0 },
     }
+    let hasUsage = false
 
     for (let i = 0; i < STRUCTURED_MAX_ITERATIONS; i++) {
       if (typed.signal?.aborted) {
@@ -648,7 +675,11 @@ export class PiRuntimeAdapter implements IModelRuntime {
         throw err
       }
 
-      const message = await complete(this.model, conversation, piOptions)
+      const message = await this.completeModel(
+        this.model,
+        conversation,
+        piOptions,
+      )
 
       if (message.stopReason === 'error' || message.stopReason === 'aborted') {
         throw new Error(
@@ -660,11 +691,31 @@ export class PiRuntimeAdapter implements IModelRuntime {
       if (u) {
         usageAccum.input = (usageAccum.input ?? 0) + (u.input ?? 0)
         usageAccum.output = (usageAccum.output ?? 0) + (u.output ?? 0)
+        usageAccum.cacheRead = (usageAccum.cacheRead ?? 0) + (u.cacheRead ?? 0)
+        usageAccum.cacheWrite =
+          (usageAccum.cacheWrite ?? 0) + (u.cacheWrite ?? 0)
         usageAccum.totalTokens =
           (usageAccum.totalTokens ?? 0) + (u.totalTokens ?? 0)
-        usageAccum.cost = {
-          total: (usageAccum.cost?.total ?? 0) + (u.cost?.total ?? 0),
+        const cost = u.reportedCost === undefined ? u.cost : u.reportedCost
+        if (!cost || usageAccum.reportedCost === null)
+          usageAccum.reportedCost = null
+        else {
+          const previous = usageAccum.cost
+          usageAccum.cost = Object.fromEntries(
+            (
+              ['input', 'output', 'cacheRead', 'cacheWrite', 'total'] as const
+            ).map((key) => [
+              key,
+              !hasUsage
+                ? cost[key]
+                : typeof previous?.[key] === 'number' &&
+                    typeof cost[key] === 'number'
+                  ? previous[key] + cost[key]
+                  : undefined,
+            ]),
+          )
         }
+        hasUsage = true
       }
 
       const toolCall = message.content.find((c) => c.type === 'toolCall') as
@@ -727,7 +778,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       reasoningEffort: options.reasoningEffort,
     })
 
-    const events = stream(this.model, context, piOptions)
+    const events = this.streamModel(this.model, context, piOptions)
 
     for await (const event of events) {
       if (event.type === 'error') {
@@ -761,7 +812,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       signal: options.signal,
       reasoningEffort: options.reasoningEffort,
     })
-    return stream(this.model, context, piOptions)
+    return this.streamModel(this.model, context, piOptions)
   }
 
   async *streamStructured<T extends TSchema>(
@@ -789,7 +840,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
       toolChoice: this.getStructuredToolChoice(),
     })
 
-    const events = stream(this.model, context, piOptions)
+    const events = this.streamModel(this.model, context, piOptions)
 
     let buffer = ''
     let finalParsed: Record<string, unknown> | undefined
@@ -859,6 +910,7 @@ export class PiRuntimeAdapter implements IModelRuntime {
   async listModels(
     capability: AIProviderCapability = 'text',
   ): Promise<ModelInfo[]> {
+    if (this.listModelsOverride) return this.listModelsOverride(capability)
     if (
       this.providerType === AIProviderType.GoogleVertex &&
       (capability === 'image' || capability === 'speech')

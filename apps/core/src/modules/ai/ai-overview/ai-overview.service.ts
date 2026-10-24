@@ -273,6 +273,7 @@ export class AiOverviewService {
         totalTokens: row.totalTokens,
         costTotalUsd: row.costTotalUsd,
         generationCount: row.generationCount,
+        unknownCostCount: row.unknownCostCount ?? 0,
       }
       byResourceType[row.resourceType] = values
       for (const key of Object.keys(total) as Array<keyof CostBucket>) {

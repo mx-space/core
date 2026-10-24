@@ -61,6 +61,7 @@ export interface GenerationSumRow {
   totalTokens: number
   costTotalUsd: number
   generationCount: number
+  unknownCostCount?: number
 }
 
 export interface AiGenerationMetricsRow {
@@ -90,7 +91,7 @@ export function resolveCostTotalUsd(
 ): number | null {
   if (!usage?.cost) return null
   const total = usage.cost.total
-  if (typeof total === 'number' && Number.isFinite(total) && total > 0) {
+  if (typeof total === 'number' && Number.isFinite(total) && total >= 0) {
     return total
   }
   const parts = [
@@ -99,9 +100,9 @@ export function resolveCostTotalUsd(
     usage.cost.cacheRead,
     usage.cost.cacheWrite,
   ].filter((v): v is number => typeof v === 'number' && Number.isFinite(v))
-  if (!parts.length) return null
+  if (parts.length !== 4 || parts.some((part) => part < 0)) return null
   const sum = parts.reduce((a, b) => a + b, 0)
-  return sum > 0 ? sum : null
+  return sum
 }
 
 export function resolveTotalTokens(
@@ -158,19 +159,32 @@ export function mergeUsage(
     if (a == null && b == null) return a ?? b ?? null
     return av + bv
   }
+  const addCost = (a?: number | null, b?: number | null) => {
+    if (a === null || b == null || !Number.isFinite(b)) return null
+    return a === undefined
+      ? acc.cost === undefined
+        ? b
+        : null
+      : Number.isFinite(a)
+        ? a + b
+        : null
+  }
   return {
     inputTokens: add(acc.inputTokens, next.inputTokens),
     outputTokens: add(acc.outputTokens, next.outputTokens),
     cacheReadTokens: add(acc.cacheReadTokens, next.cacheReadTokens),
     cacheWriteTokens: add(acc.cacheWriteTokens, next.cacheWriteTokens),
     totalTokens: add(acc.totalTokens, next.totalTokens),
-    cost: {
-      input: add(acc.cost?.input, next.cost?.input),
-      output: add(acc.cost?.output, next.cost?.output),
-      cacheRead: add(acc.cost?.cacheRead, next.cost?.cacheRead),
-      cacheWrite: add(acc.cost?.cacheWrite, next.cost?.cacheWrite),
-      total: add(acc.cost?.total, next.cost?.total),
-    },
+    cost:
+      acc.cost === null || next.cost == null
+        ? null
+        : {
+            input: addCost(acc.cost?.input, next.cost.input),
+            output: addCost(acc.cost?.output, next.cost.output),
+            cacheRead: addCost(acc.cost?.cacheRead, next.cost.cacheRead),
+            cacheWrite: addCost(acc.cost?.cacheWrite, next.cost.cacheWrite),
+            total: addCost(acc.cost?.total, next.cost.total),
+          },
   }
 }
 

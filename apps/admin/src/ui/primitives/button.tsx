@@ -23,7 +23,8 @@ export interface ButtonLinkProps extends Omit<LinkProps, 'className'> {
 // `subtle` retained as an alias of `secondary` for backward compatibility with
 // existing consumers; remove after a sweep through call sites in a later PR.
 const variantClassNames: Record<ButtonVariant, string> = {
-  primary: 'shadow-xs bg-accent text-white hover:bg-accent-hover',
+  primary:
+    'shadow-xs bg-accent text-white hover:bg-accent-hover dark:bg-accent-hover dark:hover:bg-accent-hover/90',
   secondary:
     'shadow-xs border border-border bg-surface-card text-fg hover:bg-surface-inset',
   ghost: 'bg-transparent text-fg-muted hover:bg-surface-inset hover:text-fg',

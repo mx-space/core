@@ -6,11 +6,16 @@ import type {
 } from './provider.types'
 import type { TextProtocolAdapterConfig } from './text-protocol.registry'
 import { defaultTextProtocolAdapterRegistry } from './text-protocol.registry'
+import type { RuntimeConfig } from './types'
 
 export function createModelRuntime(
   config: AIProviderConfig,
   modelOverride?: string,
-  options?: { reasoningEffort?: AIReasoningEffort; sessionId?: string },
+  options?: {
+    reasoningEffort?: AIReasoningEffort
+    sessionId?: string
+    onUsage?: RuntimeConfig['onUsage']
+  },
 ): IModelRuntime {
   if (config.type === 'typesafe')
     throw new Error('Decision providers cannot generate text')
@@ -29,6 +34,7 @@ export function createModelRuntime(
     maxTokens: config.maxTokens ?? undefined,
     reasoningEffort: options?.reasoningEffort,
     sessionId: options?.sessionId,
+    onUsage: options?.onUsage,
   }
 
   return defaultTextProtocolAdapterRegistry.resolve(runtimeConfig)

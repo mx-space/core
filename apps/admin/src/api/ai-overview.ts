@@ -72,6 +72,7 @@ export interface CostBucket {
   cacheWriteTokens: number
   costTotalUsd: number
   generationCount: number
+  unknownCostCount?: number
   inputTokens: number
   outputTokens: number
   totalTokens: number

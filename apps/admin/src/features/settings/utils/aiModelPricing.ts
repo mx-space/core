@@ -1,74 +1,102 @@
-import type { TranslationKey, TranslationValues } from '~/i18n/types'
-
 import type { AIModelPricing } from '../types/settings'
 
-type Translator = (key: TranslationKey, values?: TranslationValues) => string
+export interface SerializedPricingTable {
+  unit: 'millionTokens' | 'millionCharacters' | 'image' | 'second' | 'request'
+  strategy: 'fixed' | 'tiered' | 'lookup'
+  columns: Array<number | string>
+  params?: string[]
+  rows: Array<{ name: string; rates: Array<number | null> }>
+}
 
-export function formatAIModelPricing(
+export function serializeAIModelPricing(
   pricing: AIModelPricing | undefined,
-  t: Translator,
-): string | null {
-  if (!pricing) return null
-
-  const prompt = parsePrice(pricing.prompt)
-  const completion = parsePrice(pricing.completion)
-  const image = parsePrice(pricing.image)
-  const request = parsePrice(pricing.request)
-  const knownPrices = [prompt, completion, image, request].filter(
-    (value): value is number => value !== undefined,
-  )
-  if (knownPrices.length === 0) return null
-  if (knownPrices.every((value) => value === 0)) {
-    return t('settings.ai.pricing.free')
+): SerializedPricingTable[] {
+  if (!pricing) return []
+  const tables = new Map<string, SerializedPricingTable>()
+  function add(
+    unit: SerializedPricingTable['unit'],
+    strategy: SerializedPricingTable['strategy'],
+    columns: SerializedPricingTable['columns'],
+    name: string,
+    values: number[],
+    params?: string[],
+  ) {
+    const rates = values.map((rate) =>
+      Number.isFinite(rate) && rate >= 0 ? rate : null,
+    )
+    if (rates.every((rate) => rate === null)) return
+    const key = JSON.stringify([unit, strategy, columns, params])
+    let table = tables.get(key)
+    if (!table) {
+      table = { unit, strategy, columns, params, rows: [] }
+      tables.set(key, table)
+    }
+    table.rows.push({ name, rates })
   }
-
-  const parts: string[] = []
-  if (pricing.unit === 'character') {
-    const characterPrice = prompt || completion
-    if (characterPrice) {
-      parts.push(
-        t('settings.ai.pricing.charactersPerMillion', {
-          price: formatUsd(characterPrice * 1_000_000),
-        }),
-      )
+  if (pricing.units) {
+    for (const unit of pricing.units) {
+      if (unit.strategy === 'fixed')
+        add(unit.unit, unit.strategy, [''], unit.name, [unit.rate])
+      else if (unit.strategy === 'tiered')
+        add(
+          unit.unit,
+          unit.strategy,
+          unit.tiers.map((tier) => tier.upTo),
+          unit.name,
+          unit.tiers.map((tier) => tier.rate),
+        )
+      else {
+        const keys = Object.keys(unit.lookup.prices).sort()
+        add(
+          unit.unit,
+          unit.strategy,
+          keys,
+          unit.name,
+          keys.map((key) => unit.lookup.prices[key]),
+          unit.lookup.pricingParams,
+        )
+      }
     }
   } else {
-    if (prompt) {
-      parts.push(
-        t('settings.ai.pricing.inputPerMillion', {
-          price: formatUsd(prompt * 1_000_000),
-        }),
-      )
+    const prompt = parsePrice(pricing.prompt)
+    const completion = parsePrice(pricing.completion)
+    if (pricing.unit === 'character') {
+      const rate = prompt || completion || (prompt ?? completion)
+      if (rate !== undefined)
+        add('millionCharacters', 'fixed', [''], 'textInput', [rate * 1_000_000])
+    } else {
+      if (prompt !== undefined)
+        add('millionTokens', 'fixed', [''], 'textInput', [prompt * 1_000_000])
+      if (completion !== undefined)
+        add('millionTokens', 'fixed', [''], 'textOutput', [
+          completion * 1_000_000,
+        ])
     }
-    if (completion) {
-      parts.push(
-        t('settings.ai.pricing.outputPerMillion', {
-          price: formatUsd(completion * 1_000_000),
-        }),
-      )
+    for (const unit of ['image', 'request'] as const) {
+      const rate = parsePrice(pricing[unit])
+      if (rate !== undefined)
+        add(unit, 'fixed', [''], unit === 'image' ? 'imageOutput' : 'request', [
+          rate,
+        ])
     }
   }
-  if (image) {
-    parts.push(t('settings.ai.pricing.perImage', { price: formatUsd(image) }))
-  }
-  if (request) {
-    parts.push(
-      t('settings.ai.pricing.perRequest', { price: formatUsd(request) }),
+  const order = [
+    'textInput',
+    'textOutput',
+    'textInput_cacheRead',
+    'textInput_cacheWrite',
+  ]
+  for (const table of tables.values())
+    table.rows.sort(
+      (a, b) =>
+        (!order.includes(a.name) ? order.length : order.indexOf(a.name)) -
+        (!order.includes(b.name) ? order.length : order.indexOf(b.name)),
     )
-  }
-
-  return parts.length > 0 ? parts.join(' · ') : null
+  return [...tables.values()]
 }
 
 function parsePrice(value: string | undefined): number | undefined {
-  if (value === undefined) return undefined
+  if (value === undefined || !value.trim()) return undefined
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined
-}
-
-function formatUsd(value: number): string {
-  return `$${new Intl.NumberFormat('en-US', {
-    maximumSignificantDigits: 6,
-    useGrouping: true,
-  }).format(value)}`
 }

@@ -18,14 +18,14 @@ describe('ai-generation-metrics.types', () => {
   it('sums cost parts when total missing', () => {
     expect(
       resolveCostTotalUsd({
-        cost: { input: 0.01, output: 0.02, cacheRead: 0.001 },
+        cost: { input: 0.01, output: 0.02, cacheRead: 0.001, cacheWrite: 0 },
       }),
     ).toBeCloseTo(0.031)
   })
 
   it('returns null when no cost', () => {
     expect(resolveCostTotalUsd({})).toBeNull()
-    expect(resolveCostTotalUsd({ cost: { total: 0 } })).toBeNull()
+    expect(resolveCostTotalUsd({ cost: { total: 0 } })).toBe(0)
   })
 
   it('sums tokens when total missing', () => {
@@ -55,7 +55,21 @@ describe('ai-generation-metrics.types', () => {
     expect(merged.outputTokens).toBe(2)
     expect(merged.cacheReadTokens).toBe(4)
     expect(merged.cost?.total).toBeCloseTo(0.3)
-    expect(merged.cost?.input).toBeCloseTo(0.04)
-    expect(merged.cost?.output).toBeCloseTo(0.05)
+    expect(merged.cost?.input).toBeNull()
+    expect(merged.cost?.output).toBeNull()
+  })
+
+  it('keeps an unknown-cost turn unknown when combined with known charges', () => {
+    const result = mergeUsage(
+      { cost: { total: 0.1 } },
+      { inputTokens: 5, cost: null },
+    )
+    expect(result.cost).toBeNull()
+    expect(resolveCostTotalUsd(result)).toBeNull()
+    expect(mergeUsage(result, { cost: { total: 0.2 } }).cost).toBeNull()
+  })
+
+  it('does not derive a total from an incomplete cost breakdown', () => {
+    expect(resolveCostTotalUsd({ cost: { input: 0.01 } })).toBeNull()
   })
 })

@@ -52,7 +52,7 @@ export function GenerationMetricsMeta(props: {
       value: formatTokens(metrics.totalTokens),
     })
   }
-  if (metrics.costTotalUsd != null && metrics.costTotalUsd > 0) {
+  if (metrics.costTotalUsd != null && metrics.costTotalUsd >= 0) {
     const parts = [
       metrics.costInputUsd != null
         ? `${t('ai.metrics.costInput')}: ${formatUsdPrecise(metrics.costInputUsd)}`
@@ -74,7 +74,11 @@ export function GenerationMetricsMeta(props: {
         ? parts.join(' · ')
         : formatUsdPrecise(metrics.costTotalUsd),
     })
-  }
+  } else
+    rows.push({
+      label: t('ai.metrics.costTotal'),
+      value: t('ai.metrics.costUnknown'),
+    })
 
   if (!rows.length) return null
 

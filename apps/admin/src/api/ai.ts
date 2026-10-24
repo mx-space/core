@@ -1,6 +1,37 @@
 import { deleteJson, getJson, patchJson, postJson } from './http'
 import type { CreateTaskResponse } from './tasks'
 
+export interface LobeHubAccount {
+  status: 'connected' | 'disconnected' | 'refresh_required'
+  name: string | null
+  email: string | null
+}
+export interface LobeHubDeviceLogin {
+  flowId: string
+  userCode: string
+  verificationUri: string
+  verificationUriComplete?: string
+  expiresAt: string
+  intervalSeconds: number
+}
+export type LobeHubLoginPoll =
+  | { status: 'pending'; intervalSeconds: number }
+  | { status: 'connected' | 'expired' | 'denied' }
+
+const LOBEHUB_API = '/ai/providers/lobehub'
+export const getLobeHubAccount = () =>
+  getJson<LobeHubAccount>(`${LOBEHUB_API}/account`)
+export const startLobeHubLogin = () =>
+  postJson<LobeHubDeviceLogin, object>(`${LOBEHUB_API}/device`, {})
+export const pollLobeHubLogin = (flowId: string) =>
+  postJson<LobeHubLoginPoll, object>(
+    `${LOBEHUB_API}/device/${encodeURIComponent(flowId)}`,
+    {},
+  )
+export const cancelLobeHubLogin = (flowId: string) =>
+  deleteJson(`${LOBEHUB_API}/device/${encodeURIComponent(flowId)}`)
+export const disconnectLobeHub = () => deleteJson(`${LOBEHUB_API}/session`)
+
 export enum AiQueryType {
   Slug = 'slug',
   TitleSlug = 'title-slug',

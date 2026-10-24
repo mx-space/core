@@ -1,5 +1,6 @@
 import { createAbortError, throwIfAborted } from '@mx-space/ai'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
+import type { IModelRuntime, RuntimeConfig } from '@mx-space/ai/runtime'
+import { runtimeUsageToGenerationUsage } from '@mx-space/ai/runtime'
 import { buildSourceMetaHashes } from '@mx-space/ai/translation'
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 import pLimit from 'p-limit'
@@ -707,15 +708,18 @@ export class AiTranslationService
     existing?: AITranslationModel | null,
     onCost?: (usd: number) => Promise<void>,
     refType?: CollectionRefTypes,
+    onUsage?: RuntimeConfig['onUsage'],
   ) {
-    const { runtime, info } = await this.aiService.getTranslationModelWithInfo()
+    const { runtime, info } =
+      await this.aiService.getTranslationModelWithInfo(onUsage)
     const strategy = this.getStrategy(content.contentFormat)
     const aiConfig = await this.configService.get('ai')
 
     let reviewerRuntime: IModelRuntime | undefined
     if (aiConfig.enableTranslationReview) {
       try {
-        reviewerRuntime = await this.aiService.getTranslationReviewModel()
+        reviewerRuntime =
+          await this.aiService.getTranslationReviewModel(onUsage)
       } catch (error) {
         this.logger.warn(
           `Translation reviewer runtime resolution failed; review disabled for this run: ${error instanceof Error ? error.message : String(error)}`,
@@ -833,9 +837,13 @@ export class AiTranslationService
           : push
 
         let usage: GenerationUsage = emptyUsage()
-        const trackCost = async (usd: number) => {
-          usage = mergeUsage(usage, { cost: { total: usd } })
-          if (onCost) await onCost(usd)
+        const trackUsage: NonNullable<RuntimeConfig['onUsage']> = (
+          reported,
+        ) => {
+          usage = mergeUsage(
+            usage,
+            runtimeUsageToGenerationUsage(reported) ?? { cost: null },
+          )
         }
 
         const translated = await this.translateContentStream(
@@ -845,8 +853,9 @@ export class AiTranslationService
           onToken,
           signal,
           force ? undefined : existing,
-          trackCost,
+          onCost,
           refType,
+          trackUsage,
         )
         const { sourceLang } = translated
         const hash = this.computeContentHash(content, sourceLang)

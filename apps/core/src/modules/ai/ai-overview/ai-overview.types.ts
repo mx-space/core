@@ -84,6 +84,7 @@ export interface CostBucket {
   totalTokens: number
   costTotalUsd: number
   generationCount: number
+  unknownCostCount: number
 }
 
 export interface AiOverviewCost {
@@ -130,5 +131,6 @@ export function emptyCostBucket(): CostBucket {
     totalTokens: 0,
     costTotalUsd: 0,
     generationCount: 0,
+    unknownCostCount: 0,
   }
 }

@@ -105,7 +105,12 @@ describe('AIModelAssignmentField', () => {
 
     expect(document.body.textContent).toContain('Fish Audio: S1')
     expect(document.body.textContent).toContain('Microsoft: MAI-Voice-2-Flash')
-    expect(document.body.textContent).toContain('$15 / 100 万字符')
+    const pricingButton = document.querySelector<HTMLButtonElement>(
+      'button[aria-label="SpaceXAI: Grok Voice TTS 1.0 价格详情"]',
+    )
+    await act(async () => pricingButton?.click())
+    expect(document.querySelector('table')?.textContent).toContain('$15')
+    expect(document.body.textContent).toContain('每 100 万字符')
 
     const input = document.querySelector<HTMLInputElement>(
       'input[aria-label="语音生成模型模型"]',

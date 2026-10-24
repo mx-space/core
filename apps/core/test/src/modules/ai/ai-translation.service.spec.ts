@@ -631,6 +631,84 @@ describe('AiTranslationService — force regeneration', () => {
     aiProvider: 'provider-x',
   }
 
+  it.each([0.002, null])(
+    'records writer and reviewer tokens with reported cost %s once',
+    async (cost) => {
+      const {
+        aiInFlightService,
+        aiService,
+        configService,
+        databaseService,
+        generationMetrics,
+        lexicalStrategy,
+        repository,
+        service,
+      } = createService()
+      configService.get.mockReturnValue({
+        enableTranslation: true,
+        enableTranslationReview: true,
+      } as any)
+      databaseService.findGlobalById.mockResolvedValue({
+        document: articleDocument({ content: null }),
+        type: CollectionRefTypes.Post,
+      })
+      repository.findByRef.mockResolvedValue(null)
+      repository.upsert.mockResolvedValue(row())
+      let writerUsage: any
+      let reviewerUsage: any
+      aiService.getTranslationModelWithInfo.mockImplementation(
+        async (onUsage: any) => {
+          writerUsage = onUsage
+          return {
+            runtime: {},
+            info: { model: 'model-x', provider: 'provider-x' },
+          } as any
+        },
+      )
+      aiService.getTranslationReviewModel.mockImplementation(
+        async (onUsage: any) => {
+          reviewerUsage = onUsage
+          return {} as any
+        },
+      )
+      lexicalStrategy.translate.mockImplementation(
+        async (_content, _lang, _runtime, _info, options) => {
+          writerUsage?.({
+            inputTokens: 70,
+            outputTokens: 10,
+            cacheReadTokens: 20,
+            cacheWriteTokens: 5,
+            totalTokens: 105,
+            costBreakdown: cost === null ? null : { total: cost },
+          })
+          reviewerUsage?.({
+            inputTokens: 10,
+            outputTokens: 2,
+            totalTokens: 12,
+            costBreakdown: { total: 0.001 },
+          })
+          await options?.onCost?.(0.001)
+          return translatedResult as any
+        },
+      )
+      stubLeaderRun(aiInFlightService)
+      await service.generateTranslation('post-1', 'en')
+      expect(generationMetrics.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          usage: expect.objectContaining({
+            inputTokens: 80,
+            outputTokens: 12,
+            cacheReadTokens: 20,
+            cacheWriteTokens: 5,
+            totalTokens: 117,
+            cost:
+              cost === null ? null : expect.objectContaining({ total: 0.003 }),
+          }),
+        }),
+      )
+    },
+  )
+
   it('drops the existing translation from translateContentStream when force is true', async () => {
     const {
       aiInFlightService,

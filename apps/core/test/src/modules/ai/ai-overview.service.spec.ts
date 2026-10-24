@@ -201,6 +201,27 @@ describe('AiOverviewService.getOverviewGrouped', () => {
 })
 
 describe('AiOverviewService.getArticleOverview', () => {
+  it('keeps track of generations with unknown costs in the total and feature buckets', async () => {
+    const { service } = createService({
+      sums: [
+        {
+          resourceType: 'summary',
+          inputTokens: 10,
+          outputTokens: 2,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+          totalTokens: 12,
+          costTotalUsd: 0.01,
+          generationCount: 3,
+          unknownCostCount: 2,
+        },
+      ],
+    })
+    const detail = await service.getArticleOverview('300')
+    expect(detail.cost.total.unknownCostCount).toBe(2)
+    expect(detail.cost.byResourceType.summary.unknownCostCount).toBe(2)
+    expect(detail.cost.total.costTotalUsd).toBe(0.01)
+  })
   it('marks generated resources whose source no longer matches the article', async () => {
     const { service } = createService({
       documents: { '300': { text: 'current body' } as never },

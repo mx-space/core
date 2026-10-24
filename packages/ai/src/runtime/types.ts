@@ -5,6 +5,7 @@ import type {
   TSchema,
 } from '@earendil-works/pi-ai'
 
+import type { ModelPricing } from './model-pricing'
 import type { AIProviderType } from './provider.types'
 
 export interface RuntimeProviderInfo {
@@ -53,7 +54,7 @@ export interface RuntimeUsage {
     cacheRead?: number
     cacheWrite?: number
     total?: number
-  }
+  } | null
 }
 
 export interface GenerateTextResult {
@@ -110,17 +111,13 @@ export interface ModelInfo {
   id: string
   name: string
   created?: number
-  pricing?: {
-    completion?: string
-    image?: string
-    prompt?: string
-    request?: string
-    unit: 'character' | 'token'
-  }
+  pricing?: ModelPricing
   supportedVoices?: string[]
 }
 
 export interface RuntimeConfig {
+  /** Receives terminal usage for each provider request, including structured retries. */
+  onUsage?: (usage: RuntimeUsage | undefined) => void
   apiKey: string
   endpoint?: string
   /** Google Cloud project used by the native Vertex AI transport. */

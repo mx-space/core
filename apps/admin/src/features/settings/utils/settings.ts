@@ -189,6 +189,7 @@ export function coerceAIProviderType(value: unknown): AIProviderType {
     value === 'typesafe' ||
     value === 'anthropic' ||
     value === 'generic' ||
+    value === 'lobehub' ||
     value === 'google-vertex'
   )
     return value
@@ -206,6 +207,9 @@ export function formatAIProviderLabel(provider: AIProviderConfig) {
 
 export function getDefaultAIModel(type: AIProviderType) {
   switch (type) {
+    case 'lobehub': {
+      return ''
+    }
     case 'typesafe': {
       return 'jev-latest'
     }
@@ -291,6 +295,7 @@ export function resolvePiProviderId(provider: {
   endpoint?: string
   type: AIProviderType
 }): string | null {
+  if (provider.type === 'lobehub') return null
   const endpoint = provider.endpoint?.trim()
   if (endpoint) {
     try {

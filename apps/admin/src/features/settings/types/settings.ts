@@ -1,10 +1,16 @@
+import type { ModelPricing } from '@mx-space/ai/runtime'
 import type { LucideIcon } from 'lucide-react'
 
 import type { ConfigFormGroup } from '~/api/options'
 import type { TranslationKey } from '~/i18n/types'
 
 export type AIProviderType =
-  'anthropic' | 'generic' | 'google-vertex' | 'openai-compatible' | 'typesafe'
+  | 'anthropic'
+  | 'generic'
+  | 'google-vertex'
+  | 'lobehub'
+  | 'openai-compatible'
+  | 'typesafe'
 export type AIProviderCapability = 'decision' | 'image' | 'speech' | 'text'
 
 export interface AIProviderCapabilities {
@@ -84,13 +90,7 @@ export interface AIProviderModel {
   supportedVoices?: string[]
 }
 
-export interface AIModelPricing {
-  completion?: string
-  image?: string
-  prompt?: string
-  request?: string
-  unit: 'character' | 'token'
-}
+export type AIModelPricing = ModelPricing
 
 export interface SeoI18nOverlay {
   description?: string

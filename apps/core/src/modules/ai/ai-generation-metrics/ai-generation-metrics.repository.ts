@@ -203,6 +203,7 @@ export class AiGenerationMetricsRepository extends BaseRepository {
         totalTokens: sql<string>`coalesce(sum(${aiGenerationMetrics.totalTokens}), 0)`,
         costTotalUsd: sql<string>`coalesce(sum(${aiGenerationMetrics.costTotalUsd}), 0)`,
         generationCount: sql<string>`count(*)`,
+        unknownCostCount: sql<string>`count(*) filter (where ${aiGenerationMetrics.costTotalUsd} is null)`,
       })
       .from(aiGenerationMetrics)
       .where(eq(aiGenerationMetrics.refId, parseEntityId(refId)))
@@ -217,6 +218,7 @@ export class AiGenerationMetricsRepository extends BaseRepository {
       totalTokens: Number(row.totalTokens),
       costTotalUsd: Number(row.costTotalUsd),
       generationCount: Number(row.generationCount),
+      unknownCostCount: Number(row.unknownCostCount),
     }))
   }
 

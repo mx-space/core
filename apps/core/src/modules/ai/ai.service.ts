@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { type DecisionQuestion, requestDecision } from '@mx-space/ai/decision'
-import type { IModelRuntime } from '@mx-space/ai/runtime'
+import type { IModelRuntime, RuntimeConfig } from '@mx-space/ai/runtime'
 import { createModelRuntime } from '@mx-space/ai/runtime'
 import { Injectable } from '@nestjs/common'
 
@@ -57,27 +57,33 @@ export class AiService {
     return this.getModelForFeature(AIFeatureKey.CommentReview)
   }
 
-  public async getTranslationModel(): Promise<IModelRuntime> {
-    return this.getModelForFeature(AIFeatureKey.Translation)
+  public async getTranslationModel(
+    onUsage?: RuntimeConfig['onUsage'],
+  ): Promise<IModelRuntime> {
+    return this.getModelForFeature(AIFeatureKey.Translation, onUsage)
   }
 
-  public async getTranslationModelWithInfo(): Promise<{
+  public async getTranslationModelWithInfo(
+    onUsage?: RuntimeConfig['onUsage'],
+  ): Promise<{
     runtime: IModelRuntime
     info: AIResolvedModelInfo
   }> {
-    return this.getModelWithInfoForFeature(AIFeatureKey.Translation)
+    return this.getModelWithInfoForFeature(AIFeatureKey.Translation, onUsage)
   }
 
-  public async getTranslationReviewModel(): Promise<IModelRuntime> {
+  public async getTranslationReviewModel(
+    onUsage?: RuntimeConfig['onUsage'],
+  ): Promise<IModelRuntime> {
     const aiConfig = await this.configService.get('ai')
     const assignment = this.getAssignment(
       aiConfig,
       AIFeatureKey.TranslationReview,
     )
     if (!assignment) {
-      return this.getTranslationModel()
+      return this.getTranslationModel(onUsage)
     }
-    return this.getModelForFeature(AIFeatureKey.TranslationReview)
+    return this.getModelForFeature(AIFeatureKey.TranslationReview, onUsage)
   }
 
   public async getFieldTranslationModel(): Promise<IModelRuntime> {
@@ -109,7 +115,10 @@ export class AiService {
     return this.getModelForFeature(AIFeatureKey.InsightsTranslation)
   }
 
-  private async resolveFeatureRuntime(feature: AIFeatureKey): Promise<{
+  private async resolveFeatureRuntime(
+    feature: AIFeatureKey,
+    onUsage?: RuntimeConfig['onUsage'],
+  ): Promise<{
     runtime: IModelRuntime
     provider: AIProviderConfig
     assignment: AIModelAssignment | undefined
@@ -127,6 +136,7 @@ export class AiService {
     return {
       runtime: createModelRuntime(provider, assignment?.model, {
         reasoningEffort: assignment?.reasoningEffort,
+        onUsage,
         sessionId: OperationContext.currentId() ?? randomUUID(),
       }),
       provider,
@@ -136,17 +146,23 @@ export class AiService {
 
   private async getModelForFeature(
     feature: AIFeatureKey,
+    onUsage?: RuntimeConfig['onUsage'],
   ): Promise<IModelRuntime> {
-    const { runtime } = await this.resolveFeatureRuntime(feature)
+    const { runtime } = await this.resolveFeatureRuntime(feature, onUsage)
     return runtime
   }
 
-  private async getModelWithInfoForFeature(feature: AIFeatureKey): Promise<{
+  private async getModelWithInfoForFeature(
+    feature: AIFeatureKey,
+    onUsage?: RuntimeConfig['onUsage'],
+  ): Promise<{
     runtime: IModelRuntime
     info: AIResolvedModelInfo
   }> {
-    const { runtime, provider, assignment } =
-      await this.resolveFeatureRuntime(feature)
+    const { runtime, provider, assignment } = await this.resolveFeatureRuntime(
+      feature,
+      onUsage,
+    )
     return {
       runtime,
       info: {
