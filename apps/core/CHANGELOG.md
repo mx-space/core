@@ -1,3 +1,13 @@
+## [15.5.0](https://github.com/mx-space/core/compare/v15.4.0...v15.5.0) (2026-10-25)
+
+### Features
+
+* **admin:** inline draft diff with version picker and side-by-side dialog ([c1066b0](https://github.com/mx-space/core/commit/c1066b0953927b9d64b7ba9878dfad345711463a))
+
+### Bug Fixes
+
+* **admin:** use SelectField and align padding in drafts cleanup dialog ([756d2dc](https://github.com/mx-space/core/commit/756d2dcf3153aec2318ce0f6a0f1e2da1b10231a))
+
 ## [15.4.0](https://github.com/mx-space/core/compare/v15.3.0...v15.4.0) (2026-10-25)
 
 ### Features
