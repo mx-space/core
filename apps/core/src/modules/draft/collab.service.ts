@@ -125,10 +125,9 @@ export class CollabService {
       this.identityOf(readerId),
     ])
     return {
-      collaborators: collaborators.map(({ avatar, name }) => ({
-        avatar,
-        name,
-      })),
+      collaborators: collaborators
+        .filter((person) => !person.removedAt)
+        .map(({ avatar, name }) => ({ avatar, name })),
       documentId,
       draftId,
       me: identity!.user,

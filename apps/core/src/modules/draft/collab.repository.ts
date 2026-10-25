@@ -32,6 +32,7 @@ export interface CollaboratorRow {
   createdAt: Date
   name: string
   readerId: string
+  removedAt: Date | null
   showInByline: boolean
 }
 
@@ -237,16 +238,12 @@ export class CollabRepository extends BaseRepository {
         createdAt: contentCollaborators.createdAt,
         name: displayName,
         readerId: contentCollaborators.readerId,
+        removedAt: contentCollaborators.removedAt,
         showInByline: contentCollaborators.showInByline,
       })
       .from(contentCollaborators)
       .innerJoin(readers, eq(readers.id, contentCollaborators.readerId))
-      .where(
-        and(
-          eq(contentCollaborators.documentId, parseEntityId(documentId)),
-          isNull(contentCollaborators.removedAt),
-        ),
-      )
+      .where(eq(contentCollaborators.documentId, parseEntityId(documentId)))
       .orderBy(
         asc(contentCollaborators.createdAt),
         asc(contentCollaborators.id),
@@ -284,7 +281,7 @@ export class CollabRepository extends BaseRepository {
   ): Promise<void> {
     await this.db
       .update(contentCollaborators)
-      .set({ contributedAt: new Date() })
+      .set({ contributedAt: sql`now()` })
       .where(
         and(
           this.member(documentId, readerId),

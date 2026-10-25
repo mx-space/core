@@ -66,7 +66,9 @@ export function CollaboratorsSection(props: { documentId: string }) {
   })
 
   const invites = invitesQuery.data ?? []
-  const collaborators = collaboratorsQuery.data ?? []
+  const collaborators = (collaboratorsQuery.data ?? []).filter(
+    (person) => !person.removedAt,
+  )
 
   return (
     <section

@@ -71,6 +71,7 @@ describe('CollaboratorsSection', () => {
         createdAt: '2026-10-25T00:00:00.000Z',
         name: 'Bob',
         readerId: 'r1',
+        removedAt: null,
         showInByline: true,
       },
     ])

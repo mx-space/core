@@ -3959,6 +3959,7 @@ export const zhCN = {
   'write.collab.editing': '正在编辑的成员',
   'write.timeline.step.coauthor': '{name} 的编辑（{count} 处）',
   'write.collaborators.title': '共同作者',
+  'write.collaborators.unknownAuthor': '共同作者',
   'write.collaborators.historyNotice':
     '共同作者会拿到草稿的完整编辑历史，包括加入前已删除的文字。',
   'write.collaborators.invite': '邀请链接',

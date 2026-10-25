@@ -209,7 +209,8 @@ export function TimelinePanel(props: TimelinePanelProps) {
                 busy={busy}
                 authorName={
                   row.type === 'step' && row.author
-                    ? (authorNames.get(row.author) ?? row.author)
+                    ? (authorNames.get(row.author) ??
+                      t('write.collaborators.unknownAuthor'))
                     : null
                 }
                 key={rowKey(row)}

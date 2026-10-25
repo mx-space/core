@@ -259,7 +259,9 @@ describe('CollabRepository (real PG)', () => {
       reason: 'revoked',
     })
     expect(await repository.isCollaborator(documentId, reader)).toBe(false)
-    expect(await repository.listCollaborators(documentId)).toEqual([])
+    expect(await repository.listCollaborators(documentId)).toEqual([
+      expect.objectContaining({ name: 'Heidi', removedAt: expect.any(Date) }),
+    ])
 
     await repository.createInvite({
       documentId,

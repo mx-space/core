@@ -4,6 +4,7 @@ import type { Root } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { listCollaborators } from '~/api/collab'
 import {
   getDraftHistory,
   getDraftShare,
@@ -22,6 +23,15 @@ vi.mock('~/api/drafts', () => ({
   restoreDraftRevision: vi.fn(),
   setDraftShare: vi.fn(),
   undoDraftChange: vi.fn(),
+}))
+vi.mock('~/api/collab', () => ({
+  collabInviteUrlOf: (token: string) => token,
+  createCollabInvite: vi.fn(),
+  listCollabInvites: vi.fn(async () => []),
+  listCollaborators: vi.fn(async () => []),
+  removeCollaborator: vi.fn(),
+  revokeCollabInvite: vi.fn(),
+  updateCollaborator: vi.fn(),
 }))
 vi.mock('~/ui/feedback/confirm', () => ({
   confirmDialog: vi.fn(async () => true),
@@ -59,7 +69,7 @@ const onChanged = vi.fn(async (change: { restored: boolean }) => {
   calls.push(change.restored ? 'reload-fields' : 'pull')
 })
 
-const render = async () => {
+const render = async (documentId: string | null = null) => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -72,7 +82,7 @@ const render = async () => {
           I18nProvider,
           null,
           createElement(TimelinePanel, {
-            documentId: null,
+            documentId,
             draftId: 'd1',
             onBeforeChange,
             onChanged,
@@ -140,5 +150,47 @@ describe('TimelinePanel', () => {
     await click('撤销此步')
 
     expect(calls).toEqual(['flush', 'undo', 'pull'])
+  })
+
+  it('names co-author steps, including people since removed', async () => {
+    vi.mocked(getDraftHistory).mockResolvedValue({
+      changes: [
+        {
+          deps: [],
+          id: { counter: 9, peer: '3' },
+          length: 1,
+          message: 'human:r2',
+          timestamp: 1_792_900_200,
+        },
+        {
+          deps: [],
+          id: { counter: 5, peer: '2' },
+          length: 1,
+          message: 'human:r1',
+          timestamp: 1_792_900_100,
+        },
+      ],
+      checkpoints: [],
+    } as unknown as DraftHistory)
+    vi.mocked(listCollaborators).mockResolvedValue([
+      {
+        avatar: null,
+        contributedAt: '2026-10-25T00:00:00.000Z',
+        createdAt: '2026-10-25T00:00:00.000Z',
+        name: 'Bob',
+        readerId: 'r1',
+        removedAt: '2026-10-25T01:00:00.000Z',
+        showInByline: true,
+      },
+    ])
+
+    await render('doc-1')
+
+    await vi.waitFor(() =>
+      expect(container.textContent).toContain('Bob 的编辑'),
+    )
+    expect(container.textContent).toContain('共同作者 的编辑')
+    expect(container.textContent).not.toContain('r2 的编辑')
+    expect(container.querySelector('[data-collaborator]')).toBeNull()
   })
 })

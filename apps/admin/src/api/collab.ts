@@ -18,6 +18,7 @@ export interface Collaborator {
   createdAt: string
   name: string
   readerId: string
+  removedAt: string | null
   showInByline: boolean
 }
 

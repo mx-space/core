@@ -198,4 +198,23 @@ describe('CollabService', () => {
     expect(repository.ownerId).toHaveBeenCalledTimes(1)
     expect(repository.presenceUserOf).toHaveBeenCalledTimes(1)
   })
+
+  it('leaves removed collaborators out of the co-author workspace', async () => {
+    const { repository, service } = setup()
+    repository.listCollaborators.mockResolvedValueOnce([
+      {
+        avatar: null,
+        contributedAt: null,
+        createdAt: new Date(0),
+        name: 'Gone',
+        readerId: 'r9',
+        removedAt: new Date(0),
+        showInByline: true,
+      } as never,
+    ])
+
+    const workspace = await service.workspaceFor('doc-1', 'r1')
+
+    expect(workspace.collaborators).toEqual([])
+  })
 })
