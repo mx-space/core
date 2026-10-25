@@ -32,6 +32,8 @@ import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
+import { CollabRepository } from '../draft/collab.repository'
+import { DraftRefType } from '../draft/draft.enum'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import {
   type ListQueryDto,
@@ -85,7 +87,16 @@ export class NoteController {
     private readonly lexicalService: LexicalService,
     private readonly enrichmentService: EnrichmentService,
     private readonly translationEntryService: TranslationEntryService,
+    private readonly collabRepository: CollabRepository,
   ) {}
+
+  private async coAuthorsOf(noteId: string) {
+    const byRef = await this.collabRepository.coAuthorsByRef(
+      DraftRefType.Note,
+      [noteId],
+    )
+    return byRef.get(noteId) ?? []
+  }
 
   private toArticleTranslationInput(note: NoteModel): ArticleTranslationInput {
     return {
@@ -285,7 +296,10 @@ export class NoteController {
       const { enrichments, ...noteData } =
         await this.enrichmentService.attachEnrichments(current)
       metaBuilder.enrichments(enrichments as Record<string, EnrichmentEntry>)
-      return withMeta(noteData, metaBuilder.build())
+      return withMeta(
+        { ...noteData, coAuthors: await this.coAuthorsOf(String(current.id)) },
+        metaBuilder.build(),
+      )
     }
 
     const [[prev], [next]] = await Promise.all([
@@ -327,6 +341,7 @@ export class NoteController {
     return withMeta(
       {
         ...noteData,
+        coAuthors: await this.coAuthorsOf(String(current.id)),
         next: this.toAdjacentNavNote(next),
         prev: this.toAdjacentNavNote(prev),
       },

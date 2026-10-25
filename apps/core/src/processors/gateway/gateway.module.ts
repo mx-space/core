@@ -14,6 +14,7 @@ import { GatewayService } from './gateway.service'
 import { SharedGateway } from './shared/events.gateway'
 import { WebEventsGateway } from './web/events.gateway'
 import { VisitorEventDispatchService } from './web/visitor-event-dispatch.service'
+import { WebWsHandlerRegistry } from './web/web-ws-handler.registry'
 import { WsBusService } from './ws/ws-bus.service'
 import { WsPresenceService } from './ws/ws-presence.service'
 
@@ -24,6 +25,7 @@ import { WsPresenceService } from './ws/ws-presence.service'
     AdminEventsGateway,
     AdminWsHandlerRegistry,
     WebEventsGateway,
+    WebWsHandlerRegistry,
     SharedGateway,
 
     GatewayService,
@@ -37,6 +39,7 @@ import { WsPresenceService } from './ws/ws-presence.service'
     AdminEventsGateway,
     AdminWsHandlerRegistry,
     WebEventsGateway,
+    WebWsHandlerRegistry,
     SharedGateway,
 
     GatewayService,

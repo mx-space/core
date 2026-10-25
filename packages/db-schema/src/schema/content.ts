@@ -389,6 +389,48 @@ export const contentCrdtUpdates = pgTable(
   (table) => [index('content_crdt_updates_document_idx').on(table.documentId)],
 )
 
+export const contentCollaborators = pgTable(
+  'content_collaborators',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    readerId: text('reader_id')
+      .notNull()
+      .references(() => readers.id, { onDelete: 'cascade' }),
+    showInByline: boolean('show_in_byline').notNull().default(true),
+    contributedAt: tsCol('contributed_at'),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    unique('content_collaborators_document_reader_uniq').on(
+      table.documentId,
+      table.readerId,
+    ),
+  ],
+)
+
+export const contentCollabInvites = pgTable(
+  'content_collab_invites',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: tsCol('expires_at').notNull(),
+    maxUses: integer('max_uses'),
+    uses: integer('uses').notNull().default(0),
+    revokedAt: tsCol('revoked_at'),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    unique('content_collab_invites_token_hash_uniq').on(table.tokenHash),
+    index('content_collab_invites_document_idx').on(table.documentId),
+  ],
+)
+
 /**
  * Self-referential thread structure plus polymorphic ref to content (Post/Note/Page/Recently).
  */

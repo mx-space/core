@@ -136,6 +136,10 @@ export type AppErrorPayloadMap = {
     branchId: string
     contentFormat: string
   }
+  [AppErrorCode.COLLAB_INVITE_INVALID]: {
+    reason: 'exhausted' | 'expired' | 'not_found' | 'revoked'
+  }
+  [AppErrorCode.COLLAB_FORBIDDEN]: undefined
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: WithId

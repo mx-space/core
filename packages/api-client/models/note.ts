@@ -1,4 +1,4 @@
-import type { Image } from './base'
+import type { CoAuthor, Image } from './base'
 import type { EnrichmentResult } from './enrichment'
 import type { TopicModel } from './topic'
 
@@ -31,6 +31,7 @@ export interface NoteModel {
 
   topicId?: string | null
   topic?: TopicModel | null
+  coAuthors?: CoAuthor[]
 
   createdAt: string
   modifiedAt: string | null

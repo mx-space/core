@@ -42,6 +42,8 @@ import { AiInsightsService } from '../ai/ai-insights/ai-insights.service'
 import { parseLanguageCode } from '../ai/ai-language.util'
 import { AiSummaryService } from '../ai/ai-summary/ai-summary.service'
 import { AiTtsQueryService } from '../ai/ai-tts/ai-tts-query.service'
+import { CollabRepository } from '../draft/collab.repository'
+import { DraftRefType } from '../draft/draft.enum'
 import { EnrichmentService } from '../enrichment/enrichment.service'
 import { SnippetService } from '../snippet/snippet.service'
 import {
@@ -90,6 +92,7 @@ export class PostController {
     private readonly translationEntryService: TranslationEntryService,
     private readonly snippetService: SnippetService,
     private readonly entitlementService: EntitlementService,
+    private readonly collabRepository: CollabRepository,
   ) {}
 
   private async applyPaywall(
@@ -550,7 +553,15 @@ export class PostController {
 
     if (paywall) metaBuilder.paywall(paywall)
 
-    return withMeta(postData, metaBuilder.build())
+    const postId = String(postDocument.id)
+    const coAuthors = await this.collabRepository.coAuthorsByRef(
+      DraftRefType.Post,
+      [postId],
+    )
+    return withMeta(
+      { ...postData, coAuthors: coAuthors.get(postId) ?? [] },
+      metaBuilder.build(),
+    )
   }
 
   @Patch('/:id')

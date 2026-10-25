@@ -19,6 +19,7 @@ export const CollabWsEvents = {
   peerJoined: 'collab.peer.joined',
   peerLeft: 'collab.peer.left',
   presence: 'collab.presence',
+  revoked: 'collab.revoked',
   update: 'collab.update',
 } as const
 
@@ -27,32 +28,70 @@ export const COLLAB_ACCESS = Symbol('COLLAB_ACCESS')
 
 export interface CollabAccess {
   canJoin: (member: CollabMember, documentId: string) => Promise<boolean>
+  recordContribution: (documentId: string, readerId: string) => Promise<void>
 }
 
 export interface CollabRelay {
+  onRevoke: (
+    listener: (documentId: string, readerId: string) => void,
+  ) => () => void
   publish: (
     event: string,
     payload: unknown,
     room: string,
     exclude?: string,
   ) => void
+  revoke: (documentId: string, readerId: string) => void
 }
+
+export interface PresenceUser {
+  avatar: string | null
+  id: string
+  name: string
+}
+
+export type CollabIdentity =
+  | { kind: 'owner'; user: PresenceUser }
+  | { kind: 'reader'; readerId: string; user: PresenceUser }
 
 export interface CollabMember {
   alive: () => boolean
   connectionId: string
+  identity: CollabIdentity
   join: (room: string) => Promise<void>
   leave: (room: string) => Promise<void>
+  send: (event: string, payload: unknown) => void
+}
+
+interface Joined {
+  contributed: boolean
+  documentId: string
+  member: CollabMember
+}
+
+interface Bucket {
+  at: number
+  tokens: number
 }
 
 const MAX_UPDATE_BYTES = 4 * 1024 * 1024
+const MAX_CARET_CHARS = 4096
+const BUCKET_SIZE = 120
+const BUCKET_REFILL_PER_MS = 60 / 1000
 const REJECTED = 'DRAFT_CRDT_UPDATE_REJECTED'
 
 const base64 = z.string().max(Math.ceil((MAX_UPDATE_BYTES * 4) / 3) + 8)
 const draftId = z.string().min(1).max(64)
 const joinSchema = z.object({ draftId, since: base64.optional() })
 const updateSchema = z.object({ draftId, update: z.string() })
-const presenceSchema = z.object({ draftId, state: base64 })
+const presenceSchema = z.object({
+  caret: z.unknown(),
+  draftId,
+  entry: z
+    .string()
+    .regex(/^agent:\w{1,40}$/)
+    .optional(),
+})
 const leaveSchema = z.object({ draftId })
 
 const roomOf = (documentId: string) => `collab:${documentId}`
@@ -60,12 +99,18 @@ const encode = (bytes: Uint8Array) => Buffer.from(bytes).toString('base64')
 const decode = (value: string) => new Uint8Array(Buffer.from(value, 'base64'))
 
 const invalid: WsAckPayload = { code: 'VALIDATION_FAILED', ok: false }
+const rateLimited: WsAckPayload = { code: 'RATE_LIMITED', ok: false }
+const notJoined: WsAckPayload = { code: 'NOT_JOINED', ok: false }
+
+const authorOf = (identity: CollabIdentity) =>
+  identity.kind === 'reader' ? `human:${identity.readerId}` : undefined
 
 @Injectable()
 export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CollabRoomService.name)
-  private readonly joined = new Map<string, Map<string, string>>()
-  private stopListening?: () => void
+  private readonly joined = new Map<string, Map<string, Joined>>()
+  private readonly buckets = new Map<string, Bucket>()
+  private stopListening: Array<() => void> = []
 
   constructor(
     private readonly drafts: DraftService,
@@ -75,13 +120,20 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    this.stopListening = this.crdt.onDocumentChanged((change) =>
-      this.relayChange(change),
-    )
+    this.stopListening = [
+      this.crdt.onDocumentChanged((change) => this.relayChange(change)),
+      this.relay.onRevoke((documentId, readerId) =>
+        this.dropReader(documentId, readerId),
+      ),
+    ]
   }
 
   onModuleDestroy() {
-    this.stopListening?.()
+    for (const stop of this.stopListening.splice(0)) stop()
+  }
+
+  revoke(documentId: string, readerId: string) {
+    this.relay.revoke(documentId, readerId)
   }
 
   async join(member: CollabMember, raw: unknown): Promise<WsAckPayload> {
@@ -109,7 +161,11 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
         await member.leave(room)
         return { code: 'NOT_CONNECTED', ok: false }
       }
-      this.membership(member.connectionId).set(draftId, documentId)
+      this.membership(member.connectionId).set(draftId, {
+        contributed: false,
+        documentId,
+        member,
+      })
       this.relay.publish(
         CollabWsEvents.peerJoined,
         { connectionId: member.connectionId, documentId },
@@ -134,15 +190,26 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     if (!parsed.success) return invalid
     const bytes = decode(parsed.data.update)
     if (bytes.length > MAX_UPDATE_BYTES) return { code: REJECTED, ok: false }
-    if (!this.joined.get(member.connectionId)?.has(parsed.data.draftId)) {
-      return { code: 'NOT_JOINED', ok: false }
-    }
+    const joined = this.joined
+      .get(member.connectionId)
+      ?.get(parsed.data.draftId)
+    if (!joined) return notJoined
+    if (!this.take(member)) return rateLimited
     try {
       await this.drafts.importCrdt(
         parsed.data.draftId,
         bytes,
         member.connectionId,
+        authorOf(member.identity),
       )
+      const { identity } = member
+      if (identity.kind === 'reader' && !joined.contributed) {
+        joined.contributed = true
+        await this.access.recordContribution(
+          joined.documentId,
+          identity.readerId,
+        )
+      }
       return { ok: true }
     } catch (error) {
       return this.failure(error)
@@ -152,14 +219,27 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   async presence(member: CollabMember, raw: unknown): Promise<WsAckPayload> {
     const parsed = presenceSchema.safeParse(raw)
     if (!parsed.success) return invalid
-    const documentId = this.joined
-      .get(member.connectionId)
-      ?.get(parsed.data.draftId)
-    if (!documentId) return { code: 'NOT_JOINED', ok: false }
+    const { caret, draftId, entry } = parsed.data
+    const caretChars = JSON.stringify(caret ?? null).length
+    if (caretChars > MAX_CARET_CHARS) return invalid
+    const joined = this.joined.get(member.connectionId)?.get(draftId)
+    if (!joined) return notJoined
+    if (entry && member.identity.kind !== 'owner') {
+      return { code: 'FORBIDDEN', ok: false }
+    }
+    if (!this.take(member)) return rateLimited
     this.relay.publish(
       CollabWsEvents.presence,
-      { documentId, state: parsed.data.state },
-      roomOf(documentId),
+      {
+        caret: caret ?? null,
+        connectionId: member.connectionId,
+        documentId: joined.documentId,
+        entry: entry ?? null,
+        user: entry
+          ? { avatar: null, id: entry, name: 'AI' }
+          : member.identity.user,
+      },
+      roomOf(joined.documentId),
       member.connectionId,
     )
     return { ok: true }
@@ -169,22 +249,64 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     const parsed = leaveSchema.safeParse(raw)
     if (!parsed.success) return invalid
     const rooms = this.joined.get(member.connectionId)
-    const documentId = rooms?.get(parsed.data.draftId)
-    if (!rooms || !documentId) return { ok: true }
-    rooms.delete(parsed.data.draftId)
-    if (!rooms.size) this.joined.delete(member.connectionId)
-    await member.leave(roomOf(documentId))
-    this.announceLeft(member.connectionId, documentId)
+    const joined = rooms?.get(parsed.data.draftId)
+    if (!rooms || !joined) return { ok: true }
+    this.forget(member.connectionId, parsed.data.draftId)
+    await member.leave(roomOf(joined.documentId))
+    this.announceLeft(member.connectionId, joined.documentId)
     return { ok: true }
   }
 
   disconnect(connectionId: string) {
     const rooms = this.joined.get(connectionId)
+    this.buckets.delete(connectionId)
     if (!rooms) return
     this.joined.delete(connectionId)
-    for (const documentId of new Set(rooms.values())) {
+    for (const documentId of new Set(
+      [...rooms.values()].map((joined) => joined.documentId),
+    )) {
       this.announceLeft(connectionId, documentId)
     }
+  }
+
+  private dropReader(documentId: string, readerId: string) {
+    for (const [connectionId, rooms] of this.joined) {
+      for (const [draftId, joined] of rooms) {
+        const { identity } = joined.member
+        if (joined.documentId !== documentId) continue
+        if (identity.kind !== 'reader' || identity.readerId !== readerId) {
+          continue
+        }
+        this.forget(connectionId, draftId)
+        void joined.member.leave(roomOf(documentId)).catch(() => undefined)
+        joined.member.send(CollabWsEvents.revoked, { documentId })
+        this.announceLeft(connectionId, documentId)
+      }
+    }
+  }
+
+  private forget(connectionId: string, draftId: string) {
+    const rooms = this.joined.get(connectionId)
+    rooms?.delete(draftId)
+    if (rooms && !rooms.size) this.joined.delete(connectionId)
+  }
+
+  private take(member: CollabMember) {
+    if (member.identity.kind === 'owner') return true
+    const now = Date.now()
+    const bucket = this.buckets.get(member.connectionId) ?? {
+      at: now,
+      tokens: BUCKET_SIZE,
+    }
+    bucket.tokens = Math.min(
+      BUCKET_SIZE,
+      bucket.tokens + (now - bucket.at) * BUCKET_REFILL_PER_MS,
+    )
+    bucket.at = now
+    this.buckets.set(member.connectionId, bucket)
+    if (bucket.tokens < 1) return false
+    bucket.tokens -= 1
+    return true
   }
 
   private relayChange(change: DocumentChange) {

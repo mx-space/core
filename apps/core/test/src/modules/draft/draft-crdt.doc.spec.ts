@@ -244,4 +244,34 @@ describe('draft CRDT document', () => {
     expect(texts(readDocContent(probe).content)).toEqual(['a', 'b'])
     expect(texts(readDocContent(doc).content)).toEqual(['a'])
   })
+
+  it('refuses an update carrying changes that are not signed by the expected author', () => {
+    const doc = createContentDoc(
+      { content: state(paragraph('a')), title: 'T' },
+      'import 1',
+    )
+    const peer = new LoroDoc()
+    peer.import(doc.export({ mode: 'snapshot' }))
+    const edit = (message: string, ...values: string[]) =>
+      peer.import(
+        editDocAt(
+          peer,
+          peer.frontiers(),
+          { content: state(...values.map(paragraph)), title: 'T' },
+          message,
+        ),
+      )
+    edit('human:r1', 'a', 'b')
+    const signed = peer.export({ from: doc.oplogVersion(), mode: 'update' })
+    edit('agent:rewrite', 'a', 'b', 'c')
+    const mixed = peer.export({ from: doc.oplogVersion(), mode: 'update' })
+
+    expect(() => vetUpdate(doc, signed, { author: 'human:r1' })).not.toThrow()
+    expect(() => vetUpdate(doc, signed, { author: 'human:r2' })).toThrowError(
+      /author/,
+    )
+    expect(() => vetUpdate(doc, mixed, { author: 'human:r1' })).toThrowError(
+      /author/,
+    )
+  })
 })

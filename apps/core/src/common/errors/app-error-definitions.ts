@@ -455,6 +455,15 @@ export const APP_ERROR_DEFINITIONS = {
     message: 'This draft only accepts Lexical content',
     details: (p) => ({ branchId: p.branchId, contentFormat: p.contentFormat }),
   },
+  [AppErrorCode.COLLAB_INVITE_INVALID]: {
+    status: 410,
+    message: 'This invite link can no longer be used',
+    details: (p) => ({ reason: p.reason }),
+  },
+  [AppErrorCode.COLLAB_FORBIDDEN]: {
+    status: 403,
+    message: 'You are not a collaborator of this document',
+  },
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: {

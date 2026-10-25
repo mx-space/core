@@ -14,6 +14,7 @@ import {
   assertPgTimestamps,
 } from '../../helper/api-shape'
 import { createE2EApp } from '../../helper/create-e2e-app'
+import { collabRepositoryProvider } from '../../mock/modules/collab.mock'
 import { enrichmentProvider } from '../../mock/modules/enrichment.mock'
 import { entitlementProvider } from '../../mock/modules/entitlement.mock'
 import { snippetProvider } from '../../mock/modules/snippet.mock'
@@ -145,6 +146,7 @@ describe('PostController contract (e2e)', () => {
       translationProvider,
       translationEntryProvider,
       enrichmentProvider,
+      collabRepositoryProvider,
       aiInsightsProvider,
       aiSummaryProvider,
       aiTtsQueryProvider,

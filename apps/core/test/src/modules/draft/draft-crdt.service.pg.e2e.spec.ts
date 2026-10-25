@@ -285,6 +285,33 @@ describe('DraftCrdtService (real PG)', () => {
     expect(await crdt.findUpdates(document.id)).toHaveLength(0)
   })
 
+  it('rejects an update not signed by the author the caller expects', async () => {
+    const { branch, document } = await seed()
+    await service.workingCopy(branch.id)
+    const tab = await clientOf(branch.id)
+    const from = tab.oplogVersion()
+    tab.import(
+      editDocAt(
+        tab,
+        tab.frontiers(),
+        { content: body('p1', 'p2', 'p3'), title: 'T' },
+        'human:owner',
+      ),
+    )
+
+    await expect(
+      service.importUpdate(
+        branch.id,
+        tab.export({ from, mode: 'update' }),
+        undefined,
+        'human:reader-1',
+      ),
+    ).rejects.toMatchObject({
+      code: AppErrorCode.DRAFT_CRDT_UPDATE_REJECTED,
+    })
+    expect(await crdt.findUpdates(document.id)).toHaveLength(0)
+  })
+
   it('applies a legacy write at its base version and returns its own checkpoint', async () => {
     const { branch } = await seed()
     const workingCopy = await service.workingCopy(branch.id)

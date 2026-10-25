@@ -1,6 +1,10 @@
 import type { IncomingMessage } from 'node:http'
 
-import type { WsEnvelope } from '@mx-space/ws-client/protocol'
+import {
+  buildEnvelope,
+  type WsAckPayload,
+  type WsEnvelope,
+} from '@mx-space/ws-client/protocol'
 import { Logger } from '@nestjs/common'
 import type {
   OnGatewayConnection,
@@ -27,7 +31,7 @@ import type { SocketLike } from '../gateway.service'
 import { GatewayService } from '../gateway.service'
 import type { WsConnection } from '../ws/ws.types'
 import { WsBusService } from '../ws/ws-bus.service'
-import { buildAck } from '../ws/ws-envelope'
+import { buildAck, serializeEnvelope } from '../ws/ws-envelope'
 import {
   LANG_PATTERN,
   langUpdatePayloadSchema,
@@ -38,6 +42,7 @@ import {
 import { WsGatewayBase } from '../ws/ws-gateway.base'
 import { WsPresenceService } from '../ws/ws-presence.service'
 import type { EventGatewayHooks } from './hook.interface'
+import { WebWsHandlerRegistry } from './web-ws-handler.registry'
 
 declare module '~/types/socket-meta' {
   interface SocketMetadata {
@@ -52,6 +57,15 @@ declare module '~/types/socket-meta' {
 
 const langRoom = (lang: string) => `lang:${lang}`
 
+const COLLAB_ROOM_PREFIX = 'collab:'
+
+const CollabEvents = {
+  join: 'collab.join',
+  leave: 'collab.leave',
+  presence: 'collab.presence',
+  update: 'collab.update',
+} as const
+
 // ws defaults maxPayload to 100 MiB; cap at the ~1 MiB the socket.io
 // transport enforced so unauthenticated clients cannot buffer-bomb the node.
 @WebSocketGateway({ path: '/ws/web', maxPayload: 1024 * 1024 })
@@ -60,6 +74,7 @@ export class WebEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(WebEventsGateway.name)
+  private readonly readerIds = new WeakMap<WsConnection, string>()
 
   constructor(
     private readonly redisService: RedisService,
@@ -67,6 +82,8 @@ export class WebEventsGateway
     private readonly gatewayService: GatewayService,
 
     private readonly authService: AuthService,
+
+    private readonly handlers: WebWsHandlerRegistry,
 
     bus: WsBusService,
     presence: WsPresenceService,
@@ -142,6 +159,7 @@ export class WebEventsGateway
     }
 
     if (readerId) {
+      this.readerIds.set(conn, readerId)
       await this.gatewayService.setSocketMetadata(conn, { readerId })
     }
 
@@ -160,6 +178,7 @@ export class WebEventsGateway
     const conn = this.resolveConnection(ws)
     if (!conn) return
 
+    this.handlers.notifyDisconnect(conn.id)
     const meta = await this.gatewayService.getSocketMetadata(conn)
     const leftRooms = await this.releaseConnection(conn)
 
@@ -194,6 +213,9 @@ export class WebEventsGateway
     }
 
     const room = parsed.data.room
+    if (room.startsWith(COLLAB_ROOM_PREFIX)) {
+      return ack(envelope, { ok: false, code: 'ROOM_INVALID' })
+    }
     this.roomManager.join(room, conn)
     await this.presence.joinRoom('web', room, conn.id)
     this.logger.log(`Connection ${conn.id} joined room [${room}]`)
@@ -266,6 +288,69 @@ export class WebEventsGateway
 
     this.notifyMessageHooks(conn, envelope)
     return ack(envelope, { ok: true })
+  }
+
+  @SubscribeMessage(CollabEvents.join)
+  handleCollabJoin(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.join, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.update)
+  handleCollabUpdate(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.update, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.presence)
+  handleCollabPresence(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.presence, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.leave)
+  handleCollabLeave(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.leave, envelope, ws)
+  }
+
+  private async dispatchExtension(
+    event: string,
+    envelope: WsEnvelope,
+    ws: WebSocket,
+  ) {
+    const conn = this.resolveConnection(ws)
+    if (!conn) return ack(envelope, { ok: false, code: 'NOT_CONNECTED' })
+    const result: WsAckPayload = await this.handlers.dispatch(
+      event,
+      {
+        alive: () => this.resolveConnection(ws) === conn,
+        connectionId: conn.id,
+        join: async (room) => {
+          this.roomManager.join(room, conn)
+          await this.presence.joinRoom('web', room, conn.id)
+        },
+        leave: async (room) => {
+          this.roomManager.leave(room, conn)
+          await this.presence.leaveRoom('web', room, conn.id)
+        },
+        readerId: this.readerIds.get(conn),
+        send: (name, payload) => {
+          if (conn.ws.readyState !== conn.ws.OPEN) return
+          conn.ws.send(serializeEnvelope(buildEnvelope(name, payload)))
+        },
+      },
+      envelope.payload,
+    )
+    return ack(envelope, result)
   }
 
   private notifyMessageHooks(conn: WsConnection, envelope: WsEnvelope) {
@@ -369,7 +454,7 @@ export class WebEventsGateway
   }
 }
 
-function ack(envelope: WsEnvelope, payload: { ok: boolean; code?: string }) {
+function ack(envelope: WsEnvelope, payload: WsAckPayload) {
   return envelope.id ? buildAck(envelope.id, payload) : undefined
 }
 

@@ -191,13 +191,14 @@ export class DraftCrdtService {
     branchId: EntityId | string,
     bytes: Uint8Array,
     origin?: string,
+    author?: string,
   ): Promise<{ branch: DraftBranchRow; document: ContentDocumentRow }> {
     const session = await this.open(branchId)
     if (bytes.length > MAX_UPDATE_BYTES) {
       this.reject(session.branch, 'update is too large')
     }
     try {
-      vetUpdate(session.doc, bytes)
+      vetUpdate(session.doc, bytes, { author })
     } catch (error) {
       this.reject(session.branch, (error as Error).message)
     }

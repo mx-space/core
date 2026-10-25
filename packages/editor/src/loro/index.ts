@@ -207,13 +207,31 @@ export function revertChange(
   return fork.export({ from, mode: 'update' })
 }
 
-export function vetUpdate(doc: LoroDoc, bytes: Uint8Array): LoroDoc {
+export function vetUpdate(
+  doc: LoroDoc,
+  bytes: Uint8Array,
+  options: { author?: string } = {},
+): LoroDoc {
   const probe = doc.fork()
   if (probe.import(bytes).pending) {
     throw new Error('update depends on changes missing from the document')
   }
   if (probe.getTree(TREE_NAME).roots().length > 1) {
     throw new Error('update belongs to a different document lineage')
+  }
+  if (options.author !== undefined) {
+    const known = doc.oplogVersion()
+    for (const [peer, changes] of probe.getAllChanges()) {
+      const end = known.get(peer) ?? 0
+      for (const change of changes) {
+        if (change.counter + change.length <= end) continue
+        if (change.message !== options.author) {
+          throw new Error(
+            `update carries changes not made by ${options.author} (author mismatch)`,
+          )
+        }
+      }
+    }
   }
   readDocContent(probe)
   return probe

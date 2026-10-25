@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createAppException } from '~/common/errors'
 import { AppErrorCode } from '~/common/errors/app-error-code'
 import {
+  type CollabIdentity,
   type CollabMember,
   CollabRoomService,
   CollabWsEvents,
@@ -11,8 +12,21 @@ import type { DocumentChange } from '~/modules/draft/draft-crdt.service'
 
 const b64 = (bytes: number[]) => Buffer.from(bytes).toString('base64')
 
+const owner: CollabIdentity = {
+  kind: 'owner',
+  user: { avatar: 'https://a.test/owner.png', id: 'owner-1', name: 'Owner' },
+}
+const reader = (readerId: string): CollabIdentity => ({
+  kind: 'reader',
+  readerId,
+  user: { avatar: null, id: readerId, name: `Reader ${readerId}` },
+})
+
 const setup = (access: (documentId: string) => boolean = () => true) => {
   const order: string[] = []
+  let revokeListener:
+    ((documentId: string, readerId: string) => void) | undefined
+  const contributions: Array<[string, string]> = []
   let listener: ((change: DocumentChange) => void) | undefined
   const crdt = {
     onDocumentChanged: vi.fn((next: (change: DocumentChange) => void) => {
@@ -37,26 +51,46 @@ const setup = (access: (documentId: string) => boolean = () => true) => {
     room: string
   }[] = []
   const relay = {
+    onRevoke: (listener: (documentId: string, readerId: string) => void) => {
+      revokeListener = listener
+      return () => {
+        revokeListener = undefined
+      }
+    },
     publish: vi.fn(
       (event: string, payload: unknown, room: string, exclude?: string) => {
         published.push({ event, exclude, payload, room })
       },
     ),
+    revoke: vi.fn((documentId: string, readerId: string) =>
+      revokeListener?.(documentId, readerId),
+    ),
   }
   const service = new CollabRoomService(drafts as never, crdt as never, relay, {
     canJoin: async (_member, documentId) => access(documentId),
+    recordContribution: async (documentId, readerId) => {
+      contributions.push([documentId, readerId])
+    },
   })
   service.onModuleInit()
-  const member = (connectionId: string, alive = () => true): CollabMember => ({
+  const member = (
+    connectionId: string,
+    alive = () => true,
+    identity: CollabIdentity = owner,
+  ): CollabMember => ({
     alive,
     connectionId,
+    identity,
     join: vi.fn(async () => {
       order.push('join')
     }),
     leave: vi.fn(async () => undefined),
+    send: vi.fn(),
   })
   return {
+    contributions,
     order,
+    relay,
     change: (change: DocumentChange) => listener?.(change),
     drafts,
     member,
@@ -114,6 +148,7 @@ describe('CollabRoomService', () => {
       'd1',
       new Uint8Array([7, 7]),
       'conn-a',
+      undefined,
     )
     expect(published).toEqual([
       {
@@ -172,7 +207,7 @@ describe('CollabRoomService', () => {
     expect(alice.leave).toHaveBeenCalledWith('collab:doc-1')
     expect(published).toEqual([])
     expect(
-      await service.presence(alice, { draftId: 'd1', state: b64([1]) }),
+      await service.presence(alice, { caret: null, draftId: 'd1' }),
     ).toEqual({ code: 'NOT_JOINED', ok: false })
   })
 
@@ -211,19 +246,27 @@ describe('CollabRoomService', () => {
     expect(drafts.importCrdt).not.toHaveBeenCalled()
   })
 
-  it('relays presence to the rest of the room only for joined members', async () => {
+  it('relays presence stamped with the identity the server holds', async () => {
     const { member, published, service } = setup()
     const alice = member('conn-a')
+    const caret = { anchor: { id: 'p1', offset: 2 } }
 
-    expect(
-      await service.presence(alice, { draftId: 'd1', state: b64([5]) }),
-    ).toEqual({ code: 'NOT_JOINED', ok: false })
+    expect(await service.presence(alice, { caret, draftId: 'd1' })).toEqual({
+      code: 'NOT_JOINED',
+      ok: false,
+    })
 
     await service.join(alice, { draftId: 'd1' })
     published.length = 0
     const ack = await service.presence(alice, {
+      caret,
       draftId: 'd1',
-      state: b64([5]),
+      user: { name: 'Mallory' },
+    })
+    await service.presence(alice, {
+      caret: null,
+      draftId: 'd1',
+      entry: 'agent:42',
     })
 
     expect(ack).toEqual({ ok: true })
@@ -231,10 +274,112 @@ describe('CollabRoomService', () => {
       {
         event: CollabWsEvents.presence,
         exclude: 'conn-a',
-        payload: { documentId: 'doc-1', state: b64([5]) },
+        payload: {
+          caret,
+          connectionId: 'conn-a',
+          documentId: 'doc-1',
+          entry: null,
+          user: owner.user,
+        },
+        room: 'collab:doc-1',
+      },
+      {
+        event: CollabWsEvents.presence,
+        exclude: 'conn-a',
+        payload: {
+          caret: null,
+          connectionId: 'conn-a',
+          documentId: 'doc-1',
+          entry: 'agent:42',
+          user: { avatar: null, id: 'agent:42', name: 'AI' },
+        },
         room: 'collab:doc-1',
       },
     ])
+  })
+
+  it('refuses agent presence entries and oversized carets from co-authors', async () => {
+    const { member, service } = setup()
+    const bob = member('conn-b', () => true, reader('r1'))
+    await service.join(bob, { draftId: 'd1' })
+
+    expect(
+      await service.presence(bob, {
+        caret: null,
+        draftId: 'd1',
+        entry: 'agent:1',
+      }),
+    ).toEqual({ code: 'FORBIDDEN', ok: false })
+    expect(
+      await service.presence(bob, { caret: 'x'.repeat(5000), draftId: 'd1' }),
+    ).toEqual({ code: 'VALIDATION_FAILED', ok: false })
+  })
+
+  it('binds a co-author update to their reader id and records the first contribution', async () => {
+    const { contributions, drafts, member, service } = setup()
+    const bob = member('conn-b', () => true, reader('r1'))
+    await service.join(bob, { draftId: 'd1' })
+
+    await service.update(bob, { draftId: 'd1', update: b64([1]) })
+    await service.update(bob, { draftId: 'd1', update: b64([2]) })
+
+    expect(drafts.importCrdt).toHaveBeenCalledWith(
+      'd1',
+      new Uint8Array([1]),
+      'conn-b',
+      'human:r1',
+    )
+    expect(contributions).toEqual([['doc-1', 'r1']])
+  })
+
+  it("drops co-author frames past the rate limit but never the owner's", async () => {
+    const { member, service } = setup()
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000)
+    const bob = member('conn-b', () => true, reader('r1'))
+    const alice = member('conn-a')
+    await service.join(bob, { draftId: 'd1' })
+    await service.join(alice, { draftId: 'd1' })
+
+    const send = (who: CollabMember) =>
+      service.presence(who, { caret: null, draftId: 'd1' })
+    for (let index = 0; index < 120; index += 1) await send(bob)
+    const limited = await send(bob)
+    now.mockReturnValue(1_000_000 + 1000)
+    const refilled = await send(bob)
+    for (let index = 0; index < 200; index += 1) await send(alice)
+    const ownerAck = await send(alice)
+    now.mockRestore()
+
+    expect(limited).toEqual({ code: 'RATE_LIMITED', ok: false })
+    expect(refilled).toEqual({ ok: true })
+    expect(ownerAck).toEqual({ ok: true })
+  })
+
+  it('drops a removed co-author from the room on every pod', async () => {
+    const { member, published, relay, service } = setup()
+    const bob = member('conn-b', () => true, reader('r1'))
+    const carol = member('conn-c', () => true, reader('r2'))
+    await service.join(bob, { draftId: 'd1' })
+    await service.join(carol, { draftId: 'd1' })
+    published.length = 0
+
+    service.revoke('doc-1', 'r1')
+
+    expect(relay.revoke).toHaveBeenCalledWith('doc-1', 'r1')
+    expect(bob.leave).toHaveBeenCalledWith('collab:doc-1')
+    expect(bob.send).toHaveBeenCalledWith(CollabWsEvents.revoked, {
+      documentId: 'doc-1',
+    })
+    expect(carol.leave).not.toHaveBeenCalled()
+    expect(published.map((frame) => [frame.event, frame.payload])).toEqual([
+      [
+        CollabWsEvents.peerLeft,
+        { connectionId: 'conn-b', documentId: 'doc-1' },
+      ],
+    ])
+    expect(
+      await service.update(bob, { draftId: 'd1', update: b64([1]) }),
+    ).toEqual({ code: 'NOT_JOINED', ok: false })
   })
 
   it('announces a member leaving on leave and on disconnect', async () => {

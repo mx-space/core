@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { WebWsHandlerRegistry } from '~/processors/gateway/web/web-ws-handler.registry'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -101,6 +102,7 @@ describe('WebEventsGateway connection tracking', () => {
       fakes.redisService as any,
       fakes.gatewayService as any,
       authService as any,
+      new WebWsHandlerRegistry(),
       fakes.bus as any,
       fakes.presence as any,
     )

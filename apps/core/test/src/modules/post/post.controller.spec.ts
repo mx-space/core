@@ -169,6 +169,8 @@ const createController = (opts: CreateControllerOptions = {}) => {
     translationEntryService as any,
     snippetService as any,
     entitlementService as any,
+
+    { coAuthorsByRef: async () => new Map() } as any,
   )
 
   return {

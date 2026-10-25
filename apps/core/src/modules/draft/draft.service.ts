@@ -385,11 +385,13 @@ export class DraftService {
     id: string,
     bytes: Uint8Array,
     origin?: string,
+    author?: string,
   ): Promise<void> {
     const { branch, document } = await this.crdtService.importUpdate(
       id,
       bytes,
       origin,
+      author,
     )
     this.broadcast(branch, document)
   }

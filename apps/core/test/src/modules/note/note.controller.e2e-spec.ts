@@ -136,6 +136,8 @@ const createController = (
     {} as any,
     enrichmentService as any,
     translationEntryService as any,
+
+    { coAuthorsByRef: async () => new Map() } as any,
   )
 
   return {
