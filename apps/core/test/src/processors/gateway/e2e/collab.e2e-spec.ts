@@ -297,4 +297,23 @@ describe('collab room over the admin and web gateways', () => {
       await reader.closeAndWait()
     }
   })
+
+  it('waits for the session lookup before answering an early join', async () => {
+    testApp.authService.getSessionUserFromHeaders.mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ user: { id: 'r1' } } as never), 300),
+        ),
+    )
+    const reader = await WsTestClient.connect(testApp.webUrl(), {
+      headers: { cookie: 'better-auth.session_token=x' },
+    })
+    try {
+      expect(
+        await request(reader, CollabWsEvents.join, { draftId: 'd1' }),
+      ).toMatchObject({ ok: true })
+    } finally {
+      await reader.closeAndWait()
+    }
+  })
 })

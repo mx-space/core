@@ -133,6 +133,7 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   }
 
   revoke(documentId: string, readerId: string) {
+    this.dropReader(documentId, readerId)
     this.relay.revoke(documentId, readerId)
   }
 
@@ -140,32 +141,36 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     const parsed = joinSchema.safeParse(raw)
     if (!parsed.success) return invalid
     const { draftId, since } = parsed.data
+    let room: string | null = null
+    let entry: Joined | null = null
+    const backOut = async (ack: WsAckPayload) => {
+      this.forget(member.connectionId, draftId, entry)
+      if (room) await member.leave(room).catch(() => undefined)
+      return ack
+    }
     try {
       const documentId = await this.drafts.documentIdOf(draftId)
       if (!(await this.access.canJoin(member, documentId))) {
         return { code: 'FORBIDDEN', ok: false }
       }
-      const room = roomOf(documentId)
+      // Registered before joining so a removal that lands mid-join finds and drops it.
+      entry = { contributed: false, documentId, member }
+      this.membership(member.connectionId).set(draftId, entry)
+      room = roomOf(documentId)
       // Join before reading: a change stored after the read is then relayed to this member,
       // and one stored before it is in the snapshot. Loro dedupes anything seen twice.
       await member.join(room)
-      if (!member.alive()) {
-        await member.leave(room)
-        return { code: 'NOT_CONNECTED', ok: false }
-      }
+      if (!member.alive()) return backOut({ code: 'NOT_CONNECTED', ok: false })
       const { update } = await this.drafts.exportCrdtFor(
         draftId,
         since ? decode(since) : undefined,
       )
-      if (!member.alive()) {
-        await member.leave(room)
-        return { code: 'NOT_CONNECTED', ok: false }
+      if (!member.alive()) return backOut({ code: 'NOT_CONNECTED', ok: false })
+      const stillJoined =
+        this.joined.get(member.connectionId)?.get(draftId) === entry
+      if (!stillJoined || !(await this.access.canJoin(member, documentId))) {
+        return backOut({ code: 'FORBIDDEN', ok: false })
       }
-      this.membership(member.connectionId).set(draftId, {
-        contributed: false,
-        documentId,
-        member,
-      })
       this.relay.publish(
         CollabWsEvents.peerJoined,
         { connectionId: member.connectionId, documentId },
@@ -181,7 +186,7 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
         ok: true,
       }
     } catch (error) {
-      return this.failure(error)
+      return backOut(this.failure(error))
     }
   }
 
@@ -285,8 +290,9 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private forget(connectionId: string, draftId: string) {
+  private forget(connectionId: string, draftId: string, only?: Joined | null) {
     const rooms = this.joined.get(connectionId)
+    if (only !== undefined && rooms?.get(draftId) !== only) return
     rooms?.delete(draftId)
     if (rooms && !rooms.size) this.joined.delete(connectionId)
   }

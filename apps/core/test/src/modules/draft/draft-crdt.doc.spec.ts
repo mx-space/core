@@ -274,4 +274,46 @@ describe('draft CRDT document', () => {
       /author/,
     )
   })
+
+  it('refuses author-signed changes written under a peer someone else already uses', () => {
+    const doc = createContentDoc(
+      { content: state(paragraph('a')), title: 'T' },
+      'import 1',
+    )
+    const owner = new LoroDoc()
+    owner.import(doc.export({ mode: 'snapshot' }))
+    doc.import(
+      editDocAt(
+        owner,
+        owner.frontiers(),
+        { content: state(paragraph('a'), paragraph('o')), title: 'T' },
+        'human:owner',
+      ),
+    )
+    const ownerPeer = [...doc.getAllChanges().entries()].find(([, changes]) =>
+      changes.some((change) => change.message === 'human:owner'),
+    )![0]
+    const forger = new LoroDoc()
+    forger.import(doc.export({ mode: 'snapshot' }))
+    forger.setPeerId(ownerPeer)
+    const from = doc.oplogVersion()
+    forger.import(
+      editDocAt(
+        forger,
+        forger.frontiers(),
+        {
+          content: state(paragraph('a'), paragraph('o'), paragraph('x')),
+          title: 'T',
+        },
+        'human:r1',
+        { peer: ownerPeer },
+      ),
+    )
+
+    expect(() =>
+      vetUpdate(doc, forger.export({ from, mode: 'update' }), {
+        author: 'human:r1',
+      }),
+    ).toThrowError(/author/)
+  })
 })

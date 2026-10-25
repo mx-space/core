@@ -223,9 +223,14 @@ export function vetUpdate(
     const known = doc.oplogVersion()
     for (const [peer, changes] of probe.getAllChanges()) {
       const end = known.get(peer) ?? 0
+      // A peer id stays bound to one author, or a forged op could claim ids another member
+      // is about to send and make the server drop theirs as duplicates.
+      const sharedPeer =
+        end > 0 &&
+        doc.getChangeAt({ counter: end - 1, peer }).message !== options.author
       for (const change of changes) {
         if (change.counter + change.length <= end) continue
-        if (change.message !== options.author) {
+        if (sharedPeer || change.message !== options.author) {
           throw new Error(
             `update carries changes not made by ${options.author} (author mismatch)`,
           )

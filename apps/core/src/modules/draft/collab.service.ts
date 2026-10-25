@@ -33,6 +33,8 @@ export class CollabService {
     { at: number; identity: Promise<CollabIdentity | null> }
   >()
 
+  private ownerId: { at: number; id: Promise<string | null> } | null = null
+
   constructor(
     private readonly repository: CollabRepository,
     private readonly draftRepository: DraftRepository,
@@ -172,7 +174,14 @@ export class CollabService {
   }
 
   async ownerIdentity(): Promise<CollabIdentity | null> {
-    const ownerId = await this.repository.ownerId()
+    if (!this.ownerId || Date.now() - this.ownerId.at >= IDENTITY_TTL_MS) {
+      const id = this.repository.ownerId()
+      this.ownerId = { at: Date.now(), id }
+      id.catch(() => {
+        this.ownerId = null
+      })
+    }
+    const ownerId = await this.ownerId.id
     return ownerId ? this.identityOf(ownerId) : null
   }
 

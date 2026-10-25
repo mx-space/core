@@ -240,4 +240,37 @@ describe('CollabRepository (real PG)', () => {
     ])
     expect(byRef.has('7700000000000000002')).toBe(false)
   })
+
+  it('keeps a removed reader out through old links but lets a newer link bring them back', async () => {
+    const documentId = await seedDocument()
+    const reader = await seedReader('Heidi')
+    await repository.createInvite({
+      documentId,
+      expiresAt: later(60_000),
+      maxUses: null,
+      tokenHash: 'hash-old',
+    })
+    await repository.acceptInvite('hash-old', reader)
+    await repository.markContributed(documentId, reader)
+    await repository.removeCollaborator(documentId, reader)
+
+    expect(await repository.acceptInvite('hash-old', reader)).toEqual({
+      ok: false,
+      reason: 'revoked',
+    })
+    expect(await repository.isCollaborator(documentId, reader)).toBe(false)
+    expect(await repository.listCollaborators(documentId)).toEqual([])
+
+    await repository.createInvite({
+      documentId,
+      expiresAt: later(60_000),
+      maxUses: null,
+      tokenHash: 'hash-new',
+    })
+    expect(await repository.acceptInvite('hash-new', reader)).toEqual({
+      documentId,
+      ok: true,
+    })
+    expect(await repository.isCollaborator(documentId, reader)).toBe(true)
+  })
 })

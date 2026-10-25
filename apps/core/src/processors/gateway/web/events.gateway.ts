@@ -74,7 +74,10 @@ export class WebEventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(WebEventsGateway.name)
-  private readonly readerIds = new WeakMap<WsConnection, string>()
+  private readonly readerIds = new WeakMap<
+    WsConnection,
+    Promise<string | undefined>
+  >()
 
   constructor(
     private readonly redisService: RedisService,
@@ -130,6 +133,8 @@ export class WebEventsGateway
   async handleConnection(ws: WebSocket, request: IncomingMessage) {
     const conn = this.trackConnection(ws)
     const query = parseQuery(request)
+    const resolvingReader = this.resolveReaderId(request)
+    this.readerIds.set(conn, resolvingReader)
 
     const sessionId = query.get('socket_session_id') || conn.id
     const rawLang = query.get('lang')
@@ -147,7 +152,7 @@ export class WebEventsGateway
       await this.presence.joinRoom('web', langRoom(lang), conn.id)
     }
 
-    const readerId = await this.resolveReaderId(request)
+    const readerId = await resolvingReader
 
     // A close anywhere above already ran the disconnect cleanup, which cannot
     // see writes this handler issues afterwards. Undo them or they outlive the
@@ -159,7 +164,6 @@ export class WebEventsGateway
     }
 
     if (readerId) {
-      this.readerIds.set(conn, readerId)
       await this.gatewayService.setSocketMetadata(conn, { readerId })
     }
 
@@ -342,7 +346,7 @@ export class WebEventsGateway
           this.roomManager.leave(room, conn)
           await this.presence.leaveRoom('web', room, conn.id)
         },
-        readerId: this.readerIds.get(conn),
+        readerId: await this.readerIds.get(conn),
         send: (name, payload) => {
           if (conn.ws.readyState !== conn.ws.OPEN) return
           conn.ws.send(serializeEnvelope(buildEnvelope(name, payload)))

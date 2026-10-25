@@ -316,6 +316,13 @@
       "when": 1793000000000,
       "tag": "0044_content_collaborators",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793050000000,
+      "tag": "0045_collaborator_removed_at",
+      "breakpoints": true
     }
   ]
 }

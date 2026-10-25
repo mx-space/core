@@ -32,6 +32,7 @@ const setup = () => {
       },
     ]),
     markContributed: vi.fn(async () => undefined),
+    ownerId: vi.fn(async () => 'owner-1'),
     peekInvite: vi.fn(async () => ({ documentId: 'doc-1', ok: true })),
     presenceUserOf: vi.fn(async (id: string) =>
       id === 'owner-1'
@@ -185,5 +186,16 @@ describe('CollabService', () => {
       readerId: 'r1',
       user: { avatar: null, id: 'r1', name: 'Reader r1' },
     })
+  })
+
+  it('looks the owner up once rather than on every frame', async () => {
+    const { repository, service } = setup()
+
+    await service.ownerIdentity()
+    await service.ownerIdentity()
+    await service.ownerIdentity()
+
+    expect(repository.ownerId).toHaveBeenCalledTimes(1)
+    expect(repository.presenceUserOf).toHaveBeenCalledTimes(1)
   })
 })

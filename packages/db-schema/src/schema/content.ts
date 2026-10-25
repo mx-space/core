@@ -401,6 +401,7 @@ export const contentCollaborators = pgTable(
       .references(() => readers.id, { onDelete: 'cascade' }),
     showInByline: boolean('show_in_byline').notNull().default(true),
     contributedAt: tsCol('contributed_at'),
+    removedAt: tsCol('removed_at'),
     createdAt: createdAt(),
   },
   (table) => [

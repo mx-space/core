@@ -147,7 +147,10 @@ export class CollabRepository extends BaseRepository {
       if (!usable.ok || !invite) return usable
       const { documentId } = usable
       const [existing] = await tx
-        .select({ id: contentCollaborators.id })
+        .select({
+          id: contentCollaborators.id,
+          removedAt: contentCollaborators.removedAt,
+        })
         .from(contentCollaborators)
         .where(
           and(
@@ -156,15 +159,26 @@ export class CollabRepository extends BaseRepository {
           ),
         )
         .limit(1)
-      if (existing) return { documentId, ok: true }
+      if (existing && !existing.removedAt) return { documentId, ok: true }
+      // A link made before the removal must not undo it; only a later invite brings them back.
+      if (existing?.removedAt && invite.createdAt <= existing.removedAt) {
+        return { ok: false, reason: 'revoked' }
+      }
       if (invite.maxUses !== null && invite.uses >= invite.maxUses) {
         return { ok: false, reason: 'exhausted' }
       }
-      await tx.insert(contentCollaborators).values({
-        documentId: invite.documentId,
-        id: this.snowflake.nextId(),
-        readerId,
-      })
+      if (existing) {
+        await tx
+          .update(contentCollaborators)
+          .set({ removedAt: null })
+          .where(eq(contentCollaborators.id, existing.id))
+      } else {
+        await tx.insert(contentCollaborators).values({
+          documentId: invite.documentId,
+          id: this.snowflake.nextId(),
+          readerId,
+        })
+      }
       await tx
         .update(contentCollabInvites)
         .set({ uses: invite.uses + 1 })
@@ -227,7 +241,12 @@ export class CollabRepository extends BaseRepository {
       })
       .from(contentCollaborators)
       .innerJoin(readers, eq(readers.id, contentCollaborators.readerId))
-      .where(eq(contentCollaborators.documentId, parseEntityId(documentId)))
+      .where(
+        and(
+          eq(contentCollaborators.documentId, parseEntityId(documentId)),
+          isNull(contentCollaborators.removedAt),
+        ),
+      )
       .orderBy(
         asc(contentCollaborators.createdAt),
         asc(contentCollaborators.id),
@@ -239,7 +258,8 @@ export class CollabRepository extends BaseRepository {
     readerId: string,
   ): Promise<boolean> {
     const rows = await this.db
-      .delete(contentCollaborators)
+      .update(contentCollaborators)
+      .set({ removedAt: sql`now()` })
       .where(this.member(documentId, readerId))
       .returning({ id: contentCollaborators.id })
     return rows.length > 0
@@ -299,6 +319,7 @@ export class CollabRepository extends BaseRepository {
             refIds.map((id) => parseEntityId(id)),
           ),
           isNotNull(contentCollaborators.contributedAt),
+          isNull(contentCollaborators.removedAt),
           eq(contentCollaborators.showInByline, true),
         ),
       )
@@ -348,6 +369,7 @@ export class CollabRepository extends BaseRepository {
     return and(
       eq(contentCollaborators.documentId, parseEntityId(documentId)),
       eq(contentCollaborators.readerId, readerId),
+      isNull(contentCollaborators.removedAt),
     )
   }
 }

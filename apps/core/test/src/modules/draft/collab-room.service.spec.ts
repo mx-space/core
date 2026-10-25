@@ -415,4 +415,47 @@ describe('CollabRoomService', () => {
       ok: false,
     })
   })
+
+  it('drops a removed co-author on this pod even if the broadcast is lost', async () => {
+    const { member, relay, service } = setup()
+    relay.revoke.mockImplementation(() => undefined)
+    const bob = member('conn-b', () => true, reader('r1'))
+    await service.join(bob, { draftId: 'd1' })
+
+    service.revoke('doc-1', 'r1')
+
+    expect(bob.leave).toHaveBeenCalledWith('collab:doc-1')
+    expect(
+      await service.update(bob, { draftId: 'd1', update: b64([1]) }),
+    ).toEqual({ code: 'NOT_JOINED', ok: false })
+  })
+
+  it('backs out a join whose access was removed while it was loading', async () => {
+    let allowed = true
+    const { drafts, member, service } = setup(() => allowed)
+    drafts.exportCrdtFor.mockImplementationOnce(async () => {
+      allowed = false
+      return { documentId: 'doc-1', update: new Uint8Array([1]) }
+    })
+    const bob = member('conn-b', () => true, reader('r1'))
+
+    const ack = await service.join(bob, { draftId: 'd1' })
+
+    expect(ack).toEqual({ code: 'FORBIDDEN', ok: false })
+    expect(bob.leave).toHaveBeenCalledWith('collab:doc-1')
+    expect(
+      await service.update(bob, { draftId: 'd1', update: b64([1]) }),
+    ).toEqual({ code: 'NOT_JOINED', ok: false })
+  })
+
+  it('leaves the room again when loading the document fails', async () => {
+    const { drafts, member, service } = setup()
+    drafts.exportCrdtFor.mockRejectedValueOnce(new Error('boom'))
+    const bob = member('conn-b', () => true, reader('r1'))
+
+    const ack = await service.join(bob, { draftId: 'd1' })
+
+    expect(ack).toEqual({ code: 'INTERNAL_ERROR', ok: false })
+    expect(bob.leave).toHaveBeenCalledWith('collab:doc-1')
+  })
 })
