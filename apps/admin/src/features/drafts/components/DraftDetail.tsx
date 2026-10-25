@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ChevronLeft, GitCompare, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { Archive, ChevronLeft, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -10,10 +10,10 @@ import {
   restoreDraftRevision,
 } from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
+import { formatBytes } from '~/features/files/utils/format'
 import { useI18n } from '~/i18n'
 import type { DraftCard, DraftModel } from '~/models/draft'
 import { adminQueryKeys } from '~/query/keys'
-import { FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
@@ -26,10 +26,10 @@ import {
   getEditPathForDraft,
   getEditPathForRevision,
 } from '../utils/draft-edit-path'
-import { DraftDetailEmpty } from './DraftDetailEmpty'
+import type { DraftCompareView } from './DraftCompareBar'
+import { DraftCompareBar } from './DraftCompareBar'
+import { openDraftCompareDialog } from './DraftCompareDialog'
 import { DraftDiffPreview } from './DraftDiffPreview'
-import { DraftStoragePanel } from './DraftStoragePanel'
-import { VersionRow } from './VersionRow'
 
 export function DraftDetail(props: {
   busy: boolean
@@ -71,20 +71,15 @@ export function DraftDetail(props: {
     onSuccess: (draft) => navigate(getEditPathForDraft(draft)),
   })
 
-  useScopeArrowNav({
-    itemSelector: '[data-scope-item="row"]',
-    onItemFocus: (element) => {
-      const revisionId = element.getAttribute('data-id')
-      if (revisionId) setSelectedRevisionId(revisionId)
-    },
-    scopeId: versionsScopeId,
-  })
+  const [view, setView] = useState<DraftCompareView>('changes')
+  const restore = (revisionId: string) =>
+    restoresInPlace
+      ? restoreMutation.mutate(revisionId)
+      : navigate(getEditPathForRevision(props.draft, revisionId))
 
   useEffect(() => {
     setSelectedRevisionId(
-      versionItems.find((item) => !item.isCurrent)?.id ??
-        versionItems[0]?.id ??
-        null,
+      versionItems.find((item) => !item.isCurrent)?.id ?? null,
     )
   }, [props.draft.id, versionItems])
 
@@ -97,12 +92,30 @@ export function DraftDetail(props: {
   const diffStats = selectedRevision
     ? computeDiffStats(selectedRevision, props.draft.headRevision)
     : null
+  const { storage } = props.card
+  const reclaim = compactQuery.data
+    ? compactQuery.data.revisionBytes + compactQuery.data.crdtBytes
+    : 0
+  const summary = [
+    t(meta.labelKey),
+    relativeTimeFromNow(props.draft.updatedAt ?? props.draft.createdAt),
+    `${t('drafts.storage.revisions')} ${t(
+      'drafts.storagePanel.revisionsValue',
+      {
+        count: storage.revisionCount,
+        size: formatBytes(storage.revisionBytes),
+      },
+    )}`,
+    storage.crdtBytes > 0
+      ? `${t('drafts.storage.crdt')} ${formatBytes(storage.crdtBytes)}`
+      : null,
+  ].filter(Boolean)
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div
         className={cn(
-          'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+          'flex shrink-0 items-center justify-between gap-3 border-b border-border px-6',
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
@@ -118,20 +131,33 @@ export function DraftDetail(props: {
             <ChevronLeft aria-hidden="true" className="size-4" />
           </Button>
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+            <h2 className="truncate text-lg font-semibold text-fg">
               {props.draft.headRevision.title || t('drafts.row.untitled')}
             </h2>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-              <span>{t(meta.labelKey)}</span>
-              <time dateTime={props.draft.updatedAt ?? props.draft.createdAt}>
-                {relativeTimeFromNow(
-                  props.draft.updatedAt ?? props.draft.createdAt,
-                )}
-              </time>
-            </div>
+            <p className="mt-0.5 truncate text-xs text-fg-muted">
+              {summary.join(' · ')}
+            </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Button
+            className="h-8 px-2.5"
+            disabled={props.busy || !compactQuery.data || reclaim === 0}
+            onClick={props.onCompact}
+            type="button"
+            variant="subtle"
+          >
+            {props.busy ? (
+              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+            ) : (
+              <Archive aria-hidden="true" className="size-4" />
+            )}
+            {reclaim > 0
+              ? t('drafts.compact.actionWithSize', {
+                  size: formatBytes(reclaim),
+                })
+              : t('drafts.compact.action')}
+          </Button>
           <Button
             className="h-8 px-2.5"
             onClick={() => navigate(getEditPathForDraft(props.draft))}
@@ -148,109 +174,73 @@ export function DraftDetail(props: {
             type="button"
             variant="subtle"
           >
-            {props.busy ? (
-              <Loader2 aria-hidden="true" className="size-4 animate-spin" />
-            ) : (
-              <Trash2 aria-hidden="true" className="size-4" />
-            )}
+            <Trash2 aria-hidden="true" className="size-4" />
             {t('drafts.detail.delete')}
           </Button>
         </div>
       </div>
 
-      <DraftStoragePanel
-        busy={props.busy}
-        card={props.card}
-        onCompact={props.onCompact}
-        preview={compactQuery.data}
-      />
-
-      <div className="min-h-0 flex-1 overflow-hidden">
-        {revisionsQuery.isLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="size-5 animate-spin text-neutral-400" />
-          </div>
-        ) : versionItems.length === 0 ? (
-          <DraftDetailEmpty />
-        ) : (
-          <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <FocusScope
-              className="outline-hidden min-h-0 border-b border-neutral-200 lg:border-b-0 lg:border-r dark:border-neutral-800"
-              id={versionsScopeId}
-            >
-              <div className="flex h-10 items-center gap-2 border-b border-neutral-200 px-4 text-sm font-medium text-neutral-700 dark:border-neutral-800 dark:text-neutral-300">
-                <GitCompare aria-hidden="true" className="size-4" />
-                {t('drafts.history.title')}
-                <span className="text-xs font-normal text-neutral-400">
-                  ({versionItems.length})
-                </span>
-              </div>
-              <Scroll className="max-h-72 lg:h-[calc(100%-2.5rem)] lg:max-h-none">
-                {versionItems.map((item) => (
-                  <VersionRow
-                    diffStats={
-                      item.id === selectedRevisionId ? diffStats : null
-                    }
-                    doomed={doomed.has(item.id)}
-                    item={item}
-                    key={item.id}
-                    onRestore={() =>
-                      restoresInPlace
-                        ? restoreMutation.mutate(item.id)
-                        : navigate(getEditPathForRevision(props.draft, item.id))
-                    }
-                    onSelect={() => setSelectedRevisionId(item.id)}
-                    restorePending={
-                      restoreMutation.isPending &&
-                      restoreMutation.variables === item.id
-                    }
-                    selected={selectedRevisionId === item.id}
-                  />
-                ))}
-              </Scroll>
-            </FocusScope>
-
-            <div className="flex min-h-0 flex-col bg-neutral-50 dark:bg-neutral-950">
-              <div className="flex h-10 shrink-0 items-center justify-between border-b border-neutral-200 px-4 dark:border-neutral-800">
-                <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-                  {selectedItem ? (
-                    <>
-                      <span>{relativeTimeFromNow(selectedItem.savedAt)}</span>
-                      <span className="text-neutral-400">→</span>
-                      <span>{t('drafts.history.current')}</span>
-                    </>
-                  ) : (
-                    <span>{t('drafts.history.pickVersion')}</span>
-                  )}
-                </div>
-                {diffStats && !diffStats.isSame ? (
-                  <span className="text-xs tabular-nums text-neutral-500">
-                    {t('drafts.history.deltaChars', {
-                      delta:
-                        diffStats.delta > 0
-                          ? `+${diffStats.delta}`
-                          : diffStats.delta,
-                    })}
-                  </span>
-                ) : null}
-              </div>
-              <Scroll className="flex-1" innerClassName="p-4">
-                {selectedRevision ? (
-                  <DraftDiffPreview
-                    currentDraft={props.draft.headRevision}
-                    diffStats={diffStats}
-                    selectedDraft={selectedRevision}
-                  />
-                ) : (
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    {t('drafts.history.cannotLoad')}
-                  </p>
-                )}
-              </Scroll>
+      {revisionsQuery.isLoading ? (
+        <div className="flex flex-1 items-center justify-center">
+          <Loader2 className="size-5 animate-spin text-fg-subtle" />
+        </div>
+      ) : revisionsQuery.isError ? (
+        <p className="px-6 py-8 text-center text-sm text-fg-muted">
+          {t('drafts.history.cannotLoad')}
+        </p>
+      ) : versionItems.length <= 1 ? (
+        <p className="px-6 py-8 text-center text-sm text-fg-muted">
+          {t('drafts.history.noEarlier')}
+        </p>
+      ) : (
+        <>
+          <DraftCompareBar
+            diffStats={diffStats}
+            doomed={doomed}
+            items={versionItems}
+            onOpenSplit={() => {
+              if (!selectedRevision || !selectedItem) return
+              void openDraftCompareDialog({
+                currentDraft: props.draft.headRevision,
+                diffStats,
+                onRestore: () => restore(selectedItem.id),
+                savedAt: selectedItem.savedAt,
+                selectedDraft: selectedRevision,
+                title:
+                  props.draft.headRevision.title || t('drafts.row.untitled'),
+              })
+            }}
+            onRestore={restore}
+            onSelect={setSelectedRevisionId}
+            onViewChange={setView}
+            restorePendingId={
+              restoreMutation.isPending
+                ? (restoreMutation.variables ?? null)
+                : null
+            }
+            scopeId={versionsScopeId}
+            selectedId={selectedRevisionId}
+            view={view}
+          />
+          <Scroll className="min-h-0 flex-1" innerClassName="px-6 py-6">
+            <div className="mx-auto max-w-3xl">
+              {selectedRevision ? (
+                <DraftDiffPreview
+                  collapseUnchanged={view === 'changes'}
+                  currentDraft={props.draft.headRevision}
+                  diffStats={diffStats}
+                  layout="inline"
+                  selectedDraft={selectedRevision}
+                />
+              ) : (
+                <p className="text-sm text-fg-muted">
+                  {t('drafts.history.cannotLoad')}
+                </p>
+              )}
             </div>
-          </div>
-        )}
-      </div>
+          </Scroll>
+        </>
+      )}
     </div>
   )
 }

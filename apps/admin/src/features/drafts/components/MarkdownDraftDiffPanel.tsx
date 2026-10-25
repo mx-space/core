@@ -10,8 +10,11 @@ export function MarkdownDraftDiffPanel(props: {
   comparisonLabel?: string
   currentLabel?: string
   currentText: string
+  diffStyle?: 'split' | 'unified'
+  expandUnchanged?: boolean
   selectedLabel?: string
   selectedText: string
+  showHeader?: boolean
 }) {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -37,7 +40,8 @@ export function MarkdownDraftDiffPanel(props: {
         setIsLoading(false)
         const nextDiffInstance = new FileDiff({
           diffIndicators: 'bars',
-          diffStyle: 'unified',
+          diffStyle: props.diffStyle ?? 'unified',
+          expandUnchanged: props.expandUnchanged,
           disableFileHeader: true,
           themeType: 'system',
         }) as unknown as DiffRendererInstance
@@ -72,19 +76,23 @@ export function MarkdownDraftDiffPanel(props: {
     props.currentLabel,
     props.selectedText,
     props.selectedLabel,
+    props.diffStyle,
+    props.expandUnchanged,
     t,
   ])
 
   return (
     <section className="min-h-full min-w-0">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-          {t('drafts.diff.markdown.title')}
-        </h3>
-        <span className="shrink-0 text-xs text-neutral-500">
-          {props.comparisonLabel ?? t('drafts.history.direction')}
-        </span>
-      </div>
+      {props.showHeader === false ? null : (
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            {t('drafts.diff.markdown.title')}
+          </h3>
+          <span className="shrink-0 text-xs text-neutral-500">
+            {props.comparisonLabel ?? t('drafts.history.direction')}
+          </span>
+        </div>
+      )}
       <Scroll
         className="relative min-h-[20rem] border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950"
         orientation="both"

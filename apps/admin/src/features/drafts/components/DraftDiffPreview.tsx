@@ -9,8 +9,10 @@ import { MarkdownDraftDiffPanel } from './MarkdownDraftDiffPanel'
 import { RichDraftDiffPanel } from './RichDraftDiffPanel'
 
 export function DraftDiffPreview(props: {
+  collapseUnchanged?: boolean
   currentDraft: RevisionSnapshot
   diffStats: DraftDiffStats | null
+  layout?: 'inline' | 'split'
   selectedDraft: RevisionSnapshot
 }) {
   const { t } = useI18n()
@@ -22,9 +24,11 @@ export function DraftDiffPreview(props: {
   ) {
     return (
       <RichDraftDiffPanel
-        comparisonLabel={t('drafts.history.direction')}
+        collapseUnchanged={props.collapseUnchanged}
         currentContent={props.currentDraft.content}
+        layout={props.layout}
         selectedContent={props.selectedDraft.content}
+        showHeader={false}
       />
     )
   }
@@ -45,11 +49,13 @@ export function DraftDiffPreview(props: {
 
   return (
     <MarkdownDraftDiffPanel
-      comparisonLabel={t('drafts.history.direction')}
       currentLabel={t('drafts.history.currentFile')}
       currentText={currentText}
+      diffStyle={props.layout === 'split' ? 'split' : 'unified'}
+      expandUnchanged={!props.collapseUnchanged}
       selectedLabel={t('drafts.history.historyFile')}
       selectedText={selectedText}
+      showHeader={false}
     />
   )
 }

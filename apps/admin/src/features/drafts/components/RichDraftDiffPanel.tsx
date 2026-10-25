@@ -1,3 +1,4 @@
+import type { RichDiffLayout } from '@haklex/rich-diff'
 import { useEffect, useMemo, useRef } from 'react'
 
 import { useI18n } from '~/i18n'
@@ -9,9 +10,12 @@ import {
 } from '../utils/rich-diff'
 
 export function RichDraftDiffPanel(props: {
+  collapseUnchanged?: boolean
   comparisonLabel?: string
   currentContent: string
+  layout?: RichDiffLayout
   selectedContent: string
+  showHeader?: boolean
 }) {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -35,8 +39,11 @@ export function RichDraftDiffPanel(props: {
         if (disposed || !containerRef.current) return
         handle = mountRichDiff(containerRef.current, {
           className: '!rounded-none !border-0',
+          collapseUnchanged: props.collapseUnchanged,
+          layout: props.layout,
           newValue: currentValue,
           oldValue: selectedValue,
+          renderCollapsed: (count) => t('drafts.compare.collapsed', { count }),
           theme: getCurrentColorScheme(),
           variant: 'comment',
         })
@@ -45,9 +52,11 @@ export function RichDraftDiffPanel(props: {
 
     return () => {
       disposed = true
-      handle?.unmount()
+      const mounted = handle
+      // Unmounting a nested root while the parent tree is rendering triggers React's race warning.
+      queueMicrotask(() => mounted?.unmount())
     }
-  }, [currentValue, selectedValue])
+  }, [currentValue, selectedValue, props.layout, props.collapseUnchanged, t])
 
   if (!selectedValue || !currentValue) {
     return (
@@ -59,14 +68,16 @@ export function RichDraftDiffPanel(props: {
 
   return (
     <section className="min-h-full min-w-0">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
-          {t('drafts.diff.rich.title')}
-        </h3>
-        <span className="shrink-0 text-xs text-neutral-500">
-          {props.comparisonLabel ?? t('drafts.history.direction')}
-        </span>
-      </div>
+      {props.showHeader === false ? null : (
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h3 className="truncate text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            {t('drafts.diff.rich.title')}
+          </h3>
+          <span className="shrink-0 text-xs text-neutral-500">
+            {props.comparisonLabel ?? t('drafts.history.direction')}
+          </span>
+        </div>
+      )}
       <Scroll
         className="min-h-[20rem] border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950"
         orientation="both"
