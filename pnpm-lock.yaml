@@ -461,7 +461,7 @@ importers:
         version: 1.2.5
       '@lobehub/streamdown':
         specifier: ^1.4.0
-        version: 1.4.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)
+        version: 1.4.4(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)
       '@monaco-editor/react':
         specifier: 4.7.0
         version: 4.7.0(monaco-editor@0.57.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -4153,8 +4153,8 @@ packages:
       typescript:
         optional: true
 
-  '@lobehub/streamdown@1.4.0':
-    resolution: {integrity: sha512-kkqq2nqwcqz+rV/eUPQ7vY1TQWHWZE3kQt1MsSLtNFLNXMoKYPiF+cdahP97uunWKtf2dB48q/nkSWaZzEKRSw==}
+  '@lobehub/streamdown@1.4.4':
+    resolution: {integrity: sha512-k1vAHB+FzAMC674yB3npZr2EosRciJmT3jZQ/51ZI+d9O5rk+CoGI1RdOhz39A/oaaQFgSbEWwE2EwlrpR+Clw==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       react: ^19.0.0
@@ -15318,7 +15318,7 @@ snapshots:
       - eslint-plugin-import
       - supports-color
 
-  '@lobehub/streamdown@1.4.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)':
+  '@lobehub/streamdown@1.4.4(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)':
     dependencies:
       '@types/hast': 3.0.5
       hast-util-to-jsx-runtime: 2.3.6(supports-color@10.2.2)
