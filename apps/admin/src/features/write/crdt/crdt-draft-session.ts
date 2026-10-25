@@ -133,6 +133,7 @@ export async function createCrdtDraftSession(
   let sync: CrdtSync | null = null
   let disposed = false
   const early: Uint8Array[] = []
+  let reconnected = false
   const presence = createCollabPresence({
     send: (frame) => channel?.sendPresence(frame),
   })
@@ -185,7 +186,8 @@ export async function createCrdtDraftSession(
     onPresence: (frame) => presence.apply(frame),
     onRevoked: () => options.onRevoked?.(),
     onReconnect: () => {
-      void sync?.pull().catch(() => undefined)
+      if (sync) void sync.pull().catch(() => undefined)
+      else reconnected = true
     },
     onRemote: (bytes) => {
       if (sync) sync.receive(bytes)
@@ -214,6 +216,7 @@ export async function createCrdtDraftSession(
   }
   const ready = sync
   for (const bytes of early.splice(0)) ready.receive(bytes)
+  if (reconnected) void ready.pull().catch(() => undefined)
   reportTitle()
 
   return {

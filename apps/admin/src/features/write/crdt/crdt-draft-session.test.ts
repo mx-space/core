@@ -587,4 +587,25 @@ describe('createCrdtDraftSession co-authors', () => {
     expect(onRevoked).toHaveBeenCalledTimes(1)
     session.dispose()
   })
+
+  it('joins the room when the socket opens while the first load is still running', async () => {
+    const server = seededServer('T', 'p1')
+    const pulls: string[] = []
+    const session = await createCrdtDraftSession({
+      channel: (hooks) => ({
+        dispose: () => undefined,
+        live: () => pulls.length > 1,
+        pull: async (since) => {
+          pulls.push(since ? 'since' : 'first')
+          if (pulls.length === 1) hooks.onReconnect()
+          return transportFor(server).pull(since)
+        },
+        push: transportFor(server).push,
+        sendPresence: () => undefined,
+      }),
+    })
+
+    await vi.waitFor(() => expect(pulls).toEqual(['first', 'since']))
+    session.dispose()
+  })
 })
