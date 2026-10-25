@@ -1,3 +1,14 @@
+## [15.4.0](https://github.com/mx-space/core/compare/v15.3.0...v15.4.0) (2026-10-25)
+
+### Features
+
+* collaborative editing on Loro — realtime room, AI peer, co-authors ([#2870](https://github.com/mx-space/core/pull/2870)) ([cfb24a0](https://github.com/mx-space/core/commit/cfb24a0d29ccd485025c1b9c0e4cf7f841f54cc1))
+* **drafts:** draft management and storage reclamation ([88c3c69](https://github.com/mx-space/core/commit/88c3c690bc2d8b07c1ef6d8c542094d91245cc30))
+
+### Bug Fixes
+
+* **ai:** allow saving LobeHub providers without an API key ([b58dc67](https://github.com/mx-space/core/commit/b58dc6746e744c2987dc8bf550e67a09d835d9da))
+
 ## [15.3.0](https://github.com/mx-space/core/compare/v15.2.0...v15.3.0) (2026-10-25)
 
 ### Features

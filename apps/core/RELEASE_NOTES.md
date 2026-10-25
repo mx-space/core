@@ -1,29 +1,34 @@
 ## TL;DR
 
-The write-page AI agent now runs on the server with mid-run steering and visible usage, and LobeHub Cloud joins as an AI provider.
+Lexical drafts now sync live through Loro with co-authors and an AI peer, and drafts gain storage management with cleanup and compaction.
 
 ## Highlights
 
-The write-page AI agent now runs its tool loop on the server and talks to the editor over the admin WebSocket. Article search and reading happen server-side, while editor edits stay in the browser for review. You can send a new message while the agent is working and it picks the message up before its next step, instead of waiting for the run to end.
+Lexical drafts are now stored as one shared Loro document. Several editors can work on the same draft at once over the admin socket, see each other's carets and selections, and step back through a linear checkpoint timeline with restore and undo. HTTP sync remains the fallback whenever the socket is unavailable.
 
-Proposals from the agent are now cumulative: a newer edit replaces earlier unreviewed suggestions rather than piling up conflicting batches, and the agent sees your accepts and rejects as document changes. Each agent reply shows its token usage, prompt cache hit rate, and cost. Conversation history is stored so replayed tool calls keep their exact form, which keeps the provider prompt cache hit across turns.
+Owners can invite readers to co-author a document through an invite link. The AI writing agent edits the same document as its own peer, so its changes merge with human edits instead of overwriting them, and every step keeps its author in the history.
 
-LobeHub Cloud can be added under Settings → AI as an aggregated provider. Sign in through a device-code flow, pick a default model, and see per-model input, output, and cache pricing. Usage statistics record the cost LobeHub reports and count cache reads and writes separately.
+The drafts page shows how much storage each draft uses and whether it matches the published version. Drafts can be hard-deleted together with their collaboration data, compacted down to the latest content, or reclaimed in bulk from a cleanup dialog. An optional scheduled cleanup removes old history; drafts that differ from the published version are always kept.
 
 ## Changes
 
 ### Features
-- The write-page agent runs on the server over WebSocket, with steering, cumulative proposals, and a single active run per conversation ([2939e48](https://github.com/mx-space/core/commit/2939e48d177977ac3351d0df5144954d515a9221))
-- Agent replies show token usage, cache hit rate, and cost, with tighter Markdown typography ([2939e48](https://github.com/mx-space/core/commit/2939e48d177977ac3351d0df5144954d515a9221))
-- LobeHub Cloud provider with device-flow sign-in, model pricing, and cost-aware usage statistics ([b0878bb](https://github.com/mx-space/core/commit/b0878bb3caf420a480a47665fea19789d70f8081))
 
-### Other
-- Dynamic components inside the admin editor no longer inherit the editor's text wrapping styles (`@haklex/*` 0.54.4) ([b55f0dc](https://github.com/mx-space/core/commit/b55f0dc5ac112924f92333689e48a081d3e72fbe))
+- Realtime collaborative editing of Lexical drafts on Loro, with presence, a checkpoint timeline, restore and undo ([#2870](https://github.com/mx-space/core/pull/2870))
+- Co-author invitations and an AI agent that writes into the shared document as its own peer ([#2870](https://github.com/mx-space/core/pull/2870))
+- Draft storage overview with per-draft size, relation to the published version, filters and sort ([88c3c69](https://github.com/mx-space/core/commit/88c3c690bc2d8b07c1ef6d8c542094d91245cc30))
+- Hard delete, per-draft compaction and a bulk cleanup dialog that frees revision and collaboration storage ([88c3c69](https://github.com/mx-space/core/commit/88c3c690bc2d8b07c1ef6d8c542094d91245cc30))
+- Optional scheduled draft cleanup under Settings → Storage, disabled by default ([88c3c69](https://github.com/mx-space/core/commit/88c3c690bc2d8b07c1ef6d8c542094d91245cc30))
+
+### Bug Fixes
+
+- LobeHub providers can be saved without an API key ([b58dc67](https://github.com/mx-space/core/commit/b58dc6746e744c2987dc8bf550e67a09d835d9da))
+- The drafts list loads in a single query instead of several per draft, which cuts its response time and payload size ([88c3c69](https://github.com/mx-space/core/commit/88c3c690bc2d8b07c1ef6d8c542094d91245cc30))
 
 ## Upgrade Notes
 
-This release adds migration `0042_agent_transcript` (a nullable `transcript` column on `ai_agent_conversations`). Run the `mx-migrate` step before starting the new image, as with any schema release.
+This release adds database migrations, including `0046_draft_cleanup`. Run the release-phase migration (`mx-migrate`, or `pnpm -C apps/core run migrate`) before starting the new server; the server refuses to boot on an outdated schema.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v15.2.0...v15.3.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v15.3.0...v15.4.0
