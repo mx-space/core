@@ -10,6 +10,7 @@ import { AggregateService } from '~/modules/aggregate/aggregate.service'
 import { AnalyzeRepository } from '~/modules/analyze/analyze.repository'
 import { ReviewDemoService } from '~/modules/auth/review-demo.service'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { DraftCleanupService } from '~/modules/draft/draft-cleanup.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { SearchService } from '~/modules/search/search.service'
 import { HttpService } from '~/processors/helper/helper.http.service'
@@ -39,6 +40,7 @@ export class CronBusinessService {
     private readonly searchService: SearchService,
     private readonly fileReferenceService: FileReferenceService,
     private readonly reviewDemoService: ReviewDemoService,
+    private readonly draftCleanupService: DraftCleanupService,
   ) {
     this.logger = new Logger(CronBusinessService.name)
   }
@@ -226,6 +228,17 @@ export class CronBusinessService {
       `--> Comment image upload cleanup finished pending=${result.pendingDeleted} detached=${result.detachedDeleted}`,
     )
     return result
+  }
+
+  async cleanDrafts() {
+    const options = await this.configs.get('draftCleanupOptions')
+    const result = await this.draftCleanupService.runScheduled(options)
+    if (result) {
+      this.logger.log(
+        `--> Draft cleanup freed ${result.freed.bytes} bytes drafts=${result.freed.drafts} revisions=${result.freed.revisions} crdt=${result.freed.crdtDocs} skipped=${result.skipped.length}`,
+      )
+    }
+    return result ?? { skipped: 'disabled' }
   }
 
   async resetReviewDemo() {

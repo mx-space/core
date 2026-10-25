@@ -46,7 +46,8 @@ export function useCrdtDraft(options: {
   enabled: boolean
   onRejected: () => Promise<void>
   onRemoteTitle: (title: string) => void
-  onRevoked?: () => void
+  onReset?: () => void
+  onRevoked?: (reason?: string) => void
   room?: CrdtDraftRoom
 }): CrdtDraftController {
   const sessionRef = useRef<CrdtDraftSession | null>(null)
@@ -57,6 +58,7 @@ export function useCrdtDraft(options: {
   const [peers] = useState(createPeersStore)
   const [status, setStatus] = useState<CrdtDraftStatus>('idle')
   const [generation, setGeneration] = useState(0)
+  const [gone, setGone] = useState(false)
   const callbacksRef = useRef(options)
   callbacksRef.current = options
   const enabled = options.enabled && Boolean(options.draftId)
@@ -65,6 +67,10 @@ export function useCrdtDraft(options: {
     setReady(false)
     if (!enabled) {
       setStatus('idle')
+      return
+    }
+    if (gone) {
+      setStatus('offline')
       return
     }
     const draftId = options.draftId
@@ -92,7 +98,16 @@ export function useCrdtDraft(options: {
           .finally(() => setGeneration((value) => value + 1))
       },
       onRemoteTitle: (title) => callbacksRef.current.onRemoteTitle(title),
-      onRevoked: () => callbacksRef.current.onRevoked?.(),
+      onReset: () => {
+        if (disposed) return
+        callbacksRef.current.onReset?.()
+        setGeneration((value) => value + 1)
+      },
+      onRevoked: (reason) => {
+        if (disposed) return
+        if (reason === 'deleted') setGone(true)
+        callbacksRef.current.onRevoked?.(reason)
+      },
       presence: true,
       onStatus: (next) => {
         if (!disposed) setStatus(next)
@@ -130,7 +145,11 @@ export function useCrdtDraft(options: {
       session?.dispose()
       if (sessionRef.current === session) sessionRef.current = null
     }
-  }, [enabled, generation, options.draftId, peers])
+  }, [enabled, generation, gone, options.draftId, peers])
+
+  useEffect(() => {
+    setGone(false)
+  }, [options.draftId])
 
   const bindEditor = useCallback((editor: LexicalEditor | null) => {
     editorRef.current = editor

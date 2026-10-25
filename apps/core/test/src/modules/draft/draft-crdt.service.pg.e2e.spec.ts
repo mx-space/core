@@ -1,6 +1,5 @@
 import { SnowflakeGenerator } from '@mx-space/db-schema/id'
 import * as schema from '@mx-space/db-schema/schema'
-import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { LoroDoc } from 'loro-crdt'
 import { Pool } from 'pg'
@@ -484,43 +483,5 @@ describe('DraftCrdtService (real PG)', () => {
     expect(checkpoints[0]).toMatchObject({ title: 'Pub' })
     expect(changes[0].message).toBe('human:owner')
     expect(changes.at(-1)?.message).toMatch(/^import /)
-  })
-
-  it('discards the working copy back to the published revision', async () => {
-    const { branch, published } = await seed()
-    await service.workingCopy(branch.id)
-    const tab = await clientOf(branch.id)
-    await clientEdit(branch.id, tab, 'Draft', ['unpublished'])
-
-    const discarded = await service.discard(branch.id)
-
-    expect(discarded?.status).toBe('active')
-    const head = await drafts.findRevisionById(discarded!.headRevisionId)
-    expect(head?.kind).toBe('restore')
-    expect(head?.title).toBe(published.title)
-    expect(texts(head!.content)).toEqual(['p1', 'p2'])
-  })
-
-  it('archives a never-published working copy on discard', async () => {
-    const { document, revision } = await drafts.createDocumentWithRoot(
-      DraftRefType.Note,
-      null,
-      lexical('New', ['n']),
-      false,
-    )
-    const { branch } = await drafts.createBranch(
-      document.id,
-      revision.id,
-      lexical('New', ['n']),
-      true,
-    )
-    await service.workingCopy(branch.id)
-
-    expect(await service.discard(branch.id)).toBeNull()
-    const [row] = await db
-      .select()
-      .from(schema.drafts)
-      .where(eq(schema.drafts.id, branch.id))
-    expect(row.status).toBe('archived')
   })
 })

@@ -92,6 +92,70 @@ export interface DraftModel {
   updatedAt: string | null
 }
 
+export type DraftRelation = 'ahead' | 'fresh' | 'in_sync'
+
+export interface DraftCard {
+  baseRevisionId: string
+  createdAt: string
+  document: Pick<
+    ContentDocument,
+    'id' | 'publishedRevisionId' | 'refId' | 'refType'
+  >
+  documentId: string
+  headRevision: Pick<
+    ContentRevision,
+    'contentFormat' | 'createdAt' | 'id' | 'title'
+  >
+  headRevisionId: string
+  id: string
+  relation: DraftRelation
+  status: 'active' | 'archived'
+  storage: { crdtBytes: number; revisionBytes: number; revisionCount: number }
+  updatedAt: string | null
+}
+
+export interface DraftStorageSummary {
+  crdt: { bytes: number; count: number }
+  reclaimableBytes: number
+  relations: { ahead: number; fresh: number; inSync: number }
+  revisions: { bytes: number; count: number }
+  updates: { bytes: number; count: number }
+}
+
+export type CleanupCategory = 'A' | 'B' | 'C' | 'D'
+
+export interface CleanupDraftCandidate {
+  bytes: number
+  documentId: string
+  draftId: string
+  title: string
+}
+
+export interface CleanupPreview {
+  archived: CleanupDraftCandidate[]
+  categories: Record<CleanupCategory, { bytes: number; count: number }>
+  inSync: CleanupDraftCandidate[]
+  olderThanDays: number
+}
+
+export interface FreedTotals {
+  bytes: number
+  crdtDocs: number
+  drafts: number
+  revisions: number
+}
+
+export interface CleanupResult {
+  freed: FreedTotals
+  skipped: string[]
+}
+
+export interface CompactPreview {
+  crdtBytes: number
+  revisionBytes: number
+  revisionIds: string[]
+}
+
 export type DraftShareMode = 'follow' | 'pinned'
 
 export interface DraftShare {

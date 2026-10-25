@@ -72,10 +72,12 @@ export class DraftController {
   @Get('/')
   @Auth()
   async list(@Query({ schema: DraftPagerSchema }) query: DraftPagerDto) {
-    const result = await this.draftService.list(query.page, query.size, {
+    const result = await this.draftService.listCards(query.page, query.size, {
       hasRef: query.hasRef,
       refType: query.refType,
+      relation: query.relation,
       search: query.search,
+      sort: query.sort,
     })
     return withMeta(
       result.data,
@@ -264,8 +266,7 @@ export class DraftController {
 
   @Delete('/:id')
   @Auth()
-  async delete(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
-    await this.draftService.delete(params.id)
-    return { success: true }
+  delete(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
+    return this.draftService.delete(params.id)
   }
 }

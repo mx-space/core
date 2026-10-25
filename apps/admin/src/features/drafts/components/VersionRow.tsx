@@ -9,6 +9,7 @@ import type { DraftDiffStats, VersionItem } from '../types/drafts'
 
 export function VersionRow(props: {
   diffStats: DraftDiffStats | null
+  doomed?: boolean
   item: VersionItem
   onRestore: () => void
   onSelect: () => void
@@ -33,6 +34,11 @@ export function VersionRow(props: {
               ? t('drafts.version.current')
               : relativeTimeFromNow(props.item.savedAt)}
           </span>
+          {props.doomed ? (
+            <span className="rounded-sm bg-surface-inset px-1.5 text-xs text-fg-muted">
+              {t('drafts.version.doomed')}
+            </span>
+          ) : null}
         </div>
         <p className="mt-1 truncate text-xs text-fg-muted">
           {props.item.title || t('drafts.row.untitled')}

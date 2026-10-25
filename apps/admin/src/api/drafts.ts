@@ -1,12 +1,20 @@
 import type { Image, PaginateResult } from '~/models/base'
 import type {
+  CleanupCategory,
+  CleanupPreview,
+  CleanupResult,
+  CompactPreview,
   ContentRevision,
   CrdtOpId,
+  DraftCard,
   DraftFields,
   DraftHistory,
   DraftModel,
   DraftRefType,
+  DraftRelation,
   DraftShare,
+  DraftStorageSummary,
+  FreedTotals,
   RevisionComparison,
   TypeSpecificData,
   VersionContext,
@@ -27,8 +35,10 @@ export interface GetDraftsParams {
   hasRef?: boolean
   page?: number
   refType?: DraftRefType
+  relation?: DraftRelation
   search?: string
   size?: number
+  sort?: 'size' | 'updated'
   sort_by?: string
   sort_order?: DraftSortOrder
 }
@@ -56,12 +66,14 @@ export interface UpdateDraftData {
 }
 
 export function getDrafts(params: GetDraftsParams = {}) {
-  return getJson<PaginateResult<DraftModel>>('/drafts', {
+  return getJson<PaginateResult<DraftCard>>('/drafts', {
     hasRef: params.hasRef === undefined ? undefined : String(params.hasRef),
     page: params.page,
     refType: params.refType,
+    relation: params.relation,
     search: params.search,
     size: params.size,
+    sort: params.sort,
     sort_by: params.sort_by,
     sort_order: params.sort_order,
   })
@@ -120,7 +132,44 @@ export function updateDraft(id: string, data: UpdateDraftData) {
 }
 
 export function deleteDraft(id: string) {
-  return deleteJson<{ success: boolean }>(`/drafts/${id}`)
+  return deleteJson<FreedTotals>(`/drafts/${id}`)
+}
+
+export function batchDeleteDrafts(ids: string[]) {
+  return postJson<CleanupResult, { ids: string[] }>('/drafts/batch-delete', {
+    ids,
+  })
+}
+
+export function getDraftStorage(refType?: DraftRefType) {
+  return getJson<DraftStorageSummary>('/drafts/storage', { refType })
+}
+
+export function getCleanupPreview(olderThanDays: number) {
+  return getJson<CleanupPreview>('/drafts/cleanup/preview', {
+    olderThanDays,
+  })
+}
+
+export interface RunCleanupData {
+  archivedDraftIds?: string[]
+  categories: CleanupCategory[]
+  olderThanDays: number
+}
+
+export function runCleanup(data: RunCleanupData) {
+  return postJson<CleanupResult, RunCleanupData>('/drafts/cleanup', data)
+}
+
+export function getCompactPreview(id: string) {
+  return getJson<CompactPreview>(`/drafts/${id}/compact/preview`)
+}
+
+export function compactDraft(id: string) {
+  return postJson<FreedTotals, Record<string, never>>(
+    `/drafts/${id}/compact`,
+    {},
+  )
 }
 
 const encodeBase64 = (bytes: Uint8Array) =>

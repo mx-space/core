@@ -112,6 +112,14 @@ export const generateDefaultConfig: () => IConfig = () => ({
     pathTemplate: '{type}',
     videoMaxSize: 100,
   },
+  draftCleanupOptions: {
+    enable: false,
+    olderThanDays: 30,
+    deleteInSyncDrafts: true,
+    pruneRevisions: true,
+    compactCrdt: true,
+    removeOrphanCrdt: true,
+  },
   commentUploadOptions: {
     enable: true,
     pendingTtlMinutes: 120,

@@ -9,6 +9,7 @@ export const CronTaskType = {
   RebuildSearchIndex: 'cron:rebuild-search-index',
   CleanCommentUploads: 'cron:clean-comment-uploads',
   ResetReviewDemo: 'cron:reset-review-demo',
+  CleanDrafts: 'cron:clean-drafts',
 } as const
 
 export type CronTaskTypeValue = (typeof CronTaskType)[keyof typeof CronTaskType]
@@ -84,6 +85,12 @@ export const CronTaskMetas: Record<
     description: 'Reset App Review demo reader content and profile',
     cronExpression: 'EVERY_DAY_AT_MIDNIGHT',
     methodName: 'resetReviewDemo',
+  },
+  [CronTaskType.CleanDrafts]: {
+    name: 'cleanDrafts',
+    description: 'Clean up draft history and collaborative data',
+    cronExpression: '30 4 * * *',
+    methodName: 'cleanDrafts',
   },
 }
 

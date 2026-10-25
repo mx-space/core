@@ -13,7 +13,9 @@ export interface CrdtSyncOptions {
   apply?: (bytes: Uint8Array) => void
   batchMs?: number
   doc: LoroDoc
+  onGone?: () => void
   onRejected?: (error: ApiRequestError) => void
+  onStale?: () => void
   onStatus?: (status: CrdtSyncStatus) => void
   retryMs?: number
   transport: CrdtTransport
@@ -29,6 +31,8 @@ export interface CrdtSync {
 }
 
 export const CRDT_REJECTED_CODE = 'DRAFT_CRDT_UPDATE_REJECTED'
+export const CRDT_STALE_CODE = 'DRAFT_CRDT_STALE'
+const DRAFT_GONE_CODE = 'DRAFT_NOT_FOUND'
 
 export async function createCrdtSync(
   options: CrdtSyncOptions,
@@ -70,6 +74,11 @@ export async function createCrdtSync(
       ) {
         rejected = true
         options.onRejected?.(error)
+        return
+      }
+      if (error instanceof ApiRequestError && error.code === DRAFT_GONE_CODE) {
+        rejected = true
+        options.onGone?.()
         return
       }
       setStatus('offline')
@@ -121,7 +130,20 @@ export async function createCrdtSync(
     },
     pending: () => dirty || inFlight !== null,
     pull: async () => {
-      receive(await transport.pull(doc.oplogVersion().encode()))
+      let bytes: Uint8Array
+      try {
+        bytes = await transport.pull(doc.oplogVersion().encode())
+      } catch (error) {
+        if (
+          error instanceof ApiRequestError &&
+          error.code === CRDT_STALE_CODE
+        ) {
+          options.onStale?.()
+          return
+        }
+        throw error
+      }
+      receive(bytes)
     },
     receive,
     touch: schedule,

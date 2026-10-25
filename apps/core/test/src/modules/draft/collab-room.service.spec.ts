@@ -3,12 +3,16 @@ import { describe, expect, it, vi } from 'vitest'
 import { createAppException } from '~/common/errors'
 import { AppErrorCode } from '~/common/errors/app-error-code'
 import {
+  type CollabDropScope,
   type CollabIdentity,
   type CollabMember,
   CollabRoomService,
   CollabWsEvents,
 } from '~/modules/draft/collab-room.service'
-import type { DocumentChange } from '~/modules/draft/draft-crdt.service'
+import type {
+  DocumentChange,
+  DocumentReset,
+} from '~/modules/draft/draft-crdt.service'
 
 const b64 = (bytes: number[]) => Buffer.from(bytes).toString('base64')
 
@@ -24,8 +28,9 @@ const reader = (readerId: string): CollabIdentity => ({
 
 const setup = (access: (documentId: string) => boolean = () => true) => {
   const order: string[] = []
-  let revokeListener:
-    ((documentId: string, readerId: string) => void) | undefined
+  let dropListener:
+    ((documentId: string, scope: CollabDropScope) => void) | undefined
+  let resetListener: ((reset: DocumentReset) => void) | undefined
   const contributions: Array<[string, string]> = []
   let listener: ((change: DocumentChange) => void) | undefined
   const crdt = {
@@ -33,6 +38,12 @@ const setup = (access: (documentId: string) => boolean = () => true) => {
       listener = next
       return () => {
         listener = undefined
+      }
+    }),
+    onDocumentReset: vi.fn((next: (reset: DocumentReset) => void) => {
+      resetListener = next
+      return () => {
+        resetListener = undefined
       }
     }),
   }
@@ -51,19 +62,19 @@ const setup = (access: (documentId: string) => boolean = () => true) => {
     room: string
   }[] = []
   const relay = {
-    onRevoke: (listener: (documentId: string, readerId: string) => void) => {
-      revokeListener = listener
+    drop: vi.fn((documentId: string, scope: CollabDropScope) =>
+      dropListener?.(documentId, scope),
+    ),
+    onDrop: (next: (documentId: string, scope: CollabDropScope) => void) => {
+      dropListener = next
       return () => {
-        revokeListener = undefined
+        dropListener = undefined
       }
     },
     publish: vi.fn(
       (event: string, payload: unknown, room: string, exclude?: string) => {
         published.push({ event, exclude, payload, room })
       },
-    ),
-    revoke: vi.fn((documentId: string, readerId: string) =>
-      revokeListener?.(documentId, readerId),
     ),
   }
   const service = new CollabRoomService(drafts as never, crdt as never, relay, {
@@ -95,6 +106,7 @@ const setup = (access: (documentId: string) => boolean = () => true) => {
     drafts,
     member,
     published,
+    reset: (next: DocumentReset) => resetListener?.(next),
     service,
   }
 }
@@ -365,10 +377,14 @@ describe('CollabRoomService', () => {
 
     service.revoke('doc-1', 'r1')
 
-    expect(relay.revoke).toHaveBeenCalledWith('doc-1', 'r1')
+    expect(relay.drop).toHaveBeenCalledWith('doc-1', {
+      readerId: 'r1',
+      reason: 'removed',
+    })
     expect(bob.leave).toHaveBeenCalledWith('collab:doc-1')
     expect(bob.send).toHaveBeenCalledWith(CollabWsEvents.revoked, {
       documentId: 'doc-1',
+      reason: 'removed',
     })
     expect(carol.leave).not.toHaveBeenCalled()
     expect(published.map((frame) => [frame.event, frame.payload])).toEqual([
@@ -380,6 +396,35 @@ describe('CollabRoomService', () => {
     expect(
       await service.update(bob, { draftId: 'd1', update: b64([1]) }),
     ).toEqual({ code: 'NOT_JOINED', ok: false })
+  })
+
+  it('clears every member of a rebuilt or deleted document on every pod', async () => {
+    const { member, relay, reset, service } = setup()
+    const alice = member('conn-a')
+    const bob = member('conn-b', () => true, reader('r1'))
+    await service.join(alice, { draftId: 'd1' })
+    await service.join(bob, { draftId: 'd1' })
+
+    reset({ documentId: 'doc-1', reason: 'compacted' })
+
+    expect(relay.drop).toHaveBeenCalledWith('doc-1', { reason: 'compacted' })
+    for (const peer of [alice, bob]) {
+      expect(peer.leave).toHaveBeenCalledWith('collab:doc-1')
+      expect(peer.send).toHaveBeenCalledWith(CollabWsEvents.reset, {
+        documentId: 'doc-1',
+      })
+    }
+    expect(
+      await service.update(alice, { draftId: 'd1', update: b64([1]) }),
+    ).toEqual({ code: 'NOT_JOINED', ok: false })
+
+    await service.join(bob, { draftId: 'd1' })
+    reset({ documentId: 'doc-1', reason: 'deleted' })
+
+    expect(bob.send).toHaveBeenCalledWith(CollabWsEvents.revoked, {
+      documentId: 'doc-1',
+      reason: 'deleted',
+    })
   })
 
   it('announces a member leaving on leave and on disconnect', async () => {
@@ -418,7 +463,7 @@ describe('CollabRoomService', () => {
 
   it('drops a removed co-author on this pod even if the broadcast is lost', async () => {
     const { member, relay, service } = setup()
-    relay.revoke.mockImplementation(() => undefined)
+    relay.drop.mockImplementation(() => undefined)
     const bob = member('conn-b', () => true, reader('r1'))
     await service.join(bob, { draftId: 'd1' })
 

@@ -251,12 +251,16 @@ export const adminQueryKeys = {
   drafts: {
     byRef: (params: { id: string; refType: string }) =>
       ['drafts', 'by-ref', params.refType, params.id] as const,
+    cleanupPreview: (days: number) =>
+      ['drafts', 'cleanup-preview', days] as const,
+    compactPreview: (id: string) => ['drafts', 'compact-preview', id] as const,
     detail: (id: string) => ['drafts', 'detail', id] as const,
     history: (id: string) => ['drafts', 'history', id] as const,
     historyVersion: (params: { id: string; version: number | null }) =>
       ['drafts', 'history-version', params.id, params.version] as const,
     listRoot: ['drafts', 'list'] as const,
-    list: (filterType: string) => ['drafts', 'list', filterType] as const,
+    list: (filters: { relation: string; sort: string; type: string }) =>
+      ['drafts', 'list', filters.type, filters.relation, filters.sort] as const,
     newDraft: (refType: string) => ['drafts', 'new', refType] as const,
     recoveryHistory: (id: string) =>
       ['drafts', 'recovery-history', id] as const,
@@ -264,6 +268,7 @@ export const adminQueryKeys = {
       ['drafts', 'recovery-version', params.id, params.version] as const,
     root: ['drafts'] as const,
     share: (documentId: string) => ['drafts', 'share', documentId] as const,
+    storage: (refType: string) => ['drafts', 'storage', refType] as const,
     timeline: (id: string) => ['drafts', 'timeline', id] as const,
   },
   says: {

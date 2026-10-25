@@ -124,6 +124,8 @@ describe('DraftService on the Loro path (real PG)', () => {
       {} as never,
       { emit } as never,
       crdt,
+      {} as never,
+      {} as never,
     )
   }, 120_000)
 
@@ -200,20 +202,6 @@ describe('DraftService on the Loro path (real PG)', () => {
 
     expect(context.branches).toHaveLength(1)
     expect(context.branches[0].headRevision.kind).toBe('import')
-  })
-
-  it('discards a Lexical working copy back to the published content', async () => {
-    const { branch } = await seed(lexical('Pub', ['a']))
-    await service.update(branch.id, {
-      data: lexical('Draft', ['changed']),
-      expectedHeadRevisionId: branch.headRevisionId,
-    } as never)
-
-    await service.delete(branch.id)
-
-    const view = await service.findById(branch.id)
-    expect(view?.status).toBe('active')
-    expect(view?.headRevision).toMatchObject({ kind: 'restore', title: 'Pub' })
   })
 
   it('syncs binary updates and broadcasts the working copy', async () => {

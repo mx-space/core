@@ -72,6 +72,11 @@ export class CronTaskScheduler {
     return this.dispatch('rebuildSearchIndex', CronTaskType.RebuildSearchIndex)
   }
 
+  @CronOnce('30 4 * * *', { name: 'cleanDrafts' })
+  scheduleCleanDrafts() {
+    return this.dispatch('cleanDrafts', CronTaskType.CleanDrafts)
+  }
+
   @CronOnce('*/15 * * * *', { name: 'cleanCommentUploads' })
   async scheduleCleanCommentUploads() {
     const result = await this.cronTaskService.createCronTask(

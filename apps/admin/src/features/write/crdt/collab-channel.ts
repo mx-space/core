@@ -20,7 +20,8 @@ export interface CollabChannelOptions {
   onPresence?: (frame: IncomingPresence) => void
   onReconnect?: () => void
   onRemote: (update: Uint8Array) => void
-  onRevoked?: () => void
+  onReset?: () => void
+  onRevoked?: (reason?: string) => void
   subscribeSocket?: (
     listener: (socket: CollabSocket | null) => void,
   ) => () => void
@@ -37,6 +38,7 @@ interface DocumentFrame {
   connectionId?: string
   documentId?: string
   entry?: string | null
+  reason?: string
   update?: string
   user?: IncomingPresence['user']
 }
@@ -108,9 +110,16 @@ export function createCollabChannel(
       ),
       next.on(
         'collab.revoked',
+        forDocument((frame) => {
+          documentId = null
+          options.onRevoked?.(frame.reason)
+        }),
+      ),
+      next.on(
+        'collab.reset',
         forDocument(() => {
           documentId = null
-          options.onRevoked?.()
+          options.onReset?.()
         }),
       ),
       next.on(

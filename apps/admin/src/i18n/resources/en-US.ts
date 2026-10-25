@@ -2399,7 +2399,7 @@ export const enUS = {
   'settings.group.site.description': 'Site URL, SEO',
   'settings.group.site.title': 'Site',
   'settings.group.storage.description':
-    'Backup, image hosting, comment image uploads',
+    'Backup, image hosting, comment image uploads, draft cleanup',
   'settings.group.storage.title': 'Storage',
   'settings.group.system.description': 'Admin settings, feature toggles',
   'settings.group.system.title': 'System',
@@ -4528,4 +4528,119 @@ export const enUS = {
   'dynamicNode.outdatedHint':
     "This block uses an older version of the component. The form follows the current version's schema.",
   'dynamicComponents.detail.previousUrls': 'Earlier versions',
+  'drafts.storage.title': 'Draft storage',
+  'drafts.storage.total': 'Drafts use',
+  'drafts.storage.reclaimable': 'Reclaimable',
+  'drafts.storage.revisions': 'Versions',
+  'drafts.storage.crdt': 'Collaboration data',
+  'drafts.storage.updates': 'Pending updates',
+  'drafts.autoCleanup.on': 'Auto cleanup: on',
+  'drafts.autoCleanup.off': 'Auto cleanup: off',
+  'drafts.cleanup.open': 'Free up space',
+  'drafts.cleanup.title': 'Free up space',
+  'drafts.cleanup.subtitle':
+    'Pick what to clean up. It runs right away and cannot be undone.',
+  'drafts.cleanup.olderThanPrefix': 'Only touch content idle for more than',
+  'drafts.cleanup.olderThanSuffix': '',
+  'drafts.cleanup.days': '{count} days',
+  'drafts.cleanup.count': '{count} items',
+  'drafts.cleanup.inSync.title':
+    'Delete drafts identical to the published version',
+  'drafts.cleanup.inSync.description':
+    'Everything is published; the draft goes with its versions and collaboration data. Editing again starts a new draft from the published version.',
+  'drafts.cleanup.revisions.title': 'Delete old intermediate versions',
+  'drafts.cleanup.revisions.description':
+    'Only old saved snapshots are removed. The current content of each draft stays.',
+  'drafts.cleanup.crdt.title': 'Compact idle collaboration data',
+  'drafts.cleanup.crdt.description':
+    'Documents nobody edited for a while are rebuilt from their current content. Step-by-step undo and history are dropped.',
+  'drafts.cleanup.orphans.title': 'Delete orphaned collaboration data',
+  'drafts.cleanup.orphans.description':
+    'Collaboration data left behind by drafts that no longer exist.',
+  'drafts.cleanup.archived.title': 'Archived drafts',
+  'drafts.cleanup.archived.description':
+    '{count} drafts. They may hold unpublished content; tick the ones to delete.',
+  'drafts.cleanup.keptTitle': 'No cleanup ever touches',
+  'drafts.cleanup.kept.ahead':
+    'The current content of drafts with unpublished changes',
+  'drafts.cleanup.kept.published': 'Every published version',
+  'drafts.cleanup.kept.shared': 'Versions behind share links',
+  'drafts.cleanup.kept.base': 'Each draft base version, used for comparison',
+  'drafts.cleanup.total': 'Frees about {size}',
+  'drafts.cleanup.run': 'Clean up now',
+  'drafts.cleanup.done': 'Freed {size}',
+  'drafts.cleanup.failed': 'Cleanup failed',
+  'drafts.deleteDialog.titleOne': 'Delete the draft “{title}”?',
+  'drafts.deleteDialog.titleMany': 'Delete {count} drafts?',
+  'drafts.deleteDialog.subtitle':
+    'Deleted right away and cannot be undone. Published articles are not affected.',
+  'drafts.deleteDialog.collabWarning':
+    'This has collaboration data. Co-authors editing it now are removed immediately.',
+  'drafts.deleteDialog.removed': 'Will be deleted',
+  'drafts.deleteDialog.removedRevisions':
+    'The draft and the versions only it uses (of {count})',
+  'drafts.deleteDialog.removedCrdt':
+    'Collaboration data, with step-by-step history',
+  'drafts.deleteDialog.kept': 'Kept',
+  'drafts.deleteDialog.keptPublished':
+    'Published versions and publication history',
+  'drafts.deleteDialog.keptShare':
+    'Share links point to the latest published version',
+  'drafts.deleteDialog.keptNothing':
+    'This was never published; nothing remains after deleting',
+  'drafts.deleteDialog.reopen':
+    'Editing again starts a new draft from the published version. Co-authors need a new invite link to rejoin.',
+  'drafts.deleteDialog.confirm': 'Delete and free about {size}',
+  'drafts.relation.inSync': 'Same as published',
+  'drafts.relation.ahead': 'Unpublished changes',
+  'drafts.relation.fresh': 'Never published',
+  'drafts.sort.label': 'Sort',
+  'drafts.sort.updated': 'Recently updated',
+  'drafts.sort.size': 'Largest first',
+  'drafts.row.versions': '{count} versions',
+  'drafts.row.hasCrdt': 'Has collaboration data',
+  'drafts.list.selectedBytes': 'about {size}',
+  'drafts.compact.action': 'Compact history',
+  'drafts.compact.actionWithSize': 'Compact history · free {size}',
+  'drafts.compact.title': 'Compact the history of {count} drafts?',
+  'drafts.compact.description':
+    'Keeps the current content, published and shared versions; deletes intermediate versions and step-by-step history. Cannot be undone. Open editors reload.',
+  'drafts.compact.confirm': 'Compact',
+  'drafts.compact.done': 'Compacted, freed {size}',
+  'drafts.compact.failed': 'Compaction failed',
+  'drafts.toast.deletePartial':
+    'Skipped {count} drafts with a publish task in progress',
+  'drafts.toast.deletedFreed': 'Draft deleted, freed {size}',
+  'drafts.storagePanel.revisionsValue': '{count} · {size}',
+  'drafts.storagePanel.revisionsHint': '{count} can be removed',
+  'drafts.storagePanel.crdtHint': 'About {size} after rebuilding',
+  'drafts.version.doomed': 'Removed on compaction',
+  'write.toast.draftCompacted': 'Draft history was compacted; reloaded',
+  'write.toast.draftDeleted': 'This draft was deleted; changes no longer sync',
+  'settings.schema.draftCleanupOptions.title': 'Draft cleanup',
+  'settings.schema.draftCleanupOptions.enable.title':
+    'Clean up drafts automatically',
+  'settings.schema.draftCleanupOptions.enable.description':
+    'Runs daily at 04:30 with the same rules as “Free up space” on the drafts page. Drafts with unpublished changes are never deleted.',
+  'settings.schema.draftCleanupOptions.olderThanDays.title':
+    'Only touch content idle for (days)',
+  'settings.schema.draftCleanupOptions.olderThanDays.description':
+    'Minimum 7. Default 30',
+  'settings.schema.draftCleanupOptions.deleteInSyncDrafts.title':
+    'Delete drafts identical to the published version',
+  'settings.schema.draftCleanupOptions.pruneRevisions.title':
+    'Delete old intermediate versions',
+  'settings.schema.draftCleanupOptions.pruneRevisions.description':
+    'Keeps the current content, published versions, shared versions and each draft base',
+  'settings.schema.draftCleanupOptions.compactCrdt.title':
+    'Compact idle collaboration data',
+  'settings.schema.draftCleanupOptions.compactCrdt.description':
+    'Rebuilds from the current content; step-by-step history is dropped',
+  'settings.schema.draftCleanupOptions.removeOrphanCrdt.title':
+    'Remove orphaned collaboration data',
+  'settings.maintenance.draftCleanup.label': 'Draft storage',
+  'settings.maintenance.draftCleanup.value': '{size} reclaimable',
+  'settings.maintenance.draftCleanup.description':
+    'Delete published drafts, old versions and idle collaboration data',
+  'settings.maintenance.draftCleanup.action': 'Preview and clean up',
 } satisfies Record<TranslationKey, string>

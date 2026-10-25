@@ -77,7 +77,8 @@ export interface ChannelHooks {
   onPresence?: (frame: IncomingPresence) => void
   onReconnect: () => void
   onRemote: (bytes: Uint8Array) => void
-  onRevoked?: () => void
+  onReset?: () => void
+  onRevoked?: (reason?: string) => void
 }
 
 export type SessionChannel = Pick<
@@ -90,7 +91,8 @@ export interface CrdtDraftSessionOptions {
   channel?: (hooks: ChannelHooks) => SessionChannel
   onRejected?: (error: ApiRequestError) => void
   onRemoteTitle?: (title: string) => void
-  onRevoked?: () => void
+  onReset?: () => void
+  onRevoked?: (reason?: string) => void
   onStatus?: (status: CrdtSyncStatus) => void
   presence?: boolean
   transport?: CrdtTransport
@@ -184,7 +186,8 @@ export async function createCrdtDraftSession(
     onPeerJoined: () => presence.announce(),
     onPeerLeft: (connectionId) => presence.removeConnection(connectionId),
     onPresence: (frame) => presence.apply(frame),
-    onRevoked: () => options.onRevoked?.(),
+    onReset: () => options.onReset?.(),
+    onRevoked: (reason) => options.onRevoked?.(reason),
     onReconnect: () => {
       if (sync) void sync.pull().catch(() => undefined)
       else reconnected = true
@@ -205,7 +208,9 @@ export async function createCrdtDraftSession(
         reportTitle()
       },
       doc,
+      onGone: () => options.onRevoked?.('deleted'),
       onRejected: options.onRejected,
+      onStale: () => options.onReset?.(),
       onStatus: options.onStatus,
       transport,
     })

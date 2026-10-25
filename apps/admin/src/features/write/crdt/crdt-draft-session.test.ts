@@ -567,6 +567,7 @@ describe('createCrdtDraftSession co-authors', () => {
   it('reports when the owner removes this member from the room', async () => {
     const server = seededServer('T', 'p1')
     const onRevoked = vi.fn()
+    const onReset = vi.fn()
     let hooks: ChannelHooks | undefined
     const session = await createCrdtDraftSession({
       channel: (next) => {
@@ -579,12 +580,15 @@ describe('createCrdtDraftSession co-authors', () => {
           sendPresence: () => undefined,
         }
       },
+      onReset,
       onRevoked,
     })
 
-    hooks?.onRevoked?.()
+    hooks?.onRevoked?.('deleted')
+    hooks?.onReset?.()
 
-    expect(onRevoked).toHaveBeenCalledTimes(1)
+    expect(onRevoked).toHaveBeenCalledWith('deleted')
+    expect(onReset).toHaveBeenCalledTimes(1)
     session.dispose()
   })
 

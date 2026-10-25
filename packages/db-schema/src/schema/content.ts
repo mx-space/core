@@ -230,6 +230,7 @@ export const contentDocuments = pgTable(
       (): AnyPgColumn => contentRevisions.id,
       { onDelete: 'set null' },
     ),
+    crdtEpoch: integer('crdt_epoch').notNull().default(0),
     publishAiResources: jsonb('publish_ai_resources').$type<
       {
         mode: 'sync' | 'async'
@@ -368,6 +369,7 @@ export const contentCrdtDocs = pgTable('content_crdt_docs', {
     () => contentRevisions.id,
     { onDelete: 'set null' },
   ),
+  editedAt: tsCol('edited_at'),
   fields: jsonb('fields').$type<{
     meta: Record<string, unknown> | null
     typeSpecificData: Record<string, unknown> | null

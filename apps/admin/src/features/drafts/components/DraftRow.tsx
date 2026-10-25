@@ -1,5 +1,6 @@
+import { formatBytes } from '~/features/files/utils/format'
 import { useI18n } from '~/i18n'
-import type { DraftModel } from '~/models/draft'
+import type { DraftCard } from '~/models/draft'
 import type { ListAction, ListRowSelectMode } from '~/ui/list-actions'
 import { buildMenuItemsFromActions, ListRow } from '~/ui/list-actions'
 import { Badge } from '~/ui/primitives/badge'
@@ -7,13 +8,13 @@ import { Checkbox } from '~/ui/primitives/checkbox'
 import { cn } from '~/utils/cn'
 import { relativeTimeFromNow } from '~/utils/time'
 
-import { refTypeMeta } from '../constants'
+import { refTypeMeta, relationMeta } from '../constants'
 
 export function DraftRow(props: {
-  actions: ReadonlyArray<ListAction<DraftModel>>
+  actions: ReadonlyArray<ListAction<DraftCard>>
   checked: boolean
   cursor?: boolean
-  draft: DraftModel
+  draft: DraftCard
   isDetailTarget: boolean
   onCheck: (id: string, checked: boolean) => void
   onSelect: (mode: ListRowSelectMode) => void
@@ -23,6 +24,8 @@ export function DraftRow(props: {
   const meta = refTypeMeta[props.draft.document.refType]
   const Icon = meta.icon
   const title = props.draft.headRevision.title || t('drafts.row.untitled')
+  const relation = relationMeta[props.draft.relation]
+  const size = props.draft.storage.revisionBytes + props.draft.storage.crdtBytes
 
   const menuItems = () => buildMenuItemsFromActions(props.actions, props.draft)
 
@@ -61,16 +64,29 @@ export function DraftRow(props: {
         </Badge>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <h3 className="truncate text-sm font-medium text-fg">{title}</h3>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-2 text-xs text-fg-muted">
-            <span>
-              {props.draft.document.refId
-                ? t('drafts.row.editing')
-                : t('drafts.row.creating')}
+            <h3 className="min-w-0 flex-1 truncate text-sm font-medium text-fg">
+              {title}
+            </h3>
+            <span className="shrink-0 text-xs font-medium tabular-nums text-fg">
+              {formatBytes(size)}
             </span>
-            <span>{props.draft.headRevision.contentFormat}</span>
-            <time dateTime={props.draft.updatedAt ?? props.draft.createdAt}>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted">
+            <span className={cn('rounded-full px-1.5', relation.className)}>
+              {t(relation.labelKey)}
+            </span>
+            <span>
+              {t('drafts.row.versions', {
+                count: props.draft.storage.revisionCount,
+              })}
+            </span>
+            {props.draft.storage.crdtBytes > 0 ? (
+              <span>{t('drafts.row.hasCrdt')}</span>
+            ) : null}
+            <time
+              className="ml-auto"
+              dateTime={props.draft.updatedAt ?? props.draft.createdAt}
+            >
               {relativeTimeFromNow(
                 props.draft.updatedAt ?? props.draft.createdAt,
               )}

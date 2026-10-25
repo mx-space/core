@@ -48,6 +48,7 @@ export function CollabDocumentPage() {
       toast.error(t('collab.document.rejected'))
     },
     onRemoteTitle: setTitle,
+    onReset: () => toast.info(t('write.toast.draftCompacted')),
     onRevoked: () => setRevoked(true),
     room,
   })

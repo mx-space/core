@@ -14,15 +14,22 @@ import {
 import { DraftController } from './draft.controller'
 import { DraftRepository } from './draft.repository'
 import { DraftService } from './draft.service'
+import { DraftCleanupController } from './draft-cleanup.controller'
+import { DraftCleanupRepository } from './draft-cleanup.repository'
+import { DraftCleanupService } from './draft-cleanup.service'
 import { DraftCrdtRepository } from './draft-crdt.repository'
 import { DraftCrdtService } from './draft-crdt.service'
+import { DraftStorageRepository } from './draft-storage.repository'
 
 @Module({
-  controllers: [DraftController, CollabController],
+  controllers: [DraftController, DraftCleanupController, CollabController],
   providers: [
     DraftRepository,
     DraftCrdtRepository,
     DraftCrdtService,
+    DraftCleanupRepository,
+    DraftStorageRepository,
+    DraftCleanupService,
     DraftService,
     CollabRepository,
     CollabService,
@@ -34,6 +41,7 @@ import { DraftCrdtService } from './draft-crdt.service'
   ],
   exports: [
     CollabRepository,
+    DraftCleanupService,
     DraftService,
     DraftRepository,
     DRAFT_SERVICE_TOKEN,

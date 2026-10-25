@@ -35,6 +35,7 @@ const crdtStub = {
     listeners.add(listener)
     return () => listeners.delete(listener)
   },
+  onDocumentReset: () => () => undefined,
 }
 const draftStub = {
   documentIdOf: vi.fn(async () => 'doc-1'),
@@ -257,7 +258,10 @@ describe('collab room over the admin and web gateways', () => {
       const revoked = await reader.waitFor(
         (e) => e.event === CollabWsEvents.revoked,
       )
-      expect(revoked.payload).toEqual({ documentId: 'doc-1' })
+      expect(revoked.payload).toEqual({
+        documentId: 'doc-1',
+        reason: 'removed',
+      })
       await owner.waitFor((e) => e.event === CollabWsEvents.peerLeft)
       expect(
         await request(reader, CollabWsEvents.update, {

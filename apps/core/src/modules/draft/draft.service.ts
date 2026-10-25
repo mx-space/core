@@ -27,6 +27,7 @@ import type {
   DocumentShareRow,
   DraftBranchRow,
   DraftBranchView,
+  DraftCardFilter,
   DraftListFilter,
   DraftUpdateEventPayload,
   RevisionComparison,
@@ -35,8 +36,10 @@ import type {
   VersionContext,
   VersionTreeNode,
 } from './draft.types'
+import { DraftCleanupService } from './draft-cleanup.service'
 import { canonicalSnapshot, sameRevisionContent } from './draft-content'
 import { type CheckpointResult, DraftCrdtService } from './draft-crdt.service'
+import { DraftStorageRepository } from './draft-storage.repository'
 
 const projectVersionTree = (
   document: ContentDocumentRow,
@@ -147,6 +150,8 @@ export class DraftService {
     private readonly databaseService: DatabaseService,
     private readonly eventManager: EventManagerService,
     private readonly crdtService: DraftCrdtService,
+    private readonly cleanupService: DraftCleanupService,
+    private readonly storageRepository: DraftStorageRepository,
   ) {}
 
   get repository() {
@@ -161,6 +166,10 @@ export class DraftService {
         result.data.map((branch) => this.hydrate(branch)),
       ),
     }
+  }
+
+  listCards(page: number, size: number, filter: DraftCardFilter = {}) {
+    return this.storageRepository.cards(page, size, filter)
   }
 
   count(filter: DraftListFilter = {}) {
@@ -591,20 +600,8 @@ export class DraftService {
     }
   }
 
-  async delete(id: string): Promise<void> {
-    if (await this.crdtService.usesCrdt(id)) {
-      const branch = await this.crdtService.discard(id)
-      if (branch) this.broadcastUpdate(await this.hydrate(branch))
-      return
-    }
-    const branch = await this.draftRepository.archiveBranch(id)
-    if (!branch) {
-      throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
-    }
-    await this.fileReferenceService.removeReferencesForDocument(
-      id,
-      FileReferenceType.Draft,
-    )
+  delete(id: string) {
+    return this.cleanupService.deleteDraft(id)
   }
 
   async deleteByRef(refType: DraftRefType, refId: string): Promise<void> {

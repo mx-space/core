@@ -374,6 +374,49 @@ export const TtsOptionsSchema = section('AI text to speech', {
 })
 
 // ==================== Comment Upload Options ====================
+export const DraftCleanupOptionsSchema = section('Draft cleanup', {
+  enable: field.toggle(
+    z.boolean().optional(),
+    'Clean up drafts automatically',
+    {
+      description:
+        'Runs daily at 04:00 with the same rules as the manual cleanup on the drafts page. Drafts with unpublished changes are never deleted.',
+    },
+  ),
+  olderThanDays: field.number(
+    z.preprocess(
+      (val) => (val ? Number(val) : val),
+      z.number().int().min(7).max(3650).optional(),
+    ),
+    'Only touch content idle for (days)',
+    { 'ui:options': { halfGrid: true }, description: 'Minimum 7. Default 30' },
+  ),
+  deleteInSyncDrafts: field.toggle(
+    z.boolean().optional(),
+    'Delete drafts identical to the published version',
+  ),
+  pruneRevisions: field.toggle(
+    z.boolean().optional(),
+    'Delete old intermediate versions',
+    {
+      description:
+        'Keeps the current content, published versions, shared versions and each draft base',
+    },
+  ),
+  compactCrdt: field.toggle(
+    z.boolean().optional(),
+    'Compact idle collaborative documents',
+    {
+      description:
+        'Rebuilds idle documents from their current content; step-by-step history is dropped',
+    },
+  ),
+  removeOrphanCrdt: field.toggle(
+    z.boolean().optional(),
+    'Remove orphaned collaborative data',
+  ),
+})
+
 export const CommentUploadOptionsSchema = section('Comment image uploads', {
   enable: field.toggle(
     z.boolean().optional(),
@@ -1148,6 +1191,7 @@ export const configSchemaMapping = {
   ttsOptions: TtsOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
+  draftCleanupOptions: DraftCleanupOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,
   bingSearchOptions: BingSearchOptionsSchema,
   featureList: FeatureListSchema,

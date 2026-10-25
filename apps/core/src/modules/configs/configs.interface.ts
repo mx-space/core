@@ -11,6 +11,7 @@ import {
   type CommentOptionsSchema,
   type CommentUploadOptionsSchema,
   configSchemaMapping,
+  type DraftCleanupOptionsSchema,
   type FeatureListSchema,
   type FileUploadOptionsSchema,
   type FriendLinkOptionsSchema,
@@ -48,6 +49,7 @@ export abstract class IConfig {
   ttsOptions: Required<z.infer<typeof TtsOptionsSchema>>
   fileUploadOptions: Required<z.infer<typeof FileUploadOptionsSchema>>
   commentUploadOptions: Required<z.infer<typeof CommentUploadOptionsSchema>>
+  draftCleanupOptions: Required<z.infer<typeof DraftCleanupOptionsSchema>>
   baiduSearchOptions: Required<z.infer<typeof BaiduSearchOptionsSchema>>
   bingSearchOptions: Required<z.infer<typeof BingSearchOptionsSchema>>
   featureList: Required<z.infer<typeof FeatureListSchema>>

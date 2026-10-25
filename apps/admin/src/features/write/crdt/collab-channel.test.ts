@@ -363,4 +363,32 @@ describe('createCollabChannel', () => {
     expect(onRemote).not.toHaveBeenCalled()
     expect(channel.live()).toBe(false)
   })
+
+  it('passes on why the room was closed and when the document was rebuilt', async () => {
+    const socket = fakeSocket()
+    const onRevoked = vi.fn()
+    const onReset = vi.fn()
+    const channel = createCollabChannel({
+      draftId: 'd1',
+      http: httpTransport(),
+      onRemote: vi.fn(),
+      onReset,
+      onRevoked,
+      subscribeSocket: (next) => {
+        next(socket)
+        return () => undefined
+      },
+    })
+    await channel.pull()
+
+    socket.emit('collab.reset', { documentId: 'other' })
+    expect(onReset).not.toHaveBeenCalled()
+    socket.emit('collab.reset', { documentId: 'doc-1' })
+    expect(onReset).toHaveBeenCalledTimes(1)
+    expect(channel.live()).toBe(false)
+
+    await channel.pull()
+    socket.emit('collab.revoked', { documentId: 'doc-1', reason: 'deleted' })
+    expect(onRevoked).toHaveBeenCalledWith('deleted')
+  })
 })

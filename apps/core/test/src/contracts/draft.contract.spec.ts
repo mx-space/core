@@ -68,7 +68,7 @@ const provider = {
       document,
       publishedRevision: revision(),
     }),
-    list: async () => ({
+    listCards: async () => ({
       data: [branch],
       pagination: { currentPage: 1, size: 10, total: 1, totalPage: 1 },
     }),

@@ -69,6 +69,7 @@ const harness = () => {
     removeReferencesForDocument: vi.fn(),
     updateReferencesForDocument: vi.fn(),
   }
+  const cleanup = { deleteDraft: vi.fn() }
   const service = new DraftService(
     repository as never,
     fileReferences as never,
@@ -78,8 +79,10 @@ const harness = () => {
       usesCrdt: vi.fn(async () => false),
       workingCopyOfDocument: vi.fn(async () => null),
     } as never,
+    cleanup as never,
+    {} as never,
   )
-  return { fileReferences, repository, service }
+  return { cleanup, fileReferences, repository, service }
 }
 
 describe('DraftService tree revisions', () => {
@@ -246,17 +249,12 @@ describe('DraftService tree revisions', () => {
     )
   })
 
-  it('archives one branch without touching its siblings', async () => {
-    const { fileReferences, repository, service } = harness()
-    repository.archiveBranch.mockResolvedValue(branch)
+  it('hard-deletes through the cleanup service', async () => {
+    const { cleanup, service } = harness()
 
     await service.delete(branch.id)
 
-    expect(repository.archiveBranch).toHaveBeenCalledWith(branch.id)
-    expect(fileReferences.removeReferencesForDocument).toHaveBeenCalledWith(
-      branch.id,
-      FileReferenceType.Draft,
-    )
+    expect(cleanup.deleteDraft).toHaveBeenCalledWith(branch.id)
   })
 })
 

@@ -11,6 +11,7 @@ import { validateLexicalCreateContentPair } from '~/shared/schema'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import { DraftRefType } from './draft.enum'
+import { DRAFT_RELATIONS } from './draft.types'
 
 const ImageModelSchema = z.object({
   alt: z.string().optional(),
@@ -51,8 +52,10 @@ export const DraftPagerSchema = z.object({
   hasRef: zCoerceBoolean.optional(),
   page: zPaginationPage,
   refType: z.enum(DraftRefType).optional(),
+  relation: z.enum(DRAFT_RELATIONS).optional(),
   search: z.string().optional(),
   size: zPaginationSize,
+  sort: z.enum(['size', 'updated']).optional(),
   sortBy: z.string().optional(),
   sortOrder: zSortOrder,
 })

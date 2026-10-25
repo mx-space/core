@@ -4,9 +4,10 @@ import { useParams } from 'react-router'
 import { getDraftById } from '~/api/drafts'
 import { findInListCache } from '~/api/list-cache'
 import { useDocumentTitle } from '~/hooks/use-document-title'
-import type { DraftModel } from '~/models/draft'
+import type { DraftCard } from '~/models/draft'
 import { adminQueryKeys } from '~/query/keys'
 
+import { cardFromDraft } from '../utils/draft-card'
 import { DraftDetail } from './DraftDetail'
 import { DraftDetailEmpty } from './DraftDetailEmpty'
 import { useDraftsRouteContext } from './drafts-route-context'
@@ -18,28 +19,28 @@ export function DraftDetailRoute() {
   const queryClient = useQueryClient()
   const ctx = useDraftsRouteContext()
 
-  const initialDraft = id
-    ? findInListCache<DraftModel>(queryClient, LIST_PREFIX, id)
-    : undefined
-
   const draftQuery = useQuery({
     enabled: Boolean(id),
-    initialData: initialDraft,
     queryFn: () => getDraftById(id!),
     queryKey: adminQueryKeys.drafts.detail(id ?? ''),
-    staleTime: initialDraft ? 30_000 : 0,
   })
 
   useDocumentTitle(draftQuery.data?.headRevision.title)
 
   if (!id || !draftQuery.data) return <DraftDetailEmpty />
 
+  const card =
+    findInListCache<DraftCard>(queryClient, LIST_PREFIX, id) ??
+    cardFromDraft(draftQuery.data)
+
   return (
     <DraftDetail
-      deleting={ctx.deleting}
+      busy={ctx.busy}
+      card={card}
       draft={draftQuery.data}
       onBack={ctx.onBack}
-      onDelete={ctx.onDelete}
+      onCompact={() => ctx.onCompact(card)}
+      onDelete={() => ctx.onDelete(card)}
     />
   )
 }

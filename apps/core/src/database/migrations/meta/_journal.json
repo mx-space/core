@@ -323,6 +323,13 @@
       "when": 1793050000000,
       "tag": "0045_collaborator_removed_at",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793100000000,
+      "tag": "0046_draft_cleanup",
+      "breakpoints": true
     }
   ]
 }

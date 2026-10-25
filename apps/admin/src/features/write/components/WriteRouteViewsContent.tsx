@@ -536,6 +536,10 @@ function useDraftSession(options: {
       options.setState((previous) =>
         previous.title === title ? previous : { ...previous, title },
       ),
+    onReset: () => toast.info(t('write.toast.draftCompacted')),
+    onRevoked: (reason) => {
+      if (reason === 'deleted') toast.error(t('write.toast.draftDeleted'))
+    },
   })
   const crdtRef = useRef(crdt)
   crdtRef.current = crdt

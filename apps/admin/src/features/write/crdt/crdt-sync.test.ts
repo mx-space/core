@@ -107,6 +107,37 @@ describe('createCrdtSync', () => {
     sync.dispose()
   })
 
+  it('stops for good when the draft is gone and when the document was rebuilt', async () => {
+    const server = serverWith('')
+    const { transport } = fakeTransport(server)
+    transport.push = vi.fn(async () => {
+      throw new ApiRequestError('gone', 'DRAFT_NOT_FOUND', 404)
+    })
+    const onGone = vi.fn()
+    const onStale = vi.fn()
+    const doc = new LoroDoc()
+    const sync = await createCrdtSync({
+      batchMs: 5,
+      doc,
+      onGone,
+      onStale,
+      retryMs: 5,
+      transport,
+    })
+
+    type(doc, 'x')
+    await vi.waitFor(() => expect(onGone).toHaveBeenCalledTimes(1))
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    expect(transport.push).toHaveBeenCalledTimes(1)
+
+    transport.pull = vi.fn(async () => {
+      throw new ApiRequestError('stale', 'DRAFT_CRDT_STALE', 409)
+    })
+    await sync.pull()
+    expect(onStale).toHaveBeenCalledTimes(1)
+    sync.dispose()
+  })
+
   it('pulls only what it lacks and applies it through the importer', async () => {
     const server = serverWith('a')
     const { transport } = fakeTransport(server)

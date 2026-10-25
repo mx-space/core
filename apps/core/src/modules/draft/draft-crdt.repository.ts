@@ -5,6 +5,7 @@ import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
   contentCrdtDocs,
   contentCrdtUpdates,
+  contentDocuments,
   contentRevisions,
   drafts,
 } from '~/database/schema'
@@ -94,15 +95,32 @@ export class DraftCrdtRepository extends BaseRepository {
     return (await this.findDoc(input.documentId))!
   }
 
+  // The share lock makes a cleanup that bumps the epoch wait for this append, or this append wait
+  // for the cleanup's commit and then see the new epoch.
   async appendUpdate(
     documentId: EntityId | string,
     bytes: Uint8Array,
+    epoch?: number,
   ): Promise<EntityId> {
+    const documentIdValue = parseEntityId(documentId)
     const id = this.snowflake.nextId()
-    await this.db.insert(contentCrdtUpdates).values({
-      bytes,
-      documentId: parseEntityId(documentId),
-      id,
+    await this.db.transaction(async (tx) => {
+      const [document] = await tx
+        .select({ crdtEpoch: contentDocuments.crdtEpoch })
+        .from(contentDocuments)
+        .where(eq(contentDocuments.id, documentIdValue))
+        .for('share')
+        .limit(1)
+      if (!document || (epoch !== undefined && document.crdtEpoch !== epoch)) {
+        throw new Error('CRDT_EPOCH_CHANGED')
+      }
+      await tx
+        .insert(contentCrdtUpdates)
+        .values({ bytes, documentId: documentIdValue, id })
+      await tx
+        .update(contentCrdtDocs)
+        .set({ editedAt: sql`now()` })
+        .where(eq(contentCrdtDocs.documentId, documentIdValue))
     })
     return toEntityId(id)!
   }
@@ -182,6 +200,7 @@ export class DraftCrdtRepository extends BaseRepository {
     const [row] = await this.db
       .update(contentCrdtDocs)
       .set({
+        editedAt: sql`now()`,
         fields: sql`jsonb_build_object('meta', ${merge('meta')}, 'typeSpecificData', ${merge('typeSpecificData')})`,
         updatedAt: new Date(),
       })
@@ -196,7 +215,7 @@ export class DraftCrdtRepository extends BaseRepository {
   ): Promise<void> {
     await this.db
       .update(contentCrdtDocs)
-      .set({ fields, updatedAt: new Date() })
+      .set({ editedAt: sql`now()`, fields, updatedAt: new Date() })
       .where(eq(contentCrdtDocs.documentId, parseEntityId(documentId)))
   }
 

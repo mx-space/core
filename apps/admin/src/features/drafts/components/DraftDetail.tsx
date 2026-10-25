@@ -4,10 +4,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
-import { getDraftRevisions, restoreDraftRevision } from '~/api/drafts'
+import {
+  getCompactPreview,
+  getDraftRevisions,
+  restoreDraftRevision,
+} from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
-import type { DraftModel } from '~/models/draft'
+import type { DraftCard, DraftModel } from '~/models/draft'
 import { adminQueryKeys } from '~/query/keys'
 import { FocusScope, useScopeArrowNav } from '~/ui/focus-scope'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
@@ -24,13 +28,16 @@ import {
 } from '../utils/draft-edit-path'
 import { DraftDetailEmpty } from './DraftDetailEmpty'
 import { DraftDiffPreview } from './DraftDiffPreview'
+import { DraftStoragePanel } from './DraftStoragePanel'
 import { VersionRow } from './VersionRow'
 
 export function DraftDetail(props: {
-  deleting: boolean
+  busy: boolean
+  card: DraftCard
   draft: DraftModel
   onBack: () => void
-  onDelete: (draft: DraftModel) => void
+  onCompact: () => void
+  onDelete: () => void
 }) {
   const { t } = useI18n()
   const navigate = useNavigate()
@@ -39,6 +46,14 @@ export function DraftDetail(props: {
     queryFn: () => getDraftRevisions(props.draft.id),
     queryKey: adminQueryKeys.drafts.history(props.draft.id),
   })
+  const compactQuery = useQuery({
+    queryFn: () => getCompactPreview(props.draft.id),
+    queryKey: adminQueryKeys.drafts.compactPreview(props.draft.id),
+  })
+  const doomed = useMemo(
+    () => new Set(compactQuery.data?.revisionIds ?? []),
+    [compactQuery.data],
+  )
   const meta = refTypeMeta[props.draft.document.refType]
   const versionItems = useMemo(
     () => buildVersionItems(props.draft.headRevisionId, revisionsQuery.data),
@@ -128,12 +143,12 @@ export function DraftDetail(props: {
           </Button>
           <Button
             className="h-8 border-red-200 px-2.5 text-red-600 hover:bg-red-50 dark:border-red-950 dark:text-red-400 dark:hover:bg-red-950/30"
-            disabled={props.deleting}
-            onClick={() => props.onDelete(props.draft)}
+            disabled={props.busy}
+            onClick={props.onDelete}
             type="button"
             variant="subtle"
           >
-            {props.deleting ? (
+            {props.busy ? (
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             ) : (
               <Trash2 aria-hidden="true" className="size-4" />
@@ -142,6 +157,13 @@ export function DraftDetail(props: {
           </Button>
         </div>
       </div>
+
+      <DraftStoragePanel
+        busy={props.busy}
+        card={props.card}
+        onCompact={props.onCompact}
+        preview={compactQuery.data}
+      />
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {revisionsQuery.isLoading ? (
@@ -169,6 +191,7 @@ export function DraftDetail(props: {
                     diffStats={
                       item.id === selectedRevisionId ? diffStats : null
                     }
+                    doomed={doomed.has(item.id)}
                     item={item}
                     key={item.id}
                     onRestore={() =>

@@ -9,6 +9,7 @@ import { adminQueryKeys } from '~/query/keys'
 
 import { formatSearchIndexStats, getErrorMessage } from '../../utils/settings'
 import { SettingsSection } from '../SettingsPrimitives'
+import { DraftCleanupCard } from './DraftCleanupCard'
 import { MaintenanceCard } from './MaintenanceCard'
 import { SearchIndexRebuildCard } from './SearchIndexRebuildCard'
 
@@ -100,6 +101,7 @@ export function MaintenanceSettings() {
           }}
           onIncrementalRebuild={() => rebuildSearchIndexMutation.mutate(false)}
         />
+        <DraftCleanupCard />
       </div>
     </SettingsSection>
   )

@@ -88,6 +88,13 @@ export interface DocumentChange {
   update: Uint8Array
 }
 
+export type DocumentResetReason = 'compacted' | 'deleted'
+
+export interface DocumentReset {
+  documentId: string
+  reason: DocumentResetReason
+}
+
 export interface CheckpointResult {
   branch: DraftBranchRow
   revision: ContentRevisionRow
@@ -122,6 +129,7 @@ const changedKeys = (
 export class DraftCrdtService {
   private readonly logger = new Logger(DraftCrdtService.name)
   private readonly changeListeners = new Set<(change: DocumentChange) => void>()
+  private readonly resetListeners = new Set<(reset: DocumentReset) => void>()
 
   constructor(
     private readonly drafts: DraftRepository,
@@ -133,6 +141,26 @@ export class DraftCrdtService {
     this.changeListeners.add(listener)
     return () => {
       this.changeListeners.delete(listener)
+    }
+  }
+
+  onDocumentReset(listener: (reset: DocumentReset) => void) {
+    this.resetListeners.add(listener)
+    return () => {
+      this.resetListeners.delete(listener)
+    }
+  }
+
+  announceReset(documentId: EntityId | string, reason: DocumentResetReason) {
+    const reset = { documentId: String(documentId), reason }
+    for (const listener of this.resetListeners) {
+      try {
+        listener(reset)
+      } catch (error) {
+        this.logger.warn(
+          `document reset listener failed: ${(error as Error).message}`,
+        )
+      }
     }
   }
 
@@ -184,6 +212,9 @@ export class DraftCrdtService {
     } catch {
       return { documentId, update: doc.export({ mode: 'snapshot' }) }
     }
+    if (!this.knowsRoot(doc, from)) {
+      throw createAppException(AppErrorCode.DRAFT_CRDT_STALE, { documentId })
+    }
     return { documentId, update: doc.export({ from, mode: 'update' }) }
   }
 
@@ -202,7 +233,7 @@ export class DraftCrdtService {
     } catch (error) {
       this.reject(session.branch, (error as Error).message)
     }
-    await this.crdt.appendUpdate(session.document.id, bytes)
+    await this.append(session, bytes)
     this.notifyChanged(session.document.id, bytes, origin)
     return { branch: session.branch, document: session.document }
   }
@@ -356,24 +387,6 @@ export class DraftCrdtService {
         'undo',
         this.materialize(session, readDocContent(session.doc)),
       )
-    })
-  }
-
-  async discard(branchId: EntityId | string): Promise<DraftBranchRow | null> {
-    return this.mutate(branchId, async (session) => {
-      if (session.document.publishedRevisionId) {
-        const { branch } = await this.restoreIn(
-          session,
-          session.document.publishedRevisionId,
-        )
-        return branch
-      }
-      await this.drafts.archiveBranch(session.branch.id)
-      await this.fileReferences.removeReferencesForDocument(
-        session.branch.id,
-        FileReferenceType.Draft,
-      )
-      return null
     })
   }
 
@@ -645,8 +658,21 @@ export class DraftCrdtService {
     )
   }
 
+  private async append(session: Session, bytes: Uint8Array) {
+    try {
+      await this.crdt.appendUpdate(
+        session.document.id,
+        bytes,
+        session.document.crdtEpoch,
+      )
+    } catch (error) {
+      if ((error as Error).message !== 'CRDT_EPOCH_CHANGED') throw error
+      this.reject(session.branch, 'the document was rebuilt')
+    }
+  }
+
   private async apply(session: Session, bytes: Uint8Array) {
-    await this.crdt.appendUpdate(session.document.id, bytes)
+    await this.append(session, bytes)
     session.doc.import(bytes)
     this.notifyChanged(session.document.id, bytes)
   }
@@ -736,6 +762,15 @@ export class DraftCrdtService {
         (row) => row.kind === 'import' && row.parentRevisionId === revision.id,
       )?.frontiers ?? null
     )
+  }
+
+  // A rebuilt document starts from a new root change; a client that never saw it holds another lineage.
+  private knowsRoot(doc: LoroDoc, from: VersionVector) {
+    for (const peer of doc.oplogVersion().toJSON().keys()) {
+      const first = doc.getChangeAt({ counter: 0, peer })
+      if (!first.deps.length && !from.get(peer)) return false
+    }
+    return true
   }
 
   private knownFrontiers(

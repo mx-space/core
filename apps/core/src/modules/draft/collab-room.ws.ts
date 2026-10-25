@@ -21,6 +21,7 @@ import {
   COLLAB_ACCESS,
   COLLAB_RELAY,
   type CollabAccess,
+  type CollabDropReason,
   type CollabIdentity,
   type CollabMember,
   type CollabRelay,
@@ -28,20 +29,37 @@ import {
   CollabWsEvents,
 } from './collab-room.service'
 
-const REVOKE_EVENT = 'collab.revoke'
+const DROP_EVENT = 'collab.drop'
+const DROP_REASONS = new Set<CollabDropReason>([
+  'compacted',
+  'deleted',
+  'removed',
+])
+
+const isDropReason = (value: unknown): value is CollabDropReason =>
+  DROP_REASONS.has(value as CollabDropReason)
 
 export const collabRelayProvider: Provider = {
   inject: [WsBusService],
   provide: COLLAB_RELAY,
   useFactory: (bus: WsBusService): CollabRelay => ({
-    onRevoke: (listener) =>
+    drop: (documentId, scope) =>
+      bus.publish({
+        event: DROP_EVENT,
+        ns: 'collab',
+        payload: { documentId, ...scope },
+      }),
+    onDrop: (listener) =>
       bus.register('collab', (frame) => {
+        if (frame.event !== DROP_EVENT) return
         const payload = frame.payload as
-          { documentId?: string; readerId?: string } | undefined
-        if (frame.event !== REVOKE_EVENT) return
-        if (payload?.documentId && payload.readerId) {
-          listener(payload.documentId, payload.readerId)
-        }
+          | { documentId?: string; readerId?: string; reason?: string }
+          | undefined
+        if (!payload?.documentId || !isDropReason(payload.reason)) return
+        listener(payload.documentId, {
+          readerId: payload.readerId,
+          reason: payload.reason,
+        })
       }),
     publish: (event, payload, room, exclude) => {
       for (const ns of ['admin', 'web'] as const) {
@@ -54,12 +72,6 @@ export const collabRelayProvider: Provider = {
         })
       }
     },
-    revoke: (documentId, readerId) =>
-      bus.publish({
-        event: REVOKE_EVENT,
-        ns: 'collab',
-        payload: { documentId, readerId },
-      }),
   }),
 }
 

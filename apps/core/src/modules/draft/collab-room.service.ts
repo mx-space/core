@@ -11,7 +11,11 @@ import { z } from 'zod'
 import { AppException } from '~/common/errors/exception.types'
 
 import { DraftService } from './draft.service'
-import { type DocumentChange, DraftCrdtService } from './draft-crdt.service'
+import {
+  type DocumentChange,
+  type DocumentResetReason,
+  DraftCrdtService,
+} from './draft-crdt.service'
 
 export const CollabWsEvents = {
   collaboratorsChanged: 'collab.collaborators.changed',
@@ -20,6 +24,7 @@ export const CollabWsEvents = {
   peerJoined: 'collab.peer.joined',
   peerLeft: 'collab.peer.left',
   presence: 'collab.presence',
+  reset: 'collab.reset',
   revoked: 'collab.revoked',
   update: 'collab.update',
 } as const
@@ -32,9 +37,17 @@ export interface CollabAccess {
   recordContribution: (documentId: string, readerId: string) => Promise<void>
 }
 
+export type CollabDropReason = DocumentResetReason | 'removed'
+
+export interface CollabDropScope {
+  readerId?: string
+  reason: CollabDropReason
+}
+
 export interface CollabRelay {
-  onRevoke: (
-    listener: (documentId: string, readerId: string) => void,
+  drop: (documentId: string, scope: CollabDropScope) => void
+  onDrop: (
+    listener: (documentId: string, scope: CollabDropScope) => void,
   ) => () => void
   publish: (
     event: string,
@@ -42,7 +55,6 @@ export interface CollabRelay {
     room: string,
     exclude?: string,
   ) => void
-  revoke: (documentId: string, readerId: string) => void
 }
 
 export interface PresenceUser {
@@ -123,8 +135,11 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     this.stopListening = [
       this.crdt.onDocumentChanged((change) => this.relayChange(change)),
-      this.relay.onRevoke((documentId, readerId) =>
-        this.dropReader(documentId, readerId),
+      this.crdt.onDocumentReset(({ documentId, reason }) =>
+        this.drop(documentId, { reason }),
+      ),
+      this.relay.onDrop((documentId, scope) =>
+        this.dropLocal(documentId, scope),
       ),
     ]
   }
@@ -134,8 +149,12 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
   }
 
   revoke(documentId: string, readerId: string) {
-    this.dropReader(documentId, readerId)
-    this.relay.revoke(documentId, readerId)
+    this.drop(documentId, { readerId, reason: 'removed' })
+  }
+
+  private drop(documentId: string, scope: CollabDropScope) {
+    this.dropLocal(documentId, scope)
+    this.relay.drop(documentId, scope)
   }
 
   async join(member: CollabMember, raw: unknown): Promise<WsAckPayload> {
@@ -275,17 +294,27 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private dropReader(documentId: string, readerId: string) {
+  private dropLocal(documentId: string, scope: CollabDropScope) {
     for (const [connectionId, rooms] of this.joined) {
       for (const [draftId, joined] of rooms) {
         const { identity } = joined.member
         if (joined.documentId !== documentId) continue
-        if (identity.kind !== 'reader' || identity.readerId !== readerId) {
+        if (
+          scope.readerId &&
+          (identity.kind !== 'reader' || identity.readerId !== scope.readerId)
+        ) {
           continue
         }
         this.forget(connectionId, draftId)
         void joined.member.leave(roomOf(documentId)).catch(() => undefined)
-        joined.member.send(CollabWsEvents.revoked, { documentId })
+        if (scope.reason === 'compacted') {
+          joined.member.send(CollabWsEvents.reset, { documentId })
+        } else {
+          joined.member.send(CollabWsEvents.revoked, {
+            documentId,
+            reason: scope.reason,
+          })
+        }
         this.announceLeft(connectionId, documentId)
       }
     }

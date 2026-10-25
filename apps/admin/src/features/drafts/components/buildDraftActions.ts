@@ -1,11 +1,12 @@
 import { Pencil, Trash2 } from 'lucide-react'
+
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
-import type { DraftModel } from '~/models/draft'
+import type { DraftCard } from '~/models/draft'
 import type { ListAction } from '~/ui/list-actions'
 
 export interface DraftActionHandlers {
-  deleteMany: (drafts: DraftModel[]) => Promise<void> | void
-  open: (draft: DraftModel) => void
+  deleteMany: (drafts: DraftCard[]) => Promise<void> | void
+  open: (draft: DraftCard) => void
 }
 
 /**
@@ -15,7 +16,7 @@ export interface DraftActionHandlers {
 export function buildDraftActions(
   handlers: DraftActionHandlers,
   t: (key: TranslationKey, values?: TranslationValues) => string,
-): ListAction<DraftModel>[] {
+): ListAction<DraftCard>[] {
   return [
     {
       icon: Pencil,

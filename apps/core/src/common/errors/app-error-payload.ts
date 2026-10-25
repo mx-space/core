@@ -136,6 +136,15 @@ export type AppErrorPayloadMap = {
     branchId: string
     contentFormat: string
   }
+  [AppErrorCode.DRAFT_PUBLISH_PENDING]: {
+    documentId: string
+  }
+  [AppErrorCode.DRAFT_CRDT_STALE]: {
+    documentId: string
+  }
+  [AppErrorCode.DRAFT_CLEANUP_CONFLICT]: {
+    documentId: string
+  }
   [AppErrorCode.COLLAB_INVITE_INVALID]: {
     reason: 'exhausted' | 'expired' | 'not_found' | 'revoked'
   }
