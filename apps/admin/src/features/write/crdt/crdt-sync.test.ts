@@ -205,4 +205,26 @@ describe('createCrdtSync', () => {
     await expect(sync.flush()).rejects.toThrow()
     sync.dispose()
   })
+
+  it('applies a pushed remote update and keeps syncing local edits', async () => {
+    const server = serverWith('a')
+    const { pushes, transport } = fakeTransport(server)
+    const doc = new LoroDoc()
+    const apply = vi.fn((bytes: Uint8Array) => doc.import(bytes))
+    const sync = await createCrdtSync({ apply, batchMs: 5, doc, transport })
+    const peer = new LoroDoc()
+    peer.import(server.export({ mode: 'snapshot' }))
+    const from = peer.oplogVersion()
+    type(peer, 'b')
+    const relayed = peer.export({ from, mode: 'update' })
+    server.import(relayed)
+
+    sync.receive(relayed)
+    type(doc, 'c')
+    await vi.waitFor(() => expect(pushes).toHaveLength(1))
+
+    expect(apply).toHaveBeenCalledWith(relayed)
+    expect(server.getText('title').toString()).toBe('abc')
+    sync.dispose()
+  })
 })

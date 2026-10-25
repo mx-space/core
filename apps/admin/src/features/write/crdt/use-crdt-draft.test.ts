@@ -11,6 +11,12 @@ const api = vi.hoisted(() => ({
   postDraftCrdt: vi.fn(),
 }))
 vi.mock('~/api/drafts', () => api)
+vi.mock('~/socket/SocketBridge', () => ({
+  subscribeAdminSocket: (listener: (socket: null) => void) => {
+    listener(null)
+    return () => undefined
+  },
+}))
 
 let container: HTMLDivElement
 let root: Root

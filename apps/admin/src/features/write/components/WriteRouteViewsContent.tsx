@@ -785,7 +785,7 @@ function useDraftSession(options: {
     const currentDraftId = openDraft?.id ?? draftId
     if (!currentDraftId || payload.branchId !== currentDraftId) return
     if (crdtRef.current.active) {
-      void crdtRef.current.pull()
+      if (!crdtRef.current.live()) void crdtRef.current.pull()
       return
     }
     if (payload.headRevisionId === openDraft?.headRevisionId) return

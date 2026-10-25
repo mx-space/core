@@ -24,6 +24,7 @@ export interface CrdtSync {
   flush: () => Promise<void>
   pending: () => boolean
   pull: () => Promise<void>
+  receive: (bytes: Uint8Array) => void
 }
 
 export const CRDT_REJECTED_CODE = 'DRAFT_CRDT_UPDATE_REJECTED'
@@ -90,6 +91,11 @@ export async function createCrdtSync(
     timer = setTimeout(run, batchMs)
   }
 
+  const receive = (bytes: Uint8Array) => {
+    apply(bytes)
+    if (!dirty && !inFlight) sent = doc.oplogVersion()
+  }
+
   const unsubscribe = doc.subscribeLocalUpdates(schedule)
 
   return {
@@ -114,9 +120,8 @@ export async function createCrdtSync(
     },
     pending: () => dirty || inFlight !== null,
     pull: async () => {
-      const bytes = await transport.pull(doc.oplogVersion().encode())
-      apply(bytes)
-      if (!dirty && !inFlight) sent = doc.oplogVersion()
+      receive(await transport.pull(doc.oplogVersion().encode()))
     },
+    receive,
   }
 }

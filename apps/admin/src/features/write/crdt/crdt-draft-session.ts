@@ -4,7 +4,9 @@ import { LoroDoc } from 'loro-crdt'
 
 import type { ApiRequestError } from '~/api/http'
 
+import type { CollabChannel } from './collab-channel'
 import {
+  type CrdtSync,
   type CrdtSyncStatus,
   type CrdtTransport,
   createCrdtSync,
@@ -13,11 +15,22 @@ import {
 const HUMAN_MESSAGE = 'human:owner'
 const TITLE = 'title'
 
+export interface ChannelHooks {
+  onReconnect: () => void
+  onRemote: (bytes: Uint8Array) => void
+}
+
+export type SessionChannel = Pick<
+  CollabChannel,
+  'dispose' | 'live' | 'pull' | 'push' | 'sendPresence'
+>
+
 export interface CrdtDraftSessionOptions {
+  channel?: (hooks: ChannelHooks) => SessionChannel
   onRejected?: (error: ApiRequestError) => void
   onRemoteTitle?: (title: string) => void
   onStatus?: (status: CrdtSyncStatus) => void
-  transport: CrdtTransport
+  transport?: CrdtTransport
 }
 
 export interface BindOptions {
@@ -28,6 +41,7 @@ export interface CrdtDraftSession {
   bindEditor: (editor: LexicalEditor | null, options?: BindOptions) => void
   dispose: () => void
   flush: () => Promise<void>
+  live: () => boolean
   pending: () => boolean
   pull: () => Promise<void>
   setCommitMessage: (message: string | null) => void
@@ -51,17 +65,38 @@ export async function createCrdtDraftSession(
     options.onRemoteTitle?.(title)
   }
 
-  const sync = await createCrdtSync({
-    apply: (bytes) => {
-      if (binding) binding.import(bytes)
-      else doc.import(bytes)
-      reportTitle()
+  let sync: CrdtSync | null = null
+  const early: Uint8Array[] = []
+  const channel = options.channel?.({
+    onReconnect: () => {
+      void sync?.pull().catch(() => undefined)
     },
-    doc,
-    onRejected: options.onRejected,
-    onStatus: options.onStatus,
-    transport: options.transport,
+    onRemote: (bytes) => {
+      if (sync) sync.receive(bytes)
+      else early.push(bytes)
+    },
   })
+  const transport = channel ?? options.transport
+  if (!transport) throw new Error('A CRDT session needs a transport')
+
+  try {
+    sync = await createCrdtSync({
+      apply: (bytes) => {
+        if (binding) binding.import(bytes)
+        else doc.import(bytes)
+        reportTitle()
+      },
+      doc,
+      onRejected: options.onRejected,
+      onStatus: options.onStatus,
+      transport,
+    })
+  } catch (error) {
+    channel?.dispose()
+    throw error
+  }
+  const ready = sync
+  for (const bytes of early.splice(0)) ready.receive(bytes)
   reportTitle()
 
   return {
@@ -76,11 +111,13 @@ export async function createCrdtDraftSession(
     dispose: () => {
       binding?.dispose()
       binding = null
-      sync.dispose()
+      ready.dispose()
+      channel?.dispose()
     },
-    flush: () => sync.flush(),
-    pending: () => sync.pending(),
-    pull: () => sync.pull(),
+    flush: () => ready.flush(),
+    live: () => channel?.live() ?? false,
+    pending: () => ready.pending(),
+    pull: () => ready.pull(),
     setCommitMessage: (message) => {
       bindingOptions.commitMessage = message ?? HUMAN_MESSAGE
     },

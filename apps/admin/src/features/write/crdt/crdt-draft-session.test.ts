@@ -183,3 +183,85 @@ describe('createCrdtDraftSession adopt', () => {
     session.dispose()
   })
 })
+
+describe('createCrdtDraftSession over a live channel', () => {
+  const otherTabEdit = async (server: LoroDoc, ...values: string[]) => {
+    const other = await createCrdtDraftSession({
+      transport: transportFor(server),
+    })
+    const editor = newEditor()
+    other.bindEditor(editor)
+    const before = server.oplogVersion()
+    write(editor, ...values)
+    await other.flush()
+    other.dispose()
+    return server.export({ from: before, mode: 'update' })
+  }
+
+  it('applies relayed updates, including ones that land during the join', async () => {
+    const server = seededServer('T', 'p1')
+    const early = await otherTabEdit(server, 'p1', 'early')
+    const late = await otherTabEdit(server, 'p1', 'early', 'late')
+    const base = new LoroDoc()
+    base.import(server.export({ mode: 'snapshot' }))
+    let hooks: {
+      onReconnect: () => void
+      onRemote: (bytes: Uint8Array) => void
+    }
+    const http = transportFor(server)
+    const session = await createCrdtDraftSession({
+      channel: (next) => {
+        hooks = next
+        return {
+          dispose: () => undefined,
+          live: () => true,
+          pull: async (since) => {
+            if (!since) next.onRemote(early)
+            return http.pull(since)
+          },
+          push: http.push,
+          sendPresence: () => undefined,
+        }
+      },
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+
+    hooks!.onRemote(late)
+
+    expect(read(editor)).toEqual(['p1', 'early', 'late'])
+    expect(session.live()).toBe(true)
+    session.dispose()
+  })
+
+  it('pulls what it missed when the channel reconnects', async () => {
+    const server = seededServer('T', 'p1')
+    let hooks: {
+      onReconnect: () => void
+      onRemote: (bytes: Uint8Array) => void
+    }
+    const http = transportFor(server)
+    const pull = vi.fn(http.pull)
+    const session = await createCrdtDraftSession({
+      channel: (next) => {
+        hooks = next
+        return {
+          dispose: () => undefined,
+          live: () => true,
+          pull,
+          push: http.push,
+          sendPresence: () => undefined,
+        }
+      },
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+    await otherTabEdit(server, 'p1', 'missed')
+
+    hooks!.onReconnect()
+    await vi.waitFor(() => expect(read(editor)).toEqual(['p1', 'missed']))
+
+    expect(pull).toHaveBeenLastCalledWith(expect.any(Uint8Array))
+    session.dispose()
+  })
+})

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { getDraftCrdt, postDraftCrdt } from '~/api/drafts'
 
+import { createCollabChannel } from './collab-channel'
 import {
   type CrdtDraftSession,
   createCrdtDraftSession,
@@ -16,6 +17,7 @@ export interface CrdtDraftController {
   adoptEditorOnBind: () => void
   bindEditor: (editor: LexicalEditor | null) => void
   flush: () => Promise<void>
+  live: () => boolean
   locked: boolean
   pending: () => boolean
   pull: () => Promise<void>
@@ -55,6 +57,15 @@ export function useCrdtDraft(options: {
     let retry: ReturnType<typeof setTimeout> | undefined
     setStatus('loading')
     void createCrdtDraftSession({
+      channel: (hooks) =>
+        createCollabChannel({
+          ...hooks,
+          draftId,
+          http: {
+            pull: (since) => getDraftCrdt(draftId, since),
+            push: (bytes) => postDraftCrdt(draftId, bytes),
+          },
+        }),
       onRejected: () => {
         void callbacksRef.current
           .onRejected()
@@ -63,10 +74,6 @@ export function useCrdtDraft(options: {
       onRemoteTitle: (title) => callbacksRef.current.onRemoteTitle(title),
       onStatus: (next) => {
         if (!disposed) setStatus(next)
-      },
-      transport: {
-        pull: (since) => getDraftCrdt(draftId, since),
-        push: (bytes) => postDraftCrdt(draftId, bytes),
       },
     })
       .then((created) => {
@@ -119,6 +126,7 @@ export function useCrdtDraft(options: {
       flush: async () => {
         await sessionRef.current?.flush()
       },
+      live: () => sessionRef.current?.live() ?? false,
       pending: () => sessionRef.current?.pending() ?? false,
       pull: async () => {
         await sessionRef.current?.pull()
