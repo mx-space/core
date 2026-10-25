@@ -1,5 +1,6 @@
 import { useI18n } from '~/i18n'
 import type { DraftRefType, DraftStorageSummary } from '~/models/draft'
+import { SelectField } from '~/ui/primitives/select'
 import { cn } from '~/utils/cn'
 
 import { filterOptionKeys, relationFilterKeys } from '../constants'
@@ -60,17 +61,20 @@ export function DraftListFilters(props: {
             </span>
           </button>
         ))}
-        <label className="ml-auto flex items-center gap-1 text-xs text-fg-muted">
+        <div className="ml-auto flex items-center gap-1 text-xs text-fg-muted">
           {t('drafts.sort.label')}
-          <select
-            className="rounded-sm border border-border-strong bg-surface-card px-1.5 py-0.5 text-xs text-fg"
-            onChange={(event) => props.onSort(event.target.value as DraftSort)}
+          <SelectField<DraftSort>
+            aria-label={t('drafts.sort.label')}
+            className="h-6 w-auto pl-2 pr-1.5 text-xs"
+            onValueChange={props.onSort}
+            options={[
+              { label: t('drafts.sort.updated'), value: 'updated' },
+              { label: t('drafts.sort.size'), value: 'size' },
+            ]}
+            popupClassName="w-auto min-w-[var(--anchor-width)] text-xs"
             value={props.sort}
-          >
-            <option value="updated">{t('drafts.sort.updated')}</option>
-            <option value="size">{t('drafts.sort.size')}</option>
-          </select>
-        </label>
+          />
+        </div>
       </div>
     </div>
   )

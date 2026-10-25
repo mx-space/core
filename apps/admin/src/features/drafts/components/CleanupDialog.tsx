@@ -13,6 +13,7 @@ import { ModalFooter, ModalTitle } from '~/ui/feedback/modal'
 import { present, useModal } from '~/ui/feedback/modal-imperative'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
+import { SelectField } from '~/ui/primitives/select'
 
 import { getErrorMessage } from '../utils/errors'
 import { CleanupArchivedList } from './CleanupArchivedList'
@@ -100,21 +101,21 @@ function CleanupDialogBody() {
         </ModalTitle>
         <p className="text-sm text-fg-muted">{t('drafts.cleanup.subtitle')}</p>
       </div>
-      <label className="flex items-center gap-2 border-y border-border bg-surface-inset px-6 py-3 text-sm text-fg">
+      <div className="flex items-center gap-2 border-y border-border bg-surface-inset px-6 py-3 text-sm text-fg">
         {t('drafts.cleanup.olderThanPrefix')}
-        <select
-          className="rounded-sm border border-border-strong bg-surface-card px-2 py-1 text-sm"
-          onChange={(event) => setDays(Number(event.target.value))}
+        <SelectField
+          aria-label={t('drafts.cleanup.days', { count: days })}
+          className="w-auto"
+          onValueChange={setDays}
+          options={DAY_OPTIONS.map((value) => ({
+            label: t('drafts.cleanup.days', { count: value }),
+            value,
+          }))}
+          popupClassName="w-auto min-w-[var(--anchor-width)]"
           value={days}
-        >
-          {DAY_OPTIONS.map((value) => (
-            <option key={value} value={value}>
-              {t('drafts.cleanup.days', { count: value })}
-            </option>
-          ))}
-        </select>
+        />
         {t('drafts.cleanup.olderThanSuffix')}
-      </label>
+      </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {CATEGORIES.map((key) => (
           <label
@@ -153,7 +154,7 @@ function CleanupDialogBody() {
           onChange={setArchived}
           selected={archived}
         />
-        <section className="mx-6 my-4 flex flex-col gap-2 rounded-md bg-emerald-50 p-4 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+        <section className="mx-3 my-4 flex flex-col gap-2 rounded-md bg-emerald-50 px-3 py-3 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
           <span className="text-sm font-semibold">
             {t('drafts.cleanup.keptTitle')}
           </span>
@@ -165,7 +166,7 @@ function CleanupDialogBody() {
           </ul>
         </section>
       </div>
-      <ModalFooter>
+      <ModalFooter className="px-6">
         <span className="mr-auto text-sm text-fg-muted">
           {t('drafts.cleanup.total', { size: formatBytes(total) })}
         </span>
