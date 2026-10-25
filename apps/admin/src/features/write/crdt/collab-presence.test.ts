@@ -176,4 +176,19 @@ describe('createCollabPresence', () => {
 
     expect(a.outbox).toEqual([])
   })
+
+  it('gives everyone on screen a different color while the palette lasts', () => {
+    const presence = createCollabPresence({ send: () => undefined })
+    for (const connectionId of ['conn-0', 'conn-8']) {
+      presence.apply({
+        caret: { anchor: null, focus: null },
+        connectionId,
+        entry: null,
+        user: user(connectionId),
+      })
+    }
+
+    const [first, second] = presence.remotes()
+    expect(first.color).not.toBe(second.color)
+  })
 })

@@ -55,11 +55,20 @@ const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
     left.id === right.id &&
     left.offset === right.offset)
 
-const colorOf = (key: string, entry: string | null) => {
+const colorOf = (
+  key: string,
+  entry: string | null,
+  taken: ReadonlySet<string> = new Set(),
+) => {
   if (entry?.startsWith('agent:')) return AGENT_PRESENCE_COLOR
   let hash = 0
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) | 0
-  return PRESENCE_COLORS[Math.abs(hash) % PRESENCE_COLORS.length]
+  const start = Math.abs(hash) % PRESENCE_COLORS.length
+  for (let step = 0; step < PRESENCE_COLORS.length; step += 1) {
+    const color = PRESENCE_COLORS[(start + step) % PRESENCE_COLORS.length]
+    if (!taken.has(color)) return color
+  }
+  return PRESENCE_COLORS[start]
 }
 
 const pointOf = (value: unknown): CaretPoint | null => {
@@ -132,9 +141,14 @@ export function createCollabPresence(options: {
         return
       }
       heardAt.set(key, Date.now())
+      const taken = new Set(
+        [...remote.values()]
+          .filter((peer) => peer.key !== key)
+          .map((peer) => peer.color),
+      )
       remote.set(key, {
         anchor: pointOf(frame.caret.anchor),
-        color: colorOf(key, frame.entry),
+        color: remote.get(key)?.color ?? colorOf(key, frame.entry, taken),
         connectionId: frame.connectionId,
         focus: pointOf(frame.caret.focus),
         key,

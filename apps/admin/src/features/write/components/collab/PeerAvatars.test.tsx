@@ -74,4 +74,31 @@ describe('PeerAvatars', () => {
     expect(avatar.getAttribute('title')).toContain('Owner')
     expect(avatar.getAttribute('title')).toContain('另一个标签页')
   })
+
+  it('shows one avatar per person even with several tabs open', () => {
+    render([
+      peer('c1', 'Ann', 'r1'),
+      peer('c2', 'Ann', 'r1'),
+      peer('c3', 'Bob', 'r2'),
+    ])
+
+    expect(container.querySelectorAll('[data-peer]')).toHaveLength(2)
+  })
+
+  it('falls back to the initial when the avatar image fails to load', () => {
+    render([
+      {
+        ...peer('c1', 'Jerome', 'r1'),
+        user: { avatar: 'https://broken.test/a.png', id: 'r1', name: 'Jerome' },
+      },
+    ])
+
+    const image = container.querySelector('[data-peer] img')!
+    act(() => {
+      image.dispatchEvent(new Event('error'))
+    })
+
+    expect(container.querySelector('[data-peer] img')).toBeNull()
+    expect(container.querySelector('[data-peer]')!.textContent).toBe('J')
+  })
 })
