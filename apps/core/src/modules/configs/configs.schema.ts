@@ -797,7 +797,7 @@ const AIProviderConfigSchema = withMeta(
     type: field.plain(z.enum(AIProviderType), 'Provider type', {
       description: 'openai | openai-compatible | anthropic | openrouter',
     }),
-    apiKey: field.password(z.string(), 'API Key'),
+    apiKey: field.password(z.string().default(''), 'API Key'),
     endpoint: field.plain(z.string().optional(), 'Custom endpoint', {
       description:
         'Required for OpenAI-compatible services, e.g. https://api.deepseek.com',

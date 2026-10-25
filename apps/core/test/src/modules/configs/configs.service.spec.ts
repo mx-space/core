@@ -712,7 +712,7 @@ describe('ConfigsService', () => {
     })
   })
 
-  describe('AI capability route validation', () => {
+  describe('AI provider and capability route validation', () => {
     function createService(
       currentConfig: ReturnType<typeof generateDefaultConfig>,
     ) {
@@ -740,6 +740,74 @@ describe('ConfigsService', () => {
       )
       return { service }
     }
+
+    it('saves a LobeHub provider and model assignment without an API key', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      const result = await service.patchAndValid('ai', {
+        providers: [
+          {
+            id: 'lobehub',
+            name: 'LobeHub Cloud',
+            type: AIProviderType.LobeHub,
+            apiKey: '',
+            defaultModel: 'openai/gpt-5-mini',
+            enabled: true,
+          },
+        ],
+        writerModel: { providerId: 'lobehub', model: 'openai/gpt-5-mini' },
+      })
+
+      expect(result.providers).toMatchObject([
+        { id: 'lobehub', type: AIProviderType.LobeHub, apiKey: '' },
+      ])
+      expect(result.writerModel).toEqual({
+        providerId: 'lobehub',
+        model: 'openai/gpt-5-mini',
+      })
+    })
+
+    it('rejects a new API-key provider without a key', async () => {
+      const { service } = createService(generateDefaultConfig())
+
+      await expect(
+        service.patchAndValid('ai', {
+          providers: [
+            {
+              id: 'openai',
+              name: 'OpenAI',
+              type: AIProviderType.OpenAICompatible,
+              apiKey: '',
+              defaultModel: 'gpt-5-mini',
+              enabled: true,
+            },
+          ],
+        }),
+      ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+    })
+
+    it('retains an existing provider key when re-saving a masked key', async () => {
+      const currentConfig = generateDefaultConfig()
+      currentConfig.ai.providers = [
+        {
+          id: 'openai',
+          name: 'OpenAI',
+          type: AIProviderType.OpenAICompatible,
+          apiKey: 'existing-key',
+          defaultModel: 'gpt-5-mini',
+          enabled: true,
+        },
+      ]
+      const { service } = createService(currentConfig)
+
+      const result = await service.patchAndValid('ai', {
+        providers: [{ ...currentConfig.ai.providers[0], apiKey: '' }],
+      })
+
+      expect(decryptObject(result, 'ai').providers?.[0].apiKey).toBe(
+        'existing-key',
+      )
+    })
 
     it('accepts image and speech routes that reuse one capable provider', async () => {
       const currentConfig = generateDefaultConfig()
