@@ -8,6 +8,11 @@ import { I18nProvider } from '~/i18n'
 import type { RemotePresence } from '../../crdt/collab-presence'
 import { PeerAvatars } from './PeerAvatars'
 
+const sourceOf = (peers: RemotePresence[]) => ({
+  get: () => peers,
+  subscribe: () => () => undefined,
+})
+
 let container: HTMLDivElement
 let root: Root
 
@@ -25,7 +30,7 @@ const render = (peers: RemotePresence[]) =>
       createElement(
         I18nProvider,
         null,
-        createElement(PeerAvatars, { peers, selfId: 'owner' }),
+        createElement(PeerAvatars, { peers: sourceOf(peers), selfId: 'owner' }),
       ),
     )
   })

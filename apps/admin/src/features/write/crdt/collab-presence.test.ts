@@ -136,4 +136,22 @@ describe('createCollabPresence', () => {
     expect(PRESENCE_COLORS).toContain(color)
     expect(b.remotes()[0].color).toBe(color)
   })
+
+  it('stays quiet about its own caret and skips unchanged carets', () => {
+    const sent: Uint8Array[] = []
+    const a = createCollabPresence({ send: (bytes) => sent.push(bytes) })
+    const seen = vi.fn()
+    a.subscribe(seen)
+    a.start('conn-a', user('owner'))
+    const afterStart = sent.length
+
+    vi.advanceTimersByTime(1)
+    a.setCursor(null, { id: '1@2', offset: 1 })
+    vi.advanceTimersByTime(1)
+    a.setCursor(null, { id: '1@2', offset: 1 })
+
+    expect(seen).not.toHaveBeenCalled()
+    expect(sent.length).toBe(afterStart + 1)
+    a.dispose()
+  })
 })

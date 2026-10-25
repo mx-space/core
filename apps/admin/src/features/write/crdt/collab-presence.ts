@@ -31,6 +31,13 @@ type PresenceState = {
 
 export type RemotePresence = PresenceState & { key: string }
 
+const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
+  left === right ||
+  (left !== null &&
+    right !== null &&
+    left.id === right.id &&
+    left.offset === right.offset)
+
 const colorOf = (key: string) => {
   let hash = 0
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) | 0
@@ -58,7 +65,8 @@ export function createCollabPresence(options: {
       .map(([key, state]) => ({ ...state, key }))
       .sort((left, right) => left.key.localeCompare(right.key))
 
-  const unsubscribe = store.subscribe(() => {
+  const unsubscribe = store.subscribe((event) => {
+    if (event.by === 'local') return
     const current = remotes()
     for (const listener of listeners) listener(current)
   })
@@ -86,10 +94,22 @@ export function createCollabPresence(options: {
     },
     remotes,
     remove: (key: string) => {
-      if (key !== self) store.delete(key)
+      if (key === self || !store.get(key)) return
+      store.delete(key)
+      const current = remotes()
+      for (const listener of listeners) listener(current)
     },
-    setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) =>
-      update({ anchor, focus }),
+    setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) => {
+      const current = self ? store.get(self) : undefined
+      if (
+        current &&
+        samePoint(current.anchor, anchor) &&
+        samePoint(current.focus, focus)
+      ) {
+        return
+      }
+      update({ anchor, focus })
+    },
     start: (key: string, user: PresenceUser) => {
       const previous = self ? store.get(self) : undefined
       if (self && self !== key) store.delete(self)

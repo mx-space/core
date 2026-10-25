@@ -2,6 +2,7 @@ import type { WsAckPayload } from '@mx-space/ws-client/protocol'
 import { Injectable, Logger } from '@nestjs/common'
 
 export interface AdminWsContext {
+  alive: () => boolean
   connectionId: string
   join: (room: string) => Promise<void>
   leave: (room: string) => Promise<void>

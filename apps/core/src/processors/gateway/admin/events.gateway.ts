@@ -143,9 +143,13 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     if (!conn) return ack(envelope, { ok: false, code: 'NOT_CONNECTED' })
+    if (!this.isAuthenticated(conn)) {
+      return ack(envelope, { ok: false, code: 'NOT_AUTHENTICATED' })
+    }
     const result = await this.handlers.dispatch(
       event,
       {
+        alive: () => this.resolveConnection(ws) === conn,
         connectionId: conn.id,
         join: async (room) => {
           this.roomManager.join(room, conn)
@@ -172,7 +176,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -189,7 +193,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -206,7 +210,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -228,7 +232,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 

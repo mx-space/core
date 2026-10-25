@@ -63,7 +63,7 @@ export function createCollabChannel(
   const maxFrameBytes = options.maxFrameBytes ?? 512 * 1024
   let socket: CollabSocket | null = null
   let documentId: string | null = null
-  let dropped = false
+  let joining: { frames: DocumentFrame[] } | null = null
   let disposed = false
   let unbind: Array<() => void> = []
 
@@ -83,12 +83,13 @@ export function createCollabChannel(
     socket = next
     if (!next) return
     unbind = [
-      next.on(
-        'collab.update',
-        forDocument((frame) => {
-          if (frame.update) options.onRemote(decodeBase64(frame.update))
-        }),
-      ),
+      next.on('collab.update', (frame: DocumentFrame) => {
+        if (joining) joining.frames.push(frame)
+        else
+          forDocument((relayed) => {
+            if (relayed.update) options.onRemote(decodeBase64(relayed.update))
+          })(frame)
+      }),
       next.on(
         'collab.presence',
         forDocument((frame) => {
@@ -108,12 +109,7 @@ export function createCollabChannel(
         }),
       ),
       next.on('$state', (state: WsClientState) => {
-        if (state !== 'open') {
-          if (documentId) dropped = true
-          return
-        }
-        if (!dropped || disposed) return
-        dropped = false
+        if (state !== 'open' || disposed || joining) return
         documentId = null
         options.onReconnect?.()
       }),
@@ -145,17 +141,37 @@ export function createCollabChannel(
     live,
     pull: async (since) => {
       if (!open()) return http.pull(since)
-      const ack = await socket!.request('collab.join', {
-        draftId,
-        ...(since ? { since: encodeBase64(since) } : {}),
-      })
+      const attempt = { frames: [] as DocumentFrame[] }
+      joining = attempt
+      let ack: Awaited<ReturnType<CollabSocket['request']>>
+      try {
+        ack = await socket!.request('collab.join', {
+          draftId,
+          ...(since ? { since: encodeBase64(since) } : {}),
+        })
+      } catch {
+        if (joining === attempt) joining = null
+        documentId = null
+        return http.pull(since)
+      } finally {
+        if (joining === attempt) joining = null
+      }
       const data = ack.data as {
         connectionId: string
         documentId: string
         update: string
       }
+      if (disposed) {
+        void socket?.request('collab.leave', { draftId }).catch(() => undefined)
+        return decodeBase64(data.update)
+      }
       documentId = data.documentId
       options.onJoined?.(data.connectionId)
+      for (const frame of attempt.frames) {
+        if (frame.documentId === documentId && frame.update) {
+          options.onRemote(decodeBase64(frame.update))
+        }
+      }
       return decodeBase64(data.update)
     },
     push: async (bytes) => {

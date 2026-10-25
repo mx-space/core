@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import type { CaretPoint, RemotePresence } from '../../crdt/collab-presence'
+import { type PeersSource, usePeers } from '../../crdt/peers-store'
 
 type Resolve = (point: CaretPoint) => { key: NodeKey; offset: number } | null
 
@@ -86,10 +87,11 @@ const measure = (
 
 export function RemoteCarets(props: {
   editor: LexicalEditor | null
-  peers: RemotePresence[]
+  peers: PeersSource
   resolveCaret: Resolve
 }) {
-  const { editor, peers, resolveCaret } = props
+  const { editor, resolveCaret } = props
+  const peers = usePeers(props.peers)
   const [frame, setFrame] = useState<HTMLElement | null>(null)
   const [drawn, setDrawn] = useState<DrawnPeer[]>([])
 

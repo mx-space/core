@@ -12,7 +12,9 @@ import {
 import { WsBusService } from '~/processors/gateway/ws/ws-bus.service'
 
 import {
+  COLLAB_ACCESS,
   COLLAB_RELAY,
+  type CollabAccess,
   type CollabMember,
   type CollabRelay,
   CollabRoomService,
@@ -34,7 +36,14 @@ export const collabRelayProvider: Provider = {
   }),
 }
 
+export const collabAccessProvider: Provider = {
+  provide: COLLAB_ACCESS,
+  // /ws/admin only admits the owner, so every member that reaches the room may edit.
+  useValue: { canJoin: async () => true } satisfies CollabAccess,
+}
+
 const memberOf = (ctx: AdminWsContext): CollabMember => ({
+  alive: ctx.alive,
   connectionId: ctx.connectionId,
   join: ctx.join,
   leave: ctx.leave,

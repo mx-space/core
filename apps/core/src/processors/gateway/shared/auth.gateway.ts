@@ -31,6 +31,13 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
     }
 
     private roleGeneration = 0
+    private readonly authenticated = new WeakSet<WsConnection>()
+
+    // Message handlers run as soon as the socket is tracked, before the auth lookup settles,
+    // and keep running while a rejected socket is closing.
+    protected isAuthenticated(conn: WsConnection) {
+      return this.authenticated.has(conn)
+    }
     tokenSocketIdMap = new Map<string, Set<string>>()
     private readonly socketIdTokenMap = new Map<string, string>()
 
@@ -51,6 +58,7 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
     }
 
     authFailed(conn: WsConnection) {
+      this.authenticated.delete(conn)
       this.sendTo(conn, BusinessEvents.AUTH_FAILED, 'Authentication failed')
       conn.ws.close(AUTH_FAILED_CLOSE_CODE, 'auth failed')
     }
@@ -108,6 +116,7 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
     ) {
       if (!this.resolveConnection(conn.ws)) return
       if (generation !== this.roleGeneration) return this.authFailed(conn)
+      this.authenticated.add(conn)
       this.sendConnectGreeting(conn)
       if (token) this.bindToken(token, conn)
     }

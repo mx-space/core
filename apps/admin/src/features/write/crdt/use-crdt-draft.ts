@@ -4,16 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getDraftCrdt, postDraftCrdt } from '~/api/drafts'
 
 import { createCollabChannel } from './collab-channel'
-import type {
-  CaretPoint,
-  PresenceUser,
-  RemotePresence,
-} from './collab-presence'
+import type { CaretPoint, PresenceUser } from './collab-presence'
 import {
   type CrdtDraftSession,
   createCrdtDraftSession,
 } from './crdt-draft-session'
 import type { CrdtSyncStatus } from './crdt-sync'
+import { createPeersStore, type PeersSource } from './peers-store'
 
 export type CrdtDraftStatus = CrdtSyncStatus | 'idle' | 'loading'
 
@@ -24,7 +21,7 @@ export interface CrdtDraftController {
   flush: () => Promise<void>
   live: () => boolean
   locked: boolean
-  peers: RemotePresence[]
+  peers: PeersSource
   pending: () => boolean
   pull: () => Promise<void>
   resolveCaret: (point: CaretPoint) => { key: string; offset: number } | null
@@ -48,7 +45,7 @@ export function useCrdtDraft(options: {
   const adoptRef = useRef(false)
   const [adopting, setAdopting] = useState(false)
   const [ready, setReady] = useState(false)
-  const [peers, setPeers] = useState<RemotePresence[]>([])
+  const [peers] = useState(createPeersStore)
   const [status, setStatus] = useState<CrdtDraftStatus>('idle')
   const [generation, setGeneration] = useState(0)
   const callbacksRef = useRef(options)
@@ -97,7 +94,7 @@ export function useCrdtDraft(options: {
         }
         session = created
         sessionRef.current = created
-        stopPeers = created.subscribePeers(setPeers)
+        stopPeers = created.subscribePeers(peers.set)
         created.bindEditor(editorRef.current, { adopt: adoptRef.current })
         if (editorRef.current) {
           adoptRef.current = false
@@ -118,11 +115,11 @@ export function useCrdtDraft(options: {
       disposed = true
       clearTimeout(retry)
       stopPeers?.()
-      setPeers([])
+      peers.set([])
       session?.dispose()
       if (sessionRef.current === session) sessionRef.current = null
     }
-  }, [enabled, generation, options.draftId])
+  }, [enabled, generation, options.draftId, peers])
 
   const bindEditor = useCallback((editor: LexicalEditor | null) => {
     editorRef.current = editor

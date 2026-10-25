@@ -369,6 +369,14 @@ export class DraftService {
     return this.crdtService.exportUpdates(id, since)
   }
 
+  async documentIdOf(id: string): Promise<string> {
+    const branch = await this.draftRepository.findBranchById(id)
+    if (!branch) {
+      throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id })
+    }
+    return String(branch.documentId)
+  }
+
   exportCrdtFor(id: string, since?: Uint8Array) {
     return this.crdtService.exportFor(id, since)
   }

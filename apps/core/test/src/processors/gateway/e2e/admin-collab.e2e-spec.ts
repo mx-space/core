@@ -9,6 +9,7 @@ import {
   CollabWsEvents,
 } from '~/modules/draft/collab-room.service'
 import {
+  collabAccessProvider,
   collabRelayProvider,
   CollabRoomWsHandler,
 } from '~/modules/draft/collab-room.ws'
@@ -34,6 +35,7 @@ const crdtStub = {
   },
 }
 const draftStub = {
+  documentIdOf: vi.fn(async () => 'doc-1'),
   exportCrdtFor: vi.fn(async () => ({
     documentId: 'doc-1',
     update: new Uint8Array([1]),
@@ -61,6 +63,7 @@ describe('admin collab room over the gateway', () => {
         CollabRoomService,
         CollabRoomWsHandler,
         collabRelayProvider,
+        collabAccessProvider,
         { provide: DraftService, useValue: draftStub },
         { provide: DraftCrdtService, useValue: crdtStub },
       ],
@@ -133,6 +136,32 @@ describe('admin collab room over the gateway', () => {
       expect(left.payload).toMatchObject({ documentId: 'doc-1' })
     } finally {
       await bob.closeAndWait()
+    }
+  })
+
+  it('ignores collab frames from a socket that has not authenticated', async () => {
+    testApp.authService.verifyApiKey.mockReturnValueOnce(
+      new Promise(() => undefined) as never,
+    )
+    const stranger = await WsTestClient.connect(testApp.adminUrl(), {
+      headers: { 'x-api-key': 'pending' },
+    })
+    try {
+      draftStub.importCrdt.mockClear()
+      draftStub.exportCrdtFor.mockClear()
+      expect(
+        await request(stranger, CollabWsEvents.join, { draftId: 'd1' }),
+      ).toEqual({ code: 'NOT_AUTHENTICATED', ok: false })
+      expect(
+        await request(stranger, CollabWsEvents.update, {
+          draftId: 'd1',
+          update: b64([1]),
+        }),
+      ).toEqual({ code: 'NOT_AUTHENTICATED', ok: false })
+      expect(draftStub.exportCrdtFor).not.toHaveBeenCalled()
+      expect(draftStub.importCrdt).not.toHaveBeenCalled()
+    } finally {
+      await stranger.closeAndWait()
     }
   })
 })

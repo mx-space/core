@@ -235,4 +235,95 @@ describe('createCollabChannel', () => {
       payload: { draftId: 'd1' },
     })
   })
+
+  it('keeps updates relayed while the join is in flight', async () => {
+    const socket = fakeSocket()
+    let release: () => void = () => undefined
+    socket.replyWith(
+      (event) =>
+        new Promise((resolve) => {
+          release = () =>
+            resolve(
+              event === 'collab.join'
+                ? {
+                    data: {
+                      connectionId: 'c',
+                      documentId: 'doc-1',
+                      update: b64([1]),
+                    },
+                    ok: true,
+                  }
+                : { ok: true },
+            )
+        }),
+    )
+    const { channel, onRemote } = setup(socket)
+
+    const joining = channel.pull()
+    socket.emit('collab.update', { documentId: 'doc-1', update: b64([5]) })
+    socket.emit('collab.update', { documentId: 'other', update: b64([6]) })
+    release()
+    await joining
+    await Promise.resolve()
+
+    expect(onRemote).toHaveBeenCalledTimes(1)
+    expect(onRemote).toHaveBeenCalledWith(new Uint8Array([5]))
+  })
+
+  it('loads over HTTP when the server cannot join the room', async () => {
+    const socket = fakeSocket()
+    socket.replyWith(async () => {
+      throw Object.assign(new Error('Request rejected'), {
+        code: 'UNSUPPORTED_EVENT',
+      })
+    })
+    const { channel, http } = setup(socket)
+
+    expect(await channel.pull()).toEqual(new Uint8Array([7]))
+    expect(http.pull).toHaveBeenCalledTimes(1)
+    expect(channel.live()).toBe(false)
+  })
+
+  it('leaves again when disposed while a join is in flight', async () => {
+    const socket = fakeSocket()
+    let release: () => void = () => undefined
+    socket.replyWith((event) =>
+      event === 'collab.join'
+        ? new Promise((resolve) => {
+            release = () =>
+              resolve({
+                data: {
+                  connectionId: 'c',
+                  documentId: 'doc-1',
+                  update: b64([1]),
+                },
+                ok: true,
+              })
+          })
+        : Promise.resolve({ ok: true }),
+    )
+    const { channel, onJoined } = setup(socket)
+
+    const joining = channel.pull()
+    channel.dispose()
+    release()
+    await joining.catch(() => undefined)
+
+    expect(onJoined).not.toHaveBeenCalled()
+    expect(socket.requests.at(-1)).toEqual({
+      event: 'collab.leave',
+      payload: { draftId: 'd1' },
+    })
+  })
+
+  it('joins once the socket opens when the first load went over HTTP', async () => {
+    const socket = fakeSocket('connecting')
+    const { channel, onReconnect } = setup(socket)
+    await channel.pull()
+
+    socket.state = 'open'
+    socket.emit('$state', 'open')
+
+    expect(onReconnect).toHaveBeenCalledTimes(1)
+  })
 })

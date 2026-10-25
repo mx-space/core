@@ -12,6 +12,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { RemotePresence } from '../../crdt/collab-presence'
 import { RemoteCarets } from './RemoteCarets'
 
+const sourceOf = (peers: RemotePresence[]) => ({
+  get: () => peers,
+  subscribe: () => () => undefined,
+})
+
 let host: HTMLDivElement
 let root: Root
 
@@ -66,7 +71,7 @@ describe('RemoteCarets', () => {
       root.render(
         createElement(RemoteCarets, {
           editor,
-          peers: [peer({ id: '1@1', offset: 2 })],
+          peers: sourceOf([peer({ id: '1@1', offset: 2 })]),
           resolveCaret: () => ({ key, offset: 2 }),
         }),
       )
@@ -84,7 +89,7 @@ describe('RemoteCarets', () => {
       root.render(
         createElement(RemoteCarets, {
           editor,
-          peers: [peer({ id: '9@9', offset: 0 }), peer(null)],
+          peers: sourceOf([peer({ id: '9@9', offset: 0 }), peer(null)]),
           resolveCaret: () => null,
         }),
       )

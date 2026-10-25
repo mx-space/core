@@ -2,18 +2,16 @@ import type { CSSProperties } from 'react'
 
 import { useI18n } from '~/i18n'
 
-import type { RemotePresence } from '../../crdt/collab-presence'
+import { type PeersSource, usePeers } from '../../crdt/peers-store'
 
 const VISIBLE = 4
 
-export function PeerAvatars(props: {
-  peers: RemotePresence[]
-  selfId: string
-}) {
+export function PeerAvatars(props: { peers: PeersSource; selfId: string }) {
   const { t } = useI18n()
-  if (!props.peers.length) return null
-  const visible = props.peers.slice(0, VISIBLE)
-  const hidden = props.peers.length - visible.length
+  const peers = usePeers(props.peers)
+  if (!peers.length) return null
+  const visible = peers.slice(0, VISIBLE)
+  const hidden = peers.length - visible.length
 
   return (
     <div

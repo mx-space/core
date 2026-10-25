@@ -23,6 +23,11 @@ export const CollabWsEvents = {
 } as const
 
 export const COLLAB_RELAY = Symbol('COLLAB_RELAY')
+export const COLLAB_ACCESS = Symbol('COLLAB_ACCESS')
+
+export interface CollabAccess {
+  canJoin: (member: CollabMember, documentId: string) => Promise<boolean>
+}
 
 export interface CollabRelay {
   publish: (
@@ -34,6 +39,7 @@ export interface CollabRelay {
 }
 
 export interface CollabMember {
+  alive: () => boolean
   connectionId: string
   join: (room: string) => Promise<void>
   leave: (room: string) => Promise<void>
@@ -65,6 +71,7 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     private readonly drafts: DraftService,
     private readonly crdt: DraftCrdtService,
     @Inject(COLLAB_RELAY) private readonly relay: CollabRelay,
+    @Inject(COLLAB_ACCESS) private readonly access: CollabAccess,
   ) {}
 
   onModuleInit() {
@@ -82,12 +89,26 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     if (!parsed.success) return invalid
     const { draftId, since } = parsed.data
     try {
-      const { documentId, update } = await this.drafts.exportCrdtFor(
+      const documentId = await this.drafts.documentIdOf(draftId)
+      if (!(await this.access.canJoin(member, documentId))) {
+        return { code: 'FORBIDDEN', ok: false }
+      }
+      const room = roomOf(documentId)
+      // Join before reading: a change stored after the read is then relayed to this member,
+      // and one stored before it is in the snapshot. Loro dedupes anything seen twice.
+      await member.join(room)
+      if (!member.alive()) {
+        await member.leave(room)
+        return { code: 'NOT_CONNECTED', ok: false }
+      }
+      const { update } = await this.drafts.exportCrdtFor(
         draftId,
         since ? decode(since) : undefined,
       )
-      const room = roomOf(documentId)
-      await member.join(room)
+      if (!member.alive()) {
+        await member.leave(room)
+        return { code: 'NOT_CONNECTED', ok: false }
+      }
       this.membership(member.connectionId).set(draftId, documentId)
       this.relay.publish(
         CollabWsEvents.peerJoined,
@@ -113,6 +134,9 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
     if (!parsed.success) return invalid
     const bytes = decode(parsed.data.update)
     if (bytes.length > MAX_UPDATE_BYTES) return { code: REJECTED, ok: false }
+    if (!this.joined.get(member.connectionId)?.has(parsed.data.draftId)) {
+      return { code: 'NOT_JOINED', ok: false }
+    }
     try {
       await this.drafts.importCrdt(
         parsed.data.draftId,

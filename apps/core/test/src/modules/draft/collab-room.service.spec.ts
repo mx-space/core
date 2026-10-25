@@ -11,7 +11,8 @@ import type { DocumentChange } from '~/modules/draft/draft-crdt.service'
 
 const b64 = (bytes: number[]) => Buffer.from(bytes).toString('base64')
 
-const setup = () => {
+const setup = (access: (documentId: string) => boolean = () => true) => {
+  const order: string[] = []
   let listener: ((change: DocumentChange) => void) | undefined
   const crdt = {
     onDocumentChanged: vi.fn((next: (change: DocumentChange) => void) => {
@@ -22,10 +23,11 @@ const setup = () => {
     }),
   }
   const drafts = {
-    exportCrdtFor: vi.fn(async () => ({
-      documentId: 'doc-1',
-      update: new Uint8Array([1, 2, 3]),
-    })),
+    documentIdOf: vi.fn(async () => 'doc-1'),
+    exportCrdtFor: vi.fn(async () => {
+      order.push('export')
+      return { documentId: 'doc-1', update: new Uint8Array([1, 2, 3]) }
+    }),
     importCrdt: vi.fn(async () => undefined),
   }
   const published: {
@@ -41,14 +43,20 @@ const setup = () => {
       },
     ),
   }
-  const service = new CollabRoomService(drafts as never, crdt as never, relay)
+  const service = new CollabRoomService(drafts as never, crdt as never, relay, {
+    canJoin: async (_member, documentId) => access(documentId),
+  })
   service.onModuleInit()
-  const member = (connectionId: string): CollabMember => ({
+  const member = (connectionId: string, alive = () => true): CollabMember => ({
+    alive,
     connectionId,
-    join: vi.fn(async () => undefined),
+    join: vi.fn(async () => {
+      order.push('join')
+    }),
     leave: vi.fn(async () => undefined),
   })
   return {
+    order,
     change: (change: DocumentChange) => listener?.(change),
     drafts,
     member,
@@ -125,6 +133,8 @@ describe('CollabRoomService', () => {
 
   it('acks a rejected update with its code', async () => {
     const { drafts, member, service } = setup()
+    const alice = member('conn-a')
+    await service.join(alice, { draftId: 'd1' })
     drafts.importCrdt.mockRejectedValueOnce(
       createAppException(AppErrorCode.DRAFT_CRDT_UPDATE_REJECTED, {
         branchId: 'd1',
@@ -132,12 +142,61 @@ describe('CollabRoomService', () => {
       }),
     )
 
-    const ack = await service.update(member('conn-a'), {
+    const ack = await service.update(alice, {
       draftId: 'd1',
       update: b64([1]),
     })
 
     expect(ack).toEqual({ code: 'DRAFT_CRDT_UPDATE_REJECTED', ok: false })
+  })
+
+  it('joins the room before reading the snapshot, so no relayed change falls between', async () => {
+    const { member, order, service } = setup()
+
+    await service.join(member('conn-a'), { draftId: 'd1' })
+
+    expect(order).toEqual(['join', 'export'])
+  })
+
+  it('undoes a join whose connection closed while it was in flight', async () => {
+    const { member, published, service } = setup()
+    let open = true
+    const alice = member('conn-a', () => open)
+    ;(alice.join as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      open = false
+    })
+
+    const ack = await service.join(alice, { draftId: 'd1' })
+
+    expect(ack).toEqual({ code: 'NOT_CONNECTED', ok: false })
+    expect(alice.leave).toHaveBeenCalledWith('collab:doc-1')
+    expect(published).toEqual([])
+    expect(
+      await service.presence(alice, { draftId: 'd1', state: b64([1]) }),
+    ).toEqual({ code: 'NOT_JOINED', ok: false })
+  })
+
+  it('refuses members the access check rejects', async () => {
+    const { drafts, member, service } = setup(() => false)
+    const alice = member('conn-a')
+
+    const ack = await service.join(alice, { draftId: 'd1' })
+
+    expect(ack).toEqual({ code: 'FORBIDDEN', ok: false })
+    expect(alice.join).not.toHaveBeenCalled()
+    expect(drafts.exportCrdtFor).not.toHaveBeenCalled()
+  })
+
+  it('refuses updates from a connection that has not joined the document', async () => {
+    const { drafts, member, service } = setup()
+
+    const ack = await service.update(member('conn-a'), {
+      draftId: 'd1',
+      update: b64([1]),
+    })
+
+    expect(ack).toEqual({ code: 'NOT_JOINED', ok: false })
+    expect(drafts.importCrdt).not.toHaveBeenCalled()
   })
 
   it('refuses an update over the size limit without storing it', async () => {
