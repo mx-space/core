@@ -435,4 +435,89 @@ describe('createCrdtDraftSession agent turns', () => {
     expect(session.peers()).toEqual([])
     session.dispose()
   })
+
+  it('sends an agent write to the server on its own', async () => {
+    const server = seededServer('T', 'p1')
+    const session = await createCrdtDraftSession({
+      transport: transportFor(server),
+    })
+    session.bindEditor(newEditor())
+
+    const turn = session.startAgentTurn('agent:append')
+    turn.apply(stateOf('p1', 'agent line'))
+    turn.end()
+
+    await vi.waitFor(() =>
+      expect(serverTexts(server)).toEqual(['p1', 'agent line']),
+    )
+    session.dispose()
+  })
+
+  it('diffs a write against the version the agent actually read', async () => {
+    const server = seededServer('T', 'p1', 'p2')
+    const session = await createCrdtDraftSession({
+      transport: transportFor(server),
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+
+    const turn = session.startAgentTurn('agent:x')
+    editor.update(
+      () => {
+        const text = $getRoot()
+          .getChildAtIndex<ElementNode>(1)!
+          .getFirstDescendant() as ReturnType<typeof $createTextNode>
+        text.setTextContent('p2 typed')
+      },
+      { discrete: true },
+    )
+    turn.markView()
+    turn.apply(stateOf('P1', 'p2 typed'))
+    turn.end()
+
+    expect(read(editor)).toEqual(['P1', 'p2 typed'])
+    session.dispose()
+  })
+
+  it('puts the agent caret at the end of the block it last wrote', async () => {
+    const server = seededServer('T', 'p1')
+    const session = await createCrdtDraftSession({
+      channel: (hooks) => ({
+        dispose: () => undefined,
+        live: () => true,
+        pull: async (since) => {
+          if (!since) hooks.onJoined?.('conn-1')
+          return transportFor(server).pull(since)
+        },
+        push: transportFor(server).push,
+        sendPresence: () => undefined,
+      }),
+      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+    const target = stateOf('p1', 'agent line') as unknown as {
+      root: { children: Array<Record<string, unknown>> }
+    }
+    target.root.children[1].$ = { blockId: 'blk-new' }
+
+    const turn = session.startAgentTurn('agent:x')
+    turn.apply(target as never, 'blk-new')
+
+    const agent = session.peers().find((peer) => peer.user.name === 'AI')!
+    expect(agent.focus).not.toBeNull()
+    expect(session.resolveCaret(agent.focus!)).toEqual({
+      key: editor
+        .getEditorState()
+        .read(() =>
+          $getRoot()
+            .getChildAtIndex<ElementNode>(1)!
+            .getFirstDescendant()!
+            .getKey(),
+        ),
+      offset: 'agent line'.length,
+    })
+    turn.end()
+    session.dispose()
+  })
 })

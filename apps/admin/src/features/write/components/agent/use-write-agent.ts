@@ -166,6 +166,7 @@ export function useWriteAgent(opts: {
           turnRef.current.apply(target, focusBlockId)
         },
         ownsWrites: () => turnRef.current !== null,
+        onSeed: () => turnRef.current?.markView(),
         getBaseState: () => {
           const editor = lexicalEditorRef.current
           if (!editor) return null

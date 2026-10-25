@@ -87,6 +87,7 @@ export type DocumentBashWorkspace = {
 export type CreateDocumentBashWorkspaceOptions = {
   applyDocument?: (target: SerializedEditorState, focusBlockId?: string) => void
   ownsWrites?: () => boolean
+  onSeed?: () => void
   getEditorState: () => SerializedEditorState | null
   getBaseState?: () => SerializedEditorState | null
   getSelectionXml?: () => string
@@ -255,6 +256,7 @@ export function createDocumentBashWorkspace(
     const base = options.getBaseState?.() ?? editorState
     if (!editorState || !base) return null
     const files = seedFiles(editorState)
+    options.onSeed?.()
     const fs = new TrackingFs(files)
     const bash = new Bash({
       commands: ALLOWED_COMMANDS,

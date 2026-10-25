@@ -25,6 +25,7 @@ export interface CrdtSync {
   pending: () => boolean
   pull: () => Promise<void>
   receive: (bytes: Uint8Array) => void
+  touch: () => void
 }
 
 export const CRDT_REJECTED_CODE = 'DRAFT_CRDT_UPDATE_REJECTED'
@@ -123,5 +124,6 @@ export async function createCrdtSync(
       receive(await transport.pull(doc.oplogVersion().encode()))
     },
     receive,
+    touch: schedule,
   }
 }

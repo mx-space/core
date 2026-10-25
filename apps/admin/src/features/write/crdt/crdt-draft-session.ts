@@ -42,6 +42,7 @@ const TEXT_KEY = '#text'
 export interface AgentTurn {
   apply: (target: SerializedEditorState, focusBlockId?: string) => void
   end: () => void
+  markView: () => void
 }
 
 const randomPeer = (): `${number}` => {
@@ -277,6 +278,8 @@ export async function createCrdtDraftSession(
           )
           if (binding) binding.import(update)
           else doc.import(update)
+          // Imported ops are not local updates to the sync loop, so ask it to send them.
+          ready.touch()
           const changes = doc.getAllChanges().get(peer)
           const last = changes?.at(-1)
           if (last) view = [{ counter: last.counter + last.length - 1, peer }]
@@ -288,6 +291,9 @@ export async function createCrdtDraftSession(
           })
         },
         end: () => presence.setExtra(key, null),
+        markView: () => {
+          view = doc.frontiers()
+        },
       }
     },
     subscribePeers: (listener) => presence.subscribe(listener),
