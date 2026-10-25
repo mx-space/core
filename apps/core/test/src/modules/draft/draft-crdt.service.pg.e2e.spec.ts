@@ -379,6 +379,41 @@ describe('DraftCrdtService (real PG)', () => {
     expect(revision.typeSpecificData).toEqual({ slug: 's' })
   })
 
+  it('reports every stored change with its origin', async () => {
+    const { branch } = await seed()
+    const working = await service.workingCopy(branch.id)
+    const seen: { documentId: string; origin?: string; update: Uint8Array }[] =
+      []
+    const stop = service.onDocumentChanged((change) => {
+      seen.push(change)
+    })
+    const tab = await clientOf(branch.id)
+    const mirror = await clientOf(branch.id)
+    const from = tab.oplogVersion()
+    tab.import(
+      editDocAt(
+        tab,
+        tab.frontiers(),
+        { content: body('typed'), title: 'Pub' },
+        'human:owner',
+      ),
+    )
+    await service.importUpdate(
+      branch.id,
+      tab.export({ from, mode: 'update' }),
+      'conn-1',
+    )
+    await service.restore(branch.id, working.headRevisionId)
+    stop()
+
+    expect(seen.map((change) => change.origin)).toEqual(['conn-1', undefined])
+    expect(
+      seen.every((change) => change.documentId === branch.documentId),
+    ).toBe(true)
+    for (const change of seen) mirror.import(change.update)
+    expect(texts(readDocContent(mirror).content)).toEqual(['p1', 'p2'])
+  })
+
   it('undoes one step while later edits survive', async () => {
     const { branch } = await seed()
     await service.workingCopy(branch.id)

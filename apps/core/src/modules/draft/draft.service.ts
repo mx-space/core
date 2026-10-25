@@ -369,8 +369,20 @@ export class DraftService {
     return this.crdtService.exportUpdates(id, since)
   }
 
-  async importCrdt(id: string, bytes: Uint8Array): Promise<void> {
-    const { branch, document } = await this.crdtService.importUpdate(id, bytes)
+  exportCrdtFor(id: string, since?: Uint8Array) {
+    return this.crdtService.exportFor(id, since)
+  }
+
+  async importCrdt(
+    id: string,
+    bytes: Uint8Array,
+    origin?: string,
+  ): Promise<void> {
+    const { branch, document } = await this.crdtService.importUpdate(
+      id,
+      bytes,
+      origin,
+    )
     this.broadcast(branch, document)
   }
 

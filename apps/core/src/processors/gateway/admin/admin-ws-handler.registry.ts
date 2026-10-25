@@ -3,6 +3,8 @@ import { Injectable, Logger } from '@nestjs/common'
 
 export interface AdminWsContext {
   connectionId: string
+  join: (room: string) => Promise<void>
+  leave: (room: string) => Promise<void>
   send: (event: string, payload: unknown) => void
 }
 

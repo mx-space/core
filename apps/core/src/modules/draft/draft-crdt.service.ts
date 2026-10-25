@@ -82,6 +82,12 @@ export interface CrdtHistory {
   checkpoints: CrdtCheckpoint[]
 }
 
+export interface DocumentChange {
+  documentId: string
+  origin?: string
+  update: Uint8Array
+}
+
 export interface CheckpointResult {
   branch: DraftBranchRow
   revision: ContentRevisionRow
@@ -115,12 +121,20 @@ const changedKeys = (
 @Injectable()
 export class DraftCrdtService {
   private readonly logger = new Logger(DraftCrdtService.name)
+  private readonly changeListeners = new Set<(change: DocumentChange) => void>()
 
   constructor(
     private readonly drafts: DraftRepository,
     private readonly crdt: DraftCrdtRepository,
     private readonly fileReferences: FileReferenceService,
   ) {}
+
+  onDocumentChanged(listener: (change: DocumentChange) => void) {
+    this.changeListeners.add(listener)
+    return () => {
+      this.changeListeners.delete(listener)
+    }
+  }
 
   async usesCrdt(branchId: EntityId | string): Promise<boolean> {
     const branch = await this.drafts.findBranchById(branchId)
@@ -154,20 +168,29 @@ export class DraftCrdtService {
     branchId: EntityId | string,
     since?: Uint8Array,
   ): Promise<Uint8Array> {
-    const { doc } = await this.open(branchId)
-    if (!since) return doc.export({ mode: 'snapshot' })
+    return (await this.exportFor(branchId, since)).update
+  }
+
+  async exportFor(
+    branchId: EntityId | string,
+    since?: Uint8Array,
+  ): Promise<{ documentId: string; update: Uint8Array }> {
+    const { doc, document } = await this.open(branchId)
+    const documentId = String(document.id)
+    if (!since) return { documentId, update: doc.export({ mode: 'snapshot' }) }
     let from: VersionVector
     try {
       from = VersionVector.decode(since)
     } catch {
-      return doc.export({ mode: 'snapshot' })
+      return { documentId, update: doc.export({ mode: 'snapshot' }) }
     }
-    return doc.export({ from, mode: 'update' })
+    return { documentId, update: doc.export({ from, mode: 'update' }) }
   }
 
   async importUpdate(
     branchId: EntityId | string,
     bytes: Uint8Array,
+    origin?: string,
   ): Promise<{ branch: DraftBranchRow; document: ContentDocumentRow }> {
     const session = await this.open(branchId)
     if (bytes.length > MAX_UPDATE_BYTES) {
@@ -179,6 +202,7 @@ export class DraftCrdtService {
       this.reject(session.branch, (error as Error).message)
     }
     await this.crdt.appendUpdate(session.document.id, bytes)
+    this.notifyChanged(session.document.id, bytes, origin)
     return { branch: session.branch, document: session.document }
   }
 
@@ -623,6 +647,24 @@ export class DraftCrdtService {
   private async apply(session: Session, bytes: Uint8Array) {
     await this.crdt.appendUpdate(session.document.id, bytes)
     session.doc.import(bytes)
+    this.notifyChanged(session.document.id, bytes)
+  }
+
+  private notifyChanged(
+    documentId: EntityId | string,
+    update: Uint8Array,
+    origin?: string,
+  ) {
+    const change = { documentId: String(documentId), origin, update }
+    for (const listener of this.changeListeners) {
+      try {
+        listener(change)
+      } catch (error) {
+        this.logger.warn(
+          `document change listener failed: ${(error as Error).message}`,
+        )
+      }
+    }
   }
 
   private async checkpoint(
