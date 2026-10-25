@@ -59,6 +59,7 @@ const provider = {
       right: revision(),
     }),
     findById: async () => branch,
+    findForEditing: async () => branch,
     findNewDrafts: async () => [branch],
     findRevisionById: async () => revision(),
     getBranchRevisions: async () => [revision()],

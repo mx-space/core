@@ -28,6 +28,7 @@ import { AdminWsHandlerRegistry } from '~/processors/gateway/admin/admin-ws-hand
 import { AdminEventsGateway } from '~/processors/gateway/admin/events.gateway'
 import { GatewayService } from '~/processors/gateway/gateway.service'
 import { WebEventsGateway } from '~/processors/gateway/web/events.gateway'
+import { WebWsHandlerRegistry } from '~/processors/gateway/web/web-ws-handler.registry'
 import { createWsAdapter } from '~/processors/gateway/ws/ws-adapter.factory'
 import { WsBusService } from '~/processors/gateway/ws/ws-bus.service'
 import { WsInboundEvents } from '~/processors/gateway/ws/ws-events'
@@ -115,6 +116,7 @@ export async function createGatewayApp(
       { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
       { provide: APP_INTERCEPTOR, useClass: IdempotenceInterceptor },
       AdminWsHandlerRegistry,
+      WebWsHandlerRegistry,
       ...extraProviders,
     ],
   })

@@ -111,6 +111,38 @@ export async function requestJson<TResponse>(
   return responseData as TResponse
 }
 
+export async function requestBytes(
+  path: string,
+  init: RequestInit = {},
+): Promise<Uint8Array> {
+  const response = await fetch(`${API_URL}${path}`, {
+    credentials: 'include',
+    ...init,
+    headers: buildAdminRequestHeaders(init.headers),
+  })
+
+  if (!response.ok) {
+    const responseData = normalizeResponseData(
+      camelcaseKeys(await readResponseData<unknown>(response)),
+    )
+    if (isUnauthorizedResponse(response, responseData)) {
+      handleUnauthorized()
+    }
+    const message =
+      responseData?.error?.message ||
+      responseData?.message ||
+      response.statusText
+    throw new ApiRequestError(
+      Array.isArray(message) ? message.join(', ') : message || 'Request failed',
+      responseData?.error?.code ?? responseData?.code,
+      response.status,
+      responseData?.error?.details,
+    )
+  }
+
+  return new Uint8Array(await response.arrayBuffer())
+}
+
 export async function requestBlob(
   path: string,
   init: RequestInit = {},
@@ -184,7 +216,8 @@ function handleUnauthorized() {
   const isAuthRoute =
     hash.startsWith('/login') ||
     hash.startsWith('/setup') ||
-    hash.startsWith('/setup-api')
+    hash.startsWith('/setup-api') ||
+    hash.startsWith('/collab')
 
   if (isAuthRoute) return
 

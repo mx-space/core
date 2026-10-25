@@ -1,0 +1,216 @@
+import type { WsClient, WsClientState } from '@mx-space/ws-client'
+
+import { ApiRequestError } from '~/api/http'
+import { subscribeAdminSocket } from '~/socket/SocketBridge'
+
+import type { IncomingPresence, OutgoingPresence } from './collab-presence'
+import { CRDT_REJECTED_CODE, type CrdtTransport } from './crdt-sync'
+
+export type CollabSocket = Pick<WsClient, 'on' | 'request'> & {
+  readonly state: WsClientState
+}
+
+export interface CollabChannelOptions {
+  draftId: string
+  http: CrdtTransport
+  maxFrameBytes?: number
+  onJoined?: (connectionId: string) => void
+  onPeerJoined?: (connectionId: string) => void
+  onPeerLeft?: (connectionId: string) => void
+  onPresence?: (frame: IncomingPresence) => void
+  onReconnect?: () => void
+  onRemote: (update: Uint8Array) => void
+  onRevoked?: () => void
+  subscribeSocket?: (
+    listener: (socket: CollabSocket | null) => void,
+  ) => () => void
+}
+
+export interface CollabChannel extends CrdtTransport {
+  dispose: () => void
+  live: () => boolean
+  sendPresence: (frame: OutgoingPresence) => void
+}
+
+interface DocumentFrame {
+  caret?: IncomingPresence['caret']
+  connectionId?: string
+  documentId?: string
+  entry?: string | null
+  update?: string
+  user?: IncomingPresence['user']
+}
+
+const CHUNK = 0x8000
+
+export const encodeBase64 = (bytes: Uint8Array) => {
+  let binary = ''
+  for (let index = 0; index < bytes.length; index += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + CHUNK))
+  }
+  return btoa(binary)
+}
+
+export const decodeBase64 = (value: string) => {
+  const binary = atob(value)
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index)
+  }
+  return bytes
+}
+
+export function createCollabChannel(
+  options: CollabChannelOptions,
+): CollabChannel {
+  const { draftId, http } = options
+  const maxFrameBytes = options.maxFrameBytes ?? 512 * 1024
+  let socket: CollabSocket | null = null
+  let documentId: string | null = null
+  let joining: { frames: DocumentFrame[] } | null = null
+  let disposed = false
+  let unbind: Array<() => void> = []
+
+  const open = () => socket?.state === 'open'
+  const live = () => open() && documentId !== null
+
+  const forDocument =
+    (handle: (frame: DocumentFrame) => void) => (frame: DocumentFrame) => {
+      if (!disposed && documentId && frame?.documentId === documentId) {
+        handle(frame)
+      }
+    }
+
+  const bind = (next: CollabSocket | null) => {
+    for (const off of unbind) off()
+    unbind = []
+    socket = next
+    if (!next) return
+    unbind = [
+      next.on('collab.update', (frame: DocumentFrame) => {
+        if (joining) joining.frames.push(frame)
+        else
+          forDocument((relayed) => {
+            if (relayed.update) options.onRemote(decodeBase64(relayed.update))
+          })(frame)
+      }),
+      next.on(
+        'collab.presence',
+        forDocument((frame) => {
+          if (!frame.connectionId || !frame.user) return
+          options.onPresence?.({
+            caret: frame.caret ?? null,
+            connectionId: frame.connectionId,
+            entry: frame.entry ?? null,
+            user: frame.user,
+          })
+        }),
+      ),
+      next.on(
+        'collab.revoked',
+        forDocument(() => {
+          documentId = null
+          options.onRevoked?.()
+        }),
+      ),
+      next.on(
+        'collab.peer.joined',
+        forDocument((frame) => {
+          if (frame.connectionId) options.onPeerJoined?.(frame.connectionId)
+        }),
+      ),
+      next.on(
+        'collab.peer.left',
+        forDocument((frame) => {
+          if (frame.connectionId) options.onPeerLeft?.(frame.connectionId)
+        }),
+      ),
+      next.on('$state', (state: WsClientState) => {
+        if (state !== 'open' || disposed || joining) return
+        documentId = null
+        options.onReconnect?.()
+      }),
+    ]
+  }
+
+  const unsubscribe = (options.subscribeSocket ?? subscribeAdminSocket)(
+    (next) => {
+      const replaced = socket !== null && next !== socket && documentId
+      bind(next)
+      if (replaced && !disposed) {
+        documentId = null
+        options.onReconnect?.()
+      }
+    },
+  )
+
+  return {
+    dispose: () => {
+      if (disposed) return
+      disposed = true
+      if (open() && documentId) {
+        void socket!.request('collab.leave', { draftId }).catch(() => undefined)
+      }
+      unsubscribe()
+      for (const off of unbind) off()
+      unbind = []
+    },
+    live,
+    pull: async (since) => {
+      if (!open()) return http.pull(since)
+      const attempt = { frames: [] as DocumentFrame[] }
+      joining = attempt
+      let ack: Awaited<ReturnType<CollabSocket['request']>>
+      try {
+        ack = await socket!.request('collab.join', {
+          draftId,
+          ...(since ? { since: encodeBase64(since) } : {}),
+        })
+      } catch {
+        if (joining === attempt) joining = null
+        documentId = null
+        return http.pull(since)
+      } finally {
+        if (joining === attempt) joining = null
+      }
+      const data = ack.data as {
+        connectionId: string
+        documentId: string
+        update: string
+      }
+      if (disposed) {
+        void socket?.request('collab.leave', { draftId }).catch(() => undefined)
+        return decodeBase64(data.update)
+      }
+      documentId = data.documentId
+      options.onJoined?.(data.connectionId)
+      for (const frame of attempt.frames) {
+        if (frame.documentId === documentId && frame.update) {
+          options.onRemote(decodeBase64(frame.update))
+        }
+      }
+      return decodeBase64(data.update)
+    },
+    push: async (bytes) => {
+      if (!live() || bytes.length > maxFrameBytes) return http.push(bytes)
+      try {
+        await socket!.request('collab.update', {
+          draftId,
+          update: encodeBase64(bytes),
+        })
+      } catch (error) {
+        const code = (error as { code?: string }).code
+        if (code === CRDT_REJECTED_CODE) {
+          throw new ApiRequestError((error as Error).message, code, 400)
+        }
+        throw error
+      }
+    },
+    sendPresence: (frame) => {
+      if (!live()) return
+      void socket!
+        .request('collab.presence', { draftId, ...frame })
+        .catch(() => undefined)
+    },
+  }
+}

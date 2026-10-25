@@ -718,6 +718,9 @@ importers:
       '@fastify/static':
         specifier: 10.1.5
         version: 10.1.5
+      '@haklex/rich-collab-loro':
+        specifier: 0.55.0
+        version: 0.55.0(lexical@0.52.0(typescript@6.0.3))(loro-crdt@1.16.4)
       '@haklex/rich-headless':
         specifier: 0.55.0
         version: 0.55.0(lexical@0.52.0(typescript@6.0.3))(typescript@6.0.3)
@@ -886,6 +889,9 @@ importers:
       linkedom:
         specifier: 0.18.13
         version: 0.18.13
+      loro-crdt:
+        specifier: ^1.16.4
+        version: 1.16.4
       lru-cache:
         specifier: 11.5.3
         version: 11.5.3
@@ -1376,6 +1382,12 @@ importers:
         specifier: 0.52.0
         version: 0.52.0(typescript@6.0.3)
     devDependencies:
+      '@haklex/rich-collab-loro':
+        specifier: 0.55.0
+        version: 0.55.0(lexical@0.52.0(typescript@6.0.3))(loro-crdt@1.16.4)
+      loro-crdt:
+        specifier: ^1.16.4
+        version: 1.16.4
       tsdown:
         specifier: 0.23.0
         version: 0.23.0(tsx@4.23.15)(typescript@6.0.3)

@@ -347,6 +347,19 @@ export class PostService implements OnApplicationBootstrap {
     return trackedPost
   }
 
+  async patchById(
+    id: string,
+    patch: { categoryId?: string; pinAt?: Date | null },
+  ) {
+    await this.updateById(id, patch as Partial<PostModel>)
+    await this.draftService.mergeArticleFields(DraftRefType.Post, id, {
+      ...(patch.categoryId === undefined
+        ? {}
+        : { categoryId: patch.categoryId }),
+      ...(patch.pinAt === undefined ? {} : { pin: Boolean(patch.pinAt) }),
+    })
+  }
+
   async updateById(
     id: string,
     data: Partial<PostModel> & {

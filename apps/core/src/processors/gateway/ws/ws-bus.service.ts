@@ -10,14 +10,14 @@ import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { RedisService } from '../../redis/redis.service'
-import type { WsBusFrame, WsNamespace } from './ws.types'
+import type { WsBusChannel, WsBusFrame } from './ws.types'
 
 @Injectable()
 export class WsBusService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WsBusService.name)
   private readonly channel = getRedisKey(RedisKeys.WsBus)
   private readonly handlers = new Map<
-    WsNamespace,
+    WsBusChannel,
     (frame: WsBusFrame) => void
   >()
 
@@ -68,7 +68,7 @@ export class WsBusService implements OnModuleInit, OnModuleDestroy {
     await subClient.quit().catch(() => undefined)
   }
 
-  register(ns: WsNamespace, deliver: (frame: WsBusFrame) => void): () => void {
+  register(ns: WsBusChannel, deliver: (frame: WsBusFrame) => void): () => void {
     this.handlers.set(ns, deliver)
     return () => {
       if (this.handlers.get(ns) === deliver) this.handlers.delete(ns)

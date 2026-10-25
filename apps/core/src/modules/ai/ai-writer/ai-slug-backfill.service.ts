@@ -143,9 +143,9 @@ export class AiSlugBackfillService implements OnModuleInit {
               continue
             }
 
-            const updated = await this.noteService.updateById(note.id, {
+            const updated = await this.noteService.patchById(note.id, {
               slug,
-            } as any)
+            })
             if (!updated) {
               skipped++
               await context.appendLog(

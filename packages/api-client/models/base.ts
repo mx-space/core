@@ -159,3 +159,8 @@ export interface ResponseMeta extends BaseResponseMeta {
   summary?: SummaryMeta
   skills?: SkillBundleView[]
 }
+
+export interface CoAuthor {
+  avatar: string | null
+  name: string
+}

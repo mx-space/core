@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
+import { collabRepositoryProvider } from 'test/mock/modules/collab.mock'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { RolesGuard } from '~/common/guards/roles.guard'
@@ -176,6 +177,7 @@ const authServiceMock = {
 const postModule: ModuleMetadata = {
   controllers: [PostController],
   providers: [
+    collabRepositoryProvider,
     { provide: PostService, useValue: postService },
     {
       provide: CountingService,

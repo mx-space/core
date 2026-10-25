@@ -1,5 +1,6 @@
 import { createE2EApp } from 'test/helper/create-e2e-app'
 import { authPassHeader } from 'test/mock/guard/auth.guard'
+import { collabRepositoryProvider } from 'test/mock/modules/collab.mock'
 import { describe, expect, it, vi } from 'vitest'
 
 import { AiInsightsService } from '~/modules/ai/ai-insights/ai-insights.service'
@@ -60,6 +61,7 @@ const snippetService = {
 const proxy = createE2EApp({
   controllers: [PostController],
   providers: [
+    collabRepositoryProvider,
     { provide: PostService, useValue: postService },
     {
       provide: CountingService,

@@ -74,6 +74,10 @@ const harness = () => {
     fileReferences as never,
     {} as never,
     { emit: vi.fn() } as never,
+    {
+      usesCrdt: vi.fn(async () => false),
+      workingCopyOfDocument: vi.fn(async () => null),
+    } as never,
   )
   return { fileReferences, repository, service }
 }

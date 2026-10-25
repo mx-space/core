@@ -302,6 +302,27 @@
       "when": 1792900000000,
       "tag": "0042_agent_transcript",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792950000000,
+      "tag": "0043_loro_content_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793000000000,
+      "tag": "0044_content_collaborators",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793050000000,
+      "tag": "0045_collaborator_removed_at",
+      "breakpoints": true
     }
   ]
 }

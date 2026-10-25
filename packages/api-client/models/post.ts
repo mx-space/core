@@ -1,4 +1,4 @@
-import type { Image } from './base'
+import type { CoAuthor, Image } from './base'
 import type { CategoryModel } from './category'
 import type { EnrichmentResult } from './enrichment'
 
@@ -36,6 +36,7 @@ export interface PostModelMarkdown {
   related?: PostRelatedSummary[]
   enrichments?: EnrichmentMap
   isPremium: boolean
+  coAuthors?: CoAuthor[]
 }
 
 export interface PostModelLexical {
@@ -62,6 +63,7 @@ export interface PostModelLexical {
   related?: PostRelatedSummary[]
   enrichments?: EnrichmentMap
   isPremium: boolean
+  coAuthors?: CoAuthor[]
 }
 
 export type PostModel = PostModelMarkdown | PostModelLexical

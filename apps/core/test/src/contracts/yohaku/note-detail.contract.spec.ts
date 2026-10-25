@@ -29,6 +29,10 @@ import {
   assertPgTimestamps,
 } from '../../../helper/api-shape'
 import { createE2EApp } from '../../../helper/create-e2e-app'
+import {
+  collabCoAuthors,
+  collabRepositoryProvider,
+} from '../../../mock/modules/collab.mock'
 import { enrichmentProvider } from '../../../mock/modules/enrichment.mock'
 import { countingServiceProvider } from '../../../mock/processors/counting.mock'
 import {
@@ -171,6 +175,7 @@ describe('Yohaku contract — note detail (e2e)', () => {
       translationProvider,
       translationEntryProvider,
       enrichmentProvider,
+      collabRepositoryProvider,
       aiSummaryProvider,
       aiInsightsProvider,
       aiTtsQueryProvider,
@@ -241,5 +246,31 @@ describe('Yohaku contract — note detail (e2e)', () => {
     expect(body.data.has_insights_in_locale).toBeUndefined()
     expect(body.meta.enrichments).toBeDefined()
     expect(typeof body.meta.insights?.has_in_locale).toBe('boolean')
+  })
+
+  test('lists the co-authors credited in the byline', async () => {
+    collabCoAuthors.set('7000000000000000070', [
+      { avatar: 'https://a.test/bob.png', name: 'Bob' },
+    ])
+    try {
+      const res = await proxy.app.inject({
+        method: 'GET',
+        url: `${apiRoutePrefix}/notes/nid/42`,
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().data.co_authors).toEqual([
+        { avatar: 'https://a.test/bob.png', name: 'Bob' },
+      ])
+    } finally {
+      collabCoAuthors.clear()
+    }
+  })
+
+  test('sends an empty byline when nobody else edited', async () => {
+    const res = await proxy.app.inject({
+      method: 'GET',
+      url: `${apiRoutePrefix}/notes/nid/42`,
+    })
+    expect(res.json().data.co_authors).toEqual([])
   })
 })

@@ -445,6 +445,25 @@ export const APP_ERROR_DEFINITIONS = {
       expectedPublishedRevisionId: p.expectedPublishedRevisionId,
     }),
   },
+  [AppErrorCode.DRAFT_CRDT_UPDATE_REJECTED]: {
+    status: 400,
+    message: 'The collaborative update was rejected',
+    details: (p) => ({ branchId: p.branchId, reason: p.reason }),
+  },
+  [AppErrorCode.DRAFT_CRDT_FORMAT_UNSUPPORTED]: {
+    status: 400,
+    message: 'This draft only accepts Lexical content',
+    details: (p) => ({ branchId: p.branchId, contentFormat: p.contentFormat }),
+  },
+  [AppErrorCode.COLLAB_INVITE_INVALID]: {
+    status: 410,
+    message: 'This invite link can no longer be used',
+    details: (p) => ({ reason: p.reason }),
+  },
+  [AppErrorCode.COLLAB_FORBIDDEN]: {
+    status: 403,
+    message: 'You are not a collaborator of this document',
+  },
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: {

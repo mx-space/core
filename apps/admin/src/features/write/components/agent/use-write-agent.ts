@@ -15,6 +15,8 @@ import { toast } from 'sonner'
 
 import type { ProviderModelsResponse } from '~/api/ai'
 import { getModels } from '~/api/ai'
+import { agentCommitMessage } from '~/features/write/crdt/agent-commit-message'
+import type { AgentTurn } from '~/features/write/crdt/crdt-draft-session'
 import type { AgentSessionMeta } from '~/hooks/use-agent-session-manager'
 import { useAgentSessionManager } from '~/hooks/use-agent-session-manager'
 import { useLocalStorageState } from '~/hooks/use-local-storage-state'
@@ -87,10 +89,17 @@ function deriveDocumentSessionId(
   return `${documentKind}:${documentId}`
 }
 
+export interface AgentDocument {
+  active: boolean
+  startAgentTurn: (message: string) => AgentTurn | null
+}
+
 export function useWriteAgent(opts: {
   agentVisible: boolean
+  document?: AgentDocument
   documentId?: string
   documentKind: 'note' | 'page' | 'post'
+  ensureDocument?: () => Promise<boolean>
 }): WriteAgentController {
   const { t } = useI18n()
 
@@ -139,6 +148,11 @@ export function useWriteAgent(opts: {
   }, [providerGroups, selectedModel, selectModel])
 
   const agentLoopRef = useRef<AgentLoopHandle | null>(null)
+  const documentRef = useRef(opts.document)
+  documentRef.current = opts.document
+  const ensureDocumentRef = useRef(opts.ensureDocument)
+  ensureDocumentRef.current = opts.ensureDocument
+  const turnRef = useRef<AgentTurn | null>(null)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
   const dynamicTools = useMemo(
     () => buildDynamicTools(() => lexicalEditorRef.current),
@@ -147,6 +161,12 @@ export function useWriteAgent(opts: {
   const documentBash = useMemo(
     () =>
       createDocumentBashWorkspace({
+        applyDocument: (target, focusBlockId) => {
+          if (!turnRef.current) throw new Error('No agent turn is open')
+          turnRef.current.apply(target, focusBlockId)
+        },
+        ownsWrites: () => turnRef.current !== null,
+        onSeed: () => turnRef.current?.markView(),
         getBaseState: () => {
           const editor = lexicalEditorRef.current
           if (!editor) return null
@@ -244,6 +264,13 @@ export function useWriteAgent(opts: {
       toast.error(t('write.agent.selectModelFirst'))
       return
     }
+    const ensureDocument = ensureDocumentRef.current
+    if (ensureDocument && !documentRef.current?.active) {
+      void ensureDocument().then((ready) => {
+        if (ready && documentRef.current?.active) sendMessage(message)
+      })
+      return
+    }
     if (!agentLoopRef.current) {
       toast.error(t('write.agent.notReady'))
       return
@@ -268,6 +295,11 @@ export function useWriteAgent(opts: {
 
   const startRun = (loop: AgentLoopHandle, message: string) => {
     documentBash.beginRun()
+    const shared = documentRef.current
+    const turn = shared?.active
+      ? shared.startAgentTurn(agentCommitMessage(message))
+      : null
+    turnRef.current = turn
     const promise = loop.run(message).catch((error: unknown) => {
       if ((error as Error)?.name === 'AbortError') return
       const detail = error instanceof Error ? error.message : String(error)
@@ -277,6 +309,10 @@ export function useWriteAgent(opts: {
     activeRunRef.current = promise
     void promise.then(() => {
       if (activeRunRef.current === promise) activeRunRef.current = null
+      if (turn) {
+        turn.end()
+        if (turnRef.current === turn) turnRef.current = null
+      }
     })
   }
 

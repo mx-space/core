@@ -71,6 +71,14 @@ app.register(FastifyMultipart, {
   },
 })
 
+app
+  .getInstance()
+  .addContentTypeParser(
+    'application/octet-stream',
+    { parseAs: 'buffer' },
+    (_request, body, done) => done(null, body),
+  )
+
 const DEFAULT_RAW_BODY_LIMIT = 1024 * 1024
 
 export function isRawBodyRoute(request: FastifyRequest): boolean {

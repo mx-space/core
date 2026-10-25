@@ -2,13 +2,15 @@ import type { WebSocket } from 'ws'
 
 export type WsNamespace = 'web' | 'admin'
 
+export type WsBusChannel = WsNamespace | 'collab'
+
 export interface WsConnection {
   id: string
   ws: WebSocket
 }
 
 export interface WsBusFrame {
-  ns: WsNamespace
+  ns: WsBusChannel
   event: string
   payload?: unknown
   rooms?: string[]

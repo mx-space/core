@@ -310,7 +310,15 @@ export class ContentMigrationCommitService {
           )
           .innerJoin(
             contentRevisions,
-            eq(contentRevisions.id, drafts.headRevisionId),
+            and(
+              eq(
+                contentRevisions.id,
+                parseEntityId(
+                  branchPrecondition.headRevisionId ?? input.branchId,
+                ),
+              ),
+              eq(contentRevisions.documentId, drafts.documentId),
+            ),
           )
           .where(eq(drafts.id, parseEntityId(input.branchId)))
           .limit(1)
@@ -329,10 +337,11 @@ export class ContentMigrationCommitService {
           draft.revision.content
             ? sha256(draft.revision.content)
             : analyzeMigrationMarkdown(draft.revision.text, input).sourceHash
-        if (
-          draft.branch.headRevisionId !== branchPrecondition.headRevisionId ||
-          draftHash !== branchPrecondition.hash
-        ) {
+        // A checkpoint is immutable, so it may be published after the working copy moved on.
+        const headMoved =
+          !draft.revision.kind &&
+          draft.branch.headRevisionId !== branchPrecondition.headRevisionId
+        if (headMoved || draftHash !== branchPrecondition.hash) {
           throw new ConflictException('Draft changed after the migration check')
         }
       }

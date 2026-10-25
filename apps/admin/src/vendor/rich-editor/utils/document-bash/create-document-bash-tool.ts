@@ -1,4 +1,8 @@
-import type { AgentToolConfig, AgentToolResult } from '@haklex/rich-agent-core'
+import type {
+  AgentOperation,
+  AgentToolConfig,
+  AgentToolResult,
+} from '@haklex/rich-agent-core'
 import type { AgentFileSnapshot } from '@mx-space/ai'
 import {
   deserializeMxLitexmlToLexical,
@@ -81,6 +85,9 @@ export type DocumentBashWorkspace = {
 }
 
 export type CreateDocumentBashWorkspaceOptions = {
+  applyDocument?: (target: SerializedEditorState, focusBlockId?: string) => void
+  ownsWrites?: () => boolean
+  onSeed?: () => void
   getEditorState: () => SerializedEditorState | null
   getBaseState?: () => SerializedEditorState | null
   getSelectionXml?: () => string
@@ -143,6 +150,39 @@ class TrackingFs extends InMemoryFs {
   }
 }
 
+function keepUntouchedBlocks(
+  view: SerializedEditorState,
+  next: SerializedEditorState,
+  operations: AgentOperation[],
+): SerializedEditorState {
+  const changed = new Set(
+    operations.flatMap((operation) =>
+      operation.op === 'replace' ? [operation.blockId] : [],
+    ),
+  )
+  const original = new Map<string, SerializedLexicalNode>()
+  for (const block of view.root.children) {
+    const id = (block as NodeRecord).$?.blockId
+    if (id) original.set(id, block)
+  }
+  return {
+    ...next,
+    root: {
+      ...next.root,
+      children: next.root.children.map((block) => {
+        const id = (block as NodeRecord).$?.blockId
+        return id && !changed.has(id) ? (original.get(id) ?? block) : block
+      }),
+    },
+  }
+}
+
+function focusOf(operation: AgentOperation | undefined): string | undefined {
+  if (!operation) return undefined
+  if (operation.op !== 'insert') return operation.blockId
+  return (operation.node as NodeRecord).$?.blockId
+}
+
 function extractText(node: SerializedLexicalNode): string {
   const record = node as NodeRecord
   if (typeof record.text === 'string') return record.text
@@ -203,6 +243,7 @@ export function createDocumentBashWorkspace(
     bash: Bash
     emittedOperations: boolean
     fs: TrackingFs
+    ownsWrites: boolean
     lastEmittedXml: string
   } | null = null
   let lastTouched = new Set<string>()
@@ -220,9 +261,14 @@ export function createDocumentBashWorkspace(
   })
 
   const snapshotFiles = (): AgentFileSnapshot[] => {
-    const editorState = options.getEditorState()
+    // While the run owns its writes, other people's edits stay out of the agent's view until
+    // its next turn, so the files it is told about must be its own copy.
+    const owned = session?.ownsWrites ? session : null
+    const editorState = owned ? owned.view : options.getEditorState()
     if (!editorState) return []
-    const files = seedFiles(editorState)
+    const files = owned
+      ? { ...seedFiles(editorState), [DOC_PATH]: owned.lastEmittedXml }
+      : seedFiles(editorState)
     return TRACKED_PATHS.map((path) =>
       ATTACHED_PATHS.has(path)
         ? { attach: true, content: files[path], path }
@@ -242,6 +288,7 @@ export function createDocumentBashWorkspace(
     const base = options.getBaseState?.() ?? editorState
     if (!editorState || !base) return null
     const files = seedFiles(editorState)
+    options.onSeed?.()
     const fs = new TrackingFs(files)
     const bash = new Bash({
       commands: ALLOWED_COMMANDS,
@@ -253,6 +300,7 @@ export function createDocumentBashWorkspace(
     session = {
       base,
       bash,
+      ownsWrites: options.ownsWrites?.() ?? Boolean(options.applyDocument),
       view: editorState,
       emittedOperations: false,
       fs,
@@ -303,6 +351,27 @@ export function createDocumentBashWorkspace(
       current.lastEmittedXml = xml
     }
     await current.bash.writeFile(OUTLINE_PATH, buildOutline(diff.nextState))
+
+    if (current.ownsWrites && options.applyDocument) {
+      const applied = diffDocumentStates(current.view, diff.nextState)
+      if (!applied.ok) throw new Error(applied.message)
+      if (applied.operations.length === 0) {
+        return {
+          note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
+        }
+      }
+      // LiteXML drops inline style, alignment and indent, so only blocks the agent changed may
+      // come from the parsed file; every other block keeps the document's own JSON.
+      const target = keepUntouchedBlocks(
+        current.view,
+        diff.nextState,
+        applied.operations,
+      )
+      options.applyDocument(target, focusOf(applied.operations.at(-1)))
+      current.base = target
+      current.view = target
+      return {}
+    }
 
     if (unchangedFromView && !current.emittedOperations) {
       return {

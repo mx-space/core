@@ -34,6 +34,13 @@ import { AdminWsHandlerRegistry } from './admin-ws-handler.registry'
 
 const AI_TASK_ROOM_PREFIX = 'ai-task:'
 
+const CollabEvents = {
+  join: 'collab.join',
+  leave: 'collab.leave',
+  presence: 'collab.presence',
+  update: 'collab.update',
+} as const
+
 const AuthGateway = createAuthGateway({ namespace: 'admin' })
 
 @WebSocketGateway({ path: '/ws/admin', maxPayload: 1024 * 1024 })
@@ -97,6 +104,38 @@ export class AdminEventsGateway
     return this.dispatchExtension(AgentWsEvents.steer, envelope, ws)
   }
 
+  @SubscribeMessage(CollabEvents.join)
+  handleCollabJoin(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.join, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.update)
+  handleCollabUpdate(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.update, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.presence)
+  handleCollabPresence(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.presence, envelope, ws)
+  }
+
+  @SubscribeMessage(CollabEvents.leave)
+  handleCollabLeave(
+    @MessageBody() envelope: WsEnvelope,
+    @ConnectedSocket() ws: WebSocket,
+  ) {
+    return this.dispatchExtension(CollabEvents.leave, envelope, ws)
+  }
+
   private async dispatchExtension(
     event: string,
     envelope: WsEnvelope,
@@ -104,10 +143,22 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     if (!conn) return ack(envelope, { ok: false, code: 'NOT_CONNECTED' })
+    if (!this.isAuthenticated(conn)) {
+      return ack(envelope, { ok: false, code: 'NOT_AUTHENTICATED' })
+    }
     const result = await this.handlers.dispatch(
       event,
       {
+        alive: () => this.resolveConnection(ws) === conn,
         connectionId: conn.id,
+        join: async (room) => {
+          this.roomManager.join(room, conn)
+          await this.presence.joinRoom('admin', room, conn.id)
+        },
+        leave: async (room) => {
+          this.roomManager.leave(room, conn)
+          await this.presence.leaveRoom('admin', room, conn.id)
+        },
         send: (name, payload) => {
           if (conn.ws.readyState !== conn.ws.OPEN) return
           conn.ws.send(serializeEnvelope(buildEnvelope(name, payload)))
@@ -125,7 +176,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -142,7 +193,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiAgentPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -159,7 +210,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 
@@ -181,7 +232,7 @@ export class AdminEventsGateway
   ) {
     const conn = this.resolveConnection(ws)
     const parsed = aiTaskPayloadSchema.safeParse(envelope.payload)
-    if (!conn || !parsed.success) {
+    if (!conn || !this.isAuthenticated(conn) || !parsed.success) {
       return ack(envelope, { ok: false, code: 'VALIDATION_FAILED' })
     }
 

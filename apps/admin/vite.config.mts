@@ -48,6 +48,9 @@ export default ({ mode }) => {
     resolve: {
       tsconfigPaths: true,
       alias: {
+        // The bundler build imports its wasm as an ES module, which the dev server cannot serve.
+        // Vitest keeps the Node build so externalized deps share one wasm instance with app code.
+        ...(process.env.VITEST ? {} : { 'loro-crdt': 'loro-crdt/base64' }),
         path: 'path-browserify',
         os: 'os-browserify',
         'node-fetch': 'isomorphic-fetch',
