@@ -54,13 +54,15 @@ const setup = () => {
     importCrdt: vi.fn(async () => undefined),
   }
   const rooms = { revoke: vi.fn() }
+  const bus = { publish: vi.fn() }
   const service = new CollabService(
     repository as never,
     draftRepository as never,
     drafts as never,
     rooms as never,
+    bus as never,
   )
-  return { draftRepository, drafts, repository, rooms, service }
+  return { bus, draftRepository, drafts, repository, rooms, service }
 }
 
 describe('CollabService', () => {
@@ -216,5 +218,25 @@ describe('CollabService', () => {
     const workspace = await service.workspaceFor('doc-1', 'r1')
 
     expect(workspace.collaborators).toEqual([])
+  })
+
+  it('tells the owner admin tabs when a reader joins the document', async () => {
+    const { bus, service } = setup()
+
+    await service.accept('tok', 'r1')
+
+    expect(bus.publish).toHaveBeenCalledWith({
+      event: 'collab.collaborators.changed',
+      ns: 'admin',
+      payload: { documentId: 'doc-1' },
+    })
+  })
+
+  it('stays quiet when the owner only peeks at an invite', async () => {
+    const { bus, service } = setup()
+
+    await service.accept('tok', 'owner-1')
+
+    expect(bus.publish).not.toHaveBeenCalled()
   })
 })

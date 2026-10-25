@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, Link2, Loader2, Trash2, UserMinus, Users } from 'lucide-react'
+import { useEffect } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -13,6 +14,7 @@ import {
 } from '~/api/collab'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
+import { subscribeAdminSocket } from '~/socket/SocketBridge'
 import { Button } from '~/ui/primitives/button'
 
 export function CollaboratorsSection(props: { documentId: string }) {
@@ -34,6 +36,29 @@ export function CollaboratorsSection(props: { documentId: string }) {
       queryClient.invalidateQueries({ queryKey: invitesKey }),
       queryClient.invalidateQueries({ queryKey: collaboratorsKey }),
     ])
+
+  useEffect(() => {
+    let off: (() => void) | undefined
+    const unsubscribe = subscribeAdminSocket((socket) => {
+      off?.()
+      off = socket?.on(
+        'collab.collaborators.changed',
+        (payload: { documentId?: string }) => {
+          if (payload?.documentId !== documentId) return
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.collab.invites(documentId),
+          })
+          void queryClient.invalidateQueries({
+            queryKey: adminQueryKeys.collab.collaborators(documentId),
+          })
+        },
+      )
+    })
+    return () => {
+      off?.()
+      unsubscribe()
+    }
+  }, [documentId, queryClient])
 
   const createInvite = useMutation({
     mutationFn: () => createCollabInvite(documentId),

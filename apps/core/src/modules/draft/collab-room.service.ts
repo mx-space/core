@@ -14,6 +14,7 @@ import { DraftService } from './draft.service'
 import { type DocumentChange, DraftCrdtService } from './draft-crdt.service'
 
 export const CollabWsEvents = {
+  collaboratorsChanged: 'collab.collaborators.changed',
   join: 'collab.join',
   leave: 'collab.leave',
   peerJoined: 'collab.peer.joined',

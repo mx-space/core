@@ -3,10 +3,11 @@ import { createHash, randomBytes } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
+import { WsBusService } from '~/processors/gateway/ws/ws-bus.service'
 
 import { CollabRepository } from './collab.repository'
 import type { CollabIdentity } from './collab-room.service'
-import { CollabRoomService } from './collab-room.service'
+import { CollabRoomService, CollabWsEvents } from './collab-room.service'
 import { DraftRepository } from './draft.repository'
 import { DraftService } from './draft.service'
 
@@ -40,6 +41,7 @@ export class CollabService {
     private readonly draftRepository: DraftRepository,
     private readonly drafts: DraftService,
     private readonly rooms: CollabRoomService,
+    private readonly bus: WsBusService,
   ) {}
 
   async createInvite(
@@ -113,7 +115,13 @@ export class CollabService {
         reason: result.reason,
       })
     }
-    return { documentId: String(result.documentId), role: 'collaborator' }
+    const documentId = String(result.documentId)
+    this.bus.publish({
+      event: CollabWsEvents.collaboratorsChanged,
+      ns: 'admin',
+      payload: { documentId },
+    })
+    return { documentId, role: 'collaborator' }
   }
 
   async workspaceFor(documentId: string, readerId: string) {

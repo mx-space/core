@@ -26,6 +26,19 @@ vi.mock('~/api/collab', () => ({
   updateCollaborator: vi.fn(),
 }))
 
+const socketHandlers = new Map<string, (payload: unknown) => void>()
+vi.mock('~/socket/SocketBridge', () => ({
+  subscribeAdminSocket: (listener: (socket: unknown) => void) => {
+    listener({
+      on: (event: string, handler: (payload: unknown) => void) => {
+        socketHandlers.set(event, handler)
+        return () => socketHandlers.delete(event)
+      },
+    })
+    return () => undefined
+  },
+}))
+
 let container: HTMLDivElement
 let root: Root
 
@@ -129,5 +142,22 @@ describe('CollaboratorsSection', () => {
     await render()
 
     expect(container.querySelector('[data-history-notice]')).not.toBeNull()
+  })
+
+  it('refreshes the list when a reader joins from another device', async () => {
+    await render()
+    expect(listCollaborators).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      socketHandlers.get('collab.collaborators.changed')?.({
+        documentId: 'other',
+      })
+      socketHandlers.get('collab.collaborators.changed')?.({
+        documentId: 'doc-1',
+      })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    expect(listCollaborators).toHaveBeenCalledTimes(2)
   })
 })
