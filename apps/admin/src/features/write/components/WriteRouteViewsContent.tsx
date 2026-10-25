@@ -928,7 +928,6 @@ function useDraftSession(options: {
   }, [buildSaveVariables, conflict, options.hasContent, resolvingConflict, t])
 
   useEffect(() => {
-    if (crdt.active) return
     if (conflict || resolvingConflict || !dirtyRef.current) return
     if (!options.hasContent) return
     if (options.fingerprint === acceptedFingerprintRef.current) return
@@ -949,7 +948,6 @@ function useDraftSession(options: {
     acceptedFingerprint,
     buildSaveVariables,
     conflict,
-    crdt.active,
     options.fingerprint,
     options.hasContent,
     resolvingConflict,
