@@ -1382,6 +1382,12 @@ importers:
         specifier: 0.52.0
         version: 0.52.0(typescript@6.0.3)
     devDependencies:
+      '@haklex/rich-collab-loro':
+        specifier: 0.54.4
+        version: 0.54.4(lexical@0.52.0(typescript@6.0.3))(loro-crdt@1.16.4)
+      loro-crdt:
+        specifier: ^1.16.4
+        version: 1.16.4
       tsdown:
         specifier: 0.23.0
         version: 0.23.0(tsx@4.23.15)(typescript@6.0.3)

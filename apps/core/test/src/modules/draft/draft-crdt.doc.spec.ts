@@ -136,6 +136,28 @@ describe('draft CRDT document', () => {
     expect(read.title).toBe('T2')
   })
 
+  it('commits a write under the peer it is given', () => {
+    const doc = createContentDoc(
+      { content: state(paragraph('one')), title: 'T' },
+      'import 1',
+    )
+
+    const update = editDocAt(
+      doc,
+      doc.frontiers(),
+      { content: state(paragraph('one'), paragraph('agent')), title: 'T' },
+      'agent:add a line',
+      { peer: '424242' },
+    )
+    doc.import(update)
+
+    const agentChanges = doc.getAllChanges().get('424242')
+    expect(agentChanges?.map((change) => change.message)).toEqual([
+      'agent:add a line',
+    ])
+    expect(texts(readDocContent(doc).content)).toEqual(['one', 'agent'])
+  })
+
   it('reverts one change while edits before and after it survive', () => {
     const doc = createContentDoc(
       { content: state(paragraph('a'), paragraph('b')), title: 'T' },
