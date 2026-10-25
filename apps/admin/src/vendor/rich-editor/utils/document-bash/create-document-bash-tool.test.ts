@@ -151,6 +151,59 @@ describe('createDocumentBashWorkspace', () => {
     expect(applied[1].focus).toBe(minted)
   })
 
+  it('keeps untouched blocks exactly as the document holds them when applying', async () => {
+    const styled = {
+      ...para('a', 'Centred red'),
+      format: 'center',
+      indent: 1,
+      children: [
+        {
+          type: 'text',
+          text: 'Centred red',
+          version: 1,
+          detail: 0,
+          format: 1,
+          mode: 'normal',
+          style: 'color: red;',
+        },
+      ],
+    } as SerializedLexicalNode
+    let target: SerializedEditorState | null = null
+    const workspace = createDocumentBashWorkspace({
+      applyDocument: (next) => {
+        target = next
+      },
+      getEditorState: () => state([styled, para('b', 'Plain')]),
+    })
+    workspace.beginRun()
+
+    await workspace.tool.execute({
+      command: "sed -i 's/Plain/Plainer/' /doc.xml",
+    })
+
+    const blocks = target!.root.children as SerializedLexicalNode[]
+    expect(blocks[0]).toEqual(styled)
+    expect(JSON.stringify(blocks[1])).toContain('Plainer')
+  })
+
+  it('reports its own copy of the document while it owns the writes', async () => {
+    let live = state([para('a', 'Hello world')])
+    const workspace = createDocumentBashWorkspace({
+      applyDocument: () => undefined,
+      getEditorState: () => live,
+    })
+    workspace.beginRun()
+    await workspace.tool.execute({ command: 'cat /doc.xml' })
+
+    live = state([para('a', 'Typed by someone else')])
+
+    const doc = workspace
+      .snapshotFiles()
+      .find((file) => file.path === '/doc.xml')
+    expect(doc?.content).toContain('Hello world')
+    expect(doc?.content).not.toContain('someone else')
+  })
+
   it('reports the files a command read, with their current content', async () => {
     const workspace = createWorkspace()
     workspace.beginRun()

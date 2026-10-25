@@ -137,6 +137,7 @@ import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGeneratio
 import { VersionTreePanel } from '~/features/write/components/VersionTreePanel'
 import type { PresenceUser } from '~/features/write/crdt/collab-presence'
 import { diffDraftFields } from '~/features/write/crdt/draft-fields'
+import { createReadyGate } from '~/features/write/crdt/ready-gate'
 import { resyncRejectedDraft } from '~/features/write/crdt/resync-rejected'
 import {
   type CrdtDraftController,
@@ -928,43 +929,42 @@ function useDraftSession(options: {
   const mutationRef = useRef(mutation)
   mutationRef.current = mutation
 
-  const crdtReadyWaitersRef = useRef<Array<() => void>>([])
+  const [crdtGate] = useState(() =>
+    createReadyGate(() => crdtRef.current.active),
+  )
   useEffect(() => {
-    if (!crdt.active) return
-    for (const resolve of crdtReadyWaitersRef.current.splice(0)) resolve()
-  }, [crdt.active])
+    if (crdt.active) crdtGate.release()
+  }, [crdt.active, crdtGate])
 
-  const ensureCrdt = useCallback(async () => {
-    if (crdtRef.current.active) return true
-    if (options.state.contentFormat !== 'lexical') return false
-    if (!draftId) {
-      if (!options.hasContent) {
-        toast.error(t('write.toast.contentEmptyForDraft'))
-        return false
-      }
-      try {
-        await mutationRef.current.mutateAsync(buildSaveVariables(true))
-      } catch {
-        return false
-      }
-    }
-    return new Promise<boolean>((resolve) => {
-      const timer = window.setTimeout(
-        () => resolve(false),
-        CRDT_READY_TIMEOUT_MS,
-      )
-      crdtReadyWaitersRef.current.push(() => {
-        window.clearTimeout(timer)
-        resolve(true)
-      })
-    })
-  }, [
-    buildSaveVariables,
-    draftId,
-    options.hasContent,
-    options.state.contentFormat,
-    t,
-  ])
+  const ensureCrdt = useCallback(
+    () =>
+      crdtGate.once(async () => {
+        if (crdtRef.current.active) return true
+        if (options.state.contentFormat !== 'lexical') return false
+        if (!draftId && !mutationRef.current.isPending) {
+          if (!options.hasContent) {
+            toast.error(t('write.toast.contentEmptyForDraft'))
+            return false
+          }
+          try {
+            await mutationRef.current.mutateAsync(buildSaveVariables(true))
+          } catch {
+            return false
+          }
+        }
+        const ready = await crdtGate.wait(CRDT_READY_TIMEOUT_MS)
+        if (!ready) toast.error(t('write.toast.draftSyncPending'))
+        return ready
+      }),
+    [
+      buildSaveVariables,
+      crdtGate,
+      draftId,
+      options.hasContent,
+      options.state.contentFormat,
+      t,
+    ],
+  )
 
   const saveNow = useCallback(() => {
     if (conflict || resolvingConflict) {

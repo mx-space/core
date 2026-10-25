@@ -108,7 +108,6 @@ export interface CrdtDraftSession {
   pending: () => boolean
   pull: () => Promise<void>
   resolveCaret: (point: CaretPoint) => { key: NodeKey; offset: number } | null
-  setCommitMessage: (message: string | null) => void
   setTitle: (title: string) => void
   startAgentTurn: (message: string) => AgentTurn
   subscribePeers: (listener: (peers: RemotePresence[]) => void) => () => void
@@ -132,6 +131,7 @@ export async function createCrdtDraftSession(
   }
 
   let sync: CrdtSync | null = null
+  let disposed = false
   const early: Uint8Array[] = []
   const presence = createCollabPresence({
     send: (bytes) => channel?.sendPresence(bytes),
@@ -229,6 +229,7 @@ export async function createCrdtDraftSession(
       stopCaret = trackCaret(editor)
     },
     dispose: () => {
+      disposed = true
       stopCaret?.()
       stopCaret = null
       binding?.dispose()
@@ -246,9 +247,6 @@ export async function createCrdtDraftSession(
       const key = binding?.keyOf(point.id as never)
       return key ? { key, offset: point.offset } : null
     },
-    setCommitMessage: (message) => {
-      bindingOptions.commitMessage = message ?? HUMAN_MESSAGE
-    },
     setTitle: (title) => {
       const text = doc.getText(TITLE)
       if (text.toString() === title) return
@@ -259,8 +257,9 @@ export async function createCrdtDraftSession(
     startAgentTurn: (message) => {
       const peer = randomPeer()
       const key = `agent:${peer}`
-      const title = doc.getText(TITLE).toString()
+      let title = doc.getText(TITLE).toString()
       let view: Frontiers = doc.frontiers()
+      let ended = false
       presence.setExtra(key, {
         anchor: null,
         color: AGENT_COLOR,
@@ -269,6 +268,11 @@ export async function createCrdtDraftSession(
       })
       return {
         apply: (target, focusBlockId) => {
+          if (ended || disposed) {
+            throw new Error(
+              'The document session for this agent turn has closed',
+            )
+          }
           const update = editDocAt(
             doc,
             view,
@@ -280,9 +284,8 @@ export async function createCrdtDraftSession(
           else doc.import(update)
           // Imported ops are not local updates to the sync loop, so ask it to send them.
           ready.touch()
-          const changes = doc.getAllChanges().get(peer)
-          const last = changes?.at(-1)
-          if (last) view = [{ counter: last.counter + last.length - 1, peer }]
+          const end = doc.oplogVersion().get(peer)
+          if (end) view = [{ counter: end - 1, peer }]
           presence.setExtra(key, {
             anchor: null,
             color: AGENT_COLOR,
@@ -290,9 +293,14 @@ export async function createCrdtDraftSession(
             user: AGENT_USER,
           })
         },
-        end: () => presence.setExtra(key, null),
+        end: () => {
+          if (ended) return
+          ended = true
+          if (!disposed) presence.setExtra(key, null)
+        },
         markView: () => {
           view = doc.frontiers()
+          title = doc.getText(TITLE).toString()
         },
       }
     },

@@ -130,28 +130,6 @@ describe('createCrdtDraftSession', () => {
     other.dispose()
   })
 
-  it('labels commits with the current commit message', async () => {
-    const server = seededServer('T', 'p1')
-    const session = await createCrdtDraftSession({
-      transport: transportFor(server),
-    })
-    const editor = newEditor()
-    session.bindEditor(editor)
-
-    session.setCommitMessage('agent:summarize')
-    write(editor, 'p1', 'agent text')
-    session.setCommitMessage(null)
-    write(editor, 'p1', 'agent text', 'human text')
-    await session.flush()
-
-    const messages = [...server.getAllChanges().values()]
-      .flat()
-      .map((change) => change.message)
-    expect(messages).toContain('agent:summarize')
-    expect(messages).toContain('human:owner')
-    session.dispose()
-  })
-
   it('reports a rejected update to the caller', async () => {
     const server = seededServer('T', 'p1')
     const transport = transportFor(server)
@@ -519,5 +497,39 @@ describe('createCrdtDraftSession agent turns', () => {
     })
     turn.end()
     session.dispose()
+  })
+
+  it('leaves a title the human changed before the agent read it', async () => {
+    const server = seededServer('Old', 'p1')
+    const session = await createCrdtDraftSession({
+      transport: transportFor(server),
+    })
+    session.bindEditor(newEditor())
+
+    const turn = session.startAgentTurn('agent:x')
+    session.setTitle('New')
+    turn.markView()
+    turn.apply(stateOf('p1', 'agent'))
+    await session.flush()
+
+    expect(server.getText('title').toString()).toBe('New')
+    turn.end()
+    session.dispose()
+  })
+
+  it('refuses writes once the turn ended or the session closed', async () => {
+    const server = seededServer('T', 'p1')
+    const session = await createCrdtDraftSession({
+      transport: transportFor(server),
+    })
+    session.bindEditor(newEditor())
+
+    const ended = session.startAgentTurn('agent:a')
+    ended.end()
+    expect(() => ended.apply(stateOf('p1', 'late'))).toThrow()
+
+    const open = session.startAgentTurn('agent:b')
+    session.dispose()
+    expect(() => open.apply(stateOf('p1', 'late'))).toThrow()
   })
 })

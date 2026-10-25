@@ -26,7 +26,6 @@ export interface CrdtDraftController {
   pending: () => boolean
   pull: () => Promise<void>
   resolveCaret: (point: CaretPoint) => { key: string; offset: number } | null
-  setCommitMessage: (message: string | null) => void
   setTitle: (title: string) => void
   startAgentTurn: (message: string) => AgentTurn | null
   status: CrdtDraftStatus
@@ -149,8 +148,6 @@ export function useCrdtDraft(options: {
       pull: async () => {
         await sessionRef.current?.pull()
       },
-      setCommitMessage: (message: string | null) =>
-        sessionRef.current?.setCommitMessage(message),
       setTitle: (title: string) => sessionRef.current?.setTitle(title),
       startAgentTurn: (message: string) =>
         sessionRef.current?.startAgentTurn(message) ?? null,
