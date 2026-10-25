@@ -1,17 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createCollabPresence, PRESENCE_COLORS } from './collab-presence'
+import {
+  AGENT_PRESENCE_COLOR,
+  createCollabPresence,
+  type OutgoingPresence,
+  PRESENCE_COLORS,
+} from './collab-presence'
 
 const user = (id: string) => ({ avatar: null, id, name: `User ${id}` })
 
+const member = (connectionId: string, id: string) => {
+  const outbox: OutgoingPresence[] = []
+  const presence = createCollabPresence({
+    send: (frame) => outbox.push(frame),
+  })
+  const stamp = (frame: OutgoingPresence) => ({
+    caret: frame.caret,
+    connectionId,
+    documentId: 'doc-1',
+    entry: frame.entry ?? null,
+    user: frame.entry
+      ? { avatar: null, id: frame.entry, name: 'AI' }
+      : user(id),
+  })
+  return { connectionId, outbox, presence, stamp }
+}
+
 const pair = () => {
-  const toB: Uint8Array[] = []
-  const toA: Uint8Array[] = []
-  const a = createCollabPresence({ send: (bytes) => toB.push(bytes) })
-  const b = createCollabPresence({ send: (bytes) => toA.push(bytes) })
+  const a = member('conn-a', 'owner')
+  const b = member('conn-b', 'r1')
   const deliver = () => {
-    for (const bytes of toB.splice(0)) b.apply(bytes)
-    for (const bytes of toA.splice(0)) a.apply(bytes)
+    for (const frame of a.outbox.splice(0)) b.presence.apply(a.stamp(frame))
+    for (const frame of b.outbox.splice(0)) a.presence.apply(b.stamp(frame))
   }
   return { a, b, deliver }
 }
@@ -24,18 +44,17 @@ describe('createCollabPresence', () => {
     vi.useRealTimers()
   })
 
-  it('shares carets between members, never listing itself', () => {
+  it('shows other members with the identity the server stamped', () => {
     const { a, b, deliver } = pair()
     const seen = vi.fn()
-    b.subscribe(seen)
-    a.start('conn-a', user('owner'))
-    b.start('conn-b', user('owner'))
+    b.presence.subscribe(seen)
+    a.presence.start()
+    b.presence.start()
 
-    vi.advanceTimersByTime(1)
-    a.setCursor({ id: '1@2', offset: 3 }, { id: '1@2', offset: 5 })
+    a.presence.setCursor({ id: '1@2', offset: 3 }, { id: '1@2', offset: 5 })
     deliver()
 
-    expect(b.remotes()).toEqual([
+    expect(b.presence.remotes()).toEqual([
       {
         anchor: { id: '1@2', offset: 3 },
         color: expect.any(String),
@@ -44,146 +63,117 @@ describe('createCollabPresence', () => {
         user: user('owner'),
       },
     ])
-    expect(a.remotes().map((remote) => remote.key)).toEqual(['conn-b'])
-    expect(seen).toHaveBeenLastCalledWith(b.remotes())
+    expect(a.presence.remotes()).toEqual([
+      expect.objectContaining({ key: 'conn-b', user: user('r1') }),
+    ])
+    expect(seen).toHaveBeenCalled()
   })
 
-  it('answers a newcomer with its full state', () => {
-    const { a, b, deliver } = pair()
-    a.start('conn-a', user('owner'))
-    vi.advanceTimersByTime(1)
-    a.setCursor(null, { id: '1@2', offset: 1 })
-    deliver()
-    b.start('conn-b', user('owner'))
+  it('answers a newcomer with its caret and extras', () => {
+    const { a } = pair()
+    a.presence.start()
+    a.presence.setCursor({ id: '1@2', offset: 1 }, null)
+    a.presence.setExtra('agent:7', { anchor: null, focus: null })
+    a.outbox.length = 0
 
-    vi.advanceTimersByTime(1)
-    a.announce()
-    deliver()
+    a.presence.announce()
 
-    expect(b.remotes().map((remote) => remote.focus)).toEqual([
-      { id: '1@2', offset: 1 },
+    expect(a.outbox).toEqual([
+      { caret: { anchor: { id: '1@2', offset: 1 }, focus: null } },
+      { caret: { anchor: null, focus: null }, entry: 'agent:7' },
     ])
   })
 
-  it('drops a member that left or went quiet', () => {
+  it('drops every entry of a connection that left', () => {
     const { a, b, deliver } = pair()
-    a.start('conn-a', user('owner'))
-    b.start('conn-b', user('owner'))
+    a.presence.start()
+    a.presence.setExtra('agent:7', { anchor: null, focus: null })
     deliver()
-    expect(b.remotes()).toHaveLength(1)
+    expect(b.presence.remotes()).toHaveLength(2)
 
-    b.remove('conn-a')
-    expect(b.remotes()).toHaveLength(0)
+    b.presence.removeConnection('conn-a')
+
+    expect(b.presence.remotes()).toEqual([])
   })
 
-  it('expires a member that went quiet', async () => {
-    vi.useRealTimers()
-    const watcher = createCollabPresence({
-      refreshMs: 60_000,
-      send: () => undefined,
-      timeoutMs: 100,
-    })
-    watcher.start('conn-b', user('owner'))
-    watcher.apply(
-      (() => {
-        let captured: Uint8Array = new Uint8Array()
-        const probe = createCollabPresence({
-          refreshMs: 60_000,
-          send: (bytes) => {
-            captured = bytes
-          },
-          timeoutMs: 100,
-        })
-        probe.start('conn-a', user('owner'))
-        probe.dispose()
-        return captured
-      })(),
-    )
-    expect(watcher.remotes()).toHaveLength(1)
+  it('expires members it has not heard from and keeps its own state fresh', () => {
+    const { a, b, deliver } = pair()
+    a.presence.start()
+    b.presence.start()
+    deliver()
+    expect(b.presence.remotes()).toHaveLength(1)
 
-    await vi.waitFor(() => expect(watcher.remotes()).toHaveLength(0), {
-      timeout: 2000,
-    })
-    watcher.dispose()
-  })
-
-  it('refreshes its own state so it does not expire for others', () => {
-    const sent: Uint8Array[] = []
-    const a = createCollabPresence({ send: (bytes) => sent.push(bytes) })
-    a.start('conn-a', user('owner'))
-    const initial = sent.length
-
+    vi.advanceTimersByTime(10_000)
+    deliver()
     vi.advanceTimersByTime(25_000)
+    expect(b.presence.remotes()).toHaveLength(1)
 
-    expect(sent.length).toBeGreaterThan(initial)
-    a.dispose()
-    const afterDispose = sent.length
-    vi.advanceTimersByTime(25_000)
-    expect(sent.length).toBe(afterDispose)
+    a.presence.dispose()
+    vi.advanceTimersByTime(31_000)
+    expect(b.presence.remotes()).toEqual([])
   })
 
-  it('picks a stable color per member', () => {
+  it('removes an entry the sender cleared', () => {
     const { a, b, deliver } = pair()
-    a.start('conn-a', user('owner'))
-    b.start('conn-b', user('owner'))
-    deliver()
-
-    const color = b.remotes()[0].color
-    vi.advanceTimersByTime(1)
-    a.setCursor(null, { id: '1@2', offset: 9 })
-    deliver()
-
-    expect(PRESENCE_COLORS).toContain(color)
-    expect(b.remotes()[0].color).toBe(color)
-  })
-
-  it('stays quiet about its own caret and skips unchanged carets', () => {
-    const sent: Uint8Array[] = []
-    const a = createCollabPresence({ send: (bytes) => sent.push(bytes) })
-    const seen = vi.fn()
-    a.subscribe(seen)
-    a.start('conn-a', user('owner'))
-    const afterStart = sent.length
-
-    vi.advanceTimersByTime(1)
-    a.setCursor(null, { id: '1@2', offset: 1 })
-    vi.advanceTimersByTime(1)
-    a.setCursor(null, { id: '1@2', offset: 1 })
-
-    expect(seen).not.toHaveBeenCalled()
-    expect(sent.length).toBe(afterStart + 1)
-    a.dispose()
-  })
-
-  it('publishes an extra member such as the agent and removes it again', () => {
-    const { a, b, deliver } = pair()
-    a.start('conn-a', user('owner'))
-    b.start('conn-b', user('owner'))
-    deliver()
-
-    vi.advanceTimersByTime(1)
-    a.setExtra('agent:run-1', {
+    a.presence.start()
+    a.presence.setExtra('agent:7', {
       anchor: null,
-      color: '#8e4ec6',
-      focus: { id: '3@4', offset: 2 },
-      user: { avatar: null, id: 'agent', name: 'AI' },
+      focus: { id: '3@4', offset: 0 },
     })
     deliver()
-
-    expect(b.remotes().map((remote) => remote.key)).toEqual([
-      'agent:run-1',
+    expect(b.presence.remotes().map((peer) => peer.key)).toEqual([
       'conn-a',
-    ])
-    expect(a.remotes().map((remote) => remote.key)).toEqual([
-      'agent:run-1',
-      'conn-b',
+      'conn-a/agent:7',
     ])
 
-    vi.advanceTimersByTime(1)
-    a.setExtra('agent:run-1', null)
+    a.presence.setExtra('agent:7', null)
     deliver()
 
-    expect(b.remotes().map((remote) => remote.key)).toEqual(['conn-a'])
-    expect(a.remotes().map((remote) => remote.key)).toEqual(['conn-b'])
+    expect(b.presence.remotes().map((peer) => peer.key)).toEqual(['conn-a'])
+  })
+
+  it('lists its own agent entry locally, since the server never echoes it', () => {
+    const { a } = pair()
+    a.presence.start()
+
+    a.presence.setExtra('agent:7', { anchor: null, focus: null })
+
+    expect(a.presence.remotes()).toEqual([
+      expect.objectContaining({
+        color: AGENT_PRESENCE_COLOR,
+        key: 'local/agent:7',
+        user: expect.objectContaining({ name: 'AI' }),
+      }),
+    ])
+  })
+
+  it('picks a stable color per member and the agent color for agent entries', () => {
+    const { a, b, deliver } = pair()
+    a.presence.start()
+    a.presence.setExtra('agent:7', { anchor: null, focus: null })
+    deliver()
+
+    const [human, agent] = b.presence.remotes()
+    expect(PRESENCE_COLORS).toContain(human.color)
+    expect(agent.color).toBe(AGENT_PRESENCE_COLOR)
+  })
+
+  it('skips sending a caret that did not move', () => {
+    const { a } = pair()
+    a.presence.start()
+    a.outbox.length = 0
+
+    a.presence.setCursor({ id: '1@2', offset: 1 }, null)
+    a.presence.setCursor({ id: '1@2', offset: 1 }, null)
+
+    expect(a.outbox).toHaveLength(1)
+  })
+
+  it('stays silent before it has joined a room', () => {
+    const { a } = pair()
+
+    a.presence.setCursor({ id: '1@2', offset: 1 }, null)
+
+    expect(a.outbox).toEqual([])
   })
 })

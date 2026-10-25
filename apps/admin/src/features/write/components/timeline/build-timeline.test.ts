@@ -94,4 +94,23 @@ describe('buildTimeline', () => {
 
     expect(rows[0]).toMatchObject({ kind: 'restore', undoable: false })
   })
+
+  it('keeps each co-author in their own steps and names who wrote them', () => {
+    const history: DraftHistory = {
+      changes: [
+        change('3', 2, 210, 'human:r1'),
+        change('1', 6, 205, 'human:owner'),
+        change('3', 1, 200, 'human:r1'),
+      ],
+      checkpoints: [],
+    }
+
+    const steps = buildTimeline(history, null).filter(
+      (row) => row.type === 'step',
+    )
+
+    expect(
+      steps.map((row) => (row.type === 'step' ? row.author : undefined)),
+    ).toEqual(['r1', null, 'r1'])
+  })
 })

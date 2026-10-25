@@ -3,14 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { getDraftCrdt, postDraftCrdt } from '~/api/drafts'
 
-import { createCollabChannel } from './collab-channel'
-import type { CaretPoint, PresenceUser } from './collab-presence'
+import { type CollabSocket, createCollabChannel } from './collab-channel'
+import type { CaretPoint } from './collab-presence'
 import {
   type AgentTurn,
   type CrdtDraftSession,
   createCrdtDraftSession,
 } from './crdt-draft-session'
-import type { CrdtSyncStatus } from './crdt-sync'
+import type { CrdtSyncStatus, CrdtTransport } from './crdt-sync'
 import { createPeersStore, type PeersSource } from './peers-store'
 
 export type CrdtDraftStatus = CrdtSyncStatus | 'idle' | 'loading'
@@ -32,14 +32,22 @@ export interface CrdtDraftController {
 }
 
 const LOAD_RETRY_MS = 2000
-const FALLBACK_USER: PresenceUser = { avatar: null, id: 'owner', name: '' }
+
+export interface CrdtDraftRoom {
+  author: string
+  http: CrdtTransport
+  subscribeSocket: (
+    listener: (socket: CollabSocket | null) => void,
+  ) => () => void
+}
 
 export function useCrdtDraft(options: {
   draftId: string
   enabled: boolean
   onRejected: () => Promise<void>
   onRemoteTitle: (title: string) => void
-  user?: PresenceUser
+  onRevoked?: () => void
+  room?: CrdtDraftRoom
 }): CrdtDraftController {
   const sessionRef = useRef<CrdtDraftSession | null>(null)
   const editorRef = useRef<LexicalEditor | null>(null)
@@ -65,15 +73,18 @@ export function useCrdtDraft(options: {
     let retry: ReturnType<typeof setTimeout> | undefined
     let stopPeers: (() => void) | undefined
     setStatus('loading')
+    const { room } = callbacksRef.current
     void createCrdtDraftSession({
+      author: room?.author,
       channel: (hooks) =>
         createCollabChannel({
           ...hooks,
           draftId,
-          http: {
+          http: room?.http ?? {
             pull: (since) => getDraftCrdt(draftId, since),
             push: (bytes) => postDraftCrdt(draftId, bytes),
           },
+          subscribeSocket: room?.subscribeSocket,
         }),
       onRejected: () => {
         void callbacksRef.current
@@ -81,9 +92,8 @@ export function useCrdtDraft(options: {
           .finally(() => setGeneration((value) => value + 1))
       },
       onRemoteTitle: (title) => callbacksRef.current.onRemoteTitle(title),
-      presence: {
-        user: () => callbacksRef.current.user ?? FALLBACK_USER,
-      },
+      onRevoked: () => callbacksRef.current.onRevoked?.(),
+      presence: true,
       onStatus: (next) => {
         if (!disposed) setStatus(next)
       },

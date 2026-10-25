@@ -3,6 +3,7 @@ import type { WsClient, WsClientState } from '@mx-space/ws-client'
 import { ApiRequestError } from '~/api/http'
 import { subscribeAdminSocket } from '~/socket/SocketBridge'
 
+import type { IncomingPresence, OutgoingPresence } from './collab-presence'
 import { CRDT_REJECTED_CODE, type CrdtTransport } from './crdt-sync'
 
 export type CollabSocket = Pick<WsClient, 'on' | 'request'> & {
@@ -16,9 +17,10 @@ export interface CollabChannelOptions {
   onJoined?: (connectionId: string) => void
   onPeerJoined?: (connectionId: string) => void
   onPeerLeft?: (connectionId: string) => void
-  onPresence?: (state: Uint8Array) => void
+  onPresence?: (frame: IncomingPresence) => void
   onReconnect?: () => void
   onRemote: (update: Uint8Array) => void
+  onRevoked?: () => void
   subscribeSocket?: (
     listener: (socket: CollabSocket | null) => void,
   ) => () => void
@@ -27,14 +29,16 @@ export interface CollabChannelOptions {
 export interface CollabChannel extends CrdtTransport {
   dispose: () => void
   live: () => boolean
-  sendPresence: (state: Uint8Array) => void
+  sendPresence: (frame: OutgoingPresence) => void
 }
 
 interface DocumentFrame {
+  caret?: IncomingPresence['caret']
   connectionId?: string
   documentId?: string
-  state?: string
+  entry?: string | null
   update?: string
+  user?: IncomingPresence['user']
 }
 
 const CHUNK = 0x8000
@@ -93,7 +97,20 @@ export function createCollabChannel(
       next.on(
         'collab.presence',
         forDocument((frame) => {
-          if (frame.state) options.onPresence?.(decodeBase64(frame.state))
+          if (!frame.connectionId || !frame.user) return
+          options.onPresence?.({
+            caret: frame.caret ?? null,
+            connectionId: frame.connectionId,
+            entry: frame.entry ?? null,
+            user: frame.user,
+          })
+        }),
+      ),
+      next.on(
+        'collab.revoked',
+        forDocument(() => {
+          documentId = null
+          options.onRevoked?.()
         }),
       ),
       next.on(
@@ -189,10 +206,10 @@ export function createCollabChannel(
         throw error
       }
     },
-    sendPresence: (state) => {
+    sendPresence: (frame) => {
       if (!live()) return
       void socket!
-        .request('collab.presence', { draftId, state: encodeBase64(state) })
+        .request('collab.presence', { draftId, ...frame })
         .catch(() => undefined)
     },
   }

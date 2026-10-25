@@ -22,7 +22,7 @@ import type { CollabChannel } from './collab-channel'
 import {
   type CaretPoint,
   createCollabPresence,
-  type PresenceUser,
+  type IncomingPresence,
   type RemotePresence,
 } from './collab-presence'
 import {
@@ -35,8 +35,6 @@ import {
 const HUMAN_MESSAGE = 'human:owner'
 const TITLE = 'title'
 const CARET_DEBOUNCE_MS = 50
-const AGENT_COLOR = '#8e4ec6'
-const AGENT_USER = { avatar: null, id: 'agent', name: 'AI' }
 const TEXT_KEY = '#text'
 
 export interface AgentTurn {
@@ -76,9 +74,10 @@ export interface ChannelHooks {
   onJoined?: (connectionId: string) => void
   onPeerJoined?: (connectionId: string) => void
   onPeerLeft?: (connectionId: string) => void
-  onPresence?: (state: Uint8Array) => void
+  onPresence?: (frame: IncomingPresence) => void
   onReconnect: () => void
   onRemote: (bytes: Uint8Array) => void
+  onRevoked?: () => void
 }
 
 export type SessionChannel = Pick<
@@ -87,11 +86,13 @@ export type SessionChannel = Pick<
 >
 
 export interface CrdtDraftSessionOptions {
+  author?: string
   channel?: (hooks: ChannelHooks) => SessionChannel
   onRejected?: (error: ApiRequestError) => void
   onRemoteTitle?: (title: string) => void
+  onRevoked?: () => void
   onStatus?: (status: CrdtSyncStatus) => void
-  presence?: { user: () => PresenceUser }
+  presence?: boolean
   transport?: CrdtTransport
 }
 
@@ -118,8 +119,7 @@ export async function createCrdtDraftSession(
 ): Promise<CrdtDraftSession> {
   const doc = new LoroDoc()
   doc.setRecordTimestamp(true)
-  // The binding reads `commitMessage` on every commit, so mutating it relabels later edits.
-  const bindingOptions = { commitMessage: HUMAN_MESSAGE }
+  const bindingOptions = { commitMessage: options.author ?? HUMAN_MESSAGE }
   let binding: LoroBinding | null = null
   let lastTitle: string | null = null
 
@@ -134,7 +134,7 @@ export async function createCrdtDraftSession(
   let disposed = false
   const early: Uint8Array[] = []
   const presence = createCollabPresence({
-    send: (bytes) => channel?.sendPresence(bytes),
+    send: (frame) => channel?.sendPresence(frame),
   })
   let caretTimer: ReturnType<typeof setTimeout> | undefined
   let stopCaret: (() => void) | null = null
@@ -177,13 +177,13 @@ export async function createCrdtDraftSession(
   }
 
   const channel: SessionChannel | undefined = options.channel?.({
-    onJoined: (connectionId) => {
-      if (options.presence)
-        presence.start(connectionId, options.presence.user())
+    onJoined: () => {
+      if (options.presence) presence.start()
     },
     onPeerJoined: () => presence.announce(),
-    onPeerLeft: (connectionId) => presence.remove(connectionId),
-    onPresence: (state) => presence.apply(state),
+    onPeerLeft: (connectionId) => presence.removeConnection(connectionId),
+    onPresence: (frame) => presence.apply(frame),
+    onRevoked: () => options.onRevoked?.(),
     onReconnect: () => {
       void sync?.pull().catch(() => undefined)
     },
@@ -260,12 +260,7 @@ export async function createCrdtDraftSession(
       let title = doc.getText(TITLE).toString()
       let view: Frontiers = doc.frontiers()
       let ended = false
-      presence.setExtra(key, {
-        anchor: null,
-        color: AGENT_COLOR,
-        focus: null,
-        user: AGENT_USER,
-      })
+      presence.setExtra(key, { anchor: null, focus: null })
       return {
         apply: (target, focusBlockId) => {
           if (ended || disposed) {
@@ -288,9 +283,7 @@ export async function createCrdtDraftSession(
           if (end) view = [{ counter: end - 1, peer }]
           presence.setExtra(key, {
             anchor: null,
-            color: AGENT_COLOR,
             focus: focusBlockId ? caretAtBlock(doc, focusBlockId) : null,
-            user: AGENT_USER,
           })
         },
         end: () => {

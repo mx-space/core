@@ -243,6 +243,11 @@ export const adminQueryKeys = {
       ['pages', 'list', params] as const,
     root: ['pages'] as const,
   },
+  collab: {
+    collaborators: (documentId: string) =>
+      ['collab', 'collaborators', documentId] as const,
+    invites: (documentId: string) => ['collab', 'invites', documentId] as const,
+  },
   drafts: {
     byRef: (params: { id: string; refType: string }) =>
       ['drafts', 'by-ref', params.refType, params.id] as const,

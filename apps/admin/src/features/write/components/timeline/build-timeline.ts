@@ -8,6 +8,7 @@ import type {
 export type StepKind = 'agent' | 'human' | 'other' | 'restore' | 'undo'
 
 export interface TimelineStep {
+  author: string | null
   before: CrdtOpId[]
   change: CrdtOpId
   count: number
@@ -39,6 +40,11 @@ const kindOf = (message = ''): StepKind => {
   return 'other'
 }
 
+const authorOf = (message: string) => {
+  const match = /^human:(.+)$/.exec(message)
+  return match && match[1] !== 'owner' ? match[1] : null
+}
+
 const groupSteps = (changes: DraftChange[]): TimelineStep[] => {
   const steps: TimelineStep[] = []
   let oldestInGroup = 0
@@ -59,6 +65,7 @@ const groupSteps = (changes: DraftChange[]): TimelineStep[] => {
     } else {
       groupPeer = entry.id.peer
       steps.push({
+        author: authorOf(message),
         before: entry.deps,
         change: entry.id,
         count: 1,

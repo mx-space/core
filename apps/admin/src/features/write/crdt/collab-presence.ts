@@ -1,5 +1,3 @@
-import { EphemeralStore } from 'loro-crdt'
-
 export const PRESENCE_COLORS = [
   '#e5484d',
   '#f76b15',
@@ -10,6 +8,8 @@ export const PRESENCE_COLORS = [
   '#6e56cf',
   '#d6409f',
 ] as const
+
+export const AGENT_PRESENCE_COLOR = '#8e4ec6'
 
 export type PresenceUser = {
   avatar: string | null
@@ -22,14 +22,31 @@ export type CaretPoint = {
   offset: number
 }
 
-export type PresenceState = {
+export type PresenceCaret = {
   anchor: CaretPoint | null
-  color: string
   focus: CaretPoint | null
+}
+
+export type PresenceState = PresenceCaret & {
+  color: string
   user: PresenceUser
 }
 
 export type RemotePresence = PresenceState & { key: string }
+
+export type OutgoingPresence = {
+  caret: PresenceCaret | null
+  entry?: string
+}
+
+export type IncomingPresence = {
+  caret: PresenceCaret | null
+  connectionId: string
+  entry: string | null
+  user: PresenceUser
+}
+
+const LOCAL_AGENT_USER: PresenceUser = { avatar: null, id: 'agent', name: 'AI' }
 
 const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
   left === right ||
@@ -38,42 +55,47 @@ const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
     left.id === right.id &&
     left.offset === right.offset)
 
-const colorOf = (key: string) => {
+const colorOf = (key: string, entry: string | null) => {
+  if (entry?.startsWith('agent:')) return AGENT_PRESENCE_COLOR
   let hash = 0
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) | 0
   return PRESENCE_COLORS[Math.abs(hash) % PRESENCE_COLORS.length]
 }
 
+const pointOf = (value: unknown): CaretPoint | null => {
+  const point = value as CaretPoint | null
+  return point && typeof point.id === 'string' && Number.isFinite(point.offset)
+    ? { id: point.id, offset: point.offset }
+    : null
+}
+
 export function createCollabPresence(options: {
   refreshMs?: number
-  send: (bytes: Uint8Array) => void
+  send: (frame: OutgoingPresence) => void
   timeoutMs?: number
 }) {
-  const store = new EphemeralStore<Record<string, PresenceState>>(
-    options.timeoutMs ?? 30_000,
-  )
+  const timeoutMs = options.timeoutMs ?? 30_000
+  const remote = new Map<string, RemotePresence & { connectionId: string }>()
+  const heardAt = new Map<string, number>()
+  const extras = new Map<string, PresenceCaret>()
   const listeners = new Set<(remotes: RemotePresence[]) => void>()
-  let self: string | null = null
-  const extras = new Set<string>()
-  let refresh: ReturnType<typeof setInterval> | undefined
+  let self: PresenceCaret = { anchor: null, focus: null }
+  let started = false
+  let timer: ReturnType<typeof setInterval> | undefined
 
-  const remotes = (): RemotePresence[] =>
-    Object.entries(store.getAllStates())
-      .filter(
-        (entry): entry is [string, PresenceState] =>
-          entry[0] !== self && Boolean(entry[1]),
-      )
-      .map(([key, state]) => ({ ...state, key }))
-      .sort((left, right) => left.key.localeCompare(right.key))
-
-  const unsubscribe = store.subscribe((event) => {
-    if (event.by === 'local') return
-    const current = remotes()
-    for (const listener of listeners) listener(current)
-  })
-
-  const publish = () => {
-    if (self && store.get(self)) options.send(store.encode(self))
+  const remotes = (): RemotePresence[] => {
+    const local = [...extras].map(([entry, caret]) => ({
+      ...caret,
+      color: colorOf(entry, entry),
+      key: `local/${entry}`,
+      user: LOCAL_AGENT_USER,
+    }))
+    const others = [...remote.values()].map(
+      ({ connectionId: _connectionId, ...peer }) => peer,
+    )
+    return [...others, ...local].sort((left, right) =>
+      left.key.localeCompare(right.key),
+    )
   }
 
   const notify = () => {
@@ -81,70 +103,83 @@ export function createCollabPresence(options: {
     for (const listener of listeners) listener(current)
   }
 
-  const update = (patch: Partial<PresenceState>) => {
-    if (!self) return
-    const current = store.get(self)
-    if (!current) return
-    store.set(self, { ...current, ...patch })
-    publish()
+  const announce = () => {
+    if (!started) return
+    options.send({ caret: self })
+    for (const [entry, caret] of extras) options.send({ caret, entry })
+  }
+
+  const expire = () => {
+    const now = Date.now()
+    let changed = false
+    for (const [key, at] of heardAt) {
+      if (now - at < timeoutMs) continue
+      heardAt.delete(key)
+      changed = remote.delete(key) || changed
+    }
+    if (changed) notify()
   }
 
   return {
-    announce: publish,
-    apply: (bytes: Uint8Array) => store.apply(bytes),
-    dispose: () => {
-      clearInterval(refresh)
-      unsubscribe()
-      listeners.clear()
-      store.destroy()
-    },
-    remotes,
-    remove: (key: string) => {
-      if (key === self || !store.get(key)) return
-      store.delete(key)
-      notify()
-    },
-    setExtra: (key: string, state: PresenceState | null) => {
-      if (state) {
-        extras.add(key)
-        store.set(key, state)
-      } else {
-        extras.delete(key)
-        store.delete(key)
-      }
-      options.send(store.encode(key))
-      notify()
-    },
-    setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) => {
-      const current = self ? store.get(self) : undefined
-      if (
-        current &&
-        samePoint(current.anchor, anchor) &&
-        samePoint(current.focus, focus)
-      ) {
+    announce,
+    apply: (frame: IncomingPresence) => {
+      const key = frame.entry
+        ? `${frame.connectionId}/${frame.entry}`
+        : frame.connectionId
+      if (!frame.caret) {
+        heardAt.delete(key)
+        if (remote.delete(key)) notify()
         return
       }
-      update({ anchor, focus })
-    },
-    start: (key: string, user: PresenceUser) => {
-      const previous = self ? store.get(self) : undefined
-      if (self && self !== key) store.delete(self)
-      self = key
-      store.set(key, {
-        anchor: previous?.anchor ?? null,
-        color: colorOf(key),
-        focus: previous?.focus ?? null,
-        user,
+      heardAt.set(key, Date.now())
+      remote.set(key, {
+        anchor: pointOf(frame.caret.anchor),
+        color: colorOf(key, frame.entry),
+        connectionId: frame.connectionId,
+        focus: pointOf(frame.caret.focus),
+        key,
+        user: frame.user,
       })
-      publish()
-      clearInterval(refresh)
-      refresh = setInterval(() => {
-        for (const key of [self, ...extras]) {
-          const current = key ? store.get(key) : undefined
-          if (!key || !current) continue
-          store.set(key, current)
-          options.send(store.encode(key))
-        }
+      notify()
+    },
+    dispose: () => {
+      clearInterval(timer)
+      started = false
+      listeners.clear()
+      remote.clear()
+      heardAt.clear()
+    },
+    remotes,
+    removeConnection: (connectionId: string) => {
+      let changed = false
+      for (const [key, peer] of remote) {
+        if (peer.connectionId !== connectionId) continue
+        remote.delete(key)
+        heardAt.delete(key)
+        changed = true
+      }
+      if (changed) notify()
+    },
+    setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) => {
+      if (samePoint(self.anchor, anchor) && samePoint(self.focus, focus)) {
+        return
+      }
+      self = { anchor, focus }
+      if (started) options.send({ caret: self })
+    },
+    setExtra: (entry: string, caret: PresenceCaret | null) => {
+      if (caret) extras.set(entry, caret)
+      else extras.delete(entry)
+      if (started) options.send({ caret, entry })
+      notify()
+    },
+    start: () => {
+      started = true
+      announce()
+      clearInterval(timer)
+      timer = setInterval(() => {
+        announce()
+        expire()
       }, options.refreshMs ?? 10_000)
     },
     subscribe: (listener: (remotes: RemotePresence[]) => void) => {

@@ -536,7 +536,6 @@ function useDraftSession(options: {
       options.setState((previous) =>
         previous.title === title ? previous : { ...previous, title },
       ),
-    user: presenceUser,
   })
   const crdtRef = useRef(crdt)
   crdtRef.current = crdt

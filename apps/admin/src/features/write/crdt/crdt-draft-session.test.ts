@@ -284,8 +284,15 @@ describe('createCrdtDraftSession presence', () => {
           server.import(bytes)
           for (const member of others(id)) member.hooks.onRemote(bytes)
         },
-        sendPresence: (bytes) => {
-          for (const member of others(id)) member.hooks.onPresence?.(bytes)
+        sendPresence: (frame) => {
+          for (const member of others(id)) {
+            member.hooks.onPresence?.({
+              caret: frame.caret,
+              connectionId: id,
+              entry: frame.entry ?? null,
+              user: owner,
+            })
+          }
         },
       }
     }
@@ -317,11 +324,11 @@ describe('createCrdtDraftSession presence', () => {
     const room = fakeRoom(server)
     const a = await createCrdtDraftSession({
       channel: room,
-      presence: { user: () => owner },
+      presence: true,
     })
     const b = await createCrdtDraftSession({
       channel: room,
-      presence: { user: () => owner },
+      presence: true,
     })
     const editorA = newEditor()
     const editorB = newEditor()
@@ -352,7 +359,7 @@ describe('createCrdtDraftSession agent turns', () => {
   it('merges an agent write at the version it read, under its own peer', async () => {
     const server = seededServer('T', 'p1', 'p2')
     const session = await createCrdtDraftSession({
-      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+      presence: true,
       transport: transportFor(server),
     })
     const editor = newEditor()
@@ -403,7 +410,7 @@ describe('createCrdtDraftSession agent turns', () => {
         push: transportFor(server).push,
         sendPresence: () => undefined,
       }),
-      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+      presence: true,
     })
     session.bindEditor(newEditor())
 
@@ -470,7 +477,7 @@ describe('createCrdtDraftSession agent turns', () => {
         push: transportFor(server).push,
         sendPresence: () => undefined,
       }),
-      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+      presence: true,
     })
     const editor = newEditor()
     session.bindEditor(editor)
@@ -531,5 +538,53 @@ describe('createCrdtDraftSession agent turns', () => {
     const open = session.startAgentTurn('agent:b')
     session.dispose()
     expect(() => open.apply(stateOf('p1', 'late'))).toThrow()
+  })
+})
+
+describe('createCrdtDraftSession co-authors', () => {
+  it('signs every commit with the author it was opened as', async () => {
+    const server = seededServer('T', 'p1')
+    const session = await createCrdtDraftSession({
+      author: 'human:r1',
+      transport: transportFor(server),
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+
+    write(editor, 'p1 edited')
+    session.setTitle('T2')
+    await session.flush()
+
+    const fresh = [...server.getAllChanges().values()]
+      .flat()
+      .filter((change) => change.message !== 'import 1')
+      .map((change) => change.message)
+    expect(fresh.length).toBeGreaterThan(0)
+    expect(new Set(fresh)).toEqual(new Set(['human:r1']))
+    session.dispose()
+  })
+
+  it('reports when the owner removes this member from the room', async () => {
+    const server = seededServer('T', 'p1')
+    const onRevoked = vi.fn()
+    let hooks: ChannelHooks | undefined
+    const session = await createCrdtDraftSession({
+      channel: (next) => {
+        hooks = next
+        return {
+          dispose: () => undefined,
+          live: () => true,
+          pull: transportFor(server).pull,
+          push: transportFor(server).push,
+          sendPresence: () => undefined,
+        }
+      },
+      onRevoked,
+    })
+
+    hooks?.onRevoked?.()
+
+    expect(onRevoked).toHaveBeenCalledTimes(1)
+    session.dispose()
   })
 })

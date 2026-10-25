@@ -3,6 +3,7 @@ import { History, Loader2, RotateCcw, Undo2 } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 
+import { listCollaborators } from '~/api/collab'
 import type { SetDraftShareData } from '~/api/drafts'
 import {
   deleteDraftShare,
@@ -24,6 +25,7 @@ import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
 import { cn } from '~/utils/cn'
 
+import { CollaboratorsSection } from './collab/CollaboratorsSection'
 import {
   buildTimeline,
   type StepKind,
@@ -82,6 +84,22 @@ export function TimelinePanel(props: TimelinePanelProps) {
         })
       }),
     [draftId, queryClient],
+  )
+
+  const collaboratorsQuery = useQuery({
+    enabled: Boolean(documentId),
+    queryFn: () => listCollaborators(documentId!),
+    queryKey: adminQueryKeys.collab.collaborators(documentId ?? ''),
+  })
+  const authorNames = useMemo(
+    () =>
+      new Map(
+        (collaboratorsQuery.data ?? []).map((person) => [
+          person.readerId,
+          person.name,
+        ]),
+      ),
+    [collaboratorsQuery.data],
   )
 
   const rows = useMemo(
@@ -160,6 +178,7 @@ export function TimelinePanel(props: TimelinePanelProps) {
       onClose={props.onClose}
       title={t('write.timeline.title')}
     >
+      {documentId ? <CollaboratorsSection documentId={documentId} /> : null}
       {documentId ? (
         <ShareBar
           canFollowCurrentDraft
@@ -188,6 +207,11 @@ export function TimelinePanel(props: TimelinePanelProps) {
             {rows.map((row) => (
               <TimelineItem
                 busy={busy}
+                authorName={
+                  row.type === 'step' && row.author
+                    ? (authorNames.get(row.author) ?? row.author)
+                    : null
+                }
                 key={rowKey(row)}
                 onRestore={() => void restore(row as TimelineCheckpoint)}
                 onUndo={() => undoMutation.mutate(row as TimelineStep)}
@@ -208,6 +232,7 @@ const rowKey = (row: TimelineRow) =>
     : `step:${row.change.peer}:${row.change.counter}`
 
 function TimelineItem(props: {
+  authorName: string | null
   busy: boolean
   onRestore: () => void
   onUndo: () => void
@@ -262,7 +287,12 @@ function TimelineItem(props: {
     <li className="group flex items-start gap-2 rounded-md py-1.5 pr-2 pl-6 hover:bg-surface-inset">
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs text-fg-muted">
-          {t(stepLabels[row.kind], { count: row.count, summary })}
+          {props.authorName
+            ? t('write.timeline.step.coauthor', {
+                count: row.count,
+                name: props.authorName,
+              })
+            : t(stepLabels[row.kind], { count: row.count, summary })}
         </div>
         <div className="text-xs text-fg-subtle">{props.time}</div>
       </div>

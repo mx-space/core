@@ -125,20 +125,31 @@ describe('createCollabChannel', () => {
     })
     await channel.pull()
 
-    socket.emit('collab.presence', { documentId: 'doc-1', state: b64([3]) })
+    socket.emit('collab.presence', {
+      caret: null,
+      connectionId: 'c2',
+      documentId: 'doc-1',
+      entry: null,
+      user: { avatar: null, id: 'r1', name: 'Bob' },
+    })
     socket.emit('collab.peer.joined', {
       connectionId: 'c2',
       documentId: 'doc-1',
     })
     socket.emit('collab.peer.left', { connectionId: 'c2', documentId: 'doc-1' })
-    channel.sendPresence(new Uint8Array([8]))
+    channel.sendPresence({ caret: { anchor: null, focus: null } })
 
-    expect(presence).toHaveBeenCalledWith(new Uint8Array([3]))
+    expect(presence).toHaveBeenCalledWith({
+      caret: null,
+      connectionId: 'c2',
+      entry: null,
+      user: { avatar: null, id: 'r1', name: 'Bob' },
+    })
     expect(joined).toHaveBeenCalledWith('c2')
     expect(left).toHaveBeenCalledWith('c2')
     expect(socket.requests.at(-1)).toEqual({
       event: 'collab.presence',
-      payload: { draftId: 'd1', state: b64([8]) },
+      payload: { caret: { anchor: null, focus: null }, draftId: 'd1' },
     })
   })
 
@@ -325,5 +336,31 @@ describe('createCollabChannel', () => {
     socket.emit('$state', 'open')
 
     expect(onReconnect).toHaveBeenCalledTimes(1)
+  })
+
+  it('stops relaying and reports once the owner revokes access', async () => {
+    const socket = fakeSocket()
+    const onRevoked = vi.fn()
+    const onRemote = vi.fn()
+    const channel = createCollabChannel({
+      draftId: 'd1',
+      http: httpTransport(),
+      onRemote,
+      onRevoked,
+      subscribeSocket: (next) => {
+        next(socket)
+        return () => undefined
+      },
+    })
+    await channel.pull()
+
+    socket.emit('collab.revoked', { documentId: 'other' })
+    expect(onRevoked).not.toHaveBeenCalled()
+    socket.emit('collab.revoked', { documentId: 'doc-1' })
+    socket.emit('collab.update', { documentId: 'doc-1', update: b64([4]) })
+
+    expect(onRevoked).toHaveBeenCalledTimes(1)
+    expect(onRemote).not.toHaveBeenCalled()
+    expect(channel.live()).toBe(false)
   })
 })
