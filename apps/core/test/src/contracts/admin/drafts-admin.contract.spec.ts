@@ -46,6 +46,7 @@ describe('DraftController Admin branch contract (e2e)', () => {
         provide: DraftService,
         useValue: {
           findById: async () => fixture,
+          findForEditing: async () => fixture,
           list: async () => ({
             data: [fixture],
             pagination: { currentPage: 1, size: 10, total: 1, totalPage: 1 },

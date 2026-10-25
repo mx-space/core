@@ -26,6 +26,7 @@ export const MarkdownToLexicalDryRunSchema = z.object({
   refType: z.enum(DraftRefType),
   refId: zEntityId,
   branchId: zEntityId.optional(),
+  revisionId: zEntityId.optional(),
   sourceText: z.string().max(2_000_000),
   profile: z.literal('yohaku-v1'),
 })

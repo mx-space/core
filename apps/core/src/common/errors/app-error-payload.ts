@@ -128,6 +128,14 @@ export type AppErrorPayloadMap = {
     documentId: string
     expectedPublishedRevisionId: string | null
   }
+  [AppErrorCode.DRAFT_CRDT_UPDATE_REJECTED]: {
+    branchId: string
+    reason: string
+  }
+  [AppErrorCode.DRAFT_CRDT_FORMAT_UNSUPPORTED]: {
+    branchId: string
+    contentFormat: string
+  }
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: WithId

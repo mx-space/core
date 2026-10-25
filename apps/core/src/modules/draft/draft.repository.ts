@@ -30,6 +30,7 @@ import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type {
+  CheckpointKind,
   ContentDocumentRow,
   ContentPublicationEventRow,
   ContentRevisionRow,
@@ -53,12 +54,13 @@ const mapDocument = (
   refType: row.refType as DraftRefType,
 })
 
-const mapRevision = (
+export const mapRevision = (
   row: typeof contentRevisions.$inferSelect,
 ): ContentRevisionRow => ({
   ...row,
   documentId: toEntityId(row.documentId)!,
   id: toEntityId(row.id)!,
+  kind: row.kind as CheckpointKind | null,
   parentRevisionId: toEntityId(row.parentRevisionId),
 })
 
@@ -83,7 +85,7 @@ const mapShare = (
   revisionId: toEntityId(row.revisionId),
 })
 
-const mapBranch = (row: typeof drafts.$inferSelect): DraftBranchRow => ({
+export const mapBranch = (row: typeof drafts.$inferSelect): DraftBranchRow => ({
   ...row,
   baseRevisionId: toEntityId(row.baseRevisionId)!,
   documentId: toEntityId(row.documentId)!,

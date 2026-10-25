@@ -445,6 +445,16 @@ export const APP_ERROR_DEFINITIONS = {
       expectedPublishedRevisionId: p.expectedPublishedRevisionId,
     }),
   },
+  [AppErrorCode.DRAFT_CRDT_UPDATE_REJECTED]: {
+    status: 400,
+    message: 'The collaborative update was rejected',
+    details: (p) => ({ branchId: p.branchId, reason: p.reason }),
+  },
+  [AppErrorCode.DRAFT_CRDT_FORMAT_UNSUPPORTED]: {
+    status: 400,
+    message: 'This draft only accepts Lexical content',
+    details: (p) => ({ branchId: p.branchId, contentFormat: p.contentFormat }),
+  },
 
   // document / helper
   [AppErrorCode.DOCUMENT_NOT_FOUND]: {

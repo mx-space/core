@@ -154,18 +154,23 @@ export class ContentMigrationService {
     })
 
     if (draft) {
-      const draftResult = analyzeMxMarkdown(draft.headRevision.text, {
+      const revision = dto.revisionId
+        ? await this.draftService.findRevisionById(dto.revisionId)
+        : draft.headRevision
+      if (!revision || revision.documentId !== draft.documentId) {
+        throw new BadRequestException('Revision does not belong to this draft')
+      }
+      const draftResult = analyzeMxMarkdown(revision.text, {
         profile: 'yohaku-v1',
       })
       preconditions.push({
         kind: 'branch',
         id: String(draft.id),
         hash:
-          draft.headRevision.contentFormat === ContentFormat.Lexical &&
-          draft.headRevision.content
-            ? sha256(draft.headRevision.content)
+          revision.contentFormat === ContentFormat.Lexical && revision.content
+            ? sha256(revision.content)
             : draftResult.sourceHash,
-        headRevisionId: draft.headRevisionId,
+        headRevisionId: dto.revisionId ?? draft.headRevisionId,
       })
     }
 

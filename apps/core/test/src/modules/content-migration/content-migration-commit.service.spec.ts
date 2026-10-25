@@ -270,4 +270,41 @@ describe('ContentMigrationCommitService', () => {
     )
     expect(database.state).toEqual(before)
   })
+
+  it('accepts a checkpoint precondition after the working copy head moved on', async () => {
+    const rows = branchRows()
+    const database = createTransactionalDatabase({
+      source: sourceRow(),
+      ...rows,
+      branch: { ...rows.branch, headRevisionId: '501' },
+      revision: { ...rows.revision, kind: 'publish' },
+      translations: [],
+    })
+    const service = new ContentMigrationCommitService(
+      database as never,
+      new LexicalService(),
+    )
+
+    await service.commitMarkdownToLexical(buildCommitInput([]))
+
+    expect(database.state.source.contentFormat).toBe(ContentFormat.Lexical)
+  })
+
+  it('still rejects a moved head when the precondition revision is not a checkpoint', async () => {
+    const rows = branchRows()
+    const database = createTransactionalDatabase({
+      source: sourceRow(),
+      ...rows,
+      branch: { ...rows.branch, headRevisionId: '501' },
+      translations: [],
+    })
+    const service = new ContentMigrationCommitService(
+      database as never,
+      new LexicalService(),
+    )
+
+    await expect(
+      service.commitMarkdownToLexical(buildCommitInput([])),
+    ).rejects.toBeInstanceOf(ConflictException)
+  })
 })

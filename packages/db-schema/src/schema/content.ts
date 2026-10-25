@@ -3,6 +3,7 @@ import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
   boolean,
   check,
+  customType,
   index,
   integer,
   jsonb,
@@ -14,6 +15,12 @@ import {
 
 import { readers } from './auth'
 import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
+
+const bytea = customType<{ data: Uint8Array; driverData: Buffer }>({
+  dataType: () => 'bytea',
+  toDriver: (value) => Buffer.from(value),
+  fromDriver: (value) => new Uint8Array(value),
+})
 
 export const categories = pgTable(
   'categories',
@@ -259,6 +266,10 @@ export const contentRevisions = pgTable(
       string,
       unknown
     > | null>(),
+    frontiers: jsonb('frontiers').$type<
+      { counter: number; peer: `${number}` }[] | null
+    >(),
+    kind: text('kind'),
   },
   (table) => [
     index('content_revisions_document_idx').on(table.documentId),
@@ -344,6 +355,38 @@ export const contentPublicationEvents = pgTable(
       table.createdAt,
     ),
   ],
+)
+
+export const contentCrdtDocs = pgTable('content_crdt_docs', {
+  documentId: refText('document_id')
+    .primaryKey()
+    .notNull()
+    .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+  snapshot: bytea('snapshot').notNull(),
+  snapshotVersion: bytea('snapshot_version').notNull(),
+  syncedRevisionId: refText('synced_revision_id').references(
+    () => contentRevisions.id,
+    { onDelete: 'set null' },
+  ),
+  fields: jsonb('fields').$type<{
+    meta: Record<string, unknown> | null
+    typeSpecificData: Record<string, unknown> | null
+  } | null>(),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+})
+
+export const contentCrdtUpdates = pgTable(
+  'content_crdt_updates',
+  {
+    id: pkText(),
+    documentId: refText('document_id')
+      .notNull()
+      .references(() => contentDocuments.id, { onDelete: 'cascade' }),
+    bytes: bytea('bytes').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index('content_crdt_updates_document_idx').on(table.documentId)],
 )
 
 /**

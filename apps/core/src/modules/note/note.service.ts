@@ -353,6 +353,23 @@ export class NoteService {
     return note
   }
 
+  public async patchById(
+    id: string,
+    patch: Partial<
+      Pick<NoteModel, 'bookmark' | 'mood' | 'slug' | 'topicId' | 'weather'>
+    >,
+  ) {
+    const updated = await this.updateById(id, patch)
+    await this.draftService.mergeArticleFields(
+      DraftRefType.Note,
+      id,
+      Object.fromEntries(
+        Object.entries(patch).filter(([, value]) => value !== undefined),
+      ),
+    )
+    return updated
+  }
+
   public async updateById(
     id: string,
     data: Partial<NoteModel> & {

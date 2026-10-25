@@ -33,6 +33,7 @@ function createService(
   options: {
     source?: Record<string, unknown> | null
     draft?: Record<string, unknown> | null
+    revisions?: Record<string, Record<string, unknown>>
     translations?: Record<string, unknown>[]
   } = {},
 ) {
@@ -53,6 +54,7 @@ function createService(
   const pageService = { findById: vi.fn() }
   const draftService = {
     findById: vi.fn().mockResolvedValue(options.draft ?? null),
+    findRevisionById: vi.fn(async (id: string) => options.revisions?.[id]),
   }
   const translationRepository = {
     listByRefId: vi
@@ -207,5 +209,37 @@ describe('ContentMigrationService', () => {
     await expect(
       service.dryRunMarkdownToLexical({ ...request, branchId: '300' }),
     ).rejects.toBeInstanceOf(BadRequestException)
+  })
+
+  it('pins the branch precondition to the checkpoint being published', async () => {
+    const lexicalContent = JSON.stringify({ root: { children: [] } })
+    const { service } = createService({
+      draft: {
+        document: { id: '400', refId: '100', refType: DraftRefType.Post },
+        documentId: '400',
+        headRevision: { content: null, contentFormat: 'markdown', text: 'x' },
+        headRevisionId: '501',
+        id: '300',
+      },
+      revisions: {
+        '500': {
+          content: lexicalContent,
+          contentFormat: 'lexical',
+          documentId: '400',
+          id: '500',
+          text: '',
+        },
+      },
+    })
+
+    const result = await service.dryRunMarkdownToLexical({
+      ...request,
+      branchId: '300',
+      revisionId: '500',
+    })
+
+    expect(
+      result.preconditions.find((item) => item.kind === 'branch'),
+    ).toMatchObject({ headRevisionId: '500' })
   })
 })

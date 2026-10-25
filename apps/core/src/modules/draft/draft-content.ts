@@ -76,3 +76,15 @@ export function sameRevisionContent(
     JSON.stringify(normalizeJson(left)) === JSON.stringify(normalizeJson(right))
   )
 }
+
+export function pickSnapshot(input: RevisionSnapshot): RevisionSnapshot {
+  return {
+    content: input.content,
+    contentFormat: input.contentFormat,
+    images: input.images,
+    meta: input.meta,
+    text: input.text,
+    title: input.title,
+    typeSpecificData: input.typeSpecificData,
+  }
+}

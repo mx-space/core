@@ -592,9 +592,9 @@ export class NoteController {
     @Body({ schema: PartialNoteSchema }) body: PartialNoteDto,
     @Param({ schema: EntityIdSchema }) params: EntityIdDto,
   ) {
-    await this.noteService.updateById(
+    await this.noteService.patchById(
       params.id,
-      body as unknown as Partial<NoteModel>,
+      body as Parameters<NoteService['patchById']>[1],
     )
   }
 
