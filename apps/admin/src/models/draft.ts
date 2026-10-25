@@ -156,6 +156,31 @@ export interface CompactPreview {
   revisionIds: string[]
 }
 
+export interface OrganizerArticle {
+  bytes: number
+  documentId: string
+  draftCount: number
+  hasChanges: boolean
+  lastEditedAt: string
+  refType: DraftRefType
+  revisionCount: number
+  title: string
+  version: string
+}
+
+export type OrganizerSkipReason =
+  'changed' | 'editing' | 'publishing' | 'unconfirmed' | 'failed'
+
+export interface OrganizerResult {
+  freed: FreedTotals
+  organized: number
+  skipped: { documentId: string; reason: OrganizerSkipReason; title: string }[]
+}
+
+export interface OrganizerRunResult extends OrganizerResult {
+  unverified: OrganizerArticle[]
+}
+
 export type DraftShareMode = 'follow' | 'pinned'
 
 export interface DraftShare {

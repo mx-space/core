@@ -104,34 +104,34 @@ describe('DraftController Admin branch contract (e2e)', () => {
     expect(item.head_revision).not.toHaveProperty('text')
   })
 
-  test.each([`${apiRoutePrefix}/drafts/${fixture.id}`])(
-    '%s exposes the fields consumed by Admin',
-    async (url) => {
-      const res = await proxy.app.inject({
-        headers: authPassHeader,
-        method: 'GET',
-        url,
-      })
-      expect(res.statusCode).toBe(200)
-      const item = res.json().data
-      assertHasKeys(item, [
-        'id',
-        'document_id',
-        'base_revision_id',
-        'head_revision_id',
-        'status',
-        'relation_to_published',
-        'created_at',
-        'updated_at',
-      ])
-      assertHasKeysDeep(item, [
-        'document.ref_type',
-        'document.published_revision_id',
-        'head_revision.title',
-        'head_revision.text',
-        'head_revision.content_format',
-        'head_revision.type_specific_data',
-      ])
-    },
-  )
+  test.each([
+    `${apiRoutePrefix}/drafts/${fixture.id}`,
+    `${apiRoutePrefix}/drafts/${fixture.id}/preview`,
+  ])('%s exposes the fields consumed by Admin', async (url) => {
+    const res = await proxy.app.inject({
+      headers: authPassHeader,
+      method: 'GET',
+      url,
+    })
+    expect(res.statusCode).toBe(200)
+    const item = res.json().data
+    assertHasKeys(item, [
+      'id',
+      'document_id',
+      'base_revision_id',
+      'head_revision_id',
+      'status',
+      'relation_to_published',
+      'created_at',
+      'updated_at',
+    ])
+    assertHasKeysDeep(item, [
+      'document.ref_type',
+      'document.published_revision_id',
+      'head_revision.title',
+      'head_revision.text',
+      'head_revision.content_format',
+      'head_revision.type_specific_data',
+    ])
+  })
 })

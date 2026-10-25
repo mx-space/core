@@ -24,6 +24,7 @@ import { DraftCleanupService } from '~/modules/draft/draft-cleanup.service'
 import { editDocAt, readDocContent } from '~/modules/draft/draft-crdt.doc'
 import { DraftCrdtRepository } from '~/modules/draft/draft-crdt.repository'
 import { DraftCrdtService } from '~/modules/draft/draft-crdt.service'
+import { DraftOrganizerRepository } from '~/modules/draft/draft-organizer.repository'
 import { DraftStorageRepository } from '~/modules/draft/draft-storage.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import type { SnowflakeService } from '~/shared/id/snowflake.service'
@@ -96,6 +97,37 @@ describe('DraftCleanupService (real PG)', () => {
   }
   const tasks = { getTasks: vi.fn() }
   const resets: Array<{ documentId: string; reason: string }> = []
+  let pageCounter = 7_200_000_000_000_000_000n
+  const presence = {
+    roomHasMembers: vi.fn<(ns: string, room: string) => Promise<boolean>>(
+      async () => false,
+    ),
+  }
+
+  const seedOrganizerPage = async (title: string, changed = false) => {
+    const refId = String(pageCounter++)
+    await db.execute(sql`
+      insert into pages (id, title, slug, text, content_format, created_at)
+      values (${refId}, ${title}, ${refId}, 'Published body', 'markdown', now() - interval '180 days')
+    `)
+    const { document, revision } = await drafts.createDocumentWithRoot(
+      DraftRefType.Page,
+      refId,
+      markdown(title),
+      true,
+    )
+    const { branch } = await drafts.createBranch(
+      document.id,
+      revision.id,
+      changed ? markdown(`${title} changed`) : markdown(title),
+      !changed,
+    )
+    await age(document.id, 120)
+    await db.execute(
+      sql`update content_documents set created_at = now() - interval '120 days', updated_at = now() - interval '120 days' where id = ${document.id}`,
+    )
+    return { branch, document, published: revision, refId }
+  }
 
   const seed = async (snapshot = lexical('Pub', ['p1'])) => {
     const { document, revision } = await drafts.createDocumentWithRoot(
@@ -184,6 +216,8 @@ describe('DraftCleanupService (real PG)', () => {
       storage,
       fileReferences as never,
       tasks as never,
+      new DraftOrganizerRepository(db),
+      presence as never,
     )
   }, 120_000)
 
@@ -191,6 +225,7 @@ describe('DraftCleanupService (real PG)', () => {
     resets.length = 0
     fileReferences.removeReferencesForDocument.mockReset()
     tasks.getTasks.mockReset().mockResolvedValue({ data: [], total: 0 })
+    presence.roomHasMembers.mockReset().mockResolvedValue(false)
   })
 
   afterAll(async () => {
@@ -519,5 +554,351 @@ describe('DraftCleanupService (real PG)', () => {
     expect(summary.revisions.count).toBeGreaterThan(0)
     expect(summary.crdt.bytes).toBeGreaterThanOrEqual(0)
     expect(summary.updates.bytes).toBeGreaterThanOrEqual(0)
+  })
+
+  it('previews old published articles including changed and archived drafts without writing', async () => {
+    const target = await seedOrganizerPage('Organizer preview', true)
+    const archived = await drafts.createBranch(
+      target.document.id,
+      target.published.id,
+      markdown('Archived'),
+      false,
+    )
+    await drafts.archiveBranch(archived.branch.id)
+    await age(target.document.id, 120)
+    const recent = await seedOrganizerPage('Organizer recent')
+    await age(recent.document.id, 2)
+    const before = await storage.totals()
+
+    const preview = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer',
+    })
+
+    expect(preview.map((item) => item.documentId)).toEqual([target.document.id])
+    expect(preview[0]).toMatchObject({
+      draftCount: 2,
+      hasChanges: true,
+      refType: 'page',
+    })
+    expect(preview[0].bytes).toBeGreaterThan(0)
+    expect(await storage.totals()).toEqual(before)
+  })
+
+  it('organizes all drafts of an article while preserving published and shared versions', async () => {
+    const target = await seedOrganizerPage('Organizer remove', true)
+    const archived = await drafts.createBranch(
+      target.document.id,
+      target.published.id,
+      markdown('Shared archived'),
+      false,
+    )
+    await drafts.archiveBranch(archived.branch.id)
+    await drafts.upsertShare(target.document.id, 'organizer-shared', {
+      mode: 'pinned',
+      revisionId: archived.headRevision.id,
+    })
+    await age(target.document.id, 120)
+    const [item] = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer remove',
+    })
+
+    const result = await service.organize({
+      items: [{ documentId: item.documentId, version: item.version }],
+      discardChanges: true,
+    })
+
+    expect(result.organized).toBe(1)
+    expect(result.freed.drafts).toBe(2)
+    expect(result.freed.bytes).toBe(item.bytes)
+    expect(result.freed.revisions).toBe(item.revisionCount)
+    expect(result.skipped).toEqual([])
+    expect(await drafts.findBranchById(target.branch.id)).toBeNull()
+    expect(await drafts.findBranchById(archived.branch.id)).toBeNull()
+    expect((await revisionIds(target.document.id)).sort()).toEqual(
+      [target.published.id, archived.headRevision.id].sort(),
+    )
+    expect(await drafts.findShareByToken('organizer-shared')).toMatchObject({
+      revisionId: archived.headRevision.id,
+    })
+    const live = await db.execute<{ text: string }>(
+      sql`select text from pages where id = ${target.refId}`,
+    )
+    expect(live.rows[0].text).toBe('Published body')
+  })
+
+  it('keeps an article whose draft changed after the preview', async () => {
+    const target = await seedOrganizerPage('Organizer stale')
+    const [item] = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer stale',
+    })
+    await drafts.saveBranch(
+      target.branch.id,
+      target.branch.headRevisionId,
+      markdown('New work'),
+    )
+
+    const result = await service.organize({
+      items: [item],
+      discardChanges: true,
+    })
+
+    expect(result.organized).toBe(0)
+    expect(result.skipped).toEqual([
+      {
+        documentId: target.document.id,
+        title: 'Organizer stale',
+        reason: 'changed',
+      },
+    ])
+    expect(await drafts.findBranchById(target.branch.id)).not.toBeNull()
+  })
+
+  it('requires explicit acknowledgement before discarding unpublished changes', async () => {
+    const target = await seedOrganizerPage('Organizer acknowledge', true)
+    const [item] = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer acknowledge',
+    })
+
+    const result = await service.organize({
+      items: [item],
+      discardChanges: false,
+    })
+
+    expect(result.organized).toBe(0)
+    expect(result.skipped[0].reason).toBe('unconfirmed')
+    expect(await drafts.findBranchById(target.branch.id)).not.toBeNull()
+  })
+
+  it('keeps articles with an editor on another node or a pending publication', async () => {
+    const editing = await seedOrganizerPage('Organizer occupied')
+    const pending = await seedOrganizerPage('Organizer publishing')
+    const items = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer',
+    })
+    presence.roomHasMembers.mockImplementation(
+      async (ns, room) =>
+        ns === 'web' && room === `collab:${editing.document.id}`,
+    )
+    tasks.getTasks.mockResolvedValue({
+      data: [{ payload: { documentId: pending.document.id } }],
+      total: 1,
+    })
+
+    const result = await service.organize({
+      items: items.filter(
+        (item) =>
+          item.documentId === editing.document.id ||
+          item.documentId === pending.document.id,
+      ),
+      discardChanges: true,
+    })
+
+    expect(result.skipped.map((item) => item.reason).sort()).toEqual([
+      'editing',
+      'publishing',
+    ])
+    expect(await drafts.findBranchById(editing.branch.id)).not.toBeNull()
+    expect(await drafts.findBranchById(pending.branch.id)).not.toBeNull()
+  })
+
+  it('does not delete when the editor presence check is unavailable', async () => {
+    const target = await seedOrganizerPage('Organizer presence failure')
+    const items = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer presence failure',
+    })
+    presence.roomHasMembers.mockRejectedValue(new Error('Redis unavailable'))
+
+    const result = await service.organize({ items, discardChanges: true })
+
+    expect(result.organized).toBe(0)
+    expect(result.skipped[0].reason).toBe('failed')
+    expect(await drafts.findBranchById(target.branch.id)).not.toBeNull()
+  })
+
+  it('checks publishing tasks beyond the first queue page', async () => {
+    const target = await seedOrganizerPage('Organizer deep queue')
+    const items = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer deep queue',
+    })
+    tasks.getTasks.mockImplementation(async ({ page }) => ({
+      total: 201,
+      data:
+        page === 1
+          ? Array.from({ length: 200 }, () => ({
+              payload: { documentId: 'other' },
+            }))
+          : [{ payload: { documentId: target.document.id } }],
+    }))
+
+    const result = await service.organize({ items, discardChanges: true })
+
+    expect(result.skipped[0]?.reason).toBe('publishing')
+    expect(await drafts.findBranchById(target.branch.id)).not.toBeNull()
+  })
+
+  it('keeps fresh collaboration fields that have not moved the draft head', async () => {
+    const target = await seedOrganizerPage('Organizer live fields')
+    await drafts.saveBranch(
+      target.branch.id,
+      target.branch.headRevisionId,
+      lexical('Fields', ['hello']),
+    )
+    await crdtService.workingCopy(target.branch.id)
+    await age(target.document.id, 120)
+    const items = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer live fields',
+    })
+    expect(items).toHaveLength(1)
+    const head = (await drafts.findBranchById(target.branch.id))!.headRevisionId
+    await crdtService.updateFields(target.branch.id, {
+      meta: { summary: 'new work' },
+    })
+
+    const result = await service.organize({ items, discardChanges: true })
+
+    expect(result.skipped[0]?.reason).toBe('changed')
+    expect(
+      (await drafts.findBranchById(target.branch.id))?.headRevisionId,
+    ).toBe(head)
+    expect((await crdt.findDoc(target.document.id))?.fields?.meta).toEqual({
+      summary: 'new work',
+    })
+  })
+
+  it('removes collaboration data and redirects a following share to the published content', async () => {
+    const target = await seedOrganizerPage('Organizer collaboration')
+    await drafts.saveBranch(
+      target.branch.id,
+      target.branch.headRevisionId,
+      lexical('Collab', ['hello']),
+    )
+    await crdtService.workingCopy(target.branch.id)
+    await drafts.upsertShare(target.document.id, 'organizer-follow', {
+      mode: 'follow',
+      draftId: target.branch.id,
+    })
+    await age(target.document.id, 120)
+    const [item] = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer collaboration',
+    })
+
+    const result = await service.organize({
+      items: [item],
+      discardChanges: true,
+    })
+
+    expect(result.freed.bytes).toBe(item.bytes)
+    expect(result.freed.crdtDocs).toBe(1)
+    expect(await crdt.findDoc(target.document.id)).toBeNull()
+    expect(await crdt.findUpdates(target.document.id)).toEqual([])
+    expect(await drafts.findShareByToken('organizer-follow')).toMatchObject({
+      mode: 'pinned',
+      revisionId: target.published.id,
+    })
+  })
+
+  it('previews every matching article beyond the draft list page limit', async () => {
+    const targets = []
+    for (let i = 0; i < 51; i++)
+      targets.push(await seedOrganizerPage(`Organizer cross-page ${i}`))
+
+    const preview = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer cross-page',
+    })
+
+    expect(preview.map((item) => item.documentId).sort()).toEqual(
+      targets.map((item) => item.document.id).sort(),
+    )
+  })
+
+  it('waits for an in-flight field edit before deciding whether to discard it', async () => {
+    const target = await seedOrganizerPage('Organizer concurrent fields')
+    await drafts.saveBranch(
+      target.branch.id,
+      target.branch.headRevisionId,
+      lexical('Concurrent', ['hello']),
+    )
+    await crdtService.workingCopy(target.branch.id)
+    await age(target.document.id, 120)
+    const items = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer concurrent fields',
+    })
+    let entered: () => void
+    let resume: () => void
+    const ready = new Promise<void>((resolve) => {
+      entered = resolve
+    })
+    const paused = new Promise<void>((resolve) => {
+      resume = resolve
+    })
+    const mergeFields = crdt.mergeFields.bind(crdt)
+    const merge = vi
+      .spyOn(crdt, 'mergeFields')
+      .mockImplementation(async (...args) => {
+        entered!()
+        await paused
+        return mergeFields(...args)
+      })
+    const saving = crdtService.updateFields(target.branch.id, {
+      meta: { summary: 'in-flight work' },
+    })
+    await ready
+    const organizing = service.organize({ items, discardChanges: true })
+    try {
+      await vi.waitFor(
+        async () => {
+          const waiting = await db.execute<{ count: string }>(
+            sql`select count(*) as count from pg_stat_activity where datname = current_database() and wait_event = 'advisory'`,
+          )
+          expect(Number(waiting.rows[0].count)).toBeGreaterThan(0)
+        },
+        { timeout: 1500, interval: 20 },
+      )
+    } finally {
+      resume!()
+      merge.mockRestore()
+      await saving
+      await organizing
+    }
+    expect((await organizing).skipped[0]?.reason).toBe('changed')
+    expect((await crdt.findDoc(target.document.id))?.fields?.meta).toEqual({
+      summary: 'in-flight work',
+    })
+  })
+
+  it('excludes withdrawn and scheduled notes even when they have a published revision', async () => {
+    for (const [label, published, future] of [
+      ['withdrawn', false, false],
+      ['scheduled', true, true],
+    ] as const) {
+      const target = await seedOrganizerPage(
+        `Organizer note scope ${label}`,
+        true,
+      )
+      await db.execute(
+        sql`insert into notes (id, title, content_format, is_published, public_at) values (${target.refId}, ${label}, 'markdown', ${published}, ${future ? new Date(Date.now() + DAY) : null})`,
+      )
+      await db.execute(
+        sql`update content_documents set ref_type = 'note' where id = ${target.document.id}`,
+      )
+    }
+
+    const preview = await service.organizerPreview({
+      olderThanDays: 90,
+      search: 'Organizer note scope',
+    })
+
+    expect(preview).toEqual([])
   })
 })

@@ -255,8 +255,9 @@ export class DraftCrdtService {
     branchId: EntityId | string,
     patch: CrdtFieldsPatch,
   ): Promise<CrdtFields> {
-    const { document } = await this.open(branchId)
-    return this.crdt.mergeFields(document.id, patch)
+    return this.mutate(branchId, ({ document }) =>
+      this.crdt.mergeFields(document.id, patch),
+    )
   }
 
   async mergeDocumentFields(

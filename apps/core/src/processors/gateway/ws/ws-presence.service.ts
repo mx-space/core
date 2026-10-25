@@ -156,6 +156,11 @@ export class WsPresenceService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // Destructive operations must stop when presence cannot be checked.
+  async roomHasMembers(ns: WsNamespace, room: string): Promise<boolean> {
+    return (await this.redis.hlen(this.roomKey(ns, room))) > 0
+  }
+
   async connectionIds(ns: WsNamespace): Promise<string[]> {
     try {
       return await this.redis.hkeys(this.connsKey(ns))

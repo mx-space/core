@@ -168,6 +168,16 @@ export class DraftController {
     return draft
   }
 
+  @Get('/:id/preview')
+  @Auth()
+  async preview(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
+    const draft = await this.draftService.findById(params.id)
+    if (!draft) {
+      throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id: params.id })
+    }
+    return DraftViews.detail.parse(draft)
+  }
+
   @Get('/:id/revisions')
   @Auth()
   revisions(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {

@@ -181,7 +181,6 @@ export class DraftService {
     refId: string,
   ): Promise<VersionContext> {
     const document = await this.ensurePublishedDocument(refType, refId)
-    await this.crdtService.workingCopyOfDocument(document.id)
     return this.contextForDocument(document)
   }
 
@@ -341,9 +340,6 @@ export class DraftService {
   }
 
   async findById(id: string): Promise<DraftBranchView | null> {
-    if (await this.crdtService.usesCrdt(id)) {
-      return this.hydrate(await this.crdtService.workingCopy(id))
-    }
     const branch = await this.draftRepository.findBranchById(id)
     return branch ? this.hydrate(branch) : null
   }

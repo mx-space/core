@@ -56,6 +56,7 @@ export type CrdtFieldsPatch = {
 export interface CrdtDocRow {
   createdAt: Date
   documentId: EntityId
+  editedAt: Date | null
   fields: CrdtFields | null
   snapshot: Uint8Array
   snapshotVersion: Uint8Array

@@ -1,11 +1,11 @@
-import { Plus, RefreshCw } from 'lucide-react'
+import { ListFilter, Plus, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { DropdownMenu } from '~/ui/overlay/dropdown-menu'
-import { Button } from '~/ui/primitives/button'
+import { Button, ButtonLink } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
 export function DraftListHeader(props: {
@@ -31,6 +31,10 @@ export function DraftListHeader(props: {
         </h2>
       </div>
       <div className="flex shrink-0 items-center gap-1">
+        <ButtonLink className="gap-1.5 px-2.5" to="/drafts/organize">
+          <ListFilter aria-hidden="true" className="size-3.5" />
+          {t('drafts.organizer.open')}
+        </ButtonLink>
         <DropdownMenu>
           <DropdownMenu.Trigger
             aria-label={t('drafts.newPost')}

@@ -12,9 +12,13 @@ import { DraftRefType } from '~/modules/draft/draft.enum'
 import { DraftRepository } from '~/modules/draft/draft.repository'
 import { DraftService } from '~/modules/draft/draft.service'
 import type { RevisionSnapshot } from '~/modules/draft/draft.types'
+import { DraftCleanupRepository } from '~/modules/draft/draft-cleanup.repository'
+import { DraftCleanupService } from '~/modules/draft/draft-cleanup.service'
 import { editDocAt } from '~/modules/draft/draft-crdt.doc'
 import { DraftCrdtRepository } from '~/modules/draft/draft-crdt.repository'
 import { DraftCrdtService } from '~/modules/draft/draft-crdt.service'
+import { DraftOrganizerRepository } from '~/modules/draft/draft-organizer.repository'
+import { DraftStorageRepository } from '~/modules/draft/draft-storage.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
 import type { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -80,6 +84,8 @@ describe('DraftService on the Loro path (real PG)', () => {
   let pool: Pool
   let database: Awaited<ReturnType<typeof createIsolatedPgDatabase>>
   let drafts: DraftRepository
+  let crdtRepository: DraftCrdtRepository
+  let storage: DraftStorageRepository
   let service: DraftService
   let refCounter = 7_100_000_000_000_000_000n
   const emit = vi.fn()
@@ -113,10 +119,22 @@ describe('DraftService on the Loro path (real PG)', () => {
       workerId: 46,
     }) as SnowflakeService
     drafts = new DraftRepository(db, snowflake)
+    crdtRepository = new DraftCrdtRepository(db, snowflake)
     const crdt = new DraftCrdtService(
       drafts,
-      new DraftCrdtRepository(db, snowflake),
+      crdtRepository,
       fileReferences as never,
+    )
+    storage = new DraftStorageRepository(db)
+    const cleanup = new DraftCleanupService(
+      drafts,
+      crdt,
+      new DraftCleanupRepository(db),
+      storage,
+      fileReferences as never,
+      { getTasks: async () => ({ data: [] }) } as never,
+      new DraftOrganizerRepository(db),
+      { roomHasMembers: async () => false } as never,
     )
     service = new DraftService(
       drafts,
@@ -124,8 +142,8 @@ describe('DraftService on the Loro path (real PG)', () => {
       {} as never,
       { emit } as never,
       crdt,
-      {} as never,
-      {} as never,
+      cleanup,
+      storage,
     )
   }, 120_000)
 
@@ -189,7 +207,7 @@ describe('DraftService on the Loro path (real PG)', () => {
     ).rejects.toMatchObject({ code: AppErrorCode.DRAFT_HEAD_CONFLICT })
   })
 
-  it('collapses a Lexical document to one branch when its context is read', async () => {
+  it('reads Lexical context without importing or retiring draft branches', async () => {
     const { document, published, refId } = await seed(lexical('Pub', ['a']))
     await drafts.createBranch(
       document.id,
@@ -198,10 +216,55 @@ describe('DraftService on the Loro path (real PG)', () => {
       false,
     )
 
+    const before = await storage.totals()
     const context = await service.getContext(DraftRefType.Post, refId)
 
-    expect(context.branches).toHaveLength(1)
-    expect(context.branches[0].headRevision.kind).toBe('import')
+    expect(context.branches).toHaveLength(2)
+    expect(await storage.totals()).toEqual(before)
+    expect(await crdtRepository.findDoc(document.id)).toBeNull()
+  })
+
+  it('does not recreate a deleted draft when its context is refreshed', async () => {
+    const { branch, document, published, refId } = await seed(
+      lexical('Pub', ['a']),
+    )
+    await service.findForEditing(branch.id)
+    await service.delete(branch.id)
+    const afterDelete = await storage.totals()
+
+    const context = await service.getContext(DraftRefType.Post, refId)
+
+    expect(context.branches).toEqual([])
+    expect(context.publishedRevision?.id).toBe(published.id)
+    expect(await crdtRepository.findDoc(document.id)).toBeNull()
+    expect(await storage.totals()).toEqual(afterDelete)
+  })
+
+  it('previews a Lexical draft without creating collaboration data or checkpoints', async () => {
+    const { branch, document } = await seed(lexical('Pub', ['a']))
+    const before = await storage.totals()
+
+    const view = await service.findById(branch.id)
+
+    expect(view?.headRevisionId).toBe(branch.headRevisionId)
+    expect(await crdtRepository.findDoc(document.id)).toBeNull()
+    expect(await storage.totals()).toEqual(before)
+  })
+
+  it('collapses a Lexical document to one branch when opened for editing', async () => {
+    const { branch, document, published } = await seed(lexical('Pub', ['a']))
+    await drafts.createBranch(
+      document.id,
+      published.id,
+      lexical('Other', ['o']),
+      false,
+    )
+
+    const view = await service.findForEditing(branch.id)
+
+    expect(await drafts.findBranchesByDocument(document.id)).toHaveLength(1)
+    expect(view?.headRevision.frontiers).not.toBeNull()
+    expect(await crdtRepository.findDoc(document.id)).not.toBeNull()
   })
 
   it('syncs binary updates and broadcasts the working copy', async () => {
@@ -232,7 +295,7 @@ describe('DraftService on the Loro path (real PG)', () => {
 
   it('merges live article edits into the working copy fields', async () => {
     const { branch, refId } = await seed(lexical('Pub', ['a']))
-    await service.findById(branch.id)
+    await service.findForEditing(branch.id)
 
     await service.mergeArticleFields(DraftRefType.Post, refId, {
       categoryId: 'cat-2',
@@ -258,7 +321,7 @@ describe('DraftService on the Loro path (real PG)', () => {
 
   it('opens a Lexical draft for editing at a fresh checkpoint', async () => {
     const { branch } = await seed(lexical('Pub', ['a']))
-    await service.findById(branch.id)
+    await service.findForEditing(branch.id)
     await service.updateFields(branch.id, { meta: { cover: 'late.png' } })
 
     const view = await service.findForEditing(branch.id)

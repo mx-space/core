@@ -4658,4 +4658,85 @@ export const enUS = {
   'settings.maintenance.draftCleanup.description':
     'Delete published drafts, old versions and idle collaboration data',
   'settings.maintenance.draftCleanup.action': 'Preview and clean up',
+  'drafts.organizer.open': 'Organize drafts',
+  'drafts.organizer.title': 'Organize drafts',
+  'drafts.organizer.description':
+    'Discard drafts and old history for articles you no longer plan to edit.',
+  'drafts.organizer.published': 'Published content',
+  'drafts.organizer.ageFilter': 'Last edited',
+  'drafts.organizer.typeFilter': 'Content type',
+  'drafts.organizer.days': 'Unedited for {count} days',
+  'drafts.organizer.anyTime': 'Any time',
+  'drafts.organizer.includeChanges':
+    'Includes unpublished changes · Unpublished articles are excluded',
+  'drafts.organizer.search': 'Search article titles',
+  'drafts.organizer.oldest': 'Oldest edits first',
+  'drafts.organizer.matching': '{count} matching articles',
+  'drafts.organizer.selected': '{count} articles selected',
+  'drafts.organizer.allSelected': 'All {count} matching articles selected',
+  'drafts.organizer.selectAll': 'Select all {count} articles',
+  'drafts.organizer.clear': 'Clear selection',
+  'drafts.organizer.selectPage': 'Select all articles on this page',
+  'drafts.organizer.selectArticle': 'Select {title}',
+  'drafts.organizer.article': 'Article',
+  'drafts.organizer.history': 'Drafts and history',
+  'drafts.organizer.bytes': 'Reclaimable',
+  'drafts.organizer.lastEdited': 'Last edited',
+  'drafts.organizer.changed': 'Unpublished changes',
+  'drafts.organizer.inSync': 'Same as published',
+  'drafts.organizer.summary': 'Selected for organizing',
+  'drafts.organizer.estimated': 'Estimated space to reclaim',
+  'drafts.organizer.draftCount': '{count} drafts',
+  'drafts.organizer.revisionCount': '{count} historical versions',
+  'drafts.organizer.collab': 'Associated collaboration history is also removed',
+  'drafts.organizer.changedNotice': '{count} articles have unpublished changes',
+  'drafts.organizer.changedHint':
+    'These changes will also be discarded. Review the selection before continuing.',
+  'drafts.organizer.kept': 'Published content and comments stay unchanged',
+  'drafts.organizer.keptShared':
+    'Versions referenced by publication records or shared links are kept.',
+  'drafts.organizer.review': 'Review selection',
+  'drafts.organizer.nextHint': 'Review next; nothing is deleted yet',
+  'drafts.organizer.skipHint':
+    'Articles being edited, being published, or changed since the preview are skipped. Actual reclaimed space is reported after completion.',
+  'drafts.organizer.loadFailed': 'Could not load the preview',
+  'drafts.organizer.empty': 'No matching drafts',
+  'drafts.organizer.emptyHint':
+    'Try a different age, content type, or search term.',
+  'drafts.organizer.confirmTitle': 'Discard drafts for {count} articles?',
+  'drafts.organizer.confirmIntro':
+    'Keep published content and discard all drafts and reclaimable history for these articles.',
+  'drafts.organizer.selection': '{count} articles · {drafts} drafts',
+  'drafts.organizer.removed': 'Will be discarded',
+  'drafts.organizer.irreversible':
+    'These changes differ from the published content and cannot be restored after organizing.',
+  'drafts.organizer.ack':
+    'I no longer need the unpublished changes in these {count} articles',
+  'drafts.organizer.back': 'Back to review',
+  'drafts.organizer.discard': 'Discard {count} drafts',
+  'drafts.organizer.progress': 'Organizing {count}/{total}',
+  'drafts.organizer.mobileSelection':
+    '{count} selected · {changed} with changes',
+  'drafts.organizer.doneTitle': 'Drafts organized.',
+  'drafts.organizer.interrupted': 'Organizing interrupted',
+  'drafts.organizer.doneDescription':
+    '{count} articles organized; {skipped} skipped.',
+  'drafts.organizer.actualBytes': 'Space reclaimed',
+  'drafts.organizer.removedDrafts': 'Drafts discarded',
+  'drafts.organizer.removedRevisions': 'Versions removed',
+  'drafts.organizer.skippedTitle': 'Drafts for {count} articles were kept',
+  'drafts.organizer.skippedHint':
+    'These drafts were not discarded. Review them later before organizing again.',
+  'drafts.organizer.reason.changed': 'Changed since the preview',
+  'drafts.organizer.reason.editing': 'Being edited',
+  'drafts.organizer.reason.publishing': 'Publication queued or running',
+  'drafts.organizer.reason.unconfirmed':
+    'Discarding changes was not acknowledged',
+  'drafts.organizer.reason.failed': 'Could not complete; try again later',
+  'drafts.organizer.unverifiedTitle':
+    '{count} articles are unfinished or have unconfirmed results',
+  'drafts.organizer.unverifiedHint':
+    'The connection was interrupted. Some operations may have completed. Refresh and check the remaining drafts before continuing.',
+  'drafts.organizer.reviewRemaining': 'Review remaining drafts',
+  'drafts.organizer.backDrafts': 'Back to drafts',
 } satisfies Record<TranslationKey, string>

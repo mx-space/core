@@ -15,6 +15,9 @@ import type {
   DraftShare,
   DraftStorageSummary,
   FreedTotals,
+  OrganizerArticle,
+  OrganizerResult,
+  OrganizerRunResult,
   RevisionComparison,
   TypeSpecificData,
   VersionContext,
@@ -83,6 +86,10 @@ export function getDraftById(id: string) {
   return getJson<DraftModel>(`/drafts/${id}`)
 }
 
+export function getDraftPreview(id: string) {
+  return getJson<DraftModel>(`/drafts/${id}/preview`)
+}
+
 export function getDraftContext(refType: DraftRefType, refId: string) {
   return getJson<VersionContext>(`/drafts/context/${refType}/${refId}`)
 }
@@ -143,6 +150,56 @@ export function batchDeleteDrafts(ids: string[]) {
 
 export function getDraftStorage(refType?: DraftRefType) {
   return getJson<DraftStorageSummary>('/drafts/storage', { refType })
+}
+
+export function getOrganizerPreview(params: {
+  olderThanDays: number
+  refType?: DraftRefType
+  search?: string
+}) {
+  return getJson<OrganizerArticle[]>('/drafts/organize/preview', params)
+}
+
+export async function runDraftOrganizer(
+  articles: OrganizerArticle[],
+  discardChanges: boolean,
+  onProgress?: (processed: number) => void,
+): Promise<OrganizerRunResult> {
+  const result: OrganizerRunResult = {
+    freed: { bytes: 0, drafts: 0, revisions: 0, crdtDocs: 0 },
+    organized: 0,
+    skipped: [],
+    unverified: [],
+  }
+  for (let offset = 0; offset < articles.length; offset += 100) {
+    const batch = articles.slice(offset, offset + 100)
+    let next: OrganizerResult
+    try {
+      next = await postJson<
+        OrganizerResult,
+        {
+          discardChanges: boolean
+          items: { documentId: string; version: string }[]
+        }
+      >('/drafts/organize', {
+        discardChanges,
+        items: batch.map(({ documentId, version }) => ({
+          documentId,
+          version,
+        })),
+      })
+    } catch {
+      // A lost response can follow a committed deletion; never claim these drafts were retained.
+      result.unverified = articles.slice(offset)
+      break
+    }
+    result.organized += next.organized
+    result.skipped.push(...next.skipped)
+    for (const key of ['bytes', 'drafts', 'revisions', 'crdtDocs'] as const)
+      result.freed[key] += next.freed[key]
+    onProgress?.(offset + batch.length)
+  }
+  return result
 }
 
 export function getCleanupPreview(olderThanDays: number) {

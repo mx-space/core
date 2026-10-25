@@ -19,6 +19,7 @@ import { DraftCleanupRepository } from './draft-cleanup.repository'
 import { DraftCleanupService } from './draft-cleanup.service'
 import { DraftCrdtRepository } from './draft-crdt.repository'
 import { DraftCrdtService } from './draft-crdt.service'
+import { DraftOrganizerRepository } from './draft-organizer.repository'
 import { DraftStorageRepository } from './draft-storage.repository'
 
 @Module({
@@ -29,6 +30,7 @@ import { DraftStorageRepository } from './draft-storage.repository'
     DraftCrdtService,
     DraftCleanupRepository,
     DraftStorageRepository,
+    DraftOrganizerRepository,
     DraftCleanupService,
     DraftService,
     CollabRepository,

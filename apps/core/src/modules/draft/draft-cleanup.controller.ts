@@ -11,6 +11,12 @@ import {
   CleanupPreviewQuerySchema,
   type CleanupRunDto,
   CleanupRunSchema,
+  type OrganizeDraftsDto,
+  OrganizeDraftsSchema,
+  type OrganizerPreviewQueryDto,
+  OrganizerPreviewQuerySchema,
+  OrganizerPreviewView,
+  OrganizerResultView,
   type StorageQueryDto,
   StorageQuerySchema,
 } from './draft-cleanup.schema'
@@ -19,6 +25,25 @@ import { DraftCleanupService } from './draft-cleanup.service'
 @ApiController('drafts')
 export class DraftCleanupController {
   constructor(private readonly cleanup: DraftCleanupService) {}
+
+  @Get('/organize/preview')
+  @Auth()
+  async organizerPreview(
+    @Query({ schema: OrganizerPreviewQuerySchema })
+    query: OrganizerPreviewQueryDto,
+  ) {
+    return OrganizerPreviewView.parse(
+      await this.cleanup.organizerPreview(query),
+    )
+  }
+
+  @Post('/organize')
+  @Auth()
+  async organize(
+    @Body({ schema: OrganizeDraftsSchema }) body: OrganizeDraftsDto,
+  ) {
+    return OrganizerResultView.parse(await this.cleanup.organize(body))
+  }
 
   @Get('/storage')
   @Auth()

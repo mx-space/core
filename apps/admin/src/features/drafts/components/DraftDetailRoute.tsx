@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 
-import { getDraftById } from '~/api/drafts'
+import { getDraftPreview } from '~/api/drafts'
 import { findInListCache } from '~/api/list-cache'
 import { useDocumentTitle } from '~/hooks/use-document-title'
 import type { DraftCard } from '~/models/draft'
@@ -21,8 +21,8 @@ export function DraftDetailRoute() {
 
   const draftQuery = useQuery({
     enabled: Boolean(id),
-    queryFn: () => getDraftById(id!),
-    queryKey: adminQueryKeys.drafts.detail(id ?? ''),
+    queryFn: () => getDraftPreview(id!),
+    queryKey: [...adminQueryKeys.drafts.detail(id ?? ''), 'preview'],
   })
 
   useDocumentTitle(draftQuery.data?.headRevision.title)

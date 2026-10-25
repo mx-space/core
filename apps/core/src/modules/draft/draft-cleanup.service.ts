@@ -4,11 +4,12 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { FileReferenceType } from '~/modules/file/file-reference.enum'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 import { CONTENT_PUBLISH_TASK } from '~/modules/publish/publish.types'
+import { WsPresenceService } from '~/processors/gateway/ws/ws-presence.service'
 import { TaskQueueService } from '~/processors/task-queue/task-queue.service'
 import { TaskStatus } from '~/processors/task-queue/task-queue.types'
 import type { EntityId } from '~/shared/id/entity-id'
 
-import type { DraftRefType } from './draft.enum'
+import { CLEANUP_CATEGORIES, type DraftRefType } from './draft.enum'
 import { DraftRepository } from './draft.repository'
 import type { DraftBranchRow, DraftRelation } from './draft.types'
 import {
@@ -25,13 +26,17 @@ import {
 } from './draft-crdt.doc'
 import { DraftCrdtService } from './draft-crdt.service'
 import {
+  DraftOrganizerRepository,
+  type OrganizerFilter,
+} from './draft-organizer.repository'
+import {
   type DocumentCandidate,
   type DraftCandidate,
   DraftStorageRepository,
   type StorageTotals,
 } from './draft-storage.repository'
 
-export const CLEANUP_CATEGORIES = ['A', 'B', 'C', 'D'] as const
+export { CLEANUP_CATEGORIES } from './draft.enum'
 export type CleanupCategory = (typeof CLEANUP_CATEGORIES)[number]
 
 export interface FreedTotals {
@@ -57,6 +62,18 @@ export interface CleanupInput {
 export interface CleanupResult {
   freed: FreedTotals
   skipped: string[]
+}
+
+export type OrganizerSkipReason =
+  'changed' | 'editing' | 'publishing' | 'unconfirmed' | 'failed'
+export interface OrganizerInput {
+  discardChanges: boolean
+  items: { documentId: string; version: string }[]
+}
+export interface OrganizerResult {
+  freed: FreedTotals
+  organized: number
+  skipped: { documentId: string; reason: OrganizerSkipReason; title: string }[]
 }
 
 export interface StorageSummary extends StorageTotals {
@@ -117,7 +134,106 @@ export class DraftCleanupService {
     private readonly storageRepository: DraftStorageRepository,
     private readonly fileReferences: FileReferenceService,
     private readonly tasks: TaskQueueService,
+    private readonly organizer: DraftOrganizerRepository,
+    private readonly presence: WsPresenceService,
   ) {}
+
+  async organizerPreview(filter: OrganizerFilter) {
+    return (await this.organizer.candidates(filter)).map(
+      ({ draftIds, publishedRevisionId, ...item }) => item,
+    )
+  }
+
+  async organize(input: OrganizerInput): Promise<OrganizerResult> {
+    const result: OrganizerResult = {
+      freed: emptyFreed(),
+      organized: 0,
+      skipped: [],
+    }
+    const pending = await this.publishingDocuments()
+    for (const { documentId, version } of input.items) {
+      let title = ''
+      let reason: OrganizerSkipReason = 'changed'
+      try {
+        const removed = await this.cleanup.withDocument(
+          documentId,
+          async (tx) => {
+            await this.organizer.lockState(tx, documentId)
+            const [current] = await this.organizer.candidates(
+              { olderThanDays: 0 },
+              tx,
+              documentId,
+            )
+            title = current?.title ?? ''
+            if (!current || current.version !== version) return null
+            if (pending.has(documentId)) {
+              reason = 'publishing'
+              return null
+            }
+            const occupied = await Promise.all(
+              ['admin', 'web'].map((ns: 'admin' | 'web') =>
+                this.presence.roomHasMembers(ns, `collab:${documentId}`),
+              ),
+            )
+            if (occupied.some(Boolean)) {
+              reason = 'editing'
+              return null
+            }
+            if (current.hasChanges && !input.discardChanges) {
+              reason = 'unconfirmed'
+              return null
+            }
+            await this.cleanup.bumpEpoch(tx, documentId)
+            for (const id of current.draftIds) {
+              await this.cleanup.releaseShare(
+                tx,
+                documentId,
+                id,
+                current.publishedRevisionId as EntityId,
+              )
+              await this.cleanup.deleteDraftRow(tx, id)
+            }
+            const crdt = await this.cleanup.deleteCrdt(tx, documentId)
+            const revisions = await this.cleanup.pruneRevisions(tx, documentId)
+            return {
+              draftIds: current.draftIds,
+              freed: {
+                bytes: crdt.bytes + revisions.bytes,
+                crdtDocs: crdt.count,
+                drafts: current.draftCount,
+                revisions: revisions.count,
+              },
+            }
+          },
+        )
+        if (!removed) {
+          result.skipped.push({ documentId, reason, title })
+          continue
+        }
+        addFreed(result.freed, removed.freed)
+        result.organized++
+        this.crdtService.announceReset(documentId, 'deleted')
+        for (const id of removed.draftIds) {
+          try {
+            await this.fileReferences.removeReferencesForDocument(
+              id,
+              FileReferenceType.Draft,
+            )
+          } catch (error) {
+            this.logger.warn(
+              `Removing file references for draft ${id} failed: ${(error as Error).message}`,
+            )
+          }
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Organizing document ${documentId} failed: ${(error as Error).message}`,
+        )
+        result.skipped.push({ documentId, reason: 'failed', title })
+      }
+    }
+    return result
+  }
 
   async deleteDraft(id: EntityId | string): Promise<FreedTotals> {
     const branch = await this.branchOrThrow(id)
@@ -472,18 +588,20 @@ export class DraftCleanupService {
   }
 
   private async publishingDocuments(): Promise<Set<string>> {
-    const { data } = await this.tasks.getTasks({
-      page: 1,
-      size: 200,
-      status: [TaskStatus.Pending, TaskStatus.Running],
-      type: CONTENT_PUBLISH_TASK,
-    })
-    return new Set(
-      data.flatMap((task) => {
+    const documents = new Set<string>()
+    for (let page = 1; ; page++) {
+      const { data, total } = await this.tasks.getTasks({
+        page,
+        size: 200,
+        status: [TaskStatus.Pending, TaskStatus.Running],
+        type: CONTENT_PUBLISH_TASK,
+      })
+      for (const task of data) {
         const documentId = (task.payload as { documentId?: unknown })
           ?.documentId
-        return documentId ? [String(documentId)] : []
-      }),
-    )
+        if (documentId) documents.add(String(documentId))
+      }
+      if (!data.length || page * 200 >= total) return documents
+    }
   }
 }
