@@ -12,39 +12,21 @@ import {
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
-import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
 
-import {
-  DEFAULT_VIEW_MODE,
-  templateDescriptors,
-  templateQueryKey,
-  VIEW_MODE_STORAGE_KEY,
-  VIEW_MODES,
-} from '../constants'
+import { templateDescriptors } from '../constants'
 import { flattenPropsKeys } from '../lib/ejs-monaco'
 import { renderEjsTemplate } from '../lib/ejs-render'
 import {
   mergeFallbackProps,
   templateFallbackProps,
 } from '../lib/fallback-props'
-import type { TemplateType, TemplateViewMode } from '../types/templates'
+import type { TemplateType } from '../types/templates'
 import { getErrorMessage } from '../utils/errors'
-import { TemplateDetailPane } from './TemplateDetailPane'
-import { TemplateListPane } from './TemplateListPane'
+import { TemplateDetailRoute } from './TemplateDetailRoute'
 import { TemplatesRouteContext } from './templates-route-context'
 
 function isTemplateType(value: unknown): value is TemplateType {
   return value === 'guest' || value === 'owner' || value === 'newsletter'
-}
-
-function isViewMode(value: unknown): value is TemplateViewMode {
-  return VIEW_MODES.includes(value as TemplateViewMode)
-}
-
-function readInitialViewMode(): TemplateViewMode {
-  if (typeof window === 'undefined') return DEFAULT_VIEW_MODE
-  const stored = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY)
-  return isViewMode(stored) ? stored : DEFAULT_VIEW_MODE
 }
 
 export function TemplateRouteViewContent() {
@@ -63,13 +45,6 @@ export function TemplateRouteViewContent() {
   const [propsValue, setPropsValue] = useState<unknown>({})
   const [previewHtml, setPreviewHtml] = useState('')
   const [previewError, setPreviewError] = useState('')
-  const [viewMode, setViewMode] =
-    useState<TemplateViewMode>(readInitialViewMode)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode)
-  }, [viewMode])
 
   const templateQuery = useQuery({
     queryFn: () => getEmailTemplate(type),
@@ -185,10 +160,10 @@ export function TemplateRouteViewContent() {
       loading: templateQuery.isLoading,
       onChangeProps: setPropsValue,
       onChangeSource: setSource,
-      onChangeView: setViewMode,
       onRefresh: () => void templateQuery.refetch(),
       onReset: () => void requestReset(),
       onSave: () => saveMutation.mutate(),
+      onSelect: handleSelect,
       onTestSmtp: () => testEmailMutation.mutate(),
       previewError,
       previewHtml,
@@ -200,10 +175,10 @@ export function TemplateRouteViewContent() {
       source,
       testing: testEmailMutation.isPending,
       type,
-      viewMode,
     }),
     [
       defaultProps,
+      handleSelect,
       isDirty,
       previewError,
       previewHtml,
@@ -211,55 +186,17 @@ export function TemplateRouteViewContent() {
       propsValue,
       requestReset,
       resetMutation.isPending,
-      saveMutation,
       saveMutation.isPending,
       source,
       templateQuery,
-      testEmailMutation,
+      testEmailMutation.isPending,
       type,
-      viewMode,
     ],
   )
 
   return (
     <TemplatesRouteContext.Provider value={ctxValue}>
-      <MasterDetailShell
-        defaultSize={220}
-        emptyDetail={
-          <TemplateDetailPane
-            defaultProps={defaultProps}
-            dirty={isDirty}
-            loading={templateQuery.isLoading}
-            onChangeProps={setPropsValue}
-            onChangeSource={setSource}
-            onChangeView={setViewMode}
-            onRefresh={() => void templateQuery.refetch()}
-            onReset={() => void requestReset()}
-            onSave={() => saveMutation.mutate()}
-            onTestSmtp={() => testEmailMutation.mutate()}
-            previewError={previewError}
-            previewHtml={previewHtml}
-            propsKeys={propsKeys}
-            propsValue={propsValue}
-            refreshing={templateQuery.isFetching && !templateQuery.isLoading}
-            resetting={resetMutation.isPending}
-            saving={saveMutation.isPending}
-            source={source}
-            testing={testEmailMutation.isPending}
-            type={type}
-            viewMode={viewMode}
-          />
-        }
-        list={
-          <TemplateListPane
-            dirtyType={isDirty ? type : null}
-            onSelect={handleSelect}
-            selected={type}
-          />
-        }
-        maxSize={320}
-        minSize={180}
-      />
+      <TemplateDetailRoute />
     </TemplatesRouteContext.Provider>
   )
 }

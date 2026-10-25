@@ -1,36 +1,23 @@
-import { useDocumentTitle } from '~/hooks/use-document-title'
+import { useMemo } from 'react'
 
+import { useDocumentTitle } from '~/hooks/use-document-title'
+import { useI18n } from '~/i18n'
+
+import { templateDescriptors } from '../constants'
 import { TemplateDetailPane } from './TemplateDetailPane'
 import { useTemplatesRouteContext } from './templates-route-context'
 
 export function TemplateDetailRoute() {
   const ctx = useTemplatesRouteContext()
-  useDocumentTitle(ctx.type)
-  return (
-    <TemplateDetailPane
-      defaultProps={ctx.defaultProps}
-      dirty={ctx.dirty}
-      loading={ctx.loading}
-      onChangeProps={ctx.onChangeProps}
-      onChangeSource={ctx.onChangeSource}
-      onChangeView={ctx.onChangeView}
-      onRefresh={ctx.onRefresh}
-      onReset={ctx.onReset}
-      onSave={ctx.onSave}
-      onTestSmtp={ctx.onTestSmtp}
-      previewError={ctx.previewError}
-      previewHtml={ctx.previewHtml}
-      propsKeys={ctx.propsKeys}
-      propsValue={ctx.propsValue}
-      refreshing={ctx.refreshing}
-      resetting={ctx.resetting}
-      saving={ctx.saving}
-      source={ctx.source}
-      testing={ctx.testing}
-      type={ctx.type}
-      viewMode={ctx.viewMode}
-    />
+  const { t } = useI18n()
+  const labelKey = useMemo(
+    () =>
+      templateDescriptors.find((entry) => entry.value === ctx.type)?.labelKey ??
+      templateDescriptors[0].labelKey,
+    [ctx.type],
   )
+  useDocumentTitle(t(labelKey))
+  return <TemplateDetailPane />
 }
 
 export default TemplateDetailRoute

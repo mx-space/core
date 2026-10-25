@@ -3288,6 +3288,8 @@ export const zhCN = {
   'subscribe.toggle.success': '订阅设置已更新',
 
   'templates.action.testSmtp': '发测试邮件',
+  'templates.preview.fit': '适配 {percent}%',
+  'templates.preview.fitHint': '邮件按面板宽度等比缩放',
   'templates.preview.title': '实时预览',
   'templates.previewFailed': '渲染失败',
   'templates.props.button': '示例 Props',
@@ -3305,6 +3307,8 @@ export const zhCN = {
   'templates.saveFailed': '保存失败',
   'templates.saveSuccess': '模板已保存',
   'templates.saved': '已保存',
+  'templates.split.aria': '拖动调整编辑区与预览的宽度',
+  'templates.switcher.aria': '切换邮件模板',
   'templates.testSmtp.failed': '测试邮件发送失败',
   'templates.testSmtp.success': '测试邮件已发至博主邮箱',
   'templates.title': '模板',
@@ -3318,7 +3322,6 @@ export const zhCN = {
   'templates.view.aria': '编辑器视图模式',
   'templates.view.code': '代码',
   'templates.view.preview': '预览',
-  'templates.view.split': '分屏',
 
   'time.daysAgo': '{count} 天前',
   'time.hoursAgo': '{count} 小时前',

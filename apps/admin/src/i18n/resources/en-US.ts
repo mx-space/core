@@ -3465,6 +3465,8 @@ export const enUS = {
   'subscribe.toggle.success': 'Subscription settings updated',
 
   'templates.action.testSmtp': 'Test SMTP',
+  'templates.preview.fit': 'Fit {percent}%',
+  'templates.preview.fitHint': 'The email scales down to fit the pane',
   'templates.preview.title': 'Live preview',
   'templates.previewFailed': 'Render failed',
   'templates.props.button': 'Sample props',
@@ -3482,6 +3484,8 @@ export const enUS = {
   'templates.saveFailed': 'Save failed',
   'templates.saveSuccess': 'Template saved',
   'templates.saved': 'Saved',
+  'templates.split.aria': 'Resize the editor and preview',
+  'templates.switcher.aria': 'Switch email template',
   'templates.testSmtp.failed': 'Test email failed',
   'templates.testSmtp.success': 'Test email sent to owner',
   'templates.title': 'Templates',
@@ -3495,7 +3499,6 @@ export const enUS = {
   'templates.view.aria': 'Editor view mode',
   'templates.view.code': 'Code',
   'templates.view.preview': 'Preview',
-  'templates.view.split': 'Split',
 
   'time.daysAgo': '{count}d ago',
   'time.hoursAgo': '{count}h ago',

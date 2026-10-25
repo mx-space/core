@@ -1,95 +1,77 @@
 import { Loader2, MailCheck, RefreshCw, RotateCcw, Save } from 'lucide-react'
-import { useMemo } from 'react'
+import { useState } from 'react'
 
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
+import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { cn } from '~/utils/cn'
 
-import { templateDescriptors } from '../constants'
-import type { TemplateType, TemplateViewMode } from '../types/templates'
+import type { TemplatePaneMode } from '../types/templates'
 import { TemplateCodeEditor } from './TemplateCodeEditor'
 import { TemplatePreview } from './TemplatePreview'
 import { TemplatePropsPopover } from './TemplatePropsPopover'
+import { useTemplatesRouteContext } from './templates-route-context'
 import { TemplateSkeleton } from './TemplateSkeleton'
-import { TemplateViewToggle } from './TemplateViewToggle'
+import { TemplateSplitView } from './TemplateSplitView'
+import { TemplateSwitcher } from './TemplateSwitcher'
 
-interface TemplateDetailPaneProps {
-  defaultProps: unknown
-  dirty: boolean
-  loading: boolean
-  onChangeSource: (value: string) => void
-  onChangeProps: (next: unknown) => void
-  onChangeView: (next: TemplateViewMode) => void
-  onRefresh: () => void
-  onReset: () => void
-  onSave: () => void
-  onTestSmtp: () => void
-  previewError: string
-  previewHtml: string
-  propsKeys: string[]
-  propsValue: unknown
-  refreshing: boolean
-  resetting: boolean
-  saving: boolean
-  source: string
-  testing: boolean
-  type: TemplateType
-  viewMode: TemplateViewMode
-}
-
-export function TemplateDetailPane(props: TemplateDetailPaneProps) {
+/**
+ * Single pane: template switcher + actions in the header, editor | preview
+ * below. The former master list column is gone — three fixed templates live in
+ * the switcher menu instead. Desktop always splits; below `lg` one pane shows
+ * at a time, chosen with a two-state control.
+ */
+export function TemplateDetailPane() {
+  const ctx = useTemplatesRouteContext()
   const { t } = useI18n()
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY)
-  const descriptor = useMemo(
-    () =>
-      templateDescriptors.find((entry) => entry.value === props.type) ??
-      templateDescriptors[0],
-    [props.type],
-  )
-  const Icon = descriptor.icon
-
-  const effectiveViewMode: TemplateViewMode = isDesktop
-    ? props.viewMode
-    : props.viewMode === 'split'
-      ? 'code'
-      : props.viewMode
+  const [compactMode, setCompactMode] = useState<TemplatePaneMode>('code')
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-surface-card">
       <header
         className={cn(
-          'flex shrink-0 items-center justify-between gap-3 border-b border-neutral-200 px-4 dark:border-neutral-800',
+          'flex shrink-0 items-center gap-3 border-b border-border px-4',
           APP_SHELL_HEADER_HEIGHT_CLASS,
         )}
       >
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <MobileHeaderAffordance />
-          <h2 className="inline-flex min-w-0 items-center gap-2 text-lg font-semibold">
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-            <span className="truncate">{t(descriptor.labelKey)}</span>
-          </h2>
-          <TemplateViewToggle
-            hideSplit={!isDesktop}
-            onChange={props.onChangeView}
-            value={effectiveViewMode}
+          <TemplateSwitcher
+            dirty={ctx.dirty}
+            onChange={ctx.onSelect}
+            type={ctx.type}
           />
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {isDesktop ? null : (
+            <SegmentedControl<TemplatePaneMode>
+              aria-label={t('templates.view.aria')}
+              className="mr-1"
+              onValueChange={setCompactMode}
+              options={[
+                { label: t('templates.view.code'), value: 'code' },
+                { label: t('templates.view.preview'), value: 'preview' },
+              ]}
+              value={compactMode}
+            />
+          )}
           <TemplatePropsPopover
-            defaultProps={props.defaultProps}
-            onChange={props.onChangeProps}
-            value={props.propsValue}
+            defaultProps={ctx.defaultProps}
+            onChange={ctx.onChangeProps}
+            value={ctx.propsValue}
           />
           <Button
-            disabled={props.testing}
-            onClick={props.onTestSmtp}
+            disabled={ctx.testing}
+            onClick={ctx.onTestSmtp}
             type="button"
             variant="subtle"
           >
-            {props.testing ? (
+            {ctx.testing ? (
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             ) : (
               <MailCheck aria-hidden="true" className="size-4" />
@@ -99,24 +81,24 @@ export function TemplateDetailPane(props: TemplateDetailPaneProps) {
             </span>
           </Button>
           <Button
-            disabled={props.refreshing}
-            onClick={props.onRefresh}
+            disabled={ctx.refreshing}
+            onClick={ctx.onRefresh}
             type="button"
             variant="subtle"
           >
             <RefreshCw
               aria-hidden="true"
-              className={cn('size-4', props.refreshing && 'animate-spin')}
+              className={cn('size-4', ctx.refreshing && 'animate-spin')}
             />
             <span className="hidden lg:inline">{t('common.refresh')}</span>
           </Button>
           <Button
-            disabled={props.resetting}
-            onClick={props.onReset}
+            disabled={ctx.resetting}
+            onClick={ctx.onReset}
             type="button"
             variant="subtle"
           >
-            {props.resetting ? (
+            {ctx.resetting ? (
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             ) : (
               <RotateCcw aria-hidden="true" className="size-4" />
@@ -124,96 +106,58 @@ export function TemplateDetailPane(props: TemplateDetailPaneProps) {
             <span className="hidden lg:inline">{t('templates.reset')}</span>
           </Button>
           <Button
-            disabled={props.saving || props.loading || !props.dirty}
-            onClick={props.onSave}
+            disabled={ctx.saving || ctx.loading || !ctx.dirty}
+            onClick={ctx.onSave}
             type="button"
           >
-            {props.saving ? (
+            {ctx.saving ? (
               <Loader2 aria-hidden="true" className="size-4 animate-spin" />
             ) : (
               <Save aria-hidden="true" className="size-4" />
             )}
             <span className="hidden lg:inline">
-              {props.dirty ? t('common.save') : t('templates.saved')}
+              {ctx.dirty ? t('common.save') : t('templates.saved')}
             </span>
           </Button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        {props.loading ? (
+        {ctx.loading ? (
           <div className="min-h-0 flex-1">
             <TemplateSkeleton />
           </div>
-        ) : (
-          <TemplateBody
-            error={props.previewError}
-            html={props.previewHtml}
-            onChangeSource={props.onChangeSource}
-            onSave={props.onSave}
-            propsKeys={props.propsKeys}
-            saving={props.saving}
-            source={props.source}
-            sourceDirty={props.dirty}
-            viewMode={effectiveViewMode}
+        ) : isDesktop ? (
+          <TemplateSplitView
+            dirty={ctx.dirty}
+            error={ctx.previewError}
+            html={ctx.previewHtml}
+            onChangeSource={ctx.onChangeSource}
+            onSave={ctx.onSave}
+            propsKeys={ctx.propsKeys}
+            saving={ctx.saving}
+            source={ctx.source}
           />
+        ) : (
+          <div className="min-h-0 flex-1">
+            {compactMode === 'code' ? (
+              <TemplateCodeEditor
+                dirty={ctx.dirty}
+                onChange={ctx.onChangeSource}
+                onSave={ctx.onSave}
+                propsKeys={ctx.propsKeys}
+                saving={ctx.saving}
+                value={ctx.source}
+              />
+            ) : (
+              <TemplatePreview
+                error={ctx.previewError}
+                html={ctx.previewHtml}
+              />
+            )}
+          </div>
         )}
       </div>
     </section>
-  )
-}
-
-interface TemplateBodyProps {
-  error: string
-  html: string
-  onChangeSource: (value: string) => void
-  onSave: () => void
-  propsKeys: string[]
-  saving: boolean
-  source: string
-  sourceDirty: boolean
-  viewMode: TemplateViewMode
-}
-
-function TemplateBody(props: TemplateBodyProps) {
-  if (props.viewMode === 'code') {
-    return (
-      <div className="min-h-0 flex-1">
-        <TemplateCodeEditor
-          dirty={props.sourceDirty}
-          onChange={props.onChangeSource}
-          onSave={props.onSave}
-          propsKeys={props.propsKeys}
-          saving={props.saving}
-          value={props.source}
-        />
-      </div>
-    )
-  }
-
-  if (props.viewMode === 'preview') {
-    return (
-      <div className="min-h-0 flex-1">
-        <TemplatePreview error={props.error} html={props.html} />
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid min-h-0 flex-1 grid-cols-2 overflow-hidden">
-      <div className="min-h-0 border-r border-neutral-200 dark:border-neutral-800">
-        <TemplateCodeEditor
-          dirty={props.sourceDirty}
-          onChange={props.onChangeSource}
-          onSave={props.onSave}
-          propsKeys={props.propsKeys}
-          saving={props.saving}
-          value={props.source}
-        />
-      </div>
-      <div className="min-h-0">
-        <TemplatePreview error={props.error} html={props.html} />
-      </div>
-    </div>
   )
 }

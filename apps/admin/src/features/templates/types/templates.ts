@@ -1,2 +1,4 @@
 export type TemplateType = 'guest' | 'newsletter' | 'owner'
-export type TemplateViewMode = 'split' | 'code' | 'preview'
+
+/** Compact (below `lg`) mode: only one of the two panes is visible at a time. */
+export type TemplatePaneMode = 'code' | 'preview'

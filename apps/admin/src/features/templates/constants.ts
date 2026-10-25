@@ -1,12 +1,24 @@
-import { Mail, MailOpen, Megaphone } from 'lucide-react'
-import type { TranslationKey } from '~/i18n/types'
-import { adminQueryKeys } from '~/query/keys'
 import type { LucideIcon } from 'lucide-react'
-import type { TemplateType, TemplateViewMode } from './types/templates'
+import { Mail, MailOpen, Megaphone } from 'lucide-react'
 
-export const templateQueryKey = adminQueryKeys.templates.root
+import type { TranslationKey } from '~/i18n/types'
 
-export const VIEW_MODE_STORAGE_KEY = 'templates.viewMode'
+import type { TemplateType } from './types/templates'
+
+/**
+ * Persisted split layout id (`useDefaultLayout` → localStorage).
+ * Versioned so a changed panel set starts from a clean default.
+ */
+export const TEMPLATE_SPLIT_STORAGE_ID = 'templates.split.v1'
+
+export const TEMPLATE_EDITOR_PANEL_ID = 'templates-editor-pane'
+export const TEMPLATE_PREVIEW_PANEL_ID = 'templates-preview-pane'
+
+/** Reset target for double-clicking the splitter. */
+export const TEMPLATE_SPLIT_DEFAULT = '50%'
+
+/** Below this the editor stops being usable; the preview copes by scaling. */
+export const TEMPLATE_PANE_MIN_SIZE = '26%'
 
 export interface TemplateDescriptor {
   value: TemplateType
@@ -35,7 +47,3 @@ export const templateDescriptors: TemplateDescriptor[] = [
     icon: Megaphone,
   },
 ]
-
-export const VIEW_MODES: TemplateViewMode[] = ['split', 'code', 'preview']
-
-export const DEFAULT_VIEW_MODE: TemplateViewMode = 'split'

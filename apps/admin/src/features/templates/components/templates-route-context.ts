@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-import type { TemplateType, TemplateViewMode } from '../types/templates'
+import type { TemplateType } from '../types/templates'
 
 export interface TemplatesRouteContextValue {
   defaultProps: unknown
@@ -8,10 +8,10 @@ export interface TemplatesRouteContextValue {
   loading: boolean
   onChangeProps: (next: unknown) => void
   onChangeSource: (value: string) => void
-  onChangeView: (next: TemplateViewMode) => void
   onRefresh: () => void
   onReset: () => void
   onSave: () => void
+  onSelect: (next: TemplateType) => void
   onTestSmtp: () => void
   previewError: string
   previewHtml: string
@@ -23,7 +23,6 @@ export interface TemplatesRouteContextValue {
   source: string
   testing: boolean
   type: TemplateType
-  viewMode: TemplateViewMode
 }
 
 export const TemplatesRouteContext =
