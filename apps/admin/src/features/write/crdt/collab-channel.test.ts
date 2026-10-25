@@ -11,7 +11,14 @@ const fakeSocket = (initial: CollabSocket['state'] = 'open') => {
   const requests: { event: string; payload: any }[] = []
   let reply: (event: string, payload: any) => Promise<any> = async (event) =>
     event === 'collab.join'
-      ? { data: { documentId: 'doc-1', update: b64([1, 2]) }, ok: true }
+      ? {
+          data: {
+            connectionId: 'conn-x',
+            documentId: 'doc-1',
+            update: b64([1, 2]),
+          },
+          ok: true,
+        }
       : { ok: true }
   const socket = {
     emit: (event: string, payload: unknown) => {
@@ -49,9 +56,11 @@ const setup = (socket: ReturnType<typeof fakeSocket> | null) => {
   const http = httpTransport()
   const onRemote = vi.fn()
   const onReconnect = vi.fn()
+  const onJoined = vi.fn()
   const channel = createCollabChannel({
     draftId: 'd1',
     http,
+    onJoined,
     onReconnect,
     onRemote,
     subscribeSocket: (next) => {
@@ -65,6 +74,7 @@ const setup = (socket: ReturnType<typeof fakeSocket> | null) => {
   return {
     channel,
     http,
+    onJoined,
     onReconnect,
     onRemote,
     swapSocket: (next: CollabSocket | null) => listener?.(next),
@@ -86,6 +96,50 @@ describe('createCollabChannel', () => {
     expect(http.pull).not.toHaveBeenCalled()
     expect(http.push).not.toHaveBeenCalled()
     expect(channel.live()).toBe(true)
+  })
+
+  it('reports the connection id the server gave it on join', async () => {
+    const { channel, onJoined } = setup(fakeSocket())
+
+    await channel.pull()
+
+    expect(onJoined).toHaveBeenCalledWith('conn-x')
+  })
+
+  it('routes presence and membership frames for the joined document', async () => {
+    const socket = fakeSocket()
+    const presence = vi.fn()
+    const joined = vi.fn()
+    const left = vi.fn()
+    const channel = createCollabChannel({
+      draftId: 'd1',
+      http: httpTransport(),
+      onPeerJoined: joined,
+      onPeerLeft: left,
+      onPresence: presence,
+      onRemote: () => undefined,
+      subscribeSocket: (next) => {
+        next(socket)
+        return () => undefined
+      },
+    })
+    await channel.pull()
+
+    socket.emit('collab.presence', { documentId: 'doc-1', state: b64([3]) })
+    socket.emit('collab.peer.joined', {
+      connectionId: 'c2',
+      documentId: 'doc-1',
+    })
+    socket.emit('collab.peer.left', { connectionId: 'c2', documentId: 'doc-1' })
+    channel.sendPresence(new Uint8Array([8]))
+
+    expect(presence).toHaveBeenCalledWith(new Uint8Array([3]))
+    expect(joined).toHaveBeenCalledWith('c2')
+    expect(left).toHaveBeenCalledWith('c2')
+    expect(socket.requests.at(-1)).toEqual({
+      event: 'collab.presence',
+      payload: { draftId: 'd1', state: b64([8]) },
+    })
   })
 
   it('sends the version it already has when re-joining', async () => {

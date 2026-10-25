@@ -65,7 +65,11 @@ describe('CollabRoomService', () => {
     const ack = await service.join(alice, { draftId: 'd1', since: b64([9]) })
 
     expect(ack).toEqual({
-      data: { documentId: 'doc-1', update: b64([1, 2, 3]) },
+      data: {
+        connectionId: 'conn-a',
+        documentId: 'doc-1',
+        update: b64([1, 2, 3]),
+      },
       ok: true,
     })
     expect(drafts.exportCrdtFor).toHaveBeenCalledWith('d1', new Uint8Array([9]))

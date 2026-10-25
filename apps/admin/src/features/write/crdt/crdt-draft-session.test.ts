@@ -4,6 +4,7 @@ import {
   $createTextNode,
   $getRoot,
   createEditor,
+  type ElementNode,
   type LexicalEditor,
 } from 'lexical'
 import { LoroDoc, VersionVector } from 'loro-crdt'
@@ -11,7 +12,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ApiRequestError } from '~/api/http'
 
-import { createCrdtDraftSession } from './crdt-draft-session'
+import {
+  type ChannelHooks,
+  createCrdtDraftSession,
+  type SessionChannel,
+} from './crdt-draft-session'
 import type { CrdtTransport } from './crdt-sync'
 
 const newEditor = () =>
@@ -263,5 +268,98 @@ describe('createCrdtDraftSession over a live channel', () => {
 
     expect(pull).toHaveBeenLastCalledWith(expect.any(Uint8Array))
     session.dispose()
+  })
+})
+
+describe('createCrdtDraftSession presence', () => {
+  const owner = { avatar: null, id: 'owner', name: 'Owner' }
+
+  const fakeRoom = (server: LoroDoc) => {
+    const members: { hooks: ChannelHooks; id: string }[] = []
+    let next = 0
+    const others = (id: string) => members.filter((member) => member.id !== id)
+    return (hooks: ChannelHooks): SessionChannel => {
+      const id = `conn-${++next}`
+      return {
+        dispose: () => {
+          members.splice(
+            members.findIndex((member) => member.id === id),
+            1,
+          )
+          for (const member of others(id)) member.hooks.onPeerLeft?.(id)
+        },
+        live: () => true,
+        pull: async (since) => {
+          if (!members.some((member) => member.id === id)) {
+            members.push({ hooks, id })
+            hooks.onJoined?.(id)
+            for (const member of others(id)) member.hooks.onPeerJoined?.(id)
+          }
+          return since
+            ? server.export({
+                from: VersionVector.decode(since),
+                mode: 'update',
+              })
+            : server.export({ mode: 'snapshot' })
+        },
+        push: async (bytes) => {
+          server.import(bytes)
+          for (const member of others(id)) member.hooks.onRemote(bytes)
+        },
+        sendPresence: (bytes) => {
+          for (const member of others(id)) member.hooks.onPresence?.(bytes)
+        },
+      }
+    }
+  }
+
+  const caretAt = (editor: LexicalEditor, block: number, offset: number) =>
+    editor.update(
+      () => {
+        const text = $getRoot()
+          .getChildAtIndex<ElementNode>(block)!
+          .getFirstDescendant()!
+        ;(text as ReturnType<typeof $createTextNode>).select(offset, offset)
+      },
+      { discrete: true },
+    )
+
+  const textKey = (editor: LexicalEditor, block: number) =>
+    editor
+      .getEditorState()
+      .read(() =>
+        $getRoot()
+          .getChildAtIndex<ElementNode>(block)!
+          .getFirstDescendant()!
+          .getKey(),
+      )
+
+  it('shows where the other member is typing, mapped into this editor', async () => {
+    const server = seededServer('T', 'p1', 'p2')
+    const room = fakeRoom(server)
+    const a = await createCrdtDraftSession({
+      channel: room,
+      presence: { user: () => owner },
+    })
+    const b = await createCrdtDraftSession({
+      channel: room,
+      presence: { user: () => owner },
+    })
+    const editorA = newEditor()
+    const editorB = newEditor()
+    a.bindEditor(editorA)
+    b.bindEditor(editorB)
+
+    caretAt(editorA, 1, 1)
+
+    await vi.waitFor(() => expect(b.peers()[0]?.focus).toBeTruthy())
+    expect(b.peers()).toHaveLength(1)
+    expect(b.resolveCaret(b.peers()[0].focus!)).toEqual({
+      key: textKey(editorB, 1),
+      offset: 1,
+    })
+    a.dispose()
+    expect(b.peers()).toHaveLength(0)
+    b.dispose()
   })
 })

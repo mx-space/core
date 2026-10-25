@@ -13,6 +13,7 @@ export interface CollabChannelOptions {
   draftId: string
   http: CrdtTransport
   maxFrameBytes?: number
+  onJoined?: (connectionId: string) => void
   onPeerJoined?: (connectionId: string) => void
   onPeerLeft?: (connectionId: string) => void
   onPresence?: (state: Uint8Array) => void
@@ -148,8 +149,13 @@ export function createCollabChannel(
         draftId,
         ...(since ? { since: encodeBase64(since) } : {}),
       })
-      const data = ack.data as { documentId: string; update: string }
+      const data = ack.data as {
+        connectionId: string
+        documentId: string
+        update: string
+      }
       documentId = data.documentId
+      options.onJoined?.(data.connectionId)
       return decodeBase64(data.update)
     },
     push: async (bytes) => {

@@ -77,7 +77,7 @@ import {
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { ApiRequestError } from '~/api/http'
 import { getNoteById } from '~/api/notes'
-import { getOption } from '~/api/options'
+import { getOption, getOwner } from '~/api/options'
 import { getPageById } from '~/api/pages'
 import { getPostById, getPosts } from '~/api/posts'
 import type { PublishAiResourceRequest, PublishTask } from '~/api/publish-jobs'
@@ -135,6 +135,7 @@ import { SkillPicker } from '~/features/write/components/SkillPicker'
 import { TimelinePanel } from '~/features/write/components/TimelinePanel'
 import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGenerationEntry'
 import { VersionTreePanel } from '~/features/write/components/VersionTreePanel'
+import type { PresenceUser } from '~/features/write/crdt/collab-presence'
 import { diffDraftFields } from '~/features/write/crdt/draft-fields'
 import { resyncRejectedDraft } from '~/features/write/crdt/resync-rejected'
 import { useCrdtAgentTurns } from '~/features/write/crdt/use-crdt-agent-turns'
@@ -199,6 +200,9 @@ import {
   buildMetaSystemMessages,
   buildMetaTools,
 } from '~/vendor/rich-editor/utils/meta-tools'
+
+import { PeerAvatars } from './collab/PeerAvatars'
+import { RemoteCarets } from './collab/RemoteCarets'
 
 type WriteKind = 'note' | 'page' | 'post'
 type ContentFormat = 'lexical' | 'markdown'
@@ -495,6 +499,20 @@ function useDraftSession(options: {
   const ackedFieldsRef = useRef<DraftFields | null>(null)
   const fieldsTimerRef = useRef<number | null>(null)
   const fieldsInFlightRef = useRef<Promise<void> | null>(null)
+  const ownerQuery = useQuery({
+    queryFn: getOwner,
+    queryKey: ['shell', 'owner'],
+    retry: false,
+  })
+  const owner = ownerQuery.data
+  const presenceUser = useMemo<PresenceUser>(
+    () => ({
+      avatar: owner?.avatar || owner?.image || null,
+      id: owner?.id ?? 'owner',
+      name: owner?.name || owner?.username || '',
+    }),
+    [owner],
+  )
   const crdt = useCrdtDraft({
     draftId,
     enabled: options.state.contentFormat === 'lexical',
@@ -517,6 +535,7 @@ function useDraftSession(options: {
       options.setState((previous) =>
         previous.title === title ? previous : { ...previous, title },
       ),
+    user: presenceUser,
   })
   const crdtRef = useRef(crdt)
   crdtRef.current = crdt
@@ -1013,6 +1032,7 @@ function useDraftSession(options: {
     acceptedDraft: () => acceptedDraftRef.current,
     acceptedFingerprint: () => acceptedFingerprintRef.current,
     flushCrdt,
+    presenceUser,
     checkpoint: async (kind: 'publish' | 'save') => {
       await flushCrdt()
       return createDraftCheckpoint(draftId, kind)
@@ -1845,6 +1865,12 @@ function WritePage(props: { kind: WriteKind }) {
     setPublishConfirmOpen(true)
   }
   const crdtActive = draftSession.crdt.active
+  const peerAvatars = crdtActive ? (
+    <PeerAvatars
+      peers={draftSession.crdt.peers}
+      selfId={draftSession.presenceUser.id}
+    />
+  ) : null
   const setCrdtTitle = draftSession.crdt.setTitle
   useEffect(() => {
     if (crdtActive) setCrdtTitle(state.title)
@@ -2307,6 +2333,7 @@ function WritePage(props: { kind: WriteKind }) {
           </div>
           {props.kind === 'page' ? (
             <div className="flex shrink-0 items-center gap-1.5">
+              {peerAvatars}
               {state.contentFormat === 'markdown' ? (
                 <WriteHeaderIconButton
                   onClick={() => setPageParseDialogOpen(true)}
@@ -2370,6 +2397,7 @@ function WritePage(props: { kind: WriteKind }) {
             </div>
           ) : (
             <div className="flex shrink-0 items-center gap-1.5">
+              {peerAvatars}
               <WriteHeaderIconButton
                 badge={versionBranchCount}
                 onClick={() => toggleAsidePanel('drafts')}
@@ -5374,6 +5402,7 @@ function RichWriteSurface(props: {
   const bindCrdtEditor = props.crdt?.bindEditor
   useCrdtAgentTurns(agent, props.crdt)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
+  const [lexicalEditor, setLexicalEditor] = useState<LexicalEditor | null>(null)
   const crdtLocked = Boolean(props.crdt?.locked)
   const crdtLockedRef = useRef(crdtLocked)
   crdtLockedRef.current = crdtLocked
@@ -5449,6 +5478,7 @@ function RichWriteSurface(props: {
     },
     onEditorReady: (editor) => {
       lexicalEditorRef.current = editor
+      setLexicalEditor(editor)
       if (crdtLockedRef.current) editor?.setEditable(false)
       agent.onEditorReady(editor)
       bindCrdtEditor?.(editor)
@@ -5472,6 +5502,13 @@ function RichWriteSurface(props: {
       >
         <RichEditorWithAgent ref={editorRef} {...editorOptions} />
       </Suspense>
+      {props.crdt?.active ? (
+        <RemoteCarets
+          editor={lexicalEditor}
+          peers={props.crdt.peers}
+          resolveCaret={props.crdt.resolveCaret}
+        />
+      ) : null}
       <ContentLayoutSlot active={Boolean(props.agentVisible)} id="agent">
         <AgentPanel agent={agent} />
       </ContentLayoutSlot>

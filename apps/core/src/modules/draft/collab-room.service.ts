@@ -95,7 +95,14 @@ export class CollabRoomService implements OnModuleInit, OnModuleDestroy {
         room,
         member.connectionId,
       )
-      return { data: { documentId, update: encode(update) }, ok: true }
+      return {
+        data: {
+          connectionId: member.connectionId,
+          documentId,
+          update: encode(update),
+        },
+        ok: true,
+      }
     } catch (error) {
       return this.failure(error)
     }

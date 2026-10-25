@@ -4170,6 +4170,9 @@ export const enUS = {
   'write.share.linkedHere': 'The share link points here',
   'write.share.revoke': 'Revoke share link',
   'write.timeline.title': 'History',
+  'write.collab.peerOtherTab': '{name} (another tab of yours)',
+  'write.collab.more': '{count} more',
+  'write.collab.editing': 'People editing',
   'write.timeline.emptyTitle': 'No history yet',
   'write.timeline.emptyDescription':
     'Every step appears here once you save or edit.',

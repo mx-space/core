@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getDraftCrdt, postDraftCrdt } from '~/api/drafts'
 
 import { createCollabChannel } from './collab-channel'
+import type {
+  CaretPoint,
+  PresenceUser,
+  RemotePresence,
+} from './collab-presence'
 import {
   type CrdtDraftSession,
   createCrdtDraftSession,
@@ -19,26 +24,31 @@ export interface CrdtDraftController {
   flush: () => Promise<void>
   live: () => boolean
   locked: boolean
+  peers: RemotePresence[]
   pending: () => boolean
   pull: () => Promise<void>
+  resolveCaret: (point: CaretPoint) => { key: string; offset: number } | null
   setCommitMessage: (message: string | null) => void
   setTitle: (title: string) => void
   status: CrdtDraftStatus
 }
 
 const LOAD_RETRY_MS = 2000
+const FALLBACK_USER: PresenceUser = { avatar: null, id: 'owner', name: '' }
 
 export function useCrdtDraft(options: {
   draftId: string
   enabled: boolean
   onRejected: () => Promise<void>
   onRemoteTitle: (title: string) => void
+  user?: PresenceUser
 }): CrdtDraftController {
   const sessionRef = useRef<CrdtDraftSession | null>(null)
   const editorRef = useRef<LexicalEditor | null>(null)
   const adoptRef = useRef(false)
   const [adopting, setAdopting] = useState(false)
   const [ready, setReady] = useState(false)
+  const [peers, setPeers] = useState<RemotePresence[]>([])
   const [status, setStatus] = useState<CrdtDraftStatus>('idle')
   const [generation, setGeneration] = useState(0)
   const callbacksRef = useRef(options)
@@ -55,6 +65,7 @@ export function useCrdtDraft(options: {
     let disposed = false
     let session: CrdtDraftSession | null = null
     let retry: ReturnType<typeof setTimeout> | undefined
+    let stopPeers: (() => void) | undefined
     setStatus('loading')
     void createCrdtDraftSession({
       channel: (hooks) =>
@@ -72,6 +83,9 @@ export function useCrdtDraft(options: {
           .finally(() => setGeneration((value) => value + 1))
       },
       onRemoteTitle: (title) => callbacksRef.current.onRemoteTitle(title),
+      presence: {
+        user: () => callbacksRef.current.user ?? FALLBACK_USER,
+      },
       onStatus: (next) => {
         if (!disposed) setStatus(next)
       },
@@ -83,6 +97,7 @@ export function useCrdtDraft(options: {
         }
         session = created
         sessionRef.current = created
+        stopPeers = created.subscribePeers(setPeers)
         created.bindEditor(editorRef.current, { adopt: adoptRef.current })
         if (editorRef.current) {
           adoptRef.current = false
@@ -102,6 +117,8 @@ export function useCrdtDraft(options: {
     return () => {
       disposed = true
       clearTimeout(retry)
+      stopPeers?.()
+      setPeers([])
       session?.dispose()
       if (sessionRef.current === session) sessionRef.current = null
     }
@@ -128,6 +145,8 @@ export function useCrdtDraft(options: {
       },
       live: () => sessionRef.current?.live() ?? false,
       pending: () => sessionRef.current?.pending() ?? false,
+      resolveCaret: (point: CaretPoint) =>
+        sessionRef.current?.resolveCaret(point) ?? null,
       pull: async () => {
         await sessionRef.current?.pull()
       },
@@ -144,6 +163,7 @@ export function useCrdtDraft(options: {
     active,
     bindEditor,
     locked: enabled && !active && !adopting,
+    peers,
     status,
   }
 }
