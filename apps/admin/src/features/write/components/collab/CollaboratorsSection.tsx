@@ -93,6 +93,9 @@ export function CollaboratorsSection(props: { documentId: string }) {
           {t('write.collaborators.invite')}
         </Button>
       </div>
+      <p className="pl-5.5 text-xs text-fg-subtle" data-history-notice>
+        {t('write.collaborators.historyNotice')}
+      </p>
       {invites.map((invite) => (
         <div className="flex items-center gap-2 pl-5.5" key={invite.id}>
           <Copy aria-hidden="true" className="size-3 text-fg-subtle" />

@@ -4175,6 +4175,8 @@ export const enUS = {
   'write.collab.editing': 'People editing',
   'write.timeline.step.coauthor': "{name}'s edits ({count})",
   'write.collaborators.title': 'Co-authors',
+  'write.collaborators.historyNotice':
+    "Co-authors receive the draft's full edit history, including text deleted before they joined.",
   'write.collaborators.invite': 'Invite link',
   'write.collaborators.linkCopied': 'Invite link copied',
   'write.collaborators.linkExpires': 'Link · expires {time} · used {uses}',

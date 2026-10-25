@@ -123,4 +123,10 @@ describe('CollaboratorsSection', () => {
     })
     expect(removeCollaborator).toHaveBeenCalledWith('doc-1', 'r1')
   })
+
+  it('warns that co-authors can see the edit history', async () => {
+    await render()
+
+    expect(container.querySelector('[data-history-notice]')).not.toBeNull()
+  })
 })

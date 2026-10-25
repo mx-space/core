@@ -97,6 +97,14 @@ decision), so nothing spends the owner's model budget on their behalf.
     closes their open room membership (server sends `collab.revoked` and drops
     them from the room); their past edits stay.
 
+## Known limitation
+
+Co-authors receive the full Loro document, oplog included, so text deleted
+before they joined can be recovered with developer tools. A shallow snapshot
+would hide it but rejects concurrent owner ops whose dependencies predate the
+shallow root, which breaks live editing. The author accepted this; the
+co-authors panel states it next to the invite button.
+
 ## Testing
 
 - Core: repository specs for the two tables; invite accept (expired,
