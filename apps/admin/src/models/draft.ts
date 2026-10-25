@@ -20,11 +20,50 @@ export interface RevisionSnapshot {
   typeSpecificData: TypeSpecificData | null
 }
 
+export interface CrdtOpId {
+  counter: number
+  peer: `${number}`
+}
+
+export type CheckpointKind =
+  'import' | 'legacy-save' | 'publish' | 'restore' | 'save' | 'undo'
+
 export interface ContentRevision extends RevisionSnapshot {
   createdAt: string
   documentId: string
+  frontiers?: CrdtOpId[] | null
   id: string
+  kind?: CheckpointKind | null
   parentRevisionId: string | null
+}
+
+export type DraftCheckpoint = Pick<
+  ContentRevision,
+  | 'contentFormat'
+  | 'createdAt'
+  | 'frontiers'
+  | 'id'
+  | 'kind'
+  | 'parentRevisionId'
+  | 'title'
+>
+
+export interface DraftChange {
+  deps: CrdtOpId[]
+  id: CrdtOpId
+  lamport: number
+  message?: string
+  timestamp: number
+}
+
+export interface DraftHistory {
+  changes: DraftChange[]
+  checkpoints: DraftCheckpoint[]
+}
+
+export interface DraftFields {
+  meta: Record<string, unknown> | null
+  typeSpecificData: Record<string, unknown> | null
 }
 
 export interface ContentDocument {

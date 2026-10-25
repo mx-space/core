@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ChevronLeft, GitCompare, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
-import { getDraftRevisions } from '~/api/drafts'
+import { getDraftRevisions, restoreDraftRevision } from '~/api/drafts'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
 import type { DraftModel } from '~/models/draft'
@@ -47,6 +48,13 @@ export function DraftDetail(props: {
     null,
   )
   const versionsScopeId = `draft-versions-${props.draft.id}`
+  const restoresInPlace = props.draft.headRevision.contentFormat === 'lexical'
+  const restoreMutation = useMutation({
+    mutationFn: (revisionId: string) =>
+      restoreDraftRevision(props.draft.id, revisionId),
+    onError: () => toast.error(t('write.timeline.failed')),
+    onSuccess: (draft) => navigate(getEditPathForDraft(draft)),
+  })
 
   useScopeArrowNav({
     itemSelector: '[data-scope-item="row"]',
@@ -164,10 +172,15 @@ export function DraftDetail(props: {
                     item={item}
                     key={item.id}
                     onRestore={() =>
-                      navigate(getEditPathForRevision(props.draft, item.id))
+                      restoresInPlace
+                        ? restoreMutation.mutate(item.id)
+                        : navigate(getEditPathForRevision(props.draft, item.id))
                     }
                     onSelect={() => setSelectedRevisionId(item.id)}
-                    restorePending={false}
+                    restorePending={
+                      restoreMutation.isPending &&
+                      restoreMutation.variables === item.id
+                    }
                     selected={selectedRevisionId === item.id}
                   />
                 ))}

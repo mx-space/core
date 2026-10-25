@@ -3779,7 +3779,7 @@ export const enUS = {
   'write.format.switchUnavailable.title': 'Editor switching is unavailable',
   'write.format.switchUnavailable.description':
     'CodeMirror edits Markdown source, while Lexical stores rich-text structure. Converting an article that already has content can lose formatting, special nodes, or source syntax, so switching is disabled. Choose the editor you need before writing in a new, empty article.',
-  'write.migration.action.blocked': 'Conversion blocked ({{count}})',
+  'write.migration.action.blocked': 'Conversion blocked ({count})',
   'write.migration.action.checking': 'Checking conversion',
   'write.migration.action.committing': 'Committing conversion',
   'write.migration.action.convert': 'Convert to Lexical',
@@ -4169,6 +4169,31 @@ export const enUS = {
   'write.share.shareRevision': 'Share this version',
   'write.share.linkedHere': 'The share link points here',
   'write.share.revoke': 'Revoke share link',
+  'write.timeline.title': 'History',
+  'write.timeline.emptyTitle': 'No history yet',
+  'write.timeline.emptyDescription':
+    'Every step appears here once you save or edit.',
+  'write.timeline.restore': 'Restore this version',
+  'write.timeline.restoreTitle': 'Restore this version?',
+  'write.timeline.restoreDescription':
+    'Restoring is written as a new change; later history is kept.',
+  'write.timeline.restored': 'Restored',
+  'write.timeline.undo': 'Undo this step',
+  'write.timeline.undone': 'Step undone',
+  'write.timeline.failed': 'Action failed',
+  'write.timeline.published': 'Live',
+  'write.timeline.checkpoint.save': 'Saved',
+  'write.timeline.checkpoint.publish': 'Published',
+  'write.timeline.checkpoint.restore': 'Restored',
+  'write.timeline.checkpoint.undo': 'Undone',
+  'write.timeline.checkpoint.import': 'Collaborative editing started',
+  'write.timeline.checkpoint.legacySave': 'Saved elsewhere',
+  'write.timeline.checkpoint.legacy': 'Earlier version',
+  'write.timeline.step.human': 'Your edits ({count})',
+  'write.timeline.step.agent': 'AI: {summary}',
+  'write.timeline.step.restore': 'Restore',
+  'write.timeline.step.undo': 'Undo',
+  'write.timeline.step.other': 'System',
   'write.share.revoked': 'Share link revoked',
   'write.branch.compare': 'Compare',
   'write.branch.history': 'View branch history',
@@ -4352,6 +4377,10 @@ export const enUS = {
   'write.toast.publishedDraftSaved':
     'Changes saved as a draft and not yet applied to the online article',
   'write.toast.unpublishedSaved': 'Unpublished content saved',
+  'write.toast.draftResynced':
+    'Sync was rejected; your content was saved again',
+  'write.toast.draftSyncPending':
+    'The shared document is still loading; try saving again shortly',
   'write.toast.draftSaveFailed': 'Failed to save draft',
   'write.toast.draftTypeMismatch':
     'Draft type does not match current writing page',

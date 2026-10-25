@@ -1,6 +1,9 @@
 import type { Image, PaginateResult } from '~/models/base'
 import type {
   ContentRevision,
+  CrdtOpId,
+  DraftFields,
+  DraftHistory,
   DraftModel,
   DraftRefType,
   DraftShare,
@@ -9,7 +12,14 @@ import type {
   VersionContext,
 } from '~/models/draft'
 
-import { deleteJson, getJson, postJson, putJson } from './http'
+import {
+  deleteJson,
+  getJson,
+  patchJson,
+  postJson,
+  putJson,
+  requestBytes,
+} from './http'
 
 export type DraftSortOrder = 'asc' | 'desc'
 
@@ -111,4 +121,55 @@ export function updateDraft(id: string, data: UpdateDraftData) {
 
 export function deleteDraft(id: string) {
   return deleteJson<{ success: boolean }>(`/drafts/${id}`)
+}
+
+const encodeBase64 = (bytes: Uint8Array) =>
+  btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
+
+export function getDraftCrdt(id: string, since?: Uint8Array) {
+  const query = since ? `?since=${encodeURIComponent(encodeBase64(since))}` : ''
+  return requestBytes(`/drafts/${id}/crdt${query}`, { method: 'GET' })
+}
+
+export async function postDraftCrdt(id: string, bytes: Uint8Array) {
+  await requestBytes(`/drafts/${id}/crdt`, {
+    body: bytes as Uint8Array<ArrayBuffer>,
+    headers: { 'content-type': 'application/octet-stream' },
+    method: 'POST',
+  })
+}
+
+export function createDraftCheckpoint(id: string, kind: 'publish' | 'save') {
+  return postJson<DraftModel, { kind: 'publish' | 'save' }>(
+    `/drafts/${id}/checkpoints`,
+    { kind },
+  )
+}
+
+export function updateDraftFields(
+  id: string,
+  patch: Partial<Record<keyof DraftFields, Record<string, unknown>>>,
+) {
+  return patchJson<DraftFields, typeof patch>(`/drafts/${id}/fields`, patch)
+}
+
+export function getDraftHistory(id: string) {
+  return getJson<DraftHistory>(`/drafts/${id}/history`)
+}
+
+export function restoreDraftRevision(id: string, revisionId: string) {
+  return postJson<DraftModel, { revisionId: string }>(`/drafts/${id}/restore`, {
+    revisionId,
+  })
+}
+
+export function undoDraftChange(
+  id: string,
+  change: CrdtOpId,
+  before: CrdtOpId[],
+) {
+  return postJson<DraftModel, { before: CrdtOpId[]; id: CrdtOpId }>(
+    `/drafts/${id}/undo`,
+    { before, id: change },
+  )
 }

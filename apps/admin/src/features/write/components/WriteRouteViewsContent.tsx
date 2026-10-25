@@ -2,7 +2,7 @@ import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent/s
 import { analyzeMxMarkdown, mxLexicalToMarkdown } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { load } from 'js-yaml'
-import type { SerializedEditorState } from 'lexical'
+import type { LexicalEditor, SerializedEditorState } from 'lexical'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
@@ -65,12 +65,14 @@ import type { DraftWriteData } from '~/api/drafts'
 import {
   compareRevisions,
   createDraft,
+  createDraftCheckpoint,
   deleteDraft,
   getDraftById,
   getDraftContext,
   getNewDrafts,
   getRevision,
   updateDraft,
+  updateDraftFields,
 } from '~/api/drafts'
 import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { ApiRequestError } from '~/api/http'
@@ -130,8 +132,16 @@ import {
 import { PublishConfirmationDialog } from '~/features/write/components/PublishConfirmationDialog'
 import { openPublishProcessDock } from '~/features/write/components/PublishProcessDock'
 import { SkillPicker } from '~/features/write/components/SkillPicker'
+import { TimelinePanel } from '~/features/write/components/TimelinePanel'
 import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGenerationEntry'
 import { VersionTreePanel } from '~/features/write/components/VersionTreePanel'
+import { diffDraftFields } from '~/features/write/crdt/draft-fields'
+import { resyncRejectedDraft } from '~/features/write/crdt/resync-rejected'
+import { useCrdtAgentTurns } from '~/features/write/crdt/use-crdt-agent-turns'
+import {
+  type CrdtDraftController,
+  useCrdtDraft,
+} from '~/features/write/crdt/use-crdt-draft'
 import { MetaPresetSection } from '~/features/write/meta-presets'
 import type { DraftMergeConflict } from '~/features/write/utils/merge-draft-conflict'
 import { mergeDraftConflict } from '~/features/write/utils/merge-draft-conflict'
@@ -144,6 +154,7 @@ import type { TranslationKey } from '~/i18n/types'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
 import type {
+  DraftFields,
   DraftModel,
   RevisionSnapshot,
   VersionTreeNode,
@@ -445,6 +456,14 @@ function WritePageRoute(props: { kind: WriteKind }) {
   return <WritePage key={`${props.kind}:${documentId}`} kind={props.kind} />
 }
 
+const FIELDS_RETRY_MS = 2000
+
+const fieldsOf = (data: DraftWriteData): DraftFields => ({
+  meta: data.meta ?? null,
+  typeSpecificData: (data.typeSpecificData ??
+    null) as DraftFields['typeSpecificData'],
+})
+
 function useDraftSession(options: {
   baseRevisionId: string | null
   data: DraftWriteData
@@ -473,19 +492,95 @@ function useDraftSession(options: {
   const [conflict, setConflict] = useState<ActiveDraftConflict | null>(null)
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false)
   const [resolvingConflict, setResolvingConflict] = useState(false)
+  const ackedFieldsRef = useRef<DraftFields | null>(null)
+  const fieldsTimerRef = useRef<number | null>(null)
+  const fieldsInFlightRef = useRef<Promise<void> | null>(null)
+  const crdt = useCrdtDraft({
+    draftId,
+    enabled: options.state.contentFormat === 'lexical',
+    onRejected: async () => {
+      if (!draftId) return
+      try {
+        const draft = await resyncRejectedDraft({
+          checkpoint: () => createDraftCheckpoint(draftId, 'save'),
+          data: latestDataRef.current,
+          update: (data, expectedHeadRevisionId) =>
+            updateDraft(draftId, { data, expectedHeadRevisionId }),
+        })
+        acceptedDraftRef.current = draft
+        toast.info(t('write.toast.draftResynced'))
+      } catch (error) {
+        toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed')))
+      }
+    },
+    onRemoteTitle: (title) =>
+      options.setState((previous) =>
+        previous.title === title ? previous : { ...previous, title },
+      ),
+  })
+  const crdtRef = useRef(crdt)
+  crdtRef.current = crdt
+
+  const sendFields = useCallback(async () => {
+    if (fieldsTimerRef.current !== null) {
+      window.clearTimeout(fieldsTimerRef.current)
+      fieldsTimerRef.current = null
+    }
+    await fieldsInFlightRef.current
+    const acked = ackedFieldsRef.current
+    if (!crdtRef.current.active || !draftId || !acked) return
+    const next = fieldsOf(latestDataRef.current)
+    const patch = diffDraftFields(acked, next)
+    if (!patch) return
+    const request = updateDraftFields(draftId, patch).then(
+      () => {
+        ackedFieldsRef.current = next
+      },
+      (error: unknown) => {
+        if (fieldsTimerRef.current === null) {
+          fieldsTimerRef.current = window.setTimeout(() => {
+            fieldsTimerRef.current = null
+            void sendFieldsRef.current().catch(() => undefined)
+          }, FIELDS_RETRY_MS)
+        }
+        throw error
+      },
+    )
+    fieldsInFlightRef.current = request.finally(() => {
+      fieldsInFlightRef.current = null
+    })
+    await request
+  }, [draftId])
+  const sendFieldsRef = useRef(sendFields)
+  sendFieldsRef.current = sendFields
+
+  const flushCrdt = useCallback(async () => {
+    await crdtRef.current.flush()
+    await sendFields()
+  }, [sendFields])
 
   useEffect(() => {
     latestDataRef.current = options.data
     latestFingerprintRef.current = options.fingerprint
   }, [options.data, options.fingerprint])
 
-  const hasUnsavedChanges = useCallback(
-    () =>
+  const hasUnsavedChanges = useCallback(() => {
+    if (crdtRef.current.active) {
+      const acked = ackedFieldsRef.current
+      return (
+        crdtRef.current.pending() ||
+        fieldsTimerRef.current !== null ||
+        fieldsInFlightRef.current !== null ||
+        (acked !== null &&
+          diffDraftFields(acked, fieldsOf(latestDataRef.current)) !== null)
+      )
+    }
+    return (
       dirtyRef.current &&
       options.hasContent &&
-      latestFingerprintRef.current !== acceptedFingerprintRef.current,
-    [options.hasContent],
-  )
+      latestFingerprintRef.current !== acceptedFingerprintRef.current
+    )
+  }, [options.hasContent])
 
   const accept = useCallback(
     (
@@ -498,6 +593,13 @@ function useDraftSession(options: {
       },
     ) => {
       acceptedDraftRef.current = draft
+      ackedFieldsRef.current = draft
+        ? {
+            meta: draft.headRevision.meta ?? null,
+            typeSpecificData: (draft.headRevision.typeSpecificData ??
+              null) as DraftFields['typeSpecificData'],
+          }
+        : null
       acceptedFingerprintRef.current = fingerprint
       if (!settings?.preserveLatest) {
         latestFingerprintRef.current = fingerprint
@@ -682,6 +784,10 @@ function useDraftSession(options: {
     const openDraft = acceptedDraftRef.current
     const currentDraftId = openDraft?.id ?? draftId
     if (!currentDraftId || payload.branchId !== currentDraftId) return
+    if (crdtRef.current.active) {
+      void crdtRef.current.pull()
+      return
+    }
     if (payload.headRevisionId === openDraft?.headRevisionId) return
 
     void adoptLatestRemoteDraft(false)
@@ -712,7 +818,14 @@ function useDraftSession(options: {
   )
 
   const mutation = useMutation<DraftModel, unknown, DraftSaveVariables>({
-    mutationFn: (variables) => {
+    mutationFn: async (variables) => {
+      if (variables.draftId && crdtRef.current.active) {
+        await flushCrdt()
+        return createDraftCheckpoint(variables.draftId, 'save')
+      }
+      if (variables.draftId && crdtRef.current.locked) {
+        throw new Error(t('write.toast.draftSyncPending'))
+      }
       if (!variables.draftId) {
         return createDraft({
           baseRevisionId: options.baseRevisionId,
@@ -768,6 +881,7 @@ function useDraftSession(options: {
     },
     onSuccess: async (draft, variables) => {
       const isFirstDraftSave = !variables.draftId
+      if (isFirstDraftSave) crdtRef.current.adoptEditorOnBind()
       acceptedDraftRef.current = draft
       setDraftId(draft.id)
       setConflict(null)
@@ -814,6 +928,7 @@ function useDraftSession(options: {
   }, [buildSaveVariables, conflict, options.hasContent, resolvingConflict, t])
 
   useEffect(() => {
+    if (crdt.active) return
     if (conflict || resolvingConflict || !dirtyRef.current) return
     if (!options.hasContent) return
     if (options.fingerprint === acceptedFingerprintRef.current) return
@@ -821,6 +936,7 @@ function useDraftSession(options: {
     const timer = window.setTimeout(() => {
       if (autosaveTimerRef.current === timer) autosaveTimerRef.current = null
       if (!dirtyRef.current || mutationRef.current.isPending) return
+      if (crdtRef.current.locked) return
       mutationRef.current.mutate(buildSaveVariables())
     }, 10_000)
     autosaveTimerRef.current = timer
@@ -833,10 +949,27 @@ function useDraftSession(options: {
     acceptedFingerprint,
     buildSaveVariables,
     conflict,
+    crdt.active,
     options.fingerprint,
     options.hasContent,
     resolvingConflict,
   ])
+
+  useEffect(() => {
+    if (!crdt.active || !ackedFieldsRef.current) return
+    if (!diffDraftFields(ackedFieldsRef.current, fieldsOf(options.data))) return
+    const timer = window.setTimeout(() => {
+      if (fieldsTimerRef.current === timer) fieldsTimerRef.current = null
+      void sendFields().catch((error) =>
+        toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed'))),
+      )
+    }, 500)
+    fieldsTimerRef.current = timer
+    return () => {
+      window.clearTimeout(timer)
+      if (fieldsTimerRef.current === timer) fieldsTimerRef.current = null
+    }
+  }, [crdt.active, options.data, sendFields, t])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -881,10 +1014,29 @@ function useDraftSession(options: {
     accept,
     acceptedDraft: () => acceptedDraftRef.current,
     acceptedFingerprint: () => acceptedFingerprintRef.current,
+    flushCrdt,
+    checkpoint: async (kind: 'publish' | 'save') => {
+      await flushCrdt()
+      return createDraftCheckpoint(draftId, kind)
+    },
+    reloadFields: async () => {
+      if (!draftId) return
+      const draft = await getDraftById(draftId)
+      acceptedDraftRef.current = draft
+      ackedFieldsRef.current = fieldsOf(draft.headRevision as DraftWriteData)
+      options.setState((previous) => ({
+        ...fromRevision(options.kind, draft.headRevision, previous),
+        content: previous.content,
+        contentFormat: previous.contentFormat,
+        text: previous.text,
+        title: previous.title,
+      }))
+    },
     clearAcceptedDraft: (id: string) => {
       if (acceptedDraftRef.current?.id === id) acceptedDraftRef.current = null
     },
     conflict,
+    crdt,
     conflictDialogOpen,
     dismissRemoteUpdate,
     draftId,
@@ -1435,6 +1587,9 @@ function WritePage(props: { kind: WriteKind }) {
     }
 
     appliedRouteDraftIdRef.current = draft.id
+    // Our own first save put this id in the URL; the editor is already ahead of the saved
+    // revision, and re-applying it would remount the editor and drop keystrokes typed since.
+    if (draftSession.draftId === draft.id) return
     const nextState = fromRevision(props.kind, draft.headRevision, state)
     const fingerprint = getDraftFingerprint(
       props.kind,
@@ -1454,6 +1609,7 @@ function WritePage(props: { kind: WriteKind }) {
     }
   }, [
     draftRefType,
+    draftSession.draftId,
     id,
     isEditing,
     props.kind,
@@ -1587,17 +1743,19 @@ function WritePage(props: { kind: WriteKind }) {
       if (currentDraftId && !baseline) {
         throw new Error(t('write.toast.draftBaselineMissing'))
       }
-      const draft = currentDraftId
-        ? await updateDraft(currentDraftId, {
-            data,
-            expectedHeadRevisionId: baseline!.headRevisionId,
-          })
-        : await createDraft({
-            baseRevisionId: branchBaseRevisionId,
-            data,
-            refId: isEditing ? id : undefined,
-            refType: draftRefType,
-          })
+      const draft = draftSession.crdt.active
+        ? await draftSession.checkpoint('publish')
+        : currentDraftId
+          ? await updateDraft(currentDraftId, {
+              data,
+              expectedHeadRevisionId: baseline!.headRevisionId,
+            })
+          : await createDraft({
+              baseRevisionId: branchBaseRevisionId,
+              data,
+              refId: isEditing ? id : undefined,
+              refType: draftRefType,
+            })
       const task = await createPublishJob({
         aiResources: props.kind === 'page' ? [] : aiResources,
         branchId: draft.id,
@@ -1688,6 +1846,29 @@ function WritePage(props: { kind: WriteKind }) {
     }
     setPublishConfirmOpen(true)
   }
+  const crdtActive = draftSession.crdt.active
+  const setCrdtTitle = draftSession.crdt.setTitle
+  useEffect(() => {
+    if (crdtActive) setCrdtTitle(state.title)
+  }, [crdtActive, setCrdtTitle, state.title])
+
+  const workingCopy = activeDocumentBranches[0]
+  useEffect(() => {
+    if (!isEditing || routeDraftId || routeBaseRevisionId || !workingCopy)
+      return
+    if (workingCopy.headRevision.contentFormat !== 'lexical') return
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('draftId', workingCopy.id)
+    setSearchParams(nextParams, { replace: true })
+  }, [
+    isEditing,
+    routeBaseRevisionId,
+    routeDraftId,
+    searchParams,
+    setSearchParams,
+    workingCopy,
+  ])
+
   const updateField = <TKey extends keyof WriteFormState>(
     key: TKey,
     value: WriteFormState[TKey],
@@ -2025,21 +2206,26 @@ function WritePage(props: { kind: WriteKind }) {
     activeDocumentBranches.find(
       (branch) => branch.id === (draftId || routeDraftId),
     ) ?? routeDraftQuery.data
-  const versionBranchCount = isEditing
-    ? activeDocumentBranches.length
-    : activeNewDrafts.length
+  const versionBranchCount = crdtActive
+    ? 0
+    : isEditing
+      ? activeDocumentBranches.length
+      : activeNewDrafts.length
   const editorBranchCount = isEditing ? activeDocumentBranches.length : 0
-  const versionTreeTriggerTitle =
-    versionBranchCount > 0
+  const versionTreeTriggerTitle = crdtActive
+    ? t('write.timeline.title')
+    : versionBranchCount > 0
       ? t('write.versionTree.triggerWithCount', {
           count: versionBranchCount,
         })
       : t('write.versionTree.title')
-  const publishIsDiverged = selectedBranch
-    ? selectedBranch.relationToPublished === 'descendant' ||
-      selectedBranch.relationToPublished === 'diverged'
-    : baseRelationQuery.data?.relation === 'descendant' ||
-      baseRelationQuery.data?.relation === 'diverged'
+  const publishIsDiverged = crdtActive
+    ? false
+    : selectedBranch
+      ? selectedBranch.relationToPublished === 'descendant' ||
+        selectedBranch.relationToPublished === 'diverged'
+      : baseRelationQuery.data?.relation === 'descendant' ||
+        baseRelationQuery.data?.relation === 'diverged'
   const draftKindText = getDraftKindLabel(props.kind)
   const isDirty = draftSession.hasUnsavedChanges()
   const metaStatus = computeMetaStatus({
@@ -2147,7 +2333,11 @@ function WritePage(props: { kind: WriteKind }) {
                 type="button"
                 variant={draftsPanelOpen ? 'active' : 'default'}
               >
-                <GitBranch aria-hidden="true" className="size-4" />
+                {crdtActive ? (
+                  <History aria-hidden="true" className="size-4" />
+                ) : (
+                  <GitBranch aria-hidden="true" className="size-4" />
+                )}
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
                 onClick={() => toggleAsidePanel('meta')}
@@ -2189,7 +2379,11 @@ function WritePage(props: { kind: WriteKind }) {
                 type="button"
                 variant={draftsPanelOpen ? 'active' : 'default'}
               >
-                <GitBranch aria-hidden="true" className="size-4" />
+                {crdtActive ? (
+                  <History aria-hidden="true" className="size-4" />
+                ) : (
+                  <GitBranch aria-hidden="true" className="size-4" />
+                )}
               </WriteHeaderIconButton>
               <WriteHeaderIconButton
                 disabled={state.contentFormat !== 'lexical'}
@@ -2304,7 +2498,7 @@ function WritePage(props: { kind: WriteKind }) {
                   <EditorMetaStrip
                     aiButtonPending={writerGenerateMutation.isPending}
                     aiButtonVisible={aiButtonVisible}
-                    branchCount={editorBranchCount}
+                    branchCount={crdtActive ? 0 : editorBranchCount}
                     formatAction={formatActionState}
                     format={state.contentFormat}
                     onAiGenerate={generateTitleOrSlug}
@@ -2355,6 +2549,7 @@ function WritePage(props: { kind: WriteKind }) {
                         onContentChange={(content) =>
                           updateField('content', content)
                         }
+                        crdt={draftSession.crdt}
                         onMetaFieldsUpdate={applyAgentMetaUpdates}
                         onPinSelection={() => setAsidePanel('agent')}
                         onTextChange={(text) => updateField('text', text)}
@@ -2384,37 +2579,53 @@ function WritePage(props: { kind: WriteKind }) {
             </Scroll>
           )}
           <ContentLayoutSlot active={draftsPanelOpen} id="drafts">
-            <VersionTreePanel
-              currentDraftId={draftId || routeDraftId}
-              currentPublishedRevisionId={
-                versionContextQuery.data?.document.publishedRevisionId ?? null
-              }
-              deletingDraftId={
-                deleteDraftMutation.isPending
-                  ? (deleteDraftMutation.variables ?? null)
-                  : null
-              }
-              documentId={
-                versionContextQuery.data?.document.id ??
-                (isEditing ? activeDocumentBranches : activeNewDrafts).find(
-                  (draft) => draft.id === (draftId || routeDraftId),
-                )?.documentId ??
-                null
-              }
-              drafts={isEditing ? activeDocumentBranches : activeNewDrafts}
-              nodes={
-                isEditing
-                  ? (versionContextQuery.data?.versionTree ?? [])
-                  : standaloneDraftTree
-              }
-              onClose={closeDraftsPanel}
-              onCompare={setReviewingDraft}
-              onDelete={confirmAndDeleteDraft}
-              onContinue={(draft) => void continueDraft(draft)}
-              onHistory={(draft) => navigate(`/drafts/${draft.id}`)}
-              onPublish={(draft) => void publishDraftFromTree(draft)}
-              onViewOnline={() => void viewCurrentArticle()}
-            />
+            {crdtActive ? (
+              <TimelinePanel
+                documentId={versionContextQuery.data?.document.id ?? null}
+                draftId={draftId}
+                onBeforeChange={draftSession.flushCrdt}
+                onChanged={async ({ restored }) => {
+                  await draftSession.crdt.pull()
+                  if (restored) await draftSession.reloadFields()
+                }}
+                onClose={closeDraftsPanel}
+                publishedRevisionId={
+                  versionContextQuery.data?.document.publishedRevisionId ?? null
+                }
+              />
+            ) : (
+              <VersionTreePanel
+                currentDraftId={draftId || routeDraftId}
+                currentPublishedRevisionId={
+                  versionContextQuery.data?.document.publishedRevisionId ?? null
+                }
+                deletingDraftId={
+                  deleteDraftMutation.isPending
+                    ? (deleteDraftMutation.variables ?? null)
+                    : null
+                }
+                documentId={
+                  versionContextQuery.data?.document.id ??
+                  (isEditing ? activeDocumentBranches : activeNewDrafts).find(
+                    (draft) => draft.id === (draftId || routeDraftId),
+                  )?.documentId ??
+                  null
+                }
+                drafts={isEditing ? activeDocumentBranches : activeNewDrafts}
+                nodes={
+                  isEditing
+                    ? (versionContextQuery.data?.versionTree ?? [])
+                    : standaloneDraftTree
+                }
+                onClose={closeDraftsPanel}
+                onCompare={setReviewingDraft}
+                onDelete={confirmAndDeleteDraft}
+                onContinue={(draft) => void continueDraft(draft)}
+                onHistory={(draft) => navigate(`/drafts/${draft.id}`)}
+                onPublish={(draft) => void publishDraftFromTree(draft)}
+                onViewOnline={() => void viewCurrentArticle()}
+              />
+            )}
           </ContentLayoutSlot>
           <ContentLayoutSlot active={metaPanelOpen} id="meta">
             {props.kind === 'page' ? (
@@ -2426,7 +2637,7 @@ function WritePage(props: { kind: WriteKind }) {
               />
             ) : (
               <ContentSettingsPanel
-                availableDraft={availableDraft}
+                availableDraft={crdtActive ? undefined : availableDraft}
                 draftId={draftId || routeDraftId || undefined}
                 draftMutationData={draftMutation.data}
                 draftMutationPending={draftMutation.isPending}
@@ -5127,6 +5338,7 @@ function RichWriteSurface(props: {
   agentVisible?: boolean
   autoFocus?: boolean
   content: string
+  crdt?: CrdtDraftController
   contentClassName?: string
   kind: WriteKind
   onContentChange: (content: string) => void
@@ -5161,6 +5373,15 @@ function RichWriteSurface(props: {
     onContentChange: props.onContentChange,
     onTextChange: props.onTextChange,
   })
+  const bindCrdtEditor = props.crdt?.bindEditor
+  useCrdtAgentTurns(agent, props.crdt)
+  const lexicalEditorRef = useRef<LexicalEditor | null>(null)
+  const crdtLocked = Boolean(props.crdt?.locked)
+  const crdtLockedRef = useRef(crdtLocked)
+  crdtLockedRef.current = crdtLocked
+  useEffect(() => {
+    lexicalEditorRef.current?.setEditable(!crdtLocked)
+  }, [crdtLocked])
 
   latestCallbacks.current = {
     onContentChange: props.onContentChange,
@@ -5228,7 +5449,12 @@ function RichWriteSurface(props: {
     onChange: (value) => {
       latestCallbacks.current.onContentChange(JSON.stringify(value))
     },
-    onEditorReady: agent.onEditorReady,
+    onEditorReady: (editor) => {
+      lexicalEditorRef.current = editor
+      if (crdtLockedRef.current) editor?.setEditable(false)
+      agent.onEditorReady(editor)
+      bindCrdtEditor?.(editor)
+    },
     onPinSelection: props.onPinSelection,
     onTextChange: (text) => {
       latestCallbacks.current.onTextChange(text)
