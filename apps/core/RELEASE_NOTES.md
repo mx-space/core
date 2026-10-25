@@ -1,24 +1,25 @@
 ## TL;DR
 
-The drafts page now compares versions in a single inline view, with a version picker and an optional side-by-side dialog.
+Published articles can now shed unwanted drafts in bulk, while previewing drafts no longer recreates collaboration data after deletion.
 
 ## Highlights
 
-Draft history no longer spreads across five columns. The detail pane shows one reading column: pick a version from the compare bar, step through older and newer versions with the arrow buttons, and read changes marked in place, with long runs of unchanged blocks folded away. A full-text toggle restores the whole document, and the side-by-side view moves into a large dialog for close comparisons.
+Open **Organize drafts** from the drafts page to find published articles you no longer plan to edit. Filter by time since the last edit and content type, select matching articles across pages, and review the space to reclaim. Drafts with unpublished changes can also be discarded after explicit confirmation, alongside archived drafts and reclaimable history.
 
-The version picker lists the full history with each version's character delta, dims versions that compaction would remove, and lets you restore any of them directly. Storage figures and the compaction action now sit in the draft header instead of a separate panel.
+Cleanup preserves online content, comments, publication records, and versions used by shared links. Articles being edited, awaiting publication, or changed since the preview are skipped. The results show actual reclaimed space and explain skipped articles. The workflow supports mobile and dark mode, and interrupted requests are reported without assuming an uncertain deletion succeeded or failed.
 
 ## Changes
 
 ### Features
-- Draft detail shows an inline diff with a version picker, prev/next navigation, a changes-only or full-text toggle, and a side-by-side comparison dialog ([c1066b0](https://github.com/mx-space/core/commit/c1066b0953927b9d64b7ba9878dfad345711463a))
+
+- Organize drafts by published article, with age and content-type filters, cross-page selection, explicit confirmation, and per-article results ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755)).
+- Edit email templates in a single pane with a compact template switcher, a resizable editor/preview split, and a mobile view switch ([122e056](https://github.com/mx-space/core/commit/122e0562123f2f3e7622032bcfc7909648a81a61)).
 
 ### Bug Fixes
-- The cleanup dialog's age selector and the drafts sort selector use the dashboard's own select instead of the browser default, and the dialog's notice and footer now align with the rest of the content ([756d2dc](https://github.com/mx-space/core/commit/756d2dcf3153aec2318ce0f6a0f1e2da1b10231a))
 
-### Other
-- Rich editor packages (`@haklex/*`) upgraded to 0.57.0, which adds the inline diff layout and brings the refreshed editor styling from 0.56.0 ([1b357e7](https://github.com/mx-space/core/commit/1b357e75fcfa2bdc2b60839f8925bdcdf0d4324d))
+- Viewing a draft preview or refreshing version context no longer creates collaboration snapshots or restores deleted drafts ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755)).
+- Cleanup waits for in-flight field edits, checks the entire publish queue, and excludes unpublished and scheduled content ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755)).
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v15.4.0...v15.5.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v15.5.0...v15.6.0

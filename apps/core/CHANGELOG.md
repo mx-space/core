@@ -1,3 +1,15 @@
+## [15.6.0](https://github.com/mx-space/core/compare/v15.5.0...v15.6.0) (2026-10-26)
+
+### Features
+
+* **drafts:** add bulk organization for published articles ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755))
+* **admin:** single-pane email template editor ([122e056](https://github.com/mx-space/core/commit/122e0562123f2f3e7622032bcfc7909648a81a61))
+
+### Bug Fixes
+
+* **drafts:** prevent previews from recreating deleted collaborative drafts ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755))
+* **drafts:** protect concurrent field edits and pending publications during cleanup ([ab7b755](https://github.com/mx-space/core/commit/ab7b755d337cd018139d9e02ce90dba4ab780755))
+
 ## [15.5.0](https://github.com/mx-space/core/compare/v15.4.0...v15.5.0) (2026-10-25)
 
 ### Features
