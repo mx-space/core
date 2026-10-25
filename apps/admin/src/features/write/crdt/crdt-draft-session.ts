@@ -1,4 +1,9 @@
-import { createLoroBinding, type LoroBinding } from '@haklex/rich-collab-loro'
+import {
+  createLoroBinding,
+  type LoroBinding,
+  TREE_NAME,
+} from '@haklex/rich-collab-loro'
+import { editDocAt, type Frontiers } from '@mx-space/editor/loro'
 import {
   $getSelection,
   $isRangeSelection,
@@ -7,8 +12,9 @@ import {
   type LexicalEditor,
   type NodeKey,
   type PointType,
+  type SerializedEditorState,
 } from 'lexical'
-import { LoroDoc } from 'loro-crdt'
+import { LoroDoc, type LoroTreeNode } from 'loro-crdt'
 
 import type { ApiRequestError } from '~/api/http'
 
@@ -29,6 +35,41 @@ import {
 const HUMAN_MESSAGE = 'human:owner'
 const TITLE = 'title'
 const CARET_DEBOUNCE_MS = 50
+const AGENT_COLOR = '#8e4ec6'
+const AGENT_USER = { avatar: null, id: 'agent', name: 'AI' }
+const TEXT_KEY = '#text'
+
+export interface AgentTurn {
+  apply: (target: SerializedEditorState, focusBlockId?: string) => void
+  end: () => void
+}
+
+const randomPeer = (): `${number}` => {
+  const [value] = crypto.getRandomValues(new BigUint64Array(1))
+  return `${value}` as `${number}`
+}
+
+const lastTextIn = (node: LoroTreeNode): CaretPoint | null => {
+  const children = node.children() ?? []
+  for (let index = children.length - 1; index >= 0; index -= 1) {
+    const found = lastTextIn(children[index])
+    if (found) return found
+  }
+  const text = node.data.get(TEXT_KEY)
+  return text === undefined
+    ? null
+    : { id: node.id, offset: String(text).length }
+}
+
+const caretAtBlock = (doc: LoroDoc, blockId: string): CaretPoint | null => {
+  for (const node of doc.getTree(TREE_NAME).nodes()) {
+    const state = node.data.get('$') as { blockId?: string } | undefined
+    if (state?.blockId === blockId && !node.isDeleted()) {
+      return lastTextIn(node) ?? { id: node.id, offset: 0 }
+    }
+  }
+  return null
+}
 
 export interface ChannelHooks {
   onJoined?: (connectionId: string) => void
@@ -68,6 +109,7 @@ export interface CrdtDraftSession {
   resolveCaret: (point: CaretPoint) => { key: NodeKey; offset: number } | null
   setCommitMessage: (message: string | null) => void
   setTitle: (title: string) => void
+  startAgentTurn: (message: string) => AgentTurn
   subscribePeers: (listener: (peers: RemotePresence[]) => void) => () => void
 }
 
@@ -212,6 +254,41 @@ export async function createCrdtDraftSession(
       lastTitle = title
       text.update(title)
       doc.commit({ message: bindingOptions.commitMessage })
+    },
+    startAgentTurn: (message) => {
+      const peer = randomPeer()
+      const key = `agent:${peer}`
+      const title = doc.getText(TITLE).toString()
+      let view: Frontiers = doc.frontiers()
+      presence.setExtra(key, {
+        anchor: null,
+        color: AGENT_COLOR,
+        focus: null,
+        user: AGENT_USER,
+      })
+      return {
+        apply: (target, focusBlockId) => {
+          const update = editDocAt(
+            doc,
+            view,
+            { content: JSON.stringify(target), title },
+            message,
+            { peer },
+          )
+          if (binding) binding.import(update)
+          else doc.import(update)
+          const changes = doc.getAllChanges().get(peer)
+          const last = changes?.at(-1)
+          if (last) view = [{ counter: last.counter + last.length - 1, peer }]
+          presence.setExtra(key, {
+            anchor: null,
+            color: AGENT_COLOR,
+            focus: focusBlockId ? caretAtBlock(doc, focusBlockId) : null,
+            user: AGENT_USER,
+          })
+        },
+        end: () => presence.setExtra(key, null),
+      }
     },
     subscribePeers: (listener) => presence.subscribe(listener),
   }

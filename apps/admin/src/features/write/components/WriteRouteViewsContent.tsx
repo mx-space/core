@@ -138,7 +138,6 @@ import { VersionTreePanel } from '~/features/write/components/VersionTreePanel'
 import type { PresenceUser } from '~/features/write/crdt/collab-presence'
 import { diffDraftFields } from '~/features/write/crdt/draft-fields'
 import { resyncRejectedDraft } from '~/features/write/crdt/resync-rejected'
-import { useCrdtAgentTurns } from '~/features/write/crdt/use-crdt-agent-turns'
 import {
   type CrdtDraftController,
   useCrdtDraft,
@@ -461,6 +460,7 @@ function WritePageRoute(props: { kind: WriteKind }) {
 }
 
 const FIELDS_RETRY_MS = 2000
+const CRDT_READY_TIMEOUT_MS = 10_000
 
 const fieldsOf = (data: DraftWriteData): DraftFields => ({
   meta: data.meta ?? null,
@@ -928,6 +928,44 @@ function useDraftSession(options: {
   const mutationRef = useRef(mutation)
   mutationRef.current = mutation
 
+  const crdtReadyWaitersRef = useRef<Array<() => void>>([])
+  useEffect(() => {
+    if (!crdt.active) return
+    for (const resolve of crdtReadyWaitersRef.current.splice(0)) resolve()
+  }, [crdt.active])
+
+  const ensureCrdt = useCallback(async () => {
+    if (crdtRef.current.active) return true
+    if (options.state.contentFormat !== 'lexical') return false
+    if (!draftId) {
+      if (!options.hasContent) {
+        toast.error(t('write.toast.contentEmptyForDraft'))
+        return false
+      }
+      try {
+        await mutationRef.current.mutateAsync(buildSaveVariables(true))
+      } catch {
+        return false
+      }
+    }
+    return new Promise<boolean>((resolve) => {
+      const timer = window.setTimeout(
+        () => resolve(false),
+        CRDT_READY_TIMEOUT_MS,
+      )
+      crdtReadyWaitersRef.current.push(() => {
+        window.clearTimeout(timer)
+        resolve(true)
+      })
+    })
+  }, [
+    buildSaveVariables,
+    draftId,
+    options.hasContent,
+    options.state.contentFormat,
+    t,
+  ])
+
   const saveNow = useCallback(() => {
     if (conflict || resolvingConflict) {
       toast.error(t('write.toast.draftConflictNeedsResolution'))
@@ -1032,6 +1070,7 @@ function useDraftSession(options: {
     acceptedDraft: () => acceptedDraftRef.current,
     acceptedFingerprint: () => acceptedFingerprintRef.current,
     flushCrdt,
+    ensureCrdt,
     presenceUser,
     checkpoint: async (kind: 'publish' | 'save') => {
       await flushCrdt()
@@ -2576,6 +2615,7 @@ function WritePage(props: { kind: WriteKind }) {
                           updateField('content', content)
                         }
                         crdt={draftSession.crdt}
+                        ensureDocument={draftSession.ensureCrdt}
                         onMetaFieldsUpdate={applyAgentMetaUpdates}
                         onPinSelection={() => setAsidePanel('agent')}
                         onTextChange={(text) => updateField('text', text)}
@@ -5366,6 +5406,7 @@ function RichWriteSurface(props: {
   content: string
   crdt?: CrdtDraftController
   contentClassName?: string
+  ensureDocument?: () => Promise<boolean>
   kind: WriteKind
   onContentChange: (content: string) => void
   onTextChange: (text: string) => void
@@ -5392,15 +5433,16 @@ function RichWriteSurface(props: {
   )
   const agent = useWriteAgent({
     agentVisible: Boolean(props.agentVisible),
+    document: props.crdt,
     documentId: props.refId,
     documentKind: props.kind,
+    ensureDocument: props.ensureDocument,
   })
   const latestCallbacks = useRef({
     onContentChange: props.onContentChange,
     onTextChange: props.onTextChange,
   })
   const bindCrdtEditor = props.crdt?.bindEditor
-  useCrdtAgentTurns(agent, props.crdt)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
   const [lexicalEditor, setLexicalEditor] = useState<LexicalEditor | null>(null)
   const crdtLocked = Boolean(props.crdt?.locked)
@@ -5450,7 +5492,9 @@ function RichWriteSurface(props: {
     },
     initialValue: parseSerializedEditorState(props.content),
     systemMessages: [
-      ...buildDocumentBashSystemMessages(),
+      ...buildDocumentBashSystemMessages({
+        shared: Boolean(props.crdt?.active),
+      }),
       ...dynamicCatalogMessages,
       ...(props.metaFieldsSchema
         ? buildMetaSystemMessages(props.metaFieldsSchema)

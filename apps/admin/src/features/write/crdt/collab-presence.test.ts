@@ -154,4 +154,36 @@ describe('createCollabPresence', () => {
     expect(sent.length).toBe(afterStart + 1)
     a.dispose()
   })
+
+  it('publishes an extra member such as the agent and removes it again', () => {
+    const { a, b, deliver } = pair()
+    a.start('conn-a', user('owner'))
+    b.start('conn-b', user('owner'))
+    deliver()
+
+    vi.advanceTimersByTime(1)
+    a.setExtra('agent:run-1', {
+      anchor: null,
+      color: '#8e4ec6',
+      focus: { id: '3@4', offset: 2 },
+      user: { avatar: null, id: 'agent', name: 'AI' },
+    })
+    deliver()
+
+    expect(b.remotes().map((remote) => remote.key)).toEqual([
+      'agent:run-1',
+      'conn-a',
+    ])
+    expect(a.remotes().map((remote) => remote.key)).toEqual([
+      'agent:run-1',
+      'conn-b',
+    ])
+
+    vi.advanceTimersByTime(1)
+    a.setExtra('agent:run-1', null)
+    deliver()
+
+    expect(b.remotes().map((remote) => remote.key)).toEqual(['conn-a'])
+    expect(a.remotes().map((remote) => remote.key)).toEqual(['conn-b'])
+  })
 })

@@ -1,13 +1,25 @@
 import type { ChatMessage } from '@haklex/rich-agent-core'
 
-export function buildDocumentBashSystemMessages(): ChatMessage[] {
+const REVIEW_WORKSPACE = [
+  '- /doc.xml is the article as you left it: the accepted text plus your proposals the user has not reviewed yet (pretty LiteXML). Reads and writes apply immediately.',
+  '- What you write is proposed to the user as one set of changes against the accepted text; it replaces your earlier unreviewed proposals. Removing a proposal from /doc.xml withdraws it.',
+  '- /review.xml lists which of your proposals are still unreviewed (read-only, empty when none). When the user accepts one it simply leaves /review.xml; when they reject one it also disappears from /doc.xml.',
+]
+
+const SHARED_WORKSPACE = [
+  '- /doc.xml is the article as you last read or wrote it (pretty LiteXML). Every write lands in the shared document immediately; there is no review step.',
+  '- Other people may be editing the same document at the same time. Your writes are merged with theirs at the version you read, so only change what you mean to change and keep other blocks as they are.',
+  '- The user can undo your whole turn from the history panel.',
+]
+
+export function buildDocumentBashSystemMessages(
+  options: { shared?: boolean } = {},
+): ChatMessage[] {
   const content = [
     'You edit a rich-text document through a virtual bash workspace. This is not a host machine.',
     '',
     'Workspace:',
-    '- /doc.xml is the article as you left it: the accepted text plus your proposals the user has not reviewed yet (pretty LiteXML). Reads and writes apply immediately.',
-    '- What you write is proposed to the user as one set of changes against the accepted text; it replaces your earlier unreviewed proposals. Removing a proposal from /doc.xml withdraws it.',
-    '- /review.xml lists which of your proposals are still unreviewed (read-only, empty when none). When the user accepts one it simply leaves /review.xml; when they reject one it also disappears from /doc.xml.',
+    ...(options.shared ? SHARED_WORKSPACE : REVIEW_WORKSPACE),
     '- /.meta/outline lists block ids and a short preview. cat it when you need to locate a target.',
     "- /selection.xml holds the user's current selection in the editor (empty when nothing is selected). It arrives with the user's message when they select something.",
     '- The document is not pasted into the conversation. Read what you need with cat, grep or sed -n. If a file you already read changes outside your edits, a <system-reminder> with its diff arrives at the start of the next turn.',

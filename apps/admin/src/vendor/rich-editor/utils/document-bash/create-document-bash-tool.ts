@@ -1,4 +1,8 @@
-import type { AgentToolConfig, AgentToolResult } from '@haklex/rich-agent-core'
+import type {
+  AgentOperation,
+  AgentToolConfig,
+  AgentToolResult,
+} from '@haklex/rich-agent-core'
 import type { AgentFileSnapshot } from '@mx-space/ai'
 import {
   deserializeMxLitexmlToLexical,
@@ -81,6 +85,8 @@ export type DocumentBashWorkspace = {
 }
 
 export type CreateDocumentBashWorkspaceOptions = {
+  applyDocument?: (target: SerializedEditorState, focusBlockId?: string) => void
+  ownsWrites?: () => boolean
   getEditorState: () => SerializedEditorState | null
   getBaseState?: () => SerializedEditorState | null
   getSelectionXml?: () => string
@@ -143,6 +149,12 @@ class TrackingFs extends InMemoryFs {
   }
 }
 
+function focusOf(operation: AgentOperation | undefined): string | undefined {
+  if (!operation) return undefined
+  if (operation.op !== 'insert') return operation.blockId
+  return (operation.node as NodeRecord).$?.blockId
+}
+
 function extractText(node: SerializedLexicalNode): string {
   const record = node as NodeRecord
   if (typeof record.text === 'string') return record.text
@@ -203,6 +215,7 @@ export function createDocumentBashWorkspace(
     bash: Bash
     emittedOperations: boolean
     fs: TrackingFs
+    ownsWrites: boolean
     lastEmittedXml: string
   } | null = null
   let lastTouched = new Set<string>()
@@ -253,6 +266,7 @@ export function createDocumentBashWorkspace(
     session = {
       base,
       bash,
+      ownsWrites: options.ownsWrites?.() ?? Boolean(options.applyDocument),
       view: editorState,
       emittedOperations: false,
       fs,
@@ -303,6 +317,19 @@ export function createDocumentBashWorkspace(
       current.lastEmittedXml = xml
     }
     await current.bash.writeFile(OUTLINE_PATH, buildOutline(diff.nextState))
+
+    if (current.ownsWrites && options.applyDocument) {
+      const applied = diffDocumentStates(current.view, diff.nextState)
+      if (!applied.ok || applied.operations.length === 0) {
+        return {
+          note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
+        }
+      }
+      options.applyDocument(diff.nextState, focusOf(applied.operations.at(-1)))
+      current.base = diff.nextState
+      current.view = diff.nextState
+      return {}
+    }
 
     if (unchangedFromView && !current.emittedOperations) {
       return {

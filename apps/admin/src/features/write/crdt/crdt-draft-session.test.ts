@@ -363,3 +363,76 @@ describe('createCrdtDraftSession presence', () => {
     b.dispose()
   })
 })
+
+describe('createCrdtDraftSession agent turns', () => {
+  const stateOf = (...values: string[]) => {
+    const editor = newEditor()
+    write(editor, ...values)
+    return editor.getEditorState().toJSON()
+  }
+
+  it('merges an agent write at the version it read, under its own peer', async () => {
+    const server = seededServer('T', 'p1', 'p2')
+    const session = await createCrdtDraftSession({
+      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+      transport: transportFor(server),
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+
+    const turn = session.startAgentTurn('agent:rewrite p1')
+    editor.update(
+      () => {
+        const text = $getRoot()
+          .getChildAtIndex<ElementNode>(1)!
+          .getFirstDescendant() as ReturnType<typeof $createTextNode>
+        text.setTextContent('p2 human')
+      },
+      { discrete: true },
+    )
+    turn.apply(stateOf('P1 agent', 'p2'))
+    turn.apply(stateOf('P1 agent', 'p2', 'p3 agent'))
+    turn.end()
+    await session.flush()
+
+    expect(read(editor)).toEqual(['P1 agent', 'p2 human', 'p3 agent'])
+    expect(serverTexts(server)).toEqual(['P1 agent', 'p2 human', 'p3 agent'])
+    const agentPeers = [...server.getAllChanges().entries()]
+      .filter(([, changes]) =>
+        changes.some((change) => change.message === 'agent:rewrite p1'),
+      )
+      .map(([peer]) => peer)
+    expect(agentPeers).toHaveLength(1)
+    expect(
+      server
+        .getAllChanges()
+        .get(agentPeers[0])!
+        .every((change) => change.message === 'agent:rewrite p1'),
+    ).toBe(true)
+    session.dispose()
+  })
+
+  it('shows the agent as a member while its turn runs', async () => {
+    const server = seededServer('T', 'p1')
+    const session = await createCrdtDraftSession({
+      channel: (hooks) => ({
+        dispose: () => undefined,
+        live: () => true,
+        pull: async (since) => {
+          if (!since) hooks.onJoined?.('conn-1')
+          return transportFor(server).pull(since)
+        },
+        push: transportFor(server).push,
+        sendPresence: () => undefined,
+      }),
+      presence: { user: () => ({ avatar: null, id: 'owner', name: 'Owner' }) },
+    })
+    session.bindEditor(newEditor())
+
+    const turn = session.startAgentTurn('agent:x')
+    expect(session.peers().map((peer) => peer.user.name)).toEqual(['AI'])
+    turn.end()
+    expect(session.peers()).toEqual([])
+    session.dispose()
+  })
+})

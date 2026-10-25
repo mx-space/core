@@ -22,7 +22,7 @@ export type CaretPoint = {
   offset: number
 }
 
-type PresenceState = {
+export type PresenceState = {
   anchor: CaretPoint | null
   color: string
   focus: CaretPoint | null
@@ -54,6 +54,7 @@ export function createCollabPresence(options: {
   )
   const listeners = new Set<(remotes: RemotePresence[]) => void>()
   let self: string | null = null
+  const extras = new Set<string>()
   let refresh: ReturnType<typeof setInterval> | undefined
 
   const remotes = (): RemotePresence[] =>
@@ -73,6 +74,11 @@ export function createCollabPresence(options: {
 
   const publish = () => {
     if (self && store.get(self)) options.send(store.encode(self))
+  }
+
+  const notify = () => {
+    const current = remotes()
+    for (const listener of listeners) listener(current)
   }
 
   const update = (patch: Partial<PresenceState>) => {
@@ -96,8 +102,18 @@ export function createCollabPresence(options: {
     remove: (key: string) => {
       if (key === self || !store.get(key)) return
       store.delete(key)
-      const current = remotes()
-      for (const listener of listeners) listener(current)
+      notify()
+    },
+    setExtra: (key: string, state: PresenceState | null) => {
+      if (state) {
+        extras.add(key)
+        store.set(key, state)
+      } else {
+        extras.delete(key)
+        store.delete(key)
+      }
+      options.send(store.encode(key))
+      notify()
     },
     setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) => {
       const current = self ? store.get(self) : undefined
@@ -123,9 +139,12 @@ export function createCollabPresence(options: {
       publish()
       clearInterval(refresh)
       refresh = setInterval(() => {
-        const current = self ? store.get(self) : undefined
-        if (current && self) store.set(self, current)
-        publish()
+        for (const key of [self, ...extras]) {
+          const current = key ? store.get(key) : undefined
+          if (!key || !current) continue
+          store.set(key, current)
+          options.send(store.encode(key))
+        }
       }, options.refreshMs ?? 10_000)
     },
     subscribe: (listener: (remotes: RemotePresence[]) => void) => {

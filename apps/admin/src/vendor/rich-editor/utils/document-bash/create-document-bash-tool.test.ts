@@ -123,6 +123,34 @@ describe('createDocumentBashWorkspace', () => {
     expect(grepped.operations).toBeUndefined()
   })
 
+  it('applies an edit straight to the document when it owns the writes', async () => {
+    const applied: { focus?: string; target: SerializedEditorState }[] = []
+    const workspace = createDocumentBashWorkspace({
+      applyDocument: (target, focus) => {
+        applied.push({ focus, target })
+      },
+      getEditorState: () => state([para('a', 'Hello world')]),
+    })
+    workspace.beginRun()
+
+    const edited = await workspace.tool.execute({
+      command: "sed -i 's/Hello world/Hello earth/' /doc.xml",
+    })
+    const appended = await workspace.tool.execute({
+      command: "sed -i 's|</doc>|  <p>Second</p>\\n</doc>|' /doc.xml",
+    })
+
+    expect(edited.ok && edited.operations).toBeFalsy()
+    expect(appended.ok && appended.operations).toBeFalsy()
+    expect(applied).toHaveLength(2)
+    expect(JSON.stringify(applied[0].target)).toContain('Hello earth')
+    expect(applied[0].focus).toBe('a')
+    const blocks = applied[1].target.root.children as SerializedLexicalNode[]
+    const minted = (blocks[1] as { $?: { blockId?: string } }).$?.blockId
+    expect(minted).toBeTruthy()
+    expect(applied[1].focus).toBe(minted)
+  })
+
   it('reports the files a command read, with their current content', async () => {
     const workspace = createWorkspace()
     workspace.beginRun()

@@ -6,6 +6,7 @@ import { getDraftCrdt, postDraftCrdt } from '~/api/drafts'
 import { createCollabChannel } from './collab-channel'
 import type { CaretPoint, PresenceUser } from './collab-presence'
 import {
+  type AgentTurn,
   type CrdtDraftSession,
   createCrdtDraftSession,
 } from './crdt-draft-session'
@@ -27,6 +28,7 @@ export interface CrdtDraftController {
   resolveCaret: (point: CaretPoint) => { key: string; offset: number } | null
   setCommitMessage: (message: string | null) => void
   setTitle: (title: string) => void
+  startAgentTurn: (message: string) => AgentTurn | null
   status: CrdtDraftStatus
 }
 
@@ -150,6 +152,8 @@ export function useCrdtDraft(options: {
       setCommitMessage: (message: string | null) =>
         sessionRef.current?.setCommitMessage(message),
       setTitle: (title: string) => sessionRef.current?.setTitle(title),
+      startAgentTurn: (message: string) =>
+        sessionRef.current?.startAgentTurn(message) ?? null,
     }),
     [],
   )
