@@ -172,6 +172,16 @@ export class DraftCrdtService {
     return head?.contentFormat === ContentFormat.Lexical
   }
 
+  async isUntouchedImport(
+    head: ContentRevisionRow,
+    publishedRevisionId: EntityId | null,
+  ): Promise<boolean> {
+    if (head.kind !== 'import' || !publishedRevisionId) return false
+    if (head.parentRevisionId !== publishedRevisionId) return false
+    const editedAt = await this.crdt.findEditedAt(head.documentId)
+    return !editedAt || editedAt <= head.createdAt
+  }
+
   async workingCopy(branchId: EntityId | string): Promise<DraftBranchRow> {
     return (await this.open(branchId)).branch
   }

@@ -714,9 +714,15 @@ export class DraftService {
     if (!baseRevision || !headRevision) {
       throw createAppException(AppErrorCode.DRAFT_NOT_FOUND, { id: branch.id })
     }
-    const comparison = publishedRevision
-      ? await this.compare(publishedRevision.id, headRevision.id)
-      : null
+    const [comparison, untouched] = publishedRevision
+      ? await Promise.all([
+          this.compare(publishedRevision.id, headRevision.id),
+          this.crdtService.isUntouchedImport(
+            headRevision,
+            publishedRevision.id,
+          ),
+        ])
+      : [null, false]
     return {
       ...branch,
       baseRevision,
@@ -724,7 +730,7 @@ export class DraftService {
       document,
       headRevision,
       publishedRevision,
-      relationToPublished: comparison?.relation ?? null,
+      relationToPublished: untouched ? 'same' : (comparison?.relation ?? null),
     }
   }
 

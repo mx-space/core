@@ -79,6 +79,15 @@ export class DraftCrdtRepository extends BaseRepository {
     return row ? mapDoc(row) : null
   }
 
+  async findEditedAt(documentId: EntityId | string): Promise<Date | null> {
+    const [row] = await this.db
+      .select({ editedAt: contentCrdtDocs.editedAt })
+      .from(contentCrdtDocs)
+      .where(eq(contentCrdtDocs.documentId, parseEntityId(documentId)))
+      .limit(1)
+    return row?.editedAt ?? null
+  }
+
   async createDoc(input: CreateCrdtDocInput): Promise<CrdtDocRow> {
     await this.db
       .insert(contentCrdtDocs)
@@ -197,11 +206,12 @@ export class DraftCrdtRepository extends BaseRepository {
       patch[key]
         ? sql`(case when jsonb_typeof(${contentCrdtDocs.fields}->${key}) = 'object' then ${contentCrdtDocs.fields}->${key} else '{}'::jsonb end) || ${JSON.stringify(patch[key])}::jsonb`
         : sql`coalesce(${contentCrdtDocs.fields}->${key}, 'null'::jsonb)`
+    const fields = sql`jsonb_build_object('meta', ${merge('meta')}, 'typeSpecificData', ${merge('typeSpecificData')})`
     const [row] = await this.db
       .update(contentCrdtDocs)
       .set({
-        editedAt: sql`now()`,
-        fields: sql`jsonb_build_object('meta', ${merge('meta')}, 'typeSpecificData', ${merge('typeSpecificData')})`,
+        editedAt: sql`case when ${fields} is distinct from ${contentCrdtDocs.fields} then now() else ${contentCrdtDocs.editedAt} end`,
+        fields,
         updatedAt: new Date(),
       })
       .where(eq(contentCrdtDocs.documentId, parseEntityId(documentId)))

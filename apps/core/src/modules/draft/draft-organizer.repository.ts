@@ -78,7 +78,8 @@ export class DraftOrganizerRepository extends BaseRepository {
           select array_agg(d.id::text order by d.id) as ids,
             jsonb_agg(jsonb_build_array(d.id, d.base_revision_id, d.head_revision_id, d.status, d.updated_at) order by d.id) as state,
             max(coalesce(d.updated_at, d.created_at)) as last_edit,
-            bool_or(d.status = 'active' and
+            bool_or(d.status = 'active'
+              and not coalesce(h.kind = 'import' and h.parent_revision_id = p.id, false) and
               (h.title, h.text, h.content, h.content_format, h.images, h.meta, h.type_specific_data)
               is distinct from
               (p.title, p.text, p.content, p.content_format, p.images, p.meta, p.type_specific_data)) as changed

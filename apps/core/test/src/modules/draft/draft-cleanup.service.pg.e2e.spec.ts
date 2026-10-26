@@ -60,6 +60,13 @@ const body = (...values: string[]) =>
     },
   })
 
+const texts = (content: string | null) =>
+  (
+    JSON.parse(content!) as {
+      root: { children: { children: { text: string }[] }[] }
+    }
+  ).root.children.map((child) => child.children.map((t) => t.text).join(''))
+
 const lexical = (title: string, values: string[]): RevisionSnapshot => ({
   content: body(...values),
   contentFormat: 'lexical',
@@ -346,10 +353,9 @@ describe('DraftCleanupService (real PG)', () => {
     expect(freed.revisions).toBeGreaterThan(0)
     const after = await crdtService.workingCopy(branch.id)
     const head = await drafts.findRevisionById(after.headRevisionId)
-    expect(readDocContent(await clientOf(branch.id)).content).toBe(
-      body('p1', 'unsaved'),
-    )
-    expect(head?.content).toBe(body('p1', 'unsaved'))
+    const content = readDocContent(await clientOf(branch.id)).content
+    expect(texts(content)).toEqual(['p1', 'unsaved'])
+    expect(head?.content).toBe(content)
     expect((await crdt.findDoc(document.id))?.syncedRevisionId).toBe(head!.id)
     expect((await crdtService.history(branch.id)).changes.length).toBe(1)
     expect(await revisionIds(document.id)).toEqual(

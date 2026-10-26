@@ -1,6 +1,11 @@
+import { createLoroBinding } from '@haklex/rich-collab-loro'
+import { allHeadlessNodes } from '@haklex/rich-headless'
+import { createHeadlessEditor } from '@lexical/headless'
 import { SnowflakeGenerator } from '@mx-space/db-schema/id'
 import * as schema from '@mx-space/db-schema/schema'
+import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
+import { $getRoot, $getState, $setState, createState } from 'lexical'
 import { LoroDoc } from 'loro-crdt'
 import { Pool } from 'pg'
 import { createIsolatedPgDatabase } from 'test/helper/pg-testcontainer'
@@ -70,6 +75,17 @@ const lexical = (title: string, values: string[]): RevisionSnapshot => ({
   typeSpecificData: { slug: 's' },
 })
 
+const blockIdState = createState('blockId', {
+  parse: (value: unknown) => (typeof value === 'string' ? value : ''),
+})
+
+const blockIds = (content: string | null) =>
+  (
+    JSON.parse(content!) as {
+      root: { children: { $?: { blockId?: string } }[] }
+    }
+  ).root.children.map((child) => child.$?.blockId)
+
 const markdown = (title: string): RevisionSnapshot => ({
   content: null,
   contentFormat: 'markdown',
@@ -86,6 +102,8 @@ describe('DraftService on the Loro path (real PG)', () => {
   let drafts: DraftRepository
   let crdtRepository: DraftCrdtRepository
   let storage: DraftStorageRepository
+  let organizer: DraftOrganizerRepository
+  let db: AppDatabase
   let service: DraftService
   let refCounter = 7_100_000_000_000_000_000n
   const emit = vi.fn()
@@ -111,10 +129,98 @@ describe('DraftService on the Loro path (real PG)', () => {
     return { branch, document, published: revision, refId }
   }
 
+  const seedPage = async (published: RevisionSnapshot) => {
+    const refId = String(refCounter++)
+    await db.execute(sql`
+      insert into pages (id, title, slug, text, content_format)
+      values (${refId}, ${published.title}, ${refId}, ${published.text}, 'lexical')
+    `)
+    const { document, revision } = await drafts.createDocumentWithRoot(
+      DraftRefType.Page,
+      refId,
+      published,
+      true,
+    )
+    const { branch } = await drafts.createBranch(
+      document.id,
+      revision.id,
+      published,
+      true,
+    )
+    return { branch, document, published: revision }
+  }
+
+  const openInEditor = async (branchId: string) => {
+    await service.findForEditing(branchId)
+    const tab = new LoroDoc()
+    tab.import(await service.exportCrdt(branchId))
+    const from = tab.oplogVersion()
+    const editor = createHeadlessEditor({
+      nodes: allHeadlessNodes,
+      onError: (error) => {
+        throw error
+      },
+    })
+    const binding = createLoroBinding(editor, tab, {
+      commitMessage: 'human:owner',
+    })
+    editor.update(
+      () => {
+        const used = new Set<string>()
+        for (const child of $getRoot().getChildren()) {
+          let id = $getState(child, blockIdState)
+          if (!id || used.has(id)) {
+            id = `client-${used.size}`
+            $setState(child, blockIdState, id)
+          }
+          used.add(id)
+        }
+      },
+      { discrete: true },
+    )
+    binding.dispose()
+    const emitted = tab.oplogVersion().compare(from) !== 0
+    if (emitted) {
+      await service.importCrdt(branchId, tab.export({ from, mode: 'update' }))
+    }
+    return { emitted, tab }
+  }
+
+  const type = async (branchId: string, tab: LoroDoc, values: string[]) => {
+    const from = tab.oplogVersion()
+    tab.import(
+      editDocAt(
+        tab,
+        tab.frontiers(),
+        { content: body(...values), title: 'Pub' },
+        'human:owner',
+      ),
+    )
+    await service.importCrdt(branchId, tab.export({ from, mode: 'update' }))
+  }
+
+  const relationOf = async (branchId: string) => {
+    const view = await service.findById(branchId)
+    const page = await storage.cards(1, 50, {})
+    const [candidate] = await organizer.candidates(
+      { olderThanDays: 0 },
+      undefined,
+      String(view!.documentId),
+    )
+    return {
+      card: page.data.find((card) => card.id === branchId)?.relation,
+      hasChanges: candidate?.hasChanges,
+      view: view?.relationToPublished,
+    }
+  }
+
+  const inSync = { card: 'in_sync', hasChanges: false, view: 'same' }
+  const ahead = { card: 'ahead', hasChanges: true, view: 'ancestor' }
+
   beforeAll(async () => {
     database = await createIsolatedPgDatabase()
     pool = new Pool({ connectionString: database.getConnectionUri(), max: 6 })
-    const db = drizzle(pool, { schema }) as unknown as AppDatabase
+    db = drizzle(pool, { schema }) as unknown as AppDatabase
     const snowflake = new SnowflakeGenerator({
       workerId: 46,
     }) as SnowflakeService
@@ -126,6 +232,7 @@ describe('DraftService on the Loro path (real PG)', () => {
       fileReferences as never,
     )
     storage = new DraftStorageRepository(db)
+    organizer = new DraftOrganizerRepository(db)
     const cleanup = new DraftCleanupService(
       drafts,
       crdt,
@@ -133,7 +240,7 @@ describe('DraftService on the Loro path (real PG)', () => {
       storage,
       fileReferences as never,
       { getTasks: async () => ({ data: [] }) } as never,
-      new DraftOrganizerRepository(db),
+      organizer,
       { roomHasMembers: async () => false } as never,
     )
     service = new DraftService(
@@ -338,5 +445,73 @@ describe('DraftService on the Loro path (real PG)', () => {
     const view = await service.findForEditing(branch.id)
 
     expect(view?.headRevisionId).toBe(branch.headRevisionId)
+  })
+
+  describe('opening a published document', () => {
+    it('stays in sync when the editor loads it without edits', async () => {
+      const { branch } = await seedPage(lexical('Pub', ['a', 'b']))
+
+      const { emitted } = await openInEditor(branch.id)
+
+      expect(emitted).toBe(false)
+      const view = await service.findById(branch.id)
+      expect(view?.headRevision.kind).toBe('import')
+      const ids = blockIds(view!.headRevision.content)
+      expect(ids.every(Boolean)).toBe(true)
+      expect(new Set(ids).size).toBe(ids.length)
+      expect(await relationOf(branch.id)).toEqual(inSync)
+    })
+
+    it('stays in sync on reopen and on a field patch that changes nothing', async () => {
+      const { branch } = await seedPage(lexical('Pub', ['a']))
+      await openInEditor(branch.id)
+
+      const { emitted } = await openInEditor(branch.id)
+      await service.updateFields(branch.id, {
+        typeSpecificData: { slug: 's' },
+      })
+
+      expect(emitted).toBe(false)
+      expect(await relationOf(branch.id)).toEqual(inSync)
+    })
+
+    it('is ahead once the content changes', async () => {
+      const { branch } = await seedPage(lexical('Pub', ['a']))
+      const { tab } = await openInEditor(branch.id)
+
+      await type(branch.id, tab, ['a', 'typed'])
+
+      expect(await relationOf(branch.id)).toEqual(ahead)
+    })
+
+    it('is ahead once a field changes', async () => {
+      const { branch } = await seedPage(lexical('Pub', ['a']))
+      await openInEditor(branch.id)
+
+      await service.updateFields(branch.id, { meta: { cover: 'c.png' } })
+
+      expect(await relationOf(branch.id)).toEqual(ahead)
+    })
+
+    it('is in sync again after publishing and reopening', async () => {
+      const { branch } = await seedPage(lexical('Pub', ['a']))
+      const { tab } = await openInEditor(branch.id)
+      await type(branch.id, tab, ['a', 'typed'])
+      const { headRevision } = await service.createCheckpoint(
+        branch.id,
+        'publish',
+      )
+      const document = await drafts.findDocumentById(headRevision.documentId)
+      await drafts.recordPublication(
+        headRevision.documentId,
+        headRevision.id,
+        document!.publishedRevisionId,
+      )
+
+      const { emitted } = await openInEditor(branch.id)
+
+      expect(emitted).toBe(false)
+      expect(await relationOf(branch.id)).toEqual(inSync)
+    })
   })
 })

@@ -58,13 +58,19 @@ const PROTECTED = sql.raw(`(
   or (r.kind = 'import' and r.frontiers is not null and exists (select 1 from content_crdt_docs where document_id = r.document_id))
 )`)
 
+// Opening a published Lexical document checkpoints it as an import; that is not an edit.
+const HEAD_MATCHES_PUBLISHED = `(
+  (h.id = cd.published_revision_id
+    or (h.kind = 'import' and h.parent_revision_id = cd.published_revision_id))
+  and not exists (
+    select 1 from content_crdt_docs c
+    where c.document_id = d.document_id and c.edited_at > h.created_at
+  )
+)`
+
 const RELATION = sql.raw(`case
   when cd.published_revision_id is null then 'fresh'
-  when cd.published_revision_id = d.head_revision_id and not exists (
-    select 1 from content_crdt_docs c
-    join content_revisions p on p.id = cd.published_revision_id
-    where c.document_id = d.document_id and c.edited_at > p.created_at
-  ) then 'in_sync'
+  when ${HEAD_MATCHES_PUBLISHED} then 'in_sync'
   else 'ahead'
 end`)
 
@@ -228,14 +234,11 @@ export class DraftStorageRepository extends BaseRepository {
   async inSyncDrafts(cutoff: Date): Promise<DraftCandidate[]> {
     return this.draftCandidates(sql`
       d.status = 'active'
-      and cd.published_revision_id = d.head_revision_id
+      and ${sql.raw(HEAD_MATCHES_PUBLISHED)}
       and d.updated_at < ${cutoff}
       and not exists (
         select 1 from content_crdt_docs c
-        join content_revisions p on p.id = cd.published_revision_id
-        where c.document_id = d.document_id
-          and c.edited_at is not null
-          and (c.edited_at > p.created_at or c.edited_at >= ${cutoff})
+        where c.document_id = d.document_id and c.edited_at >= ${cutoff}
       )
     `)
   }

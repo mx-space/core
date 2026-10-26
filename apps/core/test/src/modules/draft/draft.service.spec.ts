@@ -77,6 +77,7 @@ const harness = () => {
     { emit: vi.fn() } as never,
     {
       usesCrdt: vi.fn(async () => false),
+      isUntouchedImport: vi.fn(async () => false),
       workingCopyOfDocument: vi.fn(async () => null),
     } as never,
     cleanup as never,
