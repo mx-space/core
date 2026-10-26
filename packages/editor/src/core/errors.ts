@@ -12,3 +12,13 @@ export class UnknownEditorNodeError extends EditorProjectionError {
     this.name = 'UnknownEditorNodeError'
   }
 }
+
+export class EnvelopeParseError extends EditorProjectionError {
+  constructor(
+    message: string,
+    readonly line: number,
+  ) {
+    super(message)
+    this.name = 'EnvelopeParseError'
+  }
+}

@@ -1,3 +1,4 @@
+export * from './envelope'
 export * from './errors'
 export * from './litexml'
 export * from './markdown'
