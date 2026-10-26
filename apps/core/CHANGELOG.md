@@ -1,3 +1,10 @@
+## [15.6.1](https://github.com/mx-space/core/compare/v15.6.0...v15.6.1) (2026-10-26)
+
+### Bug Fixes
+
+* **draft:** keep a published post in sync when it is opened without edits ([908a4e6](https://github.com/mx-space/core/commit/908a4e6d90bf702b8a16486fde1ae9f0087b9136))
+* **admin:** drop the import change from the draft timeline ([d5653a7](https://github.com/mx-space/core/commit/d5653a7fa6a0861a2a9c06779b9f6afef1669e72))
+
 ## [15.6.0](https://github.com/mx-space/core/compare/v15.5.0...v15.6.0) (2026-10-26)
 
 ### Features
