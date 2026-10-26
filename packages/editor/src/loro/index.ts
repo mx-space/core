@@ -6,6 +6,10 @@ import {
 import { allHeadlessNodes } from '@haklex/rich-headless'
 import { createHeadlessEditor } from '@lexical/headless'
 import {
+  $getRoot,
+  $getState,
+  $setState,
+  createState,
   DecoratorNode,
   type Klass,
   type LexicalEditor,
@@ -25,6 +29,13 @@ export interface DocContent {
 }
 
 const TITLE = 'title'
+
+const BLOCK_ID_ALPHABET =
+  'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict'
+
+const blockIdState = createState('blockId', {
+  parse: (value: unknown) => (typeof value === 'string' ? value : ''),
+})
 
 const BUILTIN_TYPES = new Set([
   'root',
@@ -56,10 +67,12 @@ const passthroughNode = (type: string): Klass<LexicalNode> => {
 
     static importJSON(json: SerializedLexicalNode): PassthroughNode {
       // The Loro binding rebuilds every node with `children: []`, which a leaf block never had.
-      const { children: _children, ...rest } = json as SerializedLexicalNode & {
-        children?: unknown
-      }
-      return new PassthroughNode(rest)
+      const {
+        $: _state,
+        children: _children,
+        ...rest
+      } = json as SerializedLexicalNode & { $?: unknown; children?: unknown }
+      return new PassthroughNode(rest).updateFromJSON(json)
     }
 
     constructor(
@@ -71,7 +84,8 @@ const passthroughNode = (type: string): Klass<LexicalNode> => {
     }
 
     exportJSON(): SerializedLexicalNode {
-      return this.__json
+      const { type: _type, version: _version, ...state } = super.exportJSON()
+      return { ...this.__json, ...state }
     }
 
     createDOM(): never {
@@ -126,6 +140,38 @@ const createEditor = (types: Set<string>): LexicalEditor =>
 const parseState = (content: string): SerializedEditorState =>
   JSON.parse(content) as SerializedEditorState
 
+const mintBlockId = (used: Set<string>) => {
+  for (;;) {
+    const id = Array.from(
+      crypto.getRandomValues(new Uint8Array(8)),
+      (byte) => BLOCK_ID_ALPHABET[byte & 63],
+    ).join('')
+    if (!used.has(id)) return id
+  }
+}
+
+const $blockIdsByKey = () =>
+  new Map(
+    $getRoot()
+      .getChildren()
+      .map((child) => [child.getKey(), $getState(child, blockIdState)]),
+  )
+
+// The editor's BlockIdPlugin mints an id for every root child that lacks one, and on a
+// Loro-bound editor that is an edit. Content leaves the server with ids so a load changes nothing.
+const $ensureBlockIds = (previous = new Map<NodeKey, string>()) => {
+  const used = new Set<string>()
+  for (const child of $getRoot().getChildren()) {
+    let id = $getState(child, blockIdState)
+    if (!id || used.has(id)) {
+      const kept = previous.get(child.getKey())
+      id = kept && !used.has(kept) ? kept : mintBlockId(used)
+      $setState(child, blockIdState, id)
+    }
+    used.add(id)
+  }
+}
+
 export const createDocument = (): LoroDoc => {
   const doc = new LoroDoc()
   doc.setRecordTimestamp(true)
@@ -142,6 +188,7 @@ export function createContentDoc(
   collectJsonTypes(state.root, types)
   const editor = createEditor(types)
   editor.setEditorState(editor.parseEditorState(state))
+  editor.update(() => $ensureBlockIds(), { discrete: true })
   doc.getText(TITLE).insert(0, content.title)
   createLoroBinding(editor, doc, { commitMessage: message }).dispose()
   doc.commit({ message })
@@ -187,7 +234,15 @@ export function editDocAt(
   const from = fork.oplogVersion()
   const title = fork.getText(TITLE)
   if (title.toString() !== target.title) title.update(target.title)
-  editor.update(() => $reconcileRoot(state.root), { discrete: true })
+  editor.update(
+    () => {
+      // Reconciling a block without an id clears the one it had; the node keeps its key.
+      const previous = $blockIdsByKey()
+      $reconcileRoot(state.root)
+      $ensureBlockIds(previous)
+    },
+    { discrete: true },
+  )
   fork.commit({ message })
   binding.dispose()
   return fork.export({ from, mode: 'update' })
