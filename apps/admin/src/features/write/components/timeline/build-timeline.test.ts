@@ -61,7 +61,7 @@ describe('buildTimeline', () => {
       rows.map((row) =>
         row.type === 'step' ? `${row.kind}:${row.count}` : row.id,
       ),
-    ).toEqual(['agent:2', 'c2', 'human:2', 'c1', 'other:1', 'p'])
+    ).toEqual(['agent:2', 'c2', 'human:2', 'c1', 'p'])
     const agent = rows[0]
     expect(agent).toMatchObject({
       before: [{ counter: 4, peer: '1' }],

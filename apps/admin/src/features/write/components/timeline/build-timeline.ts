@@ -95,7 +95,11 @@ export function buildTimeline(
       type: 'checkpoint',
     }),
   )
-  return [...checkpoints, ...groupSteps(history.changes)].sort(
+  // The import change is the import checkpoint itself, already listed as one.
+  const changes = history.changes.filter(
+    (change) => !change.message?.startsWith('import '),
+  )
+  return [...checkpoints, ...groupSteps(changes)].sort(
     (left, right) =>
       right.time - left.time ||
       (left.type === right.type ? 0 : left.type === 'checkpoint' ? -1 : 1),
