@@ -6,7 +6,7 @@ export const metadata = defineMetadata({
   titleKey: 'routes.commentImages.title',
   descriptionKey: 'routes.commentImages.description',
   icon: Image,
-  order: 2,
+  order: 3,
 })
 
 export { CommentImagesPage as default } from '~/features/files/routes/FilesRouteViews'

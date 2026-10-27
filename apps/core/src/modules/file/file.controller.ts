@@ -111,6 +111,37 @@ export class FileController {
     )
   }
 
+  @Get('/remote/list')
+  @Auth()
+  async getRemoteFiles(
+    @Query({ schema: BasicPagerSchema }) query: BasicPagerDto,
+  ) {
+    const { page = 1, size = 20 } = query
+    const { data: files, pagination } =
+      await this.fileReferenceService.listRemoteFiles(page, size)
+
+    return withMeta(
+      files.map((file) => ({
+        id: file.id,
+        fileName: file.fileName,
+        fileUrl: file.fileUrl,
+        objectKey: file.s3ObjectKey,
+        status: file.status,
+        inUse: file.inUse,
+        mimeType: file.mimeType,
+        byteSize: file.byteSize,
+        createdAt: file.createdAt,
+      })),
+      new MetaObjectBuilder().pagination(pagination).build(),
+    )
+  }
+
+  @Delete('/remote/:id')
+  @Auth()
+  async deleteRemoteFile(@Param('id') id: string) {
+    await this.fileReferenceService.deleteRemoteFile(id)
+  }
+
   @Get('/orphans/count')
   @Auth()
   async getOrphanFilesCount() {

@@ -1310,6 +1310,7 @@ export const enUS = {
   'files.empty.commentImages': 'No comment images',
   'files.empty.files': 'No files',
   'files.empty.orphans': 'No isolated files',
+  'files.empty.remoteFiles': 'No files in the bucket',
   'files.fileType.avatar': 'Avatar',
   'files.fileType.file': 'File',
   'files.fileType.icon': 'Icon',
@@ -1348,9 +1349,16 @@ export const enUS = {
   'files.orphans.selectedCount': '{count} selected',
   'files.orphans.totalCount': '{count} isolated files',
   'files.preview.title': 'Image preview',
+  'files.remote.confirmDeleteInUse':
+    'A post or setting still uses this file. Its image or link will break. Deletion cannot be undone.',
+  'files.remote.description':
+    'Files mx-core uploaded to object storage, excluding comment images. Objects added to the bucket by other tools are not listed.',
+  'files.remote.inUse': 'In use',
+  'files.remote.unused': 'Not used',
   'files.source.commentImages': 'Comment images',
-  'files.source.files': 'File library',
+  'files.source.files': 'Local files',
   'files.source.orphans': 'Isolated files',
+  'files.source.remoteFiles': 'Bucket',
   'files.toast.batchDeleteFailed': 'Batch delete failed',
   'files.toast.cleanupFailed': 'Cleanup failed',
   'files.toast.commentDeletedStorageFailed':
@@ -1396,6 +1404,7 @@ export const enUS = {
   'files.detail.field.url': 'URL',
   'files.detail.field.size': 'Size',
   'files.detail.field.mime': 'Mime type',
+  'files.detail.field.objectKey': 'Object key',
   'files.detail.field.created': 'Created',
   'files.detail.field.dimensions': 'Dimensions',
   'files.detail.field.palette': 'Palette',
@@ -1972,6 +1981,8 @@ export const enUS = {
   'routes.orphanImages.description':
     'Uploaded files not referenced by persisted content or configuration.',
   'routes.orphanImages.title': 'Isolated Files',
+  'routes.remoteFiles.description': 'Files uploaded to object storage.',
+  'routes.remoteFiles.title': 'Bucket',
   'routes.pages.description':
     'Static pages, ordering metadata, and public page links.',
   'routes.pages.title': 'Pages',

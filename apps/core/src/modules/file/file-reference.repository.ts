@@ -5,6 +5,7 @@ import {
   eq,
   gte,
   inArray,
+  isNotNull,
   lt,
   ne,
   notExists,
@@ -71,12 +72,19 @@ export class FileReferenceRepository extends BaseRepository {
     super(db)
   }
 
+  private ownerWhere() {
+    return or(
+      ne(fileReferences.uploadedBy, FileUploadedBy.Reader),
+      sql`${fileReferences.uploadedBy} IS NULL`,
+    )!
+  }
+
   private ownerOrphanWhere() {
+    return and(this.ownerWhere(), this.unusedWhere())!
+  }
+
+  private unusedWhere() {
     return and(
-      or(
-        ne(fileReferences.uploadedBy, FileUploadedBy.Reader),
-        sql`${fileReferences.uploadedBy} IS NULL`,
-      ),
       notExists(
         this.db
           .select({ id: fileUsages.id })
@@ -550,6 +558,36 @@ export class FileReferenceRepository extends BaseRepository {
     ])
     return {
       data: rows.map(mapRow),
+      pagination: this.paginationOf(Number(count ?? 0), page, size),
+    }
+  }
+
+  async listRemote(
+    page = 1,
+    size = 20,
+  ): Promise<PaginationResult<FileReferenceRow & { inUse: boolean }>> {
+    page = Math.max(1, page)
+    size = Math.min(100, Math.max(1, size))
+    const offset = (page - 1) * size
+    const where = and(isNotNull(fileReferences.s3ObjectKey), this.ownerWhere())
+    const [rows, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          row: fileReferences,
+          inUse: sql<boolean>`not (${this.unusedWhere()})`,
+        })
+        .from(fileReferences)
+        .where(where)
+        .orderBy(desc(fileReferences.createdAt))
+        .limit(size)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(fileReferences)
+        .where(where),
+    ])
+    return {
+      data: rows.map(({ row, inUse }) => ({ ...mapRow(row), inUse })),
       pagination: this.paginationOf(Number(count ?? 0), page, size),
     }
   }

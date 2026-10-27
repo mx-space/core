@@ -3,10 +3,10 @@ import type {
   CommentUploadStatus,
   FileItem,
   OrphanFile,
+  RemoteFile,
 } from '~/api/files'
 import type { TranslationKey, TranslationValues } from '~/i18n/types'
 import type { BadgeTone } from '~/ui/primitives/badge'
-
 import { relativeTimeFromNow } from '~/utils/time'
 
 import { formatBytes } from './format'
@@ -80,14 +80,18 @@ export function adaptOrphanFile(
 
 function orphanStatusTone(status: OrphanFile['status']): BadgeTone {
   switch (status) {
-    case 'active':
+    case 'active': {
       return 'neutral'
-    case 'pending':
+    }
+    case 'pending': {
       return 'warning'
-    case 'detached':
+    }
+    case 'detached': {
       return 'danger'
-    default:
+    }
+    default: {
       return 'neutral'
+    }
   }
 }
 
@@ -124,13 +128,40 @@ export function adaptCommentUpload(
 
 function commentStatusTone(status: CommentUploadFile['status']): BadgeTone {
   switch (status) {
-    case 'active':
+    case 'active': {
       return 'neutral'
-    case 'pending':
+    }
+    case 'pending': {
       return 'warning'
-    case 'detached':
+    }
+    case 'detached': {
       return 'danger'
-    default:
+    }
+    default: {
       return 'neutral'
+    }
+  }
+}
+
+export function adaptRemoteFile(
+  item: RemoteFile,
+  t: Translator,
+): FileRowItem<RemoteFile> {
+  const meta = [formatBytes(item.byteSize), relativeTimeFromNow(item.createdAt)]
+    .filter(Boolean)
+    .join(' · ')
+
+  return {
+    id: item.id,
+    name: item.fileName,
+    url: item.fileUrl,
+    primary: item.fileName,
+    secondary: meta,
+    tertiary: item.objectKey,
+    status: item.inUse
+      ? { label: t('files.remote.inUse'), tone: 'success' }
+      : { label: t('files.remote.unused'), tone: 'neutral' },
+    createdAt: item.createdAt,
+    raw: item,
   }
 }

@@ -1271,6 +1271,7 @@ export const zhCN = {
   'files.empty.commentImages': '暂无评论图片',
   'files.empty.files': '暂无文件',
   'files.empty.orphans': '暂无孤立文件',
+  'files.empty.remoteFiles': '存储桶里还没有文件',
   'files.fileType.avatar': '头像',
   'files.fileType.file': '文件',
   'files.fileType.icon': '图标',
@@ -1308,9 +1309,16 @@ export const zhCN = {
   'files.orphans.selectedCount': '已选 {count} 项',
   'files.orphans.totalCount': '共 {count} 个孤立文件',
   'files.preview.title': '图片预览',
+  'files.remote.confirmDeleteInUse':
+    '仍有文章或设置在用这个文件，删除后那里的图片或链接会失效。删除后无法恢复。',
+  'files.remote.description':
+    'mx-core 上传到对象存储的文件，不含评论图片。其他工具直接放进存储桶的对象不在这里。',
+  'files.remote.inUse': '使用中',
+  'files.remote.unused': '未使用',
   'files.source.commentImages': '评论图片',
-  'files.source.files': '文件库',
+  'files.source.files': '本地文件',
   'files.source.orphans': '孤立文件',
+  'files.source.remoteFiles': '存储桶',
   'files.toast.batchDeleteFailed': '批量删除失败',
   'files.toast.cleanupFailed': '清理失败',
   'files.toast.commentDeletedStorageFailed':
@@ -1356,6 +1364,7 @@ export const zhCN = {
   'files.detail.field.url': '链接',
   'files.detail.field.size': '大小',
   'files.detail.field.mime': 'MIME 类型',
+  'files.detail.field.objectKey': '对象键',
   'files.detail.field.created': '创建时间',
   'files.detail.field.dimensions': '尺寸',
   'files.detail.field.palette': '色板',
@@ -1897,6 +1906,8 @@ export const zhCN = {
   'routes.orphanImages.description':
     '已上传但未被任何持久化内容或配置引用的文件。',
   'routes.orphanImages.title': '孤立文件',
+  'routes.remoteFiles.description': '上传到对象存储的文件。',
+  'routes.remoteFiles.title': '存储桶',
   'routes.pages.description': '静态页面、排序元数据与公开链接。',
   'routes.pages.title': '页面',
   'routes.passkeyLab.description': 'Passkey 注册与认证诊断。',

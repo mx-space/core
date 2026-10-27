@@ -575,6 +575,32 @@ export class FileReferenceService {
     return this.fileReferenceRepository.listOrphans(page, size)
   }
 
+  async listRemoteFiles(page = 1, size = 20) {
+    return this.fileReferenceRepository.listRemote(page, size)
+  }
+
+  async deleteRemoteFile(id: string) {
+    const file = await this.fileReferenceRepository.findById(id)
+    if (!file?.s3ObjectKey || file.uploadedBy === FileUploadedBy.Reader) {
+      throw createAppException(AppErrorCode.NOT_FOUND, { id })
+    }
+    const uploader = await this.buildS3Uploader()
+    if (!uploader) {
+      throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
+    }
+    await uploader.deleteObject(file.s3ObjectKey)
+    await this.fileReferenceRepository.deleteById(file.id)
+    this.logger.log(
+      JSON.stringify({
+        event: 'file_hard_delete',
+        reason: FileDeletionReason.Manual,
+        fileName: file.fileName,
+        fileUrl: file.fileUrl,
+        s3ObjectKey: file.s3ObjectKey,
+      }),
+    )
+  }
+
   async listReaderUploads(params: {
     page: number
     size: number

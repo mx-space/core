@@ -164,6 +164,8 @@ export const adminQueryKeys = {
       ['files', 'comment-uploads', params] as const,
     orphans: (params: { page: number; size: number }) =>
       ['files', 'orphans', params] as const,
+    remote: (params: { page: number; size: number }) =>
+      ['files', 'remote', params] as const,
     root: ['files'] as const,
   },
   login: {
