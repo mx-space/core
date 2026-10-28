@@ -1,3 +1,14 @@
+## [15.7.0](https://github.com/mx-space/core/compare/v15.6.1...v15.7.0) (2026-10-28)
+
+### Features
+
+* **files:** convert uploaded images to WebP and videos to WebM ([ee2ad79](https://github.com/mx-space/core/commit/ee2ad79bdd67a6885adc8abe3fc7408324943343))
+* **files:** list and delete bucket files on their own page ([1e14e4b](https://github.com/mx-space/core/commit/1e14e4ba6107fdbbea0a3f55831b31db087dcd45))
+
+### Bug Fixes
+
+* **deps:** update dependency qs to v6.16.1 [security] ([#2885](https://github.com/mx-space/core/pull/2885)) ([5f03e22](https://github.com/mx-space/core/commit/5f03e22db9aec73dc08148b73af15209cdd1c173))
+
 ## [15.6.1](https://github.com/mx-space/core/compare/v15.6.0...v15.6.1) (2026-10-26)
 
 ### Bug Fixes
