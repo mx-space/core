@@ -2303,7 +2303,8 @@ export const zhCN = {
   'settings.group.search.title': '搜索推送',
   'settings.group.site.description': '站点地址、SEO',
   'settings.group.site.title': '站点',
-  'settings.group.storage.description': '备份、图床、评论图片上传、草稿清理',
+  'settings.group.storage.description':
+    '备份、图床、评论图片上传、媒体处理、草稿清理',
   'settings.group.storage.title': '存储',
   'settings.group.system.description': '管理端设置、功能开关',
   'settings.group.system.title': '系统',
@@ -4393,6 +4394,41 @@ export const zhCN = {
   'drafts.version.doomed': '压缩时删除',
   'write.toast.draftCompacted': '草稿历史已压缩，已重新加载',
   'write.toast.draftDeleted': '这份草稿已被删除，改动不再同步',
+  'settings.schema.mediaProcessingOptions.title': '媒体处理',
+  'settings.schema.mediaProcessingOptions.imageToWebp.title': '图片转 WebP',
+  'settings.schema.mediaProcessingOptions.imageToWebp.description':
+    '开启后，上传的图片会转成 WebP 再存储。SVG 和 WebP 保持原样。',
+  'settings.schema.mediaProcessingOptions.imageQuality.title': 'WebP 质量',
+  'settings.schema.mediaProcessingOptions.imageQuality.description':
+    '1–100，默认 80。无损模式下忽略。',
+  'settings.schema.mediaProcessingOptions.imageEffort.title': 'WebP 压缩力度',
+  'settings.schema.mediaProcessingOptions.imageEffort.description':
+    '0–6，默认 4。越大文件越小，但越慢。',
+  'settings.schema.mediaProcessingOptions.imageLossless.title': '无损 WebP',
+  'settings.schema.mediaProcessingOptions.imageLossless.description':
+    '无损编码，开启后忽略质量设置。',
+  'settings.schema.mediaProcessingOptions.imageMaxDimension.title':
+    '图片最大边长（px）',
+  'settings.schema.mediaProcessingOptions.imageMaxDimension.description':
+    '最长边超过时按比例缩小；留空不缩放。',
+  'settings.schema.mediaProcessingOptions.videoToWebm.title': '视频转 WebM',
+  'settings.schema.mediaProcessingOptions.videoToWebm.description':
+    '开启后，上传的视频会用 ffmpeg 转成 WebM（VP9 + Opus）再存储。上传会等转码完成；S3 上的视频也改为受视频大小上限限制。',
+  'settings.schema.mediaProcessingOptions.videoCrf.title': 'VP9 画质（CRF）',
+  'settings.schema.mediaProcessingOptions.videoCrf.description':
+    '0–63，默认 32。越小画质越好，文件越大。',
+  'settings.schema.mediaProcessingOptions.videoCpuUsed.title':
+    'VP9 速度（cpu-used）',
+  'settings.schema.mediaProcessingOptions.videoCpuUsed.description':
+    '0–8，默认 4。越大越快，画质越低。',
+  'settings.schema.mediaProcessingOptions.videoAudioBitrate.title':
+    'Opus 音频码率（kbps）',
+  'settings.schema.mediaProcessingOptions.videoAudioBitrate.description':
+    '默认 128 kbps。',
+  'settings.schema.mediaProcessingOptions.videoMaxHeight.title':
+    '视频最大高度（px）',
+  'settings.schema.mediaProcessingOptions.videoMaxHeight.description':
+    '超过时按比例缩小；留空不缩放。',
   'settings.schema.draftCleanupOptions.title': '草稿清理',
   'settings.schema.draftCleanupOptions.enable.title': '自动清理草稿',
   'settings.schema.draftCleanupOptions.enable.description':

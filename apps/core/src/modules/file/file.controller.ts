@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -25,7 +26,9 @@ import { AppErrorCode, createAppException } from '~/common/errors'
 import { withMeta } from '~/common/response/envelope.types'
 import { MetaObjectBuilder } from '~/common/response/meta-builder'
 import { STATIC_FILE_DIR } from '~/constants/path.constant'
+import type { IConfig } from '~/modules/configs/configs.interface'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { MediaProcessingService } from '~/processors/helper/helper.media-processing.service'
 import { UploadService } from '~/processors/helper/helper.upload.service'
 import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import {
@@ -63,6 +66,7 @@ export class FileController {
     private readonly fileReferenceService: FileReferenceService,
     private readonly fileReferenceReconciliationService: FileReferenceReconciliationService,
     private readonly configsService: ConfigsService,
+    private readonly mediaProcessingService: MediaProcessingService,
   ) {}
 
   @Post('/references/reconcile')
@@ -288,109 +292,12 @@ export class FileController {
     )
     const s3Enabled = imageStorageConfig?.enable === true
 
-    if (type === 'video' && s3Enabled) {
-      const config = imageStorageConfig!
-      if (
-        !config.endpoint ||
-        !config.secretId ||
-        !config.secretKey ||
-        !config.bucket
-      ) {
-        throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
-      }
-
-      const file = await this.uploadService.getAndValidMultipartField(req, {
-        maxFileSize: Number.MAX_SAFE_INTEGER,
-      })
-
-      let filename = generateFilename(uploadConfig, {
-        originalFilename: file.filename,
-        fileType: type,
-      })
-
-      let prefixPath = ''
-      if (config.prefix) {
-        prefixPath = replaceFilenameTemplate(config.prefix, {
-          originalFilename: file.filename,
-          fileType: type,
-        })
-        prefixPath = prefixPath.replace(/\/+$/, '')
-      }
-
-      const s3Uploader = new S3Uploader({
-        endpoint: config.endpoint,
-        accessKey: config.secretId,
-        secretKey: config.secretKey,
-        bucket: config.bucket,
-        region: config.region || 'auto',
-      })
-      if (config.customDomain) {
-        s3Uploader.setCustomDomain(config.customDomain)
-      }
-
-      const objectKey = await resolveUniqueObjectKey(
-        prefixPath ? `${prefixPath}/${filename}` : filename,
-        (key) => s3Uploader.objectExists(key),
-      )
-      filename = path.posix.basename(objectKey)
-
-      const contentType = lookup(file.filename) || 'application/octet-stream'
-      const s3Url = await s3Uploader.uploadStream(
-        file.file,
-        objectKey,
-        contentType,
-      )
-
-      await this.fileReferenceService.createPendingReference(
-        s3Url,
-        filename,
-        objectKey,
-      )
-
-      return { url: s3Url, name: filename }
-    }
-
     if (type === 'video') {
-      const file = await this.uploadService.getAndValidMultipartField(req, {
-        maxFileSize: (uploadConfig.videoMaxSize ?? 100) * 1024 * 1024,
-      })
-
-      const rawFilename = generateFilename(uploadConfig, {
-        originalFilename: file.filename,
-        fileType: type,
-      })
-
-      const basePath = generateFilePath(uploadConfig, {
-        originalFilename: file.filename,
-        fileType: type,
-      })
-
-      let relativePath: string
-      if (basePath === type || !basePath) {
-        relativePath = rawFilename
-      } else {
-        const pathWithoutType = basePath.startsWith(`${type}/`)
-          ? basePath.slice(Math.max(0, type.length + 1))
-          : basePath
-        relativePath = path.join(pathWithoutType, rawFilename)
-      }
-      relativePath = await this.service.resolveUniqueLocalName(
-        type,
-        relativePath,
+      return this.uploadVideo(
+        req,
+        uploadConfig,
+        s3Enabled ? imageStorageConfig : null,
       )
-
-      await this.service.writeFile(type, relativePath, file.file)
-      if (file.file.truncated) {
-        await this.service.deleteFile(type, relativePath).catch(() => void 0)
-        throw createAppException(AppErrorCode.FILE_TOO_LARGE)
-      }
-      const fileUrl = await this.service.resolveFileUrl(type, relativePath)
-      await this.fileReferenceService.createPendingReference(
-        fileUrl,
-        relativePath,
-      )
-
-      return { url: fileUrl, name: path.basename(relativePath) }
     }
 
     const isS3Routed = s3Enabled && (type === 'image' || type === 'file')
@@ -412,16 +319,161 @@ export class FileController {
       throw createAppException(AppErrorCode.FILE_TOO_LARGE)
     }
 
-    const contentType = lookup(file.filename) || 'application/octet-stream'
+    const processed =
+      type === 'image'
+        ? await this.mediaProcessingService.processImage(buffer, file.filename)
+        : null
+    const filename = processed?.filename ?? file.filename
+    const contentType =
+      processed?.contentType ??
+      (lookup(file.filename) || 'application/octet-stream')
 
-    return this.service.uploadBuffer(buffer, {
+    return this.service.uploadBuffer(processed?.buffer ?? buffer, {
       type,
-      originalFilename: file.filename,
+      originalFilename: filename,
       contentType,
       objectKey: query.immutable
-        ? `versions/${randomUUID()}${path.extname(file.filename)}`
+        ? `versions/${randomUUID()}${path.extname(filename)}`
         : undefined,
     })
+  }
+
+  private async uploadVideo(
+    req: FastifyRequest,
+    uploadConfig: IConfig['fileUploadOptions'],
+    s3Config: IConfig['imageStorageOptions'] | null,
+  ) {
+    const type = 'video'
+    const transcode =
+      await this.mediaProcessingService.isVideoTranscodeEnabled()
+    const videoMaxSize = (uploadConfig.videoMaxSize ?? 100) * 1024 * 1024
+
+    if (s3Config) {
+      const config = s3Config
+      if (
+        !config.endpoint ||
+        !config.secretId ||
+        !config.secretKey ||
+        !config.bucket
+      ) {
+        throw createAppException(AppErrorCode.FILE_STORAGE_NOT_CONFIGURED)
+      }
+
+      const file = await this.uploadService.getAndValidMultipartField(req, {
+        maxFileSize: transcode ? videoMaxSize : Number.MAX_SAFE_INTEGER,
+      })
+      const video = await this.mediaProcessingService.transcodeVideo(
+        file.file,
+        file.filename,
+      )
+
+      try {
+        const originalFilename = video?.filename ?? file.filename
+        let filename = generateFilename(uploadConfig, {
+          originalFilename,
+          fileType: type,
+        })
+
+        let prefixPath = ''
+        if (config.prefix) {
+          prefixPath = replaceFilenameTemplate(config.prefix, {
+            originalFilename,
+            fileType: type,
+          })
+          prefixPath = prefixPath.replace(/\/+$/, '')
+        }
+
+        const s3Uploader = new S3Uploader({
+          endpoint: config.endpoint,
+          accessKey: config.secretId,
+          secretKey: config.secretKey,
+          bucket: config.bucket,
+          region: config.region || 'auto',
+        })
+        if (config.customDomain) {
+          s3Uploader.setCustomDomain(config.customDomain)
+        }
+
+        const objectKey = await resolveUniqueObjectKey(
+          prefixPath ? `${prefixPath}/${filename}` : filename,
+          (key) => s3Uploader.objectExists(key),
+        )
+        filename = path.posix.basename(objectKey)
+
+        const contentType =
+          video?.contentType ??
+          (lookup(file.filename) || 'application/octet-stream')
+        const s3Url = await s3Uploader.uploadStream(
+          video ? createReadStream(video.path) : file.file,
+          objectKey,
+          contentType,
+        )
+
+        await this.fileReferenceService.createPendingReference(
+          s3Url,
+          filename,
+          objectKey,
+        )
+
+        return { url: s3Url, name: filename }
+      } finally {
+        await video?.cleanup()
+      }
+    }
+
+    const file = await this.uploadService.getAndValidMultipartField(req, {
+      maxFileSize: videoMaxSize,
+    })
+    const video = await this.mediaProcessingService.transcodeVideo(
+      file.file,
+      file.filename,
+    )
+
+    try {
+      const originalFilename = video?.filename ?? file.filename
+      const rawFilename = generateFilename(uploadConfig, {
+        originalFilename,
+        fileType: type,
+      })
+
+      const basePath = generateFilePath(uploadConfig, {
+        originalFilename,
+        fileType: type,
+      })
+
+      let relativePath: string
+      if (basePath === type || !basePath) {
+        relativePath = rawFilename
+      } else {
+        const pathWithoutType = basePath.startsWith(`${type}/`)
+          ? basePath.slice(Math.max(0, type.length + 1))
+          : basePath
+        relativePath = path.join(pathWithoutType, rawFilename)
+      }
+      relativePath = await this.service.resolveUniqueLocalName(
+        type,
+        relativePath,
+      )
+
+      await this.service.writeFile(
+        type,
+        relativePath,
+        video ? createReadStream(video.path) : file.file,
+      )
+      if (file.file.truncated) {
+        await this.service.deleteFile(type, relativePath).catch(() => void 0)
+        throw createAppException(AppErrorCode.FILE_TOO_LARGE)
+      }
+      const fileUrl = await this.service.resolveFileUrl(type, relativePath)
+      await this.fileReferenceService.createPendingReference(
+        fileUrl,
+        relativePath,
+      )
+
+      return { url: fileUrl, name: path.basename(relativePath) }
+    } finally {
+      await video?.cleanup()
+    }
   }
 
   @Delete('/:type/:name')

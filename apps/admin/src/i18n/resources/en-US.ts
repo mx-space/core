@@ -2424,7 +2424,7 @@ export const enUS = {
   'settings.group.site.description': 'Site URL, SEO',
   'settings.group.site.title': 'Site',
   'settings.group.storage.description':
-    'Backup, image hosting, comment image uploads, draft cleanup',
+    'Backup, image hosting, comment image uploads, media processing, draft cleanup',
   'settings.group.storage.title': 'Storage',
   'settings.group.system.description': 'Admin settings, feature toggles',
   'settings.group.system.title': 'System',
@@ -4643,6 +4643,43 @@ export const enUS = {
   'drafts.version.doomed': 'Removed on compaction',
   'write.toast.draftCompacted': 'Draft history was compacted; reloaded',
   'write.toast.draftDeleted': 'This draft was deleted; changes no longer sync',
+  'settings.schema.mediaProcessingOptions.title': 'Media processing',
+  'settings.schema.mediaProcessingOptions.imageToWebp.title':
+    'Convert images to WebP',
+  'settings.schema.mediaProcessingOptions.imageToWebp.description':
+    'Re-encode uploaded images as WebP. SVG and WebP are kept as-is.',
+  'settings.schema.mediaProcessingOptions.imageQuality.title': 'WebP quality',
+  'settings.schema.mediaProcessingOptions.imageQuality.description':
+    '1–100, default 80. Ignored in lossless mode.',
+  'settings.schema.mediaProcessingOptions.imageEffort.title': 'WebP effort',
+  'settings.schema.mediaProcessingOptions.imageEffort.description':
+    '0–6, default 4. Higher is smaller but slower.',
+  'settings.schema.mediaProcessingOptions.imageLossless.title': 'Lossless WebP',
+  'settings.schema.mediaProcessingOptions.imageLossless.description':
+    'Encode without quality loss; quality is ignored.',
+  'settings.schema.mediaProcessingOptions.imageMaxDimension.title':
+    'Max image edge (px)',
+  'settings.schema.mediaProcessingOptions.imageMaxDimension.description':
+    'Scale down so the longest edge fits; empty keeps the size.',
+  'settings.schema.mediaProcessingOptions.videoToWebm.title':
+    'Convert videos to WebM',
+  'settings.schema.mediaProcessingOptions.videoToWebm.description':
+    'Transcode uploaded videos to WebM (VP9 + Opus) with ffmpeg. The upload waits for the transcode, and S3 video uploads are then capped by the video size limit.',
+  'settings.schema.mediaProcessingOptions.videoCrf.title': 'VP9 CRF',
+  'settings.schema.mediaProcessingOptions.videoCrf.description':
+    '0–63, default 32. Lower is better quality and larger.',
+  'settings.schema.mediaProcessingOptions.videoCpuUsed.title':
+    'VP9 speed (cpu-used)',
+  'settings.schema.mediaProcessingOptions.videoCpuUsed.description':
+    '0–8, default 4. Higher is faster with lower quality.',
+  'settings.schema.mediaProcessingOptions.videoAudioBitrate.title':
+    'Opus bitrate (kbps)',
+  'settings.schema.mediaProcessingOptions.videoAudioBitrate.description':
+    'Default 128 kbps.',
+  'settings.schema.mediaProcessingOptions.videoMaxHeight.title':
+    'Max video height (px)',
+  'settings.schema.mediaProcessingOptions.videoMaxHeight.description':
+    'Scale down taller videos; empty keeps the size.',
   'settings.schema.draftCleanupOptions.title': 'Draft cleanup',
   'settings.schema.draftCleanupOptions.enable.title':
     'Clean up drafts automatically',

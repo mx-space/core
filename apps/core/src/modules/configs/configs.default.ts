@@ -112,6 +112,18 @@ export const generateDefaultConfig: () => IConfig = () => ({
     pathTemplate: '{type}',
     videoMaxSize: 100,
   },
+  mediaProcessingOptions: {
+    imageToWebp: false,
+    imageQuality: 80,
+    imageEffort: 4,
+    imageLossless: false,
+    imageMaxDimension: undefined,
+    videoToWebm: false,
+    videoCrf: 32,
+    videoCpuUsed: 4,
+    videoAudioBitrate: 128,
+    videoMaxHeight: undefined,
+  },
   draftCleanupOptions: {
     enable: false,
     olderThanDays: 30,

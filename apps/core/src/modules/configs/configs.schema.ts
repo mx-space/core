@@ -552,9 +552,59 @@ export const FileUploadOptionsSchema = section('File upload settings', {
     {
       'ui:options': { halfGrid: true },
       description:
-        'Default 100. Applies to local-disk storage only; S3 storage uploads are unlimited',
+        'Default 100. S3 storage uploads are unlimited unless video WebM conversion is enabled',
     },
   ),
+})
+
+const optionalInt = (min: number, max?: number) =>
+  z.preprocess(
+    (val) => (val === '' || val == null ? undefined : Number(val)),
+    (max === undefined
+      ? z.number().int().min(min)
+      : z.number().int().min(min).max(max)
+    ).optional(),
+  )
+
+// ==================== Media Processing ====================
+export const MediaProcessingOptionsSchema = section('Media processing', {
+  imageToWebp: field.toggle(z.boolean().optional(), 'Convert images to WebP', {
+    description:
+      'Uploaded images are re-encoded as WebP before storage. SVG and WebP are kept as-is',
+  }),
+  imageQuality: field.number(optionalInt(1, 100), 'WebP quality', {
+    description: '1-100, default 80. Ignored in lossless mode',
+    'ui:options': { halfGrid: true },
+  }),
+  imageEffort: field.number(optionalInt(0, 6), 'WebP effort', {
+    description: '0-6, default 4. Higher is smaller but slower',
+    'ui:options': { halfGrid: true },
+  }),
+  imageLossless: field.toggle(z.boolean().optional(), 'Lossless WebP'),
+  imageMaxDimension: field.number(optionalInt(1), 'Max image edge (px)', {
+    description: 'Longest edge is scaled down to this; empty keeps the size',
+    'ui:options': { halfGrid: true },
+  }),
+  videoToWebm: field.toggle(z.boolean().optional(), 'Convert videos to WebM', {
+    description:
+      'Uploaded videos are transcoded to WebM (VP9 + Opus) with ffmpeg before storage. The upload waits for the transcode; S3 uploads are then capped by the video size limit',
+  }),
+  videoCrf: field.number(optionalInt(0, 63), 'VP9 CRF', {
+    description: '0-63, default 32. Lower is better quality and larger',
+    'ui:options': { halfGrid: true },
+  }),
+  videoCpuUsed: field.number(optionalInt(0, 8), 'VP9 speed (cpu-used)', {
+    description: '0-8, default 4. Higher is faster with lower quality',
+    'ui:options': { halfGrid: true },
+  }),
+  videoAudioBitrate: field.number(optionalInt(8, 512), 'Opus bitrate (kbps)', {
+    description: 'Default 128',
+    'ui:options': { halfGrid: true },
+  }),
+  videoMaxHeight: field.number(optionalInt(2), 'Max video height (px)', {
+    description: 'Taller videos are scaled down; empty keeps the size',
+    'ui:options': { halfGrid: true },
+  }),
 })
 
 // ==================== Baidu Search Options ====================
@@ -1190,6 +1240,7 @@ export const configSchemaMapping = {
   imageGenerationOptions: ImageGenerationOptionsSchema,
   ttsOptions: TtsOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
+  mediaProcessingOptions: MediaProcessingOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
   draftCleanupOptions: DraftCleanupOptionsSchema,
   baiduSearchOptions: BaiduSearchOptionsSchema,

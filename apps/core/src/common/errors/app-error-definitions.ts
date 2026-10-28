@@ -560,6 +560,13 @@ export const APP_ERROR_DEFINITIONS = {
         : 'File must be a zip archive',
     details: (p) => (p?.got ? { got: p.got } : undefined),
   },
+  [AppErrorCode.MEDIA_TRANSCODE_FAILED]: {
+    status: 422,
+    message: (p) =>
+      p?.reason
+        ? `Media transcoding failed: ${p.reason}`
+        : 'Media transcoding failed',
+  },
 
   // init
   [AppErrorCode.INIT_ALREADY_COMPLETED]: {

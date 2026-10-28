@@ -1,6 +1,9 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { Readable } from 'node:stream'
 
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { AppException } from '~/common/errors/exception.types'
@@ -26,6 +29,12 @@ vi.mock('~/utils/s3.util', () => {
   }
 })
 
+const passthroughMedia = {
+  isVideoTranscodeEnabled: async () => false,
+  processImage: async () => null,
+  transcodeVideo: async () => null,
+}
+
 describe('FileController', () => {
   it('serves a file whose name contains nested comment-upload directories', async () => {
     const stream = Readable.from(['image-bytes'])
@@ -41,6 +50,7 @@ describe('FileController', () => {
       {} as any,
       {} as any,
       {} as any,
+      passthroughMedia as any,
     )
 
     await controller.get(
@@ -86,6 +96,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     const result = await controller.upload({ type: 'image' } as any, {} as any)
@@ -135,6 +146,7 @@ describe('FileController', () => {
             ? { enableCustomNaming: true, filenameTemplate: 'fixed.js' }
             : { enable: false },
       } as any,
+      passthroughMedia as any,
     )
     const first = await controller.upload(
       { type: 'file', immutable: 'true' },
@@ -185,6 +197,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     await expect(
@@ -221,6 +234,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     await expect(
@@ -266,6 +280,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     const result = await controller.upload({ type: 'video' } as any, {} as any)
@@ -318,6 +333,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     await expect(
@@ -354,6 +370,7 @@ describe('FileController', () => {
       { createPendingReference } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     const result = await controller.upload({ type: 'video' } as any, {} as any)
@@ -410,6 +427,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     const result = await controller.upload({ type: 'video' } as any, {} as any)
@@ -450,6 +468,7 @@ describe('FileController', () => {
       { createPendingReference: vi.fn() } as any,
       {} as any,
       { get } as any,
+      passthroughMedia as any,
     )
 
     await controller.upload({ type: 'video' } as any, {} as any)
@@ -462,6 +481,262 @@ describe('FileController', () => {
     )
   })
 
+  describe('media post-processing', () => {
+    const localConfig = (key: string) => {
+      if (key === 'fileUploadOptions') {
+        return Promise.resolve({
+          enableCustomNaming: true,
+          filenameTemplate: '{name}{ext}',
+          pathTemplate: '{type}',
+          videoMaxSize: 50,
+        })
+      }
+      if (key === 'imageStorageOptions') {
+        return Promise.resolve({ enable: false })
+      }
+      return Promise.reject(new Error(`Unexpected config key: ${key}`))
+    }
+    const s3Config = (key: string) => {
+      if (key === 'fileUploadOptions') {
+        return Promise.resolve({
+          enableCustomNaming: true,
+          filenameTemplate: '{name}{ext}',
+          videoMaxSize: 50,
+        })
+      }
+      if (key === 'imageStorageOptions') {
+        return Promise.resolve({
+          enable: true,
+          endpoint: 'https://s3.example.com',
+          secretId: 'id',
+          secretKey: 'key',
+          bucket: 'bucket',
+        })
+      }
+      return Promise.reject(new Error(`Unexpected config key: ${key}`))
+    }
+
+    let workDir: string
+    let transcodedPath: string
+    beforeEach(async () => {
+      workDir = await mkdtemp(path.join(tmpdir(), 'byline-controller-'))
+      transcodedPath = path.join(workDir, 'output.webm')
+      await writeFile(transcodedPath, 'webm-bytes')
+    })
+    afterEach(async () => {
+      await rm(workDir, { recursive: true, force: true })
+    })
+
+    const transcodingMedia = (
+      cleanup = vi.fn().mockResolvedValue(undefined),
+    ) => ({
+      isVideoTranscodeEnabled: vi.fn().mockResolvedValue(true),
+      processImage: vi.fn().mockResolvedValue(null),
+      transcodeVideo: vi.fn().mockResolvedValue({
+        path: transcodedPath,
+        filename: 'clip.webm',
+        contentType: 'video/webm',
+        cleanup,
+      }),
+    })
+
+    it('stores the WebP output in place of the uploaded image', async () => {
+      const uploadBuffer = vi.fn().mockResolvedValue({ url: 'u', name: 'n' })
+      const processImage = vi.fn().mockResolvedValue({
+        buffer: Buffer.from('webp-bytes'),
+        filename: 'origin.webp',
+        contentType: 'image/webp',
+      })
+      const controller = new FileController(
+        { uploadBuffer } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'origin.png',
+            file: Readable.from([Buffer.from('png-bytes')]),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        { ...passthroughMedia, processImage } as any,
+      )
+
+      await controller.upload({ type: 'image' } as any, {} as any)
+
+      expect(processImage.mock.calls[0][0].toString()).toBe('png-bytes')
+      expect(processImage).toHaveBeenCalledWith(
+        expect.any(Buffer),
+        'origin.png',
+      )
+      expect(uploadBuffer).toHaveBeenCalledWith(expect.any(Buffer), {
+        type: 'image',
+        originalFilename: 'origin.webp',
+        contentType: 'image/webp',
+      })
+      expect(uploadBuffer.mock.calls[0][0].toString()).toBe('webp-bytes')
+    })
+
+    it('gives an immutable WebP version key the .webp extension', async () => {
+      const uploadBuffer = vi.fn().mockResolvedValue({ url: 'u', name: 'n' })
+      const controller = new FileController(
+        { uploadBuffer } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'origin.png',
+            file: Readable.from([Buffer.from('png-bytes')]),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        {
+          ...passthroughMedia,
+          processImage: vi.fn().mockResolvedValue({
+            buffer: Buffer.from('webp-bytes'),
+            filename: 'origin.webp',
+            contentType: 'image/webp',
+          }),
+        } as any,
+      )
+
+      await controller.upload(
+        { type: 'image', immutable: 'true' } as any,
+        {} as any,
+      )
+
+      expect(uploadBuffer.mock.calls[0][1].objectKey).toMatch(
+        /^versions\/[\da-f-]+\.webp$/,
+      )
+    })
+
+    it('does not post-process non-image file uploads', async () => {
+      const processImage = vi.fn()
+      const controller = new FileController(
+        { uploadBuffer: vi.fn().mockResolvedValue({}) } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'photo.png',
+            file: Readable.from([Buffer.from('png-bytes')]),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        { ...passthroughMedia, processImage } as any,
+      )
+
+      await controller.upload({ type: 'file' } as any, {} as any)
+
+      expect(processImage).not.toHaveBeenCalled()
+    })
+
+    it('writes the transcoded WebM to local storage and cleans up', async () => {
+      const cleanup = vi.fn().mockResolvedValue(undefined)
+      const media = transcodingMedia(cleanup)
+      const written: string[] = []
+      const writeFileMock = vi.fn(
+        async (_type: string, name: string, stream: Readable) => {
+          for await (const chunk of stream) written.push(chunk.toString())
+          written.unshift(name)
+        },
+      )
+      const getAndValidMultipartField = vi.fn().mockResolvedValue({
+        filename: 'clip.mp4',
+        file: Readable.from(['mp4-bytes']),
+      })
+      const controller = new FileController(
+        {
+          writeFile: writeFileMock,
+          resolveFileUrl: vi.fn(
+            async (_type: string, name: string) => `http://x/${name}`,
+          ),
+          resolveUniqueLocalName: vi.fn(
+            async (_type: string, name: string) => name,
+          ),
+        } as any,
+        { getAndValidMultipartField } as any,
+        { createPendingReference: vi.fn() } as any,
+        {} as any,
+        { get: localConfig } as any,
+        media as any,
+      )
+
+      const result = await controller.upload(
+        { type: 'video' } as any,
+        {} as any,
+      )
+
+      expect(media.transcodeVideo).toHaveBeenCalledWith(
+        expect.any(Readable),
+        'clip.mp4',
+      )
+      expect(written).toEqual(['clip.webm', 'webm-bytes'])
+      expect(result).toEqual({ url: 'http://x/clip.webm', name: 'clip.webm' })
+      expect(cleanup).toHaveBeenCalled()
+    })
+
+    it('caps S3 video uploads by the size limit and stores the WebM', async () => {
+      const cleanup = vi.fn().mockResolvedValue(undefined)
+      const media = transcodingMedia(cleanup)
+      const getAndValidMultipartField = vi.fn().mockResolvedValue({
+        filename: 'clip.mp4',
+        file: Readable.from(['mp4-bytes']),
+      })
+      const controller = new FileController(
+        {} as any,
+        { getAndValidMultipartField } as any,
+        { createPendingReference: vi.fn() } as any,
+        {} as any,
+        { get: s3Config } as any,
+        media as any,
+      )
+
+      const result = await controller.upload(
+        { type: 'video' } as any,
+        {} as any,
+      )
+
+      expect(getAndValidMultipartField).toHaveBeenCalledWith(
+        {},
+        expect.objectContaining({ maxFileSize: 50 * 1024 * 1024 }),
+      )
+      const uploader = vi.mocked(S3Uploader).mock.instances.at(-1) as any
+      const [stream, key, contentType] = uploader.uploadStream.mock.calls.at(-1)
+      expect(key).toBe('clip.webm')
+      expect(contentType).toBe('video/webm')
+      expect(stream).not.toBe(getAndValidMultipartField.mock.results[0])
+      expect(result.name).toBe('clip.webm')
+      expect(cleanup).toHaveBeenCalled()
+    })
+
+    it('cleans up the transcode output when storing it fails', async () => {
+      const cleanup = vi.fn().mockResolvedValue(undefined)
+      const controller = new FileController(
+        {
+          writeFile: vi.fn().mockRejectedValue(new Error('disk full')),
+          resolveUniqueLocalName: vi.fn(
+            async (_type: string, name: string) => name,
+          ),
+        } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'clip.mp4',
+            file: Readable.from(['mp4-bytes']),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        transcodingMedia(cleanup) as any,
+      )
+
+      await expect(
+        controller.upload({ type: 'video' } as any, {} as any),
+      ).rejects.toThrow('disk full')
+      expect(cleanup).toHaveBeenCalled()
+    })
+  })
+
   it('delegates dry-run and apply reference reconciliation requests', async () => {
     const reconcile = vi.fn().mockResolvedValue({ applied: false })
     const controller = new FileController(
@@ -470,6 +745,7 @@ describe('FileController', () => {
       {} as any,
       { reconcile } as any,
       {} as any,
+      passthroughMedia as any,
     )
 
     await expect(

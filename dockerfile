@@ -24,7 +24,7 @@ RUN node -p "require('./apps/admin/package.json').version" > ./out/admin/version
 
 FROM node:26-alpine AS runner
 
-RUN apk add zip unzip postgresql-client bash fish rsync jq curl openrc tini --no-cache
+RUN apk add zip unzip postgresql-client bash fish rsync jq curl openrc tini ffmpeg --no-cache
 
 # Chromium + fonts/nss for the agent-browser headless fallback used by the
 # Open Graph enrichment provider (fetchMode = "browser"). Alpine's chromium

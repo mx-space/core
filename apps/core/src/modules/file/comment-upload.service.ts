@@ -6,6 +6,7 @@ import { fileTypeFromBuffer } from 'file-type'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { MediaProcessingService } from '~/processors/helper/helper.media-processing.service'
 import {
   generateFilename,
   replaceFilenameTemplate,
@@ -74,6 +75,7 @@ export class CommentUploadService {
     private readonly fileReferenceService: FileReferenceService,
     private readonly configsService: ConfigsService,
     private readonly fileService: FileService,
+    private readonly mediaProcessingService: MediaProcessingService,
   ) {}
 
   async getPublicConfig(): Promise<PublicCommentUploadConfig> {
@@ -90,17 +92,19 @@ export class CommentUploadService {
         await this.configsService.get('commentUploadOptions'),
       )
 
-    const buffer = file.buffer!
-    const totalBytes = file.size
-
-    const detected = await detectImageMime(buffer)
+    const detected = await detectImageMime(file.buffer!)
     if (!detected || !whitelist.includes(detected.mime)) {
       throw createAppException(AppErrorCode.COMMENT_UPLOAD_INVALID_MIME)
     }
 
-    const detectedMime = detected.mime
-    const ext = detected.ext
-    const originalFilename = `upload${ext}`
+    const processed = await this.mediaProcessingService.processImage(
+      file.buffer!,
+      `upload${detected.ext}`,
+    )
+    const buffer = processed?.buffer ?? file.buffer!
+    const totalBytes = processed?.buffer.length ?? file.size
+    const detectedMime = processed?.contentType ?? detected.mime
+    const originalFilename = processed?.filename ?? `upload${detected.ext}`
     const fileUploadConfig = await this.configsService.get('fileUploadOptions')
     const filename = generateFilename(fileUploadConfig, {
       originalFilename,
