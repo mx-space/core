@@ -141,7 +141,7 @@
     "pg": "^8.23.1",
     "picocolors": "^1.1.1",
     "pluralize": "^8.0.0",
-    "qs": "6.16.0",
+    "qs": "6.16.1",
     "rebuild": "^0.1.2",
     "reflect-metadata": "0.2.2",
     "remove-markdown": "0.8.0",
