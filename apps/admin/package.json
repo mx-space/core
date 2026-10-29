@@ -116,7 +116,7 @@
     "thumbhash": "0.1.1",
     "tinykeys": "4.0.1",
     "xss": "1.0.15",
-    "zod": "4.5.4",
+    "zod": "4.6.6",
     "zustand": "5.0.15"
   },
   "devDependencies": {
