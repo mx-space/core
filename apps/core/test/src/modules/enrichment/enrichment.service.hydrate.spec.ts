@@ -282,18 +282,18 @@ describe('EnrichmentService.hydrateUrls', () => {
       getByName: () => ({
         name: 'tmdb',
         localeAware: true,
-        supportedLocales: ['zh', 'ja'],
+        supportedLocales: ['zh-CN', 'ja-JP'],
         featureGateConfigKey: undefined,
       }),
     }
     service.configsService = { get: async () => ({}) }
     service.logger = { warn: vi.fn() }
 
-    const result = await service.hydrateUrls([url], 'zh')
+    const result = await service.hydrateUrls([url], 'zh-CN')
     expect(result[url]).toBe(fallbackRow.normalized)
     expect(repository.findManyByRefs).toHaveBeenCalledTimes(2)
     expect(repository.findManyByRefs).toHaveBeenNthCalledWith(1, [
-      { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+      { provider: 'tmdb', externalId: 'movie/1', locale: 'zh-CN' },
     ])
     expect(repository.findManyByRefs).toHaveBeenNthCalledWith(2, [
       { provider: 'tmdb', externalId: 'movie/1', locale: '' },
@@ -301,11 +301,11 @@ describe('EnrichmentService.hydrateUrls', () => {
     await new Promise((r) => setImmediate(r))
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        dedupKey: 'tmdb:movie/1:zh',
+        dedupKey: 'tmdb:movie/1:zh-CN',
         payload: {
           provider: 'tmdb',
           externalId: 'movie/1',
-          locale: 'zh',
+          locale: 'zh-CN',
           url,
         },
       }),
@@ -334,7 +334,7 @@ describe('EnrichmentService.hydrateUrls', () => {
     service.configsService = { get: async () => ({}) }
     service.logger = { warn: vi.fn() }
 
-    await service.hydrateUrls([url], 'zh')
+    await service.hydrateUrls([url], 'zh-CN')
     expect(repository.findManyByRefs).toHaveBeenCalledWith([
       { provider: 'gh-repo', externalId: 'vercel/next.js', locale: '' },
     ])

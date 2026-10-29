@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
 import { z } from 'zod'
 
 import { CollectionRefTypes } from '~/constants/db.constant'
@@ -6,13 +7,23 @@ import { normalizeRefType } from '~/utils/database.util'
 
 import { CommentAnchorMode } from './comment.enum'
 
+const AnchorLangSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(16)
+  .nullish()
+  .transform((lang) =>
+    lang == null ? lang : (canonicalizeLanguageTag(lang) ?? null),
+  )
+
 const BlockCommentAnchorSchema = z.object({
   mode: z.literal(CommentAnchorMode.Block),
   blockId: z.string().trim().min(1).max(128),
   blockType: z.string().trim().min(1).max(64).optional(),
   blockFingerprint: z.string().trim().min(1).max(64).optional(),
   snapshotText: z.string().max(20000).optional(),
-  lang: z.string().trim().min(1).max(10).nullish(),
+  lang: AnchorLangSchema,
 })
 
 const RangeCommentAnchorSchema = z
@@ -22,7 +33,7 @@ const RangeCommentAnchorSchema = z
     blockType: z.string().trim().min(1).max(64).optional(),
     blockFingerprint: z.string().trim().min(1).max(64).optional(),
     snapshotText: z.string().max(20000).optional(),
-    lang: z.string().trim().min(1).max(10).nullish(),
+    lang: AnchorLangSchema,
     quote: z.string().min(1).max(1000),
     prefix: z.string().max(300).default(''),
     suffix: z.string().max(300).default(''),

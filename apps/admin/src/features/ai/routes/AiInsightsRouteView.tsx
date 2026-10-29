@@ -1,3 +1,4 @@
+import { matchLanguage } from '@mx-space/ai'
 import { Languages, Plus, Sparkles } from 'lucide-react'
 import { useMemo } from 'react'
 
@@ -76,7 +77,9 @@ export function AiInsightsRouteView() {
             run: (target) =>
               createInsightsTranslationTask({
                 refId: target.refId,
-                targetLang: target.lang === 'en' ? 'zh' : 'en',
+                targetLang: matchLanguage(target.lang, ['en-US'])
+                  ? 'zh-CN'
+                  : 'en-US',
               }),
           },
         ]

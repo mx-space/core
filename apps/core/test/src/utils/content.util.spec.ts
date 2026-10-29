@@ -2,6 +2,7 @@ import { extractDocumentContext } from '@mx-space/ai/translation'
 import { describe, expect, it } from 'vitest'
 
 import {
+  computeContentHash,
   contentIdentityChanged,
   extractFileUrlsFromContent,
   extractTextFromContent,
@@ -362,6 +363,21 @@ describe('contentIdentityChanged', () => {
     }
     expect(contentIdentityChanged(markdown, lexicalDoc('hello', 'a'))).toBe(
       true,
+    )
+  })
+})
+
+describe('computeContentHash', () => {
+  const doc = { title: 'T', text: 'body', contentFormat: 'markdown' } as any
+
+  it('keeps hashes stored under a bare source code valid for its canonical tag', () => {
+    expect(computeContentHash(doc, 'zh-CN')).toBe(computeContentHash(doc, 'zh'))
+    expect(computeContentHash(doc, 'en-US')).toBe(computeContentHash(doc, 'en'))
+  })
+
+  it('still separates different source languages', () => {
+    expect(computeContentHash(doc, 'ja-JP')).not.toBe(
+      computeContentHash(doc, 'zh-CN'),
     )
   })
 })

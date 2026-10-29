@@ -156,7 +156,7 @@ describe('EnrichmentService.hydrateRefs', () => {
       getByName: () => ({
         name: 'tmdb',
         localeAware: true,
-        supportedLocales: ['zh', 'ja'],
+        supportedLocales: ['zh-CN', 'ja-JP'],
       }),
     }
     service.configsService = { get: async () => ({}) }
@@ -164,12 +164,12 @@ describe('EnrichmentService.hydrateRefs', () => {
 
     const out = await (service as EnrichmentService).hydrateRefs(
       [{ provider: 'tmdb', externalId: 'movie/1' }],
-      'zh',
+      'zh-CN',
     )
     expect(out[refKey('tmdb', 'movie/1')]).toBe(fallbackRow.normalized)
     expect(repository.findManyByRefs).toHaveBeenCalledTimes(2)
     expect(repository.findManyByRefs).toHaveBeenNthCalledWith(1, [
-      { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+      { provider: 'tmdb', externalId: 'movie/1', locale: 'zh-CN' },
     ])
     expect(repository.findManyByRefs).toHaveBeenNthCalledWith(2, [
       { provider: 'tmdb', externalId: 'movie/1', locale: '' },
@@ -177,8 +177,8 @@ describe('EnrichmentService.hydrateRefs', () => {
     await new Promise((r) => setImmediate(r))
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        dedupKey: 'tmdb:movie/1:zh',
-        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+        dedupKey: 'tmdb:movie/1:zh-CN',
+        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh-CN' },
       }),
     )
   })

@@ -111,6 +111,14 @@ export class AiTranslationRepository extends BaseRepository {
     return row ? mapTranslation(row) : null
   }
 
+  async findLangsByRef(refId: EntityId | string): Promise<string[]> {
+    const rows = await this.db
+      .select({ lang: aiTranslations.lang })
+      .from(aiTranslations)
+      .where(eq(aiTranslations.refId, parseEntityId(refId)))
+    return rows.map((row) => row.lang)
+  }
+
   async findRevisionByRefAndLang(
     refId: EntityId | string,
     lang: string,

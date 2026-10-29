@@ -10,7 +10,9 @@ import { AiSummaryService } from '~/modules/ai/ai-summary/ai-summary.service'
 import { AITaskType } from '~/modules/ai/ai-task/ai-task.types'
 
 const createService = () => {
-  const repository = createPgRepositoryMock<AiSummaryRepository>()
+  const repository = createPgRepositoryMock<AiSummaryRepository>({
+    listForRef: vi.fn().mockResolvedValue([]),
+  })
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
@@ -349,6 +351,75 @@ describe('AiSummaryService', () => {
   })
 })
 
+describe('AiSummaryService — language matching', () => {
+  const summaryRow = (lang: string) => ({
+    id: `summary-${lang}`,
+    refId: 'post-1',
+    lang,
+    summary: `summary in ${lang}`,
+    hash: 'h',
+    createdAt: now,
+  })
+
+  it('serves an existing same-script summary instead of generating a regional one', async () => {
+    const harness = createService()
+    harness.databaseService.findGlobalById.mockResolvedValue(visibleArticle)
+    harness.repository.listForRef.mockResolvedValue([summaryRow('en-US')])
+    harness.repository.findByHash.mockResolvedValue(summaryRow('en-US'))
+    const generate = vi.spyOn(harness.service, 'generateSummaryByOpenAI')
+
+    await expect(
+      harness.service.getOrGenerateSummaryForArticle('post-1', {
+        lang: 'en-GB',
+      }),
+    ).resolves.toMatchObject({ lang: 'en-US' })
+    expect(harness.repository.findByHash).toHaveBeenCalledWith(
+      'post-1',
+      expect.any(String),
+      'en-US',
+    )
+    expect(generate).not.toHaveBeenCalled()
+  })
+
+  it('generates at script level when no summary qualifies', async () => {
+    const harness = createService()
+    harness.databaseService.findGlobalById.mockResolvedValue(visibleArticle)
+    harness.configService.get.mockResolvedValue({ enableSummary: true })
+    harness.repository.findByHash.mockResolvedValue(null)
+    const generate = vi
+      .spyOn(harness.service, 'generateSummaryByOpenAI')
+      .mockResolvedValue(summaryRow('zh-TW') as any)
+
+    await harness.service.getOrGenerateSummaryForArticle('post-1', {
+      lang: 'zh-HK',
+    })
+
+    expect(generate).toHaveBeenCalledWith('post-1', 'zh-TW')
+  })
+
+  it('matches public meta summaries by language and script', async () => {
+    const { repository, service } = createService()
+    repository.listForRef.mockResolvedValue([summaryRow('zh-TW')])
+
+    await expect(
+      service.getSummaryForPublicMeta('post-1', 'zh-HK'),
+    ).resolves.toMatchObject({ lang: 'zh-TW' })
+    await expect(
+      service.getSummaryForPublicMeta('post-1', 'zh-SG'),
+    ).resolves.toBeNull()
+  })
+
+  it('batches list summaries under the configured target matching the request', async () => {
+    const { configService, repository, service } = createService()
+    configService.get.mockResolvedValue({ summaryTargetLanguages: ['en-US'] })
+    repository.listByRefIds.mockResolvedValue([])
+
+    await service.batchGetSummariesByRefIds(['post-1'], 'en-GB')
+
+    expect(repository.listByRefIds).toHaveBeenCalledWith(['post-1'], 'en-US')
+  })
+})
+
 describe('AiSummaryService — summary task pipeline', () => {
   const setup = () => {
     const harness = createService()
@@ -387,13 +458,13 @@ describe('AiSummaryService — summary task pipeline', () => {
       ([input]: any[]) => input,
     )
     expect(upserts[0]).toMatchObject({
-      lang: 'zh',
+      lang: 'zh-CN',
       isTranslation: false,
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })
     expect(upserts).toContainEqual(
       expect.objectContaining({
-        lang: 'en',
+        lang: 'en-US',
         isTranslation: true,
         sourceSummaryId: 'summary-base',
         summary: 'translated summary',
@@ -401,8 +472,11 @@ describe('AiSummaryService — summary task pipeline', () => {
     )
     expect(ctx.setResult).toHaveBeenCalledWith({
       summaries: [
-        expect.objectContaining({ summaryId: 'summary-base', lang: 'zh' }),
-        expect.objectContaining({ summaryId: 'summary-en', lang: 'en' }),
+        expect.objectContaining({ summaryId: 'summary-base', lang: 'zh-CN' }),
+        expect.objectContaining({
+          summaryId: 'summary-en-US',
+          lang: 'en-US',
+        }),
       ],
       failedLangs: [],
     })
@@ -423,7 +497,7 @@ describe('AiSummaryService — summary task pipeline', () => {
     ).rejects.toThrow(AppException)
   })
 
-  it('keeps an unrecognized token as its own target instead of collapsing it into zh', async () => {
+  it('drops an unrecognized token instead of generating a language named after it', async () => {
     const harness = setup()
 
     const ctx = await runSummaryTask(harness, {
@@ -433,16 +507,14 @@ describe('AiSummaryService — summary task pipeline', () => {
 
     expect(ctx.updateProgress.mock.calls[0]).toEqual([
       0,
-      'Generating summary (zh)',
+      'Generating summary (zh-CN)',
       0,
-      2,
+      1,
     ])
     const upserts = harness.repository.upsert.mock.calls.map(
       ([input]: any[]) => input,
     )
-    expect(upserts).toContainEqual(
-      expect.objectContaining({ lang: 'english', isTranslation: true }),
-    )
+    expect(upserts.map((input) => input.lang)).toEqual(['zh-CN'])
   })
 
   it('reuses a fresh base row instead of regenerating it', async () => {
@@ -453,12 +525,12 @@ describe('AiSummaryService — summary task pipeline', () => {
     harness.repository.findBaseForRef.mockResolvedValue({
       id: 'summary-base',
       refId: 'post-1',
-      lang: 'zh',
+      lang: 'zh-CN',
       summary: 'a summary',
       hash: contentHash,
       isTranslation: false,
       sourceSummaryId: null,
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
       createdAt: now,
     })
 
@@ -471,7 +543,7 @@ describe('AiSummaryService — summary task pipeline', () => {
       ([input]: any[]) => input,
     )
     expect(upserts).toHaveLength(1)
-    expect(upserts[0]).toMatchObject({ lang: 'en', isTranslation: true })
+    expect(upserts[0]).toMatchObject({ lang: 'en-US', isTranslation: true })
   })
 
   it('marks the task partially failed when a translation fails but the base succeeded', async () => {
@@ -494,7 +566,7 @@ describe('AiSummaryService — summary task pipeline', () => {
 
     expect(ctx.setStatus).toHaveBeenCalledWith('partial_failed')
     expect(ctx.setResult).toHaveBeenCalledWith(
-      expect.objectContaining({ failedLangs: ['en'] }),
+      expect.objectContaining({ failedLangs: ['en-US'] }),
     )
   })
 

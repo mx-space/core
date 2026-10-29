@@ -8,11 +8,12 @@ import { CategoryService } from '~/modules/category/category.service'
 import { NoteService } from '~/modules/note/note.service'
 import { TopicRepository } from '~/modules/topic/topic.repository'
 import { RedisService } from '~/processors/redis/redis.service'
-import { normalizeLanguageCode } from '~/utils/lang.util'
+import { canonicalizeLanguageTag } from '~/utils/lang.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AiService } from '../ai.service'
+import { resolveServedLanguage } from '../ai-language.util'
 import { TranslationEntryRepository } from './ai-translation.repository'
 import {
   type TranslationEntryKeyPath,
@@ -97,7 +98,7 @@ export class TranslationEntryService {
   }
 
   async getTranslationsBatch(
-    lang: string,
+    requestedLang: string,
     options: {
       entityLookups?: TranslationBatchEntityLookup[]
       dictLookups?: TranslationBatchDictLookup[]
@@ -105,6 +106,13 @@ export class TranslationEntryService {
   ): Promise<TranslationBatchResult> {
     const entityMaps = new Map<TranslationEntryKeyPath, Map<string, string>>()
     const dictMaps = new Map<TranslationEntryKeyPath, Map<string, string>>()
+
+    const aiConfig = await this.configService.get('ai')
+    const lang = resolveServedLanguage(
+      requestedLang,
+      aiConfig?.translationTargetLanguages,
+    )
+    if (!lang) return { entityMaps, dictMaps }
 
     const dbLookups: TranslationBatchLookup[] = []
     const dictHashToTextMaps = new Map<
@@ -284,7 +292,7 @@ export class TranslationEntryService {
       : aiConfig.translationTargetLanguages || []
 
     const targetLangs = rawLangs
-      .map((l) => normalizeLanguageCode(l))
+      .map((l) => canonicalizeLanguageTag(l))
       .filter(Boolean) as string[]
 
     if (!targetLangs.length) {
@@ -316,7 +324,7 @@ export class TranslationEntryService {
     const aiConfig = await this.configService.get('ai')
     const rawLangs = aiConfig.translationTargetLanguages || []
     const targetLangs = rawLangs
-      .map((l) => normalizeLanguageCode(l))
+      .map((l) => canonicalizeLanguageTag(l))
       .filter(Boolean) as string[]
 
     if (!targetLangs.length) return { created: 0, skipped: 0 }

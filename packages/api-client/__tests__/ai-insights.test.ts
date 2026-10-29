@@ -25,4 +25,11 @@ describe('AIController.insights', () => {
       client.ai.getInsights({ articleId: 'a1', lang: 'en', onlyDb: true }),
     ).resolves.not.toThrowError()
   })
+
+  test('getInsights defaults lang to zh-CN', async () => {
+    mockResponse('/ai/insights/article/a1?lang=zh-CN', { ok: true }, 'get')
+    await expect(client.ai.getInsights({ articleId: 'a1' })).resolves.toEqual({
+      ok: true,
+    })
+  })
 })

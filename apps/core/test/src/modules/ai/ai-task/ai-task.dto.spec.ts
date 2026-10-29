@@ -1,15 +1,64 @@
 import { describe, expect, it } from 'vitest'
 
 import { MAX_LANGS_PER_TASK } from '~/modules/ai/ai.constants'
-import { CreateInsightsTaskSchema } from '~/modules/ai/ai-insights/ai-insights.schema'
+import {
+  CreateInsightsTaskSchema,
+  CreateInsightsTranslationTaskSchema,
+} from '~/modules/ai/ai-insights/ai-insights.schema'
 import {
   CreateSummaryTaskSchema,
   CreateSummaryTranslationTaskSchema,
+  CreateTranslationAllTaskSchema,
+  CreateTranslationBatchTaskSchema,
   CreateTranslationTaskSchema,
 } from '~/modules/ai/ai-task/ai-task.dto'
 
-const eightLangs = Array.from({ length: 8 }, (_, i) => `lang${i}`)
-const nineLangs = Array.from({ length: 9 }, (_, i) => `lang${i}`)
+const eightLangs = ['en', 'ja', 'ko', 'fr', 'de', 'es', 'it', 'pt']
+const nineLangs = [...eightLangs, 'ru']
+
+describe('task target language validation', () => {
+  it('canonicalizes target languages', () => {
+    expect(
+      CreateSummaryTaskSchema.parse({
+        refId: 'article-1',
+        targetLanguages: ['zh', 'zh_TW'],
+      }).targetLanguages,
+    ).toEqual(['zh-CN', 'zh-TW'])
+    expect(
+      CreateSummaryTranslationTaskSchema.parse({
+        refId: 'article-1',
+        targetLang: 'en',
+      }).targetLang,
+    ).toBe('en-US')
+    expect(
+      CreateInsightsTranslationTaskSchema.parse({
+        refId: 'article-1',
+        targetLang: 'ja',
+      }).targetLang,
+    ).toBe('ja-JP')
+  })
+
+  it('rejects unknown target languages', () => {
+    for (const schema of [
+      CreateSummaryTaskSchema,
+      CreateTranslationTaskSchema,
+      CreateInsightsTaskSchema,
+      CreateTranslationBatchTaskSchema,
+    ]) {
+      expect(
+        schema.safeParse({
+          refId: 'article-1',
+          refIds: ['article-1'],
+          targetLanguages: ['jp'],
+        }).success,
+      ).toBe(false)
+    }
+    expect(
+      CreateTranslationAllTaskSchema.safeParse({ targetLanguages: ['jp'] })
+        .success,
+    ).toBe(false)
+  })
+})
 
 describe('CreateSummaryTaskSchema', () => {
   it('accepts targetLanguages at the max of 8', () => {

@@ -56,7 +56,8 @@ const buildWriteSchema = (textEntries: Record<string, unknown>) => {
   return Type.Object(
     {
       sourceLang: Type.String({
-        description: 'Detected source language as an ISO 639-1 code',
+        description:
+          'Detected source language as a BCP 47 language-REGION tag, e.g. zh-CN, zh-TW, en-US',
       }),
       translations: Type.Object(translationShape, {
         additionalProperties: false,

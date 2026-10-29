@@ -45,7 +45,9 @@ const blockRow = (
 })
 
 function createHarness(options: { storedNotePassword?: string } = {}) {
-  const repository = createPgRepositoryMock<AiTtsRepository>()
+  const repository = createPgRepositoryMock<AiTtsRepository>({
+    findLangsByRef: vi.fn().mockResolvedValue([]),
+  })
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
@@ -341,12 +343,12 @@ describe('AiTtsQueryService.getPublicNarration', () => {
         meta: { lang: 'en-US' },
       },
     })
-    repository.findByRefAndLang.mockResolvedValue(parentRow({ lang: 'en' }))
+    repository.findByRefAndLang.mockResolvedValue(parentRow({ lang: 'en-US' }))
     repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
 
     await service.getPublicNarration('1')
 
-    expect(repository.findByRefAndLang).toHaveBeenCalledWith('1', 'en')
+    expect(repository.findByRefAndLang).toHaveBeenCalledWith('1', 'en-US')
   })
 
   it('uses the requested language over the article default', async () => {
@@ -436,6 +438,33 @@ describe('AiTtsQueryService.getPublicNarration', () => {
       ['blk-a', 0],
       ['blk-b', 0],
     ])
+  })
+})
+
+describe('AiTtsQueryService language matching', () => {
+  it('serves a same-script narration to a regional request', async () => {
+    const { databaseService, repository, service } = createHarness()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: { id: '1', title: 'Post', isPublished: true },
+    })
+    repository.findLangsByRef.mockResolvedValue(['zh-TW'])
+    repository.findByRefAndLang.mockResolvedValue(parentRow({ lang: 'zh-TW' }))
+    repository.findBlocks.mockResolvedValue([blockRow('blk-a')])
+
+    await service.getPublicNarration('1', 'zh-HK')
+
+    expect(repository.findByRefAndLang).toHaveBeenCalledWith('1', 'zh-TW')
+  })
+
+  it('reads narration meta under the matching language', async () => {
+    const { repository, service } = createHarness()
+    repository.findLangsByRef.mockResolvedValue(['en-US'])
+    repository.findMeta.mockResolvedValue(null)
+
+    await service.getMetaForArticle('1', 'en-GB')
+
+    expect(repository.findMeta).toHaveBeenCalledWith('1', 'en-US')
   })
 })
 

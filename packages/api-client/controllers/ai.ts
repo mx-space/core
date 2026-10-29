@@ -196,7 +196,7 @@ export class AIController<ResponseWrapper> implements IController {
    */
   async getInsights({
     articleId,
-    lang = 'zh',
+    lang = 'zh-CN',
     onlyDb,
   }: {
     articleId: string

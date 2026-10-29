@@ -1,3 +1,5 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
+
 import { getLanguageName } from '../ai-language.util'
 
 export interface TtsLanguageStrategyContext {
@@ -44,7 +46,9 @@ export class TtsLanguageStrategyRegistry {
   resolve(context: TtsLanguageStrategyContext): TtsLanguageStrategyResolution {
     const normalized = {
       ...context,
-      language: context.language.trim().toLowerCase(),
+      language:
+        canonicalizeLanguageTag(context.language) ??
+        context.language.trim().toLowerCase(),
     }
     const strategy = this.strategies.find((item) => item.matches(normalized))
     if (!strategy) {
@@ -89,6 +93,10 @@ function modelName(model: string): string {
   return (model.split('/').at(-1) ?? model).toLowerCase()
 }
 
+function baseLanguage(language: string): string {
+  return language.split('-')[0]
+}
+
 function isOpenRouter(context: TtsLanguageStrategyContext): boolean {
   return hostnameOf(context.baseUrl) === 'openrouter.ai'
 }
@@ -108,14 +116,11 @@ function buildGeminiInput(
 ): string {
   const language = context.language
   const name =
-    language === 'zh' ? 'Mandarin Chinese' : getLanguageName(language)
-  const locale =
-    {
-      ja: 'ja-JP',
-      zh: 'zh-CN',
-    }[language] ?? language
+    baseLanguage(language) === 'zh'
+      ? 'Mandarin Chinese'
+      : getLanguageName(language)
 
-  return `Language: ${name} (${locale}). Speak only the transcript. Use ${name} pronunciation for every ambiguous character.\n\nTranscript:\n${input}`
+  return `Language: ${name} (${language}). Speak only the transcript. Use ${name} pronunciation for every ambiguous character.\n\nTranscript:\n${input}`
 }
 
 const XAI_LANGUAGE_DEFAULTS: Readonly<Record<string, string>> = {
@@ -202,7 +207,11 @@ export const defaultTtsLanguageStrategyRegistry =
       buildRequestParams: ({ language }) => ({
         provider: {
           options: {
-            xai: { language: XAI_LANGUAGE_DEFAULTS[language] ?? language },
+            xai: {
+              language:
+                XAI_LANGUAGE_DEFAULTS[baseLanguage(language)] ??
+                baseLanguage(language),
+            },
           },
         },
       }),
@@ -213,12 +222,12 @@ export const defaultTtsLanguageStrategyRegistry =
       matches: (context) =>
         isOpenRouter(context) &&
         modelVendor(context.model) === 'minimax' &&
-        MINIMAX_LANGUAGE_BOOSTS[context.language] !== undefined,
+        MINIMAX_LANGUAGE_BOOSTS[baseLanguage(context.language)] !== undefined,
       buildRequestParams: ({ language }) => ({
         provider: {
           options: {
             minimax: {
-              language_boost: MINIMAX_LANGUAGE_BOOSTS[language],
+              language_boost: MINIMAX_LANGUAGE_BOOSTS[baseLanguage(language)],
             },
           },
         },

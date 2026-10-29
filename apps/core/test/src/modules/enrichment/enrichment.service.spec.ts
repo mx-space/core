@@ -269,34 +269,36 @@ describe('EnrichmentService.resolveCacheLocale', () => {
   it('returns "" for non-locale-aware providers regardless of input', () => {
     const { service } = makeService()
     const provider = { localeAware: false } as any
-    expect(service.resolveCacheLocale(provider, 'zh')).toBe('')
+    expect(service.resolveCacheLocale(provider, 'zh-CN')).toBe('')
     expect(service.resolveCacheLocale(provider, undefined)).toBe('')
   })
 
-  it('returns the locale when locale-aware provider supports it', () => {
+  it('returns the matching supported locale for a locale-aware provider', () => {
     const { service } = makeService()
     const provider = {
       localeAware: true,
-      supportedLocales: ['zh', 'ja', 'ko', 'en'],
+      supportedLocales: ['zh-CN', 'zh-TW', 'ja-JP', 'ko-KR', 'en-US'],
     } as any
-    expect(service.resolveCacheLocale(provider, 'zh')).toBe('zh')
-    expect(service.resolveCacheLocale(provider, 'ja')).toBe('ja')
+    expect(service.resolveCacheLocale(provider, 'zh-CN')).toBe('zh-CN')
+    expect(service.resolveCacheLocale(provider, 'zh-HK')).toBe('zh-TW')
+    expect(service.resolveCacheLocale(provider, 'en-GB')).toBe('en-US')
   })
 
   it('falls back to "" when requested locale is unsupported', () => {
     const { service } = makeService()
     const provider = {
       localeAware: true,
-      supportedLocales: ['zh', 'ja'],
+      supportedLocales: ['zh-CN', 'ja-JP'],
     } as any
-    expect(service.resolveCacheLocale(provider, 'fr')).toBe('')
+    expect(service.resolveCacheLocale(provider, 'fr-FR')).toBe('')
+    expect(service.resolveCacheLocale(provider, 'zh-TW')).toBe('')
   })
 
   it('falls back to "" when no requested locale', () => {
     const { service } = makeService()
     const provider = {
       localeAware: true,
-      supportedLocales: ['zh'],
+      supportedLocales: ['zh-CN'],
     } as any
     expect(service.resolveCacheLocale(provider, undefined)).toBe('')
   })
@@ -310,7 +312,7 @@ describe('EnrichmentService.search', () => {
       featureGateConfigKey: 'tmdb',
       requiredConfigKeys: ['apiKey'],
       localeAware: true,
-      supportedLocales: ['zh', 'en'],
+      supportedLocales: ['zh-CN', 'en-US'],
       search: vi.fn(async () => searchResults),
     })
     configsService.get.mockResolvedValue({
@@ -320,7 +322,7 @@ describe('EnrichmentService.search', () => {
     await expect(service.search('tmdb', 'Dune', 'zh-CN', 6)).resolves.toBe(
       searchResults,
     )
-    expect((provider as any).search).toHaveBeenCalledWith('Dune', 'zh', 6)
+    expect((provider as any).search).toHaveBeenCalledWith('Dune', 'zh-CN', 6)
   })
 
   it('rejects search when the provider credential is missing', async () => {
@@ -359,22 +361,27 @@ describe('EnrichmentService.resolve (locale)', () => {
   function makeLocaleAwareService(stubs: ServiceStubs = {}) {
     const ctx = makeService(stubs)
     ;(ctx.provider as any).localeAware = true
-    ;(ctx.provider as any).supportedLocales = ['zh', 'ja', 'ko', 'en']
+    ;(ctx.provider as any).supportedLocales = [
+      'zh-CN',
+      'ja-JP',
+      'ko-KR',
+      'en-US',
+    ]
     return ctx
   }
 
   it('looks up by request locale when supported', async () => {
     const dbRow = makeRow({
-      locale: 'zh',
+      locale: 'zh-CN',
       expiresAt: new Date(Date.now() + 3600_000),
     })
     const { service, repository } = makeLocaleAwareService({ dbRow })
-    const out = await service.resolve(url, 'zh')
+    const out = await service.resolve(url, 'zh-CN')
     expect(out.result).toBe(dbRow.normalized)
     expect(repository.findByProviderAndExternalId).toHaveBeenCalledWith(
       'tmdb',
       'movie/1',
-      'zh',
+      'zh-CN',
     )
   })
 
@@ -391,11 +398,11 @@ describe('EnrichmentService.resolve (locale)', () => {
         .mockResolvedValueOnce(null)
         // second call: '' fallback
         .mockResolvedValueOnce(fallbackRow),
-      upsert: vi.fn(async () => makeRow({ locale: 'zh' })),
+      upsert: vi.fn(async () => makeRow({ locale: 'zh-CN' })),
     }
     const { service, taskQueueService } = makeLocaleAwareService()
     ;(service as any).repository = repository
-    const out = await service.resolve(url, 'zh')
+    const out = await service.resolve(url, 'zh-CN')
     expect(out.result).toBe(fallbackRow.normalized)
     expect(out.stale).toBe(true)
     expect(repository.findByProviderAndExternalId).toHaveBeenCalledTimes(2)
@@ -403,7 +410,7 @@ describe('EnrichmentService.resolve (locale)', () => {
       1,
       'tmdb',
       'movie/1',
-      'zh',
+      'zh-CN',
     )
     expect(repository.findByProviderAndExternalId).toHaveBeenNthCalledWith(
       2,
@@ -414,8 +421,8 @@ describe('EnrichmentService.resolve (locale)', () => {
     await new Promise((r) => setImmediate(r))
     expect(taskQueueService.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        dedupKey: 'tmdb:movie/1:zh',
-        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh' },
+        dedupKey: 'tmdb:movie/1:zh-CN',
+        payload: { provider: 'tmdb', externalId: 'movie/1', locale: 'zh-CN' },
       }),
     )
   })
@@ -424,17 +431,17 @@ describe('EnrichmentService.resolve (locale)', () => {
     const { service, provider, repository } = makeLocaleAwareService({
       dbRow: null,
     })
-    await service.resolve(url, 'zh')
-    expect(provider.fetch).toHaveBeenCalledWith('movie/1', 'zh', { url })
+    await service.resolve(url, 'zh-CN')
+    expect(provider.fetch).toHaveBeenCalledWith('movie/1', 'zh-CN', { url })
     expect(repository.upsert).toHaveBeenCalled()
     const upsertArgs = repository.upsert.mock.calls[0]
     // upsert(provider, externalId, url, normalized, raw, expiresAt, locale)
-    expect(upsertArgs[6]).toBe('zh')
+    expect(upsertArgs[6]).toBe('zh-CN')
   })
 
   it('non-locale-aware provider ignores lang and uses ""', async () => {
     const { service, provider, repository } = makeService({ dbRow: null })
-    await service.resolve(url, 'zh')
+    await service.resolve(url, 'zh-CN')
     // fetch receives undefined locale because cacheLocale='' → fetch(id, undefined)
     // ctx.url is threaded through for opaque-id providers (e.g. open-graph)
     expect(provider.fetch).toHaveBeenCalledWith('movie/1', undefined, { url })

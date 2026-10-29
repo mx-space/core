@@ -7,7 +7,6 @@ import COMMENT_SPAM_SYSTEM from './comment-spam.system.md?raw'
 import {
   AI_SUMMARY_MAX_WORDS,
   DEFAULT_SUMMARY_LANG,
-  LANGUAGE_CODE_TO_NAME,
   resolveBaseLanguageCode,
   resolveLanguageName,
 } from './constants'
@@ -280,7 +279,8 @@ export const buildTranslationChunkSchema = (
   return Type.Object(
     {
       sourceLang: Type.String({
-        description: 'Detected source language as an ISO 639-1 code',
+        description:
+          'Detected source language as a BCP 47 language-REGION tag, e.g. zh-CN, zh-TW, en-US',
       }),
       translations: Type.Object(translationShape, {
         additionalProperties: false,
@@ -534,10 +534,11 @@ const buildCoverCompileSchema = (preset: CoverStylePreset) =>
     { additionalProperties: false },
   )
 
+const DEFAULT_LANGUAGE_NAME = resolveLanguageName(DEFAULT_SUMMARY_LANG)!
+
 export const AI_PROMPTS = {
   summary: (lang: string, text: string) => {
-    const targetLanguage =
-      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+    const targetLanguage = resolveLanguageName(lang) ?? DEFAULT_LANGUAGE_NAME
     return {
       systemPrompt: SUMMARY_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}
@@ -557,8 +558,7 @@ CONTENT`,
     }
   },
   summaryStream: (lang: string, text: string) => {
-    const targetLanguage =
-      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+    const targetLanguage = resolveLanguageName(lang) ?? DEFAULT_LANGUAGE_NAME
     return {
       systemPrompt: SUMMARY_STREAM_SYSTEM,
       prompt: `TARGET_LANGUAGE: ${targetLanguage}
@@ -592,8 +592,7 @@ SOURCE_SUMMARY`,
       tags?: string[]
     },
   ) => {
-    const targetLanguage =
-      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+    const targetLanguage = resolveLanguageName(lang) ?? DEFAULT_LANGUAGE_NAME
     return {
       systemPrompt: buildInsightsSystem(false),
       prompt: buildInsightsPrompt(targetLanguage, article),
@@ -609,8 +608,7 @@ SOURCE_SUMMARY`,
       tags?: string[]
     },
   ) => {
-    const targetLanguage =
-      resolveLanguageName(lang) ?? LANGUAGE_CODE_TO_NAME[DEFAULT_SUMMARY_LANG]
+    const targetLanguage = resolveLanguageName(lang) ?? DEFAULT_LANGUAGE_NAME
     return {
       systemPrompt: buildInsightsSystem(true),
       prompt: buildInsightsPrompt(targetLanguage, article),
@@ -657,7 +655,7 @@ CONTENT`,
           }),
           lang: Type.String({
             description:
-              'ISO 639-1 language code of the input text (e.g., "en", "zh", "ja").',
+              'BCP 47 language-region tag of the input text, e.g. "en-US", "ja-JP", "zh-CN" for Simplified Chinese, "zh-TW" for Traditional Chinese.',
           }),
           keywords: Type.Array(Type.String(), {
             description:

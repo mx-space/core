@@ -7,12 +7,20 @@ describe('CreateTtsTaskSchema', () => {
     expect(CreateTtsTaskSchema.safeParse({ refId: '1' }).success).toBe(true)
   })
 
-  it('accepts resolvable language codes, including aliases', () => {
+  it('accepts canonicalizable language tags', () => {
     const result = CreateTtsTaskSchema.safeParse({
       refId: '1',
-      langs: ['zh-CN', 'en', 'jp'],
+      langs: ['zh-CN', 'en', 'zh-TW'],
     })
     expect(result.success).toBe(true)
+  })
+
+  it('rejects non-standard aliases', () => {
+    const result = CreateTtsTaskSchema.safeParse({
+      refId: '1',
+      langs: ['jp'],
+    })
+    expect(result.success).toBe(false)
   })
 
   it('rejects a langs array longer than 8', () => {

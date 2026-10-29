@@ -19,7 +19,11 @@ import { ConfigsService } from '../../configs/configs.service'
 import { FileService } from '../../file/file.service'
 import { MAX_LANGS_PER_TASK } from '../ai.constants'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import { parseLanguageCode } from '../ai-language.util'
+import {
+  normalizeTargetLangs,
+  parseLanguageCode,
+  resolveGenerationLanguage,
+} from '../ai-language.util'
 import { AITaskType, type TtsTaskPayload } from '../ai-task/ai-task.types'
 import { AiTranslationRepository } from '../ai-translation/ai-translation.repository'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
@@ -124,7 +128,11 @@ export class AiTtsService implements OnModuleInit {
     const document = await this.loadDocument(payload.refId)
     const sourceLang = parseLanguageCode(readArticleMetaLang(document))
     const targets = payload.langs?.length
-      ? [...new Set(payload.langs.map((lang) => parseLanguageCode(lang)))]
+      ? await this.resolveNarrationTargets(
+          payload.refId,
+          sourceLang,
+          payload.langs,
+        )
       : [sourceLang]
 
     if (targets.length > MAX_LANGS_PER_TASK) {
@@ -226,6 +234,30 @@ export class AiTtsService implements OnModuleInit {
     } else if (failed.length > 0 || requeued > 0) {
       context.setStatus(TaskStatus.PartialFailed)
     }
+  }
+
+  // Narration reads its text by exact language, so a regional request such as
+  // `en-GB` has to land on the `en-US` translation that actually exists.
+  private async resolveNarrationTargets(
+    refId: string,
+    sourceLang: string,
+    requested: string[],
+  ): Promise<string[]> {
+    const candidates = [
+      sourceLang,
+      ...normalizeTargetLangs(
+        await this.translationRepository.findLangsByRef(refId),
+      ),
+    ]
+    return [
+      ...new Set(
+        requested.map(
+          (lang) =>
+            resolveGenerationLanguage(lang, candidates) ??
+            parseLanguageCode(lang),
+        ),
+      ),
+    ]
   }
 
   private async runLanguage(

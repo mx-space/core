@@ -16,7 +16,13 @@ import { ConfigsService } from '../../configs/configs.service'
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { resolveTargetLanguages } from '../ai-language.util'
+import {
+  findRowByLanguage,
+  normalizeTargetLangs,
+  resolveGenerationLanguage,
+  resolveServedLanguage,
+  resolveTargetLanguages,
+} from '../ai-language.util'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import {
   AITaskType,
@@ -206,7 +212,16 @@ export class AiSummaryService implements OnModuleInit {
   ): Promise<Map<string, string>> {
     if (!refIds.length) return new Map()
 
-    const summaries = await this.aiSummaryRepository.listByRefIds(refIds, lang)
+    const aiConfig = await this.configService.get('ai')
+    const servedLang = resolveServedLanguage(
+      lang,
+      aiConfig?.summaryTargetLanguages,
+    )
+    if (!servedLang) return new Map()
+    const summaries = await this.aiSummaryRepository.listByRefIds(
+      refIds,
+      servedLang,
+    )
 
     const map = new Map<string, string>()
     for (const s of summaries) {
@@ -296,6 +311,22 @@ export class AiSummaryService implements OnModuleInit {
       await this.aiSummaryRepository.updateSummary(id, summary),
     )
   }
+  private async resolveArticleSummaryLang(
+    articleId: string,
+    lang: string,
+  ): Promise<string> {
+    const [rows, aiConfig] = await Promise.all([
+      this.aiSummaryRepository.listForRef(articleId),
+      this.configService.get('ai'),
+    ])
+    return (
+      resolveGenerationLanguage(lang, [
+        ...rows.map((row) => row.lang ?? DEFAULT_SUMMARY_LANG),
+        ...normalizeTargetLangs(aiConfig?.summaryTargetLanguages),
+      ]) ?? DEFAULT_SUMMARY_LANG
+    )
+  }
+
   async getSummaryByArticleId(
     articleId: string,
     lang = DEFAULT_SUMMARY_LANG,
@@ -313,9 +344,8 @@ export class AiSummaryService implements OnModuleInit {
     lang: string,
   ): Promise<AISummaryModel | null> {
     try {
-      return this.toSummaryDoc(
-        await this.aiSummaryRepository.findByRefAndLang(articleId, lang),
-      )
+      const rows = await this.aiSummaryRepository.listForRef(articleId)
+      return this.toSummaryDoc(findRowByLanguage(rows, lang) ?? null)
     } catch (error) {
       this.logger.warn(
         `summary meta lookup failed: article=${articleId} lang=${lang} ${
@@ -347,12 +377,12 @@ export class AiSummaryService implements OnModuleInit {
       throw createAppException(AppErrorCode.AI_NOT_ENABLED)
     }
 
-    const { lang } = options
     const { article } = await this.adapter.resolveArticleDetailed(articleId, {
       blockPremium: true,
       isOwner: options.isOwner,
       readerId: options.readerId,
     })
+    const lang = await this.resolveArticleSummaryLang(articleId, options.lang)
 
     const existingSummary = await this.findValidSummary(
       articleId,
@@ -382,7 +412,8 @@ export class AiSummaryService implements OnModuleInit {
       readerId?: string
     },
   ) {
-    const { onlyDb, lang, isOwner, readerId } = options
+    const { onlyDb, isOwner, readerId } = options
+    const lang = await this.resolveArticleSummaryLang(articleId, options.lang)
 
     const dbStored = await this.getSummaryByArticleId(articleId, lang, {
       isOwner,

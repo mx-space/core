@@ -90,7 +90,7 @@ const objectKeyUnderVoice = (
 ) =>
   buildTtsObjectKey({
     refId: '1',
-    lang: 'zh',
+    lang: 'zh-CN',
     blockId,
     chunkIndex: 0,
     fingerprint: computeTtsObjectFingerprint(fingerprint, voice),
@@ -121,7 +121,7 @@ const parentRow = (overrides: Record<string, unknown> = {}) => ({
   createdAt: now,
   updatedAt: now,
   refId: '1',
-  lang: 'zh',
+  lang: 'zh-CN',
   isTranslation: false,
   sourceLang: null,
   ...PUBLISHED_VOICE,
@@ -239,7 +239,10 @@ function createHarness() {
     ]),
   }
 
-  const translationRepository = { findByRefAndLang: vi.fn(async () => null) }
+  const translationRepository = {
+    findByRefAndLang: vi.fn(async (): Promise<unknown> => null),
+    findLangsByRef: vi.fn(async (): Promise<string[]> => []),
+  }
 
   const lockStore = new Map<string, string>()
   const redisClient = {
@@ -343,7 +346,7 @@ describe('ai-tts generation task (faux e2e)', () => {
 
     expect(generateSpeechMock).toHaveBeenCalledTimes(2)
     for (const [options] of generateSpeechMock.mock.calls) {
-      expect(options.language).toBe('zh')
+      expect(options.language).toBe('zh-CN')
     }
   })
 
@@ -376,7 +379,7 @@ describe('ai-tts generation task (faux e2e)', () => {
     for (const [, opts] of h.fileService.uploadBuffer.mock.calls) {
       expect(opts.type).toBe('audio')
       expect(opts.objectKey).toMatch(
-        /^tts\/1\/zh\/blk-[ab]-0-[\da-f]{12}\.mp3$/,
+        /^tts\/1\/zh-CN\/blk-[ab]-0-[\da-f]{12}\.mp3$/,
       )
     }
   })
@@ -466,8 +469,8 @@ describe('ai-tts generation task (faux e2e)', () => {
     expect(h.repository.upsertBlock).toHaveBeenCalledWith(
       expect.objectContaining({
         storageBackend: 'local',
-        storageKey: expect.stringMatching(/^tts\/1\/zh\/blk-a-0-/),
-        url: expect.stringContaining('/objects/audio/tts/1/zh/blk-a-0-'),
+        storageKey: expect.stringMatching(/^tts\/1\/zh-CN\/blk-a-0-/),
+        url: expect.stringContaining('/objects/audio/tts/1/zh-CN/blk-a-0-'),
       }),
     )
     expect(context.setStatus).not.toHaveBeenCalled()
@@ -497,7 +500,7 @@ describe('ai-tts generation task (faux e2e)', () => {
     await h.execute({ refId: '1' }, context)
 
     expect(h.redis.set).toHaveBeenCalledWith(
-      'ai:tts:lock:1:zh',
+      'ai:tts:lock:1:zh-CN',
       expect.any(String),
       'EX',
       300,
@@ -583,7 +586,31 @@ describe('ai-tts generation task (faux e2e)', () => {
 
     expect(context.setStatus).not.toHaveBeenCalled()
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
-      expect.objectContaining({ isTranslation: true, sourceLang: 'zh' }),
+      expect.objectContaining({ isTranslation: true, sourceLang: 'zh-CN' }),
+    )
+  })
+
+  it('narrates a regional variant from the matching translation', async () => {
+    h.translationRepository.findLangsByRef.mockResolvedValue(['en-US'])
+    h.translationRepository.findByRefAndLang.mockImplementation(
+      async (_refId: string, lang: string) =>
+        lang === 'en-US' ? translationRow() : null,
+    )
+
+    await h.execute({ refId: '1', langs: ['en-GB'] }, context)
+
+    expect(context.setStatus).not.toHaveBeenCalled()
+    expect(h.repository.upsertParent).toHaveBeenCalledWith(
+      expect.objectContaining({ lang: 'en-US', isTranslation: true }),
+    )
+  })
+
+  it('narrates a regional variant of the source language as the original', async () => {
+    await h.execute({ refId: '1', langs: ['zh-SG'] }, context)
+
+    expect(h.translationRepository.findByRefAndLang).not.toHaveBeenCalled()
+    expect(h.repository.upsertParent).toHaveBeenCalledWith(
+      expect.objectContaining({ lang: 'zh-CN', isTranslation: false }),
     )
   })
 
@@ -626,7 +653,7 @@ describe('ai-tts generation task (faux e2e)', () => {
 
     expect(h.redis.set).toHaveBeenCalledTimes(1)
     expect(h.repository.upsertParent).toHaveBeenCalledWith(
-      expect.objectContaining({ lang: 'zh' }),
+      expect.objectContaining({ lang: 'zh-CN' }),
     )
   })
 

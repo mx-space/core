@@ -1,7 +1,6 @@
 export {
   AI_SUMMARY_MAX_WORDS,
   DEFAULT_SUMMARY_LANG,
-  LANGUAGE_CODE_TO_NAME,
 } from '@mx-space/ai/prompts'
 
 /** Redis lock TTL for AI streaming tasks (in seconds) */

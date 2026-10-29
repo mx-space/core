@@ -74,6 +74,15 @@ export class AiTtsRepository extends BaseRepository {
     return row ? mapParent(row) : null
   }
 
+  async findLangsByRef(refId: EntityId | string): Promise<string[]> {
+    const rows = await this.db
+      .select({ lang: aiTts.lang })
+      .from(aiTts)
+      .where(eq(aiTts.refId, parseEntityId(refId)))
+      .orderBy(aiTts.lang)
+    return rows.map((row) => row.lang)
+  }
+
   async findAllByRef(refId: EntityId | string): Promise<AiTtsRow[]> {
     const rows = await this.db
       .select()

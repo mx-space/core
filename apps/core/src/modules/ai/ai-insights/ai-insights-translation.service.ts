@@ -9,7 +9,10 @@ import {
 } from '~/processors/task-queue'
 
 import { ConfigsService } from '../../configs/configs.service'
-import { normalizeTargetLangs } from '../ai-language.util'
+import {
+  excludeSourceLanguage,
+  normalizeTargetLangs,
+} from '../ai-language.util'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import { AiTaskService } from '../ai-task/ai-task.service'
 import {
@@ -58,9 +61,10 @@ export class AiInsightsTranslationService implements OnModuleInit {
     if (!aiConfig?.enableInsights || !aiConfig.enableAutoTranslateInsights) {
       return
     }
-    const targets = normalizeTargetLangs(
-      aiConfig.insightsTargetLanguages,
-    ).filter((lang) => lang !== event.sourceLang)
+    const targets = excludeSourceLanguage(
+      normalizeTargetLangs(aiConfig.insightsTargetLanguages),
+      event.sourceLang,
+    )
     for (const targetLang of targets) {
       const existing = await this.aiInsightsRepository.findByRefAndLang(
         event.refId,

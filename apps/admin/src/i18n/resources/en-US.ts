@@ -60,8 +60,9 @@ export const enUS = {
   'ai.overview.action.open': 'Open',
   'ai.overview.action.regenerate': 'Regenerate',
   'ai.overview.addLang': 'Add a language',
-  'ai.overview.addLangInvalid': 'Enter a valid ISO 639-1 code, e.g. en or zh',
-  'ai.overview.addLangPlaceholder': 'en',
+  'ai.overview.addLangInvalid':
+    'Enter a valid BCP 47 language tag, e.g. en-US or zh-TW',
+  'ai.overview.addLangPlaceholder': 'en-US',
   'ai.overview.assetsEmptyDescription':
     'Click an empty cell in the matrix above to generate one.',
   'ai.overview.asset.stale': 'Based on an older version',
@@ -146,7 +147,8 @@ export const enUS = {
   'ai.generate.forceLabel': 'Force regenerate',
   'ai.generate.langsCount': '{count} total',
   'ai.generate.langsHint':
-    'Comma-separated; leave empty to use the target languages from AI settings',
+    'Comma-separated BCP 47 tags (zh-CN, zh-TW, en-US); leave empty to use the target languages from AI settings',
+  'ai.generate.langsInvalid': 'Unrecognized language tags: {langs}',
   'ai.generate.langsLabel': 'Target languages',
   'ai.generate.langsTooMany': 'At most {max} languages per run',
   'ai.grouped.itemCount': '{count} items',
@@ -2372,9 +2374,9 @@ export const enUS = {
   'settings.ai.switch.translationTargetLanguages':
     'Translation target languages',
   'settings.ai.test.invalidLanguageCode':
-    'Use an ISO 639-1 language code (2 letters)',
+    'Use a BCP 47 language tag, e.g. zh-CN, zh-TW, en-US',
   'settings.ai.test.languageExists': 'Language {language} already exists',
-  'settings.ai.test.placeholder': 'e.g. en, ja, ko',
+  'settings.ai.test.placeholder': 'e.g. zh-TW, en-US, ja-JP',
   'settings.ai.toast.modelListEmpty': 'No models returned',
   'settings.ai.toast.modelListError': 'Fetch model list: {message}',
   'settings.ai.toast.modelListUpdated': 'Model list updated ({count})',

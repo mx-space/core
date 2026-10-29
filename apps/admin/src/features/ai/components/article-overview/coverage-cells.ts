@@ -1,3 +1,5 @@
+import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
+
 import type {
   ActiveGeneration,
   AiOverviewCapability,
@@ -61,10 +63,8 @@ export function coverageColumns(
   return [...langs].sort()
 }
 
-/** ISO 639-1/639-2 shape only — the server is the real authority. */
 export function normaliseLangInput(raw: string): string | null {
-  const value = raw.trim().split('-')[0].toLowerCase()
-  return /^[a-z]{2,3}$/.test(value) ? value : null
+  return isKnownLanguageTag(raw) ? canonicalizeLanguageTag(raw)! : null
 }
 
 export function resolveCell(

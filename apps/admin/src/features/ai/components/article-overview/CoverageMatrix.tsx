@@ -26,7 +26,7 @@ import {
   resolveCell,
 } from './coverage-cells'
 
-const QUICK_LANGS = ['zh', 'en', 'ja']
+const QUICK_LANGS = ['zh-CN', 'zh-TW', 'en-US', 'ja-JP']
 
 const CELL_CLASS: Record<CellState, string> = {
   has: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25',

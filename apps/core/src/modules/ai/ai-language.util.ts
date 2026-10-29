@@ -1,50 +1,77 @@
-import { normalizeTargetLang } from '@mx-space/ai'
+import {
+  canonicalizeLanguageTag,
+  matchLanguage,
+  toScriptLevelTag,
+} from '@mx-space/ai'
 
 import { parseAcceptLanguage } from '~/utils/lang.util'
 
-import { DEFAULT_SUMMARY_LANG, LANGUAGE_CODE_TO_NAME } from './ai.constants'
-
-export { normalizeTargetLang }
+import { DEFAULT_SUMMARY_LANG } from './ai.constants'
 
 export function normalizeTargetLangs(langs?: string[] | null): string[] {
   return [
     ...new Set(
       (langs ?? [])
-        .map((lang) => normalizeTargetLang(lang))
+        .map((lang) => canonicalizeLanguageTag(lang))
         .filter((lang): lang is string => lang !== undefined),
     ),
   ]
 }
 
-/**
- * Extract the primary language code from an Accept-Language header or a language code.
- * Examples: "en-US,en;q=0.9" -> "en", "zh-CN" -> "zh", "jp" -> "ja"
- *
- * Codes unknown to the alias tables (e.g. "fil", "yue") fall back to the
- * lowercased base segment instead of the default, so valid ISO codes are
- * never silently collapsed to DEFAULT_SUMMARY_LANG.
- */
-export function parseLanguageCode(lang?: string): string {
-  const normalized = parseAcceptLanguage(lang)
-  if (normalized) return normalized
-
-  const base = lang
-    ?.split(',')[0]
-    ?.split(';')[0]
-    ?.trim()
-    .split('-')[0]
-    ?.toLowerCase()
-  if (base && /^[a-z]{2,3}$/.test(base)) return base
-
-  return DEFAULT_SUMMARY_LANG
+// Stored codes the canonicalizer rejects stay visible as-is rather than vanish.
+export function canonicalizeStoredLang(lang: string): string {
+  return canonicalizeLanguageTag(lang) ?? lang
 }
 
-/**
- * Get the full name for a language code.
- * Examples: "en" -> "English", "zh" -> "Simplified Chinese"
- */
+export function resolveServedLanguage(
+  lang: string | null | undefined,
+  configuredTargets: string[] | null | undefined,
+): string | undefined {
+  const requested = canonicalizeLanguageTag(lang)
+  if (!requested) return undefined
+  const candidates = [
+    ...normalizeTargetLangs(configuredTargets),
+    DEFAULT_SUMMARY_LANG,
+  ]
+  return matchLanguage(requested, candidates) ?? toScriptLevelTag(requested)
+}
+
+export function resolveGenerationLanguage(
+  lang: string | null | undefined,
+  candidates: readonly string[],
+): string | undefined {
+  return matchLanguage(lang, candidates) ?? toScriptLevelTag(lang)
+}
+
+export function excludeSourceLanguage(
+  targets: readonly string[],
+  sourceLang: string,
+): string[] {
+  return targets.filter((lang) => !matchLanguage(lang, [sourceLang]))
+}
+
+export function findRowByLanguage<T extends { lang?: string | null }>(
+  rows: readonly T[],
+  lang: string | null | undefined,
+): T | undefined {
+  const rowLang = (row: T) => row.lang ?? DEFAULT_SUMMARY_LANG
+  const matched = matchLanguage(lang, rows.map(rowLang))
+  if (!matched) return undefined
+  return rows.find((row) => canonicalizeLanguageTag(rowLang(row)) === matched)
+}
+
+export function parseLanguageCode(lang?: string): string {
+  return parseAcceptLanguage(lang) ?? DEFAULT_SUMMARY_LANG
+}
+
+const languageNames = new Intl.DisplayNames(['en'], {
+  type: 'language',
+  fallback: 'none',
+})
+
 export function getLanguageName(langCode: string): string {
-  return LANGUAGE_CODE_TO_NAME[langCode] || langCode
+  const tag = canonicalizeLanguageTag(langCode)
+  return (tag && languageNames.of(new Intl.Locale(tag).language)) || langCode
 }
 
 export function resolveTargetLanguages(

@@ -37,6 +37,7 @@ const makeService = ({
   translations = [],
   searchRepoOverrides,
   aiRepoOverrides,
+  aiConfig = {},
 }: {
   postFindById?: any
   noteRecent?: any[]
@@ -46,6 +47,7 @@ const makeService = ({
   pageFindAll?: any[]
   translations?: any[]
   searchRepoOverrides?: Partial<Record<keyof SearchRepository, any>>
+  aiConfig?: Record<string, unknown>
   aiRepoOverrides?: Partial<Record<keyof AiTranslationRepository, any>>
 } = {}) => {
   const noteService = {
@@ -148,6 +150,7 @@ const makeService = ({
     pageService as any,
     searchRepo as any,
     aiRepo as any,
+    { get: vi.fn(async () => aiConfig) } as any,
   )
   return { service, searchRepo, aiRepo, noteService, postService, pageService }
 }
@@ -220,7 +223,11 @@ describe('SearchService', () => {
     await service.onPostCreate({ id: 'post-1' })
 
     expect(searchRepo.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ refType: 'post', refId: 'post-1', lang: 'ja' }),
+      expect.objectContaining({
+        refType: 'post',
+        refId: 'post-1',
+        lang: 'ja-JP',
+      }),
     )
   })
 
@@ -234,7 +241,11 @@ describe('SearchService', () => {
     await service.onPostCreate({ id: 'post-1' })
 
     expect(searchRepo.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ refType: 'post', refId: 'post-1', lang: 'en' }),
+      expect.objectContaining({
+        refType: 'post',
+        refId: 'post-1',
+        lang: 'en-US',
+      }),
     )
   })
 
@@ -308,7 +319,7 @@ describe('SearchService', () => {
     const { service, searchRepo } = makeService({})
     await service.onPostCreate({ id: 'post-1' })
     expect(searchRepo.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ lang: 'zh' }),
+      expect.objectContaining({ lang: 'zh-CN' }),
     )
   })
 
@@ -371,11 +382,11 @@ describe('SearchService', () => {
         findHashesByRefMap: vi.fn().mockResolvedValue(
           new Map<string, string>([
             // matches → skip
-            ['post:post-1:zh', expectedHash],
+            ['post:post-1:zh-CN', expectedHash],
             // orphan → delete
-            ['post:gone:zh', 'whatever'],
+            ['post:gone:zh-CN', 'whatever'],
             // changed hash → update
-            ['note:note-1:zh', 'old'],
+            ['note:note-1:zh-CN', 'old'],
           ]),
         ),
       },
@@ -387,8 +398,12 @@ describe('SearchService', () => {
     // post-1 matches → skip; note-1 + post:gone don't exist in expected → delete.
     expect(stats.skipped).toBe(1)
     expect(stats.deleted).toBe(2)
-    expect(searchRepo.deleteByRef).toHaveBeenCalledWith('post', 'gone', 'zh')
-    expect(searchRepo.deleteByRef).toHaveBeenCalledWith('note', 'note-1', 'zh')
+    expect(searchRepo.deleteByRef).toHaveBeenCalledWith('post', 'gone', 'zh-CN')
+    expect(searchRepo.deleteByRef).toHaveBeenCalledWith(
+      'note',
+      'note-1',
+      'zh-CN',
+    )
   })
 
   it('searchIndex applies fallback discount for misses in effective lang', async () => {
@@ -396,7 +411,7 @@ describe('SearchService', () => {
       id: 's1',
       refType: 'post',
       refId: 'post-1',
-      lang: 'en',
+      lang: 'en-US',
       sourceHash: '',
       title: 'hello',
       searchText: 'world',
@@ -417,7 +432,7 @@ describe('SearchService', () => {
       ...enHit,
       id: 's2',
       refId: 'post-2',
-      lang: 'zh',
+      lang: 'zh-CN',
       title: '你好',
       searchText: '世界',
       terms: ['你好'],
@@ -426,7 +441,7 @@ describe('SearchService', () => {
     }
 
     const findByTerms = vi.fn(async (_terms, _refType, lang) =>
-      lang === 'en' ? [enHit] : [zhHit],
+      lang === 'en-US' ? [enHit] : [zhHit],
     )
     const findByKeyword = vi.fn().mockResolvedValue([])
     const findAll = vi.fn().mockResolvedValue([])
@@ -460,11 +475,48 @@ describe('SearchService', () => {
     expect(result.data.length).toBe(2)
     const en = result.data.find((d: any) => d.id === 'post-1')
     const zh = result.data.find((d: any) => d.id === 'post-2')
-    expect(en?.lang).toBe('en')
+    expect(en?.lang).toBe('en-US')
     expect(en?.isFallback).toBe(false)
-    expect(zh?.lang).toBe('zh')
+    expect(zh?.lang).toBe('zh-CN')
     expect(zh?.isFallback).toBe(true)
   })
+
+  it.each([
+    ['en', [], 'en-US'],
+    ['en-US', [], 'en-US'],
+    ['zh-tw', [], 'zh-TW'],
+    ['en-GB', ['en-US', 'ja-JP'], 'en-US'],
+    ['zh-HK', ['zh-TW'], 'zh-TW'],
+    ['zh-HK', ['zh-HK', 'zh-TW'], 'zh-HK'],
+    ['zh-SG', ['en-US'], 'zh-CN'],
+  ])(
+    'searches documents under the served tag for lang %s with targets %j',
+    async (requested, translationTargetLanguages, expected) => {
+      const findByTerms = vi.fn().mockResolvedValue([])
+      const { service } = makeService({
+        aiConfig: { translationTargetLanguages },
+        searchRepoOverrides: {
+          findByTerms,
+          findByKeyword: vi.fn().mockResolvedValue([]),
+          findAll: vi.fn().mockResolvedValue([]),
+          findCorpusStatsByLang: vi.fn().mockResolvedValue({
+            totalDocs: 0,
+            avgTitleLength: 0,
+            avgBodyLength: 0,
+          }),
+        },
+      })
+
+      await service.search({
+        keyword: 'hello',
+        page: 1,
+        size: 10,
+        lang: requested,
+      } as any)
+
+      expect(findByTerms.mock.calls.map((call) => call[2])).toContain(expected)
+    },
+  )
 
   it('teases the full content of a premium post for public search results', async () => {
     const premiumContent = JSON.stringify({

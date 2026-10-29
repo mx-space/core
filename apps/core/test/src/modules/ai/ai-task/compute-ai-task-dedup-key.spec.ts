@@ -20,8 +20,8 @@ describe('computeAITaskDedupKey — force bit', () => {
     })
 
     expect(incKey).not.toBe(forceKey)
-    expect(incKey).toBe('1:inc:en')
-    expect(forceKey).toBe('1:force:en')
+    expect(incKey).toBe('1:inc:en-US')
+    expect(forceKey).toBe('1:force:en-US')
   })
 
   it('gives Translation a different dedup key for force vs incremental', () => {
@@ -37,8 +37,8 @@ describe('computeAITaskDedupKey — force bit', () => {
     })
 
     expect(incKey).not.toBe(forceKey)
-    expect(incKey).toBe('1:inc:en,ja')
-    expect(forceKey).toBe('1:force:en,ja')
+    expect(incKey).toBe('1:inc:en-US,ja-JP')
+    expect(forceKey).toBe('1:force:en-US,ja-JP')
   })
 
   it('gives Insights a different dedup key for force vs incremental', () => {
@@ -68,8 +68,8 @@ describe('computeAITaskDedupKey — force bit', () => {
       force: true,
     })
 
-    expect(incKey).toBe('1:en:inc')
-    expect(forceKey).toBe('1:en:force')
+    expect(incKey).toBe('1:en-US:inc')
+    expect(forceKey).toBe('1:en-US:force')
   })
 
   it('gives InsightsTranslation a different dedup key for force vs incremental, so a forced regeneration is not swallowed by a pending plain task', () => {
@@ -85,8 +85,8 @@ describe('computeAITaskDedupKey — force bit', () => {
       force: true,
     })
 
-    expect(incKey).toBe('1:en:inc')
-    expect(forceKey).toBe('1:en:force')
+    expect(incKey).toBe('1:en-US:inc')
+    expect(forceKey).toBe('1:en-US:force')
   })
 
   it('keeps a requested insights target language out of the plain key, so two targets queue as two tasks', () => {
@@ -105,11 +105,11 @@ describe('computeAITaskDedupKey — force bit', () => {
     )
   })
 
-  it('canonicalizes a requested insights target language, so jp and ja dedupe together', () => {
+  it('canonicalizes a requested insights target language, so ja and ja-JP dedupe together', () => {
     expect(
       computeAITaskDedupKey(AITaskType.Insights, {
         refId: '1',
-        targetLanguages: ['jp'],
+        targetLanguages: ['ja-JP'],
       }),
     ).toBe(
       computeAITaskDedupKey(AITaskType.Insights, {
@@ -121,6 +121,20 @@ describe('computeAITaskDedupKey — force bit', () => {
 })
 
 describe('computeAITaskDedupKey — target language normalization', () => {
+  it('canonicalizes batch and all-article translation targets', () => {
+    expect(
+      computeAITaskDedupKey(AITaskType.TranslationBatch, {
+        refIds: ['2', '1'],
+        targetLanguages: ['ja', 'en'],
+      }),
+    ).toBe('1,2:en-US,ja-JP')
+    expect(
+      computeAITaskDedupKey(AITaskType.TranslationAll, {
+        targetLanguages: ['zh-TW', 'zh'],
+      }),
+    ).toBe('all:zh-CN,zh-TW')
+  })
+
   it('gives Summary the same dedup key for zh-CN and zh, since generation now produces the same result', () => {
     const regional = computeAITaskDedupKey(AITaskType.Summary, {
       refId: '1',
@@ -132,7 +146,7 @@ describe('computeAITaskDedupKey — target language normalization', () => {
     })
 
     expect(regional).toBe(canonical)
-    expect(regional).toBe('1:inc:zh')
+    expect(regional).toBe('1:inc:zh-CN')
   })
 
   it('gives Translation the same dedup key for zh-CN and zh, since generation now produces the same result', () => {
@@ -146,6 +160,6 @@ describe('computeAITaskDedupKey — target language normalization', () => {
     })
 
     expect(regional).toBe(canonical)
-    expect(regional).toBe('1:inc:zh')
+    expect(regional).toBe('1:inc:zh-CN')
   })
 })

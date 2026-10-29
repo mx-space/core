@@ -7,7 +7,7 @@ import {
 
 const openRouterContext = {
   baseUrl: 'https://openrouter.ai/api/v1',
-  language: 'ja',
+  language: 'ja-JP',
 }
 
 describe('TtsLanguageStrategyRegistry', () => {
@@ -25,8 +25,8 @@ describe('TtsLanguageStrategyRegistry', () => {
         model: 'custom/tts',
       }),
     ).toEqual({
-      cacheKey: 'custom-language:v2:ja',
-      requestParams: { language: 'ja' },
+      cacheKey: 'custom-language:v2:ja-JP',
+      requestParams: { language: 'ja-JP' },
       strategyId: 'custom-language',
     })
   })
@@ -68,7 +68,7 @@ describe('default TTS language strategies', () => {
     })
     const chinese = defaultTtsLanguageStrategyRegistry.resolve({
       ...openRouterContext,
-      language: 'zh',
+      language: 'zh-TW',
       model: 'google/gemini-3.1-flash-tts-preview',
     })
 
@@ -81,7 +81,7 @@ describe('default TTS language strategies', () => {
       /Japanese \(ja-JP\).*Transcript:\n今日/s,
     )
     expect(chinese.transformInput?.('今日')).toMatch(
-      /Mandarin Chinese \(zh-CN\).*Transcript:\n今日/s,
+      /Mandarin Chinese \(zh-TW\).*Transcript:\n今日/s,
     )
   })
 
@@ -118,7 +118,7 @@ describe('default TTS language strategies', () => {
       provider: {
         options: {
           openai: {
-            instructions: expect.stringMatching(/Japanese.*ja/),
+            instructions: expect.stringMatching(/Japanese.*ja-JP/),
           },
         },
       },
@@ -128,12 +128,12 @@ describe('default TTS language strategies', () => {
   it('adds top-level instructions for the native OpenAI speech endpoint', () => {
     const resolved = defaultTtsLanguageStrategyRegistry.resolve({
       baseUrl: 'https://api.openai.com/v1',
-      language: 'ja',
+      language: 'ja-JP',
       model: 'gpt-4o-mini-tts',
     })
 
     expect(resolved.requestParams).toEqual({
-      instructions: expect.stringMatching(/Japanese.*ja/),
+      instructions: expect.stringMatching(/Japanese.*ja-JP/),
     })
   })
 
@@ -141,9 +141,18 @@ describe('default TTS language strategies', () => {
     expect(
       defaultTtsLanguageStrategyRegistry.resolve({
         baseUrl: 'https://api.openai.com/v1',
-        language: 'ja',
+        language: 'ja-JP',
         model: 'tts-1-hd',
       }).requestParams,
     ).toEqual({})
+  })
+  it('canonicalizes legacy bare language codes', () => {
+    const resolved = defaultTtsLanguageStrategyRegistry.resolve({
+      ...openRouterContext,
+      language: 'ja',
+      model: 'x-ai/grok-voice-tts-1.0',
+    })
+
+    expect(resolved.cacheKey).toBe('openrouter-xai-language:v1:ja-JP')
   })
 })

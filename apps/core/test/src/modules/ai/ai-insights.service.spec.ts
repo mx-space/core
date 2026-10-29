@@ -22,7 +22,9 @@ const row = {
 }
 
 const createService = () => {
-  const repository = createPgRepositoryMock<AiInsightsRepository>()
+  const repository = createPgRepositoryMock<AiInsightsRepository>({
+    listForRef: vi.fn().mockResolvedValue([]),
+  })
   const databaseService = {
     findGlobalById: vi.fn(),
     getRefArticleMap: vi.fn().mockResolvedValue({}),
@@ -127,12 +129,39 @@ function runInsightsTask(
 }
 
 describe('AiInsightsService', () => {
-  it('checks insight language availability through the PG repository', async () => {
+  it('checks insight availability by language and script', async () => {
     const { repository, service } = createService()
-    repository.findByRefAndLang.mockResolvedValue(row as any)
+    repository.listForRef.mockResolvedValue([{ ...row, lang: 'zh-TW' }] as any)
 
-    await expect(service.hasInsightsInLang('post-1', 'zh')).resolves.toBe(true)
-    expect(repository.findByRefAndLang).toHaveBeenCalledWith('post-1', 'zh')
+    await expect(service.hasInsightsInLang('post-1', 'zh-HK')).resolves.toBe(
+      true,
+    )
+    await expect(service.hasInsightsInLang('post-1', 'zh-SG')).resolves.toBe(
+      false,
+    )
+    expect(repository.listForRef).toHaveBeenCalledWith('post-1')
+  })
+
+  it('reads existing same-script insights for a regional request', async () => {
+    const { databaseService, repository, service } = createService()
+    databaseService.findGlobalById.mockResolvedValue({
+      type: CollectionRefTypes.Post,
+      document: {
+        id: 'post-1',
+        title: 'Post',
+        text: 'Text',
+        isPublished: true,
+      },
+    })
+    repository.listForRef.mockResolvedValue([{ ...row, lang: 'en-US' }] as any)
+    repository.findByRefAndLang.mockResolvedValue(null)
+
+    await service.getOrGenerateInsightsForArticle('post-1', {
+      lang: 'en-GB',
+      onlyDb: true,
+    })
+
+    expect(repository.findByRefAndLang).toHaveBeenCalledWith('post-1', 'en-US')
   })
 
   it('updates insight content after validating the target row exists', async () => {
@@ -343,7 +372,7 @@ describe('AiInsightsService', () => {
 
     await service.findSourceInsightsForArticle('post-1')
 
-    expect(repository.findSourceForRef).toHaveBeenCalledWith('post-1', 'en')
+    expect(repository.findSourceForRef).toHaveBeenCalledWith('post-1', 'en-US')
   })
 })
 
@@ -389,29 +418,29 @@ describe('AiInsightsService — insights task target languages', () => {
 
     const ctx = await runInsightsTask(harness, {
       refId: 'post-1',
-      targetLanguages: ['en', 'jp'],
+      targetLanguages: ['en', 'ja'],
     })
 
     const upserts = harness.repository.upsert.mock.calls.map(
       ([input]: any[]) => input,
     )
-    expect(upserts[0]).toMatchObject({ lang: 'zh', isTranslation: false })
+    expect(upserts[0]).toMatchObject({ lang: 'zh-CN', isTranslation: false })
     expect(upserts).toContainEqual(
       expect.objectContaining({
-        lang: 'ja',
+        lang: 'ja-JP',
         isTranslation: true,
         sourceInsightsId: 'insights-1',
         content: 'translated insight',
       }),
     )
     expect(upserts).toContainEqual(
-      expect.objectContaining({ lang: 'en', isTranslation: true }),
+      expect.objectContaining({ lang: 'en-US', isTranslation: true }),
     )
     expect(ctx.setResult).toHaveBeenCalledWith(
       expect.objectContaining({
         insightsId: 'insights-1',
-        lang: 'zh',
-        translated: expect.arrayContaining(['en', 'ja']),
+        lang: 'zh-CN',
+        translated: expect.arrayContaining(['en-US', 'ja-JP']),
       }),
     )
   })
@@ -444,14 +473,14 @@ describe('AiInsightsService — insights task target languages', () => {
 
     await runInsightsTask(harness, {
       refId: 'post-1',
-      targetLanguages: ['zh-CN'],
+      targetLanguages: ['zh'],
     })
 
     const upserts = harness.repository.upsert.mock.calls.map(
       ([input]: any[]) => input,
     )
     expect(upserts).toHaveLength(1)
-    expect(upserts[0]).toMatchObject({ lang: 'zh', isTranslation: false })
+    expect(upserts[0]).toMatchObject({ lang: 'zh-CN', isTranslation: false })
     expect(harness.aiService.getInsightsTranslationModel).not.toHaveBeenCalled()
   })
 

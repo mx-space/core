@@ -8,7 +8,7 @@ Licensed under MIT.
 
 | Import | Contents |
 |--------|----------|
-| `@mx-space/ai` | AI agent SSE event schema (`AiAgentSseEvent`), language normalization (`normalizeLanguageCode`, `normalizeTargetLang`), environment hooks (`configureAiEnvironment`, `createAiLogger`), `throwIfAborted`, JSON object extraction helpers |
+| `@mx-space/ai` | AI agent SSE event schema (`AiAgentSseEvent`), BCP 47 language tags (`canonicalizeLanguageTag`, `isKnownLanguageTag`, `matchLanguage`, `toScriptLevelTag`), environment hooks (`configureAiEnvironment`, `createAiLogger`), `throwIfAborted`, JSON object extraction helpers |
 | `@mx-space/ai/runtime` | `IModelRuntime`, `PiRuntimeAdapter`, `createModelRuntime`, provider types (`AIProviderType`, `AIProviderConfig`, ...), protocol adapter registry, JSON Schema to TypeBox conversion, Vertex helpers |
 | `@mx-space/ai/decision` | `requestDecision` / `listDecisionModels` for decision (classifier) providers |
 | `@mx-space/ai/engine` | Message engine: `Conversation`, `runEngineLoop`, sub-agent tools, `VirtualFs` |
@@ -50,9 +50,11 @@ const result = await strategy.translate(article, 'ja', runtime, info, {
 
 `existing` is any record shaped like `ExistingTranslation`, so each host keeps its own translation table.
 
-### Regional locales
+### Language tags
 
-`normalizeLanguageCode` and `normalizeTargetLang` fold regional variants by default (`zh-CN`, `zh-TW` to `zh`; `pt-BR` to `pt`). Pass `{ foldRegion: false }` to keep them distinct; tags then come back in BCP 47 casing (`zh-TW`, `pt-BR`, `zh-Hant`).
+Every stored language is a BCP 47 `language-REGION` tag derived from `Intl.Locale#maximize`: `canonicalizeLanguageTag('zh')` is `zh-CN`, `'zh-Hant'` is `zh-TW`, `'en'` is `en-US`. Legacy shorthands are not aliases: `tw` reads as Twi and `jp`, `cn` are rejected by `isKnownLanguageTag`.
+
+`matchLanguage(requested, candidates)` picks the candidate with the same language and script, preferring an exact region; `zh-HK` finds a `zh-TW` row but never a `zh-CN` one. `toScriptLevelTag` maps a request to the tag new content is generated under (`zh-HK` to `zh-TW`, `en-GB` to `en-US`).
 
 ### Workspace consumers
 

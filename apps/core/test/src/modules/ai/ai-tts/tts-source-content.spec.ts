@@ -39,9 +39,9 @@ function resolve(
     document: document as never,
     findTranslation: vi.fn(async () => row as never),
     isTranslation: true,
-    lang: 'en',
+    lang: 'en-US',
     refId: '1',
-    sourceLang: 'zh',
+    sourceLang: 'zh-CN',
     ...overrides,
   })
 }

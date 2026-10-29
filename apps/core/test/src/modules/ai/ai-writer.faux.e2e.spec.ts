@@ -51,6 +51,25 @@ describe('ai-writer faux e2e', () => {
     )
     expect(out.title).toBe('A Generated Title')
     expect(out.slug).toBe('a-generated-title')
+    expect(out.lang).toBe('en-US')
+  })
+
+  it('drops an unusable language from the model output', async () => {
+    const r = makeRuntime([
+      fauxAssistantMessage([
+        fauxToolCall('structured_output', {
+          title: 'T',
+          slug: 't',
+          lang: 'english',
+          keywords: [],
+        }),
+      ]),
+    ])
+    torn.push(r.teardown)
+    const aiService = { getWriterModel: vi.fn(async () => r.adapter) }
+    const service = new AiWriterService(aiService as any)
+    const out = await service.generateTitleAndSlugByOpenAI('text')
+    expect(out.lang).toBeUndefined()
   })
 
   it('falls back when AI throws (structured validation maxIterations)', async () => {
@@ -64,8 +83,7 @@ describe('ai-writer faux e2e', () => {
     const out = await service.generateTitleAndSlugByOpenAI(
       'Some text that will be sliced for fallback.',
     )
-    // Fallback path returns string title and lang=en
-    expect(out.lang).toBe('en')
+    expect(out.lang).toBe('en-US')
     expect(typeof out.title).toBe('string')
     expect(typeof out.slug).toBe('string')
   })

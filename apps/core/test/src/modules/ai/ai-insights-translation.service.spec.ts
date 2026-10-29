@@ -73,7 +73,7 @@ describe('AiInsightsTranslationService', () => {
 
     await service.handleInsightsGenerated({
       refId: 'post-1',
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
       insightsId: 'insights-1',
       sourceHash: 'hash-1',
     })
@@ -82,7 +82,7 @@ describe('AiInsightsTranslationService', () => {
     expect(aiTaskService.createInsightsTranslationTask).toHaveBeenCalledWith({
       refId: 'post-1',
       sourceInsightsId: 'insights-1',
-      targetLang: 'en',
+      targetLang: 'en-US',
     })
   })
 
@@ -92,13 +92,13 @@ describe('AiInsightsTranslationService', () => {
     configService.get.mockResolvedValue({
       enableInsights: true,
       enableAutoTranslateInsights: true,
-      insightsTargetLanguages: ['zh-CN', 'jp', 'ja'],
+      insightsTargetLanguages: ['zh', 'zh-SG', 'jp', 'ja'],
     })
     repository.findByRefAndLang.mockResolvedValue(null)
 
     await service.handleInsightsGenerated({
       refId: 'post-1',
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
       insightsId: 'insights-1',
       sourceHash: 'hash-1',
     })
@@ -107,7 +107,7 @@ describe('AiInsightsTranslationService', () => {
     expect(aiTaskService.createInsightsTranslationTask).toHaveBeenCalledWith({
       refId: 'post-1',
       sourceInsightsId: 'insights-1',
-      targetLang: 'ja',
+      targetLang: 'ja-JP',
     })
   })
 

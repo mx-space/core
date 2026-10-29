@@ -1,3 +1,4 @@
+import { toScriptLevelTag } from '@mx-space/ai'
 import {
   forwardRef,
   Inject,
@@ -33,15 +34,23 @@ interface SelfLabels {
   noteHash: string
 }
 
+const ENGLISH_LABELS: SelfLabels = {
+  type: 'Type',
+  post: 'Post',
+  note: 'Note',
+  noteHash: 'Note #',
+}
+
 const LABELS: Record<string, SelfLabels> = {
-  zh: { type: '类型', post: '文章', note: '笔记', noteHash: '笔记 #' },
-  ja: { type: '種類', post: '記事', note: 'ノート', noteHash: 'ノート #' },
-  ko: { type: '종류', post: '글', note: '노트', noteHash: '노트 #' },
-  en: { type: 'Type', post: 'Post', note: 'Note', noteHash: 'Note #' },
+  'zh-CN': { type: '类型', post: '文章', note: '笔记', noteHash: '笔记 #' },
+  'zh-TW': { type: '類型', post: '文章', note: '筆記', noteHash: '筆記 #' },
+  'ja-JP': { type: '種類', post: '記事', note: 'ノート', noteHash: 'ノート #' },
+  'ko-KR': { type: '종류', post: '글', note: '노트', noteHash: '노트 #' },
+  'en-US': ENGLISH_LABELS,
 }
 
 const pickLabels = (locale?: string): SelfLabels =>
-  (locale && LABELS[locale]) || LABELS.en
+  LABELS[toScriptLevelTag(locale) ?? ''] ?? ENGLISH_LABELS
 
 @Injectable()
 export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
@@ -59,7 +68,13 @@ export class MxSpaceProvider implements EnrichmentProvider, OnModuleInit {
    */
   readonly defaultTtl = 0
   readonly localeAware = true
-  readonly supportedLocales = ['zh', 'ja', 'ko', 'en'] as const
+  readonly supportedLocales = [
+    'zh-CN',
+    'zh-TW',
+    'ja-JP',
+    'ko-KR',
+    'en-US',
+  ] as const
 
   private readonly logger = new Logger(MxSpaceProvider.name)
   /**

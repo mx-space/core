@@ -387,7 +387,7 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.findByRefAndLang.mockResolvedValue(validTranslation)
+    repository.listByRefId.mockResolvedValue([validTranslation])
     translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
       'valid',
     )
@@ -412,7 +412,7 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.findByRefAndLang.mockResolvedValue(null)
+    repository.listByRefId.mockResolvedValue([])
 
     await expect(
       service.getTranslationForArticle('post-1', 'en'),
@@ -441,7 +441,7 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.findByRefAndLang.mockResolvedValue(unknownTranslation)
+    repository.listByRefId.mockResolvedValue([unknownTranslation])
     translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
       'unknown',
     )
@@ -477,7 +477,7 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.findByRefAndLang.mockResolvedValue(staleTranslation)
+    repository.listByRefId.mockResolvedValue([staleTranslation])
     translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
       'stale',
     )
@@ -525,7 +525,7 @@ describe('AiTranslationService', () => {
       document: articleDocument(),
       type: CollectionRefTypes.Post,
     })
-    repository.findByRefAndLang.mockResolvedValue(staleTranslation)
+    repository.listByRefId.mockResolvedValue([staleTranslation])
     translationConsistencyService.evaluateTranslationFreshness.mockReturnValue(
       'stale',
     )
@@ -591,8 +591,8 @@ describe('AiTranslationService', () => {
     await expect(
       service.getTranslationAndAvailableLanguages('post-1', 'ja'),
     ).resolves.toEqual({
-      availableTranslations: ['en'],
-      sourceLang: 'zh',
+      availableTranslations: ['en-US'],
+      sourceLang: 'zh-CN',
       translation: partialTranslation,
     })
 
@@ -794,6 +794,46 @@ describe('AiTranslationService — force regeneration', () => {
     )
   })
 
+  it.each([
+    [{ lang: 'zh-TW' }, 'zh', 'zh-TW'],
+    [{}, 'zh', 'zh-CN'],
+    [{}, 'en', 'en-US'],
+  ])(
+    'persists a canonical source language (meta %j, detected %s)',
+    async (meta, detected, expected) => {
+      const {
+        aiInFlightService,
+        aiService,
+        databaseService,
+        lexicalStrategy,
+        repository,
+        service,
+      } = createService()
+
+      databaseService.findGlobalById.mockResolvedValue({
+        document: articleDocument({ content: null, meta }),
+        type: CollectionRefTypes.Post,
+      })
+      repository.findByRef.mockResolvedValue(null)
+      repository.upsert.mockResolvedValue(row({ lang: 'ja-JP' }))
+      aiService.getTranslationModelWithInfo.mockResolvedValue({
+        runtime: {},
+        info: { model: 'model-x', provider: 'provider-x' },
+      } as any)
+      lexicalStrategy.translate.mockResolvedValue({
+        ...translatedResult,
+        sourceLang: detected,
+      } as any)
+      stubLeaderRun(aiInFlightService)
+
+      await service.generateTranslation('post-1', 'ja-JP')
+
+      expect(repository.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceLang: expected }),
+      )
+    },
+  )
+
   it('carries force forward into the PartialFailed retry payload', () => {
     const { service, taskProcessor } = createService()
     service.onModuleInit()
@@ -820,12 +860,12 @@ describe('AiTranslationService — force regeneration', () => {
 
     expect(retryOptions.payload).toMatchObject({
       refId: 'post-1',
-      targetLanguages: ['ja'],
+      targetLanguages: ['ja-JP'],
       force: true,
     })
   })
 
-  it('normalizes payload target languages before diffing, so zh-CN matches a successful zh', () => {
+  it('canonicalizes payload and result languages before diffing, so zh matches a successful zh-CN', () => {
     const { service, taskProcessor } = createService()
     service.onModuleInit()
     const handler = taskProcessor.registerHandler.mock.calls
@@ -839,20 +879,18 @@ describe('AiTranslationService — force regeneration', () => {
       groupId: 'group-1',
       payload: {
         refId: 'post-1',
-        targetLanguages: ['zh-CN', 'en'],
+        targetLanguages: ['zh', 'en'],
         title: 'T',
         refType: CollectionRefTypes.Post,
       },
-      // executeTranslationTask generates against the normalized language
-      // list, so a successful zh-CN run is recorded as lang: 'zh'
-      result: { translations: [{ lang: 'zh' }] },
+      result: { translations: [{ lang: 'zh-CN' }] },
     }
 
     const retryOptions = handler.buildRetryTask(task)
 
     expect(retryOptions.payload).toMatchObject({
       refId: 'post-1',
-      targetLanguages: ['en'],
+      targetLanguages: ['en-US'],
     })
   })
 })
@@ -870,5 +908,126 @@ describe('AiTranslationService.buildTranslationKey (in-flight key)', () => {
     const { service } = createService()
 
     expect(buildKey(service)).toBe(buildKey(service))
+  })
+})
+
+describe('AiTranslationService — language matching', () => {
+  const setupArticle = (
+    translations: AiTranslationRow[],
+    ctx = createService(),
+  ) => {
+    ctx.databaseService.findGlobalById.mockResolvedValue({
+      document: articleDocument(),
+      type: CollectionRefTypes.Post,
+    })
+    ctx.repository.listByRefId.mockResolvedValue(translations)
+    return ctx
+  }
+
+  it('serves a same-script translation to a visitor from another region', async () => {
+    const zhTW = row({ lang: 'zh-TW', sourceLang: 'zh-CN' })
+    const { service } = setupArticle([zhTW])
+
+    await expect(
+      service.getTranslationAndAvailableLanguages('post-1', 'zh-HK'),
+    ).resolves.toEqual({
+      availableTranslations: ['zh-TW'],
+      sourceLang: 'zh-CN',
+      translation: zhTW,
+    })
+  })
+
+  it('reads legacy bare rows as canonical tags', async () => {
+    const en = row({ lang: 'en', sourceLang: 'zh' })
+    const { service } = setupArticle([en])
+
+    await expect(
+      service.getTranslationAndAvailableLanguages('post-1', 'en-US'),
+    ).resolves.toEqual({
+      availableTranslations: ['en-US'],
+      sourceLang: 'zh-CN',
+      translation: en,
+    })
+  })
+
+  it('serves the original when the visitor matches the source language', async () => {
+    const zhTW = row({ lang: 'zh-TW', sourceLang: 'zh-CN' })
+    const { service } = setupArticle([zhTW])
+
+    await expect(
+      service.getTranslationAndAvailableLanguages('post-1', 'zh-SG'),
+    ).resolves.toMatchObject({ translation: null })
+  })
+
+  it('reads a single translation by language and script', async () => {
+    const zhTW = row({ lang: 'zh-TW', sourceLang: 'zh-CN' })
+    const { service } = setupArticle([zhTW])
+
+    await expect(
+      service.getTranslationForArticle('post-1', 'zh-HK'),
+    ).resolves.toBe(zhTW)
+    await expect(
+      service.getTranslationForArticle('post-1', 'zh-SG'),
+    ).resolves.toBeNull()
+  })
+
+  it('streams an existing same-script translation instead of generating a regional duplicate', async () => {
+    const ctx = setupArticle([row({ lang: 'en-GB', sourceLang: 'zh-CN' })])
+    ctx.configService.get.mockResolvedValue({
+      enableTranslation: true,
+    } as never)
+    ctx.repository.findByRefAndLang.mockResolvedValue(null)
+    const generate = vi
+      .spyOn(ctx.service as any, 'runTranslationGeneration')
+      .mockResolvedValue({ events: [], result: Promise.resolve() })
+
+    await ctx.service.streamTranslationForArticle('post-1', 'en-AU')
+
+    expect(ctx.repository.findByRefAndLang).toHaveBeenCalledWith(
+      'post-1',
+      'en-GB',
+    )
+    expect(generate).toHaveBeenCalledWith(
+      'post-1',
+      'en-GB',
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
+  it('generates at script level when no translation qualifies', async () => {
+    const ctx = setupArticle([])
+    ctx.configService.get.mockResolvedValue({
+      enableTranslation: true,
+    } as never)
+    ctx.repository.findByRefAndLang.mockResolvedValue(null)
+    const generate = vi
+      .spyOn(ctx.service as any, 'runTranslationGeneration')
+      .mockResolvedValue({ events: [], result: Promise.resolve() })
+
+    await ctx.service.streamTranslationForArticle('post-1', 'zh-HK')
+
+    expect(generate).toHaveBeenCalledWith(
+      'post-1',
+      'zh-TW',
+      expect.anything(),
+      expect.anything(),
+    )
+  })
+
+  it('resolves the served language against configured targets', async () => {
+    const { configService, service } = createService()
+    configService.get.mockResolvedValue({
+      translationTargetLanguages: ['zh-TW', 'en-US'],
+    } as never)
+
+    await expect(service.resolveServedLanguage('zh-HK')).resolves.toBe('zh-TW')
+    await expect(service.resolveServedLanguage('en-GB')).resolves.toBe('en-US')
+    await expect(service.resolveServedLanguage('zh-SG')).resolves.toBe('zh-CN')
+    await expect(service.resolveServedLanguage('fr')).resolves.toBe('fr-FR')
+    await expect(service.resolveServedLanguage('jp')).resolves.toBeUndefined()
+    await expect(
+      service.resolveServedLanguage(undefined),
+    ).resolves.toBeUndefined()
   })
 })

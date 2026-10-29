@@ -1,13 +1,12 @@
 import { z } from 'zod'
 
+import { zLanguageTag } from '~/common/zod/custom'
+
 import { MAX_LANGS_PER_TASK } from '../ai.constants'
 
 export const CreateSummaryTaskSchema = z.object({
   refId: z.string(),
-  targetLanguages: z
-    .array(z.string().trim().min(1))
-    .max(MAX_LANGS_PER_TASK)
-    .optional(),
+  targetLanguages: z.array(zLanguageTag).max(MAX_LANGS_PER_TASK).optional(),
   force: z.boolean().optional(),
 })
 
@@ -15,7 +14,7 @@ export type CreateSummaryTaskDto = z.infer<typeof CreateSummaryTaskSchema>
 
 export const CreateSummaryTranslationTaskSchema = z.object({
   refId: z.string(),
-  targetLang: z.string().trim().min(1),
+  targetLang: zLanguageTag,
   force: z.boolean().optional(),
 })
 
@@ -25,10 +24,7 @@ export type CreateSummaryTranslationTaskDto = z.infer<
 
 export const CreateTranslationTaskSchema = z.object({
   refId: z.string(),
-  targetLanguages: z
-    .array(z.string().trim().min(1))
-    .max(MAX_LANGS_PER_TASK)
-    .optional(),
+  targetLanguages: z.array(zLanguageTag).max(MAX_LANGS_PER_TASK).optional(),
   force: z.boolean().optional(),
 })
 
@@ -38,7 +34,7 @@ export type CreateTranslationTaskDto = z.infer<
 
 export const CreateTranslationBatchTaskSchema = z.object({
   refIds: z.array(z.string()).min(1).max(100),
-  targetLanguages: z.array(z.string()).optional(),
+  targetLanguages: z.array(zLanguageTag).optional(),
 })
 
 export type CreateTranslationBatchTaskDto = z.infer<
@@ -46,7 +42,7 @@ export type CreateTranslationBatchTaskDto = z.infer<
 >
 
 export const CreateTranslationAllTaskSchema = z.object({
-  targetLanguages: z.array(z.string()).optional(),
+  targetLanguages: z.array(zLanguageTag).optional(),
 })
 
 export type CreateTranslationAllTaskDto = z.infer<

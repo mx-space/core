@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
 import { z } from 'zod'
 
 import { zAllowedUrl } from '~/common/zod'
@@ -1010,6 +1011,29 @@ const AITtsFeatureSchema = withMeta(
   { title: 'AI text to speech feature', 'ui:options': { type: 'hidden' } },
 )
 
+const languageTagList = () =>
+  z
+    .preprocess(
+      (value) =>
+        Array.isArray(value)
+          ? [
+              ...new Set(
+                value.map((tag) =>
+                  typeof tag === 'string'
+                    ? (canonicalizeLanguageTag(tag) ?? tag)
+                    : tag,
+                ),
+              ),
+            ]
+          : value,
+      z.array(
+        z.string().refine(isKnownLanguageTag, {
+          error: 'invalid BCP 47 language tag',
+        }),
+      ),
+    )
+    .optional()
+
 export const AISchema = section('AI settings', {
   version: z.literal(2).optional().default(2),
   providers: field.array(
@@ -1034,11 +1058,11 @@ export const AISchema = section('AI settings', {
     description: 'Whether to allow calling AI to generate summaries',
   }),
   summaryTargetLanguages: field.array(
-    z.array(z.string()).optional(),
+    languageTagList(),
     'AI summary target languages',
     {
       description:
-        'Target languages for auto-generated summaries, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["zh", "en", "ja"]',
+        'Target languages for auto-generated summaries, using BCP 47 language-region tags, e.g. ["zh-CN", "zh-TW", "en-US", "ja-JP"]',
     },
   ),
   translationModel: field.plain(
@@ -1062,11 +1086,11 @@ export const AISchema = section('AI settings', {
     },
   ),
   translationTargetLanguages: field.array(
-    z.array(z.string()).optional(),
+    languageTagList(),
     'AI translation target languages',
     {
       description:
-        'Target languages for auto-generated translations, using [ISO 639-1 language codes](https://www.w3schools.com/tags/ref_language_codes.asp), e.g. ["en", "ja", "ko"]',
+        'Target languages for auto-generated translations, using BCP 47 language-region tags, e.g. ["en-US", "ja-JP", "zh-TW"]',
     },
   ),
   translationLangConcurrency: field.number(
@@ -1132,11 +1156,11 @@ export const AISchema = section('AI settings', {
     },
   ),
   insightsTargetLanguages: field.array(
-    z.array(z.string()).optional(),
+    languageTagList(),
     'Insights target languages',
     {
       description:
-        'ISO 639-1 list; the source language is automatically excluded',
+        'BCP 47 language-region tags; the source language is automatically excluded',
     },
   ),
   imageGeneration: AIImageGenerationFeatureSchema.optional(),

@@ -119,7 +119,7 @@ describe('AiTtsController', () => {
 
     await controller.getArticleTts({ id: '1' } as any, { lang: 'zh-CN' } as any)
 
-    expect(queryService.getPublicNarration).toHaveBeenCalledWith('1', 'zh', {
+    expect(queryService.getPublicNarration).toHaveBeenCalledWith('1', 'zh-CN', {
       isOwner: false,
       password: undefined,
       readerId: undefined,
@@ -154,7 +154,7 @@ describe('AiTtsController', () => {
     await controller.createTask({ refId: '1', langs: ['zh-CN', 'zh'] } as any)
 
     expect(taskService.createTtsTask).toHaveBeenCalledWith(
-      expect.objectContaining({ refId: '1', langs: ['zh'] }),
+      expect.objectContaining({ refId: '1', langs: ['zh-CN'] }),
     )
   })
 

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  zArticleMeta,
   zCoerceBoolean,
   zEntityId,
   zPaginationPage,
@@ -25,7 +26,7 @@ export const DraftWriteDataSchema = z
       .enum([ContentFormat.Markdown, ContentFormat.Lexical])
       .default(ContentFormat.Markdown),
     images: z.array(ImageModelSchema).nullable().optional(),
-    meta: z.record(z.string(), z.unknown()).nullable().optional(),
+    meta: zArticleMeta.nullable().optional(),
     text: z.string().default(''),
     title: z.string().default(''),
     typeSpecificData: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -114,7 +115,7 @@ export type DraftCheckpointDto = z.infer<typeof DraftCheckpointSchema>
 
 export const DraftFieldsSchema = z
   .object({
-    meta: z.record(z.string(), z.unknown()).optional(),
+    meta: zArticleMeta.optional(),
     typeSpecificData: z.record(z.string(), z.unknown()).optional(),
   })
   .refine((value) => value.meta || value.typeSpecificData, {

@@ -42,7 +42,7 @@ const createHarness = (overrides?: {
     resolveArticle: vi.fn(async () => ({
       article: { text: 'article text' },
       text: 'article text',
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })),
     generate: vi.fn(async (_article, lang) => ({
       content: `generated:${lang}`,
@@ -116,21 +116,24 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
 
     const result = await service.executeMultilangTask(
       adapter,
-      { refId: 'post-1', targetLanguages: ['en', 'ja', 'zh'] },
+      { refId: 'post-1', targetLanguages: ['en-US', 'ja-JP', 'zh-CN'] },
       context as any,
     )
 
     expect(adapter.generate).toHaveBeenCalledTimes(1)
     expect(adapter.generate).toHaveBeenCalledWith(
       expect.anything(),
-      'zh',
+      'zh-CN',
       expect.anything(),
       expect.anything(),
       expect.anything(),
     )
     expect(adapter.translate).toHaveBeenCalledTimes(2)
-    expect(result.sourceLang).toBe('zh')
-    expect(result.translated.map((t) => t.lang).sort()).toEqual(['en', 'ja'])
+    expect(result.sourceLang).toBe('zh-CN')
+    expect(result.translated.map((t) => t.lang).sort()).toEqual([
+      'en-US',
+      'ja-JP',
+    ])
     expect(result.failedLangs).toEqual([])
   })
 
@@ -138,16 +141,16 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
     const { adapter, context, contentHash, service } = createHarness()
     ;(adapter.findBase as any).mockResolvedValue({
       id: 'base-zh',
-      lang: 'zh',
+      lang: 'zh-CN',
       hash: contentHash,
       content: 'generated:zh',
       isTranslation: false,
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })
 
     await service.executeMultilangTask(
       adapter,
-      { refId: 'post-1', targetLanguages: ['en'] },
+      { refId: 'post-1', targetLanguages: ['en-US'] },
       context as any,
     )
 
@@ -160,11 +163,11 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
       createHarness()
     ;(adapter.findBase as any).mockResolvedValue({
       id: 'base-zh',
-      lang: 'zh',
+      lang: 'zh-CN',
       hash: contentHash,
       content: 'generated:zh',
       isTranslation: false,
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })
 
     await service.executeMultilangTask(
@@ -189,8 +192,8 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
     )
 
     expect(adapter.emitGenerated).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'base-zh' }),
-      expect.objectContaining({ refId: 'post-1', sourceLang: 'zh' }),
+      expect.objectContaining({ id: 'base-zh-CN' }),
+      expect.objectContaining({ refId: 'post-1', sourceLang: 'zh-CN' }),
     )
   })
 
@@ -198,7 +201,7 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
     const { adapter, context, service } = createHarness()
     ;(adapter.translate as any).mockImplementation(
       async (_source: string, targetLang: string) => {
-        if (targetLang === 'ja') throw new Error('boom')
+        if (targetLang === 'ja-JP') throw new Error('boom')
         return {
           content: `translated:${targetLang}`,
           usage: {},
@@ -210,16 +213,16 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
 
     const result = await service.executeMultilangTask(
       adapter,
-      { refId: 'post-1', targetLanguages: ['en', 'ja'] },
+      { refId: 'post-1', targetLanguages: ['en-US', 'ja-JP'] },
       context as any,
     )
 
-    expect(result.failedLangs).toEqual(['ja'])
-    expect(result.translated.map((t) => t.lang)).toEqual(['en'])
+    expect(result.failedLangs).toEqual(['ja-JP'])
+    expect(result.translated.map((t) => t.lang)).toEqual(['en-US'])
     expect(context.setStatus).toHaveBeenCalledWith('partial_failed')
     expect(context.appendLog).toHaveBeenCalledWith(
       'error',
-      expect.stringContaining('ja'),
+      expect.stringContaining('ja-JP'),
     )
   })
 })
@@ -227,28 +230,28 @@ describe('MultilangGenerationService.executeMultilangTask', () => {
 describe('MultilangGenerationService.runTranslation', () => {
   const base: FakeDoc = {
     id: 'base-zh',
-    lang: 'zh',
+    lang: 'zh-CN',
     hash: 'hash-1',
     content: 'base content',
     isTranslation: false,
-    sourceLang: 'zh',
+    sourceLang: 'zh-CN',
   }
 
   it('short-circuits to the existing translation when its hash matches the base', async () => {
     const { adapter, aiInFlightService, service } = createHarness()
     ;(adapter.findByRefAndLang as any).mockResolvedValue({
       id: 'tr-en',
-      lang: 'en',
+      lang: 'en-US',
       hash: 'hash-1',
       content: 'existing',
       isTranslation: true,
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })
 
     const result = await service.runTranslation(adapter, {
       refId: 'post-1',
       base,
-      targetLang: 'en',
+      targetLang: 'en-US',
     })
 
     expect(result.id).toBe('tr-en')
@@ -261,16 +264,16 @@ describe('MultilangGenerationService.runTranslation', () => {
     await service.runTranslation(adapter, {
       refId: 'post-1',
       base,
-      targetLang: 'en',
+      targetLang: 'en-US',
     })
 
     expect(adapter.persistTranslation).toHaveBeenCalledWith({
       refId: 'post-1',
-      lang: 'en',
+      lang: 'en-US',
       hash: 'hash-1',
-      content: 'translated:en:base content',
+      content: 'translated:en-US:base content',
       sourceId: 'base-zh',
-      sourceLang: 'zh',
+      sourceLang: 'zh-CN',
     })
   })
 
@@ -280,13 +283,13 @@ describe('MultilangGenerationService.runTranslation', () => {
     await service.runTranslation(adapter, {
       refId: 'post-1',
       base,
-      targetLang: 'en',
+      targetLang: 'en-US',
       force: true,
     })
     await service.runTranslation(adapter, {
       refId: 'post-1',
       base,
-      targetLang: 'en',
+      targetLang: 'en-US',
       force: true,
     })
 

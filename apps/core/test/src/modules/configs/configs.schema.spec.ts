@@ -1,4 +1,4 @@
-import { SeoSchema } from '~/modules/configs/configs.schema'
+import { AISchema, SeoSchema } from '~/modules/configs/configs.schema'
 
 describe('SeoSchema i18n overlay', () => {
   test('accepts a partial per-locale overlay', () => {
@@ -32,5 +32,30 @@ describe('SeoSchema i18n overlay', () => {
     })
 
     expect(result.success).toBe(false)
+  })
+})
+
+describe('AISchema target languages', () => {
+  const fields = [
+    'summaryTargetLanguages',
+    'translationTargetLanguages',
+    'insightsTargetLanguages',
+  ] as const
+
+  test.each(fields)('%s canonicalizes and dedupes tags', (field) => {
+    const result = AISchema.shape[field].safeParse([
+      'en',
+      'zh-TW',
+      'zh',
+      'zh-CN',
+    ])
+
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual(['en-US', 'zh-TW', 'zh-CN'])
+  })
+
+  test.each(fields)('%s rejects non-standard aliases', (field) => {
+    expect(AISchema.shape[field].safeParse(['jp']).success).toBe(false)
+    expect(AISchema.shape[field].safeParse(['english']).success).toBe(false)
   })
 })

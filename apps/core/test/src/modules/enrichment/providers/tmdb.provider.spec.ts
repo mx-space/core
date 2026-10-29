@@ -93,7 +93,7 @@ describe('TmdbProvider', () => {
       vi.mocked(client.fetch).mockResolvedValue(baseData)
       const p = new TmdbProvider(client)
 
-      await p.fetch('movie/550', 'zh')
+      await p.fetch('movie/550', 'zh-CN')
 
       expect(client.fetch).toHaveBeenCalledWith('/3/movie/550', {
         language: 'zh-CN',
@@ -115,7 +115,7 @@ describe('TmdbProvider', () => {
       vi.mocked(client.fetch).mockResolvedValue(baseData)
       const p = new TmdbProvider(client)
 
-      await p.fetch('movie/550', 'zh')
+      await p.fetch('movie/550', 'zh-CN')
 
       expect(client.fetch).toHaveBeenCalledTimes(1)
     })
@@ -137,7 +137,7 @@ describe('TmdbProvider', () => {
         .mockResolvedValueOnce(enFallback) // backfill en
       const p = new TmdbProvider(client)
 
-      const result = await p.fetch('movie/550', 'zh')
+      const result = await p.fetch('movie/550', 'zh-CN')
 
       expect(client.fetch).toHaveBeenCalledTimes(2)
       expect(client.fetch).toHaveBeenNthCalledWith(2, '/3/movie/550', {
@@ -156,7 +156,7 @@ describe('TmdbProvider', () => {
       vi.mocked(client.fetch).mockResolvedValue(sparse)
       const p = new TmdbProvider(client)
 
-      await p.fetch('movie/550', 'en')
+      await p.fetch('movie/550', 'en-US')
 
       expect(client.fetch).toHaveBeenCalledTimes(1)
       expect(client.fetch).toHaveBeenCalledWith('/3/movie/550', {
@@ -175,7 +175,7 @@ describe('TmdbProvider', () => {
         .mockRejectedValueOnce(new Error('backfill 503'))
       const p = new TmdbProvider(client)
 
-      const result = await p.fetch('movie/550', 'zh')
+      const result = await p.fetch('movie/550', 'zh-CN')
 
       expect(result.title).toBe('Fight Club')
       expect(result.description).toBeUndefined() // empty, no backfill
@@ -223,7 +223,7 @@ describe('TmdbProvider', () => {
       })
       const p = new TmdbProvider(client)
 
-      const results = await p.search('  Dune  ', 'zh', 8)
+      const results = await p.search('  Dune  ', 'zh-CN', 8)
 
       expect(client.fetch).toHaveBeenCalledWith('/3/search/multi', {
         language: 'zh-CN',

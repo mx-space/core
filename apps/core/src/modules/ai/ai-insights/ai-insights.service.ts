@@ -15,6 +15,11 @@ import type { BasicPagerDto } from '~/shared/dto/pager.dto'
 import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
+import {
+  findRowByLanguage,
+  normalizeTargetLangs,
+  resolveGenerationLanguage,
+} from '../ai-language.util'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import { AITaskType, type InsightsTaskPayload } from '../ai-task/ai-task.types'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -154,7 +159,11 @@ export class AiInsightsService implements OnModuleInit {
         readerId: options.readerId,
       },
     )
-    const lang = options.lang || sourceLang
+    const lang = await this.resolveArticleInsightsLang(
+      articleId,
+      options.lang || sourceLang,
+      sourceLang,
+    )
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) {
       this.logger.debug(`Insights cache hit: article=${articleId} lang=${lang}`)
@@ -185,7 +194,11 @@ export class AiInsightsService implements OnModuleInit {
         readerId: options.readerId,
       },
     )
-    const lang = options.lang || sourceLang
+    const lang = await this.resolveArticleInsightsLang(
+      articleId,
+      options.lang || sourceLang,
+      sourceLang,
+    )
     const existing = await this.findValidInsights(articleId, lang, article.text)
     if (existing) return existing
     if (options.onlyDb) return null
@@ -210,7 +223,26 @@ export class AiInsightsService implements OnModuleInit {
    * only answers "do we have any insights document for (refId, lang)?".
    */
   async hasInsightsInLang(refId: string, lang: string): Promise<boolean> {
-    return !!(await this.aiInsightsRepository.findByRefAndLang(refId, lang))
+    const rows = await this.aiInsightsRepository.listForRef(refId)
+    return !!findRowByLanguage(rows, lang)
+  }
+
+  private async resolveArticleInsightsLang(
+    articleId: string,
+    lang: string,
+    sourceLang: string,
+  ): Promise<string> {
+    const [rows, aiConfig] = await Promise.all([
+      this.aiInsightsRepository.listForRef(articleId),
+      this.configService.get('ai'),
+    ])
+    return (
+      resolveGenerationLanguage(lang, [
+        sourceLang,
+        ...rows.map((row) => row.lang),
+        ...normalizeTargetLangs(aiConfig?.insightsTargetLanguages),
+      ]) ?? sourceLang
+    )
   }
 
   async getInsightsById(id: string) {

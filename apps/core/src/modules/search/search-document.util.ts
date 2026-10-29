@@ -203,4 +203,4 @@ export function computeTranslationSourceHash(
     .digest('hex')
 }
 
-export const SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG = 'zh'
+export const SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG = 'zh-CN'

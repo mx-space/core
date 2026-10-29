@@ -34,12 +34,14 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
   )
   const [force, setForce] = useState(false)
 
-  const langs = parseLangInput(langInput)
+  const { langs, invalid } = parseLangInput(langInput)
   const tooMany = props.promptForLang && langs.length > MAX_LANGS
+  const hasInvalid = props.promptForLang && invalid.length > 0
+  const blocked = tooMany || hasInvalid
 
   const handleSubmit = (event?: FormEvent) => {
     event?.preventDefault()
-    if (tooMany) return
+    if (blocked) return
     modal.close({
       force,
       langs: props.promptForLang ? langs : [],
@@ -56,7 +58,7 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
               autoFocus
               label={props.langLabel}
               onChange={setLangInput}
-              placeholder="zh, en, ja"
+              placeholder="zh-CN, zh-TW, en-US"
               value={langInput}
             />
             <p className="text-xs text-fg-muted">
@@ -71,6 +73,11 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
                   {t('ai.generate.langsCount', { count: langs.length })}
                 </span>
               </div>
+            ) : null}
+            {hasInvalid ? (
+              <span className="text-xs text-red-500">
+                {t('ai.generate.langsInvalid', { langs: invalid.join(', ') })}
+              </span>
             ) : null}
             {tooMany ? (
               <span className="text-xs text-red-500">
@@ -96,7 +103,7 @@ function GeneratePromptModal(props: GeneratePromptModalProps) {
         <Button onClick={() => modal.dismiss()} type="button" variant="subtle">
           {t('common.cancel')}
         </Button>
-        <Button disabled={tooMany} type="submit" variant="primary">
+        <Button disabled={blocked} type="submit" variant="primary">
           {props.title}
         </Button>
       </ModalFooter>
