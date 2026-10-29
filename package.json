@@ -61,7 +61,7 @@
     "typescript": "6.0.3",
     "undici": "^8.10.2",
     "whatwg-url": "17.1.0",
-    "zod": "4.5.4"
+    "zod": "4.6.6"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
