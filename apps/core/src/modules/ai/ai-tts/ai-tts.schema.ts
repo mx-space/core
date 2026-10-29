@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
-import { normalizeLanguageCode } from '~/utils/lang.util'
+import { canonicalizeLanguageTag } from '~/utils/lang.util'
 
 const MAX_TASK_LANGS = 8
 
 const zResolvableLang = z
   .string()
-  .refine((lang) => normalizeLanguageCode(lang) !== undefined, {
+  .refine((lang) => canonicalizeLanguageTag(lang) !== undefined, {
     error: 'unresolvable language code',
   })
 

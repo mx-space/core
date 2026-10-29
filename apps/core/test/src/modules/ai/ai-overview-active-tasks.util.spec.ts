@@ -13,7 +13,12 @@ const task = (
 describe('toActiveGenerations', () => {
   it('ignores tasks for other articles', () => {
     const result = toActiveGenerations(
-      [task(AITaskType.Summary, { refId: 'other', targetLanguages: ['en'] })],
+      [
+        task(AITaskType.Summary, {
+          refId: 'other',
+          targetLanguages: ['en-US'],
+        }),
+      ],
       '300',
     )
 
@@ -25,7 +30,7 @@ describe('toActiveGenerations', () => {
       [
         task(AITaskType.Summary, {
           refId: '300',
-          targetLanguages: ['en', 'ja'],
+          targetLanguages: ['en-US', 'ja-JP'],
         }),
       ],
       '300',
@@ -34,10 +39,34 @@ describe('toActiveGenerations', () => {
     expect(result).toMatchObject([
       {
         capability: 'summary',
-        langs: ['en', 'ja'],
+        langs: ['en-US', 'ja-JP'],
         status: 'running',
         taskId: 't1',
       },
+    ])
+  })
+
+  it('canonicalizes legacy language codes in task payloads', () => {
+    const result = toActiveGenerations(
+      [
+        task(AITaskType.Summary, {
+          refId: '300',
+          targetLanguages: ['en', 'en-US', 'ja'],
+        }),
+        task(
+          AITaskType.SummaryTranslation,
+          { refId: '300', targetLang: 'zh' },
+          't2',
+        ),
+        task(AITaskType.Tts, { refId: '300', langs: ['zh_TW'] }, 't3'),
+      ],
+      '300',
+    )
+
+    expect(result.map((generation) => generation.langs)).toEqual([
+      ['en-US', 'ja-JP'],
+      ['zh-CN'],
+      ['zh-TW'],
     ])
   })
 
@@ -55,13 +84,13 @@ describe('toActiveGenerations', () => {
       [
         task(
           AITaskType.Insights,
-          { refId: '300', targetLanguages: ['en', 'ja'] },
+          { refId: '300', targetLanguages: ['en-US', 'ja-JP'] },
           'base',
         ),
         task(AITaskType.Insights, { refId: '300' }, 'bare'),
         task(
           AITaskType.InsightsTranslation,
-          { refId: '300', targetLang: 'en' },
+          { refId: '300', targetLang: 'en-US' },
           'trans',
         ),
       ],
@@ -71,14 +100,14 @@ describe('toActiveGenerations', () => {
     expect(result).toMatchObject([
       {
         capability: 'insights',
-        langs: ['en', 'ja'],
+        langs: ['en-US', 'ja-JP'],
         status: 'running',
         taskId: 'base',
       },
       { capability: 'insights', langs: [], status: 'running', taskId: 'bare' },
       {
         capability: 'insights',
-        langs: ['en'],
+        langs: ['en-US'],
         status: 'running',
         taskId: 'trans',
       },
@@ -90,7 +119,7 @@ describe('toActiveGenerations', () => {
       [
         task(
           AITaskType.SummaryTranslation,
-          { refId: '300', targetLang: 'ja' },
+          { refId: '300', targetLang: 'ja-JP' },
           'strans',
         ),
       ],
@@ -100,7 +129,7 @@ describe('toActiveGenerations', () => {
     expect(result).toMatchObject([
       {
         capability: 'summary',
-        langs: ['ja'],
+        langs: ['ja-JP'],
         status: 'running',
         taskId: 'strans',
       },
@@ -112,7 +141,7 @@ describe('toActiveGenerations', () => {
       [
         task(AITaskType.TranslationBatch, {
           refIds: ['100', '300'],
-          targetLanguages: ['ko'],
+          targetLanguages: ['ko-KR'],
         }),
       ],
       '300',
@@ -121,7 +150,7 @@ describe('toActiveGenerations', () => {
     expect(result).toMatchObject([
       {
         capability: 'translation',
-        langs: ['ko'],
+        langs: ['ko-KR'],
         status: 'running',
         taskId: 't1',
       },
@@ -130,7 +159,7 @@ describe('toActiveGenerations', () => {
 
   it('skips the all-articles translation task', () => {
     const result = toActiveGenerations(
-      [task(AITaskType.TranslationAll, { targetLanguages: ['en'] })],
+      [task(AITaskType.TranslationAll, { targetLanguages: ['en-US'] })],
       '300',
     )
 
@@ -139,11 +168,11 @@ describe('toActiveGenerations', () => {
 
   it('maps a tts task through its langs field', () => {
     const result = toActiveGenerations(
-      [task(AITaskType.Tts, { refId: '300', langs: ['zh'] })],
+      [task(AITaskType.Tts, { refId: '300', langs: ['zh-CN'] })],
       '300',
     )
 
-    expect(result[0]).toMatchObject({ capability: 'tts', langs: ['zh'] })
+    expect(result[0]).toMatchObject({ capability: 'tts', langs: ['zh-CN'] })
   })
 
   it('carries progress fields through', () => {
@@ -153,7 +182,7 @@ describe('toActiveGenerations', () => {
           id: 't1',
           type: AITaskType.Translation,
           status: 'running',
-          payload: { refId: '300', targetLanguages: ['en'] },
+          payload: { refId: '300', targetLanguages: ['en-US'] },
           progress: 42,
           progressMessage: 'translating block 3',
           completedItems: 3,
@@ -175,7 +204,7 @@ describe('toActiveGenerations', () => {
 
   it('nulls out progress fields the queue did not report', () => {
     const result = toActiveGenerations(
-      [task(AITaskType.Tts, { refId: '300', langs: ['zh'] })],
+      [task(AITaskType.Tts, { refId: '300', langs: ['zh-CN'] })],
       '300',
     )
 

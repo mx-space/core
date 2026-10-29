@@ -103,6 +103,11 @@ describe('ai-tts repository (real PG, ON CONFLICT + cascade)', () => {
     expect(meta?.blockCount).toBe(2)
   })
 
+  it('findLangsByRef lists only the languages narrated for an article', async () => {
+    expect(await repository.findLangsByRef('1')).toEqual(['zh'])
+    expect(await repository.findLangsByRef('999999')).toEqual([])
+  })
+
   it('findMeta returns null when no row matches', async () => {
     expect(await repository.findMeta('999999', 'zh')).toBeNull()
   })

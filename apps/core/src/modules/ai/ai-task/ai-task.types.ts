@@ -1,3 +1,5 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
+
 import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
 
 function canonicalTargetLangs(langs?: string[]): string {
@@ -135,11 +137,11 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.TranslationBatch: {
       const p = payload as TranslationBatchTaskPayload
-      return `${(p.refIds || []).slice().sort().join(',')}:${(p.targetLanguages || []).slice().sort().join(',')}`
+      return `${(p.refIds || []).slice().sort().join(',')}:${canonicalTargetLangs(p.targetLanguages)}`
     }
     case AITaskType.TranslationAll: {
       const p = payload as TranslationAllTaskPayload
-      return `all:${(p.targetLanguages || []).slice().sort().join(',')}`
+      return `all:${canonicalTargetLangs(p.targetLanguages)}`
     }
     case AITaskType.SlugBackfill: {
       const p = payload as SlugBackfillTaskPayload
@@ -155,11 +157,11 @@ export function computeAITaskDedupKey(
     }
     case AITaskType.SummaryTranslation: {
       const p = payload as SummaryTranslationTaskPayload
-      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
+      return `${p.refId}:${canonicalizeLanguageTag(p.targetLang) ?? p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.InsightsTranslation: {
       const p = payload as InsightsTranslationTaskPayload
-      return `${p.refId}:${p.targetLang}:${p.force ? 'force' : 'inc'}`
+      return `${p.refId}:${canonicalizeLanguageTag(p.targetLang) ?? p.targetLang}:${p.force ? 'force' : 'inc'}`
     }
     case AITaskType.ImageGeneration: {
       // Deliberately opts out of dedup: generating several images from the

@@ -74,19 +74,22 @@ describe('coverageColumns', () => {
 })
 
 describe('normaliseLangInput', () => {
-  it('accepts a bare code and lowercases it', () => {
-    expect(normaliseLangInput(' EN ')).toBe('en')
+  it('canonicalizes a bare code to its language-REGION tag', () => {
+    expect(normaliseLangInput(' EN ')).toBe('en-US')
   })
 
-  it('strips a region subtag', () => {
-    expect(normaliseLangInput('zh-CN')).toBe('zh')
+  it('keeps the region and script distinction', () => {
+    expect(normaliseLangInput('zh-TW')).toBe('zh-TW')
+    expect(normaliseLangInput('zh-Hant')).toBe('zh-TW')
+    expect(normaliseLangInput('zh')).toBe('zh-CN')
   })
 
-  it('rejects anything that is not a language code', () => {
+  it('rejects anything that is not a language tag', () => {
     expect(normaliseLangInput('')).toBeNull()
     expect(normaliseLangInput('english')).toBeNull()
     expect(normaliseLangInput('e')).toBeNull()
     expect(normaliseLangInput('12')).toBeNull()
+    expect(normaliseLangInput('jp')).toBeNull()
   })
 })
 

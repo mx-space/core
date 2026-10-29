@@ -1,7 +1,9 @@
 export {
+  zArticleMeta,
   zBooleanOrString,
   zEmail,
   zLang,
+  zLanguageTag,
   zMaxLengthString,
   zPinDate,
   zPrefer,

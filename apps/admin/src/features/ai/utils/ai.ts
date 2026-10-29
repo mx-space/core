@@ -1,4 +1,4 @@
-import { normalizeTargetLang } from '@mx-space/ai'
+import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
 
 import type { AIInsights, AISummary, AITranslation } from '~/api/ai'
 import { updateInsights, updateSummary, updateTranslation } from '~/api/ai'
@@ -8,19 +8,23 @@ export { getErrorMessage } from '~/features/tasks/utils/tasks'
 
 type Translator = (key: TranslationKey, values?: TranslationValues) => string
 
-export function parseLangInput(raw: string): string[] {
-  const seen = new Set<string>()
-  const result: string[] = []
+export function parseLangInput(raw: string): {
+  langs: string[]
+  invalid: string[]
+} {
+  const langs: string[] = []
+  const invalid: string[] = []
   for (const segment of raw.split(/[,，]/)) {
-    // Fold with the server's own canonicalizer: the chips shown here must name
-    // the languages the backend will actually generate, or a typed `jp` reads
-    // back as a `ja` row the board can never match to its column.
-    const lang = normalizeTargetLang(segment)
-    if (!lang || seen.has(lang)) continue
-    seen.add(lang)
-    result.push(lang)
+    const token = segment.trim()
+    if (!token) continue
+    if (!isKnownLanguageTag(token)) {
+      if (!invalid.includes(token)) invalid.push(token)
+      continue
+    }
+    const lang = canonicalizeLanguageTag(token)!
+    if (!langs.includes(lang)) langs.push(lang)
   }
-  return result
+  return { invalid, langs }
 }
 
 export function editSummaryItem(item: AISummary, t: Translator) {

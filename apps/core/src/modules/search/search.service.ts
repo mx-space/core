@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
 
@@ -526,7 +527,9 @@ export class SearchService {
     const translations = await this.aiTranslationRepository.listByRefIds(refIds)
     for (const t of translations) {
       // any translation row carries the canonical sourceLang of the article.
-      if (!out.has(t.refId)) out.set(t.refId, t.sourceLang)
+      if (!out.has(t.refId)) {
+        out.set(t.refId, canonicalizeLanguageTag(t.sourceLang) ?? t.sourceLang)
+      }
     }
     return out
   }
@@ -557,7 +560,7 @@ export class SearchService {
       }
     }
 
-    if (!lang) lang = SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG
+    lang = canonicalizeLanguageTag(lang) ?? SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG
 
     this.cacheSourceLang(refId, lang)
     return lang
@@ -723,10 +726,9 @@ export class SearchService {
   }
 
   private resolveEffectiveLang(explicitLang?: string) {
-    const trim = (s: string | undefined) => s?.trim().toLowerCase() || undefined
     return (
-      trim(explicitLang) ??
-      trim(RequestContext.currentLang()) ??
+      canonicalizeLanguageTag(explicitLang) ??
+      canonicalizeLanguageTag(RequestContext.currentLang()) ??
       SEARCH_DOCUMENT_DEFAULT_SOURCE_LANG
     )
   }

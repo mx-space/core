@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { zCoerceDate, zNonEmptyString } from '~/common/zod'
+import { zArticleMeta, zCoerceDate, zNonEmptyString } from '~/common/zod'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
 import { BaseCommentIndexSchema } from './base.schema'
@@ -11,7 +11,7 @@ export const WriteBaseSchema = BaseCommentIndexSchema.extend({
   text: z.string(),
   images: ImageArraySchema.optional(),
   created: zCoerceDate.optional(),
-  meta: z.record(z.string(), z.any()).optional().nullable().default(null),
+  meta: zArticleMeta.optional().nullable().default(null),
   contentFormat: z
     .enum([ContentFormat.Markdown, ContentFormat.Lexical])
     .default(ContentFormat.Markdown)

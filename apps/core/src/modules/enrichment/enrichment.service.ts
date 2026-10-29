@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 
+import { matchLanguage } from '@mx-space/ai'
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common'
 
 import { RequestContext } from '~/common/contexts/request.context'
@@ -773,8 +774,8 @@ export class EnrichmentService implements OnModuleInit {
     if (provider.localeAware !== true) return ''
     if (!reqLocale) return ''
     const supported = provider.supportedLocales
-    if (supported && !supported.includes(reqLocale)) return ''
-    return reqLocale
+    if (!supported) return reqLocale
+    return matchLanguage(reqLocale, supported) ?? ''
   }
 
   private isProviderReady(

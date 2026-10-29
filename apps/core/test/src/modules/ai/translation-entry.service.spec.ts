@@ -69,7 +69,7 @@ describe('TranslationEntryService', () => {
       '',
     ])
 
-    expect(repository.listByBatch).toHaveBeenCalledWith('en', [
+    expect(repository.listByBatch).toHaveBeenCalledWith('en-US', [
       {
         keyPath: 'category.name',
         keyType: 'entity',
@@ -77,6 +77,21 @@ describe('TranslationEntryService', () => {
       },
     ])
     expect(result.get('cat-1')).toBe('Category')
+  })
+
+  it('looks up entries under the configured target matching the requested language', async () => {
+    const { configService, repository, service } = createService()
+    configService.get.mockResolvedValue({
+      translationTargetLanguages: ['zh-TW', 'en-US'],
+    })
+    repository.listByBatch.mockResolvedValue([])
+
+    await service.getTranslations('category.name', 'zh-HK', ['cat-1'])
+
+    expect(repository.listByBatch).toHaveBeenCalledWith(
+      'zh-TW',
+      expect.anything(),
+    )
   })
 
   it('serves dictionary translations from Redis before falling back to PG rows', async () => {

@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
 import { z } from 'zod'
 
 import { zNonEmptyString } from '~/common/zod'
@@ -7,7 +8,7 @@ const langField = z
   .string()
   .trim()
   .min(1)
-  .transform((val) => val.toLowerCase())
+  .transform((val) => canonicalizeLanguageTag(val))
   .optional()
 
 export const SearchSchema = BasicPagerSchema.extend({

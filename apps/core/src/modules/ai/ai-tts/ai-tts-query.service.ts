@@ -11,7 +11,7 @@ import type { NoteService } from '../../note/note.service'
 import { isArticleVisibleToViewer } from '../ai-article-visibility.util'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import type { GenerationMetricsDto } from '../ai-generation-metrics/ai-generation-metrics.types'
-import { parseLanguageCode } from '../ai-language.util'
+import { findRowByLanguage, parseLanguageCode } from '../ai-language.util'
 import { AiTranslationRepository } from '../ai-translation/ai-translation.repository'
 import { readArticleMetaLang } from '../ai-translation/article-content.util'
 import { buildGroupedWithOrphans } from '../grouped-with-orphans.util'
@@ -151,7 +151,10 @@ export class AiTtsQueryService {
         ),
       )
 
-    const parent = await this.repository.findByRefAndLang(refId, resolvedLang)
+    const parent = await this.repository.findByRefAndLang(
+      refId,
+      await this.matchNarrationLang(refId, resolvedLang),
+    )
     if (!parent || parent.blockOrder.length === 0) return null
 
     const blocks = await this.repository.findBlocks(parent.id)
@@ -250,11 +253,25 @@ export class AiTtsQueryService {
     }
   }
 
-  async getMetaForArticle(
+  private async matchNarrationLang(
     refId: string,
     lang: string,
+  ): Promise<string> {
+    const langs = await this.repository.findLangsByRef(refId)
+    return (
+      findRowByLanguage(
+        langs.map((stored) => ({ lang: stored })),
+        lang,
+      )?.lang ?? lang
+    )
+  }
+
+  async getMetaForArticle(
+    refId: string,
+    requestedLang: string,
     modifiedAt?: Date | null,
   ): Promise<TtsMeta> {
+    const lang = await this.matchNarrationLang(refId, requestedLang)
     const row = await this.repository.findMeta(refId, lang)
     // An empty block_order is the generation pipeline's "not published yet"
     // sentinel — the parent row exists but the run never finalized.

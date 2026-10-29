@@ -1,3 +1,4 @@
+import { canonicalizeStoredLang } from '../ai-language.util'
 import { AITaskType } from '../ai-task/ai-task.types'
 import type { ActiveGeneration } from './ai-overview.types'
 
@@ -19,6 +20,13 @@ const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter((v): v is string => typeof v === 'string')
     : []
+
+const asLangs = (value: unknown): string[] => [
+  ...new Set(asStringArray(value).map(canonicalizeStoredLang)),
+]
+
+const asLang = (value: unknown): string[] =>
+  typeof value === 'string' ? [canonicalizeStoredLang(value)] : []
 
 const asNumber = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) ? value : null
@@ -70,7 +78,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'summary',
-          langs: asStringArray(payload.targetLanguages),
+          langs: asLangs(payload.targetLanguages),
         })
         break
       }
@@ -79,8 +87,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'summary',
-          langs:
-            typeof payload.targetLang === 'string' ? [payload.targetLang] : [],
+          langs: asLang(payload.targetLang),
         })
         break
       }
@@ -89,7 +96,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'insights',
-          langs: asStringArray(payload.targetLanguages),
+          langs: asLangs(payload.targetLanguages),
         })
         break
       }
@@ -98,8 +105,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'insights',
-          langs:
-            typeof payload.targetLang === 'string' ? [payload.targetLang] : [],
+          langs: asLang(payload.targetLang),
         })
         break
       }
@@ -108,7 +114,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'translation',
-          langs: asStringArray(payload.targetLanguages),
+          langs: asLangs(payload.targetLanguages),
         })
         break
       }
@@ -117,7 +123,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'translation',
-          langs: asStringArray(payload.targetLanguages),
+          langs: asLangs(payload.targetLanguages),
         })
         break
       }
@@ -126,7 +132,7 @@ export function toActiveGenerations(
         result.push({
           ...base,
           capability: 'tts',
-          langs: asStringArray(payload.langs),
+          langs: asLangs(payload.langs),
         })
         break
       }

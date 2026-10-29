@@ -4,7 +4,11 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { AI_PROMPTS } from '@mx-space/ai/prompts'
+import {
+  AI_PROMPTS,
+  resolveBaseLanguageCode,
+  resolveLanguageName,
+} from '@mx-space/ai/prompts'
 import type {
   GenerateStructuredOptions,
   GenerateStructuredResult,
@@ -19,7 +23,6 @@ import { extractDocumentContext } from '@mx-space/ai/translation'
 import { config as loadEnv } from 'dotenv'
 import type { z } from 'zod'
 
-import { LANGUAGE_CODE_TO_NAME } from '../src/modules/ai/ai.constants'
 import {
   type AIProviderConfig,
   AIProviderType,
@@ -342,8 +345,8 @@ function applyPromptVariant(
 
   AI_PROMPTS.translationChunk = (targetLang, chunk) => {
     const current = currentTranslationChunk(targetLang, chunk)
-    const targetLanguage = LANGUAGE_CODE_TO_NAME[targetLang] || targetLang
-    const isJapanese = targetLang === 'ja'
+    const targetLanguage = resolveLanguageName(targetLang) ?? targetLang
+    const isJapanese = resolveBaseLanguageCode(targetLang) === 'ja'
     return {
       ...current,
       systemPrompt: buildBaselineTranslationChunkSystem(isJapanese),

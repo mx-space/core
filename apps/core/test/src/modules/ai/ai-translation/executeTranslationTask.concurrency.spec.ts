@@ -334,7 +334,7 @@ describe('AiTranslationService — executeTranslationTask (spec 2 step-10)', () 
       const languages = ['en', 'ja', 'fr', 'de']
       const bundle = buildService(3, languages)
 
-      const failed = new Set(['ja', 'de'])
+      const failed = new Set(['ja-JP', 'de-DE'])
       vi.spyOn(bundle.service, 'generateTranslation').mockImplementation(
         async (_articleId, lang) => {
           if (failed.has(lang)) {
@@ -371,8 +371,8 @@ describe('AiTranslationService — executeTranslationTask (spec 2 step-10)', () 
       const result = events.find((e) => e.kind === 'result')?.payload as
         { translations: Array<{ lang: string }> } | undefined
       expect(result?.translations.map((t) => t.lang).sort()).toEqual([
-        'en',
-        'fr',
+        'en-US',
+        'fr-FR',
       ])
     })
 

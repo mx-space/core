@@ -164,11 +164,11 @@ describe('RequestContext (e2e)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = await res.json()
-      expect(body.lang).toBe('en')
-      expect(body.contextLang).toBe('en')
+      expect(body.lang).toBe('en-US')
+      expect(body.contextLang).toBe('en-US')
     })
 
-    test('normalizes language code from header (en-US -> en)', async () => {
+    test('keeps the canonical region tag from header (en-US)', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/request-context/lang',
@@ -179,11 +179,11 @@ describe('RequestContext (e2e)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = await res.json()
-      expect(body.lang).toBe('en')
-      expect(body.contextLang).toBe('en')
+      expect(body.lang).toBe('en-US')
+      expect(body.contextLang).toBe('en-US')
     })
 
-    test('normalizes zh-CN to zh', async () => {
+    test('keeps zh-CN as canonical Simplified Chinese', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/request-context/lang',
@@ -194,8 +194,8 @@ describe('RequestContext (e2e)', () => {
 
       expect(res.statusCode).toBe(200)
       const body = await res.json()
-      expect(body.lang).toBe('zh')
-      expect(body.contextLang).toBe('zh')
+      expect(body.lang).toBe('zh-CN')
+      expect(body.contextLang).toBe('zh-CN')
     })
 
     test('returns undefined when no lang is provided', async () => {
@@ -222,11 +222,11 @@ describe('RequestContext (e2e)', () => {
       expect(res.statusCode).toBe(200)
       const body = await res.json()
       expect(body.queryLang).toBe('zh')
-      expect(body.lang).toBe('zh')
+      expect(body.lang).toBe('zh-CN')
       // @Lang() writes the resolved query lang back into the context so
       // downstream services (e.g. EnrichmentService.attachEnrichments) read
       // the same locale the controller does. See lang.decorator.ts.
-      expect(body.contextLang).toBe('zh')
+      expect(body.contextLang).toBe('zh-CN')
     })
 
     test('falls back to header lang when query lang is not provided', async () => {
@@ -241,8 +241,8 @@ describe('RequestContext (e2e)', () => {
       expect(res.statusCode).toBe(200)
       const body = await res.json()
       expect(body.queryLang).toBeUndefined()
-      expect(body.lang).toBe('ja')
-      expect(body.contextLang).toBe('ja')
+      expect(body.lang).toBe('ja-JP')
+      expect(body.contextLang).toBe('ja-JP')
     })
 
     test('falls back to header lang when query lang is invalid', async () => {
@@ -257,8 +257,8 @@ describe('RequestContext (e2e)', () => {
       expect(res.statusCode).toBe(200)
       const body = await res.json()
       expect(body.queryLang).toBe('invalid-lang')
-      expect(body.lang).toBe('ja')
-      expect(body.contextLang).toBe('ja')
+      expect(body.lang).toBe('ja-JP')
+      expect(body.contextLang).toBe('ja-JP')
     })
 
     test('query original disables translation even when header lang exists', async () => {
@@ -274,7 +274,7 @@ describe('RequestContext (e2e)', () => {
       const body = await res.json()
       expect(body.queryLang).toBe('original')
       expect(body.lang).toBeUndefined()
-      expect(body.contextLang).toBe('en')
+      expect(body.contextLang).toBe('en-US')
     })
 
     test('isolates lang across concurrent requests', async () => {
@@ -304,9 +304,9 @@ describe('RequestContext (e2e)', () => {
       const bodyZh = await resZh.json()
       const bodyJa = await resJa.json()
 
-      expect(bodyEn.lang).toBe('en')
-      expect(bodyZh.lang).toBe('zh')
-      expect(bodyJa.lang).toBe('ja')
+      expect(bodyEn.lang).toBe('en-US')
+      expect(bodyZh.lang).toBe('zh-CN')
+      expect(bodyJa.lang).toBe('ja-JP')
     })
   })
 })

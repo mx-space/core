@@ -331,7 +331,10 @@ describe('TaskController (e2e)', () => {
       expect(res.statusCode).toBe(200)
 
       const created = await service.getTask(res.json().data.task_id)
-      expect((created?.payload as any).targetLanguages).toEqual(['ja', 'ko'])
+      expect((created?.payload as any).targetLanguages).toEqual([
+        'ja-JP',
+        'ko-KR',
+      ])
       expect((created?.payload as any).refId).toBe('post-1')
       expect(created?.groupId).toBe('BATCH-1')
       expect(created?.type).toBe(AITaskType.Translation)

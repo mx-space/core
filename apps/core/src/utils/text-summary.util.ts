@@ -15,7 +15,7 @@
 
 const ELLIPSIS = '…'
 
-const DEFAULT_LOCALE = 'zh'
+const DEFAULT_LOCALE = 'zh-CN'
 
 const hasIntlSegmenter = typeof Intl.Segmenter === 'function'
 

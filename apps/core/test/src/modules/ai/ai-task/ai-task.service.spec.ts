@@ -72,12 +72,12 @@ describe('AiTaskService.createTtsTask', () => {
       1,
       expect.objectContaining({
         type: AITaskType.Tts,
-        dedupKey: '1:inc:en,zh',
+        dedupKey: '1:inc:en-US,zh-CN',
       }),
     )
     expect(taskQueueService.createTask).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ dedupKey: '1:force:en,zh' }),
+      expect.objectContaining({ dedupKey: '1:force:en-US,zh-CN' }),
     )
   })
 
@@ -95,6 +95,6 @@ describe('AiTaskService.createTtsTask', () => {
     const keys = taskQueueService.createTask.mock.calls.map(
       ([options]) => options.dedupKey,
     )
-    expect(keys).toEqual(['1:inc:zh', '1:inc:zh', '1:inc:zh'])
+    expect(keys).toEqual(['1:inc:zh-CN', '1:inc:zh-CN', '1:inc:zh-CN'])
   })
 })

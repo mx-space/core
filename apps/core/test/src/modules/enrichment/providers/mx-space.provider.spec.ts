@@ -151,6 +151,19 @@ describe('MxSpaceProvider', () => {
       expect(result.description).toBe('AI summary with SECRET')
     })
 
+    it.each([
+      ['zh-CN', '类型', '文章'],
+      ['zh-TW', '類型', '文章'],
+      ['ja-JP', '種類', '記事'],
+      ['en-US', 'Type', 'Post'],
+    ])('labels the type attribute for %s', async (locale, label, value) => {
+      databaseService.findPostBySlug.mockResolvedValue(basePost)
+      const result = await provider.fetch('post:tech/my-post', locale)
+      expect(result.attributes).toEqual([
+        expect.objectContaining({ label, value }),
+      ])
+    })
+
     it('treats an unpublished post as not found', async () => {
       databaseService.findPostBySlug.mockResolvedValue({
         ...basePost,

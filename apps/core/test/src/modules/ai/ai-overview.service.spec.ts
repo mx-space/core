@@ -60,9 +60,9 @@ function createService(
 
   const configService = {
     get: vi.fn(async () => ({
-      summaryTargetLanguages: ['zh', 'en'],
-      insightsTargetLanguages: ['zh'],
-      translationTargetLanguages: ['zh', 'en', 'ja'],
+      summaryTargetLanguages: ['zh-CN', 'en-US'],
+      insightsTargetLanguages: ['zh-CN'],
+      translationTargetLanguages: ['zh-CN', 'en-US', 'ja-JP'],
     })),
   }
 
@@ -156,12 +156,12 @@ describe('AiOverviewService.getOverviewGrouped', () => {
 
   it('derives coverage and gaps per article', async () => {
     const { service } = createService({
-      documents: { '300': { meta: { lang: 'zh' } } },
+      documents: { '300': { meta: { lang: 'zh-CN' } } },
       repository: {
         coverageByRefIds: vi.fn(async () => ({
-          summary: [{ refId: '300', lang: 'zh' }],
+          summary: [{ refId: '300', lang: 'zh-CN' }],
           insights: [],
-          translation: [{ refId: '300', lang: 'en', sourceLang: 'zh' }],
+          translation: [{ refId: '300', lang: 'en-US', sourceLang: 'zh-CN' }],
           tts: [],
         })),
       },
@@ -170,11 +170,40 @@ describe('AiOverviewService.getOverviewGrouped', () => {
     const result = await service.getOverviewGrouped({ page: 1, size: 20 })
     const post = result.data.find((row) => row.article.id === '300')!
 
-    expect(post.coverage.sourceLang).toBe('zh')
-    expect(post.coverage.summary.langs).toEqual(['zh'])
-    expect(post.coverage.translation.expected).toEqual(['en', 'ja'])
+    expect(post.coverage.sourceLang).toBe('zh-CN')
+    expect(post.coverage.summary.langs).toEqual(['zh-CN'])
+    expect(post.coverage.translation.expected).toEqual(['en-US', 'ja-JP'])
     // summary en + insights zh + translation ja + tts zh & en
     expect(post.gapCount).toBe(5)
+  })
+
+  it('folds legacy language codes onto canonical columns', async () => {
+    const { service } = createService({
+      repository: {
+        coverageByRefIds: vi.fn(async () => ({
+          summary: [
+            { refId: '300', lang: 'zh' },
+            { refId: '300', lang: 'zh-CN' },
+          ],
+          insights: [{ refId: '300', lang: 'zh' }],
+          translation: [
+            { refId: '300', lang: 'en', sourceLang: 'zh' },
+            { refId: '300', lang: 'en-US', sourceLang: 'zh-CN' },
+          ],
+          tts: [{ refId: '300', lang: 'en' }],
+        })),
+      },
+    })
+
+    const result = await service.getOverviewGrouped({ page: 1, size: 20 })
+    const post = result.data.find((row) => row.article.id === '300')!
+
+    expect(post.coverage.sourceLang).toBe('zh-CN')
+    expect(post.coverage.summary.langs).toEqual(['zh-CN'])
+    expect(post.coverage.insights.langs).toEqual(['zh-CN'])
+    expect(post.coverage.translation.langs).toEqual(['en-US'])
+    expect(post.coverage.tts.langs).toEqual(['en-US'])
+    expect(post.coverage.tts.expected).toEqual(['en-US', 'zh-CN'])
   })
 
   it('marks only summary and insights inapplicable on pages', async () => {
@@ -230,10 +259,10 @@ describe('AiOverviewService.getArticleOverview', () => {
           {
             id: 's1',
             hash: 'hash:older body',
-            lang: 'zh',
+            lang: 'zh-CN',
             summary: 'old summary',
             isTranslation: false,
-            sourceLang: 'zh',
+            sourceLang: 'zh-CN',
             createdAt: new Date(),
           },
         ]),
@@ -241,10 +270,10 @@ describe('AiOverviewService.getArticleOverview', () => {
           {
             id: 'i1',
             hash: 'hash:current body',
-            lang: 'zh',
+            lang: 'zh-CN',
             content: 'current insights',
             isTranslation: false,
-            sourceLang: 'zh',
+            sourceLang: 'zh-CN',
             createdAt: new Date(),
           },
         ]),
@@ -299,13 +328,13 @@ describe('AiOverviewService.getArticleOverview', () => {
       documents: { '300': { meta: { lang: 'zh-CN' } } },
       repository: {
         summaryAssets: vi.fn(async () => [
-          { id: 's1', lang: 'zh', summary: 'x', createdAt: new Date() },
+          { id: 's1', lang: 'zh-CN', summary: 'x', createdAt: new Date() },
         ]),
         translationAssets: vi.fn(async () => [
           {
             id: 't1',
-            lang: 'en',
-            sourceLang: 'zh',
+            lang: 'en-US',
+            sourceLang: 'zh-CN',
             aiModel: null,
             createdAt: new Date(),
             updatedAt: null,
@@ -317,10 +346,50 @@ describe('AiOverviewService.getArticleOverview', () => {
     const detail = await service.getArticleOverview('300')
 
     // `meta.lang` is a locale here; it must normalise before comparisons.
-    expect(detail.coverage.sourceLang).toBe('zh')
-    expect(detail.coverage.summary.langs).toEqual(['zh'])
-    expect(detail.coverage.tts.expected).toEqual(['en', 'zh'])
+    expect(detail.coverage.sourceLang).toBe('zh-CN')
+    expect(detail.coverage.summary.langs).toEqual(['zh-CN'])
+    expect(detail.coverage.tts.expected).toEqual(['en-US', 'zh-CN'])
     expect(detail.assets.translation).toHaveLength(1)
+  })
+
+  it('reports legacy-coded assets under canonical tags and pairs translated TTS with its translation', async () => {
+    const { service } = createService({
+      documents: { '300': { meta: { lang: 'zh' } } },
+      repository: {
+        translationAssets: vi.fn(async () => [
+          {
+            id: 't1',
+            hash: 'h',
+            lang: 'en',
+            sourceLang: 'zh',
+            aiModel: null,
+            createdAt: new Date('2026-01-01'),
+            updatedAt: new Date('2026-03-01'),
+          },
+        ]),
+        ttsAssets: vi.fn(async () => [
+          {
+            id: 'a1',
+            lang: 'en-US',
+            sourceLang: 'zh-CN',
+            isTranslation: true,
+            sourceModifiedAt: null,
+            createdAt: new Date('2026-02-01'),
+            updatedAt: null,
+          },
+        ]),
+      } as never,
+    })
+
+    const detail = await service.getArticleOverview('300')
+
+    expect(detail.assets.translation[0]).toMatchObject({
+      lang: 'en-US',
+      sourceLang: 'zh-CN',
+    })
+    expect(detail.assets.tts[0].stale).toBe(true)
+    expect(detail.coverage.translation.langs).toEqual(['en-US'])
+    expect(detail.coverage.tts.langs).toEqual(['en-US'])
   })
 
   it('rejects an unknown article', async () => {
@@ -330,26 +399,26 @@ describe('AiOverviewService.getArticleOverview', () => {
     await expect(service.getArticleOverview('999')).rejects.toThrow()
   })
 
-  it('canonicalizes the configured target languages, so a zh-CN setting is not a gap an existing zh row can never close', async () => {
+  it('canonicalizes the configured target languages and drops invalid ones', async () => {
     const { service, configService } = createService({
       repository: {
         summaryAssets: vi.fn(async () => [
-          { id: 's1', lang: 'zh', summary: 'x', createdAt: new Date() },
+          { id: 's1', lang: 'zh-CN', summary: 'x', createdAt: new Date() },
         ]),
       } as never,
     })
     configService.get.mockResolvedValue({
-      summaryTargetLanguages: ['zh-CN', 'zh'],
-      insightsTargetLanguages: ['jp'],
+      summaryTargetLanguages: ['zh', 'zh-CN'],
+      insightsTargetLanguages: ['jp', 'ja'],
       translationTargetLanguages: ['en_US', 'EN'],
     })
 
     const detail = await service.getArticleOverview('300')
 
-    expect(detail.coverage.summary.expected).toEqual(['zh'])
-    expect(detail.coverage.summary.langs).toEqual(['zh'])
-    expect(detail.coverage.insights.expected).toEqual(['ja'])
-    expect(detail.coverage.translation.expected).toEqual(['en'])
+    expect(detail.coverage.summary.expected).toEqual(['zh-CN'])
+    expect(detail.coverage.summary.langs).toEqual(['zh-CN'])
+    expect(detail.coverage.insights.expected).toEqual(['ja-JP'])
+    expect(detail.coverage.translation.expected).toEqual(['en-US'])
   })
 
   it('looks up active tasks for this article only, sub-tasks included', async () => {

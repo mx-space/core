@@ -13,7 +13,11 @@ import { computeContentHash } from '~/utils/content.util'
 
 import { ConfigsService } from '../../configs/configs.service'
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
-import { normalizeTargetLangs, parseLanguageCode } from '../ai-language.util'
+import {
+  canonicalizeStoredLang,
+  normalizeTargetLangs,
+  parseLanguageCode,
+} from '../ai-language.util'
 import { MultilangGenerationService } from '../ai-multilang/ai-multilang.service'
 import type { ArticleDocument } from '../ai-translation/ai-translation.types'
 import {
@@ -107,7 +111,7 @@ export class AiOverviewService {
         translationLangs: pluckLangs(coverageRows.translation, refId),
         translationSourceLangs: coverageRows.translation
           .filter((row) => row.refId === refId)
-          .map((row) => row.sourceLang),
+          .map((row) => canonicalizeStoredLang(row.sourceLang)),
         ttsLangs: pluckLangs(coverageRows.tts, refId),
         configured,
       })
@@ -133,20 +137,36 @@ export class AiOverviewService {
       await Promise.all([
         this.repository
           .summaryAssets(refId)
-          .then((rows) => this.generationMetrics.attachLatest('summary', rows)),
+          .then((rows) =>
+            this.generationMetrics.attachLatest(
+              'summary',
+              withCanonicalLangs(rows),
+            ),
+          ),
         this.repository
           .insightsAssets(refId)
           .then((rows) =>
-            this.generationMetrics.attachLatest('insights', rows),
+            this.generationMetrics.attachLatest(
+              'insights',
+              withCanonicalLangs(rows),
+            ),
           ),
         this.repository
           .translationAssets(refId)
           .then((rows) =>
-            this.generationMetrics.attachLatest('translation', rows),
+            this.generationMetrics.attachLatest(
+              'translation',
+              withCanonicalLangs(rows),
+            ),
           ),
         this.repository
           .ttsAssets(refId)
-          .then((rows) => this.generationMetrics.attachLatest('tts', rows)),
+          .then((rows) =>
+            this.generationMetrics.attachLatest(
+              'tts',
+              withCanonicalLangs(rows),
+            ),
+          ),
         this.resolveConfiguredLanguages(),
         this.buildCost(refId),
         this.findActiveTasks(refId),
@@ -285,7 +305,7 @@ export class AiOverviewService {
   }
 
   // The handlers canonicalize their targets before generating, so a setting of
-  // `zh-CN` lands as a `zh` row. Comparing the raw setting against it would
+  // `zh` lands as a `zh-CN` row. Comparing the raw setting against it would
   // report a gap no amount of generating can close.
   private async resolveConfiguredLanguages() {
     const aiConfig = await this.configService.get('ai')
@@ -314,11 +334,27 @@ export class AiOverviewService {
   }
 }
 
+// Rows written by a pre-BCP 47 pod during a rolling deploy still carry bare
+// codes; without folding them the matrix grows an `en` column beside `en-US`.
 function pluckLangs(
   rows: Array<{ refId: string; lang: string }>,
   refId: string,
 ) {
-  return rows.filter((row) => row.refId === refId).map((row) => row.lang)
+  return rows
+    .filter((row) => row.refId === refId)
+    .map((row) => canonicalizeStoredLang(row.lang))
+}
+
+function withCanonicalLangs<
+  T extends { lang: string; sourceLang?: string | null },
+>(rows: T[]): T[] {
+  return rows.map((row) => ({
+    ...row,
+    lang: canonicalizeStoredLang(row.lang),
+    ...(row.sourceLang
+      ? { sourceLang: canonicalizeStoredLang(row.sourceLang) }
+      : {}),
+  }))
 }
 
 // `parseLanguageCode` falls back to the default language for any unusable

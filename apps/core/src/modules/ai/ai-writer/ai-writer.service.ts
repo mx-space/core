@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
 import { AI_PROMPTS } from '@mx-space/ai/prompts'
 import { Injectable, Logger } from '@nestjs/common'
 
@@ -33,7 +34,7 @@ export class AiWriterService {
         maxRetries: 2,
       })
 
-      return output
+      return { ...output, lang: canonicalizeLanguageTag(output.lang) }
     } catch (error) {
       this.logger.error(
         `Failed to generate title and slug: ${error.message}`,
@@ -47,7 +48,7 @@ export class AiWriterService {
       return {
         title: fallbackTitle,
         slug: this.generateFallbackSlug(fallbackTitle),
-        lang: 'en',
+        lang: 'en-US',
         keywords: [],
       }
     }

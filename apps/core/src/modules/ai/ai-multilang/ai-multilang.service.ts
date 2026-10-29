@@ -18,7 +18,10 @@ import {
 import { AiGenerationMetricsService } from '../ai-generation-metrics/ai-generation-metrics.service'
 import { AiInFlightService } from '../ai-inflight/ai-inflight.service'
 import type { AiStreamEvent } from '../ai-inflight/ai-inflight.types'
-import { normalizeTargetLangs } from '../ai-language.util'
+import {
+  excludeSourceLanguage,
+  normalizeTargetLangs,
+} from '../ai-language.util'
 import type {
   MultilangAdapter,
   MultilangTaskResult,
@@ -209,8 +212,9 @@ export class MultilangGenerationService {
       payload.refId,
       { isOwner: true },
     )
-    const targets = normalizeTargetLangs(payload.targetLanguages).filter(
-      (lang) => lang !== sourceLang,
+    const targets = excludeSourceLanguage(
+      normalizeTargetLangs(payload.targetLanguages),
+      sourceLang,
     )
     const totalItems = 1 + targets.length
     await context.updateProgress(

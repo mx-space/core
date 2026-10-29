@@ -12,13 +12,6 @@ import { TmdbClient } from './tmdb.client'
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 
-const TMDB_LANG_MAP: Record<string, string> = {
-  zh: 'zh-CN',
-  ja: 'ja-JP',
-  ko: 'ko-KR',
-  en: 'en-US',
-}
-
 const isBlank = (s?: string | null): boolean => !s || !s.trim()
 const pickNonBlank = (
   ...vals: (string | null | undefined)[]
@@ -36,7 +29,13 @@ export class TmdbProvider implements EnrichmentProvider {
   readonly featureGateConfigKey = 'tmdb'
   readonly requiredConfigKeys = ['apiKey']
   readonly localeAware = true
-  readonly supportedLocales = ['zh', 'ja', 'ko', 'en'] as const
+  readonly supportedLocales = [
+    'zh-CN',
+    'zh-TW',
+    'ja-JP',
+    'ko-KR',
+    'en-US',
+  ] as const
 
   constructor(private readonly client: TmdbClient) {}
 
@@ -64,7 +63,7 @@ export class TmdbProvider implements EnrichmentProvider {
   }
 
   async fetch(id: string, locale?: string): Promise<EnrichmentResult> {
-    const language = locale ? TMDB_LANG_MAP[locale] : undefined
+    const language = locale || undefined
     const data = await this.client.fetch<TMDBMovieApiResponse>(
       `/3/${id}`,
       language ? { language } : undefined,
@@ -102,7 +101,7 @@ export class TmdbProvider implements EnrichmentProvider {
     const normalizedQuery = query.trim()
     if (!normalizedQuery) return []
 
-    const language = locale ? TMDB_LANG_MAP[locale] : undefined
+    const language = locale || undefined
     const data = await this.client.fetch<TMDBSearchApiResponse>(
       '/3/search/multi',
       {

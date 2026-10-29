@@ -8,7 +8,9 @@ import { AiTtsQueryService } from '~/modules/ai/ai-tts/ai-tts-query.service'
 import type { DatabaseService } from '~/processors/database/database.service'
 
 function createHarness() {
-  const repository = createPgRepositoryMock<AiTtsRepository>()
+  const repository = createPgRepositoryMock<AiTtsRepository>({
+    findLangsByRef: vi.fn().mockResolvedValue([]),
+  })
   const databaseService = { findGlobalById: vi.fn() }
   const translationRepository = {
     findRevisionByRefAndLang: vi.fn(
@@ -34,6 +36,17 @@ function createHarness() {
 }
 
 describe('AiTtsQueryService.getMetaForArticle', () => {
+  it('reads meta under the stored language matching the request', async () => {
+    const { repository, service } = createHarness()
+    repository.findLangsByRef.mockResolvedValue(['en-US', 'zh-TW'])
+    repository.findMeta.mockResolvedValue(null)
+
+    await service.getMetaForArticle('1', 'zh-HK')
+
+    expect(repository.findMeta).toHaveBeenCalledWith('1', 'zh-TW')
+    expect(repository.findAllByRef).not.toHaveBeenCalled()
+  })
+
   it('reports available with the block count', async () => {
     const { repository, service } = createHarness()
     repository.findMeta.mockResolvedValue({

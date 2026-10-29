@@ -8,48 +8,59 @@ import {
 } from './ai'
 
 describe('parseLangInput', () => {
-  it('splits on full-width and half-width commas, trims, lowercases, dedupes, and drops empty segments', () => {
-    expect(parseLangInput('zh, EN，ja , , zh')).toEqual(['zh', 'en', 'ja'])
+  it('canonicalizes to BCP 47 language-REGION tags and reports invalid tokens', () => {
+    expect(parseLangInput('zh, zh-TW, jp')).toEqual({
+      invalid: ['jp'],
+      langs: ['zh-CN', 'zh-TW'],
+    })
+  })
+
+  it('splits on full-width and half-width commas, trims, dedupes, and drops empty segments', () => {
+    expect(parseLangInput('zh, EN，ja , , zh-cn').langs).toEqual([
+      'zh-CN',
+      'en-US',
+      'ja-JP',
+    ])
   })
 
   it('preserves first-occurrence order when deduping', () => {
-    expect(parseLangInput('ja, zh, en, ja, zh')).toEqual(['ja', 'zh', 'en'])
+    expect(parseLangInput('ja, zh, en, ja-JP, zh').langs).toEqual([
+      'ja-JP',
+      'zh-CN',
+      'en-US',
+    ])
   })
 
-  it('returns an empty array for whitespace-only input', () => {
-    expect(parseLangInput('  ')).toEqual([])
+  it('returns nothing for blank input', () => {
+    expect(parseLangInput('  ')).toEqual({ invalid: [], langs: [] })
+    expect(parseLangInput('')).toEqual({ invalid: [], langs: [] })
   })
 
-  it('returns an empty array for empty input', () => {
-    expect(parseLangInput('')).toEqual([])
+  it('keeps Simplified and Traditional Chinese apart', () => {
+    expect(parseLangInput('zh-Hans, zh-Hant, zh_TW').langs).toEqual([
+      'zh-CN',
+      'zh-TW',
+    ])
   })
 
-  it('folds a region suffix into its 2-letter primary tag, so zh-CN and zh dedupe together', () => {
-    expect(parseLangInput('zh-CN, zh')).toEqual(['zh'])
+  it('keeps an explicit region', () => {
+    expect(parseLangInput('pt-PT, en-GB, fil').langs).toEqual([
+      'pt-PT',
+      'en-GB',
+      'fil-PH',
+    ])
   })
 
-  it('treats underscore as a hyphen when folding a region suffix', () => {
-    expect(parseLangInput('en_US, EN')).toEqual(['en'])
+  it('reports legacy shorthands and free text as invalid', () => {
+    expect(parseLangInput('cn, english, jp').invalid).toEqual([
+      'cn',
+      'english',
+      'jp',
+    ])
   })
 
-  it('leaves a 3-letter primary tag (and any suffix) untouched', () => {
-    expect(parseLangInput('FIL-PH, jam')).toEqual(['fil-ph', 'jam'])
-  })
-
-  it('folds an alias onto the code the server will store, so jp and ja are one language', () => {
-    expect(parseLangInput('jp, ja')).toEqual(['ja'])
-  })
-
-  it('maps a 3-letter ISO code onto its 2-letter form', () => {
-    expect(parseLangInput('eng')).toEqual(['en'])
-  })
-
-  it('folds a script or region variant the server also folds', () => {
-    expect(parseLangInput('zh-Hant, pt-BR, kr')).toEqual(['zh', 'pt', 'ko'])
-  })
-
-  it('returns a single value when there is no separator', () => {
-    expect(parseLangInput('zh')).toEqual(['zh'])
+  it('reads tw as Twi, not Taiwan', () => {
+    expect(parseLangInput('tw').langs).toEqual(['ak-GH'])
   })
 })
 

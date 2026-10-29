@@ -6,7 +6,7 @@ import type { TranslationSourceSnapshot } from '~/modules/ai/ai-translation/tran
 import { TranslationEntryService } from '~/modules/ai/ai-translation/translation-entry.service'
 import type { TranslationEntryKeyPath } from '~/modules/ai/ai-translation/translation-entry.types'
 import { describeError, errorStack } from '~/utils/error.util'
-import { normalizeLanguageCode } from '~/utils/lang.util'
+import { canonicalizeLanguageTag } from '~/utils/lang.util'
 
 export interface TranslationMeta {
   sourceLang: string
@@ -202,12 +202,9 @@ export class TranslationService {
     lang?: string,
   ): Promise<Map<string, string>> {
     if (!lang || !refIds.length) return new Map()
-    const normalized = normalizeLanguageCode(lang)
-    if (!normalized) return new Map()
-    return this.aiTranslationService.findCachedTitlesByRefIds(
-      refIds,
-      normalized,
-    )
+    const served = await this.aiTranslationService.resolveServedLanguage(lang)
+    if (!served) return new Map()
+    return this.aiTranslationService.findCachedTitlesByRefIds(refIds, served)
   }
 
   async translateArticle(options: {
@@ -223,7 +220,7 @@ export class TranslationService {
     }
   }): Promise<TranslationResult> {
     const { articleId, targetLang, allowHidden, originalData } = options
-    const normalizedTarget = normalizeLanguageCode(targetLang)
+    const normalizedTarget = canonicalizeLanguageTag(targetLang)
 
     try {
       const { availableTranslations, sourceLang, translation } =
@@ -296,7 +293,7 @@ export class TranslationService {
   }): Promise<T[]> {
     const { items, targetLang, getInput, applyResult, translationFields } =
       options
-    const normalizedTarget = normalizeLanguageCode(targetLang)
+    const normalizedTarget = canonicalizeLanguageTag(targetLang)
 
     if (!normalizedTarget || !items.length) {
       return items.map((item) => applyResult(item, undefined))
@@ -366,7 +363,8 @@ export class TranslationService {
       defaultFields) as readonly Fields[]
     const translationFieldList =
       translationFields as readonly TranslationField[]
-    const normalizedTarget = normalizeLanguageCode(targetLang)
+    const normalizedTarget =
+      await this.aiTranslationService.resolveServedLanguage(targetLang)
 
     const buildUntranslatedMap = () =>
       new Map(
@@ -492,7 +490,7 @@ export class TranslationService {
     lang: string,
     lookupKeys: string[],
   ): Promise<Map<string, string>> {
-    const normalized = normalizeLanguageCode(lang)
+    const normalized = canonicalizeLanguageTag(lang)
     if (!normalized || !lookupKeys.length) return new Map()
     try {
       return await this.translationEntryService.getTranslations(
@@ -514,7 +512,7 @@ export class TranslationService {
     lang: string,
     sourceTexts: string[],
   ): Promise<Map<string, string>> {
-    const normalized = normalizeLanguageCode(lang)
+    const normalized = canonicalizeLanguageTag(lang)
     if (!normalized || !sourceTexts.length) return new Map()
     try {
       return await this.translationEntryService.getTranslationsForDict(

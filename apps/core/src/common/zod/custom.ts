@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
 import { z } from 'zod'
 
 import { resolveRequestedLanguage } from '~/utils/lang.util'
@@ -40,9 +41,29 @@ export const zRefTypeTransform = z.preprocess((val) => {
 
 export const zPrefer = z.enum(['lexical']).optional()
 
+export const zLanguageTag = z
+  .string()
+  .trim()
+  .refine(isKnownLanguageTag, { error: 'invalid BCP 47 language tag' })
+  .transform((tag) => canonicalizeLanguageTag(tag)!)
+
+export const zArticleMeta = z
+  .record(z.string(), z.any())
+  .transform((meta, ctx) => {
+    if (!('lang' in meta)) return meta
+    const { lang, ...rest } = meta
+    if (lang == null || lang === '') return rest
+    if (typeof lang !== 'string' || !isKnownLanguageTag(lang)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'invalid BCP 47 language tag',
+        path: ['lang'],
+      })
+      return z.NEVER
+    }
+    return { ...rest, lang: canonicalizeLanguageTag(lang)! }
+  })
+
 export const zLang = z
-  .preprocess(
-    (val) => resolveRequestedLanguage(val),
-    z.string().length(2).optional(),
-  )
+  .preprocess((val) => resolveRequestedLanguage(val), z.string().optional())
   .optional()

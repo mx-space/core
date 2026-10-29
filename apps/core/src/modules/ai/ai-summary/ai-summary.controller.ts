@@ -31,7 +31,7 @@ import { type BasicPagerDto, BasicPagerSchema } from '~/shared/dto/pager.dto'
 import { endSse, initSse, sendSseEvent } from '~/utils/sse.util'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
-import { parseLanguageCode } from '../ai-language.util'
+import { excludeSourceLanguage, parseLanguageCode } from '../ai-language.util'
 import {
   type GetSummariesGroupedQueryDto,
   GetSummariesGroupedQuerySchema,
@@ -69,8 +69,8 @@ export class AiSummaryController {
     if (!source) {
       return { taskId: null, created: false, reason: 'source-missing' }
     }
-    const sourceLang = source.sourceLang || source.lang
-    if (body.targetLang === sourceLang) {
+    const sourceLang = source.sourceLang || source.lang || DEFAULT_SUMMARY_LANG
+    if (!excludeSourceLanguage([body.targetLang], sourceLang).length) {
       throw createAppException(AppErrorCode.AI_INVALID_PARAMETER, {
         message: 'targetLang must differ from source lang',
       })

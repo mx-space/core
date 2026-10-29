@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag } from '@mx-space/ai'
 import { Test } from '@nestjs/testing'
 
 import { AiTranslationService } from '~/modules/ai/ai-translation/ai-translation.service'
@@ -20,6 +21,10 @@ const createMockAiTranslationService = () => ({
   getTranslationForArticle: vi.fn(),
   getTranslationAndAvailableLanguages: vi.fn(),
   getValidTranslationsForArticles: vi.fn(),
+  findCachedTitlesByRefIds: vi.fn().mockResolvedValue(new Map()),
+  resolveServedLanguage: vi.fn(async (lang?: string) =>
+    canonicalizeLanguageTag(lang),
+  ),
 })
 
 const createTranslationLookup = (
@@ -209,7 +214,7 @@ describe('TranslationService', () => {
 
       expect(
         mockAiTranslationService.getTranslationAndAvailableLanguages,
-      ).toHaveBeenCalledWith('article-1', 'en', { ignoreVisibility: true })
+      ).toHaveBeenCalledWith('article-1', 'en-US', { ignoreVisibility: true })
     })
 
     it('should return original data when translation service throws error', async () => {
@@ -242,7 +247,7 @@ describe('TranslationService', () => {
 
       expect(
         mockAiTranslationService.getTranslationAndAvailableLanguages,
-      ).toHaveBeenCalledWith('article-1', 'zh', undefined)
+      ).toHaveBeenCalledWith('article-1', 'zh-CN', undefined)
     })
   })
 
@@ -537,7 +542,33 @@ describe('TranslationService', () => {
 
       expect(
         mockAiTranslationService.getValidTranslationsForArticles,
-      ).toHaveBeenCalledWith(articles, 'en')
+      ).toHaveBeenCalledWith(articles, 'en-US')
+    })
+
+    it('queries the configured target that matches the requested language', async () => {
+      mockAiTranslationService.resolveServedLanguage.mockResolvedValue('zh-TW')
+      mockAiTranslationService.getValidTranslationsForArticles.mockResolvedValue(
+        createTranslationLookup(),
+      )
+
+      await service.translateArticleList({ articles, targetLang: 'zh-HK' })
+
+      expect(
+        mockAiTranslationService.resolveServedLanguage,
+      ).toHaveBeenCalledWith('zh-HK')
+      expect(
+        mockAiTranslationService.getValidTranslationsForArticles,
+      ).toHaveBeenCalledWith(articles, 'zh-TW')
+    })
+
+    it('looks up cached titles under the served language', async () => {
+      mockAiTranslationService.resolveServedLanguage.mockResolvedValue('zh-TW')
+
+      await service.getCachedTitles(['1'], 'zh-HK')
+
+      expect(
+        mockAiTranslationService.findCachedTitlesByRefIds,
+      ).toHaveBeenCalledWith(['1'], 'zh-TW')
     })
 
     it('should handle articles with empty text', async () => {
@@ -564,11 +595,11 @@ describe('TranslationService', () => {
 
       // Test various language code formats
       const testCases = [
-        { input: 'jp', expected: 'ja' },
-        { input: 'cn', expected: 'zh' },
-        { input: 'zh-tw', expected: 'zh' },
-        { input: 'en-gb', expected: 'en' },
-        { input: 'pt-br', expected: 'pt' },
+        { input: 'jp', expected: undefined },
+        { input: 'cn', expected: undefined },
+        { input: 'zh-tw', expected: 'zh-TW' },
+        { input: 'en-gb', expected: 'en-GB' },
+        { input: 'pt-br', expected: 'pt-BR' },
       ]
 
       for (const testCase of testCases) {

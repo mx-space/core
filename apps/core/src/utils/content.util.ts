@@ -1,3 +1,4 @@
+import { resolveBaseLanguageCode } from '@mx-space/ai/prompts'
 import {
   BLOCK_ID_STATE_KEY,
   extractDocumentContext,
@@ -185,7 +186,8 @@ export function computeContentHash(
       content: sourceOfTruth,
       summary: doc.summary,
       tags: doc.tags,
-      sourceLang,
+      // Base language only: rows hashed before the BCP 47 migration stored bare codes.
+      sourceLang: resolveBaseLanguageCode(sourceLang),
     }),
   )
 }

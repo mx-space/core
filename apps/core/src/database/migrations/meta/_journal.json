@@ -330,6 +330,13 @@
       "when": 1793100000000,
       "tag": "0046_draft_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793150000000,
+      "tag": "0047_language_tag_bcp47",
+      "breakpoints": true
     }
   ]
 }

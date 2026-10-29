@@ -47,20 +47,20 @@ describe('RequestContextMiddleware lang resolution', () => {
         cookie: 'NEXT_LOCALE=fr',
         'accept-language': 'zh-CN',
       }),
-    ).toBe('ja')
+    ).toBe('ja-JP')
 
     expect(
       await runWith({
         cookie: 'NEXT_LOCALE=fr',
         'accept-language': 'zh-CN',
       }),
-    ).toBe('fr')
+    ).toBe('fr-FR')
 
     expect(
       await runWith({
         'accept-language': 'zh-CN',
       }),
-    ).toBe('zh')
+    ).toBe('zh-CN')
   })
 
   test('x-skip-translation: 1 ignores cookie and accept-language', async () => {
@@ -80,7 +80,7 @@ describe('RequestContextMiddleware lang resolution', () => {
         'x-lang': 'ja',
         'accept-language': 'zh-CN',
       }),
-    ).toBe('ja')
+    ).toBe('ja-JP')
   })
 
   test('x-skip-translation value other than "1" does not trigger skip', async () => {
@@ -89,6 +89,17 @@ describe('RequestContextMiddleware lang resolution', () => {
         'x-skip-translation': 'true',
         'accept-language': 'zh-CN',
       }),
-    ).toBe('zh')
+    ).toBe('zh-CN')
+  })
+
+  test('keeps Traditional Chinese distinct from Simplified', async () => {
+    expect(await runWith({ 'x-lang': 'zh-TW' })).toBe('zh-TW')
+    expect(await runWith({ 'x-lang': 'zh_TW' })).toBe('zh-TW')
+    expect(await runWith({ cookie: 'NEXT_LOCALE=zh-TW' })).toBe('zh-TW')
+    expect(await runWith({ 'accept-language': 'zh-HK,zh;q=0.9' })).toBe('zh-HK')
+  })
+
+  test('accept-language skips invalid tags', async () => {
+    expect(await runWith({ 'accept-language': 'jp,en;q=0.8' })).toBe('en-US')
   })
 })

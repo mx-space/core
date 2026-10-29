@@ -7,6 +7,7 @@ import { Button } from '~/ui/primitives/button'
 import { TextInput } from '~/ui/primitives/text-field'
 
 import { FieldShell } from '../SettingsPrimitives'
+import { parseTargetLanguageDraft } from './target-language'
 
 export function AITextListField(props: {
   disabled?: boolean
@@ -18,17 +19,17 @@ export function AITextListField(props: {
   const [draft, setDraft] = useState('')
 
   const add = () => {
-    const value = draft.trim().toLowerCase()
-    if (!value || props.disabled) return
-    if (value.length !== 2) {
-      toast.warning(t('settings.ai.test.invalidLanguageCode'))
+    if (!draft.trim() || props.disabled) return
+    const parsed = parseTargetLanguageDraft(draft, props.value)
+    if ('error' in parsed) {
+      toast.warning(
+        parsed.error === 'exists'
+          ? t('settings.ai.test.languageExists', { language: parsed.lang })
+          : t('settings.ai.test.invalidLanguageCode'),
+      )
       return
     }
-    if (props.value.includes(value)) {
-      toast.warning(t('settings.ai.test.languageExists', { language: value }))
-      return
-    }
-    props.onChange([...props.value, value])
+    props.onChange([...props.value, parsed.lang])
     setDraft('')
   }
 
@@ -39,7 +40,7 @@ export function AITextListField(props: {
           <TextInput
             className="min-w-0 flex-1"
             disabled={props.disabled}
-            maxLength={2}
+            maxLength={16}
             onChange={setDraft}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
@@ -71,7 +72,7 @@ export function AITextListField(props: {
               }
               type="button"
             >
-              {item.toUpperCase()}
+              {item}
               <X aria-hidden="true" className="ml-1 inline size-3" />
             </button>
           ))}
