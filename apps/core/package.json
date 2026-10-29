@@ -133,7 +133,7 @@
     "mkdirp": "^3.0.1",
     "nanoid": "6.0.2",
     "node-machine-id": "1.1.12",
-    "nodemailer": "10.0.15",
+    "nodemailer": "10.1.4",
     "object-scan": "^20.0.4",
     "octokit": "^5.0.5",
     "ofetch": "1.5.1",
