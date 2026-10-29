@@ -22,7 +22,7 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
-  'eslint-plugin-react-compiler>zod': 3.25.76
+  'eslint-plugin-react-compiler>zod': 4.6.6
   'get-pixels@^3>request': ./external/request
   # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
   # migration; hold the 1.6 line until that lands.
