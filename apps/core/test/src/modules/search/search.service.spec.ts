@@ -37,6 +37,7 @@ const makeService = ({
   translations = [],
   searchRepoOverrides,
   aiRepoOverrides,
+  aiConfig = {},
 }: {
   postFindById?: any
   noteRecent?: any[]
@@ -46,6 +47,7 @@ const makeService = ({
   pageFindAll?: any[]
   translations?: any[]
   searchRepoOverrides?: Partial<Record<keyof SearchRepository, any>>
+  aiConfig?: Record<string, unknown>
   aiRepoOverrides?: Partial<Record<keyof AiTranslationRepository, any>>
 } = {}) => {
   const noteService = {
@@ -148,6 +150,7 @@ const makeService = ({
     pageService as any,
     searchRepo as any,
     aiRepo as any,
+    { get: vi.fn(async () => aiConfig) } as any,
   )
   return { service, searchRepo, aiRepo, noteService, postService, pageService }
 }
@@ -479,14 +482,19 @@ describe('SearchService', () => {
   })
 
   it.each([
-    ['en', 'en-US'],
-    ['en-US', 'en-US'],
-    ['zh-tw', 'zh-TW'],
+    ['en', [], 'en-US'],
+    ['en-US', [], 'en-US'],
+    ['zh-tw', [], 'zh-TW'],
+    ['en-GB', ['en-US', 'ja-JP'], 'en-US'],
+    ['zh-HK', ['zh-TW'], 'zh-TW'],
+    ['zh-HK', ['zh-HK', 'zh-TW'], 'zh-HK'],
+    ['zh-SG', ['en-US'], 'zh-CN'],
   ])(
-    'searches documents under the canonical tag for lang %s',
-    async (requested, expected) => {
+    'searches documents under the served tag for lang %s with targets %j',
+    async (requested, translationTargetLanguages, expected) => {
       const findByTerms = vi.fn().mockResolvedValue([])
       const { service } = makeService({
+        aiConfig: { translationTargetLanguages },
         searchRepoOverrides: {
           findByTerms,
           findByKeyword: vi.fn().mockResolvedValue([]),
