@@ -19,7 +19,7 @@ Run from the monorepo root (the workspace install is governed by the root) — s
 
 Scope checks to changed files only — never run lint/typecheck/build over the whole
 tree just to verify a small edit. One-off file typecheck:
-`pnpm -C apps/admin exec tsc --noEmit --pretty false`.
+`pnpm -C apps/admin exec tsrs --noEmit --pretty false`.
 
 Env vars live in `apps/admin/.env` (see `apps/admin/.env.example`). `VITE_APP_BASE_API`
 is the mx-core API endpoint. All vars are optional and fall back to empty/same-origin,

@@ -28,14 +28,29 @@ export async function runDeviceFlow(
   const envelope = parseEnvelope(`${line}\n`)
   const userCode = (envelope.data as { user_code: string }).user_code
 
-  await backend.authApi.deviceVerify({
-    query: { user_code: userCode },
-    headers: approver.approvalHeaders,
+  const reviewResponse = await fetch(
+    `${backend.siteUrl}/device?user_code=${encodeURIComponent(userCode)}`,
+    { headers: approver.approvalHeaders },
+  )
+  if (!reviewResponse.ok) {
+    throw new Error(
+      `Device request review failed: ${await reviewResponse.text()}`,
+    )
+  }
+
+  const headers = new Headers(approver.approvalHeaders)
+  headers.set('content-type', 'application/json')
+  const approvalResponse = await fetch(`${backend.siteUrl}/device/verify`, {
+    method: 'POST',
+    body: JSON.stringify({ user_code: userCode, action: 'approve' }),
+    headers,
   })
-  await backend.authApi.deviceApprove({
-    body: { userCode },
-    headers: approver.approvalHeaders,
-  })
+  const approval = (await approvalResponse.json()) as { ok?: boolean }
+  if (!approvalResponse.ok || approval.ok !== true) {
+    throw new Error(
+      `Device request approval failed: ${JSON.stringify(approval)}`,
+    )
+  }
 
   return spawned.result
 }

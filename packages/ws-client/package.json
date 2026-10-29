@@ -44,13 +44,13 @@
     "build": "tsdown",
     "prepublishOnly": "tsdown",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.6",
     "@types/ws": "8.18.2",
-    "tsdown": "0.23.0",
-    "typescript": "6.0.3",
+    "tsdown": "0.23.3",
+    "tsrs": "0.20.1-ts7.1.0-beta",
     "vitest": "5.0.5",
     "ws": "8.22.0"
   }

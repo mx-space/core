@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs'
+
 import { Module } from '@nestjs/common'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 import { Test } from '@nestjs/testing'
+import { parseHTML } from 'linkedom'
 import { vi } from 'vitest'
 
 import { fastifyApp } from '~/common/adapters/fastify.adapter'
@@ -24,18 +27,22 @@ const ownerSession = {
 
 const deviceApprove = vi.fn(async () => ({ success: true }))
 const deviceDeny = vi.fn(async () => ({ success: true }))
-const deviceVerify = vi.fn(async () => ({ status: 'pending' }))
+const deviceVerification = {
+  status: 'pending',
+  user_code: 'ABCD1234',
+  client_id: 'mxs-cli' as string | undefined,
+  scope: 'openid profile' as string | undefined,
+}
+const deviceVerify = vi.fn(async () => deviceVerification)
 
-const DEVICE_TEMPLATE_STUB = `<!doctype html>
-<html><head><title><%= siteTitle %> · Device authorization</title></head>
-<body><h1><%= siteTitle %></h1><p>Device authorization</p>
-<p>code: <%= userCode %></p>
-<p>user: <%= user.email || user.name || user.id %></p>
-<form action="<%= verifyUrl %>"></form></body></html>`
+const deviceTemplate = readFileSync(
+  new URL('../../../../src/embed/render/device.ejs', import.meta.url),
+  'utf8',
+)
 
 const assetService = {
   getAsset: vi.fn(async (path: string) =>
-    path === '/render/device.ejs' ? DEVICE_TEMPLATE_STUB : null,
+    path === '/render/device.ejs' ? deviceTemplate : null,
   ),
 }
 
@@ -84,7 +91,7 @@ describe('DeviceController (e2e)', () => {
   beforeEach(() => {
     deviceApprove.mockClear()
     deviceDeny.mockClear()
-    deviceVerify.mockClear()
+    deviceVerify.mockReset().mockResolvedValue(deviceVerification)
     authService.getSessionUserFromHeaders.mockReset()
     authService.getSessionUserFromHeaders.mockResolvedValue(null)
   })
@@ -107,11 +114,100 @@ describe('DeviceController (e2e)', () => {
     expect(res.body).toContain('ABCD1234')
     expect(res.body).toContain('Device authorization')
     expect(res.body).toContain('Test Site')
+    expect(res.headers['cache-control']).toBe('no-store')
+    const { document } = parseHTML(res.body)
+    expect(
+      document
+        .querySelector('[data-action="approve"]')!
+        .hasAttribute('disabled'),
+    ).toBe(false)
+    expect(document.querySelector('#user_code')!.hasAttribute('readonly')).toBe(
+      true,
+    )
+    expect(document.querySelector('.request-details')!.textContent).toContain(
+      'Mix Space CLI',
+    )
+    expect(document.querySelector('.request-details')!.textContent).toContain(
+      'openid profile',
+    )
     expect(deviceVerify).toHaveBeenCalledWith({
       query: { user_code: 'ABCD1234' },
       headers: expect.any(Headers),
     })
   })
+
+  test('GET /device requires reviewing a code before approval is available', async () => {
+    authService.getSessionUserFromHeaders.mockResolvedValue(ownerSession)
+
+    const res = await app.inject({ method: 'GET', url: '/device' })
+
+    expect(res.statusCode).toBe(200)
+    const { document } = parseHTML(res.body)
+    expect(
+      document
+        .querySelector('[data-action="approve"]')!
+        .hasAttribute('disabled'),
+    ).toBe(true)
+    expect(document.querySelector('form')!.getAttribute('method')).toBe('get')
+    expect(document.querySelector('form')!.getAttribute('action')).toBe(
+      '/device',
+    )
+    expect(deviceVerify).not.toHaveBeenCalled()
+  })
+
+  test('GET /device displays server-verified details instead of query parameters', async () => {
+    authService.getSessionUserFromHeaders.mockResolvedValue(ownerSession)
+    deviceVerify.mockResolvedValueOnce({
+      ...deviceVerification,
+      client_id: 'space-ios',
+      scope: 'openid profile <script>alert(1)</script>',
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/device?user_code=ABCD1234&client_id=mxs-cli&scope=admin',
+    })
+
+    expect(res.statusCode).toBe(200)
+    const { document } = parseHTML(res.body)
+    const details = document.querySelector('.request-details')!
+    expect(details.textContent).toContain('Space for iOS')
+    expect(details.textContent).toContain('space-ios')
+    expect(details.textContent).toContain(
+      'openid profile <script>alert(1)</script>',
+    )
+    expect(details.textContent).not.toContain('mxs-cli')
+    expect(details.querySelector('script')).toBeNull()
+  })
+
+  test.each([
+    { client_id: undefined, status: 'pending' },
+    { client_id: 'untrusted-client', status: 'pending' },
+    { client_id: 'mxs-cli', status: 'approved' },
+  ])(
+    'GET /device disables approval for unverified or completed requests: %j',
+    async (verification) => {
+      authService.getSessionUserFromHeaders.mockResolvedValue(ownerSession)
+      deviceVerify.mockResolvedValueOnce({
+        ...deviceVerification,
+        ...verification,
+      })
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/device?user_code=ABCD1234',
+      })
+
+      expect(res.statusCode).toBe(200)
+      const { document } = parseHTML(res.body)
+      expect(
+        document
+          .querySelector('[data-action="approve"]')!
+          .hasAttribute('disabled'),
+      ).toBe(true)
+      expect(document.querySelector('.request-details')).toBeNull()
+    },
+  )
 
   test('GET /device normalizes the user code before claiming it', async () => {
     authService.getSessionUserFromHeaders.mockResolvedValue(ownerSession)

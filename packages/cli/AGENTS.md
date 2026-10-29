@@ -16,7 +16,7 @@ All commands run from this package directory (`packages/cli`). Node 22+, pnpm vi
 | --- | --- |
 | Run from source (live) | `pnpm dev -- <args>` — `tsx src/bin/mxs.ts` |
 | Run locally via PATH | `mxs <args>` — `.envrc` puts `node_modules/.bin` on PATH; `pnpm install` runs `setup-local-bin.cjs` and symlinks `mxs` to `bin/mxs.cjs` |
-| Typecheck | `pnpm typecheck` — `tsc -p tsconfig.json --noEmit` |
+| Typecheck | `pnpm typecheck` — `tsrs -p tsconfig.json --noEmit` |
 | Test (all) | `pnpm test` — Vitest, single run |
 | Test (watch) | `pnpm test:watch` |
 | Test (one file) | `pnpm test -- test/cli/post/list.test.ts` |

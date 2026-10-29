@@ -36,6 +36,8 @@ const currentRedis = () => parseRedisUrl(process.env.REDIS_CONNECTION_STRING)
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 3
 export const DEMO_MODE = false
+export const SECRET_STORAGE_V2 =
+  parseBoolean(process.env.MX_SECRET_STORAGE_V2) ?? false
 
 export const CROSS_DOMAIN = {
   allowedOrigins: process.env.ALLOWED_ORIGINS

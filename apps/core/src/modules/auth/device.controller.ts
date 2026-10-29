@@ -21,7 +21,10 @@ import { isDev } from '~/global/env.global'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { AssetService } from '~/processors/helper/helper.asset.service'
 
-import { AuthInstanceInjectKey } from './auth.constant'
+import {
+  AuthInstanceInjectKey,
+  DEVICE_AUTHORIZATION_CLIENT_NAMES,
+} from './auth.constant'
 import type { InjectAuthInstance } from './auth.interface'
 import { AuthService } from './auth.service'
 
@@ -47,6 +50,12 @@ const webTargets = {
 } as const
 
 type WebTarget = keyof typeof webTargets
+
+interface DeviceAuthorizationRequest {
+  clientId: string
+  clientName: string
+  scope: string
+}
 
 @ApiController('device')
 @SkipThrottle()
@@ -113,25 +122,42 @@ export class DeviceController {
       return reply.redirect(redirect, 302)
     }
 
-    if (userCode) {
+    const normalizedUserCode = userCode?.trim() ?? ''
+    let authorizationRequest: DeviceAuthorizationRequest | null = null
+    if (normalizedUserCode) {
       const auth = this.authInstance.get()
       if (!auth) {
         throw createAppException(AppErrorCode.AUTH_FAILED, {
           message: 'auth not initialised',
         })
       }
-      await auth.api.deviceVerify({
-        query: { user_code: userCode.trim() },
+      const verification = await auth.api.deviceVerify({
+        query: { user_code: normalizedUserCode },
         headers,
       })
+      const clientId = verification.client_id
+      const clientName = clientId
+        ? DEVICE_AUTHORIZATION_CLIENT_NAMES.get(clientId)
+        : undefined
+      if (verification.status === 'pending' && clientId && clientName) {
+        authorizationRequest = {
+          clientId,
+          clientName,
+          scope: verification.scope ?? '',
+        }
+      }
     }
 
     const html = await this.renderPage({
-      userCode: userCode ?? '',
+      authorizationRequest,
+      userCode: normalizedUserCode,
       user,
       siteTitle: await this.resolveSiteTitle(),
     })
-    return reply.type('text/html').send(html)
+    return reply
+      .header('cache-control', 'no-store')
+      .type('text/html')
+      .send(html)
   }
 
   @Post('verify')
@@ -184,6 +210,7 @@ export class DeviceController {
   }
 
   private async renderPage(props: {
+    authorizationRequest: DeviceAuthorizationRequest | null
     userCode: string
     user: { id?: string; email?: string | null; name?: string | null }
     siteTitle: string
@@ -191,6 +218,7 @@ export class DeviceController {
     const template = await this.loadTemplate()
     return ejs.render(template, {
       ...props,
+      reviewUrl: deviceBasePath,
       verifyUrl: `${deviceBasePath}/verify`,
     })
   }

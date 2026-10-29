@@ -23,33 +23,35 @@ allowBuilds:
   workerd: true
 overrides:
   'eslint-plugin-react-compiler>zod': 3.25.76
+  # React Hooks 7 imports the /v4 entry when using Zod 4.
+  'eslint-plugin-react-hooks>zod-validation-error': 4.0.2
   'get-pixels@^3>request': ./external/request
-  # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
-  # migration; hold the 1.6 line until that lands.
-  better-auth: 1.6.27
-  '@better-auth/api-key': 1.6.27
-  '@better-auth/core': 1.6.27
-  '@better-auth/expo': 1.6.27
-  '@better-auth/passkey': 1.6.27
+  # Keep Better Auth server, client, and plugins on the same security release.
+  better-auth: 1.7.14
+  '@better-auth/api-key': 1.7.14
+  '@better-auth/core': 1.7.14
+  '@better-auth/expo': 1.7.14
+  '@better-auth/passkey': 1.7.14
   kysely: 0.29.7
-  mongodb: ~7.6.0
+  mongodb: ~7.7.0
   pino: ./external/pino
   rolldown: 1.2.15
   'tsdown@0.22.8>rolldown-plugin-dts': 0.27.14
   semver: 7.8.5
+  # Compiler API for code generation and declaration bundling; typechecks use tsrs.
   typescript: 6.0.3
-  undici: ^8.10.2
+  undici: ^8.12.3
   whatwg-url: 17.1.0
-  zod: 4.6.5
+  zod: 4.6.7
   'lodash-es@<4.18.0': 4.18.1
   'nanoid@<3.3.8': 5.1.16
   'nanoid@>=4.0.0 <5.0.9': 5.1.16
   'tmp@<0.2.6': 0.2.7
   'uuid@<11.1.1': 11.1.1
   jose: 6.2.13
-  lucide-react: 1.58.0
+  lucide-react: 1.63.0
   '@codemirror/state': 6.7.6
-  '@codemirror/view': 6.43.14
+  '@codemirror/view': 6.43.15
   '@codemirror/commands': 6.11.1
   '@codemirror/language': 6.13.1
   # Keep the Markdown code plugin and editor on one Shiki runtime.
@@ -82,8 +84,8 @@ overrides:
   '@lexical/utils': 0.52.0
   '@lexical/yjs': 0.52.0
   '@esbuild-kit/core-utils>esbuild': 0.25.12
-  '@cloudflare/workers-types': 5.20261005.1
-  '@fastify/static': 10.1.5
+  '@cloudflare/workers-types': 5.20261028.1
+  '@fastify/static': 10.1.8
   'brace-expansion@<1.1.16': 1.1.21
   'brace-expansion@>=2.0.0 <2.1.2': 2.1.7
   'brace-expansion@>=3.0.0 <5.0.8': 5.0.12

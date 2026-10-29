@@ -44,9 +44,9 @@ declare global {
     safeParse: typeof JSON.parse
   }
 }
-JSON.safeParse = (...rest) => {
+JSON.safeParse = (text, reviver) => {
   try {
-    return JSON.parse(...rest)
+    return JSON.parse(text, reviver)
   } catch {
     return null
   }

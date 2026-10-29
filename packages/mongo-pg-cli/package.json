@@ -50,7 +50,7 @@
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsrs -p tsconfig.json --noEmit",
     "publish": "bump"
   },
   "bump": {
@@ -66,15 +66,15 @@
     "commit_message": "chore(release): bump @mx-space/mongo-pg-cli to v${NEW_VERSION}"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261005.1",
+    "@cloudflare/workers-types": "5.20261028.1",
     "@mx-space/db-schema": "workspace:*",
     "@types/pg": "^8.23.1",
     "drizzle-orm": "^0.45.3",
-    "mongodb": "~7.6.0",
+    "mongodb": "~7.7.0",
     "pg": "^8.23.1",
-    "tsdown": "0.23.0",
+    "tsdown": "0.23.3",
+    "tsrs": "0.20.1-ts7.1.0-beta",
     "tsx": "^4.23.15",
-    "typescript": "6.0.3",
     "vitest": "5.0.5"
   }
 }

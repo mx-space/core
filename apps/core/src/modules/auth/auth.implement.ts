@@ -37,7 +37,10 @@ import {
 import { db } from '~/processors/database/postgres.provider'
 
 import { APPLE_ORIGIN } from './apple-client-secret'
-import { HASHED_API_KEY_CONFIG_ID } from './auth.constant'
+import {
+  DEVICE_AUTHORIZATION_CLIENT_IDS,
+  HASHED_API_KEY_CONFIG_ID,
+} from './auth.constant'
 import { validateMxUsername } from './auth.username-validator'
 import {
   type CredentialSignInGate,
@@ -50,13 +53,11 @@ const bcryptRegex = /^\$2[aby]\$/
 const isBcryptHash = (value?: string | null) =>
   typeof value === 'string' && bcryptRegex.test(value)
 
-export const MXS_CLI_CLIENT_ID = 'mxs-cli'
-export const SPACE_IOS_CLIENT_ID = 'space-ios'
-
-export const DEVICE_AUTHORIZATION_CLIENT_IDS: ReadonlySet<string> = new Set([
+export {
+  DEVICE_AUTHORIZATION_CLIENT_IDS,
   MXS_CLI_CLIENT_ID,
   SPACE_IOS_CLIENT_ID,
-])
+} from './auth.constant'
 
 const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
@@ -368,6 +369,8 @@ export async function CreateAuth(
         schema: {},
         generateUserCode: () => generateDeviceUserCode(),
         verificationUri: deviceVerificationPath,
+        validateClient: (clientId) =>
+          DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId),
         onDeviceAuthRequest: async (clientId) => {
           if (!DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId)) {
             throw new APIError('BAD_REQUEST', {

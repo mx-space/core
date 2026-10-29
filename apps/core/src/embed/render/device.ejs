@@ -141,6 +141,35 @@
         gap: 8px;
         margin-top: 16px;
       }
+      .request-details {
+        padding: 14px;
+        background: var(--surface-inset);
+        border-radius: var(--radius-sm);
+      }
+      .request-details dt {
+        margin-top: 10px;
+        color: var(--fg-muted);
+        font-size: 12px;
+      }
+      .request-details dt:first-child {
+        margin-top: 0;
+      }
+      .request-details dd {
+        margin: 4px 0 0;
+        overflow-wrap: anywhere;
+      }
+      .request-details code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+      }
+      .request-warning {
+        color: var(--fg-muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--accent);
+      }
       button {
         flex: 1;
         height: 32px;
@@ -209,7 +238,7 @@
       </div>
       <p class="subtitle">Authorize this device to access your account.</p>
 
-      <form id="device-form">
+      <form id="device-form" action="<%= reviewUrl %>" method="get">
         <label for="user_code">User code</label>
         <input
           id="user_code"
@@ -219,14 +248,37 @@
           autocapitalize="characters"
           spellcheck="false"
           value="<%= userCode %>"
+          <% if (authorizationRequest) { %>readonly<% } %>
           required
         />
 
+        <% if (authorizationRequest) { %>
+          <dl class="request-details">
+            <dt>Requesting application</dt>
+            <dd><%= authorizationRequest.clientName %></dd>
+            <dt>Client ID</dt>
+            <dd><code><%= authorizationRequest.clientId %></code></dd>
+            <dt>Requested scopes</dt>
+            <dd><code><%= authorizationRequest.scope || 'None requested' %></code></dd>
+          </dl>
+          <p class="request-warning">
+            Only approve if this same code is currently shown on a device you are using.
+            Approval signs this application in with your account's access;
+            requested scopes do not limit that session.
+          </p>
+          <p><a href="<%= reviewUrl %>">Use another code</a></p>
+        <% } else if (userCode) { %>
+          <p class="request-warning">Request details are unavailable. Check the code and review it again.</p>
+        <% } %>
+
         <div class="row">
-          <button type="submit" class="primary" data-action="approve">
+          <% if (!authorizationRequest) { %>
+            <button type="submit" class="primary">Review request</button>
+          <% } %>
+          <button type="submit" class="primary" data-action="approve" <% if (!authorizationRequest) { %>disabled<% } %>>
             Approve
           </button>
-          <button type="button" data-action="deny">Deny</button>
+          <button type="button" data-action="deny" <% if (!authorizationRequest) { %>disabled<% } %>>Deny</button>
         </div>
       </form>
 
@@ -236,10 +288,13 @@
 
     <script>
       ;(function () {
+        const canApprove = <%- JSON.stringify(authorizationRequest !== null) %>
+        if (!canApprove) return
         const form = document.getElementById('device-form')
         const status = document.getElementById('status')
         const verifyUrl = <%- JSON.stringify(verifyUrl) %>
         const buttons = form.querySelectorAll('button')
+        let completed = false
 
         function setStatus(message, kind) {
           status.textContent = message
@@ -248,7 +303,7 @@
 
         function setBusy(busy) {
           buttons.forEach(function (b) {
-            b.disabled = busy
+            b.disabled = busy || completed
           })
         }
 
@@ -277,6 +332,7 @@
               setStatus(msg, 'err')
               return
             }
+            completed = true
             setStatus(
               action === 'approve'
                 ? 'device approved — return to your terminal'

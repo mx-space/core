@@ -26,7 +26,7 @@ pnpm dev:admin        # vite dev server on :9528
 pnpm dev
 pnpm build            # production build → dist/
 pnpm test             # vitest (happy-dom)
-pnpm typecheck        # tsc --noEmit
+pnpm typecheck        # tsrs --noEmit
 pnpm lint             # eslint
 ```
 

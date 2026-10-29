@@ -9,9 +9,9 @@ declare global {
 }
 
 export const registerJSONGlobal = () => {
-  JSON.safeParse = (...rest) => {
+  JSON.safeParse = (text, reviver) => {
     try {
-      return JSON5.parse(...rest)
+      return JSON5.parse(text, reviver)
     } catch {
       return null
     }

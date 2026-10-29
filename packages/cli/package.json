@@ -57,11 +57,11 @@
     "setup:local-bin": "node scripts/setup-local-bin.cjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@haklex/rich-litexml": "0.60.0",
-    "loro-crdt": "^1.16.4"
+    "loro-crdt": "^1.17.1"
   },
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
@@ -72,19 +72,19 @@
     "@lexical/headless": "^0.52.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.6",
     "@types/semver": "7.8.0",
-    "better-auth": "^1.6.27",
-    "effect": "4.0.6",
+    "better-auth": "^1.7.14",
+    "effect": "4.0.7",
     "fast-xml-parser": "5.11.2",
     "get-east-asian-width": "^1.7.0",
     "lexical": "^0.52.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.4",
     "semver": "7.8.5",
-    "tsdown": "0.23.0",
+    "tsdown": "0.23.3",
+    "tsrs": "0.20.1-ts7.1.0-beta",
     "tsx": "^4.23.15",
-    "typescript": "6.0.3",
     "vitest": "5.0.5"
   }
 }

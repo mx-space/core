@@ -40,6 +40,8 @@ function buildAuth(
         userCodeLength: 8,
         verificationUri,
         schema: {},
+        validateClient: (clientId) =>
+          DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId),
         onDeviceAuthRequest: async (clientId) => {
           if (!DEVICE_AUTHORIZATION_CLIENT_IDS.has(clientId)) {
             throw new APIError('BAD_REQUEST', {
@@ -73,6 +75,36 @@ async function signUpOwner(auth: DeviceAuth) {
 }
 
 describe('deviceAuthorization plugin (e2e)', () => {
+  test('accepts a session persisted with the 1.6 user and session schema', async () => {
+    const { auth, db } = buildAuth()
+    const now = new Date()
+    db.user.push({
+      id: 'existing-owner',
+      name: 'Existing Owner',
+      email: 'existing-owner@example.com',
+      emailVerified: true,
+      createdAt: now,
+      updatedAt: now,
+    })
+    db.session.push({
+      id: 'existing-session',
+      userId: 'existing-owner',
+      token: 'pre-upgrade-session-token',
+      expiresAt: new Date(now.getTime() + 60_000),
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    const session = await auth.api.getSession({
+      headers: new Headers({
+        authorization: 'Bearer pre-upgrade-session-token',
+      }),
+    })
+
+    expect(session?.user.id).toBe('existing-owner')
+    expect(session?.session.id).toBe('existing-session')
+  })
+
   test('rejects clients outside the allow-list', async () => {
     const { auth } = buildAuth()
     await expect(
@@ -129,9 +161,21 @@ describe('deviceAuthorization plugin (e2e)', () => {
       body: { error: 'authorization_pending' },
     })
 
-    await auth.api.deviceVerify({
+    const publicVerification = await auth.api.deviceVerify({
+      query: { user_code: code.user_code },
+    })
+    expect(publicVerification).not.toHaveProperty('client_id')
+    expect(publicVerification).not.toHaveProperty('scope')
+
+    const verification = await auth.api.deviceVerify({
       query: { user_code: code.user_code },
       headers: owner.headers,
+    })
+    expect(verification).toMatchObject({
+      client_id: CLIENT_ID,
+      scope: 'openid',
+      status: 'pending',
+      user_code: code.user_code,
     })
     await auth.api.deviceApprove({
       body: { userCode: code.user_code },
