@@ -1,3 +1,9 @@
+## [16.0.1](https://github.com/mx-space/core/compare/v16.0.0...v16.0.1) (2026-10-29)
+
+### Chores
+
+* **deps:** bump @haklex/* to 0.59.1 ([8afe8f5](https://github.com/mx-space/core/commit/8afe8f509526d90e59c34548a569d94f3b7a2027))
+
 # [16.0.0](https://github.com/mx-space/core/compare/v15.7.0...v16.0.0) (2026-10-29)
 
 
