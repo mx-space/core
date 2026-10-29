@@ -77,7 +77,7 @@
     "@uswriting/exiftool": "^1.0.9",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",
-    "better-auth": "1.6.27",
+    "better-auth": "1.7.7",
     "buffer": "6.0.3",
     "canvas-confetti": "1.9.4",
     "clsx": "^2.1.1",

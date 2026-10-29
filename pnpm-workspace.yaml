@@ -26,7 +26,7 @@ overrides:
   'get-pixels@^3>request': ./external/request
   # better-auth 1.7 keys accounts on (issuer, accountId) and needs a schema
   # migration; hold the 1.6 line until that lands.
-  better-auth: 1.6.27
+  better-auth: 1.7.7
   '@better-auth/api-key': 1.6.27
   '@better-auth/core': 1.6.27
   '@better-auth/expo': 1.6.27
