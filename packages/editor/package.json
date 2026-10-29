@@ -68,22 +68,22 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-headless": "0.58.0",
-    "@haklex/rich-litexml": "0.58.0",
+    "@haklex/rich-headless": "0.59.1",
+    "@haklex/rich-litexml": "0.59.1",
     "@lexical/headless": "^0.52.0",
     "@lexical/markdown": "^0.52.0",
     "@noble/hashes": "2.4.0",
     "lexical": "^0.52.0"
   },
   "devDependencies": {
-    "@haklex/rich-collab-loro": "0.58.0",
+    "@haklex/rich-collab-loro": "0.59.1",
     "loro-crdt": "^1.16.4",
     "tsdown": "0.23.0",
     "typescript": "6.0.3",
     "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "@haklex/rich-collab-loro": "0.58.0",
+    "@haklex/rich-collab-loro": "0.59.1",
     "loro-crdt": "^1.16.4"
   },
   "peerDependenciesMeta": {
