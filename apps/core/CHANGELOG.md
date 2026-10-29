@@ -1,3 +1,20 @@
+# [16.0.0](https://github.com/mx-space/core/compare/v15.7.0...v16.0.0) (2026-10-29)
+
+
+### Features
+
+* **ai:** unify language codes on BCP 47 language-region tags ([#2894](https://github.com/mx-space/core/pull/2894)) ([505d011](https://github.com/mx-space/core/commit/505d01137085e207baa67f918b27ffc112dd785a))
+
+
+### Bug Fixes
+
+* **ai:** resolve regional search and TTS requests to served languages ([#2894](https://github.com/mx-space/core/pull/2894)) ([505d011](https://github.com/mx-space/core/commit/505d01137085e207baa67f918b27ffc112dd785a))
+
+
+### BREAKING CHANGES
+
+* **ai:** stored, configured and served language codes are now BCP 47 language-region tags (`zh-CN`, `zh-TW`, `en-US`) instead of bare codes (`zh`, `en`); `@mx-space/ai` removes `normalizeLanguageCode` and `normalizeTargetLang`.
+
 ## [15.7.0](https://github.com/mx-space/core/compare/v15.6.1...v15.7.0) (2026-10-28)
 
 ### Features
