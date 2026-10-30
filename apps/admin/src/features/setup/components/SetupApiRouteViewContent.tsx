@@ -1,20 +1,18 @@
-import { Bug, Check, RotateCcw, Server } from 'lucide-react'
+import {
+  ArrowRight,
+  Bug,
+  ChevronDown,
+  RotateCcw,
+  SlidersHorizontal,
+} from 'lucide-react'
 import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
 
+import { AuthScene } from '~/features/auth/entry/AuthExperience'
 import { useI18n } from '~/i18n'
-import {
-  authBackdropClassName,
-  authBackdropStyle,
-  authCardClassName,
-  authDescriptionClassName,
-  authIconTileClassName,
-  authTitleClassName,
-} from '~/lib/auth-backdrop'
 import { Button } from '~/ui/primitives/button'
 import { FormSwitch } from '~/ui/primitives/switch'
 import { TextInput } from '~/ui/primitives/text-field'
-import { cn } from '~/utils/cn'
 
 const storeApiUrlKey = 'mx-admin:setup-api:url'
 const storeGatewayUrlKey = 'mx-admin:setup-api:gateway'
@@ -85,40 +83,54 @@ export function SetupApiRouteViewContent() {
   }
 
   return (
-    <main
-      className={cn(authBackdropClassName, 'flex items-center justify-center')}
-      style={authBackdropStyle}
-    >
+    <AuthScene scene="connect">
       <form
-        className={cn(authCardClassName, 'max-w-md')}
+        className="auth-entry__step auth-entry__field"
         onSubmit={handleSubmit}
       >
-        <header className="mb-6 flex items-center gap-3">
-          <div className={authIconTileClassName}>
-            <Server aria-hidden="true" className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <h1 className={authTitleClassName}>{t('setup.api.title')}</h1>
-            <p className={authDescriptionClassName}>
-              {t('setup.api.description')}
-            </p>
-          </div>
+        <header className="mb-7">
+          <p className="mb-3 text-xs font-medium tracking-widest text-accent">
+            EVERY SPACE STARTS WITH A CONNECTION.
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {t('auth.entry.connectTitle')}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-fg-muted">
+            {t('auth.entry.connectDescription')}
+          </p>
         </header>
 
         <div className="space-y-4">
-          <SetupInput
-            history={historyApiUrl}
-            label={t('setup.api.urlLabel')}
-            onChange={setApiUrl}
-            value={apiUrl}
-          />
+          <div>
+            <SetupInput
+              history={historyApiUrl}
+              label={t('setup.api.urlLabel')}
+              onChange={setApiUrl}
+              value={apiUrl}
+            />
+            <p className="mt-2 text-xs leading-5 text-fg-subtle">
+              {t('auth.entry.apiHint')}
+            </p>
+          </div>
 
-          <SetupInput
-            history={historyGatewayUrl}
-            label={t('setup.api.gatewayLabel')}
-            onChange={setGatewayUrl}
-            value={gatewayUrl}
-          />
+          <details className="group border-y border-border py-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-fg-muted">
+              <SlidersHorizontal aria-hidden="true" className="size-3.5" />
+              {t('auth.entry.advanced')}
+              <ChevronDown
+                aria-hidden="true"
+                className="ml-auto size-3.5 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div className="mt-4">
+              <SetupInput
+                history={historyGatewayUrl}
+                label={t('setup.api.gatewayLabel')}
+                onChange={setGatewayUrl}
+                value={gatewayUrl}
+              />
+            </div>
+          </details>
 
           <FormSwitch
             checked={persist}
@@ -127,22 +139,22 @@ export function SetupApiRouteViewContent() {
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <Button onClick={handleLocalDev} type="button" variant="secondary">
+        <Button className="auth-entry__submit mt-6" type="submit">
+          {t('auth.entry.saveConnect')}
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </Button>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <Button onClick={handleLocalDev} type="button" variant="ghost">
             <Bug aria-hidden="true" className="size-4" />
             {t('setup.api.actions.localDev')}
           </Button>
-          <Button onClick={handleReset} type="button" variant="secondary">
+          <Button onClick={handleReset} type="button" variant="ghost">
             <RotateCcw aria-hidden="true" className="size-4" />
             {t('setup.api.actions.reset')}
           </Button>
-          <Button type="submit">
-            <Check aria-hidden="true" className="size-4" />
-            {t('common.confirm')}
-          </Button>
         </div>
       </form>
-    </main>
+    </AuthScene>
   )
 }
 

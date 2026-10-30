@@ -1,14 +1,12 @@
-import { Check, ChevronLeft } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft } from 'lucide-react'
 import type { PropsWithChildren, ReactNode } from 'react'
 
+import { AuthScene } from '~/features/auth/entry/AuthExperience'
 import { useI18n } from '~/i18n'
 import type { TranslationKey } from '~/i18n/types'
-import { authBackdropStyle } from '~/lib/auth-backdrop'
-import { FloatLayerProvider } from '~/ui/overlay/floating-layer'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
 
-import faviconUrl from '../../../../favicon.png'
 import type { OnboardingStep } from '../utils/onboarding'
 import { onboardingSteps } from '../utils/onboarding'
 
@@ -68,10 +66,11 @@ function RailRow(props: {
     <li
       aria-current={state === 'current' ? 'step' : undefined}
       className={cn(
-        'flex h-8 items-center gap-2 rounded-sm px-3 text-sm',
-        props.sub && 'pl-9',
-        state === 'current' && 'bg-black/[0.04] font-medium text-fg',
-        state === 'active' && 'font-medium text-fg',
+        'flex items-center gap-1.5 rounded-sm text-xs',
+        props.item.key === 'welcome' && 'sr-only',
+        props.sub && 'py-1',
+        state === 'current' && 'font-medium text-accent',
+        state === 'active' && 'font-medium text-accent',
         state === 'done' && 'text-fg',
         state === 'pending' && 'text-fg-muted',
       )}
@@ -112,28 +111,31 @@ export function OnboardingShell(
   const { t } = useI18n()
 
   return (
-    <div
-      className="auth-light flex min-h-dvh flex-wrap bg-white text-fg"
-      style={authBackdropStyle}
-    >
-      <FloatLayerProvider>
+    <AuthScene scene={props.step}>
+      <section className="auth-entry__step">
         <nav
           aria-label={t('setup.onboarding.rail.label')}
-          className="flex w-full flex-col gap-5 border-b border-border bg-surface-page/70 px-3 py-5 md:w-60 md:border-r md:border-b-0"
+          className={props.step === 'welcome' ? 'sr-only' : 'mb-7'}
         >
-          <div className="flex items-center gap-2 px-3 text-base font-semibold">
-            <img alt="" className="size-6 rounded-md" src={faviconUrl} />
-            Mix Space
-          </div>
-          <ol className="flex flex-wrap gap-0.5 md:flex-col">
-            {railItems.flatMap((item, index) => [
+          <ol className="flex items-center justify-between gap-2">
+            {railItems.map((item, index) => (
               <RailRow
                 item={item}
                 key={item.key}
-                number={index + 1}
+                number={index || undefined}
                 state={itemState(item, props.step)}
-              />,
-              ...(item.children ?? []).map((child) => (
+              />
+            ))}
+          </ol>
+          <ol
+            className={
+              props.step.startsWith('ai-')
+                ? 'mt-4 flex flex-wrap gap-x-4 gap-y-1 border-b border-border pb-2'
+                : 'hidden'
+            }
+          >
+            {railItems.flatMap((item) =>
+              (item.children ?? []).map((child) => (
                 <RailRow
                   item={child}
                   key={child.key}
@@ -141,41 +143,48 @@ export function OnboardingShell(
                   sub
                 />
               )),
-            ])}
-          </ol>
-          {props.onLater ? (
-            <button
-              className="flex h-8 items-center rounded-sm px-3 text-left text-sm text-fg-muted transition-colors hover:bg-black/[0.04] hover:text-fg md:mt-auto"
-              onClick={props.onLater}
-              type="button"
-            >
-              {t('setup.onboarding.action.later')}
-            </button>
-          ) : null}
-          <a
-            className={cn(
-              'hidden px-3 text-sm text-accent hover:text-accent-hover md:block',
-              !props.onLater && 'mt-auto',
             )}
-            href={deploymentDocsUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {t('setup.onboarding.rail.docs')}
-          </a>
+          </ol>
         </nav>
-        <main className="flex min-w-0 flex-1 justify-center px-4 py-6 md:px-12 md:py-16">
-          <div className="flex w-full max-w-[940px] flex-wrap items-start gap-6">
-            {props.children}
-            {props.aside ? (
-              <aside className="min-w-0 flex-[1_1_260px] rounded-lg border border-border bg-white/65 p-4 md:max-w-80">
-                {props.aside}
-              </aside>
-            ) : null}
-          </div>
-        </main>
-      </FloatLayerProvider>
-    </div>
+        <p className="mb-3 text-xs font-medium tracking-widest text-accent">
+          {
+            {
+              welcome: 'HELLO, YOUR NEW SPACE.',
+              account: '01 / MAKE IT YOURS',
+              site: '02 / A NAME, A LITTLE PERSONALITY',
+              'ai-providers': '03 / A LITTLE HELP FOR YOUR IDEAS',
+              'ai-models': '03 / THE RIGHT TOOL FOR EACH THOUGHT',
+              'ai-features': '03 / JUST THE HELP YOU NEED',
+              ready: 'ALL SET. ALL YOURS.',
+            }[props.step]
+          }
+        </p>
+        <div className="auth-entry__field">{props.children}</div>
+        {props.aside ? (
+          <details className="group mt-6 border-t border-border pt-3 text-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-fg-muted">
+              {t('auth.entry.setupInfo')}
+              <ChevronDown
+                aria-hidden="true"
+                className="size-3.5 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <aside className="mt-3 rounded-md bg-surface-page p-3">
+              {props.aside}
+            </aside>
+          </details>
+        ) : null}
+        {props.onLater ? (
+          <button
+            className="mt-4 flex h-8 items-center text-sm text-fg-subtle transition-colors hover:text-accent"
+            onClick={props.onLater}
+            type="button"
+          >
+            {t('setup.onboarding.action.later')}
+          </button>
+        ) : null}
+      </section>
+    </AuthScene>
   )
 }
 
@@ -187,16 +196,20 @@ export function OnboardingCard(
   }>,
 ) {
   return (
-    <section className="min-w-0 flex-[1_1_440px] rounded-lg border border-border bg-surface-card shadow-sm md:max-w-[580px]">
-      <header className="border-b border-border px-6 py-5">
-        <h1 className="text-2xl font-semibold text-fg">{props.title}</h1>
+    <section className="min-w-0">
+      <header className="mb-6">
+        <h1 className="text-3xl font-semibold tracking-tight text-fg">
+          {props.title}
+        </h1>
         {props.description ? (
-          <p className="mt-1 text-sm text-fg-muted">{props.description}</p>
+          <p className="mt-2 text-sm leading-6 text-fg-muted">
+            {props.description}
+          </p>
         ) : null}
       </header>
-      <div className="px-6 py-5">{props.children}</div>
+      <div>{props.children}</div>
       {props.footer ? (
-        <footer className="flex items-center justify-between gap-2 rounded-b-lg border-t border-border bg-surface-page px-6 py-3">
+        <footer className="mt-6 flex flex-wrap items-center justify-between gap-2">
           {props.footer}
         </footer>
       ) : null}

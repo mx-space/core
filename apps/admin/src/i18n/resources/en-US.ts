@@ -1,6 +1,21 @@
 import type { TranslationKey } from '../types'
 
 export const enUS = {
+  'auth.entry.loginTitle': 'Welcome back to your space.',
+  'auth.entry.loginDescription': 'Keep writing. Let your next idea unfold.',
+  'auth.entry.showPassword': 'Show password',
+  'auth.entry.hidePassword': 'Hide password',
+  'auth.entry.enter': 'Enter your space',
+  'auth.entry.otherAuth': 'Or continue with',
+  'auth.entry.secure': 'Sign in to your own Mix Space service',
+  'auth.entry.connectTitle': 'Connect your space.',
+  'auth.entry.connectDescription':
+    'Enter your Mix Space service address to connect to your world.',
+  'auth.entry.apiHint':
+    'Enter the API address. Same-origin deployments usually need no changes.',
+  'auth.entry.advanced': 'Advanced connection settings',
+  'auth.entry.saveConnect': 'Save and connect',
+  'auth.entry.setupInfo': 'Setup details and preview',
   'auth.entry.heroFirst': 'A home for your words.',
   'auth.entry.heroSecond': 'A space for your ideas.',
   'auth.entry.heroDescriptionFirst':

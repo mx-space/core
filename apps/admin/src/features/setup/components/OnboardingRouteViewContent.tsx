@@ -4,9 +4,8 @@ import { useNavigate } from 'react-router'
 
 import { checkLogged } from '~/api/auth'
 import { getOwner } from '~/api/options'
+import { AuthScene } from '~/features/auth/entry/AuthExperience'
 import { checkIsInit } from '~/features/auth/utils/check-init'
-import { authBackdropClassName, authBackdropStyle } from '~/lib/auth-backdrop'
-import { cn } from '~/utils/cn'
 
 import type { OnboardingStep } from '../utils/onboarding'
 import {
@@ -94,18 +93,14 @@ export function OnboardingRouteViewContent() {
   switch (step) {
     case null: {
       return (
-        <main
-          className={cn(
-            authBackdropClassName,
-            'flex items-center justify-center',
-          )}
-          style={authBackdropStyle}
-        >
-          <Loader2
-            aria-hidden="true"
-            className="size-5 animate-spin text-fg-subtle"
-          />
-        </main>
+        <AuthScene scene="welcome">
+          <div className="flex min-h-40 items-center justify-center">
+            <Loader2
+              aria-hidden="true"
+              className="size-5 animate-spin text-fg-subtle"
+            />
+          </div>
+        </AuthScene>
       )
     }
     case 'welcome': {

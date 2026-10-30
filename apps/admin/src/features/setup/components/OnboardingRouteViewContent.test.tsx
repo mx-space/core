@@ -6,7 +6,8 @@ import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { checkLogged } from '~/api/auth'
-import { getOption, getOwner, getUrlOptions } from '~/api/options'
+import { getOption, getOwner, getUrlOptions, patchOption } from '~/api/options'
+import { AuthExperience } from '~/features/auth/entry/AuthExperience'
 import { checkIsInit } from '~/features/auth/utils/check-init'
 import { I18nProvider } from '~/i18n'
 
@@ -23,6 +24,7 @@ vi.mock('~/api/options', async (importOriginal) => ({
   getOption: vi.fn(),
   getOwner: vi.fn(),
   getUrlOptions: vi.fn(),
+  patchOption: vi.fn(),
 }))
 
 let container: HTMLDivElement
@@ -38,6 +40,7 @@ beforeEach(() => {
     username: 'innei',
   })
   vi.mocked(getOption).mockResolvedValue({})
+  vi.mocked(patchOption).mockResolvedValue(undefined)
   vi.mocked(getUrlOptions).mockResolvedValue({
     adminUrl: '',
     serverUrl: '',
@@ -64,10 +67,12 @@ async function render() {
       <MemoryRouter initialEntries={['/setup']}>
         <QueryClientProvider client={queryClient}>
           <I18nProvider>
-            <Routes>
-              <Route element={<OnboardingRouteViewContent />} path="/setup" />
-              <Route element={<p>dashboard page</p>} path="/dashboard" />
-            </Routes>
+            <AuthExperience initialScene="welcome">
+              <Routes>
+                <Route element={<OnboardingRouteViewContent />} path="/setup" />
+                <Route element={<p>dashboard page</p>} path="/dashboard" />
+              </Routes>
+            </AuthExperience>
           </I18nProvider>
         </QueryClientProvider>
       </MemoryRouter>,
@@ -94,5 +99,28 @@ describe('OnboardingRouteViewContent', () => {
         .querySelector('[aria-current="step"]')
         ?.getAttribute('data-step'),
     ).toBe('site')
+  })
+
+  it('keeps the artwork mounted and updates its scene when setup advances', async () => {
+    markOnboardingPending()
+    await render()
+    const canvas = container.querySelector('canvas')
+    expect(
+      container
+        .querySelector('[data-auth-scene]')
+        ?.getAttribute('data-auth-scene'),
+    ).toBe('site')
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="onboarding-submit"]')!
+        .click()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(container.querySelector('canvas')).toBe(canvas)
+    expect(
+      container
+        .querySelector('[data-auth-scene]')
+        ?.getAttribute('data-auth-scene'),
+    ).toBe('ai-providers')
   })
 })

@@ -67,10 +67,10 @@ describe('OnboardingShell', () => {
     expect(el.textContent).toContain('desc')
     expect(el.textContent).toContain('body text')
     expect(el.querySelector('footer button')?.textContent).toBe('next')
-    expect(el.querySelector('aside')?.textContent).toBe('aside text')
+    expect(el.querySelector('main aside')?.textContent).toBe('aside text')
   })
 
-  it('hosts floating popups inside the light-themed scope', () => {
+  it('hosts floating popups inside the entry surface', () => {
     const el = render(
       <OnboardingShell step="welcome">
         <OnboardingCard title="Welcome">body</OnboardingCard>
@@ -78,7 +78,7 @@ describe('OnboardingShell', () => {
     )
 
     expect(
-      el.querySelector('.auth-light [data-float-layer-host]'),
+      el.querySelector('.auth-entry [data-float-layer-host]'),
     ).not.toBeNull()
   })
 })

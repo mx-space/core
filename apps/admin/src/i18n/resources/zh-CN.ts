@@ -1,4 +1,18 @@
 export const zhCN = {
+  'auth.entry.loginTitle': '欢迎回到，你的空间。',
+  'auth.entry.loginDescription': '继续写下故事，让灵感接着发生。',
+  'auth.entry.showPassword': '显示密码',
+  'auth.entry.hidePassword': '隐藏密码',
+  'auth.entry.enter': '进入空间',
+  'auth.entry.otherAuth': '或使用其他方式',
+  'auth.entry.secure': '安全连接至你自己的 Mix Space 服务',
+  'auth.entry.connectTitle': '连接你的空间。',
+  'auth.entry.connectDescription':
+    '填入 Mix Space 服务地址，让这里成为通往你世界的入口。',
+  'auth.entry.apiHint': '填写服务的 API 地址，同源部署通常无需修改。',
+  'auth.entry.advanced': '高级连接设置',
+  'auth.entry.saveConnect': '保存并连接',
+  'auth.entry.setupInfo': '配置参考与预览',
   'auth.entry.heroFirst': '文字有了归处，',
   'auth.entry.heroSecond': '想法自成空间。',
   'auth.entry.heroDescriptionFirst': '写下日常，连接灵感。',
