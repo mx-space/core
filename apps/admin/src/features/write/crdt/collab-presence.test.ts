@@ -169,6 +169,86 @@ describe('createCollabPresence', () => {
     expect(a.outbox).toHaveLength(1)
   })
 
+  it('keeps the last selection after blur and re-sends it on announce', () => {
+    vi.setSystemTime(1000)
+    const { a } = pair()
+    a.presence.start()
+    a.presence.setCursor(
+      { id: '1@2', offset: 0 },
+      { id: '1@2', offset: 4 },
+      {
+        blocks: [{ endOffset: 4, id: 'blk-1', startOffset: 0 }],
+        collapsed: false,
+      },
+    )
+    a.presence.setCursor(null, null)
+    a.outbox.length = 0
+
+    a.presence.announce()
+
+    expect(a.outbox).toEqual([
+      {
+        caret: {
+          anchor: null,
+          focus: null,
+          selection: {
+            at: 1000,
+            blocks: [{ endOffset: 4, id: 'blk-1', startOffset: 0 }],
+            collapsed: false,
+          },
+        },
+      },
+    ])
+  })
+
+  it('stamps a new time only when the selection changes', () => {
+    vi.setSystemTime(1000)
+    const { a } = pair()
+    a.presence.start()
+    const selection = { blocks: [{ id: 'blk-1' }], collapsed: true }
+    a.presence.setCursor({ id: '1@2', offset: 1 }, null, selection)
+    vi.setSystemTime(2000)
+    a.presence.setCursor({ id: '1@2', offset: 2 }, null, selection)
+
+    expect(a.outbox.at(-1)?.caret?.selection?.at).toBe(1000)
+  })
+
+  it('names an agent entry after the label in its caret', () => {
+    const presence = createCollabPresence({ send: () => undefined })
+    const agentUser = { avatar: null, id: 'agent:1', name: 'AI' }
+    presence.apply({
+      caret: { anchor: null, focus: null, label: 'Claude Code' },
+      connectionId: 'conn-1',
+      entry: 'agent:1',
+      user: agentUser,
+    })
+    presence.apply({
+      caret: { anchor: null, focus: null },
+      connectionId: 'conn-1',
+      entry: 'agent:2',
+      user: agentUser,
+    })
+    presence.apply({
+      caret: { anchor: null, focus: null, label: 'x'.repeat(60) },
+      connectionId: 'conn-1',
+      entry: 'agent:3',
+      user: agentUser,
+    })
+    presence.apply({
+      caret: { anchor: null, focus: null, label: 'Spoof' },
+      connectionId: 'conn-2',
+      entry: null,
+      user: user('owner'),
+    })
+
+    expect(presence.remotes().map((peer) => peer.user.name)).toEqual([
+      'Claude Code',
+      'AI',
+      'x'.repeat(40),
+      'User owner',
+    ])
+  })
+
   it('stays silent before it has joined a room', () => {
     const { a } = pair()
 

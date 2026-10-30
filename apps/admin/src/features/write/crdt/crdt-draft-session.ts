@@ -1,20 +1,29 @@
+import { createLoroBinding, type LoroBinding } from '@haklex/rich-collab-loro'
+import { blockIdState } from '@haklex/rich-editor'
 import {
-  createLoroBinding,
-  type LoroBinding,
-  TREE_NAME,
-} from '@haklex/rich-collab-loro'
-import { editDocAt, type Frontiers } from '@mx-space/editor/loro'
+  caretAtBlock,
+  type DocFields,
+  type DocFieldsPatch,
+  editDocAt,
+  editDocFields,
+  type Frontiers,
+  readDocFields,
+} from '@mx-space/editor/loro'
 import {
   $getSelection,
+  $getState,
+  $isElementNode,
   $isRangeSelection,
   BLUR_COMMAND,
   COMMAND_PRIORITY_LOW,
   type LexicalEditor,
+  type LexicalNode,
   type NodeKey,
   type PointType,
+  type RangeSelection,
   type SerializedEditorState,
 } from 'lexical'
-import { LoroDoc, type LoroTreeNode } from 'loro-crdt'
+import { LoroDoc } from 'loro-crdt'
 
 import type { ApiRequestError } from '~/api/http'
 
@@ -24,6 +33,8 @@ import {
   createCollabPresence,
   type IncomingPresence,
   type RemotePresence,
+  type SelectedBlock,
+  type SelectionInput,
 } from './collab-presence'
 import {
   type CrdtSync,
@@ -35,7 +46,7 @@ import {
 const HUMAN_MESSAGE = 'human:owner'
 const TITLE = 'title'
 const CARET_DEBOUNCE_MS = 50
-const TEXT_KEY = '#text'
+const MAX_SELECTED_BLOCKS = 50
 
 export interface AgentTurn {
   apply: (target: SerializedEditorState, focusBlockId?: string) => void
@@ -48,26 +59,41 @@ const randomPeer = (): `${number}` => {
   return `${value}` as `${number}`
 }
 
-const lastTextIn = (node: LoroTreeNode): CaretPoint | null => {
-  const children = node.children() ?? []
-  for (let index = children.length - 1; index >= 0; index -= 1) {
-    const found = lastTextIn(children[index])
-    if (found) return found
+const offsetInBlock = (point: PointType, block: LexicalNode) => {
+  if (point.type !== 'text' || !$isElementNode(block)) return undefined
+  const target = point.getNode()
+  let offset = point.offset
+  for (const text of block.getAllTextNodes()) {
+    if (text.is(target)) return offset
+    offset += text.getTextContentSize()
   }
-  const text = node.data.get(TEXT_KEY)
-  return text === undefined
-    ? null
-    : { id: node.id, offset: String(text).length }
+  return undefined
 }
 
-const caretAtBlock = (doc: LoroDoc, blockId: string): CaretPoint | null => {
-  for (const node of doc.getTree(TREE_NAME).nodes()) {
-    const state = node.data.get('$') as { blockId?: string } | undefined
-    if (state?.blockId === blockId && !node.isDeleted()) {
-      return lastTextIn(node) ?? { id: node.id, offset: 0 }
-    }
+const $selectionOf = (selection: RangeSelection): SelectionInput => {
+  const [start, end] = selection.isBackward()
+    ? [selection.focus, selection.anchor]
+    : [selection.anchor, selection.focus]
+  const startBlock = start.getNode().getTopLevelElement()
+  const endBlock = end.getNode().getTopLevelElement()
+  const seen = new Set<NodeKey>()
+  const blocks: SelectedBlock[] = []
+  for (const node of selection.getNodes()) {
+    const block = node.getTopLevelElement()
+    if (!block || seen.has(block.getKey())) continue
+    seen.add(block.getKey())
+    const id = $getState(block, blockIdState)
+    if (!id) continue
+    blocks.push({
+      ...(block.is(startBlock) && { startOffset: offsetInBlock(start, block) }),
+      ...(block.is(endBlock) && { endOffset: offsetInBlock(end, block) }),
+      id,
+    })
   }
-  return null
+  return {
+    blocks: blocks.slice(0, MAX_SELECTED_BLOCKS),
+    collapsed: selection.isCollapsed(),
+  }
 }
 
 export interface ChannelHooks {
@@ -90,6 +116,7 @@ export interface CrdtDraftSessionOptions {
   author?: string
   channel?: (hooks: ChannelHooks) => SessionChannel
   onRejected?: (error: ApiRequestError) => void
+  onRemoteFields?: (fields: DocFields) => void
   onRemoteTitle?: (title: string) => void
   onReset?: () => void
   onRevoked?: (reason?: string) => void
@@ -111,6 +138,8 @@ export interface CrdtDraftSession {
   pending: () => boolean
   pull: () => Promise<void>
   resolveCaret: (point: CaretPoint) => { key: NodeKey; offset: number } | null
+  fields: () => DocFields | undefined
+  setFields: (patch: DocFieldsPatch) => void
   setTitle: (title: string) => void
   startAgentTurn: (message: string) => AgentTurn
   subscribePeers: (listener: (peers: RemotePresence[]) => void) => () => void
@@ -130,6 +159,15 @@ export async function createCrdtDraftSession(
     if (title === lastTitle) return
     lastTitle = title
     options.onRemoteTitle?.(title)
+  }
+
+  let lastFields: string | null = null
+  const reportFields = () => {
+    const fields = readDocFields(doc)
+    const key = JSON.stringify(fields ?? null)
+    if (key === lastFields) return
+    lastFields = key
+    if (fields) options.onRemoteFields?.(fields)
   }
 
   let sync: CrdtSync | null = null
@@ -155,9 +193,14 @@ export async function createCrdtDraftSession(
         return {
           anchor: pointOf(selection.anchor),
           focus: pointOf(selection.focus),
+          selection: $selectionOf(selection),
         }
       })
-      presence.setCursor(caret?.anchor ?? null, caret?.focus ?? null)
+      presence.setCursor(
+        caret?.anchor ?? null,
+        caret?.focus ?? null,
+        caret?.selection,
+      )
     }
     const offUpdate = editor.registerUpdateListener(() => {
       clearTimeout(caretTimer)
@@ -206,6 +249,7 @@ export async function createCrdtDraftSession(
         if (binding) binding.import(bytes)
         else doc.import(bytes)
         reportTitle()
+        reportFields()
       },
       doc,
       onGone: () => options.onRevoked?.('deleted'),
@@ -223,6 +267,7 @@ export async function createCrdtDraftSession(
   for (const bytes of early.splice(0)) ready.receive(bytes)
   if (reconnected) void ready.pull().catch(() => undefined)
   reportTitle()
+  reportFields()
 
   return {
     bindEditor: (editor, bind) => {
@@ -246,6 +291,7 @@ export async function createCrdtDraftSession(
       channel?.dispose()
       presence.dispose()
     },
+    fields: () => readDocFields(doc),
     flush: () => ready.flush(),
     live: () => channel?.live() ?? false,
     peers: () => presence.remotes(),
@@ -254,6 +300,20 @@ export async function createCrdtDraftSession(
     resolveCaret: (point) => {
       const key = binding?.keyOf(point.id as never)
       return key ? { key, offset: point.offset } : null
+    },
+    setFields: (patch) => {
+      const update = editDocFields(
+        doc,
+        doc.frontiers(),
+        patch,
+        bindingOptions.commitMessage,
+        { peer: doc.peerIdStr },
+      )
+      if (!update.length) return
+      if (binding) binding.import(update)
+      else doc.import(update)
+      lastFields = JSON.stringify(readDocFields(doc) ?? null)
+      ready.touch()
     },
     setTitle: (title) => {
       const text = doc.getText(TITLE)

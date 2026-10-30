@@ -22,13 +22,30 @@ export type CaretPoint = {
   offset: number
 }
 
+export type SelectedBlock = {
+  endOffset?: number
+  id: string
+  startOffset?: number
+}
+
+export type SelectionInput = {
+  blocks: SelectedBlock[]
+  collapsed: boolean
+}
+
+export type PresenceSelection = SelectionInput & { at: number }
+
 export type PresenceCaret = {
   anchor: CaretPoint | null
   focus: CaretPoint | null
+  label?: string
+  selection?: PresenceSelection
 }
 
-export type PresenceState = PresenceCaret & {
+export type PresenceState = {
+  anchor: CaretPoint | null
   color: string
+  focus: CaretPoint | null
   user: PresenceUser
 }
 
@@ -46,7 +63,13 @@ export type IncomingPresence = {
   user: PresenceUser
 }
 
-const LOCAL_AGENT_USER: PresenceUser = { avatar: null, id: 'agent', name: 'AI' }
+const AGENT_NAME = 'AI'
+const MAX_LABEL_LENGTH = 40
+
+const agentName = (label: unknown) =>
+  typeof label === 'string' && label.trim()
+    ? label.trim().slice(0, MAX_LABEL_LENGTH)
+    : AGENT_NAME
 
 const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
   left === right ||
@@ -54,6 +77,14 @@ const samePoint = (left: CaretPoint | null, right: CaretPoint | null) =>
     right !== null &&
     left.id === right.id &&
     left.offset === right.offset)
+
+const sameSelection = (
+  left: SelectionInput | undefined,
+  right: SelectionInput,
+) =>
+  left !== undefined &&
+  left.collapsed === right.collapsed &&
+  JSON.stringify(left.blocks) === JSON.stringify(right.blocks)
 
 const colorOf = (
   key: string,
@@ -94,10 +125,11 @@ export function createCollabPresence(options: {
 
   const remotes = (): RemotePresence[] => {
     const local = [...extras].map(([entry, caret]) => ({
-      ...caret,
+      anchor: caret.anchor,
       color: colorOf(entry, entry),
+      focus: caret.focus,
       key: `local/${entry}`,
-      user: LOCAL_AGENT_USER,
+      user: { avatar: null, id: 'agent', name: agentName(caret.label) },
     }))
     const others = [...remote.values()].map(
       ({ connectionId: _connectionId, ...peer }) => peer,
@@ -152,7 +184,9 @@ export function createCollabPresence(options: {
         connectionId: frame.connectionId,
         focus: pointOf(frame.caret.focus),
         key,
-        user: frame.user,
+        user: frame.entry?.startsWith('agent:')
+          ? { ...frame.user, name: agentName(frame.caret.label) }
+          : frame.user,
       })
       notify()
     },
@@ -174,11 +208,23 @@ export function createCollabPresence(options: {
       }
       if (changed) notify()
     },
-    setCursor: (anchor: CaretPoint | null, focus: CaretPoint | null) => {
-      if (samePoint(self.anchor, anchor) && samePoint(self.focus, focus)) {
-        return
+    setCursor: (
+      anchor: CaretPoint | null,
+      focus: CaretPoint | null,
+      selection?: SelectionInput,
+    ) => {
+      const moved = !(
+        samePoint(self.anchor, anchor) && samePoint(self.focus, focus)
+      )
+      const reselected =
+        selection !== undefined && !sameSelection(self.selection, selection)
+      if (!moved && !reselected) return
+      self = {
+        ...self,
+        anchor,
+        focus,
+        ...(reselected && { selection: { ...selection, at: Date.now() } }),
       }
-      self = { anchor, focus }
       if (started) options.send({ caret: self })
     },
     setExtra: (entry: string, caret: PresenceCaret | null) => {

@@ -1,3 +1,4 @@
+import type { DocFields, DocFieldsPatch } from '@mx-space/editor/loro'
 import type { LexicalEditor } from 'lexical'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -19,6 +20,7 @@ export interface CrdtDraftController {
   active: boolean
   adoptEditorOnBind: () => void
   bindEditor: (editor: LexicalEditor | null) => void
+  fields: () => DocFields | undefined
   flush: () => Promise<void>
   live: () => boolean
   locked: boolean
@@ -26,6 +28,7 @@ export interface CrdtDraftController {
   pending: () => boolean
   pull: () => Promise<void>
   resolveCaret: (point: CaretPoint) => { key: string; offset: number } | null
+  setFields: (patch: DocFieldsPatch) => void
   setTitle: (title: string) => void
   startAgentTurn: (message: string) => AgentTurn | null
   status: CrdtDraftStatus
@@ -45,6 +48,7 @@ export function useCrdtDraft(options: {
   draftId: string
   enabled: boolean
   onRejected: () => Promise<void>
+  onRemoteFields?: (fields: DocFields) => void
   onRemoteTitle: (title: string) => void
   onReset?: () => void
   onRevoked?: (reason?: string) => void
@@ -97,6 +101,7 @@ export function useCrdtDraft(options: {
           .onRejected()
           .finally(() => setGeneration((value) => value + 1))
       },
+      onRemoteFields: (fields) => callbacksRef.current.onRemoteFields?.(fields),
       onRemoteTitle: (title) => callbacksRef.current.onRemoteTitle(title),
       onReset: () => {
         if (disposed) return
@@ -167,6 +172,7 @@ export function useCrdtDraft(options: {
         adoptRef.current = true
         setAdopting(true)
       },
+      fields: () => sessionRef.current?.fields(),
       flush: async () => {
         await sessionRef.current?.flush()
       },
@@ -177,6 +183,8 @@ export function useCrdtDraft(options: {
       pull: async () => {
         await sessionRef.current?.pull()
       },
+      setFields: (patch: DocFieldsPatch) =>
+        sessionRef.current?.setFields(patch),
       setTitle: (title: string) => sessionRef.current?.setTitle(title),
       startAgentTurn: (message: string) =>
         sessionRef.current?.startAgentTurn(message) ?? null,

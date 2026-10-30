@@ -136,7 +136,12 @@ import { TimelinePanel } from '~/features/write/components/TimelinePanel'
 import { TtsGenerationEntry } from '~/features/write/components/tts/TtsGenerationEntry'
 import { VersionTreePanel } from '~/features/write/components/VersionTreePanel'
 import type { PresenceUser } from '~/features/write/crdt/collab-presence'
-import { diffDraftFields } from '~/features/write/crdt/draft-fields'
+import {
+  applyFieldsPatch,
+  diffDraftFields,
+  splitSecretFields,
+  withLocalSecrets,
+} from '~/features/write/crdt/draft-fields'
 import { createReadyGate } from '~/features/write/crdt/ready-gate'
 import { resyncRejectedDraft } from '~/features/write/crdt/resync-rejected'
 import {
@@ -533,6 +538,29 @@ function useDraftSession(options: {
         toast.error(getErrorMessage(error, t('write.toast.draftSaveFailed')))
       }
     },
+    onRemoteFields: (fields) => {
+      const acked = ackedFieldsRef.current
+      if (!acked) return
+      const remote = withLocalSecrets(fields, acked)
+      const changed = diffDraftFields(acked, remote)
+      ackedFieldsRef.current = remote
+      if (!changed) return
+      const refId = options.isEditing ? options.id : undefined
+      options.setState((previous) => {
+        const data = toDraftData(options.kind, previous, refId)
+        return {
+          ...fromRevision(
+            options.kind,
+            { ...data, ...applyFieldsPatch(fieldsOf(data), changed) },
+            previous,
+          ),
+          content: previous.content,
+          contentFormat: previous.contentFormat,
+          text: previous.text,
+          title: previous.title,
+        }
+      })
+    },
     onRemoteTitle: (title) =>
       options.setState((previous) =>
         previous.title === title ? previous : { ...previous, title },
@@ -556,9 +584,18 @@ function useDraftSession(options: {
     const next = fieldsOf(latestDataRef.current)
     const patch = diffDraftFields(acked, next)
     if (!patch) return
-    const request = updateDraftFields(draftId, patch).then(
+    const { document, secret } = splitSecretFields(patch)
+    if (document) {
+      crdtRef.current.setFields(document)
+      ackedFieldsRef.current = withLocalSecrets(next, acked)
+    }
+    if (!secret) return
+    const request = updateDraftFields(draftId, secret).then(
       () => {
-        ackedFieldsRef.current = next
+        ackedFieldsRef.current = withLocalSecrets(
+          ackedFieldsRef.current ?? next,
+          next,
+        )
       },
       (error: unknown) => {
         if (fieldsTimerRef.current === null) {

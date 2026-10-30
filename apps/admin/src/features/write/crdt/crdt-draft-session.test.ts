@@ -1,8 +1,12 @@
 import { createLoroBinding } from '@haklex/rich-collab-loro'
+import { blockIdState } from '@haklex/rich-editor'
+import { editDocFields, readDocFields } from '@mx-space/editor/loro'
 import {
   $createParagraphNode,
   $createTextNode,
   $getRoot,
+  $setState,
+  BLUR_COMMAND,
   createEditor,
   type ElementNode,
   type LexicalEditor,
@@ -12,6 +16,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ApiRequestError } from '~/api/http'
 
+import type { OutgoingPresence } from './collab-presence'
 import {
   type ChannelHooks,
   createCrdtDraftSession,
@@ -345,6 +350,120 @@ describe('createCrdtDraftSession presence', () => {
     a.dispose()
     expect(b.peers()).toHaveLength(0)
     b.dispose()
+  })
+})
+
+describe('createCrdtDraftSession fields', () => {
+  const withFields = (server: LoroDoc, slug: string) => {
+    server.import(
+      editDocFields(
+        server,
+        server.frontiers(),
+        { typeSpecificData: { slug, tags: ['a'] } },
+        'fields',
+      ),
+    )
+  }
+
+  it('reads fields from the document and reports remote changes', async () => {
+    const server = seededServer('T', 'p1')
+    withFields(server, 'first')
+    const remote: unknown[] = []
+    const session = await createCrdtDraftSession({
+      onRemoteFields: (fields) => remote.push(fields),
+      transport: transportFor(server),
+    })
+
+    expect(session.fields()?.typeSpecificData).toEqual({
+      slug: 'first',
+      tags: ['a'],
+    })
+    expect(remote).toHaveLength(1)
+
+    withFields(server, 'second')
+    await session.pull()
+
+    expect(remote.at(-1)).toMatchObject({
+      typeSpecificData: { slug: 'second' },
+    })
+    session.dispose()
+  })
+
+  it('writes a local field change into the document and sends it', async () => {
+    const server = seededServer('T', 'p1')
+    withFields(server, 'first')
+    const remote: unknown[] = []
+    const session = await createCrdtDraftSession({
+      onRemoteFields: (fields) => remote.push(fields),
+      transport: transportFor(server),
+    })
+
+    session.setFields({ typeSpecificData: { slug: 'mine' } })
+    await session.flush()
+
+    expect(readDocFields(server)?.typeSpecificData).toEqual({
+      slug: 'mine',
+      tags: ['a'],
+    })
+    expect(session.fields()?.typeSpecificData).toMatchObject({ slug: 'mine' })
+    expect(remote).toHaveLength(1)
+    session.dispose()
+  })
+})
+
+describe('createCrdtDraftSession selection presence', () => {
+  it('reports the selected blocks and keeps them after blur', async () => {
+    const server = seededServer('T', 'p1', 'p2', 'p3')
+    const sent: OutgoingPresence[] = []
+    const session = await createCrdtDraftSession({
+      channel: (hooks) => ({
+        dispose: () => undefined,
+        live: () => true,
+        pull: async (since) => {
+          if (!since) hooks.onJoined?.('conn-1')
+          return transportFor(server).pull(since)
+        },
+        push: transportFor(server).push,
+        sendPresence: (frame) => sent.push(frame),
+      }),
+      presence: true,
+    })
+    const editor = newEditor()
+    session.bindEditor(editor)
+    editor.update(
+      () => {
+        const blocks = $getRoot().getChildren()
+        blocks.forEach((block, index) =>
+          $setState(block, blockIdState, `blk-${index}`),
+        )
+        const first = (blocks[0] as ElementNode).getFirstDescendant()!
+        const second = (blocks[1] as ElementNode).getFirstDescendant()!
+        const selection = (first as ReturnType<typeof $createTextNode>).select(
+          1,
+          1,
+        )
+        selection.focus.set(second.getKey(), 2, 'text')
+      },
+      { discrete: true },
+    )
+
+    await vi.waitFor(() =>
+      expect(sent.at(-1)?.caret?.selection).toMatchObject({
+        blocks: [
+          { id: 'blk-0', startOffset: 1 },
+          { endOffset: 2, id: 'blk-1' },
+        ],
+        collapsed: false,
+      }),
+    )
+    editor.dispatchCommand(BLUR_COMMAND, new FocusEvent('blur'))
+
+    expect(sent.at(-1)?.caret).toMatchObject({
+      anchor: null,
+      focus: null,
+      selection: { blocks: [{ id: 'blk-0' }, { id: 'blk-1' }] },
+    })
+    session.dispose()
   })
 })
 
