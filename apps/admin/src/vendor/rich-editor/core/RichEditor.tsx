@@ -57,6 +57,12 @@ const defaultExtraNodes = [
   StockNode,
 ]
 
+/**
+ * Root blocks, not serialized nodes: haklex recycles whole top-level blocks.
+ * Below this the plain editor is cheaper; above it the reducers pay off.
+ */
+const VIRTUALIZATION_BLOCK_THRESHOLD = 200
+
 export interface RichEditorProps extends Omit<
   BaseRichEditorProps,
   'rendererConfig' | 'extraNodes' | 'actions'
@@ -81,8 +87,12 @@ export function RichEditor({
   trackUpload,
   variant = 'article',
   theme = 'light',
+  initialValue,
+  virtualization,
   ...props
 }: RichEditorProps) {
+  const autoVirtualization =
+    (initialValue?.root.children.length ?? 0) >= VIRTUALIZATION_BLOCK_THRESHOLD
   const mergedNodes = useMemo(
     () =>
       extraNodes ? [...defaultExtraNodes, ...extraNodes] : defaultExtraNodes,
@@ -124,9 +134,11 @@ export function RichEditor({
       <BaseRichEditor
         {...props}
         extraNodes={mergedNodes}
+        initialValue={initialValue}
         rendererConfig={enhancedEditRendererConfig}
         theme={theme}
         variant={variant}
+        virtualization={virtualization ?? autoVirtualization}
         actions={
           <>
             <SlashMenuPlugin />

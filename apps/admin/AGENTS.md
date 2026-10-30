@@ -284,6 +284,16 @@ See `apps/core/CLAUDE.md` for the server-side wire-format invariants.
 
 Rich editor work is integrated as ordinary React components.
 
+### Editor Virtualization
+
+Haklex's editor recycler is enabled automatically for long documents.
+`src/vendor/rich-editor/core/RichEditor.tsx` counts the root blocks in `initialValue` and turns
+on virtualization at `VIRTUALIZATION_BLOCK_THRESHOLD` (200). Short documents keep the plain
+editor; an explicit `virtualization` prop still wins. The scroll viewport is discovered from
+the nearest scrollable ancestor, so keep the editor inside a bounded scroll container. Upstream
+limits matter: cross-block selection, collaboration carets and browser find-in-page only cover
+mounted blocks.
+
 ### Dynamic Component Catalog
 
 The catalog lives in the public JSON data snippet `dynamic-widgets-catalog`
