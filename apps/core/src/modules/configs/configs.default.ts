@@ -117,6 +117,7 @@ export const generateDefaultConfig: () => IConfig = () => ({
     imageQuality: 80,
     imageEffort: 4,
     imageLossless: false,
+    imageKeepMetadata: false,
     imageMaxDimension: undefined,
     videoToWebm: false,
     videoCrf: 32,

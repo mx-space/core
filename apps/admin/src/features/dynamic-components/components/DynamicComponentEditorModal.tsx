@@ -51,7 +51,7 @@ function DynamicComponentEditorModal({ item }: EditorProps) {
   const [error, setError] = useState('')
 
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => uploadFile(file, 'file', true),
+    mutationFn: (file: File) => uploadFile(file, 'file', { immutable: true }),
     onError: () => setError(t('dynamicComponents.editor.uploadFailed')),
     onSuccess: (uploaded) => setUrl(uploaded.url),
   })

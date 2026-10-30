@@ -92,12 +92,12 @@ describe('saveComponentSource', () => {
       'export default {}',
     )
 
-    const [file, type, immutable] = uploadFile.mock.calls[0]
+    const [file, type, options] = uploadFile.mock.calls[0]
     expect(file).toBeInstanceOf(File)
     expect(file.name).toMatch(/^progress-ring-.+\.js$/)
     expect(file.type).toBe('text/javascript')
     await expect(file.text()).resolves.toBe('export default {}')
-    expect([type, immutable]).toEqual(['file', true])
+    expect([type, options]).toEqual(['file', { immutable: true }])
     expect(updateDynamicComponentEntry).toHaveBeenCalledWith('42', {
       parentUrl: 'https://api.example/objects/file/versions/v1.js',
       url: 'https://api.example/objects/file/versions/v2.js',

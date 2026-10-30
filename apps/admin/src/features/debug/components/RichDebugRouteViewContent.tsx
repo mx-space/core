@@ -7,6 +7,7 @@ import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { API_URL } from '~/constants/env'
 import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { uploadEditorImage } from '~/lib/editor-image-upload'
 import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
 import { Button } from '~/ui/primitives/button'
 import { cn } from '~/utils/cn'
@@ -130,11 +131,7 @@ function RichDebugSurface(props: {
         debounceMs: 250,
         editorStyle: { maxWidth: '100%' },
         fetchEnrichment: (url) => resolveEnrichment(url).catch(() => null),
-        imageUpload: async (file) => {
-          const result = await uploadFile(file, 'image')
-
-          return { src: result.url }
-        },
+        imageUpload: uploadEditorImage,
         videoUpload: async (file, opts) => {
           const result = await uploadFileWithProgress(file, {
             type: 'video',

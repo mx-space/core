@@ -4659,6 +4659,10 @@ export const enUS = {
   'settings.schema.mediaProcessingOptions.imageLossless.title': 'Lossless WebP',
   'settings.schema.mediaProcessingOptions.imageLossless.description':
     'Encode without quality loss; quality is ignored.',
+  'settings.schema.mediaProcessingOptions.imageKeepMetadata.title':
+    'Keep image metadata',
+  'settings.schema.mediaProcessingOptions.imageKeepMetadata.description':
+    'Carry EXIF (camera, lens, capture time, GPS) and the color profile into the WebP. Comment uploads are always stripped.',
   'settings.schema.mediaProcessingOptions.imageMaxDimension.title':
     'Max image edge (px)',
   'settings.schema.mediaProcessingOptions.imageMaxDimension.description':

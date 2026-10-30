@@ -96,7 +96,7 @@ export function createDynamicPublisher(
               type: 'text/javascript',
             }),
             'file',
-            true,
+            { immutable: true },
           )
         ).url
       assertCurrent()

@@ -111,13 +111,29 @@ export function getFilesByType(type: FileType) {
   return getJson<FileItem[]>(`/files/${type}`)
 }
 
-export function uploadFile(file: File, type?: FileType, immutable = false) {
+interface UploadQueryOptions {
+  immutable?: boolean
+  raw?: boolean
+  type?: FileType
+}
+
+function buildUploadQuery(options: UploadQueryOptions) {
+  const query = new URLSearchParams()
+  if (options.type) query.set('type', options.type)
+  if (options.immutable) query.set('immutable', 'true')
+  if (options.raw) query.set('raw', 'true')
+  return query
+}
+
+export function uploadFile(
+  file: File,
+  type?: FileType,
+  options: Omit<UploadQueryOptions, 'type'> = {},
+) {
   const formData = new FormData()
   formData.append('file', file)
 
-  const query = new URLSearchParams()
-  if (type) query.set('type', type)
-  if (immutable) query.set('immutable', 'true')
+  const query = buildUploadQuery({ ...options, type })
 
   return requestJson<UploadResponse>(`/files/upload?${query}`, {
     body: formData,
@@ -129,13 +145,15 @@ export function uploadFileWithProgress(
   file: File,
   options: {
     onProgress: (progress: number) => void
+    raw?: boolean
     type?: FileType
   },
 ) {
   const formData = new FormData()
   formData.append('file', file)
 
-  const query = options.type ? `?type=${encodeURIComponent(options.type)}` : ''
+  const params = buildUploadQuery(options).toString()
+  const query = params ? `?${params}` : ''
 
   return new Promise<UploadResponse>((resolve, reject) => {
     const xhr = new XMLHttpRequest()

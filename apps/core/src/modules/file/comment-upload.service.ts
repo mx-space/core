@@ -100,6 +100,7 @@ export class CommentUploadService {
     const processed = await this.mediaProcessingService.processImage(
       file.buffer!,
       `upload${detected.ext}`,
+      { stripMetadata: true },
     )
     const buffer = processed?.buffer ?? file.buffer!
     const totalBytes = processed?.buffer.length ?? file.size

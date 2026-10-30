@@ -47,6 +47,7 @@ export class MediaProcessingService {
   async processImage(
     buffer: Buffer,
     filename: string,
+    { stripMetadata = false }: { stripMetadata?: boolean } = {},
   ): Promise<ProcessedImage | null> {
     const options = await this.getOptions()
     if (!options.imageToWebp) return null
@@ -63,6 +64,9 @@ export class MediaProcessingService {
           fit: 'inside',
           withoutEnlargement: true,
         })
+      }
+      if (options.imageKeepMetadata && !stripMetadata) {
+        image = image.keepExif().keepIccProfile()
       }
       const output = await image
         .webp({
@@ -154,6 +158,8 @@ export class MediaProcessingService {
       imageQuality: stored?.imageQuality ?? defaults.imageQuality,
       imageEffort: stored?.imageEffort ?? defaults.imageEffort,
       imageLossless: stored?.imageLossless ?? defaults.imageLossless,
+      imageKeepMetadata:
+        stored?.imageKeepMetadata ?? defaults.imageKeepMetadata,
       imageMaxDimension: stored?.imageMaxDimension,
       videoToWebm: stored?.videoToWebm ?? defaults.videoToWebm,
       videoCrf: stored?.videoCrf ?? defaults.videoCrf,

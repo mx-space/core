@@ -285,6 +285,7 @@ export class FileController {
     @Req() req: FastifyRequest,
   ) {
     const { type = 'file' } = query
+    const raw = query.raw === 'true'
 
     const uploadConfig = await this.configsService.get('fileUploadOptions')
     const imageStorageConfig = await this.configsService.get(
@@ -297,6 +298,7 @@ export class FileController {
         req,
         uploadConfig,
         s3Enabled ? imageStorageConfig : null,
+        raw,
       )
     }
 
@@ -320,7 +322,7 @@ export class FileController {
     }
 
     const processed =
-      type === 'image'
+      type === 'image' && !raw
         ? await this.mediaProcessingService.processImage(buffer, file.filename)
         : null
     const filename = processed?.filename ?? file.filename
@@ -342,10 +344,11 @@ export class FileController {
     req: FastifyRequest,
     uploadConfig: IConfig['fileUploadOptions'],
     s3Config: IConfig['imageStorageOptions'] | null,
+    raw: boolean,
   ) {
     const type = 'video'
     const transcode =
-      await this.mediaProcessingService.isVideoTranscodeEnabled()
+      !raw && (await this.mediaProcessingService.isVideoTranscodeEnabled())
     const videoMaxSize = (uploadConfig.videoMaxSize ?? 100) * 1024 * 1024
 
     if (s3Config) {
@@ -362,10 +365,12 @@ export class FileController {
       const file = await this.uploadService.getAndValidMultipartField(req, {
         maxFileSize: transcode ? videoMaxSize : Number.MAX_SAFE_INTEGER,
       })
-      const video = await this.mediaProcessingService.transcodeVideo(
-        file.file,
-        file.filename,
-      )
+      const video = transcode
+        ? await this.mediaProcessingService.transcodeVideo(
+            file.file,
+            file.filename,
+          )
+        : null
 
       try {
         const originalFilename = video?.filename ?? file.filename
@@ -424,10 +429,12 @@ export class FileController {
     const file = await this.uploadService.getAndValidMultipartField(req, {
       maxFileSize: videoMaxSize,
     })
-    const video = await this.mediaProcessingService.transcodeVideo(
-      file.file,
-      file.filename,
-    )
+    const video = transcode
+      ? await this.mediaProcessingService.transcodeVideo(
+          file.file,
+          file.filename,
+        )
+      : null
 
     try {
       const originalFilename = video?.filename ?? file.filename

@@ -630,6 +630,68 @@ describe('FileController', () => {
       expect(processImage).not.toHaveBeenCalled()
     })
 
+    it('stores the original image for a raw upload', async () => {
+      const uploadBuffer = vi.fn().mockResolvedValue({ url: 'u', name: 'n' })
+      const processImage = vi.fn()
+      const controller = new FileController(
+        { uploadBuffer } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'origin.jpg',
+            file: Readable.from([Buffer.from('jpg-bytes')]),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        { ...passthroughMedia, processImage } as any,
+      )
+
+      await controller.upload({ type: 'image', raw: 'true' } as any, {} as any)
+
+      expect(processImage).not.toHaveBeenCalled()
+      expect(uploadBuffer).toHaveBeenCalledWith(expect.any(Buffer), {
+        type: 'image',
+        originalFilename: 'origin.jpg',
+        contentType: 'image/jpeg',
+      })
+      expect(uploadBuffer.mock.calls[0][0].toString()).toBe('jpg-bytes')
+    })
+
+    it('streams the original video to S3 without a size cap for a raw upload', async () => {
+      const media = transcodingMedia()
+      const source = Readable.from(['mp4-bytes'])
+      const getAndValidMultipartField = vi.fn().mockResolvedValue({
+        filename: 'clip.mp4',
+        file: source,
+      })
+      const controller = new FileController(
+        {} as any,
+        { getAndValidMultipartField } as any,
+        { createPendingReference: vi.fn() } as any,
+        {} as any,
+        { get: s3Config } as any,
+        media as any,
+      )
+
+      const result = await controller.upload(
+        { type: 'video', raw: 'true' } as any,
+        {} as any,
+      )
+
+      expect(media.transcodeVideo).not.toHaveBeenCalled()
+      expect(getAndValidMultipartField).toHaveBeenCalledWith(
+        {},
+        expect.objectContaining({ maxFileSize: Number.MAX_SAFE_INTEGER }),
+      )
+      const uploader = vi.mocked(S3Uploader).mock.instances.at(-1) as any
+      const [stream, key, contentType] = uploader.uploadStream.mock.calls.at(-1)
+      expect(stream).toBe(source)
+      expect(key).toBe('clip.mp4')
+      expect(contentType).toBe('video/mp4')
+      expect(result.name).toBe('clip.mp4')
+    })
+
     it('writes the transcoded WebM to local storage and cleans up', async () => {
       const cleanup = vi.fn().mockResolvedValue(undefined)
       const media = transcodingMedia(cleanup)

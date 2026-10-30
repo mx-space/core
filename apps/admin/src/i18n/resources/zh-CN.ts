@@ -4409,6 +4409,10 @@ export const zhCN = {
   'settings.schema.mediaProcessingOptions.imageLossless.title': '无损 WebP',
   'settings.schema.mediaProcessingOptions.imageLossless.description':
     '无损编码，开启后忽略质量设置。',
+  'settings.schema.mediaProcessingOptions.imageKeepMetadata.title':
+    '保留图片元信息',
+  'settings.schema.mediaProcessingOptions.imageKeepMetadata.description':
+    '转换 WebP 时保留 EXIF（相机、镜头、拍摄时间、GPS）与色彩配置文件。评论上传始终剥离。',
   'settings.schema.mediaProcessingOptions.imageMaxDimension.title':
     '图片最大边长（px）',
   'settings.schema.mediaProcessingOptions.imageMaxDimension.description':

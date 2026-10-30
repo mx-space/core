@@ -114,7 +114,10 @@ export function ReactEditorPane({
                 tools={tools}
               />
               <NestedDocPlugin />
-              <ImageEditModalPlugin privacy={imageGpsPrivacy} />
+              <ImageEditModalPlugin
+                allowKeepOriginal
+                privacy={imageGpsPrivacy}
+              />
             </RichEditor>
           </ExcalidrawConfigProvider>
         </DialogStackProvider>

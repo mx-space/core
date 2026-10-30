@@ -279,7 +279,9 @@ it('reads an existing version, replaces only its block, and rejects stale propos
         propsSchema: parentSchema,
       }),
     )
-    expect(uploadFile).toHaveBeenCalledWith(expect.any(File), 'file', true)
+    expect(uploadFile).toHaveBeenCalledWith(expect.any(File), 'file', {
+      immutable: true,
+    })
     expect((await preview.execute(params)).ok).toBe(false)
     store.setState({
       bubbles: [{ type: 'tool_call_group', id: 'group', items: [item] }],

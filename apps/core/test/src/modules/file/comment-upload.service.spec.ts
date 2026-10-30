@@ -69,7 +69,9 @@ describe('CommentUploadService.uploadForReader media processing', () => {
       'reader-1',
     )
 
-    expect(processImage).toHaveBeenCalledWith(png, 'upload.png')
+    expect(processImage).toHaveBeenCalledWith(png, 'upload.png', {
+      stripMetadata: true,
+    })
     const [[name, bytes]] = [...stored.entries()]
     expect(name).toMatch(/^comments\/reader-1\/\d{4}\/\d{2}\/.+\.webp$/)
     expect(bytes.toString()).toBe('converted-webp')

@@ -140,6 +140,62 @@ describe('MediaProcessingService.processImage', () => {
     },
   )
 
+  describe('metadata', () => {
+    const photo = () =>
+      sharp({
+        create: {
+          width: 40,
+          height: 20,
+          channels: 3,
+          background: { r: 200, g: 40, b: 40 },
+        },
+      })
+        .jpeg()
+        .withExif({ IFD0: { Make: 'FUJIFILM', Model: 'X100VI' } })
+        .withIccProfile('p3')
+        .withMetadata({ orientation: 6 })
+        .toBuffer()
+
+    it('strips EXIF and ICC by default', async () => {
+      const service = createService({ imageToWebp: true })
+
+      const result = await service.processImage(await photo(), 'p.jpg')
+
+      const meta = await sharp(result!.buffer).metadata()
+      expect(meta.exif).toBeUndefined()
+      expect(meta.icc).toBeUndefined()
+    })
+
+    it('keeps EXIF and ICC when metadata retention is enabled', async () => {
+      const service = createService({
+        imageToWebp: true,
+        imageKeepMetadata: true,
+      })
+
+      const result = await service.processImage(await photo(), 'p.jpg')
+
+      const meta = await sharp(result!.buffer).metadata()
+      expect(meta.exif?.toString('latin1')).toContain('FUJIFILM')
+      expect(meta.icc).toBeDefined()
+      expect([meta.width, meta.height, meta.orientation]).toEqual([20, 40, 1])
+    })
+
+    it('strips metadata for callers that require it despite the setting', async () => {
+      const service = createService({
+        imageToWebp: true,
+        imageKeepMetadata: true,
+      })
+
+      const result = await service.processImage(await photo(), 'p.jpg', {
+        stripMetadata: true,
+      })
+
+      const meta = await sharp(result!.buffer).metadata()
+      expect(meta.exif).toBeUndefined()
+      expect(meta.icc).toBeUndefined()
+    })
+  })
+
   it('returns null when the image cannot be decoded', async () => {
     const service = createService({ imageToWebp: true })
 

@@ -62,7 +62,7 @@ export async function saveComponentSource(
       type: 'text/javascript',
     }),
     'file',
-    true,
+    { immutable: true },
   )
   return updateDynamicComponentEntry(entry.id, {
     parentUrl: entry.url,

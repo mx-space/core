@@ -582,6 +582,14 @@ export const MediaProcessingOptionsSchema = section('Media processing', {
     'ui:options': { halfGrid: true },
   }),
   imageLossless: field.toggle(z.boolean().optional(), 'Lossless WebP'),
+  imageKeepMetadata: field.toggle(
+    z.boolean().optional(),
+    'Keep image metadata',
+    {
+      description:
+        'Carry EXIF (camera, lens, capture time, GPS) and the ICC color profile into the WebP output',
+    },
+  ),
   imageMaxDimension: field.number(optionalInt(1), 'Max image edge (px)', {
     description: 'Longest edge is scaled down to this; empty keeps the size',
     'ui:options': { halfGrid: true },

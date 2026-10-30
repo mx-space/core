@@ -152,6 +152,7 @@ import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
 import type { TranslationKey } from '~/i18n/types'
+import { uploadEditorImage } from '~/lib/editor-image-upload'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
 import type {
@@ -4693,7 +4694,7 @@ function buildWriteImages(state: WriteFormState): ImageModel[] {
 
 function pickImagesFromMarkdown(text: string) {
   const images: string[] = []
-  // eslint-disable-next-line unicorn/better-regex -- `[^\]]` form preserved; `[^]]` changes parse semantics
+
   const imagePattern = /!\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g
 
   for (const match of text.matchAll(imagePattern)) {
@@ -5471,10 +5472,7 @@ function RichWriteSurface(props: {
     contentClassName: cn('min-h-120 px-4 py-3', props.contentClassName),
     debounceMs: 250,
     editorStyle,
-    imageUpload: async (file) => {
-      const result = await uploadFile(file, 'image')
-      return { src: result.url }
-    },
+    imageUpload: uploadEditorImage,
     trackUpload: async (file) => {
       const result = await uploadFile(file, 'file')
       return { url: result.url }
