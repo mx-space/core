@@ -1,3 +1,14 @@
+## [16.2.0](https://github.com/mx-space/core/compare/v16.1.0...v16.2.0) (2026-10-31)
+
+### Features
+
+* **admin:** add a persistent interactive WebGL ripple background with smooth scene transitions ([8ac2d8e](https://github.com/mx-space/core/commit/8ac2d8e9fa10c09994e8ff2490cfd8bec482e2e0))
+* **admin:** unify login, server connection, and onboarding in a shared entry experience ([d0441f2](https://github.com/mx-space/core/commit/d0441f21763f85cef81863fcf5dd80a4e46cf376))
+
+### Bug Fixes
+
+* **admin:** keep setup panels readable in dark mode and reserve text space for password controls ([370b743](https://github.com/mx-space/core/commit/370b743421355771234a792d7711407f746b0241))
+
 ## [16.1.0](https://github.com/mx-space/core/compare/v16.0.1...v16.1.0) (2026-10-30)
 
 
