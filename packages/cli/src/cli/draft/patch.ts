@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 
 import {
   createContentDoc,
+  type DocContent,
   editDocAt,
   readDocContent,
 } from '@mx-space/editor/loro'
@@ -55,6 +56,25 @@ function changes(before: string, after: string) {
     stats: `+${added} ~${changed} -${removed} blocks`,
     lastTouched: touched.length ? idOf(touched.at(-1)!) : null,
   }
+}
+
+const kebab = (key: string) =>
+  key.replaceAll(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
+
+function metaChanges(before: DocContent, after: DocContent) {
+  const names = before.title === after.title ? [] : ['title']
+  for (const section of ['meta', 'typeSpecificData'] as const) {
+    const keys = new Set([
+      ...Object.keys(before.fields?.[section] ?? {}),
+      ...Object.keys(after.fields?.[section] ?? {}),
+    ])
+    for (const key of keys) {
+      const was = JSON.stringify(before.fields?.[section]?.[key])
+      if (was === JSON.stringify(after.fields?.[section]?.[key])) continue
+      names.push(key === 'categoryId' ? 'category' : kebab(key))
+    }
+  }
+  return names
 }
 
 const fail = (error: unknown) =>
@@ -127,10 +147,9 @@ export const patch = Command.make('patch', { id, message }, ({ id, message }) =>
             new ServerError({ message: (error as Error).message }),
         })
         room.doc.import(update)
-        const { stats, lastTouched } = changes(
-          current.content,
-          readDocContent(room.doc).content,
-        )
+        const applied = readDocContent(room.doc)
+        const { stats, lastTouched } = changes(current.content, applied.content)
+        const meta = metaChanges(current, applied)
         holdPresenceInBackground({
           url,
           headers,
@@ -138,7 +157,11 @@ export const patch = Command.make('patch', { id, message }, ({ id, message }) =>
           entry: newAgentEntry(),
           caret: agentCaret(room.doc, lastTouched),
         })
-        yield* Effect.sync(() => process.stdout.write(`applied: ${stats}\n`))
+        yield* Effect.sync(() =>
+          process.stdout.write(
+            `applied: ${stats}${meta.length ? `; meta: ${meta.join(', ')}` : ''}\n`,
+          ),
+        )
       }),
     )
   }),

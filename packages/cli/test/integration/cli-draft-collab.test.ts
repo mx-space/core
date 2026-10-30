@@ -279,12 +279,13 @@ describe('mxs draft patch', () => {
   }, 60_000)
 
   it('writes metadata edits in the same Loro update, without HTTP writes', async () => {
-    const { code } = await run(
+    const { code, stdout } = await run(
       fake,
       ['draft', 'patch', 'd1'],
       patchBlock('<slug>hello</slug>', '<slug>world</slug>'),
     )
     expect(code).toBe(0)
+    expect(stdout).toContain('meta: slug')
     expect(updates(fake)).toHaveLength(1)
     expect(readDocContent(fake.doc).fields?.typeSpecificData).toMatchObject({ slug: 'world' })
     expect(fake.http.filter((r) => r.method !== 'GET')).toEqual([])
