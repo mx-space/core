@@ -71,6 +71,48 @@ describe('AdminEventsGateway e2e', () => {
     }
   })
 
+  it('connects via a bearer owner session token', async () => {
+    testApp.authService.getSessionUserFromHeaders.mockResolvedValueOnce({
+      user: { id: 'owner-1', role: 'owner' },
+      session: { token: 'tok-bearer' },
+    })
+
+    const client = await WsTestClient.connect(testApp.adminUrl(), {
+      headers: { authorization: 'Bearer device-session' },
+    })
+    try {
+      await client.waitFor((e) => e.event === BusinessEvents.GATEWAY_CONNECT)
+      await assertLiveConnection(client)
+      const headers = testApp.authService.getSessionUserFromHeaders.mock
+        .lastCall?.[0] as Headers
+      expect(headers.get('authorization')).toBe('Bearer device-session')
+      expect(testApp.authService.verifyApiKey).not.toHaveBeenCalledWith(
+        'device-session',
+      )
+    } finally {
+      await client.closeAndWait()
+    }
+  })
+
+  it('falls back to the api key when a bearer token is not an owner session', async () => {
+    testApp.authService.getSessionUserFromHeaders.mockResolvedValueOnce(null)
+    testApp.authService.verifyApiKey.mockResolvedValueOnce({
+      id: 'key-id',
+      referenceId: 'reader-1',
+    })
+    testApp.authService.isOwnerReaderId.mockResolvedValueOnce(true)
+
+    const client = await WsTestClient.connect(testApp.adminUrl(), {
+      headers: { authorization: 'Bearer txo-key' },
+    })
+    try {
+      await client.waitFor((e) => e.event === BusinessEvents.GATEWAY_CONNECT)
+      expect(testApp.authService.verifyApiKey).toHaveBeenCalledWith('txo-key')
+    } finally {
+      await client.closeAndWait()
+    }
+  })
+
   it('rejects reusable credentials in URL queries', async () => {
     testApp.authService.verifyApiKey.mockResolvedValueOnce({
       id: 'key-id',

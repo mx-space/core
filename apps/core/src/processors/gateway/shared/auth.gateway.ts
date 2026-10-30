@@ -68,10 +68,11 @@ export const createAuthGateway = (options: AuthGatewayOptions) => {
       const conn = this.trackConnection(ws)
       await this.presence.addConnection(namespace, conn.id)
 
-      const { cookie, origin } = request.headers
-      if (cookie) {
+      const { cookie, origin, authorization } = request.headers
+      if (cookie || authorization) {
         const headers = new Headers()
-        headers.set('cookie', cookie)
+        if (cookie) headers.set('cookie', cookie)
+        if (authorization) headers.set('authorization', authorization)
         if (origin) {
           headers.set('origin', origin)
         }
