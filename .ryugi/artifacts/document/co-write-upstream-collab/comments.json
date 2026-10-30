@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "threads": [
+    {
+      "id": "cHHedb0FJ6",
+      "anchor": {
+        "blockId": "vKKX_WSZ",
+        "quote": "放到草稿 meta 的一个 coWrite 字段"
+      },
+      "status": "resolved",
+      "statusAt": "2026-10-30T11:29:19.898Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "2w34YJsVtT",
+          "author": "human",
+          "name": "Innei",
+          "avatar": "/api/avatar/github/Innei",
+          "text": "这个复用的是之前我做的外部协作者的字段吗？没有必要因为这个场景多加一个字段。如果是之前的 collaboration 的 co-author 的话，我觉得可以",
+          "at": "2026-10-30T11:22:27.108Z"
+        },
+        {
+          "id": "PAIX-cP5lH",
+          "author": "agent",
+          "name": "Claude Code",
+          "text": "不是复用的，coWrite 是我新加的字段，已去掉。co-author 那套（content_collaborators：reader_id、show_in_byline、contributed_at）是给登录的读者协作者用的，存不了人格/语言，agent 也不是 reader，不适合挂进去。改成不新增字段：aiGen 用已有的 meta.aiGen，语言从正文推断，人格续写时从文字判断、判断不了一行问。见第 5 项。",
+          "at": "2026-10-30T11:29:19.715Z"
+        }
+      ]
+    },
+    {
+      "id": "R2ULiAHpbs",
+      "anchor": {
+        "blockId": "8gcm-Q4h",
+        "quote": "上游 meta 字段不走 Loro 实时同步；分开成一个文件，agent 不会误把 meta 当正文合并，人在浏览器里改的 meta 下次调用就能看到。"
+      },
+      "status": "resolved",
+      "statusAt": "2026-10-30T11:29:19.988Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "69TxyUeIMi",
+          "author": "human",
+          "name": "Innei",
+          "avatar": "/api/avatar/github/Innei",
+          "text": "都接到 loro 把",
+          "at": "2026-10-30T11:24:20.417Z"
+        },
+        {
+          "id": "IlbGcZyQ1J",
+          "author": "agent",
+          "name": "Claude Code",
+          "text": "好，已移到“已定”：meta + typeSpecificData 全部进 Loro，PATCH fields 改为写 Loro。第 3 项改成接下来的问题：agent 在 /doc.xml 的 <mxpost><meta> 信封里改元数据；co-author 写元数据在 vetUpdate 里拦，但读拦不住，需要你确认。",
+          "at": "2026-10-30T11:29:19.807Z"
+        }
+      ]
+    }
+  ]
+}

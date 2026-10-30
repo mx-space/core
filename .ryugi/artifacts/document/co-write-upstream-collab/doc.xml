@@ -1,0 +1,245 @@
+<doc>
+  <h1 id="XUtZAr-Q">co-write：接入上游 CRDT 协作 — 设计</h1>
+  <p id="swIIx94E">状态：待批准（2026-10-30）。读完有问题直接改或评论；没问题在终端说“批准”。批准后定稿到 <code>mx-core/docs/ryugi/specs/2026-10-30-co-write-upstream-collab-design.md</code>，两期都在当前会话里做完。</p>
+  <h2 id="fxikZBgd">意图</h2>
+  <p id="idIOSg53"><code>co-write-blog-post</code> skill 之前靠 <code>mxs author</code> 在本地起一个编辑器和一份本地 Loro 协作源：人在本地页面写，agent 改本地 <code>article.xml</code>，再三方合并回编辑器，写完才建草稿、传资产。上游 mx-core 现在已有完整的协作栈（PG 里每篇 Lexical 文档一份 Loro doc，<code>/ws/admin</code> 上的 <code>collab.*</code> 房间，服务端时间线、撤销、恢复），本地那套成了重复建设。</p>
+  <p id="9H_lc5Al">新形态：人直接在线上 admin 写作页里写；agent 用两条 CLI 命令读写同一篇草稿——<code>mxs draft cat</code> 读、<code>mxs draft patch</code> 写——每次调用临时加入协作房间，修改实时出现在人的编辑器里，带着 agent 名字的光标。草稿的元数据也接进 Loro，和正文一起实时同步。</p>
+  <h2 id="bUmcuWFE">目标</h2>
+  <ul id="Cyoz3oQJ">
+    <li>人在线上编辑器里写，agent 的修改不刷新就实时出现，光标显示 agent 的名字（如 “Claude Code”），每次修改在时间线里是可撤销的一行。</li>
+    <li>agent 只用 <code>cat</code> / <code>patch</code> 两条命令；人并发打的字永远不会被 agent 的写入静默覆盖。</li>
+    <li>人在浏览器里选中一段，切到终端说“这段”，agent 能拿到那段（失焦后也保留）。</li>
+    <li>元数据（slug、标签、分类、摘要、aiGen、封面、付费墙……）进 Loro：多个标签页和 agent 同时改不同字段互不覆盖。</li>
+    <li>本地 <code>mxs author</code> 全套删除，skill 不再有本地目录。</li>
+  </ul>
+  <h2 id="8MB8YNtW">非目标</h2>
+  <ul id="8s7z45-b">
+    <li>VFS / just-bash、sh 写入路径、整篇覆盖命令、真实挂载（macFUSE / NFS / FSKit）、MCP（以后可以包一层，语义不变）。</li>
+    <li>常驻进程、本地版本缓存。</li>
+    <li>浏览器侧发起 agent（见“后续脑暴”）。</li>
+    <li>Markdown 格式草稿（只支持 Lexical）。</li>
+    <li>给 co-author 的 AI 能力。</li>
+  </ul>
+  <h2 id="GAU7bOJB">反目标</h2>
+  <ul id="0Tf5c0jB">
+    <li>agent 的写入静默吞掉人刚打的字（评测里 sh + sed 出现过一次，这是选 patch 的原因）。</li>
+    <li>人需要离开线上编辑器、刷新页面，或者看本地文件，才能知道 agent 改了什么。</li>
+  </ul>
+  <p id="Gxwcm7kA">风险评估（你）：基本链路不复杂，主要风险在 agent 修改线上文章的边界情况。测试因此集中在 patch 的匹配与拒绝规则上。</p>
+  <h2 id="8Ans4stn">总体结构</h2>
+  <mermaid id="yWfSTwMM">flowchart LR
+  B[浏览器: 线上 admin 写作页] &lt;-- collab.update / presence --&gt; S[(mx-core: Loro doc in PG)]
+  A[外部 agent: Bash 工具] -- &quot;mxs draft cat / patch&quot; --&gt; M[mxs: 一次性协作成员]
+  M &lt;-- join / update / presence over /ws/admin --&gt; S</mermaid>
+  <mermaid id="itHz7ny0">sequenceDiagram
+  participant A as Agent (Bash)
+  participant M as mxs
+  participant S as mx-core
+  participant B as 浏览器
+  A-&gt;&gt;M: mxs draft patch &lt;draft&gt; &lt;&lt;&apos;EOF&apos; (SEARCH/REPLACE)
+  M-&gt;&gt;S: WS connect (Authorization: Bearer) + collab.join
+  S--&gt;&gt;M: snapshot（最新）
+  M-&gt;&gt;M: 渲染 LiteXML 信封，逐块字面量匹配（各须唯一）
+  alt 任一块不匹配 / 结果非法
+    M--&gt;&gt;A: exit 1 + 原因 + 该块当前内容（不做任何修改）
+  else 全部匹配
+    M-&gt;&gt;M: editDocAt(doc, 最新版本, 目标, agent:summary, 随机 peer)
+    M-&gt;&gt;S: collab.update
+    S--&gt;&gt;B: collab.update（实时出现）
+    M-&gt;&gt;S: presence（agent:run 光标，label = detectAgent）
+    M--&gt;&gt;A: applied: +a ~m -d blocks
+  end</mermaid>
+  <h2 id="UitNmCoZ">命令契约</h2>
+  <codeblock id="qVZqOM_v" lang="bash">mxs draft cat &lt;draft&gt;                 # 完整信封：&lt;mxpost&gt;&lt;meta&gt;…&lt;/meta&gt;&lt;content&gt;…&lt;/content&gt;&lt;/mxpost&gt;，每块带 id
+mxs draft cat &lt;draft&gt; | grep -n 缓存   # 随意接管道
+mxs draft cat &lt;draft&gt; --outline       # 标题层级 + 各块 id（长文导航）
+mxs draft cat &lt;draft&gt; --selection     # 人当前（或失焦前最后）的选区所在块；没有选区时说明并 exit 0
+mxs draft patch &lt;draft&gt; [--message &lt;summary&gt;] &lt;&lt;&apos;EOF&apos;
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH
+&lt;p id=&quot;hPzZ7MhV&quot;&gt;原文，从 cat 的输出逐字复制&lt;/p&gt;
+=======
+&lt;p id=&quot;hPzZ7MhV&quot;&gt;替换后的内容&lt;/p&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE
+EOF</codeblock>
+  <h3 id="DCD3TM9U"><code>patch</code> 的规则</h3>
+  <ol id="2nwOPrEr">
+    <li>输入是一个或多个 SEARCH/REPLACE 块，按顺序作用在<b>当前最新</b>渲染结果上，后一块看到前一块的结果。</li>
+    <li>匹配是字面量：先精确匹配；精确不中时，按行忽略行首缩进再匹配一次。每块必须恰好命中 1 处。</li>
+    <li>全有或全无：任一块 0 处或多处命中、或替换后的结果解析失败，整个命令不做任何修改，exit 1。错误输出写明第几块、原因（“未找到，可能已被他人修改” / “命中 N 处，请带更多上下文”），SEARCH 里含 <code>id=&quot;…&quot;</code> 时附上该块的当前内容（块已删除则说明已不存在）。</li>
+    <li>防静默丢节点：LiteXML 遇到未知标签会静默丢弃。替换后把目标重新渲染，若某个 REPLACE 的内容（去掉 id 与空白差异后）没有出现在结果里，按非法结果拒绝，并指出被丢掉的标签。</li>
+    <li>正文与标题：<code>editDocAt(doc, doc.frontiers(), 目标, &quot;agent:&quot; + summary, { peer: 随机 })</code>，一次调用一个随机 peer；summary 取 <code>--message</code>，缺省为 <code>patch +a ~m -d blocks</code>。</li>
+    <li>元数据：<code>&lt;meta&gt;</code> 里的改动——一期转成 <code>PATCH /drafts/:id/fields</code>（只发变化的键）；二期与正文在同一次 Loro 提交里写入。</li>
+    <li>服务端拒绝（<code>DRAFT_CRDT_UPDATE_REJECTED</code> 等）或网络错误：exit 3，原样报出 code。用法错误 exit 2。无变化 exit 0 并说明 no-op。</li>
+    <li>没有整篇覆盖：空草稿渲染为一个带 id 的空段落，agent 照样用 SEARCH 命中它。</li>
+  </ol>
+  <h3 id="hxHR_RoW">presence</h3>
+  <ul id="gEcFZfzz">
+    <li>写入成功后，发一条 <code>entry: agent:&lt;runId&gt;</code> 的 presence，<code>caret = { anchor: null, focus: 最后改动块末尾, label: detectAgent(process.env) ?? &quot;AI&quot; }</code>，并让光标停留约 3 秒后离开房间；命令本身在 ack 后立即返回，不让 agent 多等（实现方式留给实现者）。</li>
+    <li><code>--selection</code>：加入房间后等待浏览器在 <code>collab.peer.joined</code> 后重发的 presence（上限约 500 ms），取 owner 浏览器连接里最近一次非空 <code>caret.selection</code>，用自己的 doc 补出块文本输出。</li>
+  </ul>
+  <h2 id="XLBQ17K4">一期：协作读写</h2>
+  <h3 id="9SX-bJ1a">core（apps/core）</h3>
+  <ul id="c_HjUwoF">
+    <li><code>/ws/admin</code> 接受 Bearer session token：<code>processors/gateway/shared/auth.gateway.ts</code> 在有 cookie 或 <code>Authorization</code> 时都先查 owner session，否则退回 API key。已改好、已有两个 e2e 用例，未提交。</li>
+    <li>presence 不改：<code>caret</code> 是不透明 JSON（上限 4096 字符），<code>label</code> 和 <code>selection</code> 原样转发，探针已验证。</li>
+  </ul>
+  <h3 id="g69hYqui">CLI（packages/cli）</h3>
+  <ul id="fCj4cYUY">
+    <li>新增 <code>mxs draft cat</code>、<code>mxs draft patch</code>（<code>src/cli/draft/</code>），注册帮助，并更新 <code>mxs skill get</code> 的 draft 章节，写清上面的契约和例子。</li>
+    <li>信封渲染/解析复用现有 LiteXML 信封代码（<code>mxs draft create --file</code> 用的那套），正文用 <code>@mx-space/editor</code> 的 <code>serializeMxLexicalToLitexml</code> / <code>deserializeMxLitexmlToLexical</code>，Loro 读写用 <code>@mx-space/editor/loro</code> 的 <code>readDocContent</code> / <code>editDocAt</code>。</li>
+    <li>认证沿用 Profile：device-flow token 走 <code>Authorization: Bearer</code>，API key 走 <code>x-api-key</code>。WS 地址：admin 用的是独立的 <code>GATEWAY_URL</code> + <code>/ws/admin</code>，CLI 需要从 profile 推导（实现者先确认线上 <code>mx.innei.in</code> 的网关地址）。连上旧服务端认证失败（4401）时提示“服务端版本过旧”。</li>
+    <li>依赖新的 <code>detect-agent</code> 包。</li>
+    <li>删除 <code>mxs author</code>：<code>src/cli/author/</code> 全部、对应测试、帮助注册、<code>commands-author</code> skill 章节，以及 admin 里只为它服务的本地 SPA（<code>apps/admin/src/author/</code> 及其构建入口、<code>resolveAuthorSpaDir</code>）。删除前全局搜索确认没有别的使用方。</li>
+  </ul>
+  <h3 id="HezHg63h">admin（apps/admin）</h3>
+  <ul id="6ive1LbX">
+    <li>选区协作（<code>features/write/crdt/crdt-draft-session.ts</code>、<code>collab-presence.ts</code>）：自己的 presence 增加 <code>caret.selection = { collapsed, blocks: [{ id, startOffset?, endOffset? }] }</code>，块 id 用 LiteXML 里的同一个 blockId，最多 50 块。失焦（BLUR）时只清掉显示用的 <code>anchor/focus</code>，<code>selection</code> 保留；<code>announce()</code> 重发时带上。</li>
+    <li>agent 光标名：收到 <code>entry</code> 以 <code>agent:</code> 开头的 presence 时，用 <code>caret.label</code>（纯文本、截断到 40 字符）替代服务端盖的 <code>&apos;AI&apos;</code> 显示在光标标签和头像栈；没有 label 仍是 “AI”。颜色逻辑不变。</li>
+  </ul>
+  <h3 id="XS4kE9gK">ryugi（另一个仓库）</h3>
+  <ul id="SApnbTRK">
+    <li>把 <code>artifacts/src/server/agent.ts</code> 抽成零依赖包 <code>packages/detect-agent</code>（ESM + CJS，导出 <code>detectAgent</code>、<code>AGENT_MARKERS</code>、<code>AGENT_DISPLAY_NAMES</code>，测试随包迁移），npm 包名 <code>ryugi-detect-agent</code>（与 <code>ryugi-artifacts</code> 同风格）。artifacts 改为依赖它；<code>hooks/</code> 里的 CJS 副本改为引用包，或保留并继续由 parity 测试守住。发布走 ryugi 现有发布流程。</li>
+  </ul>
+  <h3 id="5ZHwcuAs">skill（SKILL 仓库 <code>skills/writing/co-write-blog-post</code>）</h3>
+  <ol id="3fy4F91H">
+    <li>[0] 开场两问（人格、语言）照旧；续写时不问，从已有文字判断，判断不了一行问。</li>
+    <li>[1] 新文章：<code>mxs draft create</code> 建一个只有工作标题、slug 和一个空段落的 Lexical 草稿；续写：<code>mxs draft list</code> 按标题找，多个匹配一行问。给人线上写作页链接，然后停下等人开口。</li>
+    <li>[2] 每个请求：<code>cat</code>（指“这段”时用 <code>--selection</code>）→ 定位 → 一次 <code>patch</code> 只动要求的块 → exit 1 时重新 <code>cat</code> 再写一次，仍失败就告诉人 → 一两行回复改了哪里。</li>
+    <li>资产：图片插入时立即 <code>mxs file upload</code>（不加 <code>--silent</code>，读 <code>url:</code>），宽高与 thumbhash 用 <code>image-meta.mjs</code> 从本地文件算；Excalidraw 场景写到临时文件后 <code>--type file</code> 上传，正文只放 URL。</li>
+    <li>aiGen：每做出一种新贡献，就在 <code>&lt;meta&gt;</code> 里更新 <code>aiGen</code>（同一个 <code>patch</code>）。</li>
+    <li>[3] 收尾：对 <code>cat</code> 的结果跑 no-ai-slop 检查并列出问题（不自动改）→ 确认 aiGen → 用 <code>patch</code> 填分类、标签 → 发布必须等人明确同意。付费墙、premium 的规则照旧。</li>
+    <li>删除：本地 <code>~/blog-drafts</code>、<code>session.json</code>、<code>author.log</code> 等待逻辑、<code>.selection.json</code>、“写完才上传”的规则和对应失败条目；README 表格的描述同步更新。</li>
+  </ol>
+  <h2 id="VGc2N1Dd">二期：元数据进 Loro</h2>
+  <ul id="6kJLQjv7">
+    <li><b>文档结构</b>（<code>@mx-space/editor/loro</code>）：Loro doc 增加根容器 <code>fields</code>（LoroMap），下挂 <code>meta</code>、<code>typeSpecificData</code> 两个 LoroMap，每个字段一个键；字符串数组（标签等）用 LoroList，其余值按键整体替换（同键并发后写者胜）。<code>DocContent</code> 增加 <code>fields</code>；<code>readDocContent</code> 读出，<code>editDocAt</code> 按键差异写入，<code>createContentDoc</code> 种入。</li>
+    <li><b>core</b>（<code>modules/draft/draft-crdt.service.ts</code> 等）：<code>materialize</code> 从 doc 的 <code>fields</code> 取元数据；<code>updateFields</code> / <code>mergeDocumentFields</code>（即 <code>PATCH /drafts/:id/fields</code>）改为对 Loro 做一次服务端编辑（提交信息 <code>fields</code>），经 <code>onDocumentChanged</code> 实时转发；restore / undo / legacyWrite 随 doc 自然带上元数据。<code>content_crdt_docs.fields</code> 列按 expand–contract 处理：先改为从 doc 派生写入、读取切到 doc，后续版本再删列（遵循 <code>mx-migration-author</code> 的滚动发布规则，两副本共存期间旧 pod 的写入不能丢）。</li>
+    <li><b>迁移</b>：一个 app-migration（同 <code>20261026-mint-loro-block-ids</code> 的写法），把每份已有 doc 的 <code>fields</code> 列种进 Loro，提交信息 <code>migrate-fields</code>；可重复执行。</li>
+    <li><b>校验</b>：<code>vetUpdate</code> 增加选项，co-author 的更新只要触及 <code>fields</code> 容器就拒绝。co-author 页面不渲染元数据；他们能从完整 doc 里读到元数据，这一点已接受（与已知的 oplog 限制同类）。</li>
+    <li><b>admin</b>：写作页的元数据表单直接绑定 Loro 的 <code>fields</code>（读实时值、本地改动走 binding 提交），Loro 文档不再走 <code>diffDraftFields</code> → PATCH 的路径。</li>
+    <li><b>CLI</b>：<code>patch</code> 里 <code>&lt;meta&gt;</code> 的改动与正文在同一次提交里写进 Loro；<code>cat</code> 从 doc 读元数据。命令形状不变。</li>
+  </ul>
+  <h2 id="R88CXHGt">测试与验收</h2>
+  <h3 id="h5-xh22z">一期</h3>
+  <ul id="FuyeFyK8">
+    <li>core：网关 e2e（Bearer session 通过；Bearer API key 仍走 API key 路径）——已完成。</li>
+    <li>CLI 单测：SEARCH/REPLACE 解析；精确与缩进无关匹配；0 处 / 多处命中；多块全有或全无；带 id 时附当前块内容；未知标签被丢时拒绝；元数据变化转成 PATCH；正文中的 <code>$ / &amp; . &quot;</code>、<code>&amp;amp;</code>、<code>&amp;quot;</code> 字面量往返。</li>
+    <li>CLI 集成：两个 socket 的房间测试（参照现有 collab e2e）——人改同一段后 patch 被拒、改别段时 patch 成功且两边收敛。</li>
+    <li>admin：失焦后 selection 保留并在 announce 时重发；agent entry 显示 label。</li>
+    <li>agent 评测复跑：把 <code>packages/cli/tmp/agent-eval</code> 指向真正的 <code>mxs draft cat/patch</code>，Claude 与 Codex × 5 个任务全部通过，冲突任务里人的那句保留。</li>
+    <li>端到端（真实浏览器、本地栈）：在 admin 选中一段 → agent <code>cat --selection</code> 拿到 → <code>patch</code> 改写；人同时在别段打字；浏览器里看到 “Claude Code” 光标和实时改动，时间线一行，撤销后两边恢复。</li>
+  </ul>
+  <h3 id="HpZ9PRu2">二期</h3>
+  <ul id="3LybuVpH">
+    <li>editor/loro：fields 往返；不同键并发合并；标签列表并发增删合并。</li>
+    <li>core：迁移可重复；materialize 读 doc；PATCH 写 Loro 并实时转发；co-author 触及 fields 被拒。</li>
+    <li>admin：两个标签页同时改不同元数据字段，互相实时可见、都保留。</li>
+    <li>端到端：人在浏览器改标签的同时 agent 用 <code>patch</code> 改摘要，两者都在。</li>
+  </ul>
+  <h2 id="7OWe2Hy6">发布顺序</h2>
+  <ol id="AtlzaKBO">
+    <li>core 的 WS 认证改动（独立、向后兼容），先发。</li>
+    <li>admin 选区协作 + label（独立）。</li>
+    <li>CLI <code>cat/patch</code> + 删除 <code>author</code>（依赖 1）；同时发 ryugi 的 <code>detect-agent</code>。</li>
+    <li>skill 重写（依赖 3 的 CLI 版本）。</li>
+    <li>二期按 expand–contract 分两次发布：先双写、迁移、读切到 doc，再清理旧列。</li>
+  </ol>
+  <h2 id="cYO6bnan">验证证据（2026-10-30，本地 core :2399，独立库 mx_collab_probe）</h2>
+  <h3 id="ZiNS7lNY">探针 1：协作链路</h3>
+  <p id="_sT58fbn">脚本 <code>packages/cli/tmp/collab-probe.ts</code>（gitignored）。结论：Bearer session 在 <code>/ws/admin</code> 认证通过（依赖本地网关改动）；连接+认证 55 ms，加 join+snapshot 共 134 ms；人与 agent 并发改不同段两边都保留并收敛、实时转发；时间线出现 agent 提交信息；<code>caret</code> 里的 <code>label</code>/<code>selection</code> 原样转发，entry 的 <code>user.name</code> 被服务端固定为 <code>&apos;AI&apos;</code>；服务端不存 presence，后加入者依赖成员在 <code>collab.peer.joined</code> 时重发。</p>
+  <h3 id="aYRtoxBS">探针 2：写入接口评测</h3>
+  <p id="oByfpS4z">原型 <code>packages/cli/tmp/agent-eval/</code>（<code>mxdoc</code> + 运行器）。Claude Code（sonnet）与 Codex（默认模型）× 5 个任务（改写、插入、删除、全文替换、冲突），每次 agent 首次调用后机器人以人的身份改动；共 45 次。</p>
+  <table id="wrvmZ-OT">
+    <tr>
+      <th>
+        <p>接口</p>
+      </th>
+      <th>
+        <p>通过</p>
+      </th>
+      <th>
+        <p>人的修改丢失</p>
+      </th>
+      <th>
+        <p>失败调用</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>patch（SEARCH/REPLACE）</p>
+      </td>
+      <td>
+        <p>15/15</p>
+      </td>
+      <td>
+        <p>0</p>
+      </td>
+      <td>
+        <p>3（全是冲突检测，重读后修好）</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>edit（--old/--new）</p>
+      </td>
+      <td>
+        <p>15/15</p>
+      </td>
+      <td>
+        <p>0</p>
+      </td>
+      <td>
+        <p>3（同上；全文替换需 5 次调用）</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>sh（VFS + sed）</p>
+      </td>
+      <td>
+        <p>14/15</p>
+      </td>
+      <td>
+        <p>1（静默）</p>
+      </td>
+      <td>
+        <p>1</p>
+      </td>
+    </tr>
+  </table>
+  <p id="2oOGTIUw">决定性的一次：Claude + sh + 冲突，<code>sed -i &quot;s|&lt;p id=…&gt;.*&lt;/p&gt;|…|&quot;</code> 的 <code>.*</code> 吞掉了人刚补的句子，退出码 0。同场景 patch 第一次 SEARCH 不匹配并返回块的当前内容，agent 重读后保留了人的句子。sed 另外两个坑本机复现：不匹配也退出 0；替换里的 <code>&amp;</code> 被展开成匹配内容。</p>
+  <h2 id="kNSLN7fI">决策记录</h2>
+  <ul id="CiRosDNe">
+    <li>去掉本地文件、本地编辑器、本地 CRDT 和 <code>mxs author</code>；人在线上编辑器里写。（你）</li>
+    <li>读 <code>mxs draft cat</code>、写 <code>mxs draft patch</code>（字面量 SEARCH/REPLACE，heredoc，多块原子，不匹配返回当前块）；不做 VFS、sh 写入、整篇覆盖。（你定方向，评测选定 patch）</li>
+    <li>每次调用一次性加入房间、按最新版本应用，无常驻进程、无版本缓存。（你）</li>
+    <li>先做 CLI；以后可包 MCP，语义不变。（你）</li>
+    <li>线上编辑器补选区协作：<code>caret.selection</code>，失焦保留，重发时带上。（方向你的，放法我的）</li>
+    <li>agent 光标名用 ryugi 的 <code>detectAgent</code>，放 <code>caret.label</code>，不改 core presence。（来源你的，放法我的）</li>
+    <li><code>detectAgent</code> 抽成 ryugi 仓库里的独立零依赖包，包名 <code>ryugi-detect-agent</code>。（抽包按推荐；包名我的）</li>
+    <li><code>/ws/admin</code> 接受 Bearer session token。（你要求）</li>
+    <li>每次调用一个随机 Loro peer，提交信息 <code>agent:&lt;summary&gt;</code>；光标停留约 3 秒，命令不等待。（我的）</li>
+    <li>草稿第一步就建在服务端；资产插入时即上传。（我的，必然结果）</li>
+    <li>全部元数据进 Loro，<code>PATCH /fields</code> 改写 Loro；元数据经 <code>&lt;mxpost&gt;&lt;meta&gt;</code> 信封读写；co-author 写元数据被拒、能读到（已接受）。（你）</li>
+    <li>不为 skill 新增字段：aiGen 用已有 <code>meta.aiGen</code>，语言从正文推断，人格不存。（你）</li>
+    <li>命令放在 <code>mxs draft</code> 组下。（我的）</li>
+    <li>分两期，都在当前会话做完。（你）</li>
+    <li>风险：主要在 agent 修改线上文章的边界情况。（你）</li>
+  </ul>
+  <h2 id="y72HFzQl">留给实现者</h2>
+  <ul id="8vITDHPc">
+    <li>CLI 的 WebSocket 实现（Node ≥26 内置 WebSocket 能否带请求头，不能就加 <code>ws</code>）和网关地址推导。</li>
+    <li><code>--outline</code> 的具体格式；presence 停留 3 秒的实现方式（如分离的子进程）。</li>
+    <li>二期 <code>fields</code> 容器里非字符串数组值的具体编码，只要满足“不同键并发互不覆盖、标签列表可并发增删”。</li>
+    <li>线上写作页链接的拼法（skill 里给人的 URL）。</li>
+  </ul>
+  <h2 id="oofjhBvi">后续脑暴（不在本次范围）</h2>
+  <p id="BIohpKUT">你的想法：人在浏览器里选中文字 → 点 “call agent” → 写一句评论 → Claude Code 的 Monitor 收到事件，agent 直接开始改，连 <code>--selection</code> 这一步都省掉。大概需要一个 <code>mxs draft watch</code> 一类的命令把房间里的“召唤”事件逐行输出给 Monitor，以及 admin 里的召唤 UI。以后单独讨论。</p>
+  <h2 id="xkUqEA2g">本次用到的材料</h2>
+  <ul id="Vp6lUPtQ">
+    <li>设计讨论文档：ryugi artifact <code>document/co-write-upstream-collab</code>（mx-core/.ryugi/artifacts），链接 https://ryugi.innei.dev/a/_KSi3geC4pSZrOeDy3C-。</li>
+    <li>探针与评测原型：<code>mx-core/packages/cli/tmp/collab-probe.ts</code>、<code>mx-core/packages/cli/tmp/agent-eval/</code>（gitignored，结论已写在上文）。</li>
+    <li>相关上游 spec：<code>docs/superpowers/specs/2026-10-25-collab-realtime-room-design.md</code>、<code>2026-10-25-collab-ai-peer-design.md</code>、<code>2026-10-25-collab-coauthors-design.md</code>、<code>2026-10-25-loro-content-storage-design.md</code>。</li>
+  </ul>
+</doc>
+
