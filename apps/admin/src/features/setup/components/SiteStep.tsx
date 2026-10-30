@@ -144,7 +144,7 @@ export function SiteStep(props: {
           <OnboardingAsideTitle>
             {t('setup.onboarding.site.asideTitle')}
           </OnboardingAsideTitle>
-          <div className="overflow-hidden rounded-sm border border-border bg-white shadow-xs">
+          <div className="overflow-hidden rounded-sm border border-border bg-surface-card shadow-xs">
             <div className="flex items-center gap-2 border-b border-border bg-surface-inset px-2.5 py-2">
               <img alt="" className="size-3.5 rounded-xs" src={faviconUrl} />
               <span className="truncate text-sm font-medium">

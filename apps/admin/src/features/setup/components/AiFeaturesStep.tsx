@@ -100,7 +100,7 @@ export function AiFeaturesStep(props: {
           <OnboardingAsideTitle>
             {t('setup.onboarding.ai.features.asideTitle')}
           </OnboardingAsideTitle>
-          <div className="flex flex-col gap-2 rounded-sm border border-border bg-white p-3 shadow-xs">
+          <div className="flex flex-col gap-2 rounded-sm border border-border bg-surface-card p-3 shadow-xs">
             {draft?.translation && previewLanguages.length > 0 ? (
               <div className="flex flex-wrap gap-1">
                 <LanguageTag active>

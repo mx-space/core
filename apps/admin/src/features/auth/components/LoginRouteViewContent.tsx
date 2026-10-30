@@ -205,6 +205,7 @@ export function LoginRouteViewContent() {
               <TextInput
                 aria-label={t('auth.login.passwordLabel')}
                 autoComplete="current-password"
+                controlClassName="pr-11"
                 disabled={isLoggingIn}
                 id="password-input"
                 label={t('auth.login.passwordLabel')}

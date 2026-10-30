@@ -144,7 +144,7 @@ export function AiProvidersStep(props: {
             ) : (
               providers.map((provider) => (
                 <div
-                  className="flex h-9 items-center gap-2 rounded-sm border border-border bg-white px-3 text-sm shadow-xs"
+                  className="flex h-9 items-center gap-2 rounded-sm border border-border bg-surface-card px-3 text-sm shadow-xs"
                   key={provider.id}
                 >
                   <span className="size-1.5 rounded-full bg-green-600" />
