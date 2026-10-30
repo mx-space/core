@@ -1,6 +1,32 @@
 import type { TranslationKey } from '../types'
 
 export const enUS = {
+  'auth.entry.heroFirst': 'A home for your words.',
+  'auth.entry.heroSecond': 'A space for your ideas.',
+  'auth.entry.heroDescriptionFirst':
+    'Capture the everyday. Connect your ideas.',
+  'auth.entry.heroDescriptionSecond': 'Let the things worth remembering grow.',
+  'auth.entry.independent': 'Independent words. Room to grow.',
+  'auth.entry.interact': 'Move / drag',
+  'auth.entry.ripple': 'Make a ripple',
+  'auth.entry.rippleLabel': 'Create a ripple at the center',
+  'auth.entry.reducedMotion': 'Reduced motion',
+  'auth.entry.currentService': 'Current Mix Space service',
+  'auth.entry.help': 'Need help',
+  'auth.entry.lightTheme': 'Switch to light mode',
+  'auth.entry.darkTheme': 'Switch to dark mode',
+  'auth.entry.footer': 'Collect life in words.',
+  'auth.entry.switchService': 'Switch service',
+  'auth.entry.backToLogin': 'Back to sign in',
+  'auth.entry.scene.login': 'Home',
+  'auth.entry.scene.connect': 'Connection',
+  'auth.entry.scene.welcome': 'A beginning',
+  'auth.entry.scene.account': 'Identity',
+  'auth.entry.scene.site': 'Your place',
+  'auth.entry.scene.ai-providers': 'Resonance',
+  'auth.entry.scene.ai-models': 'Order',
+  'auth.entry.scene.ai-features': 'Growth',
+  'auth.entry.scene.ready': 'Ready',
   'write.agent.dynamic.replace': 'Upload new version and replace',
   'write.agent.dynamic.updated': 'Draft updated',
   'write.agent.dynamic.versionHint':

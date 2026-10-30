@@ -4,6 +4,7 @@ import { createHashRouter, Navigate, Outlet } from 'react-router'
 import type { AppRoute, RedirectEntry } from 'virtual:admin-routes'
 import { publicRoutes, redirects, shellRoutes } from 'virtual:admin-routes'
 
+import { AuthEntryLayout } from './features/auth/entry/AuthEntryLayout'
 import { DocumentTitleSync } from './hooks/use-document-title'
 import { ProtectedLayout } from './layouts/protected-layout'
 import { LegacyStaticRedirect } from './lib/legacy-redirects'
@@ -52,7 +53,19 @@ const routeTree: RouteObject[] = [
   {
     Component: RootLayout,
     children: [
-      ...publicRoutes.map(toRouteObject),
+      {
+        Component: AuthEntryLayout,
+        children: publicRoutes
+          .filter((route) =>
+            ['/login', '/setup', '/setup-api'].includes(route.path),
+          )
+          .map(toRouteObject),
+      },
+      ...publicRoutes
+        .filter(
+          (route) => !['/login', '/setup', '/setup-api'].includes(route.path),
+        )
+        .map(toRouteObject),
       ...redirects
         .map(redirectToRouteObject)
         .filter((entry): entry is RouteObject => entry !== null),
