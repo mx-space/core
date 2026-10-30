@@ -18,17 +18,38 @@ import {
   type SerializedEditorState,
   type SerializedLexicalNode,
 } from 'lexical'
-import { LoroDoc, type OpId } from 'loro-crdt'
+import {
+  LoroDoc,
+  LoroList,
+  LoroMap,
+  type LoroTreeNode,
+  type OpId,
+  type TreeID,
+} from 'loro-crdt'
 
 export type Frontiers = ReturnType<LoroDoc['frontiers']>
 export type PeerId = Parameters<LoroDoc['setPeerId']>[0]
 
+export type FieldsSection = 'meta' | 'typeSpecificData'
+
+export type DocFields = Record<FieldsSection, Record<string, unknown> | null>
+
+export type DocFieldsPatch = Partial<
+  Record<FieldsSection, Record<string, unknown> | null>
+>
+
 export interface DocContent {
   content: string
   title: string
+  fields?: DocFields
 }
 
 const TITLE = 'title'
+export const FIELDS = 'fields'
+const SECTIONS: FieldsSection[] = ['meta', 'typeSpecificData']
+
+// Co-authors receive the whole doc, so secrets stay in the database row only.
+export const SECRET_FIELD_KEYS: ReadonlySet<string> = new Set(['password'])
 
 const BLOCK_ID_ALPHABET =
   'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict'
@@ -172,6 +193,83 @@ const $ensureBlockIds = (previous = new Map<NodeKey, string>()) => {
   }
 }
 
+const isStringList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+const syncList = (list: LoroList, target: string[]) => {
+  const current = list.toArray() as unknown[]
+  for (let i = current.length - 1; i >= 0; i--) {
+    if (!target.includes(current[i] as string)) list.delete(i, 1)
+  }
+  const kept = list.toArray() as unknown[]
+  target.forEach((item, i) => {
+    if (kept[i] === item) return
+    const at = kept.indexOf(item)
+    if (at !== -1) {
+      list.delete(at, 1)
+      kept.splice(at, 1)
+    }
+    list.insert(i, item)
+    kept.splice(i, 0, item)
+  })
+}
+
+const setField = (section: LoroMap, key: string, value: unknown) => {
+  if (SECRET_FIELD_KEYS.has(key)) return
+  const existing = section.get(key)
+  if (value === null || value === undefined) {
+    if (existing !== undefined) section.delete(key)
+    return
+  }
+  if (isStringList(value)) {
+    const list =
+      existing instanceof LoroList
+        ? existing
+        : section.setContainer(key, new LoroList())
+    syncList(list, value)
+    return
+  }
+  const current = existing instanceof LoroList ? existing.toJSON() : existing
+  if (JSON.stringify(current) !== JSON.stringify(value)) {
+    section.set(key, value as never)
+  }
+}
+
+const sectionMap = (doc: LoroDoc, name: FieldsSection, create: boolean) => {
+  const root = doc.getMap(FIELDS)
+  const existing = root.get(name)
+  if (existing instanceof LoroMap) return existing
+  return create ? root.setContainer(name, new LoroMap()) : undefined
+}
+
+const writeFields = (doc: LoroDoc, patch: DocFieldsPatch, replace: boolean) => {
+  for (const name of SECTIONS) {
+    if (!(name in patch)) continue
+    const values = patch[name]
+    if (values === null || values === undefined) {
+      if (doc.getMap(FIELDS).get(name) !== undefined) {
+        doc.getMap(FIELDS).delete(name)
+      }
+      continue
+    }
+    const section = sectionMap(doc, name, true)!
+    const keys = replace
+      ? new Set([...section.keys(), ...Object.keys(values)])
+      : Object.keys(values)
+    for (const key of keys) setField(section, key, values[key] ?? null)
+  }
+}
+
+export const readDocFields = (doc: LoroDoc): DocFields | undefined => {
+  const root = doc.getMap(FIELDS)
+  if (root.size === 0) return undefined
+  const read = (name: FieldsSection) => {
+    const section = sectionMap(doc, name, false)
+    return section ? (section.toJSON() as Record<string, unknown>) : null
+  }
+  return { meta: read('meta'), typeSpecificData: read('typeSpecificData') }
+}
+
 export const createDocument = (): LoroDoc => {
   const doc = new LoroDoc()
   doc.setRecordTimestamp(true)
@@ -190,6 +288,7 @@ export function createContentDoc(
   editor.setEditorState(editor.parseEditorState(state))
   editor.update(() => $ensureBlockIds(), { discrete: true })
   doc.getText(TITLE).insert(0, content.title)
+  if (content.fields) writeFields(doc, content.fields, true)
   createLoroBinding(editor, doc, { commitMessage: message }).dispose()
   doc.commit({ message })
   return doc
@@ -202,9 +301,11 @@ export function readDocContent(doc: LoroDoc): DocContent {
   if (doc.getTree(TREE_NAME).roots().length > 0) {
     createLoroBinding(editor, doc).dispose()
   }
+  const fields = readDocFields(doc)
   return {
     content: JSON.stringify(editor.getEditorState().toJSON()),
     title: doc.getText(TITLE).toString(),
+    ...(fields ? { fields } : {}),
   }
 }
 
@@ -234,6 +335,7 @@ export function editDocAt(
   const from = fork.oplogVersion()
   const title = fork.getText(TITLE)
   if (title.toString() !== target.title) title.update(target.title)
+  if (target.fields) writeFields(fork, target.fields, true)
   editor.update(
     () => {
       // Reconciling a block without an id clears the one it had; the node keeps its key.
@@ -246,6 +348,52 @@ export function editDocAt(
   fork.commit({ message })
   binding.dispose()
   return fork.export({ from, mode: 'update' })
+}
+
+export function editDocFields(
+  doc: LoroDoc,
+  frontiers: Frontiers,
+  patch: DocFieldsPatch,
+  message: string,
+  options: { peer?: PeerId } = {},
+): Uint8Array {
+  const fork = doc.forkAt(frontiers)
+  if (options.peer !== undefined) fork.setPeerId(options.peer)
+  fork.setRecordTimestamp(true)
+  const from = fork.oplogVersion()
+  writeFields(fork, patch, false)
+  fork.commit({ message })
+  if (fork.oplogVersion().compare(from) === 0) return new Uint8Array()
+  return fork.export({ from, mode: 'update' })
+}
+
+export interface CaretPoint {
+  id: TreeID
+  offset: number
+}
+
+const TEXT_KEY = '#text'
+
+const lastTextIn = (node: LoroTreeNode): CaretPoint | null => {
+  const children = node.children() ?? []
+  for (let index = children.length - 1; index >= 0; index -= 1) {
+    const found = lastTextIn(children[index])
+    if (found) return found
+  }
+  const text = node.data.get(TEXT_KEY)
+  return text === undefined
+    ? null
+    : { id: node.id, offset: String(text).length }
+}
+
+export function caretAtBlock(doc: LoroDoc, blockId: string): CaretPoint | null {
+  for (const node of doc.getTree(TREE_NAME).nodes()) {
+    const state = node.data.get('$') as { blockId?: string } | undefined
+    if (state?.blockId === blockId && !node.isDeleted()) {
+      return lastTextIn(node) ?? { id: node.id, offset: 0 }
+    }
+  }
+  return null
 }
 
 export function revertChange(
@@ -265,7 +413,7 @@ export function revertChange(
 export function vetUpdate(
   doc: LoroDoc,
   bytes: Uint8Array,
-  options: { author?: string } = {},
+  options: { author?: string; forbidFields?: boolean } = {},
 ): LoroDoc {
   const probe = doc.fork()
   if (probe.import(bytes).pending) {
@@ -292,6 +440,14 @@ export function vetUpdate(
         }
       }
     }
+  }
+  if (
+    options.forbidFields &&
+    JSON.stringify(readDocFields(probe)) !== JSON.stringify(readDocFields(doc))
+  ) {
+    throw new Error(
+      'update changes draft fields, which this member may not edit',
+    )
   }
   readDocContent(probe)
   return probe
