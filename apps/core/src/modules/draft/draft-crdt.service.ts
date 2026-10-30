@@ -30,9 +30,13 @@ import {
   createContentDoc,
   createDocument,
   type DocContent,
+  type DocFields,
   editDocAt,
+  editDocFields,
   readDocContent,
+  readDocFields,
   revertChange,
+  SECRET_FIELD_KEYS,
   vetUpdate,
 } from './draft-crdt.doc'
 import { DraftCrdtRepository } from './draft-crdt.repository'
@@ -104,6 +108,78 @@ const fieldsOf = (snapshot: RevisionSnapshot): CrdtFields => ({
   meta: snapshot.meta,
   typeSpecificData: snapshot.typeSpecificData,
 })
+
+const SECTIONS = ['meta', 'typeSpecificData'] as const
+
+const pickKeys = (
+  values: Record<string, unknown> | null | undefined,
+  secret: boolean,
+) => {
+  if (!values) return null
+  const picked = Object.entries(values).filter(
+    ([key]) => SECRET_FIELD_KEYS.has(key) === secret,
+  )
+  return picked.length ? Object.fromEntries(picked) : null
+}
+
+const publicFields = (fields: CrdtFields | null): DocFields => ({
+  meta: pickKeys(fields?.meta, false),
+  typeSpecificData: pickKeys(fields?.typeSpecificData, false),
+})
+
+const withSecrets = (fields: DocFields, row: CrdtFields | null): CrdtFields => {
+  const merge = (section: (typeof SECTIONS)[number]) => {
+    const secrets = pickKeys(row?.[section], true)
+    const values = fields[section]
+    return secrets ? { ...values, ...secrets } : (values ?? null)
+  }
+  return { meta: merge('meta'), typeSpecificData: merge('typeSpecificData') }
+}
+
+const publicPatch = (patch: CrdtFieldsPatch): CrdtFieldsPatch => {
+  const out: CrdtFieldsPatch = {}
+  for (const section of SECTIONS) {
+    const values = patch[section]
+    if (!values) continue
+    const kept = Object.entries(values).filter(
+      ([key]) => !SECRET_FIELD_KEYS.has(key),
+    )
+    if (kept.length) out[section] = Object.fromEntries(kept)
+  }
+  return out
+}
+
+const stableJson = (value: unknown): string =>
+  JSON.stringify(value, (_, inner: unknown) =>
+    inner && typeof inner === 'object' && !Array.isArray(inner)
+      ? Object.fromEntries(
+          Object.entries(inner).sort(([a], [b]) => a.localeCompare(b)),
+        )
+      : inner,
+  )
+
+const sameFields = (left: DocFields | undefined, right: DocFields) =>
+  stableJson(left ?? { meta: null, typeSpecificData: null }) ===
+  stableJson(right)
+
+// Turns the doc's fields into `target`, deleting keys the target lacks.
+const replacingPatch = (
+  current: DocFields | undefined,
+  target: DocFields,
+): CrdtFieldsPatch => {
+  const patch: CrdtFieldsPatch = {}
+  for (const section of SECTIONS) {
+    const keys = new Set([
+      ...Object.keys(current?.[section] ?? {}),
+      ...Object.keys(target[section] ?? {}),
+    ])
+    if (!keys.size) continue
+    patch[section] = Object.fromEntries(
+      [...keys].map((key) => [key, target[section]?.[key] ?? null]),
+    )
+  }
+  return patch
+}
 
 const sameBytes = (left: Uint8Array, right: Uint8Array) =>
   left.length === right.length && left.every((byte, i) => byte === right[i])
@@ -238,12 +314,30 @@ export class DraftCrdtService {
     if (bytes.length > MAX_UPDATE_BYTES) {
       this.reject(session.branch, 'update is too large')
     }
+    let probe: LoroDoc
     try {
-      vetUpdate(session.doc, bytes, { author })
+      probe = vetUpdate(session.doc, bytes, {
+        author,
+        forbidFields: author !== undefined,
+      })
     } catch (error) {
       this.reject(session.branch, (error as Error).message)
     }
     await this.append(session, bytes)
+    const fields = readDocFields(probe)
+    if (fields && !sameFields(readDocFields(session.doc), fields)) {
+      // Concurrent imports each see only their own update; derive the row from every appended update.
+      await this.crdt.withDocumentLock(session.document.id, async () => {
+        const { doc, row } = await this.loadDocument(session.document.id)
+        const latest = readDocFields(doc)
+        if (row && latest) {
+          await this.crdt.replaceFields(
+            session.document.id,
+            withSecrets(latest, row.fields),
+          )
+        }
+      })
+    }
     this.notifyChanged(session.document.id, bytes, origin)
     return { branch: session.branch, document: session.document }
   }
@@ -265,9 +359,7 @@ export class DraftCrdtService {
     branchId: EntityId | string,
     patch: CrdtFieldsPatch,
   ): Promise<CrdtFields> {
-    return this.mutate(branchId, ({ document }) =>
-      this.crdt.mergeFields(document.id, patch),
-    )
+    return this.mutate(branchId, (session) => this.writeFields(session, patch))
   }
 
   async mergeDocumentFields(
@@ -275,7 +367,13 @@ export class DraftCrdtService {
     typeSpecificData: Record<string, unknown>,
   ): Promise<void> {
     if (!(await this.crdt.findDoc(documentId))) return
-    await this.crdt.mergeFields(documentId, { typeSpecificData })
+    const document = await this.drafts.findDocumentById(documentId)
+    if (!document) return
+    await this.crdt.withDocumentLock(document.id, async () =>
+      this.writeFields(await this.openDocument(document, true), {
+        typeSpecificData,
+      }),
+    )
   }
 
   async legacyWrite(
@@ -450,6 +548,22 @@ export class DraftCrdtService {
     return this.openDocument(document, locked)
   }
 
+  private async loadDocument(documentId: EntityId | string) {
+    for (;;) {
+      const row = await this.crdt.findDoc(documentId)
+      const doc = createDocument()
+      if (!row) return { doc, row }
+      const updates = await this.crdt.findUpdates(documentId)
+      const current = await this.crdt.findDoc(documentId)
+      if (current && !sameBytes(current.snapshotVersion, row.snapshotVersion)) {
+        continue
+      }
+      doc.import(row.snapshot)
+      if (updates.length) doc.importBatch(updates.map((update) => update.bytes))
+      return { doc, row }
+    }
+  }
+
   private async openDocument(
     document: ContentDocumentRow,
     locked = false,
@@ -481,6 +595,24 @@ export class DraftCrdtService {
         )
       }
       await this.reconcile(session, head)
+    }
+    if (
+      session.row.fields &&
+      !sameFields(readDocFields(doc), publicFields(session.row.fields))
+    ) {
+      // Rows written by pods that predate fields in Loro, or a doc created before them.
+      if (!locked) {
+        return this.crdt.withDocumentLock(document.id, () =>
+          this.openDocument(document, true),
+        )
+      }
+      const bytes = editDocFields(
+        doc,
+        doc.frontiers(),
+        replacingPatch(readDocFields(doc), publicFields(session.row.fields)),
+        'migrate-fields',
+      )
+      if (bytes.length) await this.apply(session, bytes)
     }
     if (updates.length >= COMPACT_THRESHOLD) {
       void this.compact(
@@ -564,12 +696,16 @@ export class DraftCrdtService {
     branch: DraftBranchRow,
   ): Promise<{ branch: DraftBranchRow; row: CrdtDocRow }> {
     const head = await this.revision(branch.headRevisionId)
+    const fields = fieldsOf(head)
     const doc = createContentDoc(
-      { content: head.content ?? EMPTY_STATE, title: head.title },
+      {
+        content: head.content ?? EMPTY_STATE,
+        fields: publicFields(fields),
+        title: head.title,
+      },
       `import ${head.id}`,
     )
     const snapshot = doc.export({ mode: 'snapshot' })
-    const fields = fieldsOf(head)
     const row = await this.crdt.createDoc({
       documentId: document.id,
       fields,
@@ -655,7 +791,11 @@ export class DraftCrdtService {
       editDocAt(
         session.doc,
         session.doc.frontiers(),
-        { content: revision.content ?? EMPTY_STATE, title: revision.title },
+        {
+          content: revision.content ?? EMPTY_STATE,
+          fields: publicFields(fieldsOf(revision)),
+          title: revision.title,
+        },
         `restore ${revision.id}`,
       ),
     )
@@ -743,6 +883,20 @@ export class DraftCrdtService {
     }
     const current = session.row.fields ?? { meta: null, typeSpecificData: null }
     if (!patch.meta && !patch.typeSpecificData) return current
+    return this.writeFields(session, patch)
+  }
+
+  private async writeFields(
+    session: Session,
+    patch: CrdtFieldsPatch,
+  ): Promise<CrdtFields> {
+    const bytes = editDocFields(
+      session.doc,
+      session.doc.frontiers(),
+      publicPatch(patch),
+      'fields',
+    )
+    if (bytes.length) await this.apply(session, bytes)
     const fields = await this.crdt.mergeFields(session.document.id, patch)
     session.row = { ...session.row, fields }
     return fields
@@ -800,7 +954,9 @@ export class DraftCrdtService {
   private materialize(
     session: Session,
     content: DocContent,
-    fields: CrdtFields | null = session.row.fields,
+    fields: CrdtFields | null = content.fields
+      ? withSecrets(content.fields, session.row.fields)
+      : session.row.fields,
   ): RevisionSnapshot {
     return this.materializeFor(session.document.refType, content, fields)
   }

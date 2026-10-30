@@ -10,7 +10,11 @@ import { AppErrorCode } from '~/common/errors/app-error-code'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import { DraftRepository } from '~/modules/draft/draft.repository'
 import type { RevisionSnapshot } from '~/modules/draft/draft.types'
-import { editDocAt, readDocContent } from '~/modules/draft/draft-crdt.doc'
+import {
+  editDocAt,
+  editDocFields,
+  readDocContent,
+} from '~/modules/draft/draft-crdt.doc'
 import { DraftCrdtRepository } from '~/modules/draft/draft-crdt.repository'
 import { DraftCrdtService } from '~/modules/draft/draft-crdt.service'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
@@ -483,5 +487,158 @@ describe('DraftCrdtService (real PG)', () => {
     expect(checkpoints[0]).toMatchObject({ title: 'Pub' })
     expect(changes[0].message).toBe('human:owner')
     expect(changes.at(-1)?.message).toMatch(/^import /)
+  })
+  it('puts fields into the Loro doc on import and keeps secrets in the row only', async () => {
+    const { branch, document } = await seed(
+      lexical('Pub', ['p1'], { slug: 's', password: 'pw' }),
+    )
+    await service.workingCopy(branch.id)
+
+    expect(readDocContent(await clientOf(branch.id)).fields).toEqual({
+      meta: null,
+      typeSpecificData: { slug: 's' },
+    })
+    expect((await crdt.findDoc(document.id))?.fields?.typeSpecificData).toEqual(
+      { slug: 's', password: 'pw' },
+    )
+  })
+
+  it('writes field patches into the Loro doc, relays them and keeps the row in sync', async () => {
+    const { branch, document } = await seed()
+    await service.workingCopy(branch.id)
+    const mirror = await clientOf(branch.id)
+    const seen: Uint8Array[] = []
+    const stop = service.onDocumentChanged((change) => {
+      seen.push(change.update)
+    })
+
+    await service.updateFields(branch.id, {
+      meta: { cover: 'c.png' },
+      typeSpecificData: { tags: ['a'], password: 'pw' },
+    })
+    stop()
+
+    for (const update of seen) mirror.import(update)
+    expect(readDocContent(mirror).fields).toEqual({
+      meta: { cover: 'c.png' },
+      typeSpecificData: { slug: 's', tags: ['a'] },
+    })
+    expect((await crdt.findDoc(document.id))?.fields).toEqual({
+      meta: { cover: 'c.png' },
+      typeSpecificData: { slug: 's', tags: ['a'], password: 'pw' },
+    })
+  })
+
+  it('copies a client field edit into the row and the next checkpoint', async () => {
+    const { branch, document } = await seed(
+      lexical('Pub', ['p1'], { slug: 's', password: 'pw' }),
+    )
+    await service.workingCopy(branch.id)
+    const tab = await clientOf(branch.id)
+    const from = tab.oplogVersion()
+    tab.import(
+      editDocFields(
+        tab,
+        tab.frontiers(),
+        { typeSpecificData: { slug: 'from-tab' } },
+        'agent:meta',
+      ),
+    )
+
+    await service.importUpdate(branch.id, tab.export({ from, mode: 'update' }))
+    const { revision } = await service.createCheckpoint(branch.id, 'save')
+
+    expect((await crdt.findDoc(document.id))?.fields?.typeSpecificData).toEqual(
+      { slug: 'from-tab', password: 'pw' },
+    )
+    expect(revision.typeSpecificData).toEqual({
+      slug: 'from-tab',
+      password: 'pw',
+    })
+  })
+
+  it('keeps both of two concurrent field edits in the row and the doc', async () => {
+    const { branch, document } = await seed(
+      lexical('Pub', ['p1'], { slug: 's', summary: 'x', tags: ['a'] }),
+    )
+    await service.workingCopy(branch.id)
+    const edit = async (patch: Record<string, unknown>) => {
+      const tab = await clientOf(branch.id)
+      const from = tab.oplogVersion()
+      tab.import(
+        editDocFields(tab, tab.frontiers(), { typeSpecificData: patch }, 'tab'),
+      )
+      return tab.export({ from, mode: 'update' })
+    }
+    const [tags, summary] = await Promise.all([
+      edit({ tags: ['a', 'b'] }),
+      edit({ summary: 'new' }),
+    ])
+
+    await Promise.all([
+      service.importUpdate(branch.id, tags),
+      service.importUpdate(branch.id, summary),
+    ])
+
+    const expected = { slug: 's', summary: 'new', tags: ['a', 'b'] }
+    expect((await crdt.findDoc(document.id))?.fields?.typeSpecificData).toEqual(
+      expected,
+    )
+    const client = await clientOf(branch.id)
+    expect(readDocContent(client).fields?.typeSpecificData).toEqual(expected)
+  })
+
+  it('does not rewrite fields on open when only the key order differs', async () => {
+    const { branch } = await seed(
+      lexical('Pub', ['p1'], { slug: 's', categoryId: 'c', tags: ['a'] }),
+    )
+    await service.workingCopy(branch.id)
+    await clientOf(branch.id)
+    await clientOf(branch.id)
+
+    const { changes } = await service.history(branch.id)
+    expect(changes.some((change) => change.message === 'migrate-fields')).toBe(
+      false,
+    )
+  })
+
+  it('reconciles row fields written without the doc (old pods) into the doc on open', async () => {
+    const { branch, document } = await seed()
+    await service.workingCopy(branch.id)
+    await crdt.mergeFields(document.id, {
+      typeSpecificData: { slug: 'old-pod' },
+    })
+
+    const client = await clientOf(branch.id)
+
+    expect(readDocContent(client).fields?.typeSpecificData).toEqual({
+      slug: 'old-pod',
+    })
+    const { changes } = await service.history(branch.id)
+    expect(changes.some((change) => change.message === 'migrate-fields')).toBe(
+      true,
+    )
+  })
+
+  it('seeds fields into a doc created before fields lived in Loro', async () => {
+    const { branch, document } = await seed()
+    await service.workingCopy(branch.id)
+    const row = await crdt.findDoc(document.id)
+    const legacy = new LoroDoc()
+    legacy.import(row!.snapshot)
+    legacy.getMap('fields').clear()
+    legacy.commit()
+    await crdt.compact(document.id, {
+      expectedVersion: row!.snapshotVersion,
+      foldedIds: [],
+      snapshot: legacy.export({ mode: 'snapshot' }),
+      snapshotVersion: legacy.oplogVersion().encode(),
+    })
+
+    const client = await clientOf(branch.id)
+
+    expect(readDocContent(client).fields?.typeSpecificData).toEqual({
+      slug: 's',
+    })
   })
 })
