@@ -65,7 +65,7 @@ describe('createAuthorHeadlessEditor', () => {
 
     expect(state.toJSON().root.children).toEqual([stock])
     expect(
-      state.read(() => $getRoot().getFirstChildOrThrow<DecoratorNode<null>>().isInline()),
+      state.read(() => ($getRoot().getFirstChildOrThrow() as DecoratorNode<null>).isInline()),
     ).toBe(false)
   })
 })

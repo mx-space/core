@@ -301,9 +301,9 @@ describe('createCrdtDraftSession presence', () => {
   const caretAt = (editor: LexicalEditor, block: number, offset: number) =>
     editor.update(
       () => {
-        const text = $getRoot()
-          .getChildAtIndex<ElementNode>(block)!
-          .getFirstDescendant()!
+        const text = (
+          $getRoot().getChildAtIndex(block) as ElementNode
+        ).getFirstDescendant()!
         ;(text as ReturnType<typeof $createTextNode>).select(offset, offset)
       },
       { discrete: true },
@@ -313,8 +313,7 @@ describe('createCrdtDraftSession presence', () => {
     editor
       .getEditorState()
       .read(() =>
-        $getRoot()
-          .getChildAtIndex<ElementNode>(block)!
+        ($getRoot().getChildAtIndex(block) as ElementNode)
           .getFirstDescendant()!
           .getKey(),
       )
@@ -368,9 +367,9 @@ describe('createCrdtDraftSession agent turns', () => {
     const turn = session.startAgentTurn('agent:rewrite p1')
     editor.update(
       () => {
-        const text = $getRoot()
-          .getChildAtIndex<ElementNode>(1)!
-          .getFirstDescendant() as ReturnType<typeof $createTextNode>
+        const text = (
+          $getRoot().getChildAtIndex(1) as ElementNode
+        ).getFirstDescendant() as ReturnType<typeof $createTextNode>
         text.setTextContent('p2 human')
       },
       { discrete: true },
@@ -449,9 +448,9 @@ describe('createCrdtDraftSession agent turns', () => {
     const turn = session.startAgentTurn('agent:x')
     editor.update(
       () => {
-        const text = $getRoot()
-          .getChildAtIndex<ElementNode>(1)!
-          .getFirstDescendant() as ReturnType<typeof $createTextNode>
+        const text = (
+          $getRoot().getChildAtIndex(1) as ElementNode
+        ).getFirstDescendant() as ReturnType<typeof $createTextNode>
         text.setTextContent('p2 typed')
       },
       { discrete: true },
@@ -495,8 +494,7 @@ describe('createCrdtDraftSession agent turns', () => {
       key: editor
         .getEditorState()
         .read(() =>
-          $getRoot()
-            .getChildAtIndex<ElementNode>(1)!
+          ($getRoot().getChildAtIndex(1) as ElementNode)
             .getFirstDescendant()!
             .getKey(),
         ),
