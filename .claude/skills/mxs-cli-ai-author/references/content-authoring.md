@@ -13,34 +13,32 @@ Use this reference when drafting or modifying posts, notes, or pages.
 ## Preferred Drafting Sequence
 
 ```text
-┌─────────────────────────┐
-│ Resolve category/topic  │
-└───────────┬─────────────┘
-            ▼
-┌─────────────────────────┐
-│ Write LiteXML envelope  │
-└───────────┬─────────────┘
-            ▼
-┌─────────────────────────┐
-│ mxs author <file>       │
-│ wait for the human      │
-│ then read <file>.diff   │
-└───────────┬─────────────┘
-            ▼
-┌─────────────────────────┐
-│ Dry-run create/update   │
-└───────────┬─────────────┘
-            ▼
-┌─────────────────────────┐
-│ Execute with --json     │
-└───────────┬─────────────┘
-            ▼
-┌─────────────────────────┐
-│ Read back with llm/json │
-└─────────────────────────┘
+┌──────────────────────────────┐
+│ Resolve category/topic       │
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│ Write LiteXML envelope       │
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│ mxs draft create --file …    │
+│ --silent --open              │
+│ give the human the URL; wait │
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│ mxs draft cat <id>           │
+│ (the human's edits are live) │
+└──────────────┬───────────────┘
+               ▼
+┌──────────────────────────────┐
+│ mxs draft publish <id>       │
+│ after an explicit yes        │
+└──────────────────────────────┘
 ```
 
-After writing the envelope, run `mxs author <file>` and show the human the URL. Stop. When they say they are done, read `<file>.diff` for their edits — do not rescan the full article unless the diff is missing.
+After writing the envelope, create a draft with `mxs draft create --file <envelope> --silent --open` and give the human the admin URL it prints. Stop. They review and edit in the online editor; when they say they are done, read the result with `mxs draft cat <id>`. Further agent edits go through `mxs draft patch <id>` (SEARCH/REPLACE on the live draft, see `mxs skill get commands-draft`), never a full rewrite. For an already published post, `mxs post stage <slugOrId> --title "<current title>"` gives a working-copy draft to `cat` / `patch`, and `mxs post apply <slugOrId>` publishes it.
 
 ## Content Sources
 

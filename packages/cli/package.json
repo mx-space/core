@@ -48,7 +48,7 @@
     "access": "public"
   },
   "scripts": {
-    "package": "pnpm -C ../../apps/admin run build:author && tsdown && node scripts/vendor-author.mjs",
+    "package": "tsdown",
     "build": "npm run package",
     "prepackage": "rm -rf dist",
     "clean": "rm -rf dist",
@@ -74,6 +74,7 @@
     "@mx-space/editor": "workspace:*",
     "@types/node": "26.6.6",
     "@types/semver": "7.8.0",
+    "@types/ws": "8.18.2",
     "better-auth": "^1.7.14",
     "effect": "4.0.7",
     "fast-xml-parser": "5.11.2",
@@ -81,10 +82,12 @@
     "lexical": "^0.53.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.4",
+    "ryugi-detect-agent": "^0.1.0",
     "semver": "7.8.5",
     "tsdown": "0.23.3",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "tsx": "^4.23.15",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "ws": "8.22.0"
   }
 }

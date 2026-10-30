@@ -54,7 +54,6 @@ scripts/workflow/data
 bin/process-reporter
 
 dist
-dist-author
 dev/
 
 .eslintcache

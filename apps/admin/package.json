@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "NODE_ENV=development vite --mode development --open --host",
     "build": "NODE_ENV=production vite build --mode production",
-    "build:author": "NODE_ENV=production vite build --config vite.author.config.mts --mode production",
     "preview": "vite preview --port 2323",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",

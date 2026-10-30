@@ -53,6 +53,7 @@ const makeApi = (
   calls: Array<{ path: string; options: unknown }>,
   responses: Record<string, unknown> = {},
 ): ApiService => ({
+  connection: () => Effect.die('connection is not used'),
   request: (path, options) =>
     Effect.sync(() => {
       calls.push({ path, options })

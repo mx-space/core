@@ -48,7 +48,11 @@ function mockApi(responses: RawResponses): ApiService {
       A,
       ApiError
     >
-  return { request, raw }
+  return {
+    connection: () => Effect.die('connection is not used'),
+    request,
+    raw,
+  }
 }
 
 // ---------------------------------------------------------------------------

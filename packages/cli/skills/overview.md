@@ -18,8 +18,8 @@ The audience is **AI agents**. Pass `--output llm` for raw markdown suitable for
 | I want to …                                                        | Read                                                                                            |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | Drive any task end-to-end without damaging server state            | `workflow`                                                                                      |
-| See what a change renders as, without writing to the server        | `commands-author`                                                                               |
-| Edit an existing post, add a section, fix a typo                   | `commands-post` + `authoring` + `commands-author`                                               |
+| Co-write a draft with a person in the online editor (live edits)   | `commands-draft` (`draft cat` / `draft patch`)                                                  |
+| Edit an existing post, add a section, fix a typo                   | `commands-post` + `authoring` + `commands-draft`                                                |
 | Write LiteXML that will actually parse (tags, attributes, recipes) | `litexml` + `litexml-nodes-structural`, `litexml-nodes-extensions`, `litexml-authoring-recipes` |
 | Upload an image / icon / avatar / file and get a public URL        | `commands-file`                                                                                 |
 | Stage changes without touching the published article               | `commands-draft`                                                                                |

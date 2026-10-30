@@ -1,7 +1,7 @@
 ---
 slug: commands-draft
 title: Draft commands
-description: draft list/get/create/update/publish/delete syntax — standalone server-side drafts
+description: draft list/get/cat/patch/create/update/publish/delete syntax — standalone server-side drafts and live collaborative editing
 order: 43
 ---
 
@@ -16,10 +16,58 @@ content change.
 | ------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `mxs draft list`         | List drafts.                                                | `--type post\|note\|page`, `--new` (unlinked only), `--linked`, `--page`, `--size` |
 | `mxs draft get <id>`     | Read a draft by Snowflake id.                               | global flags                                                                |
+| `mxs draft cat <id>`     | Print the live draft as a LiteXML envelope with block ids.  | `--outline`, `--selection`                                                   |
+| `mxs draft patch <id>`   | Apply SEARCH/REPLACE blocks from stdin to the live draft.   | `--message <summary>`                                                        |
 | `mxs draft create`       | Create a standalone post draft.                             | same authoring flags as `post create` (`--file`, `--title`, `--content`, `--format`, `--meta`, ...); `--silent` emits `{ok, id}` |
 | `mxs draft update <id>`  | Update a draft; bumps version, records history.             | same authoring flags; `--silent`                                            |
 | `mxs draft publish <id>` | Publish: creates the live post/note/page (or applies to the linked one). | `--ai`, `--silent`, `--open`                                    |
 | `mxs draft delete <id>`  | Delete a draft.                                             | `--force`; prefer `--dry-run` first                                          |
+
+## Editing a draft someone has open
+
+`cat` and `patch` join the draft's collaboration room, the same one the admin
+write page uses. A `patch` lands in every open editor at once, under a cursor
+named after the agent running it (Claude Code, Codex, …), and becomes one
+undoable row in the draft's history. Nothing is written to disk.
+
+```bash
+mxs draft cat <id>                 # <mxpost><meta>…</meta><content>…</content></mxpost>
+mxs draft cat <id> | grep -n 缓存  # pipe it anywhere
+mxs draft cat <id> --outline       # headings with block ids, for long drafts
+mxs draft cat <id> --selection     # the blocks a person last selected in the editor
+mxs draft patch <id> <<'EOF'
+<<<<<<< SEARCH
+<p id="hPzZ7MhV">exact text copied from cat</p>
+=======
+<p id="hPzZ7MhV">replacement</p>
+>>>>>>> REPLACE
+EOF
+```
+
+Rules for `patch`:
+
+- Copy SEARCH from `cat` output, tags and `id` attributes included. Matching
+  is literal (no regex, nothing to escape); leading indentation may differ.
+- Each SEARCH must match the **current** draft exactly once. Several blocks may
+  go in one call; they apply in order, and if any block fails nothing changes.
+- A SEARCH that no longer matches means someone edited that text. The error
+  shows the block's current content: run `cat` again and redo the edit on top
+  of it. Never retry the same SEARCH.
+- Only what SEARCH covers changes, so edits the person makes elsewhere at the
+  same time are kept. There is no whole-file overwrite; to insert a block, use
+  its neighbour as SEARCH and repeat it in REPLACE.
+- `<meta>` (title, slug, category by slug, tags, summary, `ai-gen`, …) is
+  edited the same way and travels in the same update.
+- A replacement the editor cannot represent (unknown tag) is refused instead of
+  silently dropped.
+- Exit codes: `0` applied (or no-op), `1` SEARCH did not match, `5` malformed
+  input, `3` not signed in, `4` network or production write gate, `6` server
+  rejected the edit.
+
+To edit a published post this way, stage it first so it has a working copy:
+`mxs post stage <slugOrId> --title "<current title>"` prints the draft; use its
+`id` with `cat` / `patch`, then `mxs post apply <slugOrId>` when the person
+approves.
 
 ## Recommended authoring flow for a new post
 
@@ -50,4 +98,4 @@ Notes:
   `--ai` nothing is generated. Nothing is generated automatically on content
   changes; regenerate later with `mxs ai`.
 
-Dry-run support: `create`, `update`, `publish`, `delete`.
+Dry-run support: `create`, `update`, `publish`, `delete`. `patch` has no dry run; `cat` shows the state it would apply to.

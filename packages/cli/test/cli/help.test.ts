@@ -176,6 +176,13 @@ describe('renderGroupHelp', () => {
     }
   })
 
+  it('lists the collaborative draft verbs and no longer knows author', () => {
+    const md = renderGroupHelp(groupHelpDataFor('draft', '0.3.0-test'))
+    expect(md).toMatch(/`cat/)
+    expect(md).toMatch(/`patch/)
+    expect(isGroupName('author')).toBe(false)
+  })
+
   it('recognizes known groups and rejects unknown group names', () => {
     expect(isGroupName('post')).toBe(true)
     expect(isGroupName('missing')).toBe(false)

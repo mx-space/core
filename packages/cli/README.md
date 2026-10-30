@@ -678,17 +678,21 @@ Example profile config:
 | `6`  | Server 5xx failure                                                           |
 | `7`  | Resource not found                                                           |
 
-## Author
+## Collaborative drafts
 
-`mxs author <file>` opens the Mix Space admin rich editor for a LiteXML fragment or `<mxpost>` / `<mxnote>` envelope and keeps it in sync with the file through a Loro CRDT. Browser edits autosave to the file; agent edits to the file stream into the editor with an agent cursor, merged three-way so concurrent typing is kept. `<file>.diff` holds the current body vs the body at process start, and `<file>.loro` persists the full history (browse and restore it from the editor's 历史 panel). The command does not contact `mx-core`. See `mxs skill get commands-author`.
+`mxs draft cat` and `mxs draft patch` read and edit a draft through the same live collaboration room the admin write page uses, so an agent's edits appear in an open editor as they land, with the agent's name on its cursor. Each call joins the room, works on the latest state and leaves; nothing is kept on disk. See `mxs skill get commands-draft`.
 
 ```bash
-mxs author ./post.xml              # open the editor
-mxs author --no-open ./post.xml    # print the URL only
-mxs author --port 4173 ./note.xml  # fail if the port is taken
+mxs draft cat <draftId>                  # LiteXML envelope with block ids
+mxs draft cat <draftId> --selection      # blocks a person last selected in the editor
+mxs draft patch <draftId> <<'EOF'
+<<<<<<< SEARCH
+<p id="hPzZ7MhV">old text copied from cat</p>
+=======
+<p id="hPzZ7MhV">new text</p>
+>>>>>>> REPLACE
+EOF
 ```
-
-Only the envelope `<content>` is edited. Meta such as title, slug, and tags is left in place. Stdin is not accepted.
 
 ## Skill bundle
 

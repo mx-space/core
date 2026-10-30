@@ -103,6 +103,14 @@ export interface ApiService {
     path: string,
     options?: Omit<ApiRequestOptions, 'schema'>,
   ) => Effect.Effect<unknown, ApiError>
+
+  /** Resolve the api base and auth headers for a non-HTTP channel (the collab socket). */
+  readonly connection: (
+    method: ApiMethod,
+  ) => Effect.Effect<
+    { readonly apiBase: string; readonly headers: Record<string, string> },
+    ApiError
+  >
 }
 
 export class Api extends Context.Service<Api, ApiService>()('Api') {
@@ -177,26 +185,18 @@ function makeApiService(
         })
       })
 
-    const request = <A = unknown, I = unknown>(
-      path: string,
-      options: ApiRequestOptions<A, I> = {},
-    ): Effect.Effect<A, ApiError> =>
-      Effect.gen(function* () {
-        const resolved = yield* resolvedEffect
-        yield* maybeEmitBanner(resolved)
-
-        const method = (options.method ?? 'GET') as ApiMethod
-        // ---- 1. write-gate (pure decision; runs BEFORE network) ---------
-        const gateInput: ResolvedGateInput = {
-          apiUrl: resolved.apiUrl,
-          profileName: resolved.profileName,
-          isProduction: resolved.isProduction,
-          profileExplicit: resolved.profileExplicit,
-          urlOverridden: resolved.urlOverridden,
-        }
-        const decision = decideWriteGate(gateInput, method as HttpMethod)
-        if (!decision.allow) {
-          return yield* Effect.fail(
+    const writeGate = (resolved: ResolvedConfig, method: ApiMethod) => {
+      const gateInput: ResolvedGateInput = {
+        apiUrl: resolved.apiUrl,
+        profileName: resolved.profileName,
+        isProduction: resolved.isProduction,
+        profileExplicit: resolved.profileExplicit,
+        urlOverridden: resolved.urlOverridden,
+      }
+      const decision = decideWriteGate(gateInput, method as HttpMethod)
+      return decision.allow
+        ? Effect.void
+        : Effect.fail(
             new WriteRequiresExplicit({
               message: decision.message,
               hint: decision.hint,
@@ -208,7 +208,40 @@ function makeApiService(
               },
             }),
           )
-        }
+    }
+
+    const freshToken = (resolved: ResolvedConfig) =>
+      Effect.gen(function* () {
+        if (!resolved.token || !resolved.profileName) return resolved.token
+        const fresh = yield* auth
+          .ensureFresh(resolved)
+          .pipe(Effect.catch(() => Effect.succeed(null)))
+        return fresh ? fresh.access_token : resolved.token
+      })
+
+    const connection = (method: ApiMethod) =>
+      Effect.gen(function* () {
+        const resolved = yield* resolvedEffect
+        yield* maybeEmitBanner(resolved)
+        yield* writeGate(resolved, method)
+        const token = yield* freshToken(resolved)
+        const headers: Record<string, string> = { 'user-agent': USER_AGENT }
+        if (token) headers.authorization = `Bearer ${token}`
+        if (resolved.apiKey) headers['x-api-key'] = resolved.apiKey
+        return { apiBase: resolved.apiBase, headers }
+      })
+
+    const request = <A = unknown, I = unknown>(
+      path: string,
+      options: ApiRequestOptions<A, I> = {},
+    ): Effect.Effect<A, ApiError> =>
+      Effect.gen(function* () {
+        const resolved = yield* resolvedEffect
+        yield* maybeEmitBanner(resolved)
+
+        const method = (options.method ?? 'GET') as ApiMethod
+        // ---- 1. write-gate (pure decision; runs BEFORE network) ---------
+        yield* writeGate(resolved, method)
 
         // ---- 1b. --dry-run short-circuit (writes only; reads pass through)
         if (opts.dryRun && method !== 'GET') {
@@ -234,13 +267,7 @@ function makeApiService(
         }
 
         // ---- 2. auto-refresh near-expiry tokens -------------------------
-        let token = resolved.token
-        if (token && resolved.profileName) {
-          const fresh = yield* auth
-            .ensureFresh(resolved)
-            .pipe(Effect.catch(() => Effect.succeed(null)))
-          if (fresh) token = fresh.access_token
-        }
+        let token = yield* freshToken(resolved)
 
         // ---- 3. send (with single 401-retry) ----------------------------
         // Inject `lang` into the query for read-only requests when the bin
@@ -361,6 +388,7 @@ function makeApiService(
     return {
       request,
       raw,
+      connection,
     }
   })
 }

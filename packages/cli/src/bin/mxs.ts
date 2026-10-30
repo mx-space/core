@@ -8,7 +8,6 @@ import { FetchHttpClient } from 'effect/http'
 
 import { aiCmd } from '../cli/ai'
 import { authCmd } from '../cli/auth'
-import { authorCmd } from '../cli/author'
 import { categoryCmd } from '../cli/category'
 import { commentCmd } from '../cli/comment'
 import { configCmd } from '../cli/config'
@@ -153,7 +152,6 @@ const rootCmd = Command.make('mxs', {}, () =>
     configCmd,
     fileCmd,
     skillCmd,
-    authorCmd,
     updateCmd,
   ]),
 )
@@ -283,7 +281,7 @@ type HelpTarget =
 // Top-level commands that are leafs (have their own handler) rather than
 // subcommand groups. Bare `mxs <leaf>` MUST execute the handler — only
 // `mxs <leaf> --help` should render our custom group/leaf help page.
-const LEAF_COMMANDS = new Set<string>(['update', 'skill', 'author'])
+const LEAF_COMMANDS = new Set<string>(['update', 'skill'])
 
 const detectHelpTarget = (rest: readonly string[]): HelpTarget => {
   // `rest` includes argv[0] (node) and argv[1] (script).

@@ -49,6 +49,7 @@ describe('mxs skill', () => {
     async () => {
       const res = await runMxs(['skill'])
       expect(res.code).toBe(0)
+      expect(res.stdout).not.toContain('commands-author')
       for (const slug of [
         'overview',
         'workflow',
@@ -63,7 +64,7 @@ describe('mxs skill', () => {
         'commands-config',
         'commands-auth',
         'commands-profile',
-        'commands-author',
+        'commands-draft',
         'output-modes',
         'auth-config',
         'safety',

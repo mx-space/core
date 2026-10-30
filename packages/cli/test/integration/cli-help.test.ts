@@ -63,7 +63,6 @@ describe('cli --help', () => {
         'config',
         'skill',
         'file',
-        'author',
         'update',
       ]) {
         expect(stripped).toMatch(new RegExp(`\\b${cmd}\\b`))

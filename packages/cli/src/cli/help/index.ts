@@ -36,7 +36,6 @@ import '../file'
 import '../note'
 import '../page'
 import '../post'
-import '../author'
 import '../profile'
 import '../project'
 import '../skill'
@@ -89,7 +88,6 @@ export const GROUP_NAMES = [
   'config',
   'skill',
   'file',
-  'author',
   'update',
 ] as const
 

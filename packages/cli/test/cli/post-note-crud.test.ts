@@ -55,6 +55,7 @@ const makeResolver = (): ResolverService => ({
 })
 
 const makeApi = (calls: Array<{ path: string; options: unknown }>): ApiService => ({
+  connection: () => Effect.die('connection is not used'),
   request: (path, options) =>
     Effect.sync(() => {
       calls.push({ path, options })

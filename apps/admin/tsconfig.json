@@ -24,8 +24,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
-    "vite.config.mts",
-    "vite.author.config.mts"
+    "vite.config.mts"
   ],
   "exclude": ["node_modules", "assets", "dist/**"]
 }

@@ -15,6 +15,7 @@ import { makeMemFs, TestFsLive, TestPathLive } from '../helper/test-fs'
 const none = <A>() => Option.none<A>()
 
 const makeApi = (calls: string[]): ApiService => ({
+  connection: () => Effect.die('connection is not used'),
   request: (path) =>
     Effect.sync(() => {
       calls.push(path)

@@ -1,10 +1,12 @@
 import { Command } from 'effect/cli'
 
 import { registerCommandHelp } from '../help/registry'
+import { cat } from './cat'
 import { create } from './create'
 import { del } from './delete'
 import { get } from './get'
 import { list } from './list'
+import { patch } from './patch'
 import { publish } from './publish'
 import { update } from './update'
 
@@ -19,6 +21,16 @@ const help = registerCommandHelp({
       description: 'list drafts',
     },
     { name: 'get', args: ['<id>'], description: 'show a single draft' },
+    {
+      name: 'cat',
+      args: ['<id>', '[--outline]', '[--selection]'],
+      description: 'print the live draft as LiteXML with block ids',
+    },
+    {
+      name: 'patch',
+      args: ['<id>', '[--message <summary>]', '< SEARCH/REPLACE blocks'],
+      description: 'apply literal SEARCH/REPLACE blocks to the live draft',
+    },
     {
       name: 'create',
       args: ['--file <envelope.xml>', '[--title ...]', '...'],
@@ -44,5 +56,14 @@ const help = registerCommandHelp({
 
 export const draftCmd = Command.make('draft').pipe(
   Command.withDescription(help.description),
-  Command.withSubcommands([list, get, create, update, publish, del]),
+  Command.withSubcommands([
+    list,
+    get,
+    cat,
+    patch,
+    create,
+    update,
+    publish,
+    del,
+  ]),
 )
