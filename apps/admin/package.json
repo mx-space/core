@@ -132,7 +132,7 @@
     "@vitejs/plugin-react": "6.1.2",
     "babel-plugin-react-compiler": "1.0.0",
     "code-inspector-plugin": "2.0.9",
-    "happy-dom": "^20.14.5",
+    "happy-dom": "^21.0.0",
     "tailwindcss": "^4.3.3",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "vite": "8.3.5",
