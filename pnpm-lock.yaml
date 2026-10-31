@@ -871,7 +871,7 @@ importers:
         version: 2.2.3
       jsondiffpatch:
         specifier: ^0.7.6
-        version: 0.7.6
+        version: 0.7.7
       jsonrepair:
         specifier: ^3.15.0
         version: 3.15.0
@@ -9004,8 +9004,8 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
-  jsondiffpatch@0.7.6:
-    resolution: {integrity: sha512-zE9+AXFq+MkTolDor2Cw1nJzLC0aleqPkYf52Kb4Kn4mJcka/gFHpGI2JBVEJCfWOvBl0OoxZS+wuLdislQcqg==}
+  jsondiffpatch@0.7.7:
+    resolution: {integrity: sha512-C3375q+xluwQYS6Je613YqXpZhW9uSi2YFRR+8QTJVYhdk0GZiDr7HD9bXNrdV9PJCpmwsCgJM9ZXXESSZPCzA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
@@ -14268,7 +14268,7 @@ snapshots:
       '@haklex/rich-headless': 0.62.2(lexical@0.53.0(typescript@6.0.3))(typescript@6.0.3)
       '@haklex/rich-style-token': 0.62.2(react@19.3.1)
       '@lexical/react': 0.53.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(yjs@13.6.33)
-      jsondiffpatch: 0.7.6
+      jsondiffpatch: 0.7.7
       lexical: 0.53.0(typescript@6.0.3)
       lucide-react: 1.63.0(@types/react@19.3.0)(react@19.3.1)
       react: 19.3.1
@@ -20740,7 +20740,7 @@ snapshots:
 
   jsonc-parser@3.3.1: {}
 
-  jsondiffpatch@0.7.6:
+  jsondiffpatch@0.7.7:
     dependencies:
       '@dmsnell/diff-match-patch': 1.1.0
 
