@@ -1,8 +1,5 @@
-import type { LexicalEditor } from 'lexical'
-import type { ReactNode } from 'react'
-import type { RichEditorProps } from '../core'
-import type { SaveExcalidrawSnapshot } from '../types'
-import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
+import '@haklex/rich-plugin-agent-stream/style.css'
+import './setup-enrichment-linkcard'
 
 import { DialogStackProvider } from '@haklex/rich-editor-ui'
 import { ExcalidrawConfigProvider } from '@haklex/rich-ext-excalidraw'
@@ -10,13 +7,17 @@ import {
   NestedDocDialogEditorProvider,
   nestedDocEditNodes,
 } from '@haklex/rich-ext-nested-doc'
+import { AgentStreamPlugin } from '@haklex/rich-plugin-agent-stream'
+import type { LexicalEditor } from 'lexical'
+import type { ReactNode } from 'react'
 
+import type { RichEditorProps } from '../core'
 import { RichEditor } from '../core'
+import type { SaveExcalidrawSnapshot } from '../types'
 import { EditorToolbar } from './EditorToolbar'
+import type { EnrichmentFetcher } from './EnrichmentLinkCardContext'
 import { EnrichmentFetcherProvider } from './EnrichmentLinkCardContext'
 import { NestedDocDialogEditor } from './NestedDocDialogEditor'
-
-import './setup-enrichment-linkcard'
 
 export interface RichEditorBridgeProps {
   editorProps: Omit<RichEditorProps, 'onChange' | 'onSubmit' | 'onEditorReady'>
@@ -58,6 +59,7 @@ export function RichEditorBridge({
               onSubmit={onSubmit}
               onEditorReady={onEditorReady}
             >
+              <AgentStreamPlugin agentName="AI" />
               {children}
             </RichEditor>
           </ExcalidrawConfigProvider>

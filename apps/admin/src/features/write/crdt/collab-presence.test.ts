@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   AGENT_PRESENCE_COLOR,
   createCollabPresence,
+  isAgentPresence,
   type OutgoingPresence,
   PRESENCE_COLORS,
 } from './collab-presence'
@@ -156,6 +157,21 @@ describe('createCollabPresence', () => {
     const [human, agent] = b.presence.remotes()
     expect(PRESENCE_COLORS).toContain(human.color)
     expect(agent.color).toBe(AGENT_PRESENCE_COLOR)
+  })
+
+  it('tells agent entries apart from members, local or remote', () => {
+    const { a, b, deliver } = pair()
+    a.presence.start()
+    a.presence.setExtra('agent:7', { anchor: null, focus: null })
+    deliver()
+
+    expect(a.presence.remotes().map(isAgentPresence)).toEqual([true])
+    expect(
+      b.presence.remotes().map((peer) => [peer.key, isAgentPresence(peer)]),
+    ).toEqual([
+      ['conn-a', false],
+      ['conn-a/agent:7', true],
+    ])
   })
 
   it('skips sending a caret that did not move', () => {

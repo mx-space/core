@@ -51,6 +51,11 @@ export type PresenceState = {
 
 export type RemotePresence = PresenceState & { key: string }
 
+const AGENT_ENTRY = 'agent:'
+
+export const isAgentPresence = (peer: Pick<RemotePresence, 'key'>) =>
+  peer.key.includes(`/${AGENT_ENTRY}`)
+
 export type OutgoingPresence = {
   caret: PresenceCaret | null
   entry?: string
@@ -91,7 +96,7 @@ const colorOf = (
   entry: string | null,
   taken: ReadonlySet<string> = new Set(),
 ) => {
-  if (entry?.startsWith('agent:')) return AGENT_PRESENCE_COLOR
+  if (entry?.startsWith(AGENT_ENTRY)) return AGENT_PRESENCE_COLOR
   let hash = 0
   for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) | 0
   const start = Math.abs(hash) % PRESENCE_COLORS.length
@@ -184,7 +189,7 @@ export function createCollabPresence(options: {
         connectionId: frame.connectionId,
         focus: pointOf(frame.caret.focus),
         key,
-        user: frame.entry?.startsWith('agent:')
+        user: frame.entry?.startsWith(AGENT_ENTRY)
           ? { ...frame.user, name: agentName(frame.caret.label) }
           : frame.user,
       })

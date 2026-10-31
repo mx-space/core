@@ -71,6 +71,30 @@ describe('buildTimeline', () => {
     expect(rows.at(-1)).toMatchObject({ published: true })
   })
 
+  it('folds the numbered writes of one agent turn into one step', () => {
+    const steps = buildTimeline(
+      {
+        changes: [
+          change('2', 3, 400, 'agent:shorten #3', [{ counter: 1, peer: '2' }]),
+          change('2', 1, 390, 'agent:shorten #2', [{ counter: 0, peer: '2' }]),
+          change('2', 0, 380, 'agent:shorten #1', [{ counter: 5, peer: '1' }]),
+          change('3', 0, 370, 'agent:shorten #1', [{ counter: 5, peer: '1' }]),
+        ],
+        checkpoints: [],
+      },
+      null,
+    )
+
+    expect(steps).toHaveLength(2)
+    expect(steps[0]).toMatchObject({
+      before: [{ counter: 5, peer: '1' }],
+      change: { counter: 3, peer: '2' },
+      count: 3,
+      message: 'agent:shorten',
+    })
+    expect(steps[1]).toMatchObject({ message: 'agent:shorten' })
+  })
+
   it('splits human edits separated by an idle gap', () => {
     const rows = buildTimeline(
       {

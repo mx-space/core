@@ -82,6 +82,30 @@ describe('RemoteCarets', () => {
     expect(caret!.textContent).toBe('Ann')
   })
 
+  it('leaves agent entries to the agent stream caret', () => {
+    const { editor, frame, key } = mountEditor()
+    const focus = { id: '1@1', offset: 2 }
+
+    act(() => {
+      root.render(
+        createElement(RemoteCarets, {
+          editor,
+          peers: sourceOf([
+            { ...peer(focus), key: 'local/agent:7' },
+            { ...peer(focus), key: 'c2/agent:9' },
+            peer(focus),
+          ]),
+          resolveCaret: () => ({ key, offset: 2 }),
+        }),
+      )
+    })
+
+    const carets = frame.querySelectorAll('[data-remote-caret]')
+    expect(
+      [...carets].map((caret) => caret.getAttribute('data-remote-caret')),
+    ).toEqual(['c1'])
+  })
+
   it('draws nothing for a member without a resolvable caret', () => {
     const { editor, frame } = mountEditor()
 

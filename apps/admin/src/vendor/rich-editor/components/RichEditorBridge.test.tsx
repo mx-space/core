@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { AgentStreamPlugin } from '@haklex/rich-plugin-agent-stream'
 import { createElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -89,6 +90,9 @@ describe('RichEditorBridge', () => {
       'nested-b',
     ])
     expect(richEditor.props.header.type).toBeTypeOf('function')
-    expect(richEditor.props.children.type).toBe('custom-child')
+    expect(richEditor.props.children.map((child: any) => child.type)).toEqual([
+      AgentStreamPlugin,
+      'custom-child',
+    ])
   })
 })

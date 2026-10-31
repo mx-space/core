@@ -1,6 +1,7 @@
 import './setup-enrichment-linkcard'
 import '@haklex/rich-ext-ai-agent/style.css'
 import '@haklex/rich-ext-nested-doc/style.css'
+import '@haklex/rich-plugin-agent-stream/style.css'
 import '../core/style'
 
 import type {
@@ -21,6 +22,7 @@ import {
   nestedDocEditNodes,
   NestedDocPlugin,
 } from '@haklex/rich-ext-nested-doc'
+import { AgentStreamPlugin } from '@haklex/rich-plugin-agent-stream'
 import { ImageEditModalPlugin } from '@haklex/rich-plugin-image-editor'
 import type { LexicalEditor } from 'lexical'
 import { useRef } from 'react'
@@ -103,6 +105,7 @@ export function ReactEditorPane({
               onSubmit={onSubmit}
               onEditorReady={handleEditorReady}
             >
+              <AgentStreamPlugin agentName="AI" />
               <DiffReviewOverlayPlugin store={store} />
               {agentRuntime ? <AgentSelectionPinPlugin store={store} /> : null}
               <AgentLoopCapture

@@ -27,6 +27,7 @@ import { LoroDoc } from 'loro-crdt'
 
 import type { ApiRequestError } from '~/api/http'
 
+import { agentWriteMessage } from './agent-commit-message'
 import type { CollabChannel } from './collab-channel'
 import {
   type CaretPoint,
@@ -328,6 +329,7 @@ export async function createCrdtDraftSession(
       let title = doc.getText(TITLE).toString()
       let view: Frontiers = doc.frontiers()
       let ended = false
+      let writes = 0
       presence.setExtra(key, { anchor: null, focus: null })
       return {
         apply: (target, focusBlockId) => {
@@ -340,7 +342,7 @@ export async function createCrdtDraftSession(
             doc,
             view,
             { content: JSON.stringify(target), title },
-            message,
+            agentWriteMessage(message, ++writes),
             { peer },
           )
           if (binding) binding.import(update)

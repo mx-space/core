@@ -1,3 +1,4 @@
+import { agentTurnMessage } from '~/features/write/crdt/agent-commit-message'
 import type {
   CheckpointKind,
   CrdtOpId,
@@ -51,7 +52,10 @@ const groupSteps = (changes: DraftChange[]): TimelineStep[] => {
   let groupPeer = ''
   for (const entry of changes) {
     const kind = kindOf(entry.message)
-    const message = entry.message ?? ''
+    const message =
+      kind === 'agent'
+        ? agentTurnMessage(entry.message ?? '')
+        : (entry.message ?? '')
     const last = steps.at(-1)
     const joins =
       last?.kind === kind &&

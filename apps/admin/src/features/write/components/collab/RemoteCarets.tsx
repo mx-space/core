@@ -2,7 +2,11 @@ import type { LexicalEditor, NodeKey } from 'lexical'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import type { CaretPoint, RemotePresence } from '../../crdt/collab-presence'
+import {
+  type CaretPoint,
+  isAgentPresence,
+  type RemotePresence,
+} from '../../crdt/collab-presence'
 import { type PeersSource, usePeers } from '../../crdt/peers-store'
 
 type Resolve = (point: CaretPoint) => { key: NodeKey; offset: number } | null
@@ -114,6 +118,7 @@ export function RemoteCarets(props: {
     const update = () =>
       setDrawn(
         peers
+          .filter((peer) => !isAgentPresence(peer))
           .map((peer) => measure(editor, frame, peer, resolveCaret))
           .filter((peer): peer is DrawnPeer => peer !== null),
       )

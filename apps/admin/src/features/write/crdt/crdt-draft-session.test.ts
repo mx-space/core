@@ -502,7 +502,7 @@ describe('createCrdtDraftSession agent turns', () => {
     expect(serverTexts(server)).toEqual(['P1 agent', 'p2 human', 'p3 agent'])
     const agentPeers = [...server.getAllChanges().entries()]
       .filter(([, changes]) =>
-        changes.some((change) => change.message === 'agent:rewrite p1'),
+        changes.some((change) => change.message?.startsWith('agent:')),
       )
       .map(([peer]) => peer)
     expect(agentPeers).toHaveLength(1)
@@ -510,9 +510,38 @@ describe('createCrdtDraftSession agent turns', () => {
       server
         .getAllChanges()
         .get(agentPeers[0])!
-        .every((change) => change.message === 'agent:rewrite p1'),
-    ).toBe(true)
+        .map((change) => change.message),
+    ).toEqual(['agent:rewrite p1 #1', 'agent:rewrite p1 #2'])
     session.dispose()
+  })
+
+  it('keeps every write of a long turn playable as a live agent write', async () => {
+    vi.useFakeTimers({ now: 1_800_000_000_000, toFake: ['Date'] })
+    try {
+      const server = seededServer('T', 'p1')
+      const session = await createCrdtDraftSession({
+        transport: transportFor(server),
+      })
+      const editor = newEditor()
+      session.bindEditor(editor)
+      const tags: string[][] = []
+      editor.registerUpdateListener((update) => {
+        tags.push([...update.tags])
+      })
+
+      const turn = session.startAgentTurn('agent:append')
+      turn.apply(stateOf('p1', 'first'))
+      vi.setSystemTime(Date.now() + 20_000)
+      tags.length = 0
+      turn.apply(stateOf('p1', 'first', 'second'))
+      turn.end()
+
+      expect(read(editor)).toEqual(['p1', 'first', 'second'])
+      expect(tags.some((list) => list.includes('agent-write'))).toBe(true)
+      session.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('shows the agent as a member while its turn runs', async () => {
