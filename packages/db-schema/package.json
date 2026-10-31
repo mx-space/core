@@ -61,7 +61,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261028.1",
     "@types/node": "26.6.6",
-    "tsdown": "0.23.3",
+    "tsdown": "0.23.4",
     "tsrs": "0.20.1-ts7.1.0-beta"
   }
 }

@@ -78,7 +78,7 @@
   "devDependencies": {
     "@haklex/rich-collab-loro": "0.62.2",
     "loro-crdt": "^1.17.1",
-    "tsdown": "0.23.3",
+    "tsdown": "0.23.4",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "vitest": "5.0.5"
   },
