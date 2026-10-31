@@ -93,7 +93,7 @@
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.99.1",
-    "@earendil-works/pi-ai": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.2",
     "@haklex/rich-headless": "0.62.2",
     "@innei/message-engine": "0.5.0",
     "es-toolkit": "^1.53.0",
