@@ -48,7 +48,7 @@ overrides:
   'nanoid@>=4.0.0 <5.0.9': 5.1.16
   'tmp@<0.2.6': 0.2.7
   'uuid@<11.1.1': 11.1.1
-  jose: 6.2.13
+  jose: 6.2.14
   lucide-react: 1.63.0
   '@codemirror/state': 6.7.6
   '@codemirror/view': 6.43.15
