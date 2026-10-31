@@ -65,7 +65,7 @@
     "@better-auth/api-key": "^1.7.14",
     "@better-auth/expo": "^1.7.14",
     "@better-auth/passkey": "^1.7.14",
-    "@earendil-works/pi-agent-core": "0.99.1",
+    "@earendil-works/pi-agent-core": "0.99.2",
     "@earendil-works/pi-ai": "0.99.1",
     "@fastify/multipart": "10.1.6",
     "@fastify/static": "10.1.8",

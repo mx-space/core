@@ -92,7 +92,7 @@
     "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "0.99.1",
+    "@earendil-works/pi-agent-core": "0.99.2",
     "@earendil-works/pi-ai": "0.99.1",
     "@haklex/rich-headless": "0.62.2",
     "@innei/message-engine": "0.5.0",
