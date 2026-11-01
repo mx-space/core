@@ -108,6 +108,15 @@ pub struct Store {
     connection: Connection,
 }
 
+const SCRUB_SETTLED_REPLY_EXCERPTS_SQL: &str =
+    "UPDATE push_events SET payload = json_remove(payload, '$.data.reply_excerpt')
+     WHERE json_extract(payload, '$.data.reply_excerpt') IS NOT NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM push_deliveries d
+         WHERE d.source_id = push_events.source_id AND d.event_id = push_events.id
+           AND d.status IN ('pending', 'processing', 'retrying')
+       )";
+
 fn admission_error() -> rusqlite::Error {
     rusqlite::Error::InvalidParameterName("relay_admission_limited".into())
 }
@@ -488,6 +497,7 @@ impl Store {
                 };
                 let within_budget: bool = tx.query_row("SELECT (SELECT count(*) FROM push_deliveries WHERE status IN ('pending', 'processing', 'retrying')) <= 10000 AND (SELECT count(*) FROM push_deliveries WHERE created_at >= ?1) <= 100000", [now - 86400000], |row| row.get(0))?;
                 if !within_budget { return Err(admission_error()); }
+                tx.execute(SCRUB_SETTLED_REPLY_EXCERPTS_SQL, [])?;
                 tx.commit()?;
                 Ok(deliveries)
             })
@@ -539,11 +549,14 @@ impl Store {
         );
         self.connection
             .call(move |conn| {
-                conn.execute(
+                let tx = conn.transaction()?;
+                tx.execute(
                     "UPDATE push_deliveries SET status = 'delivered', apns_id = ?2,
                      delivered_at = ?3, updated_at = ?3 WHERE id = ?1",
                     values,
                 )?;
+                tx.execute(SCRUB_SETTLED_REPLY_EXCERPTS_SQL, [])?;
+                tx.commit()?;
                 Ok(())
             })
             .await
@@ -580,9 +593,12 @@ impl Store {
         let values = (id.to_owned(), error.to_owned(), now.timestamp_millis());
         self.connection
             .call(move |conn| {
-                conn.execute(
+                let tx = conn.transaction()?;
+                tx.execute(
                     "UPDATE push_deliveries SET status = 'failed', last_error = ?2, updated_at = ?3 WHERE id = ?1", values,
                 )?;
+                tx.execute(SCRUB_SETTLED_REPLY_EXCERPTS_SQL, [])?;
+                tx.commit()?;
                 Ok(())
             })
             .await
@@ -1088,5 +1104,93 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
+    }
+
+    async fn stored_excerpt(store: &Store, event_id: &str) -> Option<String> {
+        let event_id = event_id.to_owned();
+        store
+            .connection
+            .call(move |conn| {
+                Ok::<_, rusqlite::Error>(conn.query_row(
+                    "SELECT json_extract(payload, '$.data.reply_excerpt') FROM push_events WHERE id = ?1",
+                    [event_id],
+                    |row| row.get::<_, Option<String>>(0),
+                )?)
+            })
+            .await
+            .unwrap()
+    }
+
+    fn reply_with_excerpt(id: &str, recipient: &str) -> PushEvent {
+        event(
+            id,
+            crate::protocol::COMMENT_REPLIED_EVENT,
+            json!({
+                "resource_id": format!("c_{id}"), "resource_type": "comment", "recipient_reader_id": recipient,
+                "sender_id": "sender", "sender_name": "Sender", "target_title": "Title",
+                "target_path": "/posts/1", "reply_excerpt": "secret words"
+            }),
+        )
+    }
+
+    #[tokio::test]
+    async fn reply_excerpt_is_erased_once_every_delivery_settles() {
+        let store = store().await;
+        let preferences = PushPreferences::default();
+        bind(&store, "phone", "yohaku", Some("reader1"), &preferences).await;
+        bind(&store, "pad", "yohaku", Some("reader1"), &preferences).await;
+        let now = Utc::now();
+        let reply = reply_with_excerpt("reply", "reader1");
+        assert_eq!(
+            store
+                .accept_event("src_1", "d1", &reply, now)
+                .await
+                .unwrap(),
+            2
+        );
+        let claimed = store.claim_deliveries(10, now).await.unwrap();
+        assert_eq!(claimed.len(), 2);
+        let PushEvent::CommentReplied(claimed_event) = claimed[0].event.clone().unwrap() else {
+            panic!()
+        };
+        assert_eq!(
+            claimed_event.data.reply_excerpt.as_deref(),
+            Some("secret words")
+        );
+
+        store
+            .complete_delivery(&claimed[0].id, Some("apns"), now)
+            .await
+            .unwrap();
+        store
+            .retry_delivery(&claimed[1].id, "503", now, now)
+            .await
+            .unwrap();
+        assert_eq!(
+            stored_excerpt(&store, "reply").await.as_deref(),
+            Some("secret words")
+        );
+
+        let retried = store.claim_deliveries(10, now).await.unwrap();
+        assert_eq!(retried.len(), 1);
+        store
+            .fail_delivery(&retried[0].id, "410", now)
+            .await
+            .unwrap();
+        assert_eq!(stored_excerpt(&store, "reply").await, None);
+    }
+
+    #[tokio::test]
+    async fn reply_excerpt_without_recipients_is_never_kept() {
+        let store = store().await;
+        let reply = reply_with_excerpt("orphan", "nobody");
+        assert_eq!(
+            store
+                .accept_event("src_1", "d1", &reply, Utc::now())
+                .await
+                .unwrap(),
+            0
+        );
+        assert_eq!(stored_excerpt(&store, "orphan").await, None);
     }
 }

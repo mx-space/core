@@ -9,6 +9,8 @@ export const COMMENT_REPLIED_EVENT = 'dev.mx-space.comment.replied.v1' as const
 const resourceId = z.string().min(1).max(128)
 const publicTitle = z.string().trim().min(1).max(160)
 const publicSummary = z.string().trim().min(1).max(360)
+const noteAttribute = z.string().trim().min(1).max(40)
+const replyExcerpt = z.string().trim().min(1).max(160)
 const isSafeTargetSegment = (segment: string) => {
   try {
     const decoded = decodeURIComponent(segment)
@@ -68,6 +70,10 @@ const ContentArticleDataSchema = z
     display_title: publicTitle,
     summary: publicSummary.optional(),
     target_path: internalTargetPath,
+    owner_name: ownerName.optional(),
+    cover_url: httpsUrl.optional(),
+    weather: noteAttribute.optional(),
+    mood: noteAttribute.optional(),
   })
   .strict()
 
@@ -115,6 +121,7 @@ export const CommentRepliedDataSchema = z
     sender_avatar_url: httpsUrl.optional(),
     target_title: publicTitle,
     target_path: internalTargetPath,
+    reply_excerpt: replyExcerpt.optional(),
   })
   .strict()
 

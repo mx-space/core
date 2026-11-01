@@ -60,7 +60,8 @@
         },
         "sound": "default",
         "thread-id": "posts",
-        "category": "YOHAKU_CONTENT"
+        "category": "YOHAKU_CONTENT",
+        "mutable-content": 1
       },
       "event_type": "dev.mx-space.content.published.v1",
       "target_path": "/posts/p1",
@@ -96,7 +97,8 @@
         },
         "sound": "default",
         "thread-id": "notes",
-        "category": "YOHAKU_CONTENT"
+        "category": "YOHAKU_CONTENT",
+        "mutable-content": 1
       },
       "event_type": "dev.mx-space.content.published.v1",
       "target_path": "/notes/1",
@@ -429,6 +431,102 @@
       "source_id": "src_abc",
       "resource_type": "comment",
       "resource_id": "c3"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e11",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.content.published.v1",
+      "subject": "note/n1",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "n1",
+        "resource_type": "note",
+        "display_title": "Note",
+        "target_path": "/notes/1",
+        "owner_name": "Innei",
+        "cover_url": "https://object.innei.in/c.png",
+        "weather": "秋",
+        "mood": "五味杂陈"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_CONTENT_TITLE",
+          "title-loc-args": [
+            "Note"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "notes",
+        "category": "YOHAKU_CONTENT",
+        "mutable-content": 1
+      },
+      "event_type": "dev.mx-space.content.published.v1",
+      "target_path": "/notes/1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "note",
+      "resource_id": "n1",
+      "owner_name": "Innei",
+      "cover_url": "https://object.innei.in/c.png",
+      "weather": "秋",
+      "mood": "五味杂陈"
+    }
+  },
+  {
+    "event": {
+      "specversion": "1.0",
+      "id": "e12",
+      "source": "urn:mx-core:instance:src_abc",
+      "type": "dev.mx-space.comment.replied.v1",
+      "subject": "comment/c2",
+      "time": "2026-10-06T12:00:00.000Z",
+      "datacontenttype": "application/json",
+      "data": {
+        "resource_id": "c2",
+        "resource_type": "comment",
+        "recipient_reader_id": "rd1",
+        "sender_id": "s1",
+        "sender_name": " Bob ",
+        "sender_avatar_url": "https://a.b/c.png",
+        "target_title": "Post",
+        "target_path": "/posts/p1",
+        "reply_excerpt": "暂时还不行"
+      }
+    },
+    "payload": {
+      "aps": {
+        "alert": {
+          "title-loc-key": "PUSH_REPLY_TITLE",
+          "title-loc-args": [
+            "Bob"
+          ],
+          "loc-key": "PUSH_REPLY_BODY",
+          "loc-args": [
+            "Post"
+          ]
+        },
+        "sound": "default",
+        "thread-id": "comment-replies",
+        "category": "YOHAKU_COMMENT_REPLIED",
+        "mutable-content": 1
+      },
+      "event_type": "dev.mx-space.comment.replied.v1",
+      "sender_id": "s1",
+      "sender_name": "Bob",
+      "sender_avatar_url": "https://a.b/c.png",
+      "target_title": "Post",
+      "target_path": "/posts/p1",
+      "schema_version": 1,
+      "source_id": "src_abc",
+      "resource_type": "comment",
+      "resource_id": "c2",
+      "reply_excerpt": "暂时还不行"
     }
   }
 ]

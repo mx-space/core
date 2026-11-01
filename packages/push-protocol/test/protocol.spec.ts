@@ -170,6 +170,55 @@ describe('push protocol', () => {
     expect(PushEventSchema.parse(published)).toEqual(published)
   })
 
+  it('accepts banner metadata on published articles', () => {
+    const published = {
+      ...cloudEventBase,
+      id: 'content.published:note:abc',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'note/abc',
+      data: {
+        resource_id: 'abc',
+        resource_type: 'note',
+        display_title: '十月未央',
+        target_path: '/notes/221',
+        owner_name: 'Innei',
+        cover_url: 'https://object.innei.in/cover.png',
+        weather: '秋',
+        mood: '五味杂陈',
+      },
+    }
+
+    expect(PushEventSchema.parse(published)).toEqual(published)
+  })
+
+  it('rejects non-HTTPS covers and oversized banner metadata', () => {
+    const base = {
+      ...cloudEventBase,
+      id: 'content.published:post:abc',
+      type: CONTENT_PUBLISHED_EVENT,
+      subject: 'post/abc',
+    }
+    const data = {
+      resource_id: 'abc',
+      resource_type: 'post',
+      display_title: 'A public title',
+      target_path: '/posts/tech/a',
+    }
+
+    expect(
+      PushEventSchema.safeParse({
+        ...base,
+        data: { ...data, cover_url: 'http://object.innei.in/cover.png' },
+      }).success,
+    ).toBe(false)
+    expect(
+      PushEventSchema.safeParse({
+        ...base,
+        data: { ...data, weather: 'x'.repeat(41) },
+      }).success,
+    ).toBe(false)
+  })
+
   it('rejects private visitor data and unsafe paths on content.published.v1', () => {
     const data = {
       resource_id: 'abc',
@@ -246,7 +295,34 @@ describe('push protocol', () => {
     expect(PushEventSchema.parse(replied)).toEqual(replied)
   })
 
-  it('rejects reply text and non-HTTPS sender avatars', () => {
+  it('accepts a bounded reply excerpt on comment.replied.v1', () => {
+    const data = {
+      resource_id: '456',
+      resource_type: 'comment',
+      recipient_reader_id: 'reader_1',
+      sender_id: 'reader_2',
+      sender_name: 'A reader',
+      target_title: 'A public post',
+      target_path: '/comments/post-1',
+    } as const
+    const envelope = {
+      ...cloudEventBase,
+      id: 'comment.replied:456',
+      type: COMMENT_REPLIED_EVENT,
+      subject: 'comment/456',
+    }
+    const replied = { ...envelope, data: { ...data, reply_excerpt: '暂时还不行' } }
+
+    expect(PushEventSchema.parse(replied)).toEqual(replied)
+    expect(
+      PushEventSchema.safeParse({
+        ...envelope,
+        data: { ...data, reply_excerpt: 'x'.repeat(161) },
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects raw reply text and non-HTTPS sender avatars', () => {
     const data = {
       resource_id: '456',
       resource_type: 'comment',

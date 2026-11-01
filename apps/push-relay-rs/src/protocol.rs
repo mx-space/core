@@ -140,6 +140,14 @@ pub struct ArticleData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
     pub target_path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub owner_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub weather: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mood: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy)]
@@ -233,6 +241,8 @@ pub struct CommentRepliedData {
     pub sender_avatar_url: Option<String>,
     pub target_title: String,
     pub target_path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_excerpt: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -335,6 +345,7 @@ impl PushEvent {
                 }
                 checker.trimmed(&["data", "target_title"], &mut d.target_title, 1, 160);
                 checker.target_path(&["data", "target_path"], &d.target_path);
+                checker.trimmed_opt(&["data", "reply_excerpt"], &mut d.reply_excerpt, 1, 160);
                 let (resource_type, resource_id) = (d.resource_type.clone(), d.resource_id.clone());
                 e.check_subject_matches(&mut checker, &resource_type, &resource_id);
             }
@@ -390,6 +401,17 @@ fn check_content_published(checker: &mut Checker, data: &mut ContentPublishedDat
             checker.trimmed(&["data", "display_title"], &mut d.display_title, 1, 160);
             checker.trimmed_opt(&["data", "summary"], &mut d.summary, 1, 360);
             checker.target_path(&["data", "target_path"], &d.target_path);
+            checker.trimmed_opt(&["data", "owner_name"], &mut d.owner_name, 1, 80);
+            if let Some(url) = &d.cover_url {
+                checker.check(
+                    is_https_url(url),
+                    &["data", "cover_url"],
+                    "HTTPS URL required",
+                );
+                checker.len(&["data", "cover_url"], url, 0, 2048);
+            }
+            checker.trimmed_opt(&["data", "weather"], &mut d.weather, 1, 40);
+            checker.trimmed_opt(&["data", "mood"], &mut d.mood, 1, 40);
         }
         ContentPublishedData::RecentlyEnriched(d) => {
             checker.len(&["data", "resource_id"], &d.resource_id, 1, 128);
@@ -472,6 +494,13 @@ mod tests {
             panic!()
         };
         assert_eq!(data.display_title, "Hi");
+
+        let mut insecure_cover = value.clone();
+        insecure_cover["data"]["cover_url"] = json!("http://object.innei.in/c.png");
+        assert!(PushEvent::parse(insecure_cover).is_err());
+        let mut long_weather = value.clone();
+        long_weather["data"]["weather"] = json!("x".repeat(41));
+        assert!(PushEvent::parse(long_weather).is_err());
 
         let mut mismatch = value.clone();
         mismatch["subject"] = json!("post/other");

@@ -15,6 +15,7 @@ use crate::protocol::{
 
 const TOKEN_TTL_SECONDS: i64 = 50 * 60;
 const MAX_PAYLOAD_BYTES: usize = 4096;
+const SHEDDABLE_FIELDS: [&str; 4] = ["cover_url", "mood", "weather", "reply_excerpt"];
 
 #[derive(Debug)]
 pub struct ApnsResult {
@@ -257,10 +258,21 @@ pub fn build_apns_payload(event: &PushEvent) -> Value {
         }
         PushEvent::ContentPublished(e) => {
             let (alert, thread_id) = content_alert(&e.data);
-            payload.insert(
-                "aps".into(),
-                json!({ "alert": alert, "sound": "default", "thread-id": thread_id, "category": "YOHAKU_CONTENT" }),
-            );
+            let mut aps = json!({ "alert": alert, "sound": "default", "thread-id": thread_id, "category": "YOHAKU_CONTENT" });
+            if let ContentPublishedData::Article(d) = &e.data {
+                aps["mutable-content"] = json!(1);
+                for (key, value) in [
+                    ("owner_name", &d.owner_name),
+                    ("cover_url", &d.cover_url),
+                    ("weather", &d.weather),
+                    ("mood", &d.mood),
+                ] {
+                    if let Some(value) = value {
+                        payload.insert(key.into(), json!(value));
+                    }
+                }
+            }
+            payload.insert("aps".into(), aps);
             payload.insert("event_type".into(), json!(e.event_type));
             payload.insert("target_path".into(), json!(e.data.target_path()));
             let (resource_type, resource_id) = e.data.resource();
@@ -291,8 +303,17 @@ pub fn build_apns_payload(event: &PushEvent) -> Value {
             }
             payload.insert("target_title".into(), json!(d.target_title));
             payload.insert("target_path".into(), json!(d.target_path));
+            if let Some(excerpt) = &d.reply_excerpt {
+                payload.insert("reply_excerpt".into(), json!(excerpt));
+            }
             custom_fields(&mut payload, &e.source, &d.resource_type, &d.resource_id);
         }
+    }
+    for field in SHEDDABLE_FIELDS {
+        if Value::Object(payload.clone()).to_string().len() <= MAX_PAYLOAD_BYTES {
+            break;
+        }
+        payload.remove(field);
     }
     Value::Object(payload)
 }
@@ -315,5 +336,131 @@ mod tests {
                 fixture["event"]["id"]
             );
         }
+    }
+
+    fn content_event(data: Value) -> PushEvent {
+        let resource_type = data["resource_type"].as_str().unwrap().to_string();
+        let resource_id = data["resource_id"].as_str().unwrap().to_string();
+        PushEvent::parse(json!({
+            "specversion": "1.0",
+            "id": "content.published:x",
+            "source": "urn:mx-core:instance:src_abc",
+            "type": "dev.mx-space.content.published.v1",
+            "subject": format!("{resource_type}/{resource_id}"),
+            "time": "2026-10-06T12:00:00.000Z",
+            "datacontenttype": "application/json",
+            "data": data,
+        }))
+        .unwrap()
+    }
+
+    fn reply_event(extra: Value) -> PushEvent {
+        let mut data = json!({
+            "resource_id": "c2",
+            "resource_type": "comment",
+            "recipient_reader_id": "rd1",
+            "sender_id": "s1",
+            "sender_name": "Innei",
+            "target_title": "十月未央",
+            "target_path": "/comments/n1",
+        });
+        data.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        PushEvent::parse(json!({
+            "specversion": "1.0",
+            "id": "comment.replied:c2",
+            "source": "urn:mx-core:instance:src_abc",
+            "type": "dev.mx-space.comment.replied.v1",
+            "subject": "comment/c2",
+            "time": "2026-10-06T12:00:00.000Z",
+            "datacontenttype": "application/json",
+            "data": data,
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn article_banner_metadata_rides_in_custom_fields_with_unchanged_alert() {
+        let payload = build_apns_payload(&content_event(json!({
+            "resource_id": "n1",
+            "resource_type": "note",
+            "display_title": "十月未央",
+            "target_path": "/notes/221",
+            "owner_name": "Innei",
+            "cover_url": "https://object.innei.in/c.png",
+            "weather": "秋",
+            "mood": "五味杂陈",
+        })));
+        assert_eq!(payload["aps"]["mutable-content"], json!(1));
+        assert_eq!(
+            payload["aps"]["alert"],
+            json!({ "title-loc-key": "PUSH_CONTENT_TITLE", "title-loc-args": ["十月未央"] })
+        );
+        assert_eq!(payload["owner_name"], json!("Innei"));
+        assert_eq!(payload["cover_url"], json!("https://object.innei.in/c.png"));
+        assert_eq!(payload["weather"], json!("秋"));
+        assert_eq!(payload["mood"], json!("五味杂陈"));
+    }
+
+    #[test]
+    fn article_without_metadata_still_opts_into_the_extension() {
+        let payload = build_apns_payload(&content_event(json!({
+            "resource_id": "p1",
+            "resource_type": "post",
+            "display_title": "Hello",
+            "target_path": "/posts/tech/hello",
+        })));
+        assert_eq!(payload["aps"]["mutable-content"], json!(1));
+        assert!(payload.get("owner_name").is_none());
+        assert!(payload.get("cover_url").is_none());
+    }
+
+    #[test]
+    fn recently_does_not_opt_into_the_extension() {
+        let payload = build_apns_payload(&content_event(json!({
+            "resource_id": "r1",
+            "resource_type": "recently",
+            "target_path": "/thinking/r1",
+            "kind": "plain",
+            "owner_name": "Innei",
+            "text": "hi",
+        })));
+        assert!(payload["aps"].get("mutable-content").is_none());
+    }
+
+    #[test]
+    fn reply_excerpt_rides_in_custom_fields_with_unchanged_alert() {
+        let payload = build_apns_payload(&reply_event(
+            json!({ "reply_excerpt": "暂时还不行\u{E000}" }),
+        ));
+        assert_eq!(payload["reply_excerpt"], json!("暂时还不行\u{E000}"));
+        assert_eq!(
+            payload["aps"]["alert"],
+            json!({
+                "title-loc-key": "PUSH_REPLY_TITLE",
+                "title-loc-args": ["Innei"],
+                "loc-key": "PUSH_REPLY_BODY",
+                "loc-args": ["十月未央"],
+            })
+        );
+    }
+
+    #[test]
+    fn oversized_payload_sheds_optional_banner_fields() {
+        let long_cover = format!("https://object.innei.in/{}", "a".repeat(2000));
+        let payload = build_apns_payload(&content_event(json!({
+            "resource_id": "p1",
+            "resource_type": "post",
+            "display_title": "题".repeat(160),
+            "summary": "摘".repeat(360),
+            "target_path": format!("/posts/{}", "b".repeat(500)),
+            "owner_name": "名".repeat(80),
+            "cover_url": long_cover,
+            "weather": "晴",
+        })));
+        assert!(payload.to_string().len() <= MAX_PAYLOAD_BYTES);
+        assert!(payload.get("cover_url").is_none());
+        assert_eq!(payload["owner_name"], json!("名".repeat(80)));
     }
 }

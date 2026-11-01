@@ -33,6 +33,7 @@ import type { PushRelaySourceRow } from './push.types'
 import { resolveAllowedPushRelayOrigin } from './push-relay-origin'
 import { PushSecretVault } from './push-secret.vault'
 import { enrichmentMapOf, projectThinkingCopy } from './recently-copy'
+import { projectReplyExcerpt } from './reply-excerpt'
 
 const resourceIdOf = (data: unknown) => {
   const value = (data as { id?: unknown } | null)?.id
@@ -260,6 +261,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       author?: unknown
       avatar?: unknown
       refId?: unknown
+      text?: unknown
     }
     const resourceId = resourceIdOf(comment)
     const parentCommentId = comment.parentCommentId
@@ -279,6 +281,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       160,
     )
     if (!targetTitle) return
+    const replyExcerpt = projectReplyExcerpt(comment.text)
     const time = eventTimeOf(comment)
     await this.enqueueToEnabledSources((source) => {
       const event: CommentRepliedEvent = {
@@ -301,6 +304,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
             : {}),
           target_title: targetTitle,
           target_path: `/comments/${encodeURIComponent(targetId)}`,
+          ...(replyExcerpt ? { reply_excerpt: replyExcerpt } : {}),
         },
       }
       return event
@@ -328,6 +332,9 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
       nid?: unknown
       category?: { slug?: unknown }
       metadata?: { summary?: unknown; title?: unknown } | null
+      meta?: { cover?: unknown } | null
+      weather?: unknown
+      mood?: unknown
     }
     const summary = publicText(
       document.summary ?? document.metadata?.summary,
@@ -340,6 +347,12 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     if (!displayTitle) return
     const targetPath = this.contentTargetPath(resourceType, document)
     if (!targetPath) return
+    const ownerName = publicText(await this.ownerDisplayName(), 80)
+    const cover = httpsUrlOf(document.meta?.cover)
+    const coverUrl = cover && cover.length <= 2048 ? cover : undefined
+    const weather =
+      resourceType === 'note' ? publicText(document.weather, 40) : null
+    const mood = resourceType === 'note' ? publicText(document.mood, 40) : null
     const time = eventTimeOf(data)
     await this.enqueueToEnabledSources((source) => {
       const event: ContentPublishedEvent = {
@@ -356,6 +369,10 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
           display_title: displayTitle,
           ...(summary ? { summary } : {}),
           target_path: targetPath,
+          ...(ownerName ? { owner_name: ownerName } : {}),
+          ...(coverUrl ? { cover_url: coverUrl } : {}),
+          ...(weather ? { weather } : {}),
+          ...(mood ? { mood } : {}),
         },
       }
       return event

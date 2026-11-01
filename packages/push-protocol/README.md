@@ -9,7 +9,7 @@ Versioned, privacy-preserving push protocol used by [`apps/core`](../../apps/cor
 
 ### Protocol (`src/protocol.ts`)
 
-- **Event schemas** — CloudEvents 1.0-shaped Zod schemas. v1 projections carry resource identifiers only; comment text, author, email, IP address, and user agent never enter the protocol.
+- **Event schemas** — CloudEvents 1.0-shaped Zod schemas. v1 projections carry resource identifiers and public display copy only; author email, IP address, and user agent never enter the protocol. The single exception to keeping comment text out is `comment.replied.v1` `reply_excerpt`: a cleaned, ≤160-character excerpt of a public reply, which Push Relay erases from its event log once every delivery for the event has settled.
   - `comment.created.v1` — Space admin comment review (`resource_id`, `resource_type`)
   - `content.published.v1` — Yohaku reader content broadcast (`resource_id`, `resource_type`: `post` | `note` | `recently`)
   - `comment.replied.v1` — Yohaku reader reply routing (`resource_id`, `resource_type`, `recipient_reader_id` for signed fan-out; not an APNs display field)

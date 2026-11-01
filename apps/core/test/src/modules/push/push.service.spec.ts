@@ -174,6 +174,98 @@ describe('PushService', () => {
     service.onModuleDestroy()
   })
 
+  it('adds owner name and https cover to published posts', async () => {
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: {
+        id: 'post-1',
+        title: 'Public title',
+        slug: 'public-title',
+        isPublished: true,
+        category: { slug: 'tech' },
+        meta: { cover: 'https://object.innei.in/cover.png' },
+      },
+    })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1' },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    const { data } = repository.enqueueDelivery.mock.calls[0]![0].event
+    expect(data).toMatchObject({
+      owner_name: 'Innei',
+      cover_url: 'https://object.innei.in/cover.png',
+    })
+    expect(data).not.toHaveProperty('weather')
+    expect(data).not.toHaveProperty('mood')
+    service.onModuleDestroy()
+  })
+
+  it('drops cover urls the relay would reject for length', async () => {
+    database.findGlobalById.mockResolvedValue({
+      type: 'post',
+      document: {
+        id: 'post-1',
+        title: 'Public title',
+        slug: 'public-title',
+        isPublished: true,
+        category: { slug: 'tech' },
+        meta: { cover: `https://object.innei.in/${'a'.repeat(2048)}.png` },
+      },
+    })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.POST_CREATE,
+      { id: 'post-1' },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    const { data } = repository.enqueueDelivery.mock.calls[0]![0].event
+    expect(data).toMatchObject({ owner_name: 'Innei' })
+    expect(data).not.toHaveProperty('cover_url')
+    service.onModuleDestroy()
+  })
+
+  it('adds weather and mood to published notes and drops non-https covers', async () => {
+    database.findGlobalById.mockResolvedValue({
+      type: 'note',
+      document: {
+        id: 'note-1',
+        title: '十月未央',
+        nid: 221,
+        isPublished: true,
+        hasPassword: false,
+        publicAt: null,
+        weather: '秋',
+        mood: '五味杂陈',
+        meta: { cover: 'http://object.innei.in/cover.png' },
+      },
+    })
+    const service = createService()
+    service.onModuleInit()
+    handler?.(
+      BusinessEvents.NOTE_CREATE,
+      { id: 'note-1' },
+      EventScope.TO_SYSTEM_VISITOR,
+    )
+
+    await flushHandler()
+    const { data } = repository.enqueueDelivery.mock.calls[0]![0].event
+    expect(data).toMatchObject({
+      owner_name: 'Innei',
+      weather: '秋',
+      mood: '五味杂陈',
+    })
+    expect(data).not.toHaveProperty('cover_url')
+    service.onModuleDestroy()
+  })
+
   it.each([
     {
       event: BusinessEvents.POST_REPUBLISH,
@@ -341,7 +433,7 @@ describe('PushService', () => {
         author: 'Reply author',
         avatar: 'https://cdn.example.com/avatar.png',
         refId: 'post-1',
-        text: 'private reply',
+        text: '**暂时**还不行 ![图](https://a.b/c.png)',
         createdAt: new Date('2026-08-07T12:00:00.000Z'),
       },
       EventScope.TO_VISITOR,
@@ -363,9 +455,10 @@ describe('PushService', () => {
         sender_avatar_url: 'https://cdn.example.com/avatar.png',
         target_title: 'Public post',
         target_path: '/comments/post-1',
+        reply_excerpt: '暂时还不行 \uE000',
       },
     })
-    expect(JSON.stringify(event)).not.toContain('private reply')
+    expect(JSON.stringify(event)).not.toContain('https://a.b/c.png')
     service.onModuleDestroy()
   })
 
