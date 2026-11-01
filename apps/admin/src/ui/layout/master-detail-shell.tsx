@@ -56,6 +56,7 @@ const MasterDetailContext = createContext<MasterDetailContextValue | null>(null)
 
 export interface MasterDetailShellProps {
   list: ReactNode
+  header?: ReactNode
   /** Desktop 无 detail 时之占位；mobile 不显 */
   emptyDetail?: ReactNode
   /** List panel 之默认宽度（像素） */
@@ -118,6 +119,7 @@ export function MasterDetailShell(props: MasterDetailShellProps) {
           detailScopeId={props.detailScopeId}
           emptyDetail={props.emptyDetail}
           hasDetail={outlet != null}
+          header={props.header}
           list={props.list}
           listClassName={props.listClassName}
           maxSize={props.maxSize}
@@ -129,6 +131,7 @@ export function MasterDetailShell(props: MasterDetailShellProps) {
           className={props.className}
           detailClassName={props.detailClassName}
           detailScopeId={props.detailScopeId}
+          header={props.header}
           list={props.list}
           listClassName={props.listClassName}
           onDismiss={handleDismiss}
@@ -147,6 +150,7 @@ interface DesktopShellProps {
   detailScopeId?: string
   emptyDetail?: ReactNode
   hasDetail: boolean
+  header?: ReactNode
   list: ReactNode
   listClassName?: string
   maxSize?: number
@@ -159,52 +163,64 @@ function DesktopShell(props: DesktopShellProps) {
   const minSize = props.minSize ?? DEFAULT_LIST_MIN_PIXELS
   const maxSize = props.maxSize ?? DEFAULT_LIST_MAX_PIXELS
 
+  const panels = (
+    <PanelGroup className="flex h-full min-h-0" orientation="horizontal">
+      <ResizablePanel
+        className={cn(
+          'min-h-0 overflow-hidden bg-background',
+          props.listClassName,
+        )}
+        defaultSize={defaultSize}
+        groupResizeBehavior="preserve-pixel-size"
+        maxSize={maxSize}
+        minSize={minSize}
+      >
+        {props.list}
+      </ResizablePanel>
+      <ResizeHandle />
+      <ResizablePanel
+        className={cn(
+          'min-h-0 min-w-0 overflow-hidden bg-surface-card',
+          props.detailClassName,
+        )}
+      >
+        <div className="relative h-full" ref={props.asideRef}>
+          {props.hasDetail ? (
+            props.detailScopeId ? (
+              <FocusScope className="h-full min-h-0" id={props.detailScopeId}>
+                <Suspense fallback={<DetailSkeleton />}>
+                  {props.outlet}
+                </Suspense>
+              </FocusScope>
+            ) : (
+              <Suspense fallback={<DetailSkeleton />}>{props.outlet}</Suspense>
+            )
+          ) : (
+            props.emptyDetail
+          )}
+        </div>
+      </ResizablePanel>
+    </PanelGroup>
+  )
+
   return (
     <div
       className={cn(
         'relative h-full min-h-0 overflow-hidden bg-background',
+        props.header != null && 'flex flex-col',
         props.className,
       )}
     >
-      <PanelGroup className="flex h-full min-h-0" orientation="horizontal">
-        <ResizablePanel
-          className={cn(
-            'min-h-0 overflow-hidden bg-background',
-            props.listClassName,
-          )}
-          defaultSize={defaultSize}
-          groupResizeBehavior="preserve-pixel-size"
-          maxSize={maxSize}
-          minSize={minSize}
-        >
-          {props.list}
-        </ResizablePanel>
-        <ResizeHandle />
-        <ResizablePanel
-          className={cn(
-            'min-h-0 min-w-0 overflow-hidden bg-surface-card',
-            props.detailClassName,
-          )}
-        >
-          <div className="relative h-full" ref={props.asideRef}>
-            {props.hasDetail ? (
-              props.detailScopeId ? (
-                <FocusScope className="h-full min-h-0" id={props.detailScopeId}>
-                  <Suspense fallback={<DetailSkeleton />}>
-                    {props.outlet}
-                  </Suspense>
-                </FocusScope>
-              ) : (
-                <Suspense fallback={<DetailSkeleton />}>
-                  {props.outlet}
-                </Suspense>
-              )
-            ) : (
-              props.emptyDetail
-            )}
+      {props.header == null ? (
+        panels
+      ) : (
+        <>
+          {props.header}
+          <div className="min-h-0 flex-1" data-page-header-slot="">
+            {panels}
           </div>
-        </ResizablePanel>
-      </PanelGroup>
+        </>
+      )}
     </div>
   )
 }
@@ -213,6 +229,7 @@ interface MobileShellProps {
   className?: string
   detailClassName?: string
   detailScopeId?: string
+  header?: ReactNode
   list: ReactNode
   listClassName?: string
   onDismiss: () => void
@@ -358,7 +375,17 @@ function MobileShell(props: MobileShellProps) {
         )}
         style={{ x: listX }}
       >
-        {props.list}
+        {props.header == null ? (
+          props.list
+        ) : (
+          <div
+            className="flex h-full min-h-0 flex-col"
+            data-page-header-slot=""
+          >
+            {props.header}
+            <div className="min-h-0 flex-1">{props.list}</div>
+          </div>
+        )}
       </motion.div>
 
       {renderOverlay ? (

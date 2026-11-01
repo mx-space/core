@@ -5,7 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { getDrafts, getDraftStorage } from '~/api/drafts'
 import { getOption } from '~/api/options'
 import { useI18n } from '~/i18n'
-import type { DraftCard, DraftRefType } from '~/models/draft'
+import type { CleanupCategory, DraftCard, DraftRefType } from '~/models/draft'
 import { adminQueryKeys } from '~/query/keys'
 import { FocusScope } from '~/ui/focus-scope'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
@@ -24,13 +24,11 @@ import { buildDraftActions } from './buildDraftActions'
 import { openCleanupDialog } from './CleanupDialog'
 import { DraftDetailEmpty } from './DraftDetailEmpty'
 import { DraftListEmpty } from './DraftListEmpty'
-import { DraftListFilters } from './DraftListFilters'
-import { DraftListHeader } from './DraftListHeader'
 import { DraftListSkeleton } from './DraftListSkeleton'
 import { DraftRow } from './DraftRow'
 import { DraftsRouteContext } from './drafts-route-context'
 import { DraftSelectionBar } from './DraftSelectionBar'
-import { DraftStorageBar } from './DraftStorageBar'
+import { DraftsPageHeader } from './DraftsPageHeader'
 
 const FOCUS_SCOPE_ID = 'drafts-list'
 
@@ -100,8 +98,8 @@ export function DraftsRouteViewContent() {
     [navigate, searchParams],
   )
 
-  const startCleanup = useCallback(() => {
-    void openCleanupDialog().then(() => selectionClearRef.current?.())
+  const startCleanup = useCallback((focus?: CleanupCategory) => {
+    void openCleanupDialog({ focus }).then(() => selectionClearRef.current?.())
   }, [])
 
   useEffect(() => {
@@ -158,54 +156,43 @@ export function DraftsRouteViewContent() {
     <DraftsRouteContext.Provider value={routeContextValue}>
       <MasterDetailShell
         detailScopeId={`${FOCUS_SCOPE_ID}-detail`}
-        emptyDetail={<DraftDetailEmpty />}
+        emptyDetail={
+          <DraftDetailEmpty
+            autoCleanup={autoCleanupQuery.data?.enable}
+            onCleanup={(focus) => startCleanup(focus)}
+            storage={storageQuery.data}
+          />
+        }
+        header={
+          <DraftsPageHeader
+            autoCleanup={autoCleanupQuery.data?.enable}
+            fetching={draftsQuery.isFetching}
+            onCleanup={() => startCleanup()}
+            onRefresh={() => {
+              void draftsQuery.refetch()
+              void storageQuery.refetch()
+            }}
+            onRelation={(next: DraftRelationFilter) =>
+              setParam('relation', next === 'all' ? null : next)
+            }
+            onSort={(next: DraftSort) =>
+              setParam('sort', next === 'updated' ? null : next)
+            }
+            onType={(next: DraftRefType | 'all') =>
+              setParam('type', next === 'all' ? null : next)
+            }
+            relation={relation}
+            sort={sort}
+            storage={storageQuery.data}
+            total={draftsQuery.data?.pagination.total ?? 0}
+            type={filterType}
+          />
+        }
         list={
           <FocusScope
             className="outline-hidden flex h-full min-h-0 flex-col"
             id={FOCUS_SCOPE_ID}
           >
-            <DraftListHeader
-              fetching={draftsQuery.isFetching}
-              onRefresh={() => {
-                void draftsQuery.refetch()
-                void storageQuery.refetch()
-              }}
-              total={draftsQuery.data?.pagination.total ?? 0}
-            />
-            <DraftStorageBar
-              autoCleanup={autoCleanupQuery.data?.enable}
-              onCleanup={startCleanup}
-              summary={storageQuery.data}
-            />
-            <DraftListFilters
-              counts={storageQuery.data?.relations}
-              onRelation={(next: DraftRelationFilter) =>
-                setParam('relation', next === 'all' ? null : next)
-              }
-              onSort={(next: DraftSort) =>
-                setParam('sort', next === 'updated' ? null : next)
-              }
-              onType={(next: DraftRefType | 'all') =>
-                setParam('type', next === 'all' ? null : next)
-              }
-              relation={relation}
-              sort={sort}
-              type={filterType}
-            />
-            {drafts.length > 0 ? (
-              <DraftSelectionBar
-                allSelected={allVisibleSelected}
-                busy={mutations.deleting || mutations.compacting}
-                indeterminate={selected.length > 0 && !allVisibleSelected}
-                onCompact={() => void mutations.confirmCompact(selected)}
-                onDelete={() => void mutations.confirmDelete(selected)}
-                onSelectAll={(checked) => {
-                  if (checked) selection.selectAll()
-                  else selection.clear()
-                }}
-                selected={selected}
-              />
-            ) : null}
             <Scroll className="flex-1">
               {draftsQuery.isLoading && drafts.length === 0 ? (
                 <DraftListSkeleton />
@@ -231,10 +218,25 @@ export function DraftsRouteViewContent() {
                       }
                     }}
                     selected={selection.isSelected(draft.id)}
+                    selectionActive={selected.length > 0}
                   />
                 ))
               )}
             </Scroll>
+            {selected.length > 0 ? (
+              <DraftSelectionBar
+                allSelected={allVisibleSelected}
+                busy={mutations.deleting || mutations.compacting}
+                indeterminate={!allVisibleSelected}
+                onCompact={() => void mutations.confirmCompact(selected)}
+                onDelete={() => void mutations.confirmDelete(selected)}
+                onSelectAll={(checked) => {
+                  if (checked) selection.selectAll()
+                  else selection.clear()
+                }}
+                selected={selected}
+              />
+            ) : null}
           </FocusScope>
         }
       />

@@ -1,5 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Archive, ChevronLeft, Loader2, Pencil, Trash2 } from 'lucide-react'
+import {
+  Archive,
+  ArrowLeft,
+  ChevronLeft,
+  Loader2,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -26,6 +33,7 @@ import {
   getEditPathForDraft,
   getEditPathForRevision,
 } from '../utils/draft-edit-path'
+import { DraftChangeSummary } from './DraftChangeSummary'
 import type { DraftCompareView } from './DraftCompareBar'
 import { DraftCompareBar } from './DraftCompareBar'
 import { openDraftCompareDialog } from './DraftCompareDialog'
@@ -72,6 +80,13 @@ export function DraftDetail(props: {
   })
 
   const [view, setView] = useState<DraftCompareView>('changes')
+  const [showHistory, setShowHistory] = useState(false)
+  const openCompare = () => {
+    const publishedId = props.draft.publishedRevision?.id
+    if (publishedId && versionItems.some((item) => item.id === publishedId))
+      setSelectedRevisionId(publishedId)
+    setShowHistory(true)
+  }
   const restore = (revisionId: string) =>
     restoresInPlace
       ? restoreMutation.mutate(revisionId)
@@ -180,7 +195,31 @@ export function DraftDetail(props: {
         </div>
       </div>
 
-      {revisionsQuery.isLoading ? (
+      {showHistory ? (
+        <button
+          className="flex shrink-0 items-center gap-1.5 border-b border-border px-6 py-2 text-left text-xs text-fg-muted hover:text-fg"
+          onClick={() => setShowHistory(false)}
+          type="button"
+        >
+          <ArrowLeft aria-hidden="true" className="size-3.5" />
+          {t('drafts.summary.back')}
+        </button>
+      ) : null}
+      {!showHistory ? (
+        <Scroll className="min-h-0 flex-1" innerClassName="px-6 py-6">
+          <DraftChangeSummary
+            compactBusy={props.busy || !compactQuery.data}
+            draft={props.draft.headRevision}
+            onCompact={props.onCompact}
+            onOpenCompare={openCompare}
+            onShowHistory={() => setShowHistory(true)}
+            published={props.draft.publishedRevision}
+            reclaimBytes={reclaim}
+            snapshotBytes={storage.revisionBytes}
+            snapshotCount={storage.revisionCount}
+          />
+        </Scroll>
+      ) : revisionsQuery.isLoading ? (
         <div className="flex flex-1 items-center justify-center">
           <Loader2 className="size-5 animate-spin text-fg-subtle" />
         </div>

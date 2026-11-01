@@ -217,6 +217,11 @@ shells live in `apps/admin/src/ui/layout/`:
 
 - `content-layout.tsx` — list+detail pages (comments, drafts, topics)
 - `page-layout.tsx` — page shell with header
+- `master-detail-shell.tsx` — resizable list + routed detail. Pass `header` when the
+  page needs more actions, filters or a summary than a list column header can hold:
+  it spans both columns on desktop and sits above the list (covered by a pushed
+  detail) on mobile. Build it with `page-header-bar.tsx` (`PageHeaderBar`: title,
+  count, filters, actions, summary line); the list then drops its own header.
 - companion pieces in the same dir (`header-back-button.tsx`, `sidebar-*`, `resize-handle.tsx`)
 
 ## Configuration Files

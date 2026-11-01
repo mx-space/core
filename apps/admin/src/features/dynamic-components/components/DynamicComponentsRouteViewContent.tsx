@@ -1,28 +1,34 @@
-import { useMutation } from '@tanstack/react-query'
-import { Plus, RefreshCw, Search } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { deleteDynamicComponentEntry } from '~/api/dynamic-components'
-import { APP_SHELL_HEADER_HEIGHT_CLASS } from '~/constants/layout'
 import { useI18n } from '~/i18n'
+import { adminQueryKeys } from '~/query/keys'
 import { confirmDialog } from '~/ui/feedback/confirm'
 import { MasterDetailShell } from '~/ui/layout/master-detail-shell'
-import { MobileHeaderAffordance } from '~/ui/layout/mobile-header-affordance'
-import { Button } from '~/ui/primitives/button'
 import { Scroll } from '~/ui/primitives/scroll'
-import { TextInput } from '~/ui/primitives/text-field'
-import { cn } from '~/utils/cn'
 
+import { useComponentUsage } from '../hooks/use-component-usage'
 import {
   useApplyDynamicCatalog,
   useDynamicCatalog,
 } from '../hooks/use-dynamic-catalog'
 import type { DynamicComponentItem } from '../types/dynamic-components'
+import type { ComponentCleanupCandidate } from '../utils/component-usage'
+import {
+  openComponentCleanupDialog,
+  useRunComponentCleanup,
+} from './ComponentCleanupDialog'
 import { DynamicComponentsRouteContext } from './dynamic-components-route-context'
 import { presentDynamicComponentEditor } from './DynamicComponentEditorModal'
 import { DynamicComponentList } from './DynamicComponentList'
+import type { UsageFilter } from './DynamicComponentsHeader'
+import {
+  DynamicComponentsHeader,
+  USAGE_FILTERS,
+} from './DynamicComponentsHeader'
 import {
   DynamicComponentDetailEmptyState,
   DynamicComponentListEmptyState,
@@ -35,23 +41,56 @@ export function DynamicComponentsRouteViewContent() {
   const { t } = useI18n()
   const navigate = useNavigate()
   const params = useParams<{ id?: string }>()
+  const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { items, query } = useDynamicCatalog()
+  const usageQuery = useComponentUsage(query.data)
+  const report = usageQuery.data
   const applyCatalog = useApplyDynamicCatalog()
   const [search, setSearch] = useState('')
 
+  const rawFilter = searchParams.get('usage')
+  const filter: UsageFilter = USAGE_FILTERS.includes(rawFilter as UsageFilter)
+    ? (rawFilter as UsageFilter)
+    : 'all'
+  const statusById = useMemo(
+    () => new Map(report?.entries.map((entry) => [entry.entryId, entry])),
+    [report],
+  )
+  const counts = useMemo(() => {
+    const result: Record<UsageFilter, number> = {
+      all: items.length,
+      draftOnly: 0,
+      unused: 0,
+      used: 0,
+    }
+    for (const item of items) {
+      const status = statusById.get(item.id)?.status
+      if (status === 'used' || status === 'draftOnly' || status === 'unused')
+        result[status]++
+    }
+    return result
+  }, [items, statusById])
+
   const visibleItems = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    if (!keyword) return items
     return items.filter(
       (item) =>
-        item.name.toLowerCase().includes(keyword) ||
-        item.url.toLowerCase().includes(keyword),
+        (filter === 'all' || statusById.get(item.id)?.status === filter) &&
+        (!keyword ||
+          item.name.toLowerCase().includes(keyword) ||
+          item.url.toLowerCase().includes(keyword)),
     )
-  }, [items, search])
+  }, [filter, items, search, statusById])
 
-  const closeDetail = useCallback(() => {
-    navigate(BASE_PATH)
-  }, [navigate])
+  const refreshAll = useCallback(
+    () =>
+      queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.dynamicComponents.root,
+      }),
+    [queryClient],
+  )
+  const closeDetail = useCallback(() => navigate(BASE_PATH), [navigate])
 
   const openEditor = useCallback(
     async (item: DynamicComponentItem | null) => {
@@ -77,9 +116,13 @@ export function DynamicComponentsRouteViewContent() {
       closeDetail()
     },
   })
+  const versionCleanup = useRunComponentCleanup(() => void refreshAll())
 
   const ctxValue = useMemo(
     () => ({
+      deletingKey: versionCleanup.isPending
+        ? (versionCleanup.variables?.[0]?.key ?? null)
+        : null,
       onBack: closeDetail,
       onDelete: async (item: DynamicComponentItem) => {
         const confirmed = await confirmDialog({
@@ -90,92 +133,83 @@ export function DynamicComponentsRouteViewContent() {
         })
         if (confirmed) deleteMutation.mutate(item.id)
       },
+      onDeleteCandidate: (candidate: ComponentCleanupCandidate) =>
+        versionCleanup.mutate([candidate]),
       onEdit: (item: DynamicComponentItem) => void openEditor(item),
+      usage: report,
     }),
-    [closeDetail, deleteMutation, openEditor, t],
+    [closeDetail, deleteMutation, openEditor, report, t, versionCleanup],
   )
+
+  const openCleanup = () => {
+    if (!report) return
+    void openComponentCleanupDialog(report).then((result) => {
+      if (result) void refreshAll()
+    })
+  }
 
   return (
     <DynamicComponentsRouteContext.Provider value={ctxValue}>
       <MasterDetailShell
         emptyDetail={<DynamicComponentDetailEmptyState />}
+        header={
+          <DynamicComponentsHeader
+            counts={counts}
+            filter={filter}
+            onCleanup={openCleanup}
+            onCreate={() => void openEditor(null)}
+            onFilterChange={(next) =>
+              setSearchParams(
+                (current) => {
+                  const nextParams = new URLSearchParams(current)
+                  if (next === 'all') nextParams.delete('usage')
+                  else nextParams.set('usage', next)
+                  return nextParams
+                },
+                { replace: true },
+              )
+            }
+            onRefresh={() => void refreshAll()}
+            onSearchChange={setSearch}
+            refreshing={query.isFetching || usageQuery.isFetching}
+            report={report}
+            search={search}
+            total={items.length}
+            usageState={
+              usageQuery.isError
+                ? 'error'
+                : usageQuery.isPending
+                  ? 'loading'
+                  : 'ready'
+            }
+          />
+        }
         list={
-          <section className="flex h-full min-h-0 flex-col">
-            <div
-              className={cn(
-                'flex shrink-0 items-center justify-between border-b border-neutral-200 px-4 dark:border-neutral-800',
-                APP_SHELL_HEADER_HEIGHT_CLASS,
-              )}
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <MobileHeaderAffordance />
-                <span className="truncate text-sm font-semibold text-fg">
-                  {t('dynamicComponents.title')}
-                </span>
-                <span className="shrink-0 text-xs text-fg-subtle">
-                  {t('dynamicComponents.count', { count: items.length })}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  aria-label={t('dynamicComponents.refreshAria')}
-                  className="h-8 px-2"
-                  onClick={() => void query.refetch()}
-                  type="button"
-                  variant="subtle"
-                >
-                  <RefreshCw aria-hidden="true" className="size-3.5" />
-                </Button>
-                <Button
-                  className="h-8 px-2"
-                  onClick={() => void openEditor(null)}
-                  type="button"
-                >
-                  <Plus aria-hidden="true" className="size-3.5" />
-                  {t('dynamicComponents.add')}
-                </Button>
-              </div>
-            </div>
-
-            {items.length > 0 ? (
-              <div className="relative shrink-0 border-b border-neutral-100 px-4 py-2 dark:border-neutral-900">
-                <Search
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-6.5 top-1/2 size-3.5 -translate-y-1/2 text-fg-subtle"
-                />
-                <TextInput
-                  aria-label={t('dynamicComponents.searchPlaceholder')}
-                  controlClassName="pl-8"
-                  onChange={setSearch}
-                  placeholder={t('dynamicComponents.searchPlaceholder')}
-                  type="search"
-                  value={search}
-                />
-              </div>
-            ) : null}
-
-            <Scroll className="flex-1">
-              {query.isLoading && items.length === 0 ? (
-                <DynamicComponentListSkeleton />
-              ) : items.length === 0 ? (
-                <DynamicComponentListEmptyState
-                  onCreate={() => void openEditor(null)}
-                />
-              ) : visibleItems.length === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-fg-subtle">
-                  {t('dynamicComponents.noMatch')}
-                </p>
-              ) : (
-                <DynamicComponentList
-                  items={visibleItems}
-                  onSelect={(item) =>
-                    navigate(`${BASE_PATH}/${encodeURIComponent(item.id)}`)
-                  }
-                  selectedId={params.id ?? null}
-                />
-              )}
-            </Scroll>
-          </section>
+          <Scroll className="h-full">
+            {query.isLoading && items.length === 0 ? (
+              <DynamicComponentListSkeleton />
+            ) : items.length === 0 ? (
+              <DynamicComponentListEmptyState
+                onCreate={() => void openEditor(null)}
+              />
+            ) : visibleItems.length === 0 ? (
+              <p className="px-4 py-10 text-center text-sm text-fg-subtle">
+                {t('dynamicComponents.noMatch')}
+              </p>
+            ) : (
+              <DynamicComponentList
+                items={visibleItems}
+                onSelect={(item) =>
+                  navigate({
+                    pathname: `${BASE_PATH}/${encodeURIComponent(item.id)}`,
+                    search: searchParams.toString(),
+                  })
+                }
+                reports={statusById}
+                selectedId={params.id ?? null}
+              />
+            )}
+          </Scroll>
         }
       />
     </DynamicComponentsRouteContext.Provider>

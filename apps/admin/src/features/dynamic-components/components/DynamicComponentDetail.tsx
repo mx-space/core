@@ -15,16 +15,26 @@ import { SegmentedControl } from '~/ui/primitives/segmented-control'
 import { cn } from '~/utils/cn'
 
 import type { DynamicComponentItem } from '../types/dynamic-components'
+import type {
+  ComponentCleanupCandidate,
+  ComponentEntryReport,
+} from '../utils/component-usage'
+import { ComponentUsageBadge } from './ComponentUsageBadge'
+import { ComponentVersionTimeline } from './ComponentVersionTimeline'
 import { DynamicComponentPreview } from './DynamicComponentPreview'
 import { DynamicComponentSourcePanel } from './DynamicComponentSourcePanel'
 
 type DetailTab = 'preview' | 'schema' | 'source'
 
 export function DynamicComponentDetail(props: {
+  deletable: Map<string, ComponentCleanupCandidate>
+  deletingKey: null | string
   item: DynamicComponentItem
   onBack: () => void
   onDelete: () => void
+  onDeleteVersion: (candidate: ComponentCleanupCandidate) => void
   onEdit: () => void
+  report: ComponentEntryReport | undefined
 }) {
   const { t } = useI18n()
   const { item } = props
@@ -74,6 +84,7 @@ export function DynamicComponentDetail(props: {
           <h2 className="truncate text-lg font-semibold text-fg">
             {item.name}
           </h2>
+          {props.report ? <ComponentUsageBadge report={props.report} /> : null}
         </div>
         <div className="flex shrink-0 gap-2">
           <Button
@@ -162,6 +173,15 @@ export function DynamicComponentDetail(props: {
             )}
           </div>
 
+          {props.report ? (
+            <ComponentVersionTimeline
+              deletable={props.deletable}
+              deletingKey={props.deletingKey}
+              onDeleteVersion={props.onDeleteVersion}
+              report={props.report}
+            />
+          ) : null}
+
           <dl className="grid gap-3 rounded-lg border border-border p-4 text-sm">
             <DetailRow label={t('dynamicComponents.detail.url')} mono>
               {item.url}
@@ -172,18 +192,6 @@ export function DynamicComponentDetail(props: {
             {item.parentUrl && !item.previousUrls?.includes(item.parentUrl) ? (
               <DetailRow label={t('dynamicComponents.detail.parentUrl')} mono>
                 {item.parentUrl}
-              </DetailRow>
-            ) : null}
-            {item.previousUrls?.length ? (
-              <DetailRow
-                label={t('dynamicComponents.detail.previousUrls')}
-                mono
-              >
-                {item.previousUrls.toReversed().map((url) => (
-                  <span className="block" key={url}>
-                    {url}
-                  </span>
-                ))}
               </DetailRow>
             ) : null}
           </dl>

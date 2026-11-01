@@ -82,6 +82,12 @@ export function deleteDynamicComponentEntry(
   })
 }
 
+export function mutateDynamicCatalog(
+  mutate: (components: DynamicCatalogEntry[]) => DynamicCatalogEntry[],
+): Promise<DynamicCatalog> {
+  return mutateCatalog(mutate)
+}
+
 // Read-modify-write on one snippet: the last concurrent writer wins. Every
 // write persists the derived ids, so legacy entries keep a stable id once
 // any entry changes.

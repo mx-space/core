@@ -9,7 +9,7 @@ import { adminQueryKeys } from '~/query/keys'
 
 import { cardFromDraft } from '../utils/draft-card'
 import { DraftDetail } from './DraftDetail'
-import { DraftDetailEmpty } from './DraftDetailEmpty'
+import { DraftDetailPlaceholder } from './DraftDetailEmpty'
 import { useDraftsRouteContext } from './drafts-route-context'
 
 const LIST_PREFIX = adminQueryKeys.drafts.listRoot
@@ -27,7 +27,7 @@ export function DraftDetailRoute() {
 
   useDocumentTitle(draftQuery.data?.headRevision.title)
 
-  if (!id || !draftQuery.data) return <DraftDetailEmpty />
+  if (!id || !draftQuery.data) return <DraftDetailPlaceholder />
 
   const card =
     findInListCache<DraftCard>(queryClient, LIST_PREFIX, id) ??

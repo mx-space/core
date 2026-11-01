@@ -122,7 +122,7 @@ export interface DraftStorageSummary {
   updates: { bytes: number; count: number }
 }
 
-export type CleanupCategory = 'A' | 'B' | 'C' | 'D'
+export type CleanupCategory = 'A' | 'B' | 'C' | 'D' | 'E'
 
 export interface CleanupDraftCandidate {
   bytes: number
@@ -136,6 +136,7 @@ export interface CleanupPreview {
   categories: Record<CleanupCategory, { bytes: number; count: number }>
   inSync: CleanupDraftCandidate[]
   olderThanDays: number
+  testDrafts: CleanupDraftCandidate[]
 }
 
 export interface FreedTotals {

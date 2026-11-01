@@ -143,6 +143,7 @@ export const adminQueryKeys = {
     list: () => ['dynamic-components', 'list'] as const,
     root: ['dynamic-components'] as const,
     source: (url: string) => ['dynamic-components', 'source', url] as const,
+    usage: (urls: string[]) => ['dynamic-components', 'usage', urls] as const,
   },
   enrichment: {
     cacheDetail: (id: string) => ['enrichment', 'cache', 'detail', id] as const,
