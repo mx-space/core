@@ -46,6 +46,47 @@ function createWorkspace(doc = state([para('a', 'Hello world')])) {
   })
 }
 
+describe('createDocumentBashWorkspace readonly files', () => {
+  const skillPath = '/skills/chart/SKILL.md'
+
+  function createSkillWorkspace() {
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () => state([para('a', 'Hello world')]),
+      readonlyFiles: { [skillPath]: 'Use one accent color.\n' },
+    })
+    workspace.beginRun()
+    return workspace
+  }
+
+  it('lets bash read them', async () => {
+    const result = await createSkillWorkspace().tool.execute({
+      command: `cat ${skillPath}`,
+    })
+    expect(result.ok && result.content).toContain('Use one accent color.')
+  })
+
+  it.each([
+    `sed -i 's/one/two/' ${skillPath}`,
+    `echo x > ${skillPath}`,
+    `rm ${skillPath}`,
+    `mv ${skillPath} /tmp/moved`,
+    'touch /skills/chart/new.md',
+  ])('refuses to change them: %s', async (command) => {
+    const workspace = createSkillWorkspace()
+    const write = await workspace.tool.execute({ command })
+    expect(write.ok && write.content).toMatch(/read-only/i)
+    const read = await workspace.tool.execute({ command: `cat ${skillPath}` })
+    expect(read.ok && read.content).toBe('Use one accent color.\n')
+  })
+
+  it('still allows copying them out', async () => {
+    const result = await createSkillWorkspace().tool.execute({
+      command: `cp ${skillPath} /tmp/copy && cat /tmp/copy`,
+    })
+    expect(result.ok && result.content).toContain('Use one accent color.')
+  })
+})
+
 describe('createDocumentBashWorkspace', () => {
   it('lets bash read the seeded document', async () => {
     const workspace = createWorkspace()

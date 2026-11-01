@@ -23,6 +23,7 @@ import { useLocalStorageState } from '~/hooks/use-local-storage-state'
 import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { getAdminSocket } from '~/socket/SocketBridge'
+import { bundledAgentSkillFiles } from '~/vendor/rich-editor/agent-skills/bundled'
 import type { AgentLoopHandle, AgentRuntime } from '~/vendor/rich-editor/types'
 import {
   buildProposedState,
@@ -185,6 +186,7 @@ export function useWriteAgent(opts: {
           )
         },
         getReviewXml: () => buildReviewXml(store.getState().reviewState),
+        readonlyFiles: bundledAgentSkillFiles,
         getSelectionXml: () => {
           const editor = lexicalEditorRef.current
           if (!editor) return ''

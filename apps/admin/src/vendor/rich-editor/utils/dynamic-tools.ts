@@ -44,6 +44,7 @@ const DRAFT_FIELDS_OUTSIDE_SCHEMA = [
   'props',
   'initialHeight',
   'target',
+  'newComponent',
 ] as const
 
 // Models writing a large propsSchema often close it one brace late, which
@@ -105,15 +106,32 @@ export function readDynamicReceipt(item: ToolCallGroupItem): {
   }
 }
 
+function findUnrevisedReads(
+  editor: LexicalEditor | null,
+  readBlockIds: Set<string>,
+) {
+  if (!editor) return []
+  return [...readBlockIds].filter((blockId) => {
+    try {
+      readDynamicTarget(editor, blockId)
+      return true
+    } catch {
+      readBlockIds.delete(blockId)
+      return false
+    }
+  })
+}
+
 export function buildDynamicTools(
   getEditor: () => LexicalEditor | null = () => null,
 ): AgentToolConfig[] {
+  const readBlockIds = new Set<string>()
   return [
     {
       name: DYNAMIC_PREVIEW_TOOL,
-      description: `Create or revise an interactive JS component for the user to preview in this conversation. Supply the COMPLETE source on every revision; previous versions remain available. This tool does not upload or edit the article. The user must click Upload and insert to adopt it; do not insert a temporary URL yourself.
+      description: `Create or revise an interactive JS component for the user to preview in this conversation. Before writing or revising source, call load_skill with "dynamic-component-design" once in this conversation and follow it. Supply the COMPLETE source on every revision; previous versions remain available. This tool does not upload or edit the article. The user must click Upload and insert to adopt it; do not insert a temporary URL yourself.
 Adopted components join the site's component catalog and are reused across posts. Before writing a new one, check the Dynamic Component Catalog: if a listed component fits, insert it with a <dynamic> node and props instead of calling this tool. Write new components to be reusable: take every piece of post-specific content (labels, data, text) from props rather than hardcoding it, give props sensible defaults, and pass description (what it shows and when to use it) and propsSchema (a JSON Schema object whose properties describe each prop; string, enum, number, integer and boolean properties with title, description and default become a form writers fill in).
-To edit a component already in the article, first call read_dynamic_component with its blockId from /doc.xml, then pass the returned target unchanged in every revision. Adoption replaces only that block in the current draft; a new URL is created and the published article keeps the old version until republished. Never edit or overwrite an uploaded file.
+To edit a component already in the article, first call read_dynamic_component with its blockId from /doc.xml, then pass the returned target unchanged in every revision. After reading a component, a draft without target is rejected; set newComponent: true only when the draft is a separate component added alongside it. Adoption replaces only that block in the current draft; a new URL is created and the published article keeps the old version until republished. Never edit or overwrite an uploaded file.
 Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScript, npm/bare or relative imports). Prefer native DOM, CSS and SVG. Default export: { mount(container, { props, host: { theme } }) { /* render inside container */ return { update(input) { /* optional: props/theme changes */ }, unmount() { /* remove listeners, timers, animation frames and DOM */ } } }. mount is synchronous. Put styles INSIDE container: it lives in a Shadow DOM for CSS isolation. Do not modify document/head/body, use global CSS, or rely on admin libraries. Support light/dark theme and responsive width. Include accessible control labels. To fix an error or change the design, call this tool again with revised complete source.`,
       parameters: {
         type: 'object',
@@ -151,16 +169,35 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
             description: 'JSON input for the component',
           },
           initialHeight: { type: 'integer', minimum: 80, maximum: 2000 },
+          newComponent: {
+            type: 'boolean',
+            description:
+              'Set true only for a separate new component after reading an existing one; a rewrite of that component passes target instead',
+          },
         },
         required: ['name', 'source'],
       },
       execute: async (params) => {
-        const parsed = draftSchema.safeParse(liftMisplacedDraftFields(params))
+        const lifted = liftMisplacedDraftFields(params)
+        const parsed = draftSchema.safeParse(lifted)
         if (!parsed.success)
           return {
             ok: false,
             error: { error: 'invalid_params', message: parsed.error.message },
           }
+        const newComponent =
+          (lifted as { newComponent?: unknown } | null)?.newComponent === true
+        if (!parsed.data.target && !newComponent) {
+          const unrevised = findUnrevisedReads(getEditor(), readBlockIds)
+          if (unrevised.length > 0)
+            return {
+              ok: false,
+              error: {
+                error: 'missing_target',
+                message: `You read component ${unrevised.join(', ')} but this draft has no target, so adopting it would add a second component instead of replacing that one. To rewrite it, pass the target returned by read_dynamic_component. To add a separate component, set newComponent: true.`,
+              },
+            }
+        }
         if (parsed.data.target) {
           try {
             const editor = getEditor()
@@ -234,6 +271,7 @@ Source must be a standalone browser ES module (plain JavaScript, no JSX/TypeScri
             !isEqual(readDynamicTarget(editor, blockId), target)
           )
             throw new Error('Component changed while reading')
+          readBlockIds.add(blockId)
           return { ok: true, content: JSON.stringify({ target, source }) }
         } catch (error) {
           return {

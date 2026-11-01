@@ -194,6 +194,10 @@ import { cn } from '~/utils/cn'
 import { getDayOfYear } from '~/utils/time'
 import { CodeMirrorEditor, ImageDropZone } from '~/vendor/codemirror'
 import { getEditorView } from '~/vendor/codemirror/editor-store'
+import {
+  bundledAgentSkillSystemMessages,
+  bundledLoadSkillTool,
+} from '~/vendor/rich-editor/agent-skills/bundled'
 import type {
   RichEditorWithAgentProps,
   RichEditorWithAgentRef,
@@ -5533,6 +5537,7 @@ function RichWriteSurface(props: {
       ...buildDocumentBashSystemMessages({
         shared: Boolean(props.crdt?.active),
       }),
+      ...bundledAgentSkillSystemMessages,
       ...dynamicCatalogMessages,
       ...(props.metaFieldsSchema
         ? buildMetaSystemMessages(props.metaFieldsSchema)
@@ -5540,6 +5545,7 @@ function RichWriteSurface(props: {
     ],
     tools: [
       agent.documentBashTool,
+      bundledLoadSkillTool,
       ...agent.dynamicTools,
       ...(props.metaFieldsSchema &&
       props.getMetaFields &&
