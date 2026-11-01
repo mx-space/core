@@ -1,3 +1,9 @@
+## [16.4.0](https://github.com/mx-space/core/compare/v16.3.0...v16.4.0) (2026-11-02)
+
+### Features
+
+* **core:** content usage endpoint and suspected test draft cleanup ([6a08125](https://github.com/mx-space/core/commit/6a0812520c77a4ad3817a8a7418ed62210a63c65))
+
 ## [16.3.0](https://github.com/mx-space/core/compare/v16.2.0...v16.3.0) (2026-11-01)
 
 ### Features

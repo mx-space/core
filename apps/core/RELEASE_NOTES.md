@@ -1,27 +1,25 @@
 ## TL;DR
 
-Yohaku push notifications now carry who published, cover images, note weather and mood, and the actual text of comment replies.
+Find and safely remove unused dynamic components and test drafts, with a redesigned drafts page and a writing agent that follows a component design guide.
 
 ## Highlights
 
-Content notifications sent through Push Relay now include the site owner's name, an HTTPS cover image, and, for notes, the recorded weather and mood. Updated Yohaku apps use these to show who published the post or note, attach the cover as a thumbnail, and place the note's atmosphere under its title. The visible alert sent to devices is unchanged, so older app builds keep today's banners.
+The dynamic components page now shows where every component version is used: published posts, notes and pages, translations, pinned shares, drafts (including unsaved collaborative edits), snippets, topics and moments. A cleanup dialog lists unused components, old versions nobody references and stray component files, re-checks usage when you confirm, and restores anything the server still finds in use.
 
-Reply notifications can now include a short, cleaned excerpt of the reply itself. Markdown is stripped, images and code blocks become placeholders the app localizes, and the excerpt is capped so it always fits Relay's limits. Push Relay erases the excerpt from its event log as soon as every delivery for that reply has finished.
+The drafts page gets a full-width header with type and relation filters, the storage summary and a one-click cleanup. With no draft selected it shows storage totals and cleanup suggestions; a selected draft leads with a summary of what changed since the published version. Draft cleanup can also remove suspected test drafts: never published, idle, and untitled or named like e2e/test/tmp/demo.
+
+The writing agent ships a bundled dynamic-component design skill it loads before writing or revising a component, and it must name the component it is revising, so revisions no longer register duplicate entries.
 
 ## Changes
 
 ### Features
 
-- Send owner name, cover image, note weather and mood, and a cleaned reply excerpt with Yohaku push notifications. ([dad8dd7](https://github.com/mx-space/core/commit/dad8dd7f3aba92eb9c40e712c2794a2c71867026))
-
-### Other
-
-- Admin editor picks up the streaming agent-write reveal and refined Details disclosure styling from the latest Haklex packages. ([0ffc00f](https://github.com/mx-space/core/commit/0ffc00f51), [03f38a1](https://github.com/mx-space/core/commit/03f38a175))
-
-## Upgrade Notes
-
-- Deploy Push Relay before this Core release. A Relay older than this release rejects the new optional fields, and affected notifications are retried until Relay is updated.
+- Report where each file URL is used through `POST /files/references/usage`, including live collaborative edits ([6a08125](https://github.com/mx-space/core/commit/6a0812520c77a4ad3817a8a7418ed62210a63c65))
+- Clean up suspected test drafts from the drafts cleanup dialog; scheduled auto cleanup never touches them ([6a08125](https://github.com/mx-space/core/commit/6a0812520c77a4ad3817a8a7418ed62210a63c65))
+- See per-version usage and clean up unused dynamic components, old versions and unregistered component files in the dashboard ([d836d7f](https://github.com/mx-space/core/commit/d836d7f7f))
+- Use the redesigned drafts page: header filters, storage overview with cleanup suggestions, and a change summary on each draft ([d836d7f](https://github.com/mx-space/core/commit/d836d7f7f))
+- Let the writing agent load bundled skills, starting with dynamic component design ([37158ca](https://github.com/mx-space/core/commit/37158cabc))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v16.2.0...v16.3.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v16.3.0...v16.4.0
