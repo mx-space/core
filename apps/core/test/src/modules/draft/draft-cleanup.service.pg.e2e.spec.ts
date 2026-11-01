@@ -907,4 +907,97 @@ describe('DraftCleanupService (real PG)', () => {
 
     expect(preview).toEqual([])
   })
+  describe('suspected test drafts (category E)', () => {
+    const fresh = async (title: string) => {
+      const { document, revision } = await drafts.createDocumentWithRoot(
+        DraftRefType.Post,
+        null,
+        markdown(title),
+        false,
+      )
+      await drafts.createBranch(document.id, revision.id, markdown(title), true)
+      await age(document.id, 30)
+      return String(document.id)
+    }
+
+    it('previews only never-published drafts whose title looks like a test', async () => {
+      const e2e = await fresh('loro-new-e2e-4')
+      const untitled = await fresh('无标题')
+      const real = await fresh('Remix notes')
+      const md = await fresh('md-e2e-1')
+      const { document: published } = await seed(markdown('e2e published'))
+      await age(published.id, 30)
+
+      const preview = await service.preview(7)
+      const ids = preview.testDrafts.map((item) => item.documentId)
+
+      expect(ids).toEqual(expect.arrayContaining([e2e, untitled, md]))
+      expect(ids).not.toContain(real)
+      expect(ids).not.toContain(String(published.id))
+      expect(preview.categories.E.count).toBe(preview.testDrafts.length)
+    })
+
+    it('never lists an untitled draft holding unsaved collaborative edits', async () => {
+      const empty = lexical('', ['p1'])
+      const { document, revision } = await drafts.createDocumentWithRoot(
+        DraftRefType.Post,
+        null,
+        empty,
+        false,
+      )
+      const { branch } = await drafts.createBranch(
+        document.id,
+        revision.id,
+        empty,
+        true,
+      )
+      await type(branch.id, await clientOf(branch.id), ['p1', 'Kyoto trip'])
+      await age(document.id, 30)
+      await db.execute(
+        sql`update content_crdt_docs set edited_at = ${new Date(Date.now() - 20 * DAY)} where document_id = ${document.id}`,
+      )
+
+      const preview = await service.preview(7)
+
+      expect(preview.testDrafts.map((item) => item.documentId)).not.toContain(
+        String(document.id),
+      )
+    })
+
+    it('removes suspected test drafts and keeps real ones', async () => {
+      const e2e = await fresh('agent-new-e2e')
+      const real = await fresh('Weekly notes')
+
+      await service.run({ categories: ['E'], olderThanDays: 7 })
+
+      expect(await drafts.findDocumentById(e2e)).toBeNull()
+      expect(await drafts.findDocumentById(real)).not.toBeNull()
+    })
+
+    it('skips a suspected test draft someone has open', async () => {
+      const e2e = await fresh('tmp-open-draft')
+      presence.roomHasMembers.mockResolvedValue(true)
+
+      await service.run({ categories: ['E'], olderThanDays: 7 })
+
+      expect(await drafts.findDocumentById(e2e)).not.toBeNull()
+    })
+
+    it('never runs category E on schedule', async () => {
+      const run = vi.spyOn(service, 'run').mockResolvedValue({
+        freed: { bytes: 0, crdtDocs: 0, drafts: 0, revisions: 0 },
+        skipped: [],
+      })
+      await service.runScheduled({
+        compactCrdt: true,
+        deleteInSyncDrafts: true,
+        enable: true,
+        olderThanDays: 30,
+        pruneRevisions: true,
+        removeOrphanCrdt: true,
+      })
+      expect(run.mock.calls[0][0].categories).not.toContain('E')
+      run.mockRestore()
+    })
+  })
 })

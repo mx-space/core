@@ -51,6 +51,7 @@ export interface CleanupPreview {
   categories: Record<CleanupCategory, { bytes: number; count: number }>
   inSync: DraftCandidate[]
   olderThanDays: number
+  testDrafts: DraftCandidate[]
 }
 
 export interface CleanupInput {
@@ -170,12 +171,7 @@ export class DraftCleanupService {
               reason = 'publishing'
               return null
             }
-            const occupied = await Promise.all(
-              ['admin', 'web'].map((ns: 'admin' | 'web') =>
-                this.presence.roomHasMembers(ns, `collab:${documentId}`),
-              ),
-            )
-            if (occupied.some(Boolean)) {
+            if (await this.isOpenInCollab(documentId)) {
               reason = 'editing'
               return null
             }
@@ -290,24 +286,32 @@ export class DraftCleanupService {
 
   async preview(olderThanDays: number): Promise<CleanupPreview> {
     const cutoff = cutoffOf(olderThanDays)
-    const [inSync, stale, idle, orphans, archived] = await Promise.all([
-      this.storageRepository.inSyncDrafts(cutoff),
-      this.storageRepository.staleRevisions(cutoff),
-      this.storageRepository.idleCrdtDocs(cutoff),
-      this.storageRepository.orphanCrdtDocs(),
-      this.storageRepository.archivedDrafts(),
-    ])
-    const inSyncDocuments = new Set(inSync.map((item) => item.documentId))
+    const [inSync, stale, idle, orphans, archived, testDrafts] =
+      await Promise.all([
+        this.storageRepository.inSyncDrafts(cutoff),
+        this.storageRepository.staleRevisions(cutoff),
+        this.storageRepository.idleCrdtDocs(cutoff),
+        this.storageRepository.orphanCrdtDocs(),
+        this.storageRepository.archivedDrafts(),
+        this.storageRepository.testDrafts(cutoff),
+      ])
+    const removedDocuments = new Set(
+      [...inSync, ...testDrafts].map((item) => item.documentId),
+    )
+    const kept = <T extends { documentId: string }>(items: T[]) =>
+      items.filter((item) => !removedDocuments.has(item.documentId))
     return {
       archived,
       categories: {
         A: tally(inSync),
-        B: tally(stale.filter((item) => !inSyncDocuments.has(item.documentId))),
-        C: tally(idle.filter((item) => !inSyncDocuments.has(item.documentId))),
+        B: tally(kept(stale)),
+        C: tally(kept(idle)),
         D: tally(orphans),
+        E: tally(testDrafts),
       },
       inSync,
       olderThanDays,
+      testDrafts,
     }
   }
 
@@ -351,6 +355,18 @@ export class DraftCleanupService {
       await guard(String(branch.documentId), () =>
         this.removeDraft(branch, false),
       )
+    }
+    if (categories.has('E')) {
+      for (const item of await this.storageRepository.testDrafts(cutoff)) {
+        await guard(item.documentId, async () => {
+          if (await this.isOpenInCollab(item.documentId))
+            throw new CleanupSkip()
+          const document = await this.drafts.findDocumentById(item.documentId)
+          if (!document || document.publishedRevisionId) throw new CleanupSkip()
+          const branch = await this.drafts.findBranchById(item.draftId)
+          return branch ? this.removeDraft(branch, false) : {}
+        })
+      }
     }
     if (categories.has('B')) {
       for (const item of await this.storageRepository.staleRevisions(cutoff)) {
@@ -420,6 +436,15 @@ export class DraftCleanupService {
       0,
     )
     return { ...totals, reclaimableBytes, relations }
+  }
+
+  private async isOpenInCollab(documentId: string) {
+    const occupied = await Promise.all(
+      (['admin', 'web'] as const).map((ns) =>
+        this.presence.roomHasMembers(ns, `collab:${documentId}`),
+      ),
+    )
+    return occupied.some(Boolean)
   }
 
   private async removeDraft(

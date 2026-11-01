@@ -3,4 +3,4 @@ export enum DraftRefType {
   Note = 'note',
   Page = 'page',
 }
-export const CLEANUP_CATEGORIES = ['A', 'B', 'C', 'D'] as const
+export const CLEANUP_CATEGORIES = ['A', 'B', 'C', 'D', 'E'] as const

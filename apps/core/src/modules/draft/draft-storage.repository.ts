@@ -74,6 +74,9 @@ const RELATION = sql.raw(`case
   else 'ahead'
 end`)
 
+const TEST_DRAFT_TITLE_PATTERN =
+  '(^|[-_[:space:]])(e2e|test|tmp|demo)([-_[:space:][:digit:]]|$)'
+
 const toNumber = (value: unknown) => Number(value ?? 0)
 
 type CardRow = {
@@ -239,6 +242,23 @@ export class DraftStorageRepository extends BaseRepository {
       and not exists (
         select 1 from content_crdt_docs c
         where c.document_id = d.document_id and c.edited_at >= ${cutoff}
+      )
+    `)
+  }
+
+  async testDrafts(cutoff: Date): Promise<DraftCandidate[]> {
+    return this.draftCandidates(sql`
+      d.status = 'active'
+      and cd.published_revision_id is null
+      and d.updated_at < ${cutoff}
+      and not exists (
+        select 1 from content_crdt_docs c
+        where c.document_id = d.document_id
+          and (c.edited_at >= ${cutoff} or c.edited_at > h.created_at)
+      )
+      and (
+        coalesce(btrim(h.title), '') in ('', '无标题')
+        or h.title ~* ${TEST_DRAFT_TITLE_PATTERN}
       )
     `)
   }
