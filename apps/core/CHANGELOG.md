@@ -1,3 +1,9 @@
+## [16.3.0](https://github.com/mx-space/core/compare/v16.2.0...v16.3.0) (2026-11-01)
+
+### Features
+
+* **push:** carry banner metadata and reply excerpts to Yohaku ([dad8dd7](https://github.com/mx-space/core/commit/dad8dd7f3aba92eb9c40e712c2794a2c71867026))
+
 ## [16.2.0](https://github.com/mx-space/core/compare/v16.1.0...v16.2.0) (2026-10-31)
 
 ### Features
