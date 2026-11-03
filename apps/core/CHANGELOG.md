@@ -1,3 +1,9 @@
+## [16.4.1](https://github.com/mx-space/core/compare/v16.4.0...v16.4.1) (2026-11-04)
+
+### Bug Fixes
+
+* **admin:** allow inviting co-authors on unpublished drafts ([1c2f985](https://github.com/mx-space/core/commit/1c2f9854f05d8b08d30174252a4c3666b20f2186))
+
 ## [16.4.0](https://github.com/mx-space/core/compare/v16.3.0...v16.4.0) (2026-11-02)
 
 ### Features
