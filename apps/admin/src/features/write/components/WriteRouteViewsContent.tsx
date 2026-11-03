@@ -1511,6 +1511,12 @@ function WritePage(props: { kind: WriteKind }) {
     () => buildStandaloneDraftTree(activeNewDrafts),
     [activeNewDrafts],
   )
+  const currentDocumentId =
+    versionContextQuery.data?.document.id ??
+    (isEditing ? activeDocumentBranches : activeNewDrafts).find(
+      (draft) => draft.id === (draftId || routeDraftId),
+    )?.documentId ??
+    null
   const firstCategoryId = categories[0]?.id ?? ''
   const activeCategory =
     categories.find((category) => category.id === state.categoryId) ??
@@ -2692,7 +2698,7 @@ function WritePage(props: { kind: WriteKind }) {
           <ContentLayoutSlot active={draftsPanelOpen} id="drafts">
             {crdtActive ? (
               <TimelinePanel
-                documentId={versionContextQuery.data?.document.id ?? null}
+                documentId={currentDocumentId}
                 draftId={draftId}
                 onBeforeChange={draftSession.flushCrdt}
                 onChanged={async ({ restored }) => {
@@ -2715,13 +2721,7 @@ function WritePage(props: { kind: WriteKind }) {
                     ? (deleteDraftMutation.variables ?? null)
                     : null
                 }
-                documentId={
-                  versionContextQuery.data?.document.id ??
-                  (isEditing ? activeDocumentBranches : activeNewDrafts).find(
-                    (draft) => draft.id === (draftId || routeDraftId),
-                  )?.documentId ??
-                  null
-                }
+                documentId={currentDocumentId}
                 drafts={isEditing ? activeDocumentBranches : activeNewDrafts}
                 nodes={
                   isEditing
