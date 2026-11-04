@@ -1,8 +1,9 @@
 # Better Auth 1.7 security upgrade
 
 This release upgrades `better-auth`, its core, adapters, and the API Key, Expo,
-and Passkey plugins from 1.6.27 to 1.7.14. Core, Admin, and CLI consumers use the
-same release through the workspace overrides.
+and Passkey plugins from 1.6.27 to 1.7.16 (including the follow-up from 1.7.14).
+Core, Admin, CLI, and E2E consumers use the same release through the workspace
+overrides, matching Yohaku Web and iOS. `better-call` resolves to 1.4.5.
 
 ## Security scope
 
@@ -11,6 +12,15 @@ device approval, OAuth state / Magic Link isolation, OAuth Proxy, and PostgreSQL
 rate limiting. The updated graph has no Better Auth advisory matches in
 `pnpm audit`. Other packages reported by a full workspace audit are outside this
 upgrade.
+
+The 1.7.16 patch also fixes revoked sessions remaining usable through caches,
+OAuth profile verification, trusted-origin wildcard matching, Expo authorization
+proxy state validation, and Passkey origin / user-verification checks. This
+application does not configure Better Auth secondary storage or session cookie
+caching. Existing database sessions remain usable; revoked sessions must fail.
+The production Passkey configuration already supplies both the admin hostname as
+`rpID` and the exact admin origin as `origin`, so the stricter origin check needs
+no application change. Keep that explicit origin when configuring another host.
 
 The application enables device authorization and supplies its own approval page.
 Upgrading the library alone does not satisfy the
@@ -34,6 +44,12 @@ No new schema migration is required for this application's enabled features:
   `device_code` and `user_code` indexes required by the standalone device plugin.
 - The application uses Apple, GitHub, and Google sign-in. The Microsoft account
   identifier migration and OAuth-provider / SCIM schema changes do not apply.
+- The 1.7.14 to 1.7.16 patch adds no required fields for the enabled plugins.
+  Existing bcrypt and scrypt passwords, signed session cookies, and bearer
+  sessions are covered by PostgreSQL integration tests using persisted rows.
+  Existing API key and OAuth token storage migrations are tested separately;
+  this dependency upgrade does not activate a new secret-storage mode or rotate
+  the signing secret.
 
 Before production deployment, run this read-only check against the target
 database. Better Auth 1.7 rejects ambiguous account matches. The existing
@@ -72,8 +88,12 @@ Local regression commands:
 ```sh
 pnpm typecheck
 pnpm typecheck:admin
+pnpm -C packages/cli run typecheck
 TZ=UTC pnpm -C apps/core exec vitest run src/modules/auth --maxWorkers=2
+TZ=UTC pnpm -C apps/core exec vitest run src/utils/secret-storage-compatibility.spec.ts src/database/protect-stored-secrets.spec.ts --maxWorkers=2
 TZ=UTC pnpm -C packages/e2e exec vitest run test/auth-login-state.test.ts test/auth-device-flow.test.ts --maxWorkers=1
+pnpm -C apps/core run bundle
+pnpm -C apps/admin run build
 pnpm audit --json
 ```
 
@@ -84,6 +104,7 @@ production-origin social-login and Passkey checks.
 ## Upstream references
 
 - [Better Auth 1.7 upgrade guide](https://www.better-auth.com/docs/guides/1-7-upgrade-guide)
+- [Better Auth 1.7.16 security fixes](https://github.com/better-auth/better-auth/releases/tag/v1.7.16)
 - [Account schema correction in 1.7.3](https://better-auth.com/blog/1-7-account-schema)
 - [OAuth state / Magic Link isolation](https://github.com/advisories/GHSA-965c-763c-88jm)
 - [OAuth Proxy isolation](https://github.com/advisories/GHSA-r4xp-prcw-77qf)

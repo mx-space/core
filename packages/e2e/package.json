@@ -18,7 +18,7 @@
     "@testcontainers/postgresql": "^12.2.1",
     "@types/node": "26.6.6",
     "@types/pg": "^8.23.1",
-    "better-auth": "^1.7.14",
+    "better-auth": "^1.7.16",
     "drizzle-orm": "^0.45.3",
     "pg": "^8.23.1",
     "testcontainers": "^12.2.1",
