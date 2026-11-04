@@ -35,7 +35,7 @@ overrides:
   kysely: 0.29.7
   mongodb: ~7.7.0
   pino: ./external/pino
-  rolldown: 1.2.15
+  rolldown: 1.2.16
   'tsdown@0.22.8>rolldown-plugin-dts': 0.27.14
   semver: 7.8.5
   # Compiler API for code generation and declaration bundling; typechecks use tsrs.
