@@ -39,6 +39,7 @@ import {
   SECRET_FIELD_KEYS,
   vetUpdate,
 } from './draft-crdt.doc'
+import { publicFields, withSecrets } from './draft-crdt.fields'
 import { DraftCrdtRepository } from './draft-crdt.repository'
 
 const COMPACT_THRESHOLD = 100
@@ -110,31 +111,6 @@ const fieldsOf = (snapshot: RevisionSnapshot): CrdtFields => ({
 })
 
 const SECTIONS = ['meta', 'typeSpecificData'] as const
-
-const pickKeys = (
-  values: Record<string, unknown> | null | undefined,
-  secret: boolean,
-) => {
-  if (!values) return null
-  const picked = Object.entries(values).filter(
-    ([key]) => SECRET_FIELD_KEYS.has(key) === secret,
-  )
-  return picked.length ? Object.fromEntries(picked) : null
-}
-
-const publicFields = (fields: CrdtFields | null): DocFields => ({
-  meta: pickKeys(fields?.meta, false),
-  typeSpecificData: pickKeys(fields?.typeSpecificData, false),
-})
-
-const withSecrets = (fields: DocFields, row: CrdtFields | null): CrdtFields => {
-  const merge = (section: (typeof SECTIONS)[number]) => {
-    const secrets = pickKeys(row?.[section], true)
-    const values = fields[section]
-    return secrets ? { ...values, ...secrets } : (values ?? null)
-  }
-  return { meta: merge('meta'), typeSpecificData: merge('typeSpecificData') }
-}
 
 const publicPatch = (patch: CrdtFieldsPatch): CrdtFieldsPatch => {
   const out: CrdtFieldsPatch = {}

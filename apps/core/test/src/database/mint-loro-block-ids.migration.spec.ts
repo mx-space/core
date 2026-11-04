@@ -14,7 +14,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { migration } from '~/database/app-migrations/20261026-mint-loro-block-ids'
 import { DraftRefType } from '~/modules/draft/draft.enum'
 import { DraftRepository } from '~/modules/draft/draft.repository'
-import type { RevisionSnapshot } from '~/modules/draft/draft.types'
+import type { CrdtFields, RevisionSnapshot } from '~/modules/draft/draft.types'
 import { editDocAt, readDocContent } from '~/modules/draft/draft-crdt.doc'
 import { DraftCrdtRepository } from '~/modules/draft/draft-crdt.repository'
 import { DraftCrdtService } from '~/modules/draft/draft-crdt.service'
@@ -140,8 +140,11 @@ describe('mint Loro block ids migration (real PG)', () => {
     updateReferencesForDocument: vi.fn(),
   }
 
-  const seedLegacyImport = async (values: string[]) => {
-    const published = lexical(values)
+  const seedLegacyImport = async (
+    values: string[],
+    fields: CrdtFields = { meta: null, typeSpecificData: { slug: 's' } },
+  ) => {
+    const published = { ...lexical(values), ...fields }
     const { document, revision } = await drafts.createDocumentWithRoot(
       DraftRefType.Post,
       null,
@@ -157,7 +160,7 @@ describe('mint Loro block ids migration (real PG)', () => {
     const doc = legacyImport(published.content!, `import ${revision.id}`)
     await crdt.createDoc({
       documentId: document.id,
-      fields: { meta: null, typeSpecificData: { slug: 's' } },
+      fields,
       snapshot: doc.export({ mode: 'snapshot' }),
       snapshotVersion: doc.oplogVersion().encode(),
       syncedRevisionId: revision.id,
@@ -220,8 +223,16 @@ describe('mint Loro block ids migration (real PG)', () => {
     const after = await stateOf(document.id)
     expect(after.epoch).toBe(before.epoch + 1)
     expect(loadEmits(after.snapshot)).toBe(false)
+    const persisted = new LoroDoc()
+    persisted.import(after.snapshot)
+    expect(readDocContent(persisted).fields).toEqual({
+      meta: null,
+      typeSpecificData: { slug: 's' },
+    })
     const doc = new LoroDoc()
     doc.import(await service.exportUpdates(branch.id))
+    expect(doc.frontiers()).toEqual(persisted.frontiers())
+    expect(await crdt.findUpdates(document.id)).toEqual([])
     const content = readDocContent(doc).content
     const ids = blocks(content).map((block) => block.id)
     expect(blocks(content).map((block) => block.text)).toEqual(['a', 'b'])
@@ -234,6 +245,29 @@ describe('mint Loro block ids migration (real PG)', () => {
       head.id,
     )
     expect(await relationOf(branch.id)).toBe('in_sync')
+  })
+
+  it('keeps private fields in the row while migrating public fields into the snapshot', async () => {
+    const fields: CrdtFields = {
+      meta: { cover: 'cover.png', password: 'private-meta' },
+      typeSpecificData: { slug: 's', password: 'private-post' },
+    }
+    const { branch, document } = await seedLegacyImport(['private'], fields)
+
+    await run()
+
+    const row = (await crdt.findDoc(document.id))!
+    expect(row.fields).toEqual(fields)
+    const doc = new LoroDoc()
+    doc.import(row.snapshot)
+    expect(readDocContent(doc).fields).toEqual({
+      meta: { cover: 'cover.png' },
+      typeSpecificData: { slug: 's' },
+    })
+    const opened = new LoroDoc()
+    opened.import(await service.exportUpdates(branch.id))
+    expect(opened.frontiers()).toEqual(doc.frontiers())
+    expect(await crdt.findUpdates(document.id)).toEqual([])
   })
 
   it('is idempotent', async () => {

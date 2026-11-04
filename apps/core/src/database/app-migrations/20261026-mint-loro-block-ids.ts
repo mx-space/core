@@ -7,6 +7,7 @@ import {
   createDocument,
   readDocContent,
 } from '~/modules/draft/draft-crdt.doc'
+import { publicFields } from '~/modules/draft/draft-crdt.fields'
 import { parseEntityId } from '~/shared/id/entity-id'
 
 import type { AppMigration } from './types'
@@ -67,7 +68,13 @@ export const migration: AppMigration = {
         ) {
           return false
         }
-        const fresh = createContentDoc(content, `import ${head.head_id}`)
+        const fresh = createContentDoc(
+          {
+            ...content,
+            fields: state.fields ? publicFields(state.fields) : content.fields,
+          },
+          `import ${head.head_id}`,
+        )
         await tx
           .update(contentRevisions)
           .set({ content: readDocContent(fresh).content })
