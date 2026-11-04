@@ -113,7 +113,24 @@ export async function createIsolatedPgDatabase(): Promise<{
     drop: async () => {
       const cleaner = new Pool({ connectionString: baseUri, max: 1 })
       try {
-        await cleaner.query(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`)
+        // pg-pool.end() resolves before every client finishes disconnecting.
+        // Let those sockets close before dropping the database; FORCE can
+        // otherwise surface an unhandled 57P01 on an already-ending client.
+        const deadline = Date.now() + 5_000
+        for (;;) {
+          const { rows } = await cleaner.query<{ connected: boolean }>(
+            'SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = $1) AS connected',
+            [dbName],
+          )
+          if (!rows[0].connected) break
+          if (Date.now() >= deadline) {
+            throw new Error(
+              `Test database ${dbName} still has open connections`,
+            )
+          }
+          await new Promise((resolve) => setTimeout(resolve, 10))
+        }
+        await cleaner.query(`DROP DATABASE IF EXISTS ${dbName}`)
       } finally {
         await cleaner.end()
       }
