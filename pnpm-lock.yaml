@@ -847,7 +847,7 @@ importers:
         version: 7.0.2
       es-toolkit:
         specifier: ^1.53.0
-        version: 1.53.0
+        version: 1.53.1
       file-type:
         specifier: ^22.2.0
         version: 22.2.0(supports-color@5.5.0)
@@ -1134,7 +1134,7 @@ importers:
         version: 0.5.0(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@10.2.2)(zod@4.6.7))(react@19.3.1)
       es-toolkit:
         specifier: ^1.53.0
-        version: 1.53.0
+        version: 1.53.1
       json5:
         specifier: 2.2.3
         version: 2.2.3
@@ -7727,6 +7727,9 @@ packages:
 
   es-toolkit@1.53.0:
     resolution: {integrity: sha512-3+AYXp9fmJ/UhHBMYj2/U+RaUouMD90SzoItyDOB2Za7W6dB7fQApFGnZPl2MF6K8/Tv1koh1JyirSx/kju6Pw==}
+
+  es-toolkit@1.53.1:
+    resolution: {integrity: sha512-VhMc6IXmexu8iYFfL2aaAww6IvJTdHlqBLruLoEUs33YD4IcP5DdZcLOybMsMmmLsiy1c8PsiLsrM0DdIuuRUA==}
 
   es6-promise-pool@2.5.0:
     resolution: {integrity: sha512-VHErXfzR/6r/+yyzPKeBvO0lgjfC5cbDCQWjWwMZWSb6YU39TGIl51OUmCfWCq4ylMdJSB8zkz2vIuIeIxXApA==}
@@ -19108,6 +19111,8 @@ snapshots:
       is-symbol: 1.1.1
 
   es-toolkit@1.53.0: {}
+
+  es-toolkit@1.53.1: {}
 
   es6-promise-pool@2.5.0: {}
 
