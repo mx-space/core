@@ -1,3 +1,20 @@
+## [17.0.0](https://github.com/mx-space/core/compare/v16.4.1...v17.0.0) (2026-11-07)
+
+### ⚠ BREAKING CHANGES
+
+* migration 0048 drops and recreates `ai_agent_conversations`, discarding all agent conversations. Admin and server must run the same version; neither side accepts the previous agent payload shape.
+
+### Features
+
+* make the server transcript the single source of agent session state ([ad8dc5e](https://github.com/mx-space/core/commit/ad8dc5ef0d13b94c6a1c6aa2cb8c0deb3090d265))
+* **admin:** let the editor agent read and write paywall fields ([cbd5c18](https://github.com/mx-space/core/commit/cbd5c18d2a536e8c7501de95b23ba8eef73c55ac))
+
+### Bug Fixes
+
+* **auth:** upgrade Better Auth to 1.7.16 ([12a1bac](https://github.com/mx-space/core/commit/12a1bac79bde8d62d255f9f1104fc60eb43dbf10))
+* **draft:** retain public fields when rebuilding imported CRDT documents ([b7170de](https://github.com/mx-space/core/commit/b7170dead5f9b9a5f56bb24508d5662ea6e9e373))
+* **test:** wait for PostgreSQL connections before isolated database teardown ([cbf2002](https://github.com/mx-space/core/commit/cbf200246ec321e47c3f8e22a289ab554b060a07))
+
 ## [16.4.1](https://github.com/mx-space/core/compare/v16.4.0...v16.4.1) (2026-11-04)
 
 ### Bug Fixes
