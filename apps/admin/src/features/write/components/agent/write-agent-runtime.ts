@@ -4,11 +4,14 @@ import type { WsClient } from '@mx-space/ws-client'
 import type { AgentRuntime } from '~/vendor/rich-editor/types'
 import type { DocumentBashWorkspace } from '~/vendor/rich-editor/utils/document-bash'
 
+import { createAgentWireClient } from './agent-wire-client'
 import { createServerAgentRunner } from './server-agent-runner'
 import type { SelectedAgentModel } from './types'
 
 export interface WriteAgentRuntimeOptions {
-  ensureConversation: () => Promise<string | null>
+  getConversationId: () => string | null
+  onConversation: (conversationId: string) => void
+  onReviewBatch?: (batchId: string, toolCallId: string) => void
   getSocket: () => WsClient | null
   model: SelectedAgentModel
   sessionId: string
@@ -22,6 +25,20 @@ export function createWriteAgentRuntime(
   options: WriteAgentRuntimeOptions,
 ): AgentRuntime {
   let active: ReturnType<typeof createServerAgentRunner> | null = null
+  const wire = createAgentWireClient()
+  let watched: { socket: WsClient; dispose: () => void } | null = null
+
+  const watch = (socket: WsClient) => {
+    if (watched?.socket === socket) return
+    watched?.dispose()
+    wire.reset()
+    watched = {
+      dispose: socket.on('$state', (state: string) => {
+        if (state !== 'open') wire.reset()
+      }),
+      socket,
+    }
+  }
 
   return {
     steer: async (userInput) =>
@@ -39,23 +56,36 @@ export function createWriteAgentRuntime(
       if (!socket || socket.state !== 'open') {
         throw new Error(options.socketUnavailableMessage)
       }
-      const conversationId = await options.ensureConversation()
+      watch(socket)
       const runner = createServerAgentRunner({
         connectionLostMessage: options.connectionLostMessage,
         collectFiles: (name) =>
           name === options.workspace.tool.name
             ? options.workspace.touchedFiles()
             : [],
-        onOperationsChanged,
+        onConversation: options.onConversation,
+        onOperationsChanged: (operations, toolCallId) => {
+          const before = new Set(
+            options.store.getState().reviewState?.batches.map((b) => b.id),
+          )
+          onOperationsChanged(operations, toolCallId)
+          for (const batch of options.store.getState().reviewState?.batches ??
+            []) {
+            if (!before.has(batch.id)) {
+              options.onReviewBatch?.(batch.id, toolCallId)
+            }
+          }
+        },
         socket,
         store: options.store,
         tools,
+        wire,
       })
       active = runner
       const done = await runner
         .run(
           {
-            conversationId,
+            conversationId: options.getConversationId(),
             files: options.workspace.snapshotFiles(),
             model: options.model.modelId,
             providerId: options.model.providerId,

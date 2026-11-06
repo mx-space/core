@@ -17,38 +17,24 @@ import { WithFastifyRouteOptions } from '~/common/decorators/fastify-route-optio
 import { type EntityIdDto, EntityIdSchema } from '~/shared/dto/id.dto'
 
 import {
-  type AppendMessagesDto,
-  AppendMessagesSchema,
-  type CreateConversationDto,
-  CreateConversationSchema,
   type ListConversationsQueryDto,
   ListConversationsQuerySchema,
-  type ReplaceMessagesDto,
-  ReplaceMessagesSchema,
+  type SaveReviewStateDto,
+  SaveReviewStateSchema,
   type UpdateConversationDto,
   UpdateConversationSchema,
 } from './ai-agent.schema'
 import { AiAgentConversationService } from './ai-agent-conversation.service'
 
 // Review batches embed base/preview document snapshots, so a long session on a
-// large post passes Fastify's 1 MB default and the client would silently drop turns.
-const CONVERSATION_PAYLOAD_BYTES = 32 * 1024 * 1024
+// large post passes Fastify's 1 MB default.
+const REVIEW_STATE_PAYLOAD_BYTES = 32 * 1024 * 1024
 
 @ApiController('ai/agent')
 export class AiAgentController {
   constructor(
     private readonly conversationService: AiAgentConversationService,
   ) {}
-
-  @Post('/conversations')
-  @Auth()
-  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
-  @BypassCaseTransform(['data.messages[]'])
-  createConversation(
-    @Body({ schema: CreateConversationSchema }) body: CreateConversationDto,
-  ) {
-    return this.conversationService.create(body)
-  }
 
   @Get('/conversations')
   @Auth()
@@ -61,9 +47,9 @@ export class AiAgentController {
 
   @Get('/conversations/:id')
   @Auth()
-  @BypassCaseTransform(['data.messages[]'])
+  @BypassCaseTransform(['data.bubbles[]', 'data.reviewState', 'data.anchors'])
   getConversation(@Param({ schema: EntityIdSchema }) params: EntityIdDto) {
-    return this.conversationService.getById(params.id)
+    return this.conversationService.getDetail(params.id)
   }
 
   @Patch('/conversations/:id')
@@ -75,24 +61,14 @@ export class AiAgentController {
     return this.conversationService.updateById(params.id, body)
   }
 
-  @Patch('/conversations/:id/messages')
+  @Put('/conversations/:id/review-state')
   @Auth()
-  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
-  appendMessages(
+  @WithFastifyRouteOptions({ bodyLimit: REVIEW_STATE_PAYLOAD_BYTES })
+  saveReviewState(
     @Param({ schema: EntityIdSchema }) params: EntityIdDto,
-    @Body({ schema: AppendMessagesSchema }) body: AppendMessagesDto,
+    @Body({ schema: SaveReviewStateSchema }) body: SaveReviewStateDto,
   ) {
-    return this.conversationService.appendMessages(params.id, body.messages)
-  }
-
-  @Put('/conversations/:id/messages')
-  @Auth()
-  @WithFastifyRouteOptions({ bodyLimit: CONVERSATION_PAYLOAD_BYTES })
-  replaceMessages(
-    @Param({ schema: EntityIdSchema }) params: EntityIdDto,
-    @Body({ schema: ReplaceMessagesSchema }) body: ReplaceMessagesDto,
-  ) {
-    return this.conversationService.replaceMessages(params.id, body.messages)
+    return this.conversationService.saveReviewState(params.id, body)
   }
 
   @Delete('/conversations/:id')

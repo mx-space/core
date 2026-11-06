@@ -6,11 +6,10 @@ import type {
 } from '@earendil-works/pi-ai'
 import type {
   AgentFileSnapshot,
-  AgentRunPayload,
   AgentRunStatus,
   AgentServerEvent,
-  AgentToolResultPayload,
   AgentToolSchema,
+  ResolvedAgentRun,
 } from '@mx-space/ai'
 import {
   convertJsonSchemaToTypeBox,
@@ -23,11 +22,7 @@ import { ConfigsService } from '~/modules/configs/configs.service'
 
 import { AiAgentArticleSource } from './ai-agent-article.source'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
-import {
-  bubblesToHistory,
-  mapPiEventToSse,
-  toPiMessages,
-} from './ai-agent-messages'
+import { mapPiEventToSse } from './ai-agent-messages'
 import {
   type AgentArticleSource,
   type AgentServerTool,
@@ -43,19 +38,25 @@ export interface AgentTranscript {
   known: KnownFiles
 }
 
+export interface AgentClientToolResult {
+  toolCallId: string
+  content: string
+  isError: boolean
+  files?: AgentFileSnapshot[]
+}
+
 export interface AgentRunSink {
   emit: (event: AgentServerEvent) => void
   callClientTool: (call: {
     toolCallId: string
     name: string
     arguments: Record<string, unknown>
-  }) => Promise<Omit<AgentToolResultPayload, 'runId'>>
+  }) => Promise<AgentClientToolResult>
 }
 
 export interface AgentRunOptions {
   sink: AgentRunSink
   signal: AbortSignal
-  memory: Map<string, AgentTranscript>
   inbox?: AgentSteerInbox
 }
 
@@ -85,8 +86,8 @@ export class AiAgentRunService {
   }
 
   async run(
-    payload: AgentRunPayload,
-    { sink, signal, memory, inbox = createSteerInbox() }: AgentRunOptions,
+    payload: ResolvedAgentRun,
+    { sink, signal, inbox = createSteerInbox() }: AgentRunOptions,
   ): Promise<AgentRunResult> {
     const provider = await this.resolveProvider(payload.providerId)
     const runtime = createModelRuntime(provider, payload.model)
@@ -94,7 +95,7 @@ export class AiAgentRunService {
       throw new Error('runtime does not implement streamMessage')
     }
 
-    const handle = await this.openTranscript(payload, memory, runtime)
+    const handle = await this.openTranscript(payload.conversationId)
     const { transcript } = handle
 
     const appendUser = (text: string, files: AgentFileSnapshot[]) => {
@@ -235,7 +236,7 @@ export class AiAgentRunService {
       serverNames: Set<string>
       clientNames: Set<string>
       excludeRefId?: string
-      onFiles: (files: NonNullable<AgentToolResultPayload['files']>) => void
+      onFiles: (files: AgentFileSnapshot[]) => void
     },
   ): Promise<{ content: string; isError: boolean }> {
     const args = (toolCall.arguments ?? {}) as Record<string, unknown>
@@ -290,20 +291,8 @@ export class AiAgentRunService {
   }
 
   private async openTranscript(
-    payload: AgentRunPayload,
-    memory: Map<string, AgentTranscript>,
-    runtime: ReturnType<typeof createModelRuntime>,
+    conversationId: string,
   ): Promise<TranscriptHandle> {
-    if (!payload.conversationId) {
-      let transcript = memory.get(payload.sessionId)
-      if (!transcript) {
-        transcript = { messages: [], known: {} }
-        memory.set(payload.sessionId, transcript)
-      }
-      return { transcript, save: async () => {} }
-    }
-
-    const conversationId = payload.conversationId
     const row =
       await this.conversationRepository.findWithTranscript(conversationId)
     if (!row) {
@@ -311,16 +300,11 @@ export class AiAgentRunService {
         message: 'Conversation not found',
       })
     }
-    const stored = row.transcript as AgentTranscript | null
-    const transcript: AgentTranscript = stored?.messages
-      ? { messages: stored.messages, known: stored.known ?? {} }
-      : {
-          messages: toPiMessages(
-            withoutPendingUser(bubblesToHistory(row.messages), payload.user),
-            runtime.providerInfo,
-          ).piMessages,
-          known: {},
-        }
+    const stored = row.transcript as Partial<AgentTranscript>
+    const transcript: AgentTranscript = {
+      messages: stored.messages ?? [],
+      known: stored.known ?? {},
+    }
     return {
       transcript,
       save: async () => {
@@ -359,16 +343,6 @@ function toolResult(
     isError,
     timestamp: Date.now(),
   }
-}
-
-function withoutPendingUser(
-  history: Record<string, unknown>[],
-  user: string,
-): Record<string, unknown>[] {
-  const last = history.at(-1)
-  return last?.role === 'user' && String(last.content).trim() === user.trim()
-    ? history.slice(0, -1)
-    : history
 }
 
 function withoutToolCalls(message: AssistantMessage): AssistantMessage {

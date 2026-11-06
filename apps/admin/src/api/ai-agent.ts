@@ -1,26 +1,26 @@
+import type { AgentHistoryBubble } from '@mx-space/ai'
+
 import { deleteJson, getJson, patchJson, postJson, putJson } from './http'
 
 export interface AgentConversation {
   createdAt: string
   id: string
-  messages?: Record<string, unknown>[]
-  model: string | null
-  providerId: string | null
+  model: string
+  providerId: string
   sessionId: string
   title: string | null
-  updatedAt: string
+  updatedAt: string | null
 }
 
-export function createAgentConversation(data: {
-  messages?: Record<string, unknown>[]
-  model?: string | null
-  providerId?: string | null
-  sessionId: string
-}) {
-  return postJson<AgentConversation, typeof data>(
-    '/ai/agent/conversations',
-    data,
-  )
+export interface AgentReviewAnchor {
+  batchId: string
+  toolCallId: string
+}
+
+export interface AgentConversationDetail extends AgentConversation {
+  bubbles: AgentHistoryBubble[]
+  reviewState: Record<string, unknown> | null
+  anchors: AgentReviewAnchor[]
 }
 
 export function getAgentConversations(sessionId: string) {
@@ -30,39 +30,28 @@ export function getAgentConversations(sessionId: string) {
 }
 
 export function getAgentConversation(id: string) {
-  return getJson<AgentConversation>(`/ai/agent/conversations/${id}`)
-}
-
-export function appendAgentConversationMessages(
-  id: string,
-  messages: Record<string, unknown>[],
-) {
-  return patchJson<AgentConversation, { messages: Record<string, unknown>[] }>(
-    `/ai/agent/conversations/${id}/messages`,
-    { messages },
-  )
-}
-
-export function replaceAgentConversationMessages(
-  id: string,
-  messages: Record<string, unknown>[],
-) {
-  return putJson<AgentConversation, { messages: Record<string, unknown>[] }>(
-    `/ai/agent/conversations/${id}/messages`,
-    { messages },
-  )
+  return getJson<AgentConversationDetail>(`/ai/agent/conversations/${id}`)
 }
 
 export function updateAgentConversation(
   id: string,
-  data: {
-    model?: string | null
-    providerId?: string | null
-    sessionId?: string
-  },
+  data: { sessionId: string },
 ) {
   return patchJson<AgentConversation, typeof data>(
     `/ai/agent/conversations/${id}`,
+    data,
+  )
+}
+
+export function saveAgentConversationReviewState(
+  id: string,
+  data: {
+    reviewState: Record<string, unknown> | null
+    anchors: AgentReviewAnchor[]
+  },
+) {
+  return putJson<void, typeof data>(
+    `/ai/agent/conversations/${id}/review-state`,
     data,
   )
 }

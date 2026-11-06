@@ -2,7 +2,6 @@ import {
   type AgentDonePayload,
   type AgentEventPayload,
   type AgentToolCallPayload,
-  type AgentToolResultPayload,
   AgentWsEvents,
 } from '@mx-space/ai'
 import type { WsAckPayload } from '@mx-space/ws-client/protocol'
@@ -20,14 +19,43 @@ import {
 } from '~/processors/gateway/admin/admin-ws-handler.registry'
 import { RedisService } from '~/processors/redis/redis.service'
 
-import { type AgentTranscript, AiAgentRunService } from './ai-agent-run.service'
+import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
+import {
+  type AgentClientToolResult,
+  AiAgentRunService,
+} from './ai-agent-run.service'
 import { acquireConversationRunLock } from './ai-agent-run-lock'
 import { type AgentSteerInbox, createSteerInbox } from './ai-agent-steer'
+import {
+  type AgentWireContext,
+  createAgentWireContext,
+  type WireResult,
+} from './ai-agent-wire-context'
 
-const fileSnapshot = z.object({
-  path: z.string().min(1).max(256),
-  content: z.string(),
-  attach: z.boolean().optional(),
+const filePath = z.string().min(1).max(256)
+const fileFrame = z.union([
+  z.object({
+    path: filePath,
+    attach: z.boolean().optional(),
+    content: z.string(),
+  }),
+  z.object({
+    path: filePath,
+    attach: z.boolean().optional(),
+    baseHash: z.string().min(1),
+    patch: z.string(),
+  }),
+  z.object({
+    path: filePath,
+    attach: z.boolean().optional(),
+    hash: z.string().min(1),
+  }),
+])
+
+const toolSchema = z.object({
+  name: z.string().min(1).max(128),
+  description: z.string(),
+  parameters: z.record(z.string(), z.unknown()),
 })
 
 const runSchema = z.object({
@@ -36,16 +64,12 @@ const runSchema = z.object({
   conversationId: z.string().min(1).nullable(),
   model: z.string().min(1),
   providerId: z.string().min(1),
-  system: z.array(z.string()),
   user: z.string(),
-  tools: z.array(
-    z.object({
-      name: z.string().min(1).max(128),
-      description: z.string(),
-      parameters: z.record(z.string(), z.unknown()),
-    }),
-  ),
-  files: z.array(fileSnapshot),
+  systemHash: z.string().min(1),
+  system: z.array(z.string()).optional(),
+  toolsHash: z.string().min(1),
+  tools: z.array(toolSchema).optional(),
+  files: z.array(fileFrame),
 })
 
 const toolResultSchema = z.object({
@@ -53,7 +77,7 @@ const toolResultSchema = z.object({
   toolCallId: z.string().min(1),
   content: z.string(),
   isError: z.boolean(),
-  files: z.array(fileSnapshot).optional(),
+  files: z.array(fileFrame).optional(),
 })
 
 const cancelSchema = z.object({ runId: z.string().min(1) })
@@ -61,16 +85,17 @@ const cancelSchema = z.object({ runId: z.string().min(1) })
 const steerSchema = z.object({
   runId: z.string().min(1),
   user: z.string().min(1),
-  files: z.array(fileSnapshot),
+  files: z.array(fileFrame),
 })
 
 interface PendingToolCall {
-  resolve: (result: Omit<AgentToolResultPayload, 'runId'>) => void
+  resolve: (result: AgentClientToolResult) => void
   reject: (error: Error) => void
 }
 
 interface ActiveRun {
   sessionId: string
+  conversationId: string
   controller: AbortController
   pending: Map<string, PendingToolCall>
   inbox: AgentSteerInbox
@@ -78,8 +103,12 @@ interface ActiveRun {
 
 interface ConnectionState {
   runs: Map<string, ActiveRun>
-  memory: Map<string, AgentTranscript>
+  starting: Set<string>
+  wire: AgentWireContext
 }
+
+const nack = (result: Exclude<WireResult<unknown>, { ok: true }>) =>
+  result as WsAckPayload
 
 @Injectable()
 export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
@@ -91,6 +120,7 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     private readonly registry: AdminWsHandlerRegistry,
     private readonly runService: AiAgentRunService,
     private readonly redisService: RedisService,
+    private readonly conversationRepository: AiAgentConversationRepository,
   ) {}
 
   onModuleInit() {
@@ -128,34 +158,60 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     const parsed = runSchema.safeParse(raw)
     if (!parsed.success) return { ok: false, code: 'VALIDATION_FAILED' }
     const payload = parsed.data
-
-    const releaseLock = payload.conversationId
-      ? await acquireConversationRunLock(
-          this.redisService.getClient(),
-          payload.conversationId,
-          (error, phase) =>
-            this.logger.warn(
-              `agent run lock ${phase} failed: ${error.message}`,
-            ),
-        )
-      : null
-    if (payload.conversationId && !releaseLock) {
-      return { ok: false, code: 'AGENT_BUSY' }
-    }
-
     const state = this.stateOf(ctx.connectionId)
+
     const busy =
       state.runs.has(payload.runId) ||
+      state.starting.has(payload.sessionId) ||
       [...state.runs.values()].some(
         (active) => active.sessionId === payload.sessionId,
       )
-    if (busy) {
-      await releaseLock?.()
-      return { ok: false, code: 'AGENT_BUSY' }
+    if (busy) return { ok: false, code: 'AGENT_BUSY' }
+
+    state.starting.add(payload.sessionId)
+    try {
+      return await this.startRun(ctx, state, payload)
+    } finally {
+      state.starting.delete(payload.sessionId)
     }
+  }
+
+  private async startRun(
+    ctx: AdminWsContext,
+    state: ConnectionState,
+    payload: z.infer<typeof runSchema>,
+  ): Promise<WsAckPayload> {
+    const statics = await state.wire.resolveStatic(payload)
+    if (!statics.ok) return nack(statics)
+    const pendingKey = `pending:${payload.runId}`
+    const files = await state.wire.resolveFiles(
+      payload.conversationId ?? pendingKey,
+      payload.files,
+    )
+    if (!files.ok) return nack(files)
+
+    let conversationId = payload.conversationId
+    if (!conversationId) {
+      const created = await this.conversationRepository.create({
+        sessionId: payload.sessionId,
+        model: payload.model,
+        providerId: payload.providerId,
+      })
+      conversationId = String(created.id)
+      state.wire.moveBaseline(pendingKey, conversationId)
+    }
+
+    const releaseLock = await acquireConversationRunLock(
+      this.redisService.getClient(),
+      conversationId,
+      (error, phase) =>
+        this.logger.warn(`agent run lock ${phase} failed: ${error.message}`),
+    )
+    if (!releaseLock) return { ok: false, code: 'AGENT_BUSY' }
 
     const run: ActiveRun = {
       sessionId: payload.sessionId,
+      conversationId,
       controller: new AbortController(),
       pending: new Map(),
       inbox: createSteerInbox(),
@@ -166,7 +222,7 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     const finish = (done: Omit<AgentDonePayload, 'runId'>) => {
       state.runs.delete(runId)
       run.inbox.take({ close: true })
-      void releaseLock?.()
+      void releaseLock()
       for (const pending of run.pending.values()) {
         pending.reject(new Error('Run ended'))
       }
@@ -178,30 +234,42 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     }
 
     this.runService
-      .run(payload, {
-        signal: run.controller.signal,
-        memory: state.memory,
-        inbox: run.inbox,
-        sink: {
-          emit: (event) =>
-            ctx.send(AgentWsEvents.event, {
-              runId,
-              event,
-            } satisfies AgentEventPayload),
-          callClientTool: (call) =>
-            new Promise((resolve, reject) => {
-              if (run.controller.signal.aborted) {
-                reject(new Error('Run aborted'))
-                return
-              }
-              run.pending.set(call.toolCallId, { resolve, reject })
-              ctx.send(AgentWsEvents.toolCall, {
-                runId,
-                ...call,
-              } satisfies AgentToolCallPayload)
-            }),
+      .run(
+        {
+          runId,
+          sessionId: payload.sessionId,
+          conversationId,
+          model: payload.model,
+          providerId: payload.providerId,
+          user: payload.user,
+          system: statics.value.system,
+          tools: statics.value.tools,
+          files: files.value,
         },
-      })
+        {
+          signal: run.controller.signal,
+          inbox: run.inbox,
+          sink: {
+            emit: (event) =>
+              ctx.send(AgentWsEvents.event, {
+                runId,
+                event,
+              } satisfies AgentEventPayload),
+            callClientTool: (call) =>
+              new Promise((resolve, reject) => {
+                if (run.controller.signal.aborted) {
+                  reject(new Error('Run aborted'))
+                  return
+                }
+                run.pending.set(call.toolCallId, { resolve, reject })
+                ctx.send(AgentWsEvents.toolCall, {
+                  runId,
+                  ...call,
+                } satisfies AgentToolCallPayload)
+              }),
+          },
+        },
+      )
       .then(
         (result) => finish(result),
         (error: Error) => {
@@ -213,18 +281,33 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
         },
       )
 
-    return { ok: true }
+    return { ok: true, conversationId }
   }
 
-  private handleToolResult(ctx: AdminWsContext, raw: unknown): WsAckPayload {
+  private async handleToolResult(
+    ctx: AdminWsContext,
+    raw: unknown,
+  ): Promise<WsAckPayload> {
     const parsed = toolResultSchema.safeParse(raw)
     if (!parsed.success) return { ok: false, code: 'VALIDATION_FAILED' }
-    const { runId, ...result } = parsed.data
-    const run = this.connections.get(ctx.connectionId)?.runs.get(runId)
+    const { runId, files: frames, ...result } = parsed.data
+    const state = this.connections.get(ctx.connectionId)
+    const run = state?.runs.get(runId)
     const pending = run?.pending.get(result.toolCallId)
-    if (!run || !pending) return { ok: false, code: 'UNKNOWN_TOOL_CALL' }
+    if (!state || !run || !pending) {
+      return { ok: false, code: 'UNKNOWN_TOOL_CALL' }
+    }
+    let files: AgentClientToolResult['files']
+    if (frames?.length) {
+      const resolved = await state.wire.resolveFiles(run.conversationId, frames)
+      if (!resolved.ok) return nack(resolved)
+      files = resolved.value
+    }
+    if (run.pending.get(result.toolCallId) !== pending) {
+      return { ok: false, code: 'UNKNOWN_TOOL_CALL' }
+    }
     run.pending.delete(result.toolCallId)
-    pending.resolve(result)
+    pending.resolve(files ? { ...result, files } : result)
     return { ok: true }
   }
 
@@ -238,12 +321,21 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     return { ok: true }
   }
 
-  private handleSteer(ctx: AdminWsContext, raw: unknown): WsAckPayload {
+  private async handleSteer(
+    ctx: AdminWsContext,
+    raw: unknown,
+  ): Promise<WsAckPayload> {
     const parsed = steerSchema.safeParse(raw)
     if (!parsed.success) return { ok: false, code: 'VALIDATION_FAILED' }
-    const { runId, ...steer } = parsed.data
-    const run = this.connections.get(ctx.connectionId)?.runs.get(runId)
-    if (!run || run.controller.signal.aborted || !run.inbox.push(steer)) {
+    const { runId, user, files: frames } = parsed.data
+    const state = this.connections.get(ctx.connectionId)
+    const run = state?.runs.get(runId)
+    if (!state || !run || run.controller.signal.aborted) {
+      return { ok: false, code: 'RUN_ENDED' }
+    }
+    const files = await state.wire.resolveFiles(run.conversationId, frames)
+    if (!files.ok) return nack(files)
+    if (!run.inbox.push({ user, files: files.value })) {
       return { ok: false, code: 'RUN_ENDED' }
     }
     return { ok: true }
@@ -259,7 +351,11 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
   private stateOf(connectionId: string) {
     let state = this.connections.get(connectionId)
     if (!state) {
-      state = { runs: new Map(), memory: new Map() }
+      state = {
+        runs: new Map(),
+        starting: new Set(),
+        wire: createAgentWireContext(),
+      }
       this.connections.set(connectionId, state)
     }
     return state

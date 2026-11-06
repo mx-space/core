@@ -6,6 +6,8 @@ import type {
   ChatBubble,
 } from '@haklex/rich-agent-core'
 import {
+  AGENT_CONTEXT_MISSING,
+  AGENT_FILE_BASE_MISMATCH,
   type AgentDonePayload,
   type AgentEventPayload,
   type AgentFileSnapshot,
@@ -16,13 +18,18 @@ import {
   type AgentToolResultPayload,
   AgentWsEvents,
 } from '@mx-space/ai'
-import type { WsAckPayload } from '@mx-space/ws-client'
+import type { WsAckPayload, WsRequestError } from '@mx-space/ws-client'
 
 import {
   addAgentUsage,
   type AgentTurnUsage,
   type ModelCallUsage,
 } from './agent-usage'
+import {
+  type AgentWireClient,
+  createAgentWireClient,
+  type StaticFrame,
+} from './agent-wire-client'
 import type { AssistantChatBubble } from './types'
 
 export interface AgentSocketPort {
@@ -31,29 +38,68 @@ export interface AgentSocketPort {
   request: (event: string, payload: unknown) => Promise<WsAckPayload>
 }
 
-export type ServerAgentRunInput = Omit<AgentRunPayload, 'runId' | 'tools'>
+export interface ServerAgentRunInput {
+  conversationId: string | null
+  sessionId: string
+  model: string
+  providerId: string
+  user: string
+  system: string[]
+  files: AgentFileSnapshot[]
+}
 
 export interface ServerAgentRunnerConfig {
   socket: AgentSocketPort
   store: AgentStore
   tools: AgentToolConfig[]
+  wire?: AgentWireClient
   collectFiles?: (toolName: string) => AgentFileSnapshot[]
-  onOperationsChanged?: (operations: AgentOperation[]) => void
+  onOperationsChanged?: (
+    operations: AgentOperation[],
+    toolCallId: string,
+  ) => void
+  onConversation?: (conversationId: string) => void
   connectionLostMessage?: string
 }
 
 const CANCEL_GRACE_MS = 5000
+const SETTLED_TOOL_CALL_CODES = new Set(['UNKNOWN_TOOL_CALL', 'RUN_ENDED'])
 
 export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
   const { socket, store } = config
   const toolMap = new Map(config.tools.map((tool) => [tool.name, tool]))
-  let activeRunId: string | null = null
+  const wire = config.wire ?? createAgentWireClient()
+  const toolSchemas = config.tools.map(({ description, name, parameters }) => ({
+    description,
+    name,
+    parameters,
+  }))
+  let active: { runId: string; conversationId: string } | null = null
+
+  async function requestWithResend(
+    send: (full?: ReadonlySet<string>) => Promise<WsAckPayload>,
+  ) {
+    try {
+      return await send()
+    } catch (error) {
+      const ack = (error as WsRequestError).ack
+      if (ack?.code === AGENT_CONTEXT_MISSING) {
+        wire.forgetStatic()
+        return send()
+      }
+      if (ack?.code === AGENT_FILE_BASE_MISMATCH) {
+        return send(new Set((ack.paths as string[] | undefined) ?? []))
+      }
+      throw error
+    }
+  }
 
   async function run(
     input: ServerAgentRunInput,
     signal?: AbortSignal,
   ): Promise<AgentDonePayload> {
     const runId = crypto.randomUUID()
+    let conversationId = input.conversationId
     const operations: AgentOperation[] = []
     const view = createBubbleView(store, (name, params) => {
       const tool = toolMap.get(name)
@@ -125,19 +171,41 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
         } else {
           operations.push(...result.operations)
         }
-        config.onOperationsChanged?.(operations)
+        config.onOperationsChanged?.(operations, call.toolCallId)
       }
 
       const content = result.ok ? result.content : JSON.stringify(result.error)
       view.settleItem(call.toolCallId, content, !result.ok)
       const files = tool ? config.collectFiles?.(call.name) : undefined
-      socket.send(AgentWsEvents.toolResult, {
-        content,
-        ...(files?.length ? { files } : {}),
-        isError: !result.ok,
-        runId,
-        toolCallId: call.toolCallId,
-      } satisfies AgentToolResultPayload)
+      try {
+        await requestWithResend(async (full) =>
+          socket.request(AgentWsEvents.toolResult, {
+            content,
+            ...(files?.length
+              ? {
+                  files: await wire.encodeFiles(conversationId, files, {
+                    full,
+                  }),
+                }
+              : {}),
+            isError: !result.ok,
+            runId,
+            toolCallId: call.toolCallId,
+          } satisfies AgentToolResultPayload),
+        )
+        if (files?.length && conversationId) {
+          wire.commitFiles(conversationId, files)
+        }
+      } catch (error) {
+        const code = (error as WsRequestError).code
+        if (code && SETTLED_TOOL_CALL_CODES.has(code)) return
+        socket.send(AgentWsEvents.cancel, { runId })
+        settle({
+          error: error instanceof Error ? error.message : String(error),
+          runId,
+          status: 'failed',
+        })
+      }
     }
 
     let cancelTimer: ReturnType<typeof setTimeout> | undefined
@@ -152,21 +220,36 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
     store.getState().setStatus('running')
 
     try {
-      await socket.request(AgentWsEvents.run, {
-        ...input,
-        runId,
-        tools: config.tools.map(({ description, name, parameters }) => ({
-          description,
-          name,
-          parameters,
-        })),
-      } satisfies AgentRunPayload)
-      activeRunId = runId
+      let sentStatic: StaticFrame | undefined
+      const ack = await requestWithResend(async (full) => {
+        sentStatic = await wire.encodeStatic(input.system, toolSchemas)
+        const files = await wire.encodeFiles(
+          input.conversationId,
+          input.files,
+          { full },
+        )
+        signal?.throwIfAborted()
+        return socket.request(AgentWsEvents.run, {
+          conversationId: input.conversationId,
+          files,
+          model: input.model,
+          providerId: input.providerId,
+          runId,
+          sessionId: input.sessionId,
+          user: input.user,
+          ...sentStatic,
+        } satisfies AgentRunPayload)
+      })
+      conversationId = String(ack.conversationId ?? input.conversationId)
+      wire.commitStatic(sentStatic!)
+      wire.commitFiles(conversationId, input.files)
+      active = { conversationId, runId }
+      config.onConversation?.(conversationId)
       const done = await finished
       store.getState().setStatus('done')
       return done
     } finally {
-      if (activeRunId === runId) activeRunId = null
+      if (active?.runId === runId) active = null
       clearTimeout(cancelTimer)
       signal?.removeEventListener('abort', onAbort)
       for (const dispose of disposers) dispose()
@@ -174,13 +257,19 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
   }
 
   async function steer(user: string, files: AgentFileSnapshot[]) {
-    if (!activeRunId) return false
+    const current = active
+    if (!current) return false
     try {
-      await socket.request(AgentWsEvents.steer, {
-        files,
-        runId: activeRunId,
-        user,
-      } satisfies AgentSteerPayload)
+      await requestWithResend(async (full) =>
+        socket.request(AgentWsEvents.steer, {
+          files: await wire.encodeFiles(current.conversationId, files, {
+            full,
+          }),
+          runId: current.runId,
+          user,
+        } satisfies AgentSteerPayload),
+      )
+      wire.commitFiles(current.conversationId, files)
       return true
     } catch {
       return false

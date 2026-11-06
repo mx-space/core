@@ -96,6 +96,7 @@
     "@earendil-works/pi-ai": "0.99.1",
     "@haklex/rich-headless": "0.63.0",
     "@innei/message-engine": "0.5.0",
+    "diff": "9.0.0",
     "es-toolkit": "^1.53.0",
     "json5": "2.2.3",
     "jsonrepair": "^3.15.0",

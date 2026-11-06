@@ -1,8 +1,10 @@
 import type { AgentOperation, AgentToolConfig } from '@haklex/rich-agent-core'
 import { createAgentStore } from '@haklex/rich-agent-core'
+import { applyFilePatch } from '@mx-space/ai'
 import type { WsAckPayload } from '@mx-space/ws-client'
 import { describe, expect, it, vi } from 'vitest'
 
+import { createAgentWireClient } from './agent-wire-client'
 import {
   type AgentSocketPort,
   createServerAgentRunner,
@@ -10,8 +12,8 @@ import {
 } from './server-agent-runner'
 
 function createFakeSocket(
-  ack: WsAckPayload = { ok: true },
-  acks: Record<string, WsAckPayload> = {},
+  ack: WsAckPayload = { ok: true, conversationId: 'conv-1' },
+  acks: Record<string, WsAckPayload | WsAckPayload[]> = {},
 ) {
   const handlers = new Map<string, Set<(payload: any) => void>>()
   const sent: Array<{ event: string; payload: any }> = []
@@ -26,8 +28,16 @@ function createFakeSocket(
     send: (event, payload) => sent.push({ event, payload }),
     request: async (event, payload) => {
       requested.push({ event, payload })
-      const reply = acks[event] ?? ack
-      if (!reply.ok) throw Object.assign(new Error('rejected'), reply)
+      const queued = acks[event]
+      const reply =
+        (Array.isArray(queued) ? queued.shift() : queued) ??
+        (event === 'agent.run' ? ack : { ok: true })
+      if (!reply.ok) {
+        throw Object.assign(new Error('rejected'), {
+          ack: reply,
+          code: reply.code,
+        })
+      }
       return reply
     },
   }
@@ -58,7 +68,10 @@ function tool(overrides: Partial<AgentToolConfig> = {}): AgentToolConfig {
 }
 
 async function flush() {
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  const until = performance.now() + 20
+  while (performance.now() < until) {
+    await new Promise((resolve) => setImmediate(resolve))
+  }
 }
 
 describe('createServerAgentRunner', () => {
@@ -140,7 +153,7 @@ describe('createServerAgentRunner', () => {
     await flush()
 
     expect(bash.execute).toHaveBeenCalledWith({ command: 'ls' })
-    expect(fake.sent).toContainEqual({
+    expect(fake.requested).toContainEqual({
       event: 'agent.tool.result',
       payload: {
         content: 'listing',
@@ -249,7 +262,59 @@ describe('createServerAgentRunner', () => {
     fake.deliver('agent.done', { runId, status: 'complete' })
     await done
 
-    expect(onOperationsChanged).toHaveBeenCalledWith(ops)
+    expect(onOperationsChanged).toHaveBeenCalledWith(ops, 'c1')
+  })
+
+  it('fails the run and cancels it when a tool result cannot be delivered', async () => {
+    const fake = createFakeSocket(undefined, {
+      'agent.tool.result': { code: 'TIMEOUT', ok: false },
+    })
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [tool()],
+    })
+
+    const done = runner.run(input)
+    await flush()
+    const runId = fake.requested[0].payload.runId
+    fake.deliver('agent.tool.call', {
+      runId,
+      toolCallId: 'c1',
+      name: 'bash',
+      arguments: {},
+    })
+
+    await expect(done).resolves.toMatchObject({ runId, status: 'failed' })
+    expect(fake.sent).toContainEqual({
+      event: 'agent.cancel',
+      payload: { runId },
+    })
+  })
+
+  it('ignores a tool result the server no longer waits for', async () => {
+    const fake = createFakeSocket(undefined, {
+      'agent.tool.result': { code: 'UNKNOWN_TOOL_CALL', ok: false },
+    })
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [tool()],
+    })
+
+    const done = runner.run(input)
+    await flush()
+    const runId = fake.requested[0].payload.runId
+    fake.deliver('agent.tool.call', {
+      runId,
+      toolCallId: 'c1',
+      name: 'bash',
+      arguments: {},
+    })
+    await flush()
+    expect(fake.sent).toEqual([])
+    fake.deliver('agent.done', { runId, status: 'complete' })
+    await expect(done).resolves.toMatchObject({ status: 'complete' })
   })
 
   it('answers an unknown client tool with an error', async () => {
@@ -273,7 +338,9 @@ describe('createServerAgentRunner', () => {
     fake.deliver('agent.done', { runId, status: 'complete' })
     await done
 
-    expect(fake.sent[0].payload).toMatchObject({
+    expect(
+      fake.requested.find((r) => r.event === 'agent.tool.result')!.payload,
+    ).toMatchObject({
       isError: true,
       toolCallId: 'c9',
     })
@@ -299,6 +366,22 @@ describe('createServerAgentRunner', () => {
     })
     fake.deliver('agent.done', { runId, status: 'aborted' })
     await expect(done).resolves.toMatchObject({ status: 'aborted' })
+  })
+
+  it('does not start the server run when aborted before it was sent', async () => {
+    const fake = createFakeSocket()
+    const controller = new AbortController()
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [],
+    })
+
+    const done = runner.run(input, controller.signal)
+    controller.abort()
+
+    await expect(done).rejects.toMatchObject({ name: 'AbortError' })
+    expect(fake.requested.filter((r) => r.event === 'agent.run')).toEqual([])
   })
 
   it('ignores frames that belong to another run', async () => {
@@ -364,7 +447,7 @@ describe('createServerAgentRunner', () => {
   })
 
   it('settles as aborted when the server never confirms a cancel', async () => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     try {
       const fake = createFakeSocket()
       const controller = new AbortController()
@@ -375,7 +458,7 @@ describe('createServerAgentRunner', () => {
       })
 
       const done = runner.run(input, controller.signal)
-      await vi.advanceTimersByTimeAsync(0)
+      await flush()
       const runId = fake.requested[0].payload.runId
       controller.abort()
       await vi.advanceTimersByTimeAsync(10_000)
@@ -542,6 +625,180 @@ describe('createServerAgentRunner', () => {
         input: 2729,
         output: 860,
       },
+    })
+  })
+
+  describe('wire protocol', () => {
+    const v1 = '<doc>\n  <p>one</p>\n</doc>'
+    const v2 = '<doc>\n  <p>two</p>\n</doc>'
+
+    async function finishRun(
+      fake: ReturnType<typeof createFakeSocket>,
+      done: Promise<unknown>,
+    ) {
+      await flush()
+      const runId = fake.requested.findLast((r) => r.event === 'agent.run')!
+        .payload.runId
+      fake.deliver('agent.done', { runId, status: 'complete' })
+      await done
+    }
+
+    it('sends hashes and patches on a later run of the same conversation', async () => {
+      const fake = createFakeSocket()
+      const runner = createServerAgentRunner({
+        socket: fake.socket,
+        store: createAgentStore(),
+        tools: [tool()],
+        wire: createAgentWireClient(),
+      })
+
+      await finishRun(
+        fake,
+        runner.run({ ...input, files: [{ content: v1, path: '/doc.xml' }] }),
+      )
+      await finishRun(
+        fake,
+        runner.run({ ...input, files: [{ content: v2, path: '/doc.xml' }] }),
+      )
+
+      const second = fake.requested.filter((r) => r.event === 'agent.run')[1]
+        .payload
+      expect(second.system).toBeUndefined()
+      expect(second.tools).toBeUndefined()
+      expect(second.systemHash).toMatch(/^[\da-f]{64}$/)
+      expect(applyFilePatch(v1, second.files[0].patch)).toBe(v2)
+    })
+
+    it('resends full context once when the server reports it missing', async () => {
+      const fake = createFakeSocket(undefined, {
+        'agent.run': [
+          { ok: true, conversationId: 'conv-1' },
+          { code: 'CONTEXT_MISSING', missing: ['system'], ok: false },
+          { ok: true, conversationId: 'conv-1' },
+        ],
+      })
+      const runner = createServerAgentRunner({
+        socket: fake.socket,
+        store: createAgentStore(),
+        tools: [],
+        wire: createAgentWireClient(),
+      })
+
+      await finishRun(fake, runner.run(input))
+      await finishRun(fake, runner.run(input))
+
+      const runs = fake.requested.filter((r) => r.event === 'agent.run')
+      expect(runs).toHaveLength(3)
+      expect(runs[1].payload.system).toBeUndefined()
+      expect(runs[2].payload.system).toEqual(['sys'])
+    })
+
+    it('resends full files once when the server baseline does not match', async () => {
+      const fake = createFakeSocket(undefined, {
+        'agent.run': [
+          { ok: true, conversationId: 'conv-1' },
+          { code: 'FILE_BASE_MISMATCH', ok: false, paths: ['/doc.xml'] },
+          { ok: true, conversationId: 'conv-1' },
+        ],
+      })
+      const runner = createServerAgentRunner({
+        socket: fake.socket,
+        store: createAgentStore(),
+        tools: [],
+        wire: createAgentWireClient(),
+      })
+
+      await finishRun(
+        fake,
+        runner.run({ ...input, files: [{ content: v1, path: '/doc.xml' }] }),
+      )
+      await finishRun(
+        fake,
+        runner.run({ ...input, files: [{ content: v2, path: '/doc.xml' }] }),
+      )
+
+      const runs = fake.requested.filter((r) => r.event === 'agent.run')
+      expect(runs[1].payload.files[0]).toHaveProperty('patch')
+      expect(runs[2].payload.files).toEqual([{ content: v2, path: '/doc.xml' }])
+    })
+
+    it('reports the conversation id the server assigned and keys files under it', async () => {
+      const fake = createFakeSocket({ ok: true, conversationId: 'conv-9' })
+      const onConversation = vi.fn()
+      let touched = v1
+      const runner = createServerAgentRunner({
+        collectFiles: () => [{ content: touched, path: '/doc.xml' }],
+        onConversation,
+        socket: fake.socket,
+        store: createAgentStore(),
+        tools: [tool()],
+        wire: createAgentWireClient(),
+      })
+
+      const done = runner.run({
+        ...input,
+        conversationId: null,
+        files: [{ content: v1, path: '/doc.xml' }],
+      })
+      await flush()
+      expect(onConversation).toHaveBeenCalledWith('conv-9')
+      const runId = fake.requested[0].payload.runId
+      touched = v2
+      fake.deliver('agent.tool.call', {
+        runId,
+        toolCallId: 'c1',
+        name: 'bash',
+        arguments: {},
+      })
+      await flush()
+
+      const result = fake.requested.find(
+        (r) => r.event === 'agent.tool.result',
+      )!.payload
+      expect(applyFilePatch(v1, result.files[0].patch)).toBe(v2)
+      fake.deliver('agent.done', { runId, status: 'complete' })
+      await done
+    })
+
+    it('resends a tool result with full files when its baseline does not match', async () => {
+      const fake = createFakeSocket(undefined, {
+        'agent.tool.result': [
+          { code: 'FILE_BASE_MISMATCH', ok: false, paths: ['/doc.xml'] },
+          { ok: true },
+        ],
+      })
+      const runner = createServerAgentRunner({
+        collectFiles: () => [{ content: v2, path: '/doc.xml' }],
+        socket: fake.socket,
+        store: createAgentStore(),
+        tools: [tool()],
+        wire: createAgentWireClient(),
+      })
+
+      const done = runner.run({
+        ...input,
+        files: [{ content: v1, path: '/doc.xml' }],
+      })
+      await flush()
+      const runId = fake.requested[0].payload.runId
+      fake.deliver('agent.tool.call', {
+        runId,
+        toolCallId: 'c1',
+        name: 'bash',
+        arguments: {},
+      })
+      await flush()
+      await flush()
+
+      const results = fake.requested.filter(
+        (r) => r.event === 'agent.tool.result',
+      )
+      expect(results).toHaveLength(2)
+      expect(results[1].payload.files).toEqual([
+        { content: v2, path: '/doc.xml' },
+      ])
+      fake.deliver('agent.done', { runId, status: 'complete' })
+      await done
     })
   })
 })

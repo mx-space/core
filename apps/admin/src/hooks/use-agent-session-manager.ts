@@ -3,19 +3,20 @@ import type {
   AgentStoreSlice,
   ChatBubble,
 } from '@haklex/rich-agent-core'
+import type { AgentHistoryBubble } from '@mx-space/ai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { translate } from '~/i18n/translate'
 
-import type { AgentConversation } from '../api/ai-agent'
+import type { AgentConversation, AgentReviewAnchor } from '../api/ai-agent'
 import {
-  createAgentConversation,
   deleteAgentConversation,
   generateAgentConversationTitle,
   getAgentConversation,
   getAgentConversations,
-  replaceAgentConversationMessages,
+  saveAgentConversationReviewState,
+  updateAgentConversation,
 } from '../api/ai-agent'
 
 export interface AgentSessionMeta {
@@ -28,61 +29,41 @@ export interface AgentSessionMeta {
 
 interface UseAgentSessionManagerOptions {
   abort: () => void
-  getModel: () => string
-  getProviderId: () => string
+  describeToolCall?: (
+    toolName: string,
+    params: Record<string, unknown>,
+  ) => string | undefined
   sessionId?: string
   store: AgentStore
 }
 
-const TITLE_MAX_CHARS = 28
+type AgentStoreReviewState = AgentStoreSlice['reviewState']
 
-function deriveTitleFromMessages(
-  messages: AgentConversation['messages'],
-): string | null {
-  if (!messages?.length) return null
-  for (const m of messages) {
-    if ((m as { type?: string }).type === 'user') {
-      const content = String((m as { content?: unknown }).content ?? '').trim()
-      if (!content) continue
-      const oneLine = content.replaceAll(/\s+/g, ' ')
-      return oneLine.length > TITLE_MAX_CHARS
-        ? `${oneLine.slice(0, TITLE_MAX_CHARS)}…`
-        : oneLine
-    }
-    if ((m as { role?: string }).role === 'user') {
-      const content = String((m as { content?: unknown }).content ?? '').trim()
-      if (!content) continue
-      const oneLine = content.replaceAll(/\s+/g, ' ')
-      return oneLine.length > TITLE_MAX_CHARS
-        ? `${oneLine.slice(0, TITLE_MAX_CHARS)}…`
-        : oneLine
-    }
-  }
-  return null
+const TITLE_MAX_CHARS = 28
+const REVIEW_SYNC_DELAY_MS = 1000
+
+function deriveTitle(bubbles: readonly ChatBubble[]): string | null {
+  const first = bubbles.find((bubble) => bubble.type === 'user')
+  const content = first?.type === 'user' ? first.content.trim() : ''
+  if (!content) return null
+  const oneLine = content.replaceAll(/\s+/g, ' ')
+  return oneLine.length > TITLE_MAX_CHARS
+    ? `${oneLine.slice(0, TITLE_MAX_CHARS)}…`
+    : oneLine
 }
 
 function toSessionMeta(conversation: AgentConversation): AgentSessionMeta {
   return {
     id: conversation.id,
     createdAt: conversation.createdAt,
-    updatedAt: conversation.updatedAt,
+    updatedAt: conversation.updatedAt ?? conversation.createdAt,
     title: conversation.title,
-    derivedTitle: deriveTitleFromMessages(conversation.messages),
+    derivedTitle: null,
   }
 }
 
-function shouldTriggerTitleGen(
-  bubbles: { type?: string }[],
-  meta: AgentSessionMeta | undefined,
-): boolean {
-  if (!meta || meta.title) return false
-  const hasUser = bubbles.some((b) => b.type === 'user')
-  const hasAssistant = bubbles.some((b) => b.type === 'assistant')
-  return hasUser && hasAssistant
-}
-
 function normalizeConversationList(value: AgentConversation[] | unknown) {
-  if (Array.isArray(value)) return value
+  if (Array.isArray(value)) return value as AgentConversation[]
   if (
     value &&
     typeof value === 'object' &&
@@ -91,61 +72,12 @@ function normalizeConversationList(value: AgentConversation[] | unknown) {
   ) {
     return (value as { data: AgentConversation[] }).data
   }
-
   return []
-}
-
-function normalizeHydratedBubble(message: Record<string, unknown>) {
-  const bubble = { ...message }
-  if ('streaming' in bubble) bubble.streaming = false
-  if ('isStreaming' in bubble) bubble.isStreaming = false
-  return bubble as unknown as ChatBubble
-}
-
-// Sentinel envelope: review state batches are NOT bubbles, they live on
-// store.reviewState — but the server's `messages` column is the only piece we
-// persist. Append a sentinel message at the tail on save; extract it on hydrate.
-const REVIEW_STATE_SENTINEL = '__agent_review_state__'
-
-type AgentStoreReviewState = AgentStoreSlice['reviewState']
-
-function withEmbeddedReviewState(
-  bubbles: Record<string, unknown>[],
-  reviewState: AgentStoreReviewState,
-): Record<string, unknown>[] {
-  if (!reviewState || reviewState.batches.length === 0) return bubbles
-  return [
-    ...bubbles,
-    {
-      type: REVIEW_STATE_SENTINEL,
-      reviewState: reviewState as unknown as Record<string, unknown>,
-    },
-  ]
-}
-
-function splitMessagesEnvelope(messages: Record<string, unknown>[]): {
-  bubbles: Record<string, unknown>[]
-  reviewState: AgentStoreReviewState
-} {
-  let reviewState: AgentStoreReviewState = null
-  const bubbles: Record<string, unknown>[] = []
-  for (const message of messages) {
-    if (message && message.type === REVIEW_STATE_SENTINEL) {
-      const payload = (message as { reviewState?: unknown }).reviewState
-      if (payload && typeof payload === 'object') {
-        reviewState = payload as AgentStoreReviewState
-      }
-      continue
-    }
-    bubbles.push(message)
-  }
-  return { bubbles, reviewState }
 }
 
 export function useAgentSessionManager({
   abort,
-  getModel,
-  getProviderId,
+  describeToolCall,
   sessionId,
   store,
 }: UseAgentSessionManagerOptions) {
@@ -157,152 +89,111 @@ export function useAgentSessionManager({
 
   const activeSessionIdRef = useRef<string | null>(null)
   const abortRef = useRef(abort)
-  const getModelRef = useRef(getModel)
-  const getProviderIdRef = useRef(getProviderId)
+  const describeRef = useRef(describeToolCall)
   const isHydratingRef = useRef(false)
-  const isCreatingSessionRef = useRef(false)
-  const isPendingCreationRef = useRef(false)
-  const creationRef = useRef<{
-    epoch: number
-    promise: Promise<string | null>
-  } | null>(null)
-  const loadSessionsRef = useRef<() => Promise<void>>(async () => {})
   const sessionIdRef = useRef(sessionId)
   const prevSessionIdRef = useRef(sessionId)
+  const initializedRef = useRef(false)
   const sessionEpochRef = useRef(0)
   const sessionsRef = useRef(sessions)
-  const pendingSyncRef = useRef<{
-    cancel: () => void
+  const anchorsRef = useRef(new Map<string, string>())
+  const titledRef = useRef(new Set<string>())
+  const pendingReviewSyncRef = useRef<{
     conversationId: string
+    flush: () => void
+    cancel: () => void
   } | null>(null)
 
-  useEffect(() => {
-    abortRef.current = abort
-    getModelRef.current = getModel
-    getProviderIdRef.current = getProviderId
-    sessionIdRef.current = sessionId
-  }, [abort, getModel, getProviderId, sessionId])
+  abortRef.current = abort
+  describeRef.current = describeToolCall
+  sessionIdRef.current = sessionId
 
-  useEffect(() => {
-    activeSessionIdRef.current = activeSessionId
-  }, [activeSessionId])
+  const activate = useCallback((conversationId: string | null) => {
+    activeSessionIdRef.current = conversationId
+    setActiveSessionId(conversationId)
+  }, [])
 
-  useEffect(() => {
-    isHydratingRef.current = isHydrating
-  }, [isHydrating])
+  const replaceSessions = useCallback((next: AgentSessionMeta[]) => {
+    sessionsRef.current = next
+    setSessions(next)
+  }, [])
 
-  useEffect(() => {
-    sessionsRef.current = sessions
-  }, [sessions])
-
-  const syncMessages = useCallback(
-    (conversationId: string) => {
-      const state = store.getState()
-      const bubbles = state.bubbles
-      if (bubbles.length === 0) return
-
-      const messages = withEmbeddedReviewState(
-        bubbles as unknown as Record<string, unknown>[],
-        state.reviewState,
-      )
-
-      replaceAgentConversationMessages(conversationId, messages)
-        .then((updated) => {
-          if (!updated) return
-          const meta = toSessionMeta(updated)
-          setSessions((current) =>
-            current.map((session) =>
-              session.id === conversationId ? meta : session,
-            ),
-          )
-
-          if (
-            shouldTriggerTitleGen(
-              bubbles as unknown as { type?: string }[],
-              meta,
-            )
-          ) {
-            generateAgentConversationTitle(conversationId)
-              .then((withTitle) => {
-                if (!withTitle?.title) return
-                const next = toSessionMeta(withTitle)
-                setSessions((current) =>
-                  current.map((session) =>
-                    session.id === conversationId ? next : session,
-                  ),
-                )
-              })
-              .catch(() => {})
-          }
-        })
-        .catch((error: unknown) => {
-          console.error('[agent-session] failed to persist conversation', error)
-          toast.error(translate('write.agent.toast.sessionSyncFailed'))
-        })
+  const updateSessions = useCallback(
+    (update: (current: AgentSessionMeta[]) => AgentSessionMeta[]) => {
+      replaceSessions(update(sessionsRef.current))
     },
-    [store],
+    [replaceSessions],
+  )
+
+  const syncReviewState = useCallback(
+    (conversationId: string, reviewState: AgentStoreReviewState) => {
+      const batchIds = new Set(reviewState?.batches.map((batch) => batch.id))
+      const anchors: AgentReviewAnchor[] = [...anchorsRef.current]
+        .filter(([batchId]) => batchIds.has(batchId))
+        .map(([batchId, toolCallId]) => ({ batchId, toolCallId }))
+      saveAgentConversationReviewState(conversationId, {
+        anchors,
+        reviewState: reviewState as unknown as Record<string, unknown> | null,
+      }).catch(() => {
+        toast.error(translate('write.agent.toast.sessionSyncFailed'))
+      })
+    },
+    [],
   )
 
   const flushPendingSync = useCallback(() => {
-    const pendingSync = pendingSyncRef.current
-    if (!pendingSync) return
+    pendingReviewSyncRef.current?.flush()
+    pendingReviewSyncRef.current = null
+  }, [])
 
-    pendingSync.cancel()
-    syncMessages(pendingSync.conversationId)
-    pendingSyncRef.current = null
-  }, [syncMessages])
+  const resetConversation = useCallback(() => {
+    flushPendingSync()
+    abortRef.current()
+    activate(null)
+    store.getState().reset()
+    anchorsRef.current = new Map()
+    sessionEpochRef.current += 1
+  }, [activate, flushPendingSync, store])
 
   const switchSession = useCallback(
     async (conversationId: string) => {
-      flushPendingSync()
-
-      const epoch = ++sessionEpochRef.current
-      abortRef.current()
-      isPendingCreationRef.current = false
+      resetConversation()
+      const epoch = sessionEpochRef.current
+      activate(conversationId)
+      isHydratingRef.current = true
       setIsHydrating(true)
-      setActiveSessionId(conversationId)
-      store.getState().reset()
 
       try {
         const detail = await getAgentConversation(conversationId)
         if (epoch !== sessionEpochRef.current) return
 
-        const rawMessages = detail.messages ?? []
-        const { bubbles: bubbleMessages, reviewState } =
-          splitMessagesEnvelope(rawMessages)
-        const bubbles = bubbleMessages
-          .filter((message): message is Record<string, unknown> => {
-            const type = message.type ?? message.role
-            return typeof type === 'string' && type.length > 0
-          })
-          .map(normalizeHydratedBubble)
-
+        anchorsRef.current = new Map(
+          (detail.anchors ?? []).map(({ batchId, toolCallId }) => [
+            batchId,
+            toolCallId,
+          ]),
+        )
         store.setState({
-          bubbles,
-          reviewState,
+          bubbles: (detail.bubbles ?? []).map((bubble) =>
+            hydrateBubble(bubble, describeRef.current),
+          ),
+          reviewState: detail.reviewState as AgentStoreReviewState,
           status: 'idle',
         } as Partial<AgentStoreSlice>)
-
-        setSessions((current) =>
-          current.map((session) =>
-            session.id === conversationId
-              ? {
-                  ...session,
-                  updatedAt: detail.updatedAt,
-                }
-              : session,
-          ),
-        )
+        if (detail.title) titledRef.current.add(conversationId)
       } catch {
         store.setState({
           bubbles: [],
           status: 'idle',
         } as Partial<AgentStoreSlice>)
       } finally {
-        if (epoch === sessionEpochRef.current) setIsHydrating(false)
+        if (epoch === sessionEpochRef.current) {
+          isHydratingRef.current = false
+          setIsHydrating(false)
+        }
       }
     },
-    [flushPendingSync, store],
+    [activate, resetConversation, store],
   )
 
   const loadSessions = useCallback(async () => {
@@ -312,221 +203,177 @@ export function useAgentSessionManager({
     setIsLoading(true)
     setLoadError(false)
     try {
-      const list = normalizeConversationList(
+      const metas = normalizeConversationList(
         await getAgentConversations(currentSessionId),
-      )
-      const metas = list.map(toSessionMeta)
-      setSessions(metas)
-
+      ).map(toSessionMeta)
+      replaceSessions(metas)
       if (metas.length > 0 && !activeSessionIdRef.current) {
         await switchSession(metas[0].id)
       }
     } catch {
-      setSessions([])
+      replaceSessions([])
       setLoadError(true)
     } finally {
       setIsLoading(false)
     }
-  }, [switchSession])
+  }, [replaceSessions, switchSession])
 
-  useEffect(() => {
-    loadSessionsRef.current = loadSessions
-  }, [loadSessions])
+  const adoptConversation = useCallback(
+    (conversationId: string) => {
+      if (activeSessionIdRef.current === conversationId) return
+      activate(conversationId)
+      const now = new Date().toISOString()
+      updateSessions((current) => [
+        {
+          createdAt: now,
+          derivedTitle: deriveTitle(store.getState().bubbles),
+          id: conversationId,
+          title: null,
+          updatedAt: now,
+        },
+        ...current.filter((session) => session.id !== conversationId),
+      ])
+    },
+    [activate, store, updateSessions],
+  )
+
+  const recordAnchor = useCallback((batchId: string, toolCallId: string) => {
+    anchorsRef.current.set(batchId, toolCallId)
+  }, [])
+
+  const onRunFinished = useCallback(async () => {
+    const conversationId = activeSessionIdRef.current
+    if (!conversationId || titledRef.current.has(conversationId)) return
+    titledRef.current.add(conversationId)
+    try {
+      const updated = await generateAgentConversationTitle(conversationId)
+      if (!updated?.title) {
+        titledRef.current.delete(conversationId)
+        return
+      }
+      updateSessions((current) =>
+        current.map((session) =>
+          session.id === conversationId
+            ? { ...session, title: updated.title }
+            : session,
+        ),
+      )
+    } catch {
+      titledRef.current.delete(conversationId)
+    }
+  }, [updateSessions])
 
   const createSession = useCallback(() => {
-    flushPendingSync()
-    abortRef.current()
-    store.getState().reset()
-    setActiveSessionId(null)
-    isCreatingSessionRef.current = false
-    isPendingCreationRef.current = true
-    sessionEpochRef.current += 1
-  }, [flushPendingSync, store])
+    resetConversation()
+  }, [resetConversation])
 
   const deleteSession = useCallback(
     async (conversationId: string) => {
-      if (activeSessionIdRef.current === conversationId) flushPendingSync()
-
       try {
         await deleteAgentConversation(conversationId)
       } catch {
         return
       }
-
       const remaining = sessionsRef.current.filter(
         (session) => session.id !== conversationId,
       )
-      setSessions(remaining)
-
+      replaceSessions(remaining)
       if (activeSessionIdRef.current !== conversationId) return
-
       if (remaining.length > 0) {
         await switchSession(remaining[0].id)
         return
       }
-
-      setActiveSessionId(null)
-      isCreatingSessionRef.current = false
-      isPendingCreationRef.current = false
-      store.getState().reset()
-      sessionEpochRef.current += 1
+      resetConversation()
     },
-    [flushPendingSync, store, switchSession],
+    [replaceSessions, resetConversation, switchSession],
   )
 
   const renameSession = useCallback(
-    async (_conversationId: string, _title: string) => {
-      // The new session-scoped backend no longer carries a per-conversation
-      // title — local rename is a no-op until a dedicated title channel lands.
-    },
+    async (_conversationId: string, _title: string) => {},
     [],
   )
 
-  const scheduleMessagesSync = useCallback(
-    (conversationId: string) => {
-      pendingSyncRef.current?.cancel()
+  useEffect(() => {
+    let previous = store.getState().reviewState
+    return store.subscribe((state) => {
+      if (state.reviewState === previous) return
+      previous = state.reviewState
+      const conversationId = activeSessionIdRef.current
+      if (isHydratingRef.current || !conversationId) return
 
+      pendingReviewSyncRef.current?.cancel()
+      const reviewState = state.reviewState
+      const flush = () => {
+        clearTimeout(timer)
+        syncReviewState(conversationId, reviewState)
+      }
       const timer = setTimeout(() => {
-        if (activeSessionIdRef.current === conversationId)
-          syncMessages(conversationId)
-        pendingSyncRef.current = null
-      }, 2000)
-
-      pendingSyncRef.current = {
+        pendingReviewSyncRef.current = null
+        syncReviewState(conversationId, reviewState)
+      }, REVIEW_SYNC_DELAY_MS)
+      pendingReviewSyncRef.current = {
         cancel: () => clearTimeout(timer),
         conversationId,
+        flush,
       }
-    },
-    [syncMessages],
-  )
-
-  const startCreation = useCallback(
-    (
-      currentSessionId: string,
-      messages: Record<string, unknown>[],
-      epoch: number,
-    ): Promise<string | null> => {
-      isCreatingSessionRef.current = true
-      isPendingCreationRef.current = true
-      const creation = createAgentConversation({
-        messages,
-        model: getModelRef.current(),
-        providerId: getProviderIdRef.current(),
-        sessionId: currentSessionId,
-      })
-        .then((conversation) => {
-          if (epoch !== sessionEpochRef.current) return null
-          activeSessionIdRef.current = conversation.id
-          setActiveSessionId(conversation.id)
-          isCreatingSessionRef.current = false
-          isPendingCreationRef.current = false
-          setSessions((current) => [toSessionMeta(conversation), ...current])
-          // Tool results may arrive while conversation creation is in flight.
-          syncMessages(conversation.id)
-          return conversation.id
-        })
-        .catch(() => {
-          isCreatingSessionRef.current = false
-          isPendingCreationRef.current = false
-          return null
-        })
-        .finally(() => {
-          if (creationRef.current?.promise === creation) {
-            creationRef.current = null
-          }
-        })
-      creationRef.current = { epoch, promise: creation }
-      return creation
-    },
-    [syncMessages],
-  )
-
-  useEffect(() => {
-    return store.subscribe((state) => {
-      if (isHydratingRef.current) return
-      if (state.bubbles.length === 0) return
-
-      const currentSessionId = sessionIdRef.current
-      if (!currentSessionId) return
-
-      const epoch = sessionEpochRef.current
-      const messages = withEmbeddedReviewState(
-        state.bubbles as unknown as Record<string, unknown>[],
-        state.reviewState,
-      )
-
-      if (!activeSessionIdRef.current) {
-        if (isCreatingSessionRef.current) return
-        void startCreation(currentSessionId, messages, epoch)
-        return
-      }
-
-      scheduleMessagesSync(activeSessionIdRef.current)
     })
-  }, [scheduleMessagesSync, startCreation, store])
-
-  const ensureConversation = useCallback(async (): Promise<string | null> => {
-    if (activeSessionIdRef.current) return activeSessionIdRef.current
-    const pending = creationRef.current
-    if (pending && pending.epoch === sessionEpochRef.current) {
-      return pending.promise
-    }
-    const currentSessionId = sessionIdRef.current
-    if (!currentSessionId) return null
-    const state = store.getState()
-    return startCreation(
-      currentSessionId,
-      withEmbeddedReviewState(
-        state.bubbles as unknown as Record<string, unknown>[],
-        state.reviewState,
-      ),
-      sessionEpochRef.current,
-    )
-  }, [startCreation, store])
+  }, [store, syncReviewState])
 
   useEffect(() => {
     const previousSessionId = prevSessionIdRef.current
+    const firstRun = !initializedRef.current
+    initializedRef.current = true
     prevSessionIdRef.current = sessionId
+    if (!firstRun && previousSessionId === sessionId) return
 
-    // Session id only just became available (e.g. a new document acquired its
-    // draft id) while an unsaved conversation is already in memory. Keep it so
-    // the create path persists it under the new session instead of wiping it.
-    const adoptInMemory =
-      !previousSessionId &&
-      Boolean(sessionId) &&
-      !activeSessionIdRef.current &&
-      store.getState().bubbles.length > 0
-    if (adoptInMemory) return
-
-    flushPendingSync()
-    sessionsRef.current = []
-    setSessions([])
-    setActiveSessionId(null)
-    isCreatingSessionRef.current = false
-    isPendingCreationRef.current = false
-    store.getState().reset()
-    sessionEpochRef.current += 1
-
-    if (sessionId) void loadSessions()
-  }, [flushPendingSync, loadSessions, sessionId, store])
-
-  useEffect(() => {
-    return () => {
-      flushPendingSync()
+    const conversationId = activeSessionIdRef.current
+    if (!firstRun && !previousSessionId && sessionId && conversationId) {
+      void updateAgentConversation(conversationId, { sessionId }).catch(() => {
+        toast.error(translate('write.agent.toast.sessionSyncFailed'))
+      })
+      return
     }
-  }, [flushPendingSync])
+
+    resetConversation()
+    replaceSessions([])
+    if (sessionId) void loadSessions()
+  }, [loadSessions, replaceSessions, resetConversation, sessionId])
+
+  useEffect(() => () => flushPendingSync(), [flushPendingSync])
+
+  const getActiveConversationId = useCallback(
+    () => activeSessionIdRef.current,
+    [],
+  )
 
   return {
     activeSessionId,
+    adoptConversation,
     createSession,
     deleteSession,
-    ensureConversation,
+    getActiveConversationId,
     isHydrating,
     isLoading,
     loadError,
     loadSessions,
+    onRunFinished,
+    recordAnchor,
     renameSession,
     sessions,
     switchSession,
   }
+}
+
+function hydrateBubble(
+  bubble: AgentHistoryBubble,
+  describe: UseAgentSessionManagerOptions['describeToolCall'],
+): ChatBubble {
+  if (bubble.type !== 'tool_call_group') return bubble as ChatBubble
+  return {
+    ...bubble,
+    items: bubble.items.map((item) => ({
+      ...item,
+      description: describe?.(item.toolName, item.params),
+    })),
+  } as ChatBubble
 }

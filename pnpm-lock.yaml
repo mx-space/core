@@ -1132,6 +1132,9 @@ importers:
       '@innei/message-engine':
         specifier: 0.5.0
         version: 0.5.0(@earendil-works/pi-agent-core@0.99.1(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(supports-color@10.2.2)(zod@4.6.7))(react@19.3.1)
+      diff:
+        specifier: 9.0.0
+        version: 9.0.0
       es-toolkit:
         specifier: ^1.53.0
         version: 1.53.1

@@ -3,10 +3,14 @@ import type { EntityId } from '~/shared/id/entity-id'
 export interface AiAgentConversationRow {
   id: EntityId
   sessionId: string
-  model: string | null
-  providerId: string | null
+  model: string
+  providerId: string
   title: string | null
-  messages: unknown[]
   createdAt: Date
   updatedAt: Date | null
+}
+
+export interface AiAgentConversationDetailRow extends AiAgentConversationRow {
+  transcript: Record<string, unknown>
+  reviewState: Record<string, unknown> | null
 }

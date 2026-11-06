@@ -36,7 +36,10 @@ export interface AgentRuntimeRunRequest {
   userInput: string
   systemMessages: string[]
   tools: AgentToolConfig[]
-  onOperationsChanged: (operations: AgentOperation[]) => void
+  onOperationsChanged: (
+    operations: AgentOperation[],
+    toolCallId: string,
+  ) => void
   signal: AbortSignal
 }
 

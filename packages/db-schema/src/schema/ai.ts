@@ -126,16 +126,13 @@ export const aiAgentConversations = pgTable(
   {
     id: pkText(),
     sessionId: text('session_id').notNull(),
-    model: text('model'),
-    providerId: text('provider_id'),
+    model: text('model').notNull(),
+    providerId: text('provider_id').notNull(),
     title: text('title'),
-    messages: jsonb('messages')
-      .$type<unknown[]>()
-      .notNull()
-      .default(sql`'[]'::jsonb`),
     // json, not jsonb: jsonb reorders object keys, so a replayed tool-call
     // history stops matching the provider's cached prompt prefix.
-    transcript: json('transcript').$type<Record<string, unknown>>(),
+    transcript: json('transcript').$type<Record<string, unknown>>().notNull(),
+    reviewState: json('review_state').$type<Record<string, unknown>>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

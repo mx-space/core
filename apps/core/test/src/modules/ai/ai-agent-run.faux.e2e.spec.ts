@@ -1,9 +1,9 @@
 import type { Context } from '@earendil-works/pi-ai'
 import { fauxAssistantMessage, fauxToolCall } from '@earendil-works/pi-ai'
 import type {
-  AgentRunPayload,
   AgentServerEvent,
   AgentToolResultPayload,
+  ResolvedAgentRun,
 } from '@mx-space/ai'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -22,8 +22,7 @@ const MODEL_ID = 'faux-agent-run-model'
 
 interface StoredConversation {
   id: string
-  messages: unknown[]
-  transcript: AgentTranscript | null
+  transcript: AgentTranscript
 }
 
 type Step = Parameters<
@@ -52,12 +51,7 @@ function setup(responses: Step[], conversation?: StoredConversation) {
   const repository = {
     findWithTranscript: vi.fn(async (id: string) => {
       const row = conversations.get(id)
-      return row
-        ? structuredClone({
-            messages: row.messages,
-            transcript: row.transcript,
-          })
-        : null
+      return row ? structuredClone({ transcript: row.transcript }) : null
     }),
     saveTranscript: vi.fn(async (id: string, transcript: AgentTranscript) => {
       const row = conversations.get(id)
@@ -127,7 +121,7 @@ function setup(responses: Step[], conversation?: StoredConversation) {
   }
 }
 
-function payload(overrides: Partial<AgentRunPayload> = {}): AgentRunPayload {
+function payload(overrides: Partial<ResolvedAgentRun> = {}): ResolvedAgentRun {
   return {
     runId: 'run-1',
     sessionId: 'post:current',
@@ -153,7 +147,7 @@ function payload(overrides: Partial<AgentRunPayload> = {}): AgentRunPayload {
 }
 
 function emptyConversation(): StoredConversation {
-  return { id: 'conv-1', messages: [], transcript: null }
+  return { id: 'conv-1', transcript: { messages: [], known: {} } }
 }
 
 const torn: Array<() => void> = []
@@ -196,7 +190,6 @@ describe('AiAgentRunService', () => {
     const result = await ctx.service.run(payload(), {
       sink: ctx.sink,
       signal: new AbortController().signal,
-      memory: new Map(),
     })
 
     expect(result.status).toBe('complete')
@@ -216,7 +209,6 @@ describe('AiAgentRunService', () => {
     await ctx.service.run(payload(), {
       sink: ctx.sink,
       signal: new AbortController().signal,
-      memory: new Map(),
     })
 
     expect(
@@ -244,7 +236,6 @@ describe('AiAgentRunService', () => {
     const result = await ctx.service.run(payload(), {
       sink: ctx.sink,
       signal: new AbortController().signal,
-      memory: new Map(),
     })
 
     expect(result.status).toBe('complete')
@@ -283,7 +274,6 @@ describe('AiAgentRunService', () => {
     const result = await ctx.service.run(payload(), {
       sink: ctx.sink,
       signal: new AbortController().signal,
-      memory: new Map(),
     })
 
     expect(result.status).toBe('complete')
@@ -309,7 +299,6 @@ describe('AiAgentRunService', () => {
       {
         sink: ctx.sink,
         signal: new AbortController().signal,
-        memory: new Map(),
       },
     )
 
@@ -320,61 +309,17 @@ describe('AiAgentRunService', () => {
     expect(ctx.events).toContainEqual({ type: 'reminder', paths: ['/doc.xml'] })
   })
 
-  it('seeds history from stored chat bubbles when no transcript exists', async () => {
-    const conversation = emptyConversation()
-    conversation.messages = [
-      { type: 'user', content: 'earlier question' },
-      { type: 'assistant', content: 'earlier answer' },
-      { type: '__agent_review_state__', reviewState: {} },
-    ]
-    const ctx = setup([fauxAssistantMessage('ok')], conversation)
+  it('fails when the conversation row does not exist', async () => {
+    const ctx = setup([fauxAssistantMessage('never')])
     torn.push(ctx.teardown)
 
-    await ctx.service.run(payload(), {
-      sink: ctx.sink,
-      signal: new AbortController().signal,
-      memory: new Map(),
-    })
-
-    expect(rolesOf(ctx.contexts[0])).toEqual(['user', 'assistant', 'user'])
-    expect(userText(ctx.contexts[0], 0)).toBe('earlier question')
-  })
-
-  it('does not repeat the current message when the stored bubbles already hold it', async () => {
-    const conversation = emptyConversation()
-    conversation.messages = [{ type: 'user', content: 'hello' }]
-    const ctx = setup([fauxAssistantMessage('ok')], conversation)
-    torn.push(ctx.teardown)
-
-    await ctx.service.run(payload(), {
-      sink: ctx.sink,
-      signal: new AbortController().signal,
-      memory: new Map(),
-    })
-
-    expect(rolesOf(ctx.contexts[0])).toEqual(['user'])
-  })
-
-  it('keeps an unsaved conversation in the connection memory', async () => {
-    const ctx = setup([
-      fauxAssistantMessage('one'),
-      fauxAssistantMessage('two'),
-    ])
-    torn.push(ctx.teardown)
-    const memory = new Map<string, AgentTranscript>()
-    const options = {
-      sink: ctx.sink,
-      signal: new AbortController().signal,
-      memory,
-    }
-
-    await ctx.service.run(payload({ conversationId: null }), options)
-    await ctx.service.run(
-      payload({ conversationId: null, runId: 'run-2', user: 'again' }),
-      options,
-    )
-
-    expect(rolesOf(ctx.contexts[1])).toEqual(['user', 'assistant', 'user'])
+    await expect(
+      ctx.service.run(payload({ conversationId: 'missing' }), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      }),
+    ).rejects.toThrow(/Conversation not found/)
+    expect(ctx.contexts).toHaveLength(0)
   })
 
   it('aborts while waiting for a client tool and leaves a replayable transcript', async () => {
@@ -396,7 +341,6 @@ describe('AiAgentRunService', () => {
     const result = await ctx.service.run(payload(), {
       sink: ctx.sink,
       signal: controller.signal,
-      memory: new Map(),
     })
 
     expect(result.status).toBe('aborted')
@@ -438,7 +382,6 @@ describe('AiAgentRunService', () => {
       const result = await ctx.service.run(payload(), {
         sink: ctx.sink,
         signal: new AbortController().signal,
-        memory: new Map(),
         inbox,
       })
 
@@ -471,7 +414,6 @@ describe('AiAgentRunService', () => {
       const result = await ctx.service.run(payload(), {
         sink: ctx.sink,
         signal: new AbortController().signal,
-        memory: new Map(),
         inbox,
       })
 
@@ -489,7 +431,6 @@ describe('AiAgentRunService', () => {
       await ctx.service.run(payload(), {
         sink: ctx.sink,
         signal: new AbortController().signal,
-        memory: new Map(),
         inbox,
       })
 
@@ -517,7 +458,6 @@ describe('AiAgentRunService', () => {
       const result = await ctx.service.run(payload(), {
         sink: ctx.sink,
         signal: controller.signal,
-        memory: new Map(),
         inbox,
       })
 

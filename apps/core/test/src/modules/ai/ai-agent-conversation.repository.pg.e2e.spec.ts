@@ -27,7 +27,11 @@ describe('ai agent conversation transcript (real PG)', () => {
   })
 
   it('keeps tool argument key order so a replayed history matches the cached prompt prefix', async () => {
-    const conversation = await repo.create({ sessionId: 'post:1' })
+    const conversation = await repo.create({
+      sessionId: 'post:1',
+      model: 'm',
+      providerId: 'p',
+    })
     const args = { type: 'note', id: '133259626689347643', limit: 1500 }
     await repo.saveTranscript(conversation.id, {
       known: {},
@@ -54,5 +58,39 @@ describe('ai agent conversation transcript (real PG)', () => {
     expect(JSON.stringify(messages[0].content[0].arguments)).toBe(
       JSON.stringify(args),
     )
+  })
+
+  it('creates a conversation with an empty transcript and no review state', async () => {
+    const conversation = await repo.create({
+      sessionId: 'post:2',
+      model: 'm',
+      providerId: 'p',
+    })
+    const detail = await repo.findDetail(conversation.id)
+    expect(detail).toMatchObject({
+      sessionId: 'post:2',
+      model: 'm',
+      providerId: 'p',
+      title: null,
+      transcript: { messages: [], known: {} },
+      reviewState: null,
+    })
+    expect(detail).not.toHaveProperty('messages')
+  })
+
+  it('stores review state verbatim', async () => {
+    const conversation = await repo.create({
+      sessionId: 'post:3',
+      model: 'm',
+      providerId: 'p',
+    })
+    const state = {
+      reviewState: { documentRevision: 2, batches: [{ id: 'b1', z: 1, a: 2 }] },
+      anchors: [{ batchId: 'b1', toolCallId: 'call-1' }],
+    }
+    expect(await repo.saveReviewState(conversation.id, state)).toBe(true)
+    const detail = await repo.findDetail(conversation.id)
+    expect(JSON.stringify(detail!.reviewState)).toBe(JSON.stringify(state))
+    expect(await repo.saveReviewState('1', state)).toBe(false)
   })
 })

@@ -235,20 +235,34 @@ export function useWriteAgent(opts: {
     store.getState().setStatus('idle')
   }
 
+  const describeToolCall = (name: string, params: Record<string, unknown>) => {
+    const tool = [documentBash.tool, ...dynamicTools].find(
+      (candidate) => candidate.name === name,
+    )
+    try {
+      return tool?.describeCall?.(params) ?? describeFirstParam(params)
+    } catch {
+      return describeFirstParam(params)
+    }
+  }
+
   const sessionManager = useAgentSessionManager({
     abort,
-    getModel: () => selectedModel?.modelId ?? '',
-    getProviderId: () => selectedModel?.providerId ?? '',
+    describeToolCall,
     sessionId: documentSessionId,
     store,
   })
-  const ensureConversationRef = useRef(sessionManager.ensureConversation)
-  ensureConversationRef.current = sessionManager.ensureConversation
+  const sessionManagerRef = useRef(sessionManager)
+  sessionManagerRef.current = sessionManager
 
   const agentRuntime = useMemo<AgentRuntime | null>(() => {
     if (!selectedModel) return null
     return createWriteAgentRuntime({
-      ensureConversation: () => ensureConversationRef.current(),
+      getConversationId: () =>
+        sessionManagerRef.current.getActiveConversationId(),
+      onConversation: (id) => sessionManagerRef.current.adoptConversation(id),
+      onReviewBatch: (batchId, toolCallId) =>
+        sessionManagerRef.current.recordAnchor(batchId, toolCallId),
       getSocket: getAdminSocket,
       model: selectedModel,
       sessionId: providerSessionId,
@@ -302,12 +316,15 @@ export function useWriteAgent(opts: {
       ? shared.startAgentTurn(agentCommitMessage(message))
       : null
     turnRef.current = turn
-    const promise = loop.run(message).catch((error: unknown) => {
-      if ((error as Error)?.name === 'AbortError') return
-      const detail = error instanceof Error ? error.message : String(error)
-      store.getState().addBubble({ message: detail, type: 'error' })
-      store.getState().setStatus('idle')
-    })
+    const promise = loop.run(message).then(
+      () => sessionManagerRef.current.onRunFinished(),
+      (error: unknown) => {
+        if ((error as Error)?.name === 'AbortError') return
+        const detail = error instanceof Error ? error.message : String(error)
+        store.getState().addBubble({ message: detail, type: 'error' })
+        store.getState().setStatus('idle')
+      },
+    )
     activeRunRef.current = promise
     void promise.then(() => {
       if (activeRunRef.current === promise) activeRunRef.current = null
@@ -456,4 +473,9 @@ export function useWriteAgent(opts: {
     store,
     switchSession: sessionManager.switchSession,
   }
+}
+
+function describeFirstParam(params: Record<string, unknown>) {
+  const first = Object.values(params)[0]
+  return first === undefined ? undefined : String(first).slice(0, 40)
 }

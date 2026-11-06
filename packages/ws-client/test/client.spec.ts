@@ -186,6 +186,29 @@ describe('createWsClient', () => {
     })
   })
 
+  it('keeps the whole rejected ack on the error', async () => {
+    const { client, serverSocket } = await connectedHarness()
+
+    serverSocket.on('message', (raw) => {
+      const parsed: unknown = JSON.parse(String(raw))
+      if (!isWsEnvelope(parsed) || parsed.event === 'ack') return
+      serverSocket.send(
+        JSON.stringify(
+          buildEnvelope(
+            'ack',
+            { ok: false, code: 'FILE_BASE_MISMATCH', paths: ['/doc.xml'] },
+            parsed.id,
+          ),
+        ),
+      )
+    })
+
+    await expect(client.request('add')).rejects.toMatchObject({
+      code: 'FILE_BASE_MISMATCH',
+      ack: { ok: false, code: 'FILE_BASE_MISMATCH', paths: ['/doc.xml'] },
+    })
+  })
+
   it('rejects request() on timeout when no ack arrives', async () => {
     const { client } = await connectedHarness()
 

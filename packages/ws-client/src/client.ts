@@ -151,7 +151,9 @@ export function createWsClient(options: WsClientOptions): WsClient {
       const ack = parsed.payload as WsAckPayload | undefined
       if (ack?.ok) entry.resolve(ack)
       else {
-        entry.reject(createWsError('Request rejected', ack?.code ?? 'REJECTED'))
+        entry.reject(
+          createWsError('Request rejected', ack?.code ?? 'REJECTED', ack),
+        )
       }
       return
     }

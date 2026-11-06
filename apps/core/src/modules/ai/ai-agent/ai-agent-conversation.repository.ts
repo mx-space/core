@@ -11,20 +11,43 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
-import type { AiAgentConversationRow } from './ai-agent-conversation.types'
+import type {
+  AiAgentConversationDetailRow,
+  AiAgentConversationRow,
+} from './ai-agent-conversation.types'
 
-const mapRow = (
-  row: typeof aiAgentConversations.$inferSelect,
-): AiAgentConversationRow => ({
+type MetaRow = Pick<
+  typeof aiAgentConversations.$inferSelect,
+  | 'id'
+  | 'sessionId'
+  | 'model'
+  | 'providerId'
+  | 'title'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+const mapRow = (row: MetaRow): AiAgentConversationRow => ({
   id: toEntityId(row.id) as EntityId,
   sessionId: row.sessionId,
   model: row.model,
   providerId: row.providerId,
   title: row.title,
-  messages: (row.messages as unknown[] | null) ?? [],
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 })
+
+const metaColumns = {
+  id: aiAgentConversations.id,
+  sessionId: aiAgentConversations.sessionId,
+  model: aiAgentConversations.model,
+  providerId: aiAgentConversations.providerId,
+  title: aiAgentConversations.title,
+  createdAt: aiAgentConversations.createdAt,
+  updatedAt: aiAgentConversations.updatedAt,
+}
+
+const EMPTY_TRANSCRIPT = { messages: [], known: {} }
 
 @Injectable()
 export class AiAgentConversationRepository extends BaseRepository {
@@ -40,16 +63,32 @@ export class AiAgentConversationRepository extends BaseRepository {
   ): Promise<AiAgentConversationRow | null> {
     const idBig = parseEntityId(id)
     const [row] = await this.db
-      .select()
+      .select(metaColumns)
       .from(aiAgentConversations)
       .where(eq(aiAgentConversations.id, idBig))
       .limit(1)
     return row ? mapRow(row) : null
   }
 
+  async findDetail(
+    id: EntityId | string,
+  ): Promise<AiAgentConversationDetailRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(aiAgentConversations)
+      .where(eq(aiAgentConversations.id, parseEntityId(id)))
+      .limit(1)
+    if (!row) return null
+    return {
+      ...mapRow(row),
+      transcript: row.transcript,
+      reviewState: row.reviewState ?? null,
+    }
+  }
+
   async listBySession(sessionId: string): Promise<AiAgentConversationRow[]> {
     const rows = await this.db
-      .select()
+      .select(metaColumns)
       .from(aiAgentConversations)
       .where(eq(aiAgentConversations.sessionId, sessionId))
       .orderBy(desc(aiAgentConversations.updatedAt))
@@ -58,24 +97,20 @@ export class AiAgentConversationRepository extends BaseRepository {
 
   async create(input: {
     sessionId: string
-    messages?: unknown[]
-    model?: string | null
-    providerId?: string | null
+    model: string
+    providerId: string
   }): Promise<AiAgentConversationRow> {
-    const id = this.snowflake.nextId()
-    const messages = input.messages ?? []
-    const now = new Date()
     const [row] = await this.db
       .insert(aiAgentConversations)
       .values({
-        id,
+        id: this.snowflake.nextId(),
         sessionId: input.sessionId,
-        messages,
-        model: input.model ?? null,
-        providerId: input.providerId ?? null,
-        updatedAt: now,
+        model: input.model,
+        providerId: input.providerId,
+        transcript: EMPTY_TRANSCRIPT,
+        updatedAt: new Date(),
       })
-      .returning()
+      .returning(metaColumns)
     return mapRow(row)
   }
 
@@ -83,9 +118,8 @@ export class AiAgentConversationRepository extends BaseRepository {
     id: EntityId | string,
     patch: Partial<{
       sessionId: string
-      messages: unknown[]
-      model: string | null
-      providerId: string | null
+      model: string
+      providerId: string
       title: string | null
     }>,
   ): Promise<AiAgentConversationRow | null> {
@@ -94,7 +128,6 @@ export class AiAgentConversationRepository extends BaseRepository {
       updatedAt: new Date(),
     }
     if (patch.sessionId !== undefined) update.sessionId = patch.sessionId
-    if (patch.messages !== undefined) update.messages = patch.messages
     if (patch.model !== undefined) update.model = patch.model
     if (patch.providerId !== undefined) update.providerId = patch.providerId
     if (patch.title !== undefined) update.title = patch.title
@@ -102,27 +135,19 @@ export class AiAgentConversationRepository extends BaseRepository {
       .update(aiAgentConversations)
       .set(update)
       .where(eq(aiAgentConversations.id, idBig))
-      .returning()
+      .returning(metaColumns)
     return row ? mapRow(row) : null
   }
 
-  async findWithTranscript(id: EntityId | string): Promise<{
-    messages: unknown[]
-    transcript: Record<string, unknown> | null
-  } | null> {
+  async findWithTranscript(
+    id: EntityId | string,
+  ): Promise<{ transcript: Record<string, unknown> } | null> {
     const [row] = await this.db
-      .select({
-        messages: aiAgentConversations.messages,
-        transcript: aiAgentConversations.transcript,
-      })
+      .select({ transcript: aiAgentConversations.transcript })
       .from(aiAgentConversations)
       .where(eq(aiAgentConversations.id, parseEntityId(id)))
       .limit(1)
-    if (!row) return null
-    return {
-      messages: (row.messages as unknown[] | null) ?? [],
-      transcript: row.transcript ?? null,
-    }
+    return row ?? null
   }
 
   async saveTranscript(
@@ -135,31 +160,16 @@ export class AiAgentConversationRepository extends BaseRepository {
       .where(eq(aiAgentConversations.id, parseEntityId(id)))
   }
 
-  async appendMessage(
+  async saveReviewState(
     id: EntityId | string,
-    message: unknown,
-  ): Promise<AiAgentConversationRow | null> {
-    const idBig = parseEntityId(id)
-    return this.db.transaction(async (tx) => {
-      const [existing] = await tx
-        .select()
-        .from(aiAgentConversations)
-        .where(eq(aiAgentConversations.id, idBig))
-        .limit(1)
-      if (!existing) return null
-      const messages = ((existing.messages as unknown[] | null) ?? []).concat(
-        message,
-      )
-      const [row] = await tx
-        .update(aiAgentConversations)
-        .set({
-          messages,
-          updatedAt: new Date(),
-        })
-        .where(eq(aiAgentConversations.id, idBig))
-        .returning()
-      return row ? mapRow(row) : null
-    })
+    reviewState: Record<string, unknown>,
+  ): Promise<boolean> {
+    const rows = await this.db
+      .update(aiAgentConversations)
+      .set({ reviewState, updatedAt: new Date() })
+      .where(eq(aiAgentConversations.id, parseEntityId(id)))
+      .returning({ id: aiAgentConversations.id })
+    return rows.length > 0
   }
 
   async deleteById(
@@ -169,7 +179,7 @@ export class AiAgentConversationRepository extends BaseRepository {
     const [row] = await this.db
       .delete(aiAgentConversations)
       .where(eq(aiAgentConversations.id, idBig))
-      .returning()
+      .returning(metaColumns)
     return row ? mapRow(row) : null
   }
 }

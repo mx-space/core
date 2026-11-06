@@ -9,6 +9,15 @@ export interface FileReconcileResult {
   paths: string[]
 }
 
+const REMINDER_OPEN = '<system-reminder>\n'
+const REMINDER_CLOSE = '\n</system-reminder>\n\n'
+
+export function stripSystemReminder(text: string): string {
+  if (!text.startsWith(REMINDER_OPEN)) return text
+  const end = text.indexOf(REMINDER_CLOSE)
+  return end === -1 ? text : text.slice(end + REMINDER_CLOSE.length)
+}
+
 export function recordFiles(
   known: KnownFiles,
   snapshots: readonly AgentFileSnapshot[],

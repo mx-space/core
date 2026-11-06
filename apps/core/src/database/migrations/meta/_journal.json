@@ -337,6 +337,13 @@
       "when": 1793150000000,
       "tag": "0047_language_tag_bcp47",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793984466102,
+      "tag": "0048_agent_conversation_rebuild",
+      "breakpoints": true
     }
   ]
 }
