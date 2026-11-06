@@ -32,7 +32,7 @@ overrides:
   '@better-auth/core': 1.7.16
   '@better-auth/expo': 1.7.16
   '@better-auth/passkey': 1.7.16
-  kysely: 0.29.7
+  kysely: 0.29.8
   mongodb: ~7.7.0
   pino: ./external/pino
   rolldown: 1.2.16
