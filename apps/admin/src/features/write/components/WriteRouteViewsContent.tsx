@@ -211,6 +211,11 @@ import {
   buildMetaTools,
 } from '~/vendor/rich-editor/utils/meta-tools'
 
+import {
+  applyWriteAgentMetaUpdates,
+  getWriteAgentMetaFields,
+  getWriteAgentMetaSchema,
+} from './agent-meta-fields'
 import { PeerAvatars } from './collab/PeerAvatars'
 import { RemoteCarets } from './collab/RemoteCarets'
 
@@ -357,61 +362,6 @@ const WEATHER_SET: readonly PresetOption[] = [
   { labelKey: 'write.weather.snow', value: '\u96EA' },
   { labelKey: 'write.weather.thunderstorm', value: '\u96F7\u96E8' },
 ] as const
-
-const POST_META_SCHEMA: MetaFieldsSchema = {
-  title: { description: 'Post title', type: 'string' },
-  slug: {
-    description:
-      'URL path segment; prefer lowercase English words joined with hyphens.',
-    example: 'my-first-post',
-    type: 'string',
-  },
-  tags: { description: 'Post tag list', type: 'string[]' },
-  summary: {
-    description: 'Post summary; leave empty to auto-generate.',
-    type: 'string',
-  },
-  copyright: {
-    description: 'Whether to show the copyright notice at the end.',
-    type: 'boolean',
-  },
-  pin: { description: 'Whether the post is pinned', type: 'boolean' },
-  pinOrder: {
-    description:
-      'Pin order; higher numbers float to the top; set to 0 when pin is off.',
-    type: 'number',
-  },
-}
-
-const NOTE_META_SCHEMA: MetaFieldsSchema = {
-  title: { description: 'Note title', type: 'string' },
-  slug: {
-    description: 'URL path segment; may be empty (then the nid path is used).',
-    type: 'string',
-  },
-  mood: { description: 'Mood', type: 'string' },
-  weather: { description: 'Weather', type: 'string' },
-  bookmark: {
-    description: 'Whether to mark as a bookmarked memory.',
-    type: 'boolean',
-  },
-  location: { description: 'Location text (optional).', type: 'string' },
-}
-
-const PAGE_META_SCHEMA: MetaFieldsSchema = {
-  title: { description: 'Page title', type: 'string' },
-  slug: {
-    description:
-      'URL path segment; prefer lowercase English words joined with hyphens.',
-    example: 'about',
-    type: 'string',
-  },
-  subtitle: { description: 'Subtitle', type: 'string' },
-  order: {
-    description: 'Navigation order; smaller numbers come first.',
-    type: 'number',
-  },
-}
 
 interface KindConfig {
   description: string
@@ -2161,6 +2111,7 @@ function WritePage(props: { kind: WriteKind }) {
   const getAgentMetaFields = () => getWriteAgentMetaFields(props.kind, state)
 
   const applyAgentMetaUpdates = (updates: Record<string, unknown>) => {
+    applyWriteAgentMetaUpdates(props.kind, state, updates)
     draftSession.markDirty()
     setState((previous) =>
       applyWriteAgentMetaUpdates(props.kind, previous, updates),
@@ -5719,90 +5670,6 @@ function validateState(
   }
 
   return null
-}
-
-function getWriteAgentMetaSchema(kind: WriteKind) {
-  if (kind === 'post') return POST_META_SCHEMA
-  if (kind === 'note') return NOTE_META_SCHEMA
-  return PAGE_META_SCHEMA
-}
-
-function getWriteAgentMetaFields(kind: WriteKind, state: WriteFormState) {
-  if (kind === 'post') {
-    return {
-      copyright: state.copyright,
-      pin: state.pin,
-      pinOrder: Number(state.pinOrder) || 0,
-      slug: state.slug,
-      summary: state.summary,
-      tags: splitCommaList(state.tags),
-      title: state.title,
-    }
-  }
-
-  if (kind === 'note') {
-    return {
-      bookmark: state.bookmark,
-      location: state.location,
-      mood: state.mood,
-      slug: state.slug,
-      title: state.title,
-      weather: state.weather,
-    }
-  }
-
-  return {
-    order: Number(state.order) || 0,
-    slug: state.slug,
-    subtitle: state.subtitle,
-    title: state.title,
-  }
-}
-
-function applyWriteAgentMetaUpdates(
-  kind: WriteKind,
-  state: WriteFormState,
-  updates: Record<string, unknown>,
-) {
-  const next = { ...state }
-
-  if ('title' in updates) next.title = String(updates.title ?? '')
-  if ('slug' in updates) next.slug = String(updates.slug ?? '')
-
-  if (kind === 'post') {
-    if ('tags' in updates && Array.isArray(updates.tags)) {
-      next.tags = updates.tags.map((tag) => String(tag)).join(', ')
-    }
-    if ('summary' in updates) next.summary = String(updates.summary ?? '')
-    if ('copyright' in updates) next.copyright = Boolean(updates.copyright)
-    if ('pin' in updates) {
-      next.pin = Boolean(updates.pin)
-      if (!next.pin) next.pinOrder = '0'
-      else if (!next.pinOrder || Number(next.pinOrder) === 0)
-        next.pinOrder = '1'
-    }
-    if ('pinOrder' in updates) {
-      next.pinOrder = String(Number(updates.pinOrder ?? 0) || 0)
-    }
-  }
-
-  if (kind === 'note') {
-    if ('mood' in updates) next.mood = String(updates.mood ?? '')
-    if ('weather' in updates) next.weather = String(updates.weather ?? '')
-    if ('bookmark' in updates) next.bookmark = Boolean(updates.bookmark)
-    if ('location' in updates) {
-      next.location = updates.location == null ? '' : String(updates.location)
-    }
-  }
-
-  if (kind === 'page') {
-    if ('subtitle' in updates) next.subtitle = String(updates.subtitle ?? '')
-    if ('order' in updates) {
-      next.order = String(Number(updates.order ?? 0) || 0)
-    }
-  }
-
-  return next
 }
 
 function resolveWriteTitle(kind: WriteKind, state: WriteFormState) {
