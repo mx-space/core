@@ -1,3 +1,14 @@
+## [17.0.2](https://github.com/mx-space/core/compare/v17.0.1...v17.0.2) (2026-11-08)
+
+### Features
+
+* add article language meta preset ([8be5b8c](https://github.com/mx-space/core/commit/8be5b8c030b71576a41b9fe864fb9986621ccdd1))
+* let the write agent edit embedded drawings, components and images through /embeds ([497c149](https://github.com/mx-space/core/commit/497c1490412027d5e4fd9a8f8c3e732568c46dba))
+
+### Bug Fixes
+
+* **core:** stop dev CORS from rejecting requests without an Origin header ([1899da8](https://github.com/mx-space/core/commit/1899da8db9ff3eaf6a9547ee8de6e8d3351c9dfa))
+
 ## [17.0.1](https://github.com/mx-space/core/compare/v17.0.0...v17.0.1) (2026-11-08)
 
 ### Bug Fixes
