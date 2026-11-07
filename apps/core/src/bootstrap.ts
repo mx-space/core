@@ -1,7 +1,6 @@
 import cluster from 'node:cluster'
 import { performance } from 'node:perf_hooks'
 
-import type { FastifyCorsOptions } from '@fastify/cors'
 import { Logger } from '@innei/pretty-logger-nestjs'
 import { NestFactory } from '@nestjs/core'
 import type { NestFastifyApplication } from '@nestjs/platform-fastify'
@@ -19,6 +18,7 @@ import { logger } from './global/consola.global'
 import { isDev, isMainProcess, isTest } from './global/env.global'
 import { createWsAdapter } from './processors/gateway/ws/ws-adapter.factory'
 import { checkInit } from './utils/check-init.util'
+import { allowAllCors } from './utils/cors.util'
 import {
   sendTelemetry,
   startHeartbeat,
@@ -43,11 +43,6 @@ export async function bootstrap() {
   // Replace NestJS built-in logger with our custom Logger
   app.useLogger(app.get(Logger))
 
-  const allowAllCors: FastifyCorsOptions = {
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    origin: (origin, callback) => callback(null, origin || ''),
-  }
   // If Origin is not an array, allow all cross-origin requests
 
   app.enableCors(
