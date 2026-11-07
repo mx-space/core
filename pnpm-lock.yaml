@@ -847,7 +847,7 @@ importers:
         version: 7.0.2
       es-toolkit:
         specifier: ^1.53.0
-        version: 1.53.1
+        version: 1.53.2
       file-type:
         specifier: ^22.2.0
         version: 22.2.0(supports-color@5.5.0)
@@ -1137,7 +1137,7 @@ importers:
         version: 9.0.0
       es-toolkit:
         specifier: ^1.53.0
-        version: 1.53.1
+        version: 1.53.2
       json5:
         specifier: 2.2.3
         version: 2.2.3
@@ -7734,8 +7734,8 @@ packages:
   es-toolkit@1.53.0:
     resolution: {integrity: sha512-3+AYXp9fmJ/UhHBMYj2/U+RaUouMD90SzoItyDOB2Za7W6dB7fQApFGnZPl2MF6K8/Tv1koh1JyirSx/kju6Pw==}
 
-  es-toolkit@1.53.1:
-    resolution: {integrity: sha512-VhMc6IXmexu8iYFfL2aaAww6IvJTdHlqBLruLoEUs33YD4IcP5DdZcLOybMsMmmLsiy1c8PsiLsrM0DdIuuRUA==}
+  es-toolkit@1.53.2:
+    resolution: {integrity: sha512-iUqZ+NlwH4jUgRmXZUxFBsV/9762TQEa1O4IXLFBmDEjVHScBytKuseX23I0+v9ShZ5MYxEx6WKNzm6IPnex8g==}
 
   es6-promise-pool@2.5.0:
     resolution: {integrity: sha512-VHErXfzR/6r/+yyzPKeBvO0lgjfC5cbDCQWjWwMZWSb6YU39TGIl51OUmCfWCq4ylMdJSB8zkz2vIuIeIxXApA==}
@@ -19132,7 +19132,7 @@ snapshots:
 
   es-toolkit@1.53.0: {}
 
-  es-toolkit@1.53.1: {}
+  es-toolkit@1.53.2: {}
 
   es6-promise-pool@2.5.0: {}
 
