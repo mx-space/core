@@ -1,3 +1,4 @@
+import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -16,6 +17,7 @@ import { Modal, ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { Button } from '~/ui/primitives/button'
 import { Checkbox } from '~/ui/primitives/checkbox'
 import { CodeEditor } from '~/ui/primitives/code-editor'
+import { Combobox } from '~/ui/primitives/combobox'
 import { Scroll } from '~/ui/primitives/scroll'
 import { SelectField } from '~/ui/primitives/select'
 import { FormSwitch } from '~/ui/primitives/switch'
@@ -117,6 +119,11 @@ const builtinPresetTranslations: Record<string, BuiltinPresetTranslation> = {
     label: 'write.meta.builtin.banner.label',
   },
   cover: { label: 'write.meta.builtin.cover.label' },
+  lang: {
+    description: 'write.meta.builtin.lang.description',
+    label: 'write.meta.builtin.lang.label',
+    placeholder: 'write.meta.builtin.lang.placeholder',
+  },
   keywords: {
     label: 'write.meta.builtin.keywords.label',
     placeholder: 'write.meta.builtin.keywords.placeholder',
@@ -372,6 +379,137 @@ function FieldLabel(props: { description?: string; label: string }) {
   )
 }
 
+function languageSuggestions(
+  options: MetaFieldOption[] | undefined,
+  locale: string,
+): Array<{ label: string; tag: string }> {
+  let displayNames: Intl.DisplayNames | undefined
+  try {
+    displayNames = new Intl.DisplayNames([locale], {
+      fallback: 'none',
+      type: 'language',
+    })
+  } catch {
+    displayNames = undefined
+  }
+  return (options ?? []).flatMap((option) => {
+    const tag = String(option.value)
+    if (!isKnownLanguageTag(tag)) return []
+    let label: string | undefined
+    try {
+      label = displayNames?.of(tag)
+    } catch {
+      label = undefined
+    }
+    return [{ label: label ?? option.label, tag }]
+  })
+}
+
+interface LanguageSuggestion {
+  label: string
+  tag: string
+}
+
+// BCP 47 source language: the common tags are one click away while any valid
+// tag can still be typed by hand.
+function LanguageInput(props: {
+  label: string
+  onChange: (value: unknown) => void
+  options?: MetaFieldOption[]
+  placeholder?: string
+  value: unknown
+}) {
+  const { locale, t } = useI18n()
+  const committed = typeof props.value === 'string' ? props.value : ''
+  // Intermediate keystrokes ("e", "en-") are invalid tags; keeping them local
+  // stops an in-progress edit from poisoning `meta.lang` and failing draft
+  // autosave (the server rejects non-BCP 47 tags).
+  const [draft, setDraft] = useState(committed)
+  const invalid = draft.trim() !== '' && !isKnownLanguageTag(draft)
+  const suggestions = useMemo(
+    () => languageSuggestions(props.options, locale),
+    [locale, props.options],
+  )
+
+  useEffect(() => {
+    setDraft(committed)
+  }, [committed])
+
+  return (
+    <div className="grid gap-1">
+      <Combobox
+        filter={(item, query) => {
+          const suggestion = item as LanguageSuggestion
+          const needle = query.trim().toLocaleLowerCase()
+          if (!needle) return true
+          return `${suggestion.tag} ${suggestion.label}`
+            .toLocaleLowerCase()
+            .includes(needle)
+        }}
+        inputValue={draft}
+        itemToStringLabel={(item) => (item as LanguageSuggestion).tag}
+        items={suggestions}
+        onInputValueChange={(next) => {
+          setDraft(next)
+          if (!next.trim()) props.onChange('')
+          else if (isKnownLanguageTag(next)) props.onChange(next)
+        }}
+        onValueChange={(next) => {
+          const picked = next as LanguageSuggestion | null
+          if (!picked) return
+          const canonical = canonicalizeLanguageTag(picked.tag) ?? picked.tag
+          setDraft(canonical)
+          props.onChange(canonical)
+        }}
+      >
+        <Combobox.Control>
+          <Combobox.Input
+            aria-label={props.label}
+            className={cn(invalid && 'border-red-500')}
+            onBlur={() => {
+              const raw = draft.trim()
+              if (!raw) return
+              const canonical = canonicalizeLanguageTag(raw)
+              if (!canonical) return
+              setDraft(canonical)
+              if (canonical !== committed) props.onChange(canonical)
+            }}
+            placeholder={props.placeholder}
+            spellCheck={false}
+          />
+          <Combobox.Trigger aria-label={props.label} />
+        </Combobox.Control>
+        <Combobox.Content>
+          <Combobox.Empty>
+            {t('write.meta.language.noSuggestion')}
+          </Combobox.Empty>
+          <Scroll
+            className="max-h-56"
+            innerClassName="p-1"
+            viewportClassName="max-h-56"
+          >
+            <Combobox.List>
+              {(item: LanguageSuggestion) => (
+                <Combobox.Item key={item.tag} value={item}>
+                  <span>{item.label}</span>
+                  <span className="ml-2 text-xs text-fg-subtle">
+                    {item.tag}
+                  </span>
+                </Combobox.Item>
+              )}
+            </Combobox.List>
+          </Scroll>
+        </Combobox.Content>
+      </Combobox>
+      {invalid ? (
+        <span className="text-xs text-red-600 dark:text-red-400">
+          {t('write.meta.language.invalid')}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function FieldControl(props: {
   field: MetaPresetField
   onChange: (value: unknown) => void
@@ -437,6 +575,17 @@ function FieldControl(props: {
             value: String(o.value),
           }))}
           value={value == null ? '' : String(value)}
+        />
+      )
+    }
+    case 'language': {
+      return (
+        <LanguageInput
+          label={field.label}
+          onChange={onChange}
+          options={field.options}
+          placeholder={field.placeholder}
+          value={value}
         />
       )
     }
@@ -569,6 +718,17 @@ function ChildFieldRenderer(props: {
               value: String(o.value),
             }))}
             value={value == null ? '' : String(value)}
+          />
+        )
+      }
+      case 'language': {
+        return (
+          <LanguageInput
+            label={child.label}
+            onChange={onChange}
+            options={child.options}
+            placeholder={child.placeholder}
+            value={value}
           />
         )
       }

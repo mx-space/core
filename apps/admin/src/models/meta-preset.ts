@@ -12,6 +12,7 @@ export type MetaFieldType =
   | 'tags'
   | 'boolean'
   | 'object'
+  | 'language'
 
 /**
  * 适用范围
@@ -64,18 +65,7 @@ export interface MetaPresetField {
  * AI 生成类型值
  */
 export type AiGenValue =
-  | -1
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | (string & {})
+  -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | (string & {})
 
 /**
  * 创建预设字段请求

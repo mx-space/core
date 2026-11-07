@@ -104,6 +104,34 @@ const BUILTIN_PRESETS: Partial<MetaPresetModel>[] = [
     order: 4,
     enabled: true,
   },
+  {
+    // `meta.lang` is the per-article source language; AI translation, summary,
+    // insights, TTS and search all read it. Without it those subsystems fall
+    // back to `zh-CN`, so it has to be editable per article.
+    key: 'lang',
+    label: 'Article language',
+    type: MetaFieldType.Language,
+    scope: MetaPresetScope.Both,
+    description:
+      'Source language of this article (BCP 47 tag). Drives AI translation, summaries, insights, TTS and search.',
+    placeholder: 'Pick a language or type a tag, e.g. en-US',
+    options: [
+      { value: 'zh-CN', label: 'Chinese (Simplified)' },
+      { value: 'zh-TW', label: 'Chinese (Traditional)' },
+      { value: 'en-US', label: 'English (US)' },
+      { value: 'en-GB', label: 'English (UK)' },
+      { value: 'ja-JP', label: 'Japanese' },
+      { value: 'ko-KR', label: 'Korean' },
+      { value: 'fr-FR', label: 'French' },
+      { value: 'de-DE', label: 'German' },
+      { value: 'es-ES', label: 'Spanish' },
+      { value: 'ru-RU', label: 'Russian' },
+      { value: 'pt-BR', label: 'Portuguese (Brazil)' },
+    ],
+    isBuiltin: true,
+    order: 5,
+    enabled: true,
+  },
 ]
 
 @Injectable()
