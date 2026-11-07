@@ -1,3 +1,9 @@
+## [17.0.1](https://github.com/mx-space/core/compare/v17.0.0...v17.0.1) (2026-11-08)
+
+### Bug Fixes
+
+* **admin:** mount editor DOM plugins inside every editing surface ([af36344](https://github.com/mx-space/core/commit/af363445175476137b640cf9d02a470cddc75a33))
+
 ## [17.0.0](https://github.com/mx-space/core/compare/v16.4.1...v17.0.0) (2026-11-07)
 
 ### ⚠ BREAKING CHANGES
