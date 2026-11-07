@@ -1,5 +1,6 @@
 import type { RichEditorProps as BaseRichEditorProps } from '@haklex/rich-editor'
 import {
+  EditorSurfacePlugins,
   NestedContentRendererProvider,
   RichEditor as BaseRichEditor,
 } from '@haklex/rich-editor'
@@ -147,19 +148,23 @@ export function RichEditor({
           </>
         }
       >
-        <BlockHandlePlugin />
-        <LiteXmlPastePlugin />
-        <FloatingToolbarPlugin actions={floatingToolbarActions} />
-        <FloatingLinkEditorPlugin renderExtraActions={renderLinkExtraActions} />
-        <DynamicInsertPlugin />
-        <ExcalidrawPlugin />
-        <EmbedPlugin selfHostnames={selfHostnames} />
-        <MapPlugin trackUpload={trackUpload} />
-        <AfilmoryPlugin />
-        <StockPlugin />
-        <PasteLinkCardPlugin />
-        <TableRowColumnHandlesPlugin />
-        <TableCellResizerPlugin />
+        <EditorSurfacePlugins>
+          <BlockHandlePlugin />
+          <LiteXmlPastePlugin />
+          <FloatingToolbarPlugin actions={floatingToolbarActions} />
+          <FloatingLinkEditorPlugin
+            renderExtraActions={renderLinkExtraActions}
+          />
+          <DynamicInsertPlugin />
+          <ExcalidrawPlugin />
+          <EmbedPlugin selfHostnames={selfHostnames} />
+          <MapPlugin trackUpload={trackUpload} />
+          <AfilmoryPlugin />
+          <StockPlugin />
+          <PasteLinkCardPlugin />
+          <TableRowColumnHandlesPlugin />
+          <TableCellResizerPlugin />
+        </EditorSurfacePlugins>
         {children}
       </BaseRichEditor>
     </NestedContentRendererProvider>

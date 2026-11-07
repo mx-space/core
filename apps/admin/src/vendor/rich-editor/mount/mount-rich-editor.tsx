@@ -1,13 +1,13 @@
-import { createRoot } from 'react-dom/client'
-import type { LexicalEditor, SerializedEditorState } from 'lexical'
-import type { EnrichmentFetcher } from '../components/EnrichmentLinkCardContext'
-import type { SaveExcalidrawSnapshot } from '../types'
-import type { BuildRichEditorPropsInput } from '../utils/build-rich-editor-props'
-
+import { EditorSurfacePlugins } from '@haklex/rich-editor'
 import { NestedDocPlugin } from '@haklex/rich-ext-nested-doc'
 import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import type { LexicalEditor, SerializedEditorState } from 'lexical'
+import { createRoot } from 'react-dom/client'
 
+import type { EnrichmentFetcher } from '../components/EnrichmentLinkCardContext'
 import { RichEditorBridge } from '../components/RichEditorBridge'
+import type { SaveExcalidrawSnapshot } from '../types'
+import type { BuildRichEditorPropsInput } from '../utils/build-rich-editor-props'
 import { buildRichEditorProps } from '../utils/build-rich-editor-props'
 
 export interface MountRichEditorOptions extends BuildRichEditorPropsInput {
@@ -22,10 +22,10 @@ export interface MountRichEditorOptions extends BuildRichEditorPropsInput {
 }
 
 export interface RichEditorHandle {
-  update(opts: MountRichEditorOptions): void
-  unmount(): void
-  getEditor(): LexicalEditor | null
-  focus(): void
+  update: (opts: MountRichEditorOptions) => void
+  unmount: () => void
+  getEditor: () => LexicalEditor | null
+  focus: () => void
 }
 
 export function mountRichEditor(
@@ -73,7 +73,9 @@ export function mountRichEditor(
         onSubmit={handleSubmit}
         onEditorReady={handleEditorReady}
       >
-        <NestedDocPlugin />
+        <EditorSurfacePlugins>
+          <NestedDocPlugin />
+        </EditorSurfacePlugins>
       </RichEditorBridge>,
     )
   }

@@ -9,6 +9,7 @@ import type {
   AgentToolConfig,
   ChatMessage,
 } from '@haklex/rich-agent-core'
+import { EditorSurfacePlugins } from '@haklex/rich-editor'
 import { DialogStackProvider } from '@haklex/rich-editor-ui'
 import {
   AgentAskAIAction,
@@ -116,7 +117,9 @@ export function ReactEditorPane({
                 systemMessages={systemMessages}
                 tools={tools}
               />
-              <NestedDocPlugin />
+              <EditorSurfacePlugins>
+                <NestedDocPlugin />
+              </EditorSurfacePlugins>
               <ImageEditModalPlugin
                 allowKeepOriginal
                 privacy={imageGpsPrivacy}
