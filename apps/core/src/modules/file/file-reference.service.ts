@@ -18,6 +18,7 @@ import {
   FileReferenceStatus,
   FileReferenceType,
   FileUploadedBy,
+  type UploadedAssetTag,
 } from './file-reference.types'
 import { FileReferenceUsageRepository } from './file-reference-usage.repository'
 import {
@@ -120,6 +121,24 @@ export class FileReferenceService {
       status: FileReferenceStatus.Pending,
       s3ObjectKey,
     })
+  }
+
+  async tagUploadedAsset(fileUrl: string, tag: UploadedAssetTag) {
+    const parent =
+      tag.parentUrl && tag.parentUrl !== fileUrl
+        ? await this.fileReferenceRepository.findFirstByUrl(tag.parentUrl)
+        : null
+    const assetKey = parent?.assetKey ?? tag.assetKey ?? null
+    await this.fileReferenceRepository.tagAsset(fileUrl, {
+      assetKey,
+      draftId: tag.draftId ?? null,
+    })
+    if (parent && assetKey && !parent.assetKey) {
+      await this.fileReferenceRepository.backfillAssetKey(
+        parent.fileUrl,
+        assetKey,
+      )
+    }
   }
 
   async createReaderPendingReference(input: {
@@ -682,11 +701,23 @@ export class FileReferenceService {
     candidates: FileReferenceRow[],
   ): Promise<FileReferenceRow[]> {
     if (candidates.length === 0) return []
-    const referencedUrls =
-      await this.fileReferenceUsageRepository.findReferencedUrls(
+    const draftUploadIds = candidates
+      .filter((file) => file.draftId)
+      .map((file) => file.id)
+    const [referencedUrls, unsavedDraftUploads] = await Promise.all([
+      this.fileReferenceUsageRepository.findReferencedUrls(
         candidates.map((file) => file.fileUrl),
-      )
-    return candidates.filter((file) => !referencedUrls.has(file.fileUrl))
+      ),
+      draftUploadIds.length > 0
+        ? this.fileReferenceRepository.findUploadedSinceDraftSave(
+            draftUploadIds,
+          )
+        : new Set<string>(),
+    ])
+    return candidates.filter(
+      (file) =>
+        !referencedUrls.has(file.fileUrl) && !unsavedDraftUploads.has(file.id),
+    )
   }
 
   private async buildS3Uploader(): Promise<S3Uploader | null> {

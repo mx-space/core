@@ -95,9 +95,17 @@ async function assertResponse(response: Response) {
 
 function cloudMessages(context: Context) {
   const messages: Record<string, unknown>[] = []
+  let toolImages: Record<string, unknown>[] = []
+  // OpenAI-compatible tool messages cannot carry images, and a run of tool
+  // results must stay contiguous, so images follow the whole run as one user turn.
+  const flushToolImages = () => {
+    if (toolImages.length) messages.push({ role: 'user', content: toolImages })
+    toolImages = []
+  }
   if (context.systemPrompt)
     messages.push({ role: 'system', content: context.systemPrompt })
   for (const message of context.messages) {
+    if (message.role !== 'toolResult') flushToolImages()
     if (message.role === 'user') {
       messages.push({
         role: 'user',
@@ -120,11 +128,23 @@ function cloudMessages(context: Context) {
         role: 'tool',
         tool_call_id: message.toolCallId,
         content: message.content
-          .map((part) =>
-            part.type === 'text' ? part.text : `[image:${part.mimeType}]`,
-          )
+          .flatMap((part) => (part.type === 'text' ? [part.text] : []))
           .join('\n'),
       })
+      const images = message.content.flatMap((part) =>
+        part.type === 'image' ? [part] : [],
+      )
+      if (images.length)
+        toolImages.push(
+          {
+            type: 'text',
+            text: `Images returned by tool call ${message.toolCallId}:`,
+          },
+          ...images.map((image) => ({
+            type: 'image_url',
+            image_url: { url: `data:${image.mimeType};base64,${image.data}` },
+          })),
+        )
     } else if (message.role === 'assistant') {
       const calls = message.content.filter(
         (part): part is ToolCall => part.type === 'toolCall',
@@ -150,6 +170,7 @@ function cloudMessages(context: Context) {
       })
     }
   }
+  flushToolImages()
   return messages
 }
 

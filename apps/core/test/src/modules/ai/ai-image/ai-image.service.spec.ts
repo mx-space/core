@@ -274,6 +274,40 @@ describe('AiImageService image generation task handler', () => {
     })
   })
 
+  it('tags an inline image with its asset key and owning draft', async () => {
+    const { getHandler, fileService } = createService()
+    generateOpenRouterImagesMock.mockResolvedValueOnce({
+      api: 'openrouter-images-api',
+      provider: 'openrouter',
+      model: 'google/gemini-3-flash-image',
+      output: [
+        {
+          type: 'image',
+          data: Buffer.from('png').toString('base64'),
+          mimeType: 'image/png',
+        },
+      ],
+      stopReason: 'stop',
+      timestamp: Date.now(),
+    } satisfies AssistantImages)
+
+    await getHandler().execute(
+      {
+        prompt: 'a cat',
+        purpose: 'inline',
+        requestId: 'req-2',
+        draftId: '902',
+        assetKey: 'asset-9',
+      },
+      createContext(),
+    )
+
+    expect(fileService.uploadBuffer.mock.calls[0][1].asset).toEqual({
+      assetKey: 'asset-9',
+      draftId: '902',
+    })
+  })
+
   it('throws instead of silently succeeding when the runtime reports stopReason: error', async () => {
     const { getHandler, fileService } = createService()
     const assistantImages: AssistantImages = {

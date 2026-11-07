@@ -1,0 +1,347 @@
+<doc>
+  <h1 id="lH9Sj_Xv">嵌入资源进 VFS：设计稿</h1>
+  <p id="HRrVVN6i">写作 agent 经 <code>bash</code> 虚拟工作区编辑 Excalidraw、Dynamic 组件与图片等本站存储的嵌入资源；三者合为一套基于文件的机制，不设专用工具。本稿经三轮问答与一次建造者审阅定稿，待君审批。</p>
+  <alert id="vrqVCB4w" type="note">
+    <p>阅读顺序：§1–3 讲为何与边界，§4 为建造细节，§5 列留给建造者之事，§6 为模块清单，§7 为验收。决策原委见文末「决策记录」。</p>
+  </alert>
+  <h2 id="glAFjKTt">1. 缘由</h2>
+  <p id="CdjRkHHO">正文中的 <code>&lt;excalidraw&gt;</code> 只存一条对象存储 URL。场景 JSON 不在 VFS 里，agent 读不到也写不回：一篇文章要把 6 张图译成英文，agent 只能建议君手动导出再上传。</p>
+  <p id="_7j0YnWW">Dynamic 组件则走另一套：<code>read_dynamic_component</code> 抓源码，<code>preview_dynamic_component</code> 交整份源码生成草稿卡片，君点「上传并插入」才落地。两套规则，agent 要分别记；excalidraw 无对应工具；图片只能看到 URL，看不到内容。</p>
+  <p id="UIkV4MWR">统一为「嵌入即文件」：agent 用 <code>cat / sed / heredoc</code> 改文件，工作区负责上传、换 URL、记版本；改动与正文其余部分一样，进入同一套提案审阅。</p>
+  <h2 id="Jge-iPur">2. 目标与边界</h2>
+  <table id="1HQy5f4P">
+    <tr>
+      <th>
+        <p>类</p>
+      </th>
+      <th>
+        <p>内容</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>目标</p>
+      </td>
+      <td>
+        <p>agent 可读、改、新建、复制 Excalidraw 与 Dynamic；可查看图片内容；生图直接成为 VFS 文件。每次改动成为该嵌入的一个新版本，可在历史中回溯。改动不坏及已发布内容。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>非目标</p>
+      </td>
+      <td>
+        <p>服务端 agent 工具（<code>ai-agent-server-tools.ts</code> 的 <code>read_article</code>）仍输出原 URL；mxs CLI 不变；dynamic 目录的 <code>previousUrls</code> 不迁移；图片内容不可在 VFS 中编辑。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>反目标</p>
+      </td>
+      <td>
+        <p>不改 <code>rich-litexml</code> 的语义，不让其知晓 VFS；不覆盖任何已上传文件；不新建表。</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="NNYyMsNM">3. 约束</h2>
+  <ul id="OxWof15R">
+    <li>LiteXML 编解码为多处共用：admin 工作区、mxs CLI、服务端 agent、协作草稿、ryugi 文档。</li>
+    <li>上传永不覆盖：普通上传经 <code>resolveUniqueObjectKey</code> 去重，<code>immutable</code> 上传落在 <code>versions/&lt;uuid&gt;</code>。已发布文章引用旧 URL，直到重新发布。</li>
+    <li>孤立扫描 <code>findReferencedUrls</code> 以正则扫各内容表的文本列，读不到 <code>content_crdt_docs</code> 的 bytea 快照。CRDT 只在 save / publish / restore / undo / import 时落成 revision。</li>
+    <li>协作者无上传权限（<code>CoauthorEditor</code> 的 <code>refuseSnapshot</code>）。</li>
+    <li>迁移须 expand-contract（Dokploy 双副本滚动发布），见 <code>mx-migration-author</code> skill。</li>
+    <li>前台 Excalidraw 展示用 haklex 自绘的 Scene，读存储的 width/height，不在加载时重算文字尺寸。</li>
+  </ul>
+  <h2 id="ZRDvWsxo">4. 设计</h2>
+  <h3 id="vixXYC0q">4.1 agent 所见的工作区</h3>
+  <codeblock id="b8v3ETnu" lang="text">/doc.xml                       正文，嵌入以路径引用
+/embeds/&lt;blockId&gt;.excalidraw   场景 JSON（补丁后完整场景，格式化），可写
+/embeds/&lt;blockId&gt;.js           Dynamic 源码，可写
+/embeds/&lt;blockId&gt;.meta.json    Dynamic 的 name / description / propsSchema，可写
+/embeds/&lt;blockId&gt;.png|jpg|…    图片、视频、文件：只读，cat 得元数据
+/embeds/&lt;blockId&gt;.error        抓取失败原因；对应路径只读</codeblock>
+  <codeblock id="og_zhdot" lang="xml">&lt;excalidraw id=&quot;xc28xMrt&quot;&gt;/embeds/xc28xMrt.excalidraw&lt;/excalidraw&gt;
+&lt;dynamic id=&quot;5rIpK5hR&quot; url=&quot;/embeds/5rIpK5hR.js&quot; initial-height=&quot;320&quot; /&gt;
+&lt;img src=&quot;/embeds/Qa81kdZz.png&quot; alt=&quot;架构图&quot; /&gt;</codeblock>
+  <ul id="aGngWaWt">
+    <li>路径按 blockId 生成，跨轮稳定。新嵌入由 agent 自取文件名（<code>/embeds/arch-en.excalidraw</code>），在 <code>/doc.xml</code> 中引用即可；<code>cp</code> 后改引用即复制。</li>
+    <li>映射范围：Excalidraw、Dynamic、顶层图片 / 视频 / 文件节点、gallery 内的图。只映射本站存储域名（<code>collectAllowedImageHosts</code>）下的 URL；外站链接、map、afilmory 等第三方地址原样保留。</li>
+    <li><code>&lt;dynamic url&gt;</code> 仍接受原始 https URL，供插入组件目录中已有组件。</li>
+    <li>二进制文件 <code>cat</code> 的输出为元数据：mime、尺寸、字节数、alt。</li>
+    <li>delta 快照（baseUrl + 补丁）呈现为补丁后的完整场景，写回时上传完整新文件，弃 delta 形态。inline 快照呈现为文件，写回仍为 inline、不上传。</li>
+  </ul>
+  <h3 id="lKiPqh1X">4.2 映射层：中间件</h3>
+  <p id="vsqmpuUU">路径与 URL 的互换做在 <code>SerializedEditorState</code> 上，夹在 LiteXML 编解码两侧，实现于 admin 工作区（<code>apps/admin/src/vendor/rich-editor/utils/document-bash/</code>），以选项注入 <code>createDocumentBashWorkspace</code>。</p>
+  <mermaid id="wvFyduPM">flowchart LR
+  S[editor state&lt;br/&gt;URL] --&gt;|toView| V[view state&lt;br/&gt;/embeds 路径] --&gt;|serialize| X[/doc.xml/]
+  X --&gt;|deserialize| V2[view state] --&gt;|await fromView&lt;br/&gt;上传改动文件| S2[state&lt;br/&gt;新 URL] --&gt; D[diffDocumentStates]</mermaid>
+  <codeblock id="vwSi8S6l" lang="ts">type EmbedMount = {
+  prefetch(state: SerializedEditorState): Promise&lt;void&gt;
+  seed(fs: IFileSystem): Promise&lt;void&gt;
+  toView(state: SerializedEditorState): SerializedEditorState
+  fromView(state: SerializedEditorState, fs: IFileSystem): Promise&lt;SerializedEditorState&gt;
+}
+
+createDocumentBashWorkspace({ ..., embeds: createEmbedMount({ upload, canUpload, getCurrentUrl }) })</codeblock>
+  <ul id="Vkrzi6Yu">
+    <li><code>fromView</code> 必须在 <code>diffDocumentStates</code> 之前完成；否则 base（URL）与解析结果（路径）相比，每个嵌入块都算作改动。</li>
+    <li><code>/doc.xml</code>、<code>/selection.xml</code>、<code>/review.xml</code>、<code>/.meta/outline</code> 与 <code>snapshotFiles</code> 一律经 <code>toView</code>。</li>
+    <li>远端内容按 URL 缓存于工作区实例（URL 不可变，缓存不失效）；每轮首次 bash 调用时并发预取正文中全部嵌入。</li>
+    <li>可选的 LiteXML 小改：excalidraw writer 现仅对 <code>http / blob / ref:</code> 开头者写纯文本，路径会被包进 CDATA。放宽为「单行、无空白、非 JSON」即写纯文本，只为可读，不改亦可工作。</li>
+  </ul>
+  <h3 id="oFb_6sby">4.3 写回流程</h3>
+  <p id="2wZIuzON"><ref artboard="verify-embed-vfs" to="EZaSizEWGJmDlGmuLQar5" group="v1" /></p>
+  <p id="EiuE3cA1">每次 bash 调用后，<code>projectDocument</code> 在解析 <code>/doc.xml</code> 之后、求 diff 之前执行：</p>
+  <steps id="-QXfALgP">
+    <step id="s_wt9mctu6" title="核对引用">
+      <p><code>/doc.xml</code> 引用了不存在的 <code>/embeds</code> 路径，则拒绝本次改动并报错。文件存在而无块引用，不上传。</p>
+    </step>
+    <step id="s_g903kdlj" title="比对内容">
+      <p>与播种时的内容哈希相同，保留原 URL。同一轮内同一内容只上传一次，按内容哈希复用已得 URL。</p>
+    </step>
+    <step id="s_6ctzsbaa" title="Excalidraw 重算文字尺寸">
+      <p>text 变了的元素，经 <code>restoreElements(elements, null, { refreshDimensions: true })</code>（@excalidraw/excalidraw 0.18.1）重算 width/height，懒加载该库与字体。agent 只需改 <code>text</code> 与 <code>originalText</code>。</p>
+    </step>
+    <step id="s_oblscsmz" title="核对并发">
+      <p>上传前比对编辑器中该块当前 URL 与播种时的 URL。不同者，本轮内已有人改过此嵌入：拒绝该块，报「已被他人修改，请重新读取」，不覆盖。</p>
+    </step>
+    <step id="s_00ipnwtj" title="上传">
+      <p><code>immutable</code> 上传，带 <code>assetKey</code> 与所属草稿（§4.7）。改既有嵌入沿用其 key；新嵌入、<code>cp</code> 之副本、生图结果生成新 key。</p>
+    </step>
+    <step id="s_fgx6xmca" title="失败处理">
+      <p>上传失败，则本次 <code>/doc.xml</code> 改动不应用并报错；VFS 中文件保持改后内容，下次调用自动重试。</p>
+    </step>
+  </steps>
+  <h3 id="SG8wfOMD">4.4 Dynamic 并入提案审阅</h3>
+  <ul id="Plkrjzsu">
+    <li>删除 <code>preview_dynamic_component</code>、<code>read_dynamic_component</code>、<code>DynamicComponentCard</code>、<code>publish-dynamic-component.ts</code> 及相关 i18n。改 <code>.js</code> 即上传，成为正文提案，在 diff 中以真 URL 实时渲染，接受 / 拒绝同普通改动。</li>
+    <li>名称、描述、propsSchema 放 <code>/embeds/&lt;blockId&gt;.meta.json</code>，工作区校验为 JSON；props 与 initial-height 仍在 <code>/doc.xml</code> 的 <code>&lt;dynamic&gt;</code> 上。</li>
+    <li><b>提案中的渲染（君定）：</b>admin 的 <code>isAllowedDynamicUrl</code> 另放行本站存储域名下 <code>versions/</code> 路径的 <code>.js</code>，使未入目录的新版本可在提案中渲染；前台不变。只有 owner 能往此处传 <code>.js</code>（协作者禁上传，读者只能传图片）。 <ask id="dynamic-preview-allowlist" recommend="own-versions"><option value="own-versions">admin 放行本站存储域名下 versions/ 路径的 .js（仅 admin，前台不变）</option><option value="session-only">只放行本会话上传过的 URL（刷新后提案不可预览）</option><option value="register-on-upload">上传即登记入目录（推翻「接受时登记」）</option></ask></li>
+    <li><b>只改 <code>.meta.json</code>（君定）：</b>节点只存 url、props、initialHeight，名称、描述、propsSchema 只在目录中。只改 meta 时直接写入目录，工具结果注明「已改目录」，不经审阅。不在目录中的组件，<code>.meta.json</code> 为空对象；接受其首次提案时新建目录条目。 <ask id="meta-only-edit" recommend="catalog-direct"><option value="catalog-direct">直接写入目录，工具结果注明「已改目录」；不经审阅</option><option value="refuse">拒绝，要求连同源码一起改（重新上传）</option><option value="pseudo-proposal">生成一条只含元数据的提案，接受时写入目录</option></ask></li>
+    <li>组件目录登记：审阅模式于君接受含该块的提案时登记（挂在 <code>acceptReviewBatch</code> 一路）；共享模式写入即登记。修订既有组件沿用现有 <code>reviseDynamicComponent</code> 逻辑（父 URL、<code>previousUrls</code>）。</li>
+    <li>旧逻辑中的 <code>liftMisplacedDraftFields</code> 随工具一并删除。</li>
+  </ul>
+  <h3 id="hfr-sNjy">4.5 图片与生图</h3>
+  <p id="mQpQpSIw"><ref artboard="verify-embed-vfs" to="EZaSizEWGJmDlGmuLQar5" group="v2" /></p>
+  <p id="bbCYxqqN"><ref artboard="verify-embed-vfs" to="EZaSizEWGJmDlGmuLQar5" group="v3" /></p>
+  <ul id="j7p02xDR">
+    <li><b>查看：</b>新增 bash 命令 <code>view &lt;path&gt;</code>。工具结果附带图片 URL；不带 base64，免得 ws 帧与会话历史塞入数 MB 数据。</li>
+    <li><b>传输：</b>扩展 haklex <code>rich-agent-core</code> 的 <code>AgentToolResult</code>，加图片附件字段，经 ws 协议传到服务端。服务端调用模型前抓取 URL，缩放至长边约 1568px，编码为 pi-ai 图片块 <code>{ type: &apos;image&apos;, data: base64, mimeType }</code>。历史只存 URL，每次请求重新编码。</li>
+    <li><b>LobeHub 适配器缺口：</b><code>packages/ai/src/runtime/lobehub/lobehub-api.ts</code> 现把 toolResult 中的图片压成 <code>[image:mime]</code> 文字。OpenAI 兼容接口的 tool 消息不能带图，须在 tool 消息之后补一条带图的 user 消息。</li>
+    <li><b>生图：</b><code>generate_image</code> 改为把结果写入 <code>/embeds/&lt;name&gt;.png</code> 并返回路径；agent 在 <code>/doc.xml</code> 中引用路径。生图任务已在服务端存下文件，不再重复上传：生图请求带上 <code>assetKey</code> 与 <code>draftId</code>，由服务端写入该文件行（吾意）。</li>
+  </ul>
+  <h3 id="5wQ4bFw3">4.6 双向同步</h3>
+  <table id="93KwkyuU">
+    <tr>
+      <th>
+        <p>方向</p>
+      </th>
+      <th>
+        <p>机制</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>VFS → 编辑器</p>
+      </td>
+      <td>
+        <p>不变：每次 bash 调用后投影。审阅模式产提案；共享模式立即应用，未改动块保留原 JSON。新增 §4.3 的上传与并发核对。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>编辑器 → VFS，同一轮内</p>
+      </td>
+      <td>
+        <p>不变：首次 bash 调用时播种，此后冻结。嵌入的并发改动由 §4.3「核对并发」挡下。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>编辑器 → VFS，跨轮</p>
+      </td>
+      <td>
+        <p>快照中嵌入文件的 content 只写版本标识（<code>asset_key</code> + URL），不写全文。服务端 <code>reconcileFiles</code>（<code>apps/core/src/modules/ai/ai-agent/ai-agent-vfs.ts</code>）对 <code>/embeds/</code> 路径特判：只写一行「此文件已有新版本，需要时请重新 cat」，不生成 diff。</p>
+      </td>
+    </tr>
+  </table>
+  <h3 id="J6SOFdnz">4.7 版本与清理</h3>
+  <ul id="nMNrITKP">
+    <li><b>版本链：</b><code>file_references</code> 加一列 <code>asset_key text NULL</code> 并加索引。同一嵌入的各版本共用 key，按 <code>created_at</code> 排序即版本链。只加可空列，属 expand 型迁移。用 key 不用「上一版本」外键：中间版本被回收后链不断。</li>
+    <li><b>上传接口：</b><code>POST /files/upload</code> 加可选参数 <code>assetKey</code> 与所属草稿；admin <code>uploadFile</code> 同步加参数。编辑器中人手保存 Excalidraw（<code>saveExcalidrawSnapshot</code>）也带上 key 与草稿。</li>
+    <li><b>草稿绑定（吾意，审阅后改）：</b>不能用 <code>ref_type / ref_id</code>：每次草稿检查点都会经 <code>markDocumentPending</code> 把该草稿名下各行的 <code>ref_id</code> 清空，发布时 <code>activateUrl</code> 又改写 <code>ref_type</code>，绑定会在下次保存时丢失。故另加一列 <code>draft_id</code>（可空，上传时写入，此后不改），仍在 <code>file_references</code> 表内，不另建表。</li>
+    <li><b>孤立判断的保护条件：</b>文件的 <code>draft_id</code> 指向的草稿仍在，且文件上传时间晚于该草稿最新一次 revision，则跳过删除（即「上传后尚未保存过」）。草稿一经保存，revision 中有此 URL 者照常受引用保护，无者（如被拒提案的文件）照常回收；草稿删除后全部照常回收。此举亦修复今日编辑器上传的图片在 CRDT 未保存期间被误删之险。</li>
+    <li><b>不算引用：</b><code>asset_key</code> 不参与孤立判断。</li>
+    <li><b>既有嵌入的 key（吾意）：</b>节点不存 key，按 URL 查文件行取得；首次改动时，旧文件行无 key 者补写新 key，使改前版本进入版本链。查无文件行者（外部导入等），新版本另起 key，旧版本不入链。</li>
+    <li><b>历史回溯：</b>文档级沿用 <code>content_revisions</code>（每版存当时的 URL）；单个嵌入按 <code>asset_key</code> 查其各版本。</li>
+  </ul>
+  <h3 id="aeTRBsKU">4.8 权限</h3>
+  <p id="ZUzs4cQv">无上传权限时（协作者），<code>/embeds</code> 只读，写入报错并说明原因。</p>
+  <h3 id="8nmSrW_u">4.9 Prompt 与 skill</h3>
+  <ul id="BQoTR7vc">
+    <li><code>document-bash/prompt.ts</code> 加「嵌入文件」一段：路径规则、可写与只读之分、<code>view</code> 命令、新建与复制的写法、上传与审阅的含义。</li>
+    <li>新增 bundled skill <code>excalidraw-editing</code>（<code>apps/admin/src/vendor/rich-editor/agent-skills/</code>）：改字只动 <code>text</code> / <code>originalText</code>、保留 id、加元素与改色的规则、尺寸由工作区重算。</li>
+    <li>改写 <code>dynamic-component-design</code> skill 中的工具用法为 VFS 写法与 meta.json 约定。</li>
+  </ul>
+  <h2 id="wyKWOjca">5. 留给建造者</h2>
+  <ul id="Br7CqZnT">
+    <li><code>view</code> 命令在 just-bash 中的实现方式（自定义命令返回附件标记，由工具层收集）。</li>
+    <li>附件字段的确切命名与 ws 帧格式；服务端抓取的超时、大小上限与缓存。</li>
+    <li>二进制元数据的取得方式（节点已有字段优先，缺者 HEAD 请求）。</li>
+    <li>预取的并发数与超时；<code>.error</code> 文件的措辞。</li>
+    <li>CRDT 草稿的「所属草稿」id 取 document 还是 branch，以与检查点一致为准。</li>
+    <li>拆分提交与发版顺序（haklex 先发，mx-core 后升级）。</li>
+  </ul>
+  <h2 id="iVLVsPwZ">6. 涉及模块</h2>
+  <table id="z0eRIygG">
+    <tr>
+      <th>
+        <p>仓库</p>
+      </th>
+      <th>
+        <p>位置</p>
+      </th>
+      <th>
+        <p>改动</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>haklex</p>
+      </td>
+      <td>
+        <p><code>rich-agent-core</code></p>
+      </td>
+      <td>
+        <p><code>AgentToolResult</code> 加图片附件</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>haklex（可选）</p>
+      </td>
+      <td>
+        <p><code>rich-litexml</code> writers/custom.ts</p>
+      </td>
+      <td>
+        <p>excalidraw 纯文本判断放宽</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core admin</p>
+      </td>
+      <td>
+        <p><code>vendor/rich-editor/utils/document-bash/</code></p>
+      </td>
+      <td>
+        <p>EmbedMount、写回流程、<code>view</code>、prompt</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core admin</p>
+      </td>
+      <td>
+        <p><code>utils/dynamic-tools.ts</code>、<code>features/write/components/agent/</code></p>
+      </td>
+      <td>
+        <p>删旧工具与卡片；接受时登记目录；生图写入 VFS</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core admin</p>
+      </td>
+      <td>
+        <p><code>api/files.ts</code>、<code>WriteRouteViewsContent.tsx</code></p>
+      </td>
+      <td>
+        <p>上传参数；人手保存 Excalidraw 带 key</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core admin</p>
+      </td>
+      <td>
+        <p><code>vendor/rich-editor/agent-skills/</code></p>
+      </td>
+      <td>
+        <p>新增 excalidraw-editing；改写 dynamic-component-design</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core core</p>
+      </td>
+      <td>
+        <p><code>modules/file/</code>、db-schema、迁移</p>
+      </td>
+      <td>
+        <p><code>asset_key</code>、<code>draft_id</code> 两列；上传参数；孤立判断跳过「草稿仍在且上传后未保存」者</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core core</p>
+      </td>
+      <td>
+        <p><code>modules/ai/ai-agent/ai-agent-vfs.ts</code></p>
+      </td>
+      <td>
+        <p><code>/embeds/</code> 只报版本变化</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>mx-core packages/ai</p>
+      </td>
+      <td>
+        <p>agent 运行时、<code>runtime/lobehub/lobehub-api.ts</code></p>
+      </td>
+      <td>
+        <p>图片附件转 base64 块；LobeHub 补带图 user 消息</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="mf9LHSWr">7. 验收</h2>
+  <ul id="gAO7kfXv" type="check">
+    <li checked="false">截图之例：一篇含 6 张中文 Excalidraw 的文章，agent 用 sed 译成英文；提案中 6 张图均为新 URL，文字尺寸已重算；接受后已发布版本不变，重新发布后更新。</li>
+    <li checked="false">agent 改 <code>.js</code> 与 <code>.meta.json</code>，提案中组件实时渲染；接受后目录出现修订，拒绝则目录不变。</li>
+    <li checked="false">本轮内君在弹窗中改了同一张图，agent 写回被拒并提示重新读取。</li>
+    <li checked="false">上传失败时正文不变；重试成功后提案出现。</li>
+    <li checked="false"><code>view</code> 一张图，模型能描述其内容（Anthropic 与 LobeHub 两条路径）。</li>
+    <li checked="false"><code>generate_image</code> 产出 <code>/embeds</code> 文件，引用后成为提案。</li>
+    <li checked="false">同一嵌入的各版本可按 <code>asset_key</code> 查出；删草稿超过宽限期后其独占文件被回收；草稿仍在而 CRDT 未保存时文件不被回收。</li>
+    <li checked="false">协作者模式下写 <code>/embeds</code> 报只读。</li>
+    <li checked="false">跨轮：君改了 agent 读过的图，下一轮 system-reminder 只有一行版本提示。</li>
+  </ul>
+  <h2 id="DvLMREql">8. 所用 artifact</h2>
+  <p id="RbIVPS2a">本文档即 <code>document/embed-vfs</code>（<code>.ryugi/artifacts/document/embed-vfs/doc.xml</code>）。两轮问答与评论皆在其中，结论已全数写入正文与下方决策记录。批准后另存为 <code>docs/ryugi/specs/2026-11-08-embed-vfs-design.md</code>。</p>
+  <details id="s58uobck" summary="决策记录" open="false">
+    <ul>
+      <li>君定：Excalidraw 与 Dynamic 合一，基于 VFS，不新增专用工具。</li>
+      <li>君定：映射做成中间件，不入 LiteXML 解析器（吾荐，君认可）。</li>
+      <li>君定：Dynamic 并入正文提案审阅，删预览卡片。</li>
+      <li>君定：写入即上传。</li>
+      <li>君定：工作区自动重算文字尺寸。</li>
+      <li>君定：agent 编辑原始场景 JSON，配 skill。</li>
+      <li>君定：无上传权限时只读。</li>
+      <li>君定：图片等本站 S3 文件亦入 VFS；agent 可多模态查看图片；生图写入 VFS。</li>
+      <li>君定：模型收到的图片为 base64。</li>
+      <li>君定：不建表，复用 <code>file_references</code>，加 <code>asset_key</code>；吾意：另加 <code>draft_id</code>（审阅所见，ref_id 会被检查点清空）。</li>
+      <li>君定：上传时登记所属草稿，草稿仍在者跳过孤立删除。</li>
+      <li>君定：组件目录于接受时登记（共享模式写入即登记）。</li>
+      <li>君定：Dynamic 元数据放旁置 meta.json；只改 meta 时直接写入目录。</li>
+      <li>君定：admin 放行本站存储 <code>versions/</code> 路径的 <code>.js</code>，以便提案中渲染。</li>
+      <li>吾意：已上传文件永不覆盖；delta 写回为完整新文件；inline 写回仍 inline。</li>
+      <li>吾意：抓取失败写 <code>.error</code> 文件；<code>&lt;dynamic url&gt;</code> 接受原始 URL。</li>
+      <li>吾意：只映射本站存储域名；gallery 内的图在范围内。</li>
+      <li>吾意：工具结果只带 URL，服务端编码 base64，缩放至长边约 1568px。</li>
+      <li>吾意：跨轮快照只记版本标识，<code>/embeds</code> 变化只报一行。</li>
+      <li>吾意：dynamic 目录 <code>previousUrls</code> 暂不迁移。</li>
+    </ul>
+  </details>
+</doc>
+

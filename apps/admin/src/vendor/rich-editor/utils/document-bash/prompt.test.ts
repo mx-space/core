@@ -19,4 +19,12 @@ describe('buildDocumentBashSystemMessages', () => {
     expect(prompt).toContain('immediately')
     expect(prompt).toMatch(/other people/i)
   })
+
+  it('explains embedded files under /embeds', () => {
+    const prompt = text(false)
+    expect(prompt).toContain('/embeds/')
+    expect(prompt).toContain('view /embeds/')
+    expect(prompt).toContain('excalidraw-editing')
+    expect(prompt).toContain('.meta.json')
+  })
 })

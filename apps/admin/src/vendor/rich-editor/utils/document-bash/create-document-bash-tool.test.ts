@@ -1,7 +1,8 @@
 import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createDocumentBashWorkspace } from './create-document-bash-tool'
+import { createEmbedMount } from './embed-mount'
 
 function para(id: string, text: string): SerializedLexicalNode {
   return {
@@ -434,5 +435,277 @@ describe('createDocumentBashWorkspace', () => {
         'parses to the same document',
       )
     })
+  })
+})
+
+describe('createDocumentBashWorkspace embedded files', () => {
+  const SCENE_URL = 'https://cdn.example.test/arch.excalidraw'
+
+  function drawing(id: string, snapshot: string) {
+    return {
+      type: 'excalidraw',
+      version: 1,
+      snapshot,
+      $: { blockId: id },
+    } as unknown as SerializedLexicalNode
+  }
+
+  function setup(canUpload = true) {
+    const upload = vi.fn(async () => 'https://cdn.example.test/versions/v2')
+    const embeds = createEmbedMount({
+      isOwnUrl: (url) => url.startsWith('https://cdn.example.test/'),
+      fetchText: async () => '{"elements":[{"id":"t1","text":"架构"}]}',
+      applyDelta: async (base) => base,
+      upload,
+      canUpload: () => canUpload,
+      getCurrentRef: () => SCENE_URL,
+      createAssetKey: () => 'k1',
+    })
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () =>
+        state([para('a', 'Intro'), drawing('xc', SCENE_URL)]),
+      embeds,
+    })
+    workspace.beginRun()
+    return { workspace, upload }
+  }
+
+  it('shows the drawing as a file referenced by path', async () => {
+    const { workspace } = setup()
+    const result = await workspace.tool.execute({
+      command: 'cat /doc.xml /embeds/xc.excalidraw',
+    })
+    expect(result.ok && result.content).toContain('/embeds/xc.excalidraw')
+    expect(result.ok && result.content).not.toContain(SCENE_URL)
+    expect(result.ok && result.content).toContain('架构')
+  })
+
+  it('proposes the drawing at a new URL after an edit to its file alone', async () => {
+    const { workspace, upload } = setup()
+    const result = await workspace.tool.execute({
+      command: "sed -i 's/架构/Architecture/' /embeds/xc.excalidraw",
+    })
+    expect(upload).toHaveBeenCalledTimes(1)
+    expect(result.ok && result.operations).toEqual([
+      expect.objectContaining({
+        op: 'replace',
+        blockId: 'xc',
+        node: expect.objectContaining({
+          snapshot: 'https://cdn.example.test/versions/v2',
+        }),
+      }),
+    ])
+  })
+
+  it('keeps the path in /doc.xml after minting ids for a new block', async () => {
+    const { workspace } = setup()
+    await workspace.tool.execute({
+      command:
+        "sed -i 's|</doc>|  <p>Added</p>\\n</doc>|' /doc.xml && cat /doc.xml",
+    })
+    const read = await workspace.tool.execute({ command: 'cat /doc.xml' })
+    expect(read.ok && read.content).toContain('/embeds/xc.excalidraw')
+    expect(read.ok && read.content).not.toContain(SCENE_URL)
+  })
+
+  it('refuses to edit embedded files when uploads are not allowed', async () => {
+    const { workspace, upload } = setup(false)
+    const result = await workspace.tool.execute({
+      command: "sed -i 's/架构/x/' /embeds/xc.excalidraw",
+    })
+    expect(result.ok && result.content).toMatch(/read-only/i)
+    expect(upload).not.toHaveBeenCalled()
+  })
+
+  it('reports embedded files by version in the turn snapshot', async () => {
+    const { workspace } = setup()
+    await workspace.tool.execute({ command: 'cat /embeds/xc.excalidraw' })
+    const touched = workspace.touchedFiles()
+    expect(touched).toContainEqual({
+      path: '/embeds/xc.excalidraw',
+      content: `version ${SCENE_URL}`,
+    })
+  })
+
+  it('keeps their version of a drawing that changed under the agent and says so', async () => {
+    const theirs = 'https://cdn.example.test/versions/theirs'
+    let live = SCENE_URL
+    const embeds = createEmbedMount({
+      isOwnUrl: (url) => url.startsWith('https://cdn.example.test/'),
+      fetchText: async (url) =>
+        url === theirs
+          ? '{"elements":[{"id":"t9","text":"theirs"}]}'
+          : '{"elements":[{"id":"t1","text":"架构"}]}',
+      applyDelta: async (base) => base,
+      upload: vi.fn(async () => 'https://cdn.example.test/versions/v2'),
+      canUpload: () => true,
+      getCurrentRef: () => live,
+      createAssetKey: () => 'k1',
+    })
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () => state([drawing('xc', SCENE_URL)]),
+      embeds,
+    })
+    workspace.beginRun()
+    await workspace.tool.execute({ command: 'cat /embeds/xc.excalidraw' })
+    live = theirs
+
+    const result = await workspace.tool.execute({
+      command: "sed -i 's/架构/x/' /embeds/xc.excalidraw",
+    })
+    const read = await workspace.tool.execute({
+      command: 'cat /embeds/xc.excalidraw',
+    })
+
+    expect(result.ok && result.content).toMatch(/changed by someone else/)
+    expect(read.ok && read.content).toContain('theirs')
+  })
+
+  it('says the catalog was updated after an edit to the metadata alone', async () => {
+    const save = vi.fn(async () => {})
+    const url = 'https://cdn.example.test/versions/w.js'
+    const embeds = createEmbedMount({
+      isOwnUrl: (value) => value.startsWith('https://cdn.example.test/'),
+      fetchText: async () => 'export default {}',
+      applyDelta: async (base) => base,
+      upload: vi.fn(),
+      canUpload: () => true,
+      getCurrentRef: () => url,
+      createAssetKey: () => 'k',
+      dynamicMeta: { read: async () => ({ name: 'Old' }), save },
+    })
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () =>
+        state([
+          {
+            type: 'dynamic',
+            version: 1,
+            url,
+            $: { blockId: 'dy' },
+          } as unknown as SerializedLexicalNode,
+        ]),
+      embeds,
+    })
+    workspace.beginRun()
+
+    const result = await workspace.tool.execute({
+      command: `echo '{"name":"New"}' > /embeds/dy.meta.json`,
+    })
+
+    expect(save).toHaveBeenCalledWith(url, { name: 'New' })
+    expect(result.ok && result.content).toMatch(/component catalog/)
+    expect(result.ok && result.content).not.toMatch(/no edit was recorded/)
+  })
+
+  it('shows at most 8 images per command and says which were left out', async () => {
+    const embeds = createEmbedMount({
+      isOwnUrl: (url) => url.startsWith('https://cdn.example.test/'),
+      fetchText: async () => '',
+      applyDelta: async (base) => base,
+      upload: vi.fn(),
+      canUpload: () => true,
+      getCurrentRef: () => null,
+      createAssetKey: () => 'k',
+    })
+    const ids = Array.from({ length: 9 }, (_, index) => `i${index}`)
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () =>
+        state(
+          ids.map(
+            (id) =>
+              ({
+                type: 'image',
+                version: 1,
+                src: `https://cdn.example.test/${id}.png`,
+                $: { blockId: id },
+              }) as unknown as SerializedLexicalNode,
+          ),
+        ),
+      embeds,
+    })
+    workspace.beginRun()
+
+    const result = await workspace.tool.execute({
+      command: `view ${ids.map((id) => `/embeds/${id}.png`).join(' ')}`,
+    })
+
+    expect((result as { images?: unknown[] }).images).toHaveLength(8)
+    expect(result.ok && result.content).toMatch(/\/embeds\/i8\.png.*at most 8/)
+  })
+
+  it('shows an own-storage image to the model with view', async () => {
+    const embeds = createEmbedMount({
+      isOwnUrl: (url) => url.startsWith('https://cdn.example.test/'),
+      fetchText: async () => '',
+      applyDelta: async (base) => base,
+      upload: vi.fn(),
+      canUpload: () => true,
+      getCurrentRef: () => null,
+      createAssetKey: () => 'k',
+    })
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () =>
+        state([
+          {
+            type: 'image',
+            version: 1,
+            src: 'https://cdn.example.test/p.png',
+            $: { blockId: 'im' },
+          } as unknown as SerializedLexicalNode,
+        ]),
+      embeds,
+    })
+    workspace.beginRun()
+
+    const shown = await workspace.tool.execute({
+      command: 'view /embeds/im.png',
+    })
+    const missing = await workspace.tool.execute({ command: 'view /doc.xml' })
+
+    expect(shown).toMatchObject({
+      ok: true,
+      images: [
+        { url: 'https://cdn.example.test/p.png', mimeType: 'image/png' },
+      ],
+    })
+    expect(missing.ok && missing.content).toMatch(/not an image/)
+    expect(missing).not.toHaveProperty('images')
+  })
+
+  it('adds a generated image the agent can reference by path', async () => {
+    const embeds = createEmbedMount({
+      isOwnUrl: (url) => url.startsWith('https://cdn.example.test/'),
+      fetchText: async () => '',
+      applyDelta: async (base) => base,
+      upload: vi.fn(),
+      canUpload: () => true,
+      getCurrentRef: () => null,
+      createAssetKey: () => 'k',
+    })
+    const workspace = createDocumentBashWorkspace({
+      getEditorState: () => state([para('a', 'Intro')]),
+      embeds,
+    })
+    workspace.beginRun()
+
+    const path = await workspace.addEmbedFile(
+      'https://cdn.example.test/ai.png',
+      'server room',
+    )
+    const meta = await workspace.tool.execute({ command: `cat ${path}` })
+    const added = await workspace.tool.execute({
+      command: `sed -i 's|</doc>|  <img src="${path}" alt="x" />\\n</doc>|' /doc.xml`,
+    })
+
+    expect(path).toBe('/embeds/server-room.png')
+    expect(meta.ok && meta.content).toContain('image/png')
+    expect(added.ok && added.operations).toEqual([
+      expect.objectContaining({
+        op: 'insert',
+        node: expect.objectContaining({
+          src: 'https://cdn.example.test/ai.png',
+        }),
+      }),
+    ])
   })
 })

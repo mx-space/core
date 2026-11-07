@@ -1,6 +1,6 @@
 ---
 name: dynamic-component-design
-description: Design rules for writing or revising an interactive component with preview_dynamic_component. Load before writing any component source, including small fixes to how one looks.
+description: Design rules for writing or revising an interactive component stored at /embeds/<id>.js. Load before writing any component source, including small fixes to how one looks.
 ---
 
 # Dynamic component design
@@ -28,7 +28,16 @@ The six ways it fails:
 2. **Sort facts from decoration.** Facts stay and get ranked: one lead at full weight, the rest in a quieter layer (a row of small stats, secondary rows, a second view behind a control). Decoration is cut down to what the reader needs to read the data: usually 3 to 7 strings of labels and units, no restated titles, no explanatory paragraph.
 3. **Build the resting frame first.** It must work as a still image: the screenshot, the RSS reader, the reader who never clicks. Pick sensible default props so this frame is the most telling state, not an empty one.
 4. **Add the interaction.** One primary control, placed next to what it changes. Feedback starts on input. Changes move from the old state to the new one; nothing pops, nothing rewinds without a cause.
-5. **Check before you call the tool.** Run the checklist below against your source. Then call preview_dynamic_component with the complete source.
+5. **Check before you save.** Run the checklist below against your source, then write the complete source to its file.
+
+## Files
+
+- Each `<dynamic>` block in `/doc.xml` names its source, for example `<dynamic id="5rIpK5hR" url="/embeds/5rIpK5hR.js" initial-height="320">`. Props stay on the block as JSON; `initial-height` stays on the block.
+- `/embeds/<id>.meta.json` holds `name`, `description` (what it shows and when to use it) and `propsSchema` (a JSON Schema object; string, enum, number, integer and boolean properties with title, description and default become a form writers fill in). Keep every post-specific value in props, with sensible defaults, so the component can be reused.
+- Revising: edit `/embeds/<id>.js` (and its `.meta.json` if the props change). Saving uploads a new version and proposes it; the user accepts or rejects it like any other edit, and the published article keeps the old version until it is republished. Accepted versions join the component catalog.
+- Changing only `.meta.json` updates the catalog entry directly.
+- A new component: write `/embeds/<name>.js` and `/embeds/<name>.meta.json` with a heredoc, then add `<dynamic url="/embeds/<name>.js" initial-height="320">{...props}</dynamic>` to `/doc.xml`. Reuse a catalog component instead, by its listed URL, whenever one fits.
+- Source must be a standalone browser ES module: plain JavaScript, no JSX or TypeScript, no bare or relative imports. Default export: `{ mount(container, { props, host: { theme } }) { … return { update(input) {}, unmount() {} } } }`. Styles live inside `container` (it is in a Shadow DOM); support light and dark themes and any width.
 
 ## Revising a component
 

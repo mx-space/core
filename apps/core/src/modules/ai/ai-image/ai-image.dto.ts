@@ -32,6 +32,7 @@ export const GenerateImageSchema = z
     purpose: z.enum(['cover', 'inline']),
     refId: z.string().optional(),
     draftId: z.string().optional(),
+    assetKey: z.string().trim().min(1).max(100).optional(),
     title: z.string().optional(),
     summary: z.string().optional(),
     requestId: z.string().min(1),

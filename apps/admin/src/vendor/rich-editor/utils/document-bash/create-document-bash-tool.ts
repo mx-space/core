@@ -1,17 +1,22 @@
-import type {
-  AgentOperation,
-  AgentToolConfig,
-  AgentToolResult,
-} from '@haklex/rich-agent-core'
+import type { AgentToolConfig, AgentToolResult } from '@haklex/rich-agent-core'
 import type { AgentFileSnapshot } from '@mx-space/ai'
 import {
   deserializeMxLitexmlToLexical,
   serializeMxLexicalToLitexml,
 } from '@mx-space/editor'
-import { Bash, type CommandName, defineCommand, InMemoryFs } from 'just-bash'
-import type { SerializedEditorState, SerializedLexicalNode } from 'lexical'
+import { Bash, type CommandName, defineCommand } from 'just-bash'
+import type { SerializedEditorState } from 'lexical'
 
 import { diffDocumentStates } from './diff-document-states'
+import { type EmbedMount, EMBEDS_DIR, type EmbedView } from './embed-mount'
+import { TrackingFs } from './tracking-fs'
+import {
+  buildOutline,
+  focusOf,
+  formatExec,
+  keepUntouchedBlocks,
+  resolveCommand,
+} from './workspace-helpers'
 
 const DOC_PATH = '/doc.xml'
 const OUTLINE_PATH = '/.meta/outline'
@@ -19,6 +24,8 @@ const SELECTION_PATH = '/selection.xml'
 const REVIEW_PATH = '/review.xml'
 const TRACKED_PATHS = [DOC_PATH, SELECTION_PATH, OUTLINE_PATH, REVIEW_PATH]
 const ATTACHED_PATHS = new Set([SELECTION_PATH, REVIEW_PATH])
+// The core ws schema rejects a tool result with more images than this.
+const MAX_VIEW_IMAGES = 8
 
 const ALLOWED_COMMANDS: CommandName[] = [
   'awk',
@@ -68,16 +75,14 @@ const STUB_COMMANDS = [
 ] as const
 
 const AVAILABLE =
-  'Available: cat ls head tail grep rg sed awk diff wc echo printf find tree cut tr sort uniq tee mkdir cp mv rm'
+  'Available: cat ls head tail grep rg sed awk diff wc echo printf find tree cut tr sort uniq tee mkdir cp mv rm view'
 
-type NodeRecord = SerializedLexicalNode & {
-  $?: { blockId?: string }
-  children?: SerializedLexicalNode[]
-  text?: string
-  type?: string
+export type DocumentBashToolResult = AgentToolResult & {
+  images?: { url: string; mimeType: string }[]
 }
 
 export type DocumentBashWorkspace = {
+  addEmbedFile: (url: string, name: string) => Promise<string>
   beginRun: () => void
   snapshotFiles: () => AgentFileSnapshot[]
   tool: AgentToolConfig
@@ -93,195 +98,7 @@ export type CreateDocumentBashWorkspaceOptions = {
   getSelectionXml?: () => string
   getReviewXml?: () => string
   readonlyFiles?: Record<string, string>
-}
-
-function readonlyEntries(paths: string[]) {
-  const files = new Set(paths)
-  const dirs = new Set<string>()
-  for (const path of paths) {
-    let dir = path.slice(0, path.lastIndexOf('/'))
-    while (dir) {
-      dirs.add(dir)
-      dir = dir.slice(0, dir.lastIndexOf('/'))
-    }
-  }
-  return { dirs, files }
-}
-
-class TrackingFs extends InMemoryFs {
-  touched: Set<string> | null = null
-  refused: Set<string> | null = null
-  private readonly readonly: ReturnType<typeof readonlyEntries>
-
-  constructor(files: Record<string, string>, readonlyPaths: string[] = []) {
-    super(files)
-    this.readonly = readonlyEntries(readonlyPaths)
-  }
-
-  private guard(...paths: string[]) {
-    const { dirs, files } = this.readonly
-    for (const raw of paths) {
-      const path = raw.length > 1 ? raw.replace(/\/+$/, '') : raw
-      const parent = path.slice(0, path.lastIndexOf('/'))
-      if (files.has(path) || dirs.has(path) || dirs.has(parent)) {
-        this.refused?.add(path)
-        throw new Error(`EROFS: read-only file system, '${path}'`)
-      }
-    }
-  }
-
-  private async mark(...paths: string[]) {
-    const touched = this.touched
-    if (!touched) return
-    for (const path of paths) {
-      touched.add(path)
-      try {
-        touched.add(await this.realpath(path))
-      } catch {
-        // A destination that does not exist yet has no real path.
-      }
-    }
-  }
-
-  override async readFile(...args: Parameters<InMemoryFs['readFile']>) {
-    await this.mark(args[0])
-    return super.readFile(...args)
-  }
-
-  override async readFileBytes(
-    ...args: Parameters<InMemoryFs['readFileBytes']>
-  ) {
-    await this.mark(args[0])
-    return super.readFileBytes(...args)
-  }
-
-  override async readFileBuffer(
-    ...args: Parameters<InMemoryFs['readFileBuffer']>
-  ) {
-    await this.mark(args[0])
-    return super.readFileBuffer(...args)
-  }
-
-  override async writeFile(...args: Parameters<InMemoryFs['writeFile']>) {
-    this.guard(args[0])
-    await this.mark(args[0])
-    return super.writeFile(...args)
-  }
-
-  override async appendFile(...args: Parameters<InMemoryFs['appendFile']>) {
-    this.guard(args[0])
-    await this.mark(args[0])
-    return super.appendFile(...args)
-  }
-
-  override async cp(...args: Parameters<InMemoryFs['cp']>) {
-    this.guard(args[1])
-    await this.mark(args[0], args[1])
-    return super.cp(...args)
-  }
-
-  override async mv(...args: Parameters<InMemoryFs['mv']>) {
-    this.guard(args[0], args[1])
-    await this.mark(args[0], args[1])
-    return super.mv(...args)
-  }
-
-  override async rm(...args: Parameters<InMemoryFs['rm']>) {
-    this.guard(args[0])
-    return super.rm(...args)
-  }
-
-  override async mkdir(...args: Parameters<InMemoryFs['mkdir']>) {
-    this.guard(args[0])
-    return super.mkdir(...args)
-  }
-
-  override async createExclusive(
-    ...args: Parameters<InMemoryFs['createExclusive']>
-  ) {
-    this.guard(args[0])
-    return super.createExclusive(...args)
-  }
-
-  override async chmod(...args: Parameters<InMemoryFs['chmod']>) {
-    this.guard(args[0])
-    return super.chmod(...args)
-  }
-
-  override async utimes(...args: Parameters<InMemoryFs['utimes']>) {
-    this.guard(args[0])
-    return super.utimes(...args)
-  }
-
-  override async symlink(...args: Parameters<InMemoryFs['symlink']>) {
-    this.guard(args[1])
-    return super.symlink(...args)
-  }
-
-  override async link(...args: Parameters<InMemoryFs['link']>) {
-    this.guard(args[1])
-    return super.link(...args)
-  }
-}
-
-function keepUntouchedBlocks(
-  view: SerializedEditorState,
-  next: SerializedEditorState,
-  operations: AgentOperation[],
-): SerializedEditorState {
-  const changed = new Set(
-    operations.flatMap((operation) =>
-      operation.op === 'replace' ? [operation.blockId] : [],
-    ),
-  )
-  const original = new Map<string, SerializedLexicalNode>()
-  for (const block of view.root.children) {
-    const id = (block as NodeRecord).$?.blockId
-    if (id) original.set(id, block)
-  }
-  return {
-    ...next,
-    root: {
-      ...next.root,
-      children: next.root.children.map((block) => {
-        const id = (block as NodeRecord).$?.blockId
-        return id && !changed.has(id) ? (original.get(id) ?? block) : block
-      }),
-    },
-  }
-}
-
-function focusOf(operation: AgentOperation | undefined): string | undefined {
-  if (!operation) return undefined
-  if (operation.op !== 'insert') return operation.blockId
-  return (operation.node as NodeRecord).$?.blockId
-}
-
-function extractText(node: SerializedLexicalNode): string {
-  const record = node as NodeRecord
-  if (typeof record.text === 'string') return record.text
-  if (Array.isArray(record.children)) {
-    return record.children.map((child) => extractText(child)).join('')
-  }
-  return ''
-}
-
-function buildOutline(state: SerializedEditorState): string {
-  const root = state.root as NodeRecord
-  const children = Array.isArray(root.children) ? root.children : []
-  const lines = children.map((node) => {
-    const record = node as NodeRecord
-    const id = record.$?.blockId ?? '-'
-    const type = typeof record.type === 'string' ? record.type : 'unknown'
-    const preview = extractText(node)
-      .replaceAll(/\s+/g, ' ')
-      .trim()
-      .slice(0, 80)
-    return `${id} ${type} ${preview}`.trim()
-  })
-  return ['# /doc.xml outline — ids are XML id attributes', ...lines, ''].join(
-    '\n',
-  )
+  embeds?: EmbedMount
 }
 
 function stubCommand(name: string) {
@@ -290,22 +107,6 @@ function stubCommand(name: string) {
     stderr: `${name} is not available in this workspace.\nEdit /doc.xml with cat, sed, grep, awk, or a heredoc.\n${AVAILABLE}\n`,
     stdout: '',
   }))
-}
-
-function formatExec(result: {
-  exitCode: number
-  stderr: string
-  stdout: string
-}) {
-  const chunks = [result.stdout, result.stderr].filter((part) => part !== '')
-  if (chunks.length > 0) return chunks.join('\n')
-  return result.exitCode === 0 ? '' : `exit ${result.exitCode}`
-}
-
-function resolveCommand(params: unknown): string | null {
-  const command = (params as { command?: unknown } | null)?.command
-  if (typeof command !== 'string' || command.trim() === '') return null
-  return command
 }
 
 export function createDocumentBashWorkspace(
@@ -327,9 +128,20 @@ export function createDocumentBashWorkspace(
     lastTouched = new Set()
   }
 
-  const seedFiles = (editorState: SerializedEditorState) => ({
-    [DOC_PATH]: serializeMxLexicalToLitexml(editorState, { compact: false }),
-    [OUTLINE_PATH]: buildOutline(editorState),
+  const viewOf = (
+    editorState: SerializedEditorState,
+    remember: boolean,
+  ): EmbedView =>
+    options.embeds?.toView(editorState, { remember }) ?? {
+      state: editorState,
+      files: {},
+      readonly: [],
+      versions: {},
+    }
+
+  const seedFiles = (view: EmbedView) => ({
+    [DOC_PATH]: serializeMxLexicalToLitexml(view.state, { compact: false }),
+    [OUTLINE_PATH]: buildOutline(view.state),
     [SELECTION_PATH]: options.getSelectionXml?.() ?? '',
     [REVIEW_PATH]: options.getReviewXml?.() ?? '',
   })
@@ -340,14 +152,21 @@ export function createDocumentBashWorkspace(
     const owned = session?.ownsWrites ? session : null
     const editorState = owned ? owned.view : options.getEditorState()
     if (!editorState) return []
+    const view = viewOf(editorState, false)
     const files = owned
-      ? { ...seedFiles(editorState), [DOC_PATH]: owned.lastEmittedXml }
-      : seedFiles(editorState)
-    return TRACKED_PATHS.map((path) =>
-      ATTACHED_PATHS.has(path)
-        ? { attach: true, content: files[path], path }
-        : { content: files[path], path },
-    )
+      ? { ...seedFiles(view), [DOC_PATH]: owned.lastEmittedXml }
+      : seedFiles(view)
+    return [
+      ...TRACKED_PATHS.map((path) =>
+        ATTACHED_PATHS.has(path)
+          ? { attach: true, content: files[path], path }
+          : { content: files[path], path },
+      ),
+      ...Object.entries(view.versions).map(([path, content]) => ({
+        content,
+        path,
+      })),
+    ]
   }
 
   // Report the files as the editor now holds them, not the working copy: a
@@ -356,22 +175,60 @@ export function createDocumentBashWorkspace(
   const touchedFiles = () =>
     snapshotFiles().filter((file) => lastTouched.has(file.path))
 
+  let shownImages: { url: string; mimeType: string }[] = []
+  const viewCommand = defineCommand('view', async (args, ctx) => {
+    const errors: string[] = []
+    const shown: string[] = []
+    for (const arg of args) {
+      const path = arg.startsWith('/')
+        ? arg
+        : `${ctx.cwd.replace(/\/$/, '')}/${arg}`
+      const image = options.embeds?.imageOf(path)
+      if (image && shownImages.length >= MAX_VIEW_IMAGES) {
+        errors.push(
+          `${path} was not shown: one command shows at most ${MAX_VIEW_IMAGES} images; view the rest in another command.`,
+        )
+      } else if (image) {
+        shownImages.push(image)
+        shown.push(`shown ${path}`)
+      } else {
+        errors.push(
+          `${path} is not an image under ${EMBEDS_DIR}; view only shows images.`,
+        )
+      }
+    }
+    return {
+      exitCode: errors.length ? 1 : 0,
+      stderr: errors.map((line) => `${line}\n`).join(''),
+      stdout: shown.map((line) => `${line}\n`).join(''),
+    }
+  })
+
   const ensureSession = async () => {
     if (session) return session
     const editorState = options.getEditorState()
     const base = options.getBaseState?.() ?? editorState
     if (!editorState || !base) return null
-    const files = seedFiles(editorState)
+    await options.embeds?.prefetch(editorState)
+    const view = viewOf(editorState, true)
+    const files = seedFiles(view)
     options.onSeed?.()
     const readonlyFiles = options.readonlyFiles ?? {}
+    const lockedFiles = options.embeds?.canUpload()
+      ? view.readonly
+      : Object.keys(view.files)
     const fs = new TrackingFs(
-      { ...files, ...readonlyFiles },
+      { ...files, ...view.files, ...readonlyFiles },
       Object.keys(readonlyFiles),
+      lockedFiles,
     )
     const bash = new Bash({
       commands: ALLOWED_COMMANDS,
       cwd: '/',
-      customCommands: STUB_COMMANDS.map((name) => stubCommand(name)),
+      customCommands: [
+        ...STUB_COMMANDS.map((name) => stubCommand(name)),
+        viewCommand,
+      ],
       fs,
     })
     await bash.exec('mkdir -p /tmp')
@@ -387,8 +244,43 @@ export function createDocumentBashWorkspace(
     return session
   }
 
+  const readEmbed = async (
+    current: NonNullable<typeof session>,
+    path: string,
+  ) => {
+    try {
+      return await current.fs.readFile(path, 'utf8')
+    } catch {
+      return null
+    }
+  }
+
+  const resolveEmbeds = async (
+    current: NonNullable<typeof session>,
+    parsed: SerializedEditorState,
+  ) => {
+    if (!options.embeds) return { state: parsed, rewrite: null, notices: [] }
+    const minted = diffDocumentStates(current.base, parsed)
+    if (!minted.ok) throw new Error(minted.message)
+    const state = await options.embeds.fromView(minted.nextState, (path) =>
+      readEmbed(current, path),
+    )
+    const report = options.embeds.takeReport()
+    for (const [path, text] of Object.entries(report.files)) {
+      await current.fs.writeFile(path, text)
+      lastTouched.add(path)
+    }
+    return {
+      state,
+      rewrite:
+        report.view ?? (minted.mintedIds.length > 0 ? minted.nextState : null),
+      notices: report.notices,
+    }
+  }
+
   const projectDocument = async (
     current: NonNullable<typeof session>,
+    embedsWritten: boolean,
   ): Promise<
     Pick<
       Extract<AgentToolResult, { ok: true }>,
@@ -396,7 +288,7 @@ export function createDocumentBashWorkspace(
     > & { note?: string }
   > => {
     const xml = await current.bash.readFile(DOC_PATH)
-    if (xml === current.lastEmittedXml) return {}
+    if (xml === current.lastEmittedXml && !embedsWritten) return {}
 
     const rootEnd = xml.lastIndexOf('</doc>')
     if (rootEnd !== -1 && xml.slice(rootEnd + '</doc>'.length).trim()) {
@@ -412,6 +304,9 @@ export function createDocumentBashWorkspace(
       throw new Error(`Failed to parse ${DOC_PATH}`, { cause: error })
     }
 
+    const resolved = await resolveEmbeds(current, parsed)
+    const notice = resolved.notices.join('\n') || undefined
+    parsed = resolved.state
     const diff = diffDocumentStates(current.base, parsed)
     if (!diff.ok) {
       throw new Error(diff.message)
@@ -419,8 +314,10 @@ export function createDocumentBashWorkspace(
     const viewDiff = diffDocumentStates(current.view, parsed)
     const unchangedFromView = viewDiff.ok && viewDiff.operations.length === 0
 
-    if (diff.mintedIds.length > 0) {
-      const rewritten = serializeMxLexicalToLitexml(diff.nextState, {
+    const rewriteFrom =
+      resolved.rewrite ?? (diff.mintedIds.length > 0 ? diff.nextState : null)
+    if (rewriteFrom) {
+      const rewritten = serializeMxLexicalToLitexml(rewriteFrom, {
         compact: false,
       })
       await current.bash.writeFile(DOC_PATH, rewritten)
@@ -435,7 +332,9 @@ export function createDocumentBashWorkspace(
       if (!applied.ok) throw new Error(applied.message)
       if (applied.operations.length === 0) {
         return {
-          note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
+          note:
+            notice ??
+            `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
         }
       }
       // LiteXML drops inline style, alignment and indent, so only blocks the agent changed may
@@ -448,12 +347,14 @@ export function createDocumentBashWorkspace(
       options.applyDocument(target, focusOf(applied.operations.at(-1)))
       current.base = target
       current.view = target
-      return {}
+      return { note: notice }
     }
 
     if (unchangedFromView && !current.emittedOperations) {
       return {
-        note: `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
+        note:
+          notice ??
+          `${DOC_PATH} changed textually but parses to the same document; no edit was recorded.`,
       }
     }
 
@@ -461,6 +362,7 @@ export function createDocumentBashWorkspace(
     return {
       operations: diff.operations,
       operationsMode: 'replace',
+      note: notice,
     }
   }
 
@@ -488,7 +390,7 @@ export function createDocumentBashWorkspace(
       if (!command) return 'bash'
       return command.length > 60 ? `${command.slice(0, 60)}…` : command
     },
-    execute: async (params): Promise<AgentToolResult> => {
+    execute: async (params): Promise<DocumentBashToolResult> => {
       const command = resolveCommand(params)
       if (!command) {
         return {
@@ -511,10 +413,13 @@ export function createDocumentBashWorkspace(
         }
       }
 
+      shownImages = []
       const touched = new Set<string>()
       const refused = new Set<string>()
+      const written = new Set<string>()
       current.fs.touched = touched
       current.fs.refused = refused
+      current.fs.written = written
       let execResult: { exitCode: number; stderr: string; stdout: string }
       try {
         execResult = await current.bash.exec(command)
@@ -524,6 +429,7 @@ export function createDocumentBashWorkspace(
         execResult = { exitCode: 1, stderr: '', stdout: '' }
       } finally {
         current.fs.touched = null
+        current.fs.written = null
         current.fs.refused = null
       }
       if (refused.size > 0)
@@ -531,16 +437,24 @@ export function createDocumentBashWorkspace(
           ...execResult,
           stderr: `${execResult.stderr}${[...refused].join(', ')}: read-only file system. Copy it to /tmp to work on a copy.\n`,
         }
-      lastTouched = new Set(TRACKED_PATHS.filter((path) => touched.has(path)))
+      const isEmbed = (path: string) => path.startsWith(`${EMBEDS_DIR}/`)
+      lastTouched = new Set([
+        ...TRACKED_PATHS.filter((path) => touched.has(path)),
+        ...[...touched].filter(isEmbed),
+      ])
       try {
         const xmlBefore = current.lastEmittedXml
-        const { note, ...projection } = await projectDocument(current)
+        const { note, ...projection } = await projectDocument(
+          current,
+          [...written].some(isEmbed),
+        )
         if (current.lastEmittedXml !== xmlBefore) lastTouched.add(REVIEW_PATH)
         const content = formatExec(execResult)
         return {
           content: note ? `${content}\n${note}`.trim() : content,
           ok: true,
           ...projection,
+          ...(shownImages.length ? { images: shownImages } : {}),
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
@@ -552,5 +466,14 @@ export function createDocumentBashWorkspace(
     },
   }
 
-  return { beginRun, snapshotFiles, tool, touchedFiles }
+  const addEmbedFile = async (url: string, name: string) => {
+    const current = await ensureSession()
+    if (!current || !options.embeds) throw new Error('Editor is not ready')
+    const { path, content } = options.embeds.registerMedia(url, name)
+    await current.fs.writeFile(path, content)
+    current.fs.lock(path)
+    return path
+  }
+
+  return { addEmbedFile, beginRun, snapshotFiles, tool, touchedFiles }
 }

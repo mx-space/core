@@ -337,6 +337,15 @@ export class FileController {
       objectKey: query.immutable
         ? `versions/${randomUUID()}${path.extname(filename)}`
         : undefined,
+      ...(query.assetKey || query.draftId
+        ? {
+            asset: {
+              assetKey: query.assetKey,
+              draftId: query.draftId,
+              parentUrl: query.parentUrl,
+            },
+          }
+        : {}),
     })
   }
 

@@ -19,9 +19,16 @@ import { Injectable, Logger } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { FileReferenceService } from '~/modules/file/file-reference.service'
 
 import { AiAgentArticleSource } from './ai-agent-article.source'
 import { AiAgentConversationRepository } from './ai-agent-conversation.repository'
+import {
+  type AgentToolImage,
+  createImageLoader,
+  hydrateImages,
+  toolResultContent,
+} from './ai-agent-images'
 import { mapPiEventToSse } from './ai-agent-messages'
 import {
   type AgentArticleSource,
@@ -43,6 +50,7 @@ export interface AgentClientToolResult {
   content: string
   isError: boolean
   files?: AgentFileSnapshot[]
+  images?: AgentToolImage[]
 }
 
 export interface AgentRunSink {
@@ -79,6 +87,7 @@ export class AiAgentRunService {
     private readonly configService: ConfigsService,
     private readonly conversationRepository: AiAgentConversationRepository,
     articleSource: AiAgentArticleSource,
+    private readonly fileReferenceService: FileReferenceService,
   ) {
     this.serverTools = createAgentServerTools(
       articleSource as AgentArticleSource,
@@ -91,6 +100,9 @@ export class AiAgentRunService {
   ): Promise<AgentRunResult> {
     const provider = await this.resolveProvider(payload.providerId)
     const runtime = createModelRuntime(provider, payload.model)
+    const loadImage = createImageLoader({
+      allowedHosts: await this.fileReferenceService.collectAllowedImageHosts(),
+    })
     if (!runtime.streamMessage) {
       throw new Error('runtime does not implement streamMessage')
     }
@@ -152,7 +164,7 @@ export class AiAgentRunService {
       let failure: { aborted: boolean; message: string } | undefined
       try {
         for await (const event of runtime.streamMessage({
-          messages: transcript.messages,
+          messages: await hydrateImages(transcript.messages, loadImage),
           systemPrompt,
           tools,
           sessionId: payload.sessionId,
@@ -219,7 +231,12 @@ export class AiAgentRunService {
           },
         })
         transcript.messages.push(
-          toolResult(toolCall, outcome.content, outcome.isError),
+          toolResult(
+            toolCall,
+            outcome.content,
+            outcome.isError,
+            outcome.images,
+          ),
         )
       }
       appendSteers(inbox.take())
@@ -238,7 +255,7 @@ export class AiAgentRunService {
       excludeRefId?: string
       onFiles: (files: AgentFileSnapshot[]) => void
     },
-  ): Promise<{ content: string; isError: boolean }> {
+  ): Promise<{ content: string; isError: boolean; images?: AgentToolImage[] }> {
     const args = (toolCall.arguments ?? {}) as Record<string, unknown>
     if (context.serverNames.has(toolCall.name)) {
       const tool = this.serverTools.find(
@@ -275,7 +292,11 @@ export class AiAgentRunService {
           arguments: args,
         })
         if (result.files?.length) context.onFiles(result.files)
-        return { content: result.content, isError: result.isError }
+        return {
+          content: result.content,
+          isError: result.isError,
+          images: result.images,
+        }
       } catch (error) {
         return {
           content: `Tool did not complete: ${(error as Error).message}`,
@@ -334,12 +355,13 @@ function toolResult(
   toolCall: ToolCall,
   text: string,
   isError: boolean,
+  images?: AgentToolImage[],
 ): ToolResultMessage {
   return {
     role: 'toolResult',
     toolCallId: toolCall.id,
     toolName: toolCall.name,
-    content: [{ type: 'text', text }],
+    content: toolResultContent(text, images),
     isError,
     timestamp: Date.now(),
   }

@@ -5,6 +5,7 @@ import type {
   AgentToolResultPayload,
   ResolvedAgentRun,
 } from '@mx-space/ai'
+import sharp from 'sharp'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'
@@ -89,6 +90,9 @@ function setup(responses: Step[], conversation?: StoredConversation) {
     configService as any,
     repository as any,
     articles,
+    {
+      collectAllowedImageHosts: async () => ['cdn.example.test'],
+    } as any,
   )
   const events: AgentServerEvent[] = []
   const clientCalls: Array<{ name: string; arguments: unknown }> = []
@@ -282,6 +286,65 @@ describe('AiAgentRunService', () => {
     ])
     expect(ctx.conversations.get('conv-1')!.transcript!.known).toEqual({
       '/doc.xml': '<doc/>',
+    })
+  })
+
+  it('hands tool images to the model as base64 while the transcript keeps their URL', async () => {
+    const png = await sharp({
+      create: { width: 4, height: 4, channels: 3, background: '#000' },
+    })
+      .png()
+      .toBuffer()
+    const realFetch = globalThis.fetch
+    vi.stubGlobal('fetch', async (input: URL | string, init?: RequestInit) =>
+      String(input).startsWith('https://cdn.example.test/')
+        ? new Response(new Uint8Array(png), {
+            headers: { 'content-type': 'image/png' },
+          })
+        : realFetch(input, init),
+    )
+    torn.push(() => vi.unstubAllGlobals())
+    const ctx = setup(
+      [
+        fauxAssistantMessage(
+          [fauxToolCall('bash', { command: 'view /embeds/a.png' })],
+          { stopReason: 'toolUse' },
+        ),
+        fauxAssistantMessage('a black square'),
+      ],
+      emptyConversation(),
+    )
+    torn.push(ctx.teardown)
+    ctx.setClientReply(async (call) => ({
+      toolCallId: call.toolCallId,
+      content: 'shown',
+      isError: false,
+      images: [
+        { url: 'https://cdn.example.test/a.png', mimeType: 'image/png' },
+      ],
+    }))
+
+    const result = await ctx.service.run(payload(), {
+      sink: ctx.sink,
+      signal: new AbortController().signal,
+    })
+
+    expect(result.status).toBe('complete')
+    const sent = ctx.contexts[1].messages.find(
+      (message) => message.role === 'toolResult',
+    )!
+    expect(sent.content[1]).toEqual({
+      type: 'image',
+      data: png.toString('base64'),
+      mimeType: 'image/png',
+    })
+    const stored = ctx.conversations
+      .get('conv-1')!
+      .transcript.messages.find((message) => message.role === 'toolResult')!
+    expect(stored.content[1]).toEqual({
+      type: 'image',
+      data: 'https://cdn.example.test/a.png',
+      mimeType: 'image/png',
     })
   })
 

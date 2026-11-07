@@ -72,4 +72,35 @@ describe('buildImageTools', () => {
       ok: false,
     })
   })
+
+  it('saves the image into the workspace and answers with its path', async () => {
+    generateImage.mockResolvedValueOnce({ created: true, taskId: 'task-2' })
+    waitForImageTask.mockResolvedValueOnce({
+      completedAt: 1,
+      url: 'https://cdn.example.test/ai.png',
+    })
+    const saveToWorkspace = vi.fn(async () => '/embeds/server-room.png')
+
+    const [tool] = buildImageTools({
+      refId: 'post-1',
+      getDraftId: () => '902',
+      saveToWorkspace,
+    })
+    const result = await tool.execute({
+      prompt: 'a server room',
+      name: 'server-room',
+    })
+
+    expect(generateImage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ draftId: '902', assetKey: expect.any(String) }),
+    )
+    expect(saveToWorkspace).toHaveBeenCalledWith(
+      'https://cdn.example.test/ai.png',
+      'server-room',
+    )
+    expect(result.ok && result.content).toContain('/embeds/server-room.png')
+    expect(result.ok && result.content).not.toContain(
+      'https://cdn.example.test',
+    )
+  })
 })

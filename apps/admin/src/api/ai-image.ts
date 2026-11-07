@@ -41,6 +41,7 @@ export type ImageAspectRatio =
 export interface GenerateImageData {
   prompt?: string
   aspectRatio?: ImageAspectRatio
+  assetKey?: string
   draftId?: string
   model?: string
   presetId?: string

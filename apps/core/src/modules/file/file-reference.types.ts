@@ -32,5 +32,13 @@ export interface FileReferenceRow {
   mimeType: string | null
   byteSize: number | null
   detachedAt: Date | null
+  assetKey: string | null
+  draftId: string | null
   createdAt: Date
+}
+
+export interface UploadedAssetTag {
+  assetKey?: string
+  draftId?: string
+  parentUrl?: string
 }

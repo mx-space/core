@@ -249,6 +249,34 @@ describe('AiAgentWsHandler', () => {
     })
   })
 
+  it('delivers tool-result images to the waiting run', async () => {
+    const t = setup()
+    torn.push(() => t.handler.onModuleDestroy())
+    await t.dispatch(AgentWsEvents.run, await runPayload())
+    const pending = t.runs[0].options.sink.callClientTool({
+      toolCallId: 'call-1',
+      name: 'bash',
+      arguments: {},
+    })
+
+    const ack = await t.dispatch(AgentWsEvents.toolResult, {
+      runId: 'run-1',
+      toolCallId: 'call-1',
+      content: 'shown',
+      isError: false,
+      images: [
+        { url: 'https://cdn.example.test/a.png', mimeType: 'image/png' },
+      ],
+    })
+
+    expect(ack).toEqual({ ok: true })
+    await expect(pending).resolves.toMatchObject({
+      images: [
+        { url: 'https://cdn.example.test/a.png', mimeType: 'image/png' },
+      ],
+    })
+  })
+
   it('keeps a tool call waiting when its files do not match the baseline', async () => {
     const t = setup()
     torn.push(() => t.handler.onModuleDestroy())

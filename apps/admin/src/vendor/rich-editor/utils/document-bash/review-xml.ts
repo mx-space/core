@@ -5,28 +5,34 @@ import type { SerializedEditorState } from 'lexical'
 
 const SETTLED_BATCH = new Set<ReviewBatch['status']>(['accepted', 'rejected'])
 
+type ReviewNode = Parameters<typeof serializeMxLexicalNodesToLitexml>[0][number]
+
 export function buildReviewXml(
   reviewState: { batches: ReviewBatch[] } | null | undefined,
+  viewNode: (node: ReviewNode) => ReviewNode = (node) => node,
 ): string {
   const proposals = pendingReviewOperations(reviewState).map((op) =>
-    describeOperation(op),
+    describeOperation(op, viewNode),
   )
   return proposals.length
     ? ['<review>', ...proposals, '</review>', ''].join('\n')
     : ''
 }
 
-function describeOperation(op: AgentOperation) {
+function describeOperation(
+  op: AgentOperation,
+  viewNode: (node: ReviewNode) => ReviewNode,
+) {
   switch (op.op) {
     case 'insert': {
       const position =
         op.position.type === 'root'
           ? `at="${op.position.index ?? 'end'}"`
           : `${op.position.type}="${op.position.blockId}"`
-      return wrap(`insert ${position}`, 'insert', op.node)
+      return wrap(`insert ${position}`, 'insert', viewNode(op.node))
     }
     case 'replace': {
-      return wrap(`replace block="${op.blockId}"`, 'replace', op.node)
+      return wrap(`replace block="${op.blockId}"`, 'replace', viewNode(op.node))
     }
     case 'delete': {
       return `<delete block="${op.blockId}"/>`
@@ -34,11 +40,7 @@ function describeOperation(op: AgentOperation) {
   }
 }
 
-function wrap(
-  open: string,
-  tag: string,
-  node: Parameters<typeof serializeMxLexicalNodesToLitexml>[0][number],
-) {
+function wrap(open: string, tag: string, node: ReviewNode) {
   const body = serializeMxLexicalNodesToLitexml([node], { compact: false })
   return `<${open}>\n${body.trimEnd()}\n</${tag}>`
 }

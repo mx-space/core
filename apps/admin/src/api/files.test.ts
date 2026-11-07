@@ -45,4 +45,22 @@ describe('uploadFile', () => {
 
     expect(requestedQuery(fetchMock).get('immutable')).toBe('true')
   })
+
+  it('sends the asset key, owning draft and parent version', async () => {
+    const fetchMock = mockUploadFetch()
+
+    await uploadFile(new File(['{}'], 'a.excalidraw'), 'file', {
+      immutable: true,
+      assetKey: 'k1',
+      draftId: '902',
+      parentUrl: 'https://cdn.example.test/old.excalidraw',
+    })
+
+    const query = requestedQuery(fetchMock)
+    expect(query.get('assetKey')).toBe('k1')
+    expect(query.get('draftId')).toBe('902')
+    expect(query.get('parentUrl')).toBe(
+      'https://cdn.example.test/old.excalidraw',
+    )
+  })
 })

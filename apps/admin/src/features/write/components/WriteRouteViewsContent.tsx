@@ -74,7 +74,6 @@ import {
   updateDraft,
   updateDraftFields,
 } from '~/api/drafts'
-import { uploadFile, uploadFileWithProgress } from '~/api/files'
 import { ApiRequestError } from '~/api/http'
 import { getNoteById } from '~/api/notes'
 import { getOption, getOwner } from '~/api/options'
@@ -157,7 +156,6 @@ import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '~/hooks/use-media-query'
 import { useI18n } from '~/i18n'
 import { translate } from '~/i18n/translate'
 import type { TranslationKey } from '~/i18n/types'
-import { uploadEditorImage } from '~/lib/editor-image-upload'
 import type { Amap, AMapSearch } from '~/models/amap'
 import type { Image as ImageModel } from '~/models/base'
 import type {
@@ -211,6 +209,7 @@ import {
   buildMetaTools,
 } from '~/vendor/rich-editor/utils/meta-tools'
 
+import { useDraftUploads } from '../draft-uploads'
 import {
   applyWriteAgentMetaUpdates,
   getWriteAgentMetaFields,
@@ -2621,6 +2620,7 @@ function WritePage(props: { kind: WriteKind }) {
                         onMetaFieldsUpdate={applyAgentMetaUpdates}
                         onPinSelection={() => setAsidePanel('agent')}
                         onTextChange={(text) => updateField('text', text)}
+                        draftId={draftId || routeDraftId || undefined}
                         refId={isEditing ? id : routeDraftId || undefined}
                         surfaceClassName="flex min-h-[70dvh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
                         surfaceStyle={
@@ -5412,6 +5412,7 @@ function RichWriteSurface(props: {
     updates: Record<string, unknown>,
   ) => Promise<void> | void
   onPinSelection?: () => void
+  draftId?: string
   refId?: string
   surfaceClassName?: string
   surfaceStyle?: CSSProperties
@@ -5432,8 +5433,10 @@ function RichWriteSurface(props: {
     document: props.crdt,
     documentId: props.refId,
     documentKind: props.kind,
+    draftId: props.draftId,
     ensureDocument: props.ensureDocument,
   })
+  const draftUploads = useDraftUploads(props.draftId)
   const latestCallbacks = useRef({
     onContentChange: props.onContentChange,
     onTextChange: props.onTextChange,
@@ -5464,25 +5467,10 @@ function RichWriteSurface(props: {
     contentClassName: cn('min-h-120 px-4 py-3', props.contentClassName),
     debounceMs: 250,
     editorStyle,
-    imageUpload: uploadEditorImage,
-    trackUpload: async (file) => {
-      const result = await uploadFile(file, 'file')
-      return { url: result.url }
-    },
-    videoUpload: async (file, opts) => {
-      const result = await uploadFileWithProgress(file, {
-        type: 'video',
-        onProgress: (percent) => opts?.onProgress?.(percent),
-      })
-      return { src: result.url }
-    },
-    fileUpload: async (file, opts) => {
-      const result = await uploadFileWithProgress(file, {
-        type: 'file',
-        onProgress: (percent) => opts?.onProgress?.(percent),
-      })
-      return { src: result.url }
-    },
+    imageUpload: draftUploads.imageUpload,
+    trackUpload: draftUploads.trackUpload,
+    videoUpload: draftUploads.videoUpload,
+    fileUpload: draftUploads.fileUpload,
     initialValue: parseSerializedEditorState(props.content),
     systemMessages: [
       ...buildDocumentBashSystemMessages({
@@ -5497,7 +5485,6 @@ function RichWriteSurface(props: {
     tools: [
       agent.documentBashTool,
       bundledLoadSkillTool,
-      ...agent.dynamicTools,
       ...(props.metaFieldsSchema &&
       props.getMetaFields &&
       props.onMetaFieldsUpdate
@@ -5508,7 +5495,11 @@ function RichWriteSurface(props: {
           })
         : []),
       ...(imageGenerationEnabled
-        ? buildImageTools({ refId: props.refId })
+        ? buildImageTools({
+            getDraftId: draftUploads.getDraftId,
+            refId: props.refId,
+            saveToWorkspace: agent.addEmbedFile,
+          })
         : []),
     ],
     onAgentLoopReady: agent.onAgentLoopReady,
@@ -5528,7 +5519,7 @@ function RichWriteSurface(props: {
     },
     placeholder: t('write.richEditor.placeholder'),
     agentRuntime: agent.agentRuntime,
-    saveExcalidrawSnapshot,
+    saveExcalidrawSnapshot: draftUploads.saveExcalidrawSnapshot,
     store: agent.store,
     theme: getColorScheme(),
     variant: props.kind === 'note' ? 'note' : 'article',
@@ -5603,18 +5594,6 @@ function lexicalNodeHasContent(node: unknown): boolean {
   }
 
   return record.type !== 'root' && record.type !== 'paragraph'
-}
-
-async function saveExcalidrawSnapshot(snapshot: object, existingRef?: string) {
-  const name = existingRef
-    ? `${existingRef.replaceAll(/[^\w.-]/g, '-')}.json`
-    : `excalidraw-${crypto.randomUUID()}.json`
-  const file = new File([JSON.stringify(snapshot)], name, {
-    type: 'application/json',
-  })
-  const result = await uploadFile(file, 'file')
-
-  return result.url
 }
 
 function getColorScheme(): 'dark' | 'light' {

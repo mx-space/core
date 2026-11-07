@@ -49,6 +49,28 @@ function batch(
 }
 
 describe('buildReviewXml', () => {
+  it('shows proposed nodes through the given view', () => {
+    const xml = buildReviewXml(
+      {
+        batches: [
+          batch([
+            {
+              op: {
+                blockId: 'b',
+                node: para('https://cdn/x', 'b'),
+                op: 'replace',
+              },
+            },
+          ]),
+        ],
+      } as never,
+      () => para('/embeds/b.excalidraw', 'b'),
+    )
+
+    expect(xml).toContain('/embeds/b.excalidraw')
+    expect(xml).not.toContain('https://cdn/x')
+  })
+
   it('lists each pending proposal with its target', () => {
     const xml = buildReviewXml({
       batches: [

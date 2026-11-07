@@ -188,9 +188,12 @@ export const fileReferences = pgTable(
       withTimezone: false,
       mode: 'date',
     }),
+    assetKey: text('asset_key'),
+    draftId: refText('draft_id'),
   },
   (table) => [
     index('file_references_file_url_idx').on(table.fileUrl),
+    index('file_references_asset_key_idx').on(table.assetKey),
     index('file_references_ref_idx').on(table.refId, table.refType),
     index('file_references_status_created_idx').on(
       table.status,

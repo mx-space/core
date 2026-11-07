@@ -31,6 +31,8 @@ const createRef = (
   mimeType: null,
   byteSize: null,
   detachedAt: null,
+  assetKey: null,
+  draftId: null,
   createdAt: now,
   ...overrides,
 })

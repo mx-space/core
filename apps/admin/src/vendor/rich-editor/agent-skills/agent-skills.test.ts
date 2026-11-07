@@ -87,6 +87,22 @@ describe('buildAgentSkillSystemMessages', () => {
 })
 
 describe('bundledAgentSkills', () => {
+  it('ships the Excalidraw editing skill', () => {
+    expect(bundledAgentSkills.map((skill) => skill.name)).toContain(
+      'excalidraw-editing',
+    )
+  })
+
+  it('teaches dynamic components through /embeds files, not the old tools', () => {
+    const skill = bundledAgentSkills.find(
+      (item) => item.name === 'dynamic-component-design',
+    )!
+    expect(skill.description).not.toContain('preview_dynamic_component')
+    expect(skill.body).toContain('/embeds/')
+    expect(skill.body).toContain('.meta.json')
+    expect(skill.body).not.toContain('preview_dynamic_component')
+  })
+
   it('ships the dynamic component design skill', () => {
     expect(bundledAgentSkills.map((skill) => skill.name)).toContain(
       'dynamic-component-design',

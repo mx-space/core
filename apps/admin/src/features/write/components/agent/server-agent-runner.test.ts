@@ -174,6 +174,47 @@ describe('createServerAgentRunner', () => {
     await done
   })
 
+  it('forwards images a client tool returned', async () => {
+    const fake = createFakeSocket()
+    const bash = tool({
+      execute: vi.fn(async () => ({
+        content: 'shown',
+        images: [
+          { mimeType: 'image/png', url: 'https://cdn.example.test/a.png' },
+        ],
+        ok: true as const,
+      })),
+    })
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [bash],
+    })
+
+    const done = runner.run(input)
+    await flush()
+    const runId = fake.requested[0].payload.runId
+    fake.deliver('agent.tool.call', {
+      runId,
+      toolCallId: 'c1',
+      name: 'bash',
+      arguments: { command: 'view /embeds/a.png' },
+    })
+    await flush()
+
+    expect(fake.requested).toContainEqual({
+      event: 'agent.tool.result',
+      payload: expect.objectContaining({
+        images: [
+          { mimeType: 'image/png', url: 'https://cdn.example.test/a.png' },
+        ],
+        toolCallId: 'c1',
+      }),
+    })
+    fake.deliver('agent.done', { runId, status: 'complete' })
+    await done
+  })
+
   it('marks a server tool row from its result event without running anything locally', async () => {
     const fake = createFakeSocket()
     const store = createAgentStore()

@@ -17,6 +17,8 @@ const ASPECT_RATIOS: ImageAspectRatio[] = [
 
 interface BuildImageToolsOptions {
   refId?: string
+  getDraftId?: () => string | undefined
+  saveToWorkspace?: (url: string, name: string) => Promise<string>
 }
 
 function toError(error: string, message: string): AgentToolResult {
@@ -31,6 +33,8 @@ function isImageAspectRatio(value: unknown): value is ImageAspectRatio {
 
 export function buildImageTools({
   refId,
+  getDraftId,
+  saveToWorkspace,
 }: BuildImageToolsOptions = {}): AgentToolConfig[] {
   return [
     {
@@ -48,6 +52,11 @@ export function buildImageTools({
           },
           prompt: {
             description: '图片内容的文字描述',
+            type: 'string',
+          },
+          name: {
+            description:
+              '保存到 /embeds 的文件名（不含扩展名），省略则自动命名',
             type: 'string',
           },
         },
@@ -73,8 +82,25 @@ export function buildImageTools({
             purpose: 'inline',
             refId,
             requestId: crypto.randomUUID(),
+            ...(saveToWorkspace
+              ? { assetKey: crypto.randomUUID(), draftId: getDraftId?.() }
+              : {}),
           })
           const result = await waitForImageTask(taskId)
+
+          if (saveToWorkspace) {
+            const name = (params as { name?: unknown } | null)?.name
+            const path = await saveToWorkspace(
+              result.url,
+              typeof name === 'string' && name.trim()
+                ? name.trim()
+                : 'generated',
+            )
+            return {
+              content: `Generated image saved as ${path}. Insert it by adding <img src="${path}" alt="..." /> to /doc.xml with bash; view ${path} shows it to you.`,
+              ok: true,
+            }
+          }
 
           return {
             content: `Generated image ready at URL: ${result.url}\nTo insert it into the document, edit /doc.xml with bash and add <img src="${result.url}" alt="..." />.`,

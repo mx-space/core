@@ -9,6 +9,7 @@ export interface FileReconcileResult {
   paths: string[]
 }
 
+const EMBEDS_DIR = '/embeds/'
 const REMINDER_OPEN = '<system-reminder>\n'
 const REMINDER_CLOSE = '\n</system-reminder>\n\n'
 
@@ -42,6 +43,10 @@ export function reconcileFiles(
       sections.push(`${path} (attached by the user):\n${content}`)
     } else if (previous === content) {
       continue
+    } else if (path.startsWith(EMBEDS_DIR)) {
+      sections.push(
+        `${path} has a new version since you last saw it, not through your own tool calls. cat it again if you need its content.`,
+      )
     } else {
       sections.push(describeChange(path, previous, content))
     }

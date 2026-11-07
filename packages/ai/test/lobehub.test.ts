@@ -114,6 +114,28 @@ describe('LobeHub runtime', () => {
     expect(request.body).toMatchObject({ model: 'test-model', reasoning_effort: 'high', messages: [{ role: 'user', content: 'hello' }] })
   })
 
+  const usage0 = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }
+  const toolTurn = (ids: string[]) => ({ role: 'assistant', content: ids.map((id) => ({ type: 'toolCall', id, name: 'bash', arguments: {} })), api: 'openai-completions', provider: 'lobehub', model: 'test-model', usage: usage0, stopReason: 'toolUse', timestamp: 0 })
+  const toolImageResult = (id: string, data: string) => ({ role: 'toolResult', toolCallId: id, toolName: 'bash', isError: false, timestamp: 0, content: [{ type: 'text', text: id }, { type: 'image', data, mimeType: 'image/png' }] })
+  const streamed = async (messages: unknown[]) => {
+    responseBody = 'event: text\ndata: "ok"\n\nevent: stop\ndata: "stop"\n\n'
+    for await (const _ of runtime().streamMessage!({ systemPrompt: 'sys', messages } as any)) void _
+    return request.body.messages as any[]
+  }
+
+  it('follows a tool result that carries images with a user message holding them', async () => {
+    const messages = await streamed([{ role: 'user', content: 'look', timestamp: 0 }, toolTurn(['call_1']), toolImageResult('call_1', 'QUJD')])
+    const toolIndex = messages.findIndex((m) => m.role === 'tool')
+    expect(messages[toolIndex].content).toBe('call_1')
+    expect(messages[toolIndex + 1]).toEqual({ role: 'user', content: [{ type: 'text', text: 'Images returned by tool call call_1:' }, { type: 'image_url', image_url: { url: 'data:image/png;base64,QUJD' } }] })
+  })
+
+  it('keeps parallel tool results together and sends their images after the last one', async () => {
+    const messages = await streamed([{ role: 'user', content: 'look', timestamp: 0 }, toolTurn(['c1', 'c2']), toolImageResult('c1', 'QQ=='), toolImageResult('c2', 'Qg==')])
+    expect(messages.map((m) => m.role).slice(-3)).toEqual(['tool', 'tool', 'user'])
+    expect(messages.at(-1).content.filter((p: any) => p.type === 'image_url')).toHaveLength(2)
+  })
+
   it('assembles fragmented tool arguments for validated structured generation', async () => {
     responseBody = 'event: tool_calls\ndata: [{"index":0,"id":"call_1","function":{"name":"structured_output","arguments":"{\\"answer\\":"}}]\n\nevent: tool_calls\ndata: [{"index":0,"function":{"arguments":"42}"}}]\n\nevent: stop\ndata: "tool_calls"\n\n'
     const result = await runtime().generateStructured({ prompt: 'answer', schema: Type.Object({ answer: Type.Number() }) })

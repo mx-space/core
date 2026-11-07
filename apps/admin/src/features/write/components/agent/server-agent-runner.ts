@@ -15,6 +15,7 @@ import {
   type AgentServerEvent,
   type AgentSteerPayload,
   type AgentToolCallPayload,
+  type AgentToolImage,
   type AgentToolResultPayload,
   AgentWsEvents,
 } from '@mx-space/ai'
@@ -175,6 +176,9 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
       }
 
       const content = result.ok ? result.content : JSON.stringify(result.error)
+      const images = result.ok
+        ? (result as { images?: AgentToolImage[] }).images
+        : undefined
       view.settleItem(call.toolCallId, content, !result.ok)
       const files = tool ? config.collectFiles?.(call.name) : undefined
       try {
@@ -188,6 +192,7 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
                   }),
                 }
               : {}),
+            ...(images?.length ? { images } : {}),
             isError: !result.ok,
             runId,
             toolCallId: call.toolCallId,

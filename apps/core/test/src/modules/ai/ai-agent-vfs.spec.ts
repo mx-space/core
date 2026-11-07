@@ -45,6 +45,26 @@ describe('reconcileFiles', () => {
     expect(result.paths).toEqual(['/doc.xml'])
   })
 
+  it('reports a new version of an embedded file in one line, without a diff', () => {
+    const result = reconcileFiles(
+      { '/embeds/x.excalidraw': 'asset-1 https://cdn.example.test/v1.json' },
+      [
+        {
+          path: '/embeds/x.excalidraw',
+          content: 'asset-1 https://cdn.example.test/v2.json',
+        },
+      ],
+    )
+
+    expect(result.reminder).toContain('/embeds/x.excalidraw')
+    expect(result.reminder).toContain('new version')
+    expect(result.reminder).not.toContain('```diff')
+    expect(result.reminder).not.toContain('v1.json')
+    expect(result.known['/embeds/x.excalidraw']).toBe(
+      'asset-1 https://cdn.example.test/v2.json',
+    )
+  })
+
   it('stays silent when a read file is unchanged', () => {
     const result = reconcileFiles({ '/doc.xml': DOC }, [
       { path: '/doc.xml', content: DOC },

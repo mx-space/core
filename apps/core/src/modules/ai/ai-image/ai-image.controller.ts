@@ -79,6 +79,7 @@ export class AiImageController {
       providerParams: body.providerParams,
       refId: body.refId,
       draftId: body.draftId,
+      assetKey: body.assetKey,
       title: body.title,
       summary: body.summary,
       requestId: body.requestId,

@@ -36,6 +36,14 @@ export function buildDocumentBashSystemMessages(
     '- Mx custom blocks use <node type="..." data="{...}" />. data is a JSON string escaped as an XML attribute. Do not invent <map> or <afilmory> tags.',
     '- Map: <node type="map" data="{...}" /> with title, pois, track, view.',
     '- Afilmory: <node type="afilmory" data="{...}" /> with baseUrl, source, layout, title, caption.',
+    '',
+    'Embedded files:',
+    '- Drawings, components and images stored on this site appear as files under /embeds/, and /doc.xml refers to them by path: <excalidraw>/embeds/<id>.excalidraw</excalidraw>, <dynamic url="/embeds/<id>.js" …>, <img src="/embeds/<id>.png" />.',
+    '- /embeds/<id>.excalidraw is the drawing as JSON; load_skill "excalidraw-editing" before changing one.',
+    '- /embeds/<id>.js is a component source and /embeds/<id>.meta.json its catalog name, description and propsSchema; load_skill "dynamic-component-design" before changing one.',
+    '- Images, videos and other files are read-only; cat shows their type, size and alt. Run view /embeds/<id>.png to look at an image.',
+    '- Saving a changed file uploads it as a new version and the block points at it; nothing on the live site is overwritten. To copy, cp to a new name and reference the new path from a new block. A block that names a missing file is refused.',
+    '- A file ending in .error explains why that embed could not be loaded; its block keeps its original address and cannot be edited.',
   ].join('\n')
 
   return [{ content, cacheBreakpoint: true, role: 'system' }]

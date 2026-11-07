@@ -76,7 +76,6 @@ export function AgentPanel({ agent }: AgentPanelProps) {
         sessions={agent.sessions}
       />
       <MessageList
-        onPublishDynamic={agent.publishDynamic}
         isHydrating={agent.isHydrating}
         onAcceptBatch={agent.acceptBatch}
         onReapplyBatch={agent.reapplyBatch}

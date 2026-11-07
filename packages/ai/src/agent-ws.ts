@@ -59,12 +59,18 @@ export type AgentRunAck =
   | { ok: false; code: 'FILE_BASE_MISMATCH'; paths: string[] }
   | { ok: false; code: string }
 
+export interface AgentToolImage {
+  url: string
+  mimeType?: string
+}
+
 export interface AgentToolResultPayload {
   runId: string
   toolCallId: string
   content: string
   isError: boolean
   files?: AgentFileFrame[]
+  images?: AgentToolImage[]
 }
 
 export interface AgentSteerPayload {

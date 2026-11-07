@@ -31,15 +31,15 @@ import {
   buildSelectionXml,
   createDocumentBashWorkspace,
 } from '~/vendor/rich-editor/utils/document-bash'
-import { buildDynamicTools } from '~/vendor/rich-editor/utils/dynamic-tools'
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
-import { createDynamicPublisher } from './publish-dynamic-component'
 import type { SelectedAgentModel, UserChatBubble } from './types'
+import { useWriteEmbeds } from './use-write-embeds'
 import { createWriteAgentRuntime } from './write-agent-runtime'
 
 export interface WriteAgentController {
+  addEmbedFile: (url: string, name: string) => Promise<string>
   store: AgentStore
   agentRuntime: AgentRuntime | null
   onAgentLoopReady: (loop: AgentLoopHandle | null) => void
@@ -66,8 +66,6 @@ export interface WriteAgentController {
   reapplyBatch: (batchId: string) => void
   reapplyToolGroup: (items: ToolCallGroupItem[]) => void
   documentBashTool: AgentToolConfig
-  dynamicTools: AgentToolConfig[]
-  publishDynamic: (item: ToolCallGroupItem) => Promise<void>
 }
 
 function isSelectedAgentModelAvailable(
@@ -100,6 +98,7 @@ export function useWriteAgent(opts: {
   document?: AgentDocument
   documentId?: string
   documentKind: 'note' | 'page' | 'post'
+  draftId?: string
   ensureDocument?: () => Promise<boolean>
 }): WriteAgentController {
   const { t } = useI18n()
@@ -155,16 +154,17 @@ export function useWriteAgent(opts: {
   ensureDocumentRef.current = opts.ensureDocument
   const turnRef = useRef<AgentTurn | null>(null)
   const lexicalEditorRef = useRef<LexicalEditor | null>(null)
-  const dynamicTools = useMemo(
-    () => buildDynamicTools(() => lexicalEditorRef.current),
-    [],
-  )
+  const { embeds, registerDynamics } = useWriteEmbeds({
+    draftId: opts.draftId,
+    lexicalEditorRef,
+  })
   const documentBash = useMemo(
     () =>
       createDocumentBashWorkspace({
         applyDocument: (target, focusBlockId) => {
           if (!turnRef.current) throw new Error('No agent turn is open')
           turnRef.current.apply(target, focusBlockId)
+          registerDynamics(target.root)
         },
         ownsWrites: () => turnRef.current !== null,
         onSeed: () => turnRef.current?.markView(),
@@ -185,7 +185,9 @@ export function useWriteAgent(opts: {
             store.getState().reviewState,
           )
         },
-        getReviewXml: () => buildReviewXml(store.getState().reviewState),
+        getReviewXml: () =>
+          buildReviewXml(store.getState().reviewState, embeds.viewNode),
+        embeds,
         readonlyFiles: bundledAgentSkillFiles,
         getSelectionXml: () => {
           const editor = lexicalEditorRef.current
@@ -196,17 +198,16 @@ export function useWriteAgent(opts: {
             liveSelection ??
             editor.getEditorState().read(() => $captureSelection())
           return buildSelectionXml(
-            projectAgentDiffNodesToFactualState(
-              editor.getEditorState().toJSON(),
-            ),
+            embeds.toView(
+              projectAgentDiffNodesToFactualState(
+                editor.getEditorState().toJSON(),
+              ),
+              { remember: false },
+            ).state,
             selection,
           )
         },
       }),
-    [store],
-  )
-  const publishDynamic = useMemo(
-    () => createDynamicPublisher(store, () => lexicalEditorRef.current),
     [store],
   )
   const [agentReady, setAgentReady] = useState(false)
@@ -236,7 +237,7 @@ export function useWriteAgent(opts: {
   }
 
   const describeToolCall = (name: string, params: Record<string, unknown>) => {
-    const tool = [documentBash.tool, ...dynamicTools].find(
+    const tool = [documentBash.tool].find(
       (candidate) => candidate.name === name,
     )
     try {
@@ -385,7 +386,11 @@ export function useWriteAgent(opts: {
   // resolution. Applying ops to the document here as well double-applies
   // (or conflicts, since pending blocks are replaced by diff decorators).
   const acceptBatch = (batchId: string) => {
+    const batch = store
+      .getState()
+      .reviewState?.batches.find((item) => item.id === batchId)
     store.getState().acceptReviewBatch(batchId)
+    if (batch) registerDynamics(batch.entries.map((entry) => entry.op))
     toast.success(t('write.agent.toast.suggestionApplied'))
   }
 
@@ -446,6 +451,7 @@ export function useWriteAgent(opts: {
   return {
     abort,
     acceptBatch,
+    addEmbedFile: documentBash.addEmbedFile,
     activeSessionId: sessionManager.activeSessionId,
     agentReady,
     createSession: sessionManager.createSession,
@@ -458,8 +464,6 @@ export function useWriteAgent(opts: {
     onEditorReady,
     agentRuntime,
     documentBashTool: documentBash.tool,
-    dynamicTools,
-    publishDynamic,
     providerGroups,
     reapplyBatch,
     reapplyToolGroup,

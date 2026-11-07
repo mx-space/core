@@ -305,6 +305,57 @@ describe('FileService.uploadBuffer', () => {
     })
   })
 
+  it('tags an S3 upload with its asset key and owning draft', async () => {
+    const fileReferenceService = {
+      ...createFileReferenceService(),
+      tagUploadedAsset: vi.fn().mockResolvedValue(undefined),
+    }
+    const service = new FileService(
+      s3Config('{name}{ext}') as any,
+      fileReferenceService as any,
+    )
+
+    const result = await service.uploadBuffer(Buffer.from('scene'), {
+      type: 'file',
+      originalFilename: 'scene.excalidraw',
+      contentType: 'application/json',
+      objectKey: 'versions/abc.excalidraw',
+      asset: {
+        assetKey: 'asset-1',
+        draftId: '42',
+        parentUrl: 'https://cdn.example.com/old.excalidraw',
+      },
+    })
+
+    expect(fileReferenceService.tagUploadedAsset).toHaveBeenCalledWith(
+      result.url,
+      {
+        assetKey: 'asset-1',
+        draftId: '42',
+        parentUrl: 'https://cdn.example.com/old.excalidraw',
+      },
+    )
+  })
+
+  it('does not tag uploads without asset information', async () => {
+    const fileReferenceService = {
+      ...createFileReferenceService(),
+      tagUploadedAsset: vi.fn(),
+    }
+    const service = new FileService(
+      s3Config('{name}{ext}') as any,
+      fileReferenceService as any,
+    )
+
+    await service.uploadBuffer(Buffer.from('img'), {
+      type: 'image',
+      originalFilename: 'a.png',
+      contentType: 'image/png',
+    })
+
+    expect(fileReferenceService.tagUploadedAsset).not.toHaveBeenCalled()
+  })
+
   it('falls back to local storage and registers a pending reference', async () => {
     const configService = {
       get: vi.fn(async (key: string) => {

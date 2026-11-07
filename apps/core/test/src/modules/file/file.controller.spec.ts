@@ -609,6 +609,40 @@ describe('FileController', () => {
       )
     })
 
+    it('passes the asset key, owning draft and parent version to the upload', async () => {
+      const uploadBuffer = vi.fn().mockResolvedValue({ url: 'u', name: 'n' })
+      const controller = new FileController(
+        { uploadBuffer } as any,
+        {
+          getAndValidMultipartField: vi.fn().mockResolvedValue({
+            filename: 'scene.excalidraw',
+            file: Readable.from([Buffer.from('{}')]),
+          }),
+        } as any,
+        {} as any,
+        {} as any,
+        { get: localConfig } as any,
+        passthroughMedia as any,
+      )
+
+      await controller.upload(
+        {
+          type: 'file',
+          immutable: 'true',
+          assetKey: 'asset-1',
+          draftId: '42',
+          parentUrl: 'https://cdn.example.com/old.excalidraw',
+        } as any,
+        {} as any,
+      )
+
+      expect(uploadBuffer.mock.calls[0][1].asset).toEqual({
+        assetKey: 'asset-1',
+        draftId: '42',
+        parentUrl: 'https://cdn.example.com/old.excalidraw',
+      })
+    })
+
     it('does not post-process non-image file uploads', async () => {
       const processImage = vi.fn()
       const controller = new FileController(

@@ -78,6 +78,18 @@ const toolResultSchema = z.object({
   content: z.string(),
   isError: z.boolean(),
   files: z.array(fileFrame).optional(),
+  images: z
+    .array(
+      z.object({
+        url: z.url({ protocol: /^https?$/ }),
+        mimeType: z
+          .string()
+          .regex(/^image\//)
+          .optional(),
+      }),
+    )
+    .max(8)
+    .optional(),
 })
 
 const cancelSchema = z.object({ runId: z.string().min(1) })

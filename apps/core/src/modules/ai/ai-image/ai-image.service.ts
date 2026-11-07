@@ -111,6 +111,14 @@ export class AiImageService implements OnModuleInit {
           type: 'image',
           originalFilename: `ai-${payload.purpose}-${payload.requestId}.${ext}`,
           contentType: image.mimeType,
+          ...(payload.assetKey
+            ? {
+                asset: {
+                  assetKey: payload.assetKey,
+                  draftId: payload.draftId,
+                },
+              }
+            : {}),
         })
 
         await context.setResult({

@@ -93,6 +93,7 @@ export interface ImageGenerationTaskPayload {
   providerParams?: Record<string, unknown>
   refId?: string
   draftId?: string
+  assetKey?: string
   title?: string
   summary?: string
   requestId: string

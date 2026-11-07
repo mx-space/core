@@ -112,7 +112,10 @@ export function getFilesByType(type: FileType) {
 }
 
 interface UploadQueryOptions {
+  assetKey?: string
+  draftId?: string
   immutable?: boolean
+  parentUrl?: string
   raw?: boolean
   type?: FileType
 }
@@ -122,6 +125,9 @@ function buildUploadQuery(options: UploadQueryOptions) {
   if (options.type) query.set('type', options.type)
   if (options.immutable) query.set('immutable', 'true')
   if (options.raw) query.set('raw', 'true')
+  if (options.assetKey) query.set('assetKey', options.assetKey)
+  if (options.draftId) query.set('draftId', options.draftId)
+  if (options.parentUrl) query.set('parentUrl', options.parentUrl)
   return query
 }
 
@@ -144,6 +150,7 @@ export function uploadFile(
 export function uploadFileWithProgress(
   file: File,
   options: {
+    draftId?: string
     onProgress: (progress: number) => void
     raw?: boolean
     type?: FileType

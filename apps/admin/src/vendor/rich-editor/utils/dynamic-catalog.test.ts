@@ -5,6 +5,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { ApiRequestError } from '~/api/http'
 
 import {
+  allowDynamicVersionHosts,
   buildDynamicCatalogSystemMessage,
   currentCatalogEntries,
   isAllowedDynamicUrl,
@@ -215,4 +216,18 @@ it('lists only current versions in the agent catalog and asks it to reuse them',
   expect(content).not.toContain(`url: ${v1.url}`)
   expect(content).not.toContain(`url: ${v2.url}`)
   expect(content).toMatch(/reuse/i)
+})
+
+it('allows uploaded component versions on the site storage hosts', () => {
+  const version = 'https://cdn.site.test/versions/0b1c.js'
+  expect(isAllowedDynamicUrl(version)).toBe(false)
+
+  allowDynamicVersionHosts(['cdn.site.test'])
+
+  expect(isAllowedDynamicUrl(version)).toBe(true)
+  expect(isAllowedDynamicUrl('https://cdn.site.test/uploads/x.js')).toBe(false)
+  expect(isAllowedDynamicUrl('https://cdn.site.test/versions/x.json')).toBe(
+    false,
+  )
+  expect(isAllowedDynamicUrl('https://other.test/versions/0b1c.js')).toBe(false)
 })

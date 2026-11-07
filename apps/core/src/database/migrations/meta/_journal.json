@@ -344,6 +344,13 @@
       "when": 1793984466102,
       "tag": "0048_agent_conversation_rebuild",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1794100000000,
+      "tag": "0049_file_reference_asset",
+      "breakpoints": true
     }
   ]
 }

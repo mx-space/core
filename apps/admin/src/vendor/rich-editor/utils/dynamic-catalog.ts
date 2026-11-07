@@ -80,6 +80,14 @@ export function primeDynamicCatalog(catalog: DynamicCatalog) {
   cachedCatalogPromise = Promise.resolve(catalog)
 }
 
+const versionHosts = new Set<string>()
+
+// Agent revisions live at immutable versions/<uuid>.js keys before they are
+// cataloged; only the owner can write there, so admin may render them.
+export function allowDynamicVersionHosts(hosts: readonly string[]) {
+  for (const host of hosts) versionHosts.add(host)
+}
+
 export function isAllowedDynamicUrl(url: string): boolean {
   // primary allowlist: exact membership in the fetched catalog (covers S3/CDN
   // hosted widgets whose origin differs from the API)
@@ -87,6 +95,11 @@ export function isAllowedDynamicUrl(url: string): boolean {
   try {
     const api = new URL(API_URL)
     const resolved = new URL(url, api.origin)
+    if (
+      versionHosts.has(resolved.host) &&
+      /\/versions\/[^/]+\.js$/.test(resolved.pathname)
+    )
+      return true
     return (
       resolved.origin === api.origin && resolved.pathname.includes('/objects/')
     )
@@ -107,7 +120,7 @@ export function buildDynamicCatalogSystemMessage(
 
   return {
     role: 'system',
-    content: `## Dynamic Component Catalog\n\nThe following interactive components are available for <dynamic> nodes. Use exactly these URLs and the listed initial-height; props must conform to each schema. Reuse a listed component whenever it fits, passing the post's content through props, before writing a new one with preview_dynamic_component.\n\n${entries}`,
+    content: `## Dynamic Component Catalog\n\nThe following interactive components are available for <dynamic> nodes. Use exactly these URLs and the listed initial-height; props must conform to each schema. Reuse a listed component whenever it fits, passing the post's content through props, before writing a new one as /embeds/<name>.js with its /embeds/<name>.meta.json.\n\n${entries}`,
   }
 }
 

@@ -32,6 +32,7 @@ import { resolveUniqueObjectKey } from '~/utils/unique-object-key.util'
 import { ConfigsService } from '../configs/configs.service'
 import type { FileType } from './file.type'
 import { FileReferenceService } from './file-reference.service'
+import type { UploadedAssetTag } from './file-reference.types'
 
 @Injectable()
 export class FileService {
@@ -210,6 +211,7 @@ export class FileService {
       originalFilename?: string
       contentType: string
       objectKey?: string
+      asset?: UploadedAssetTag
     },
   ): Promise<{
     url: string
@@ -299,6 +301,8 @@ export class FileService {
         filename,
         objectKey,
       )
+      if (opts.asset)
+        await this.fileReferenceService.tagUploadedAsset(s3Url, opts.asset)
 
       return {
         url: s3Url,
@@ -338,6 +342,8 @@ export class FileService {
       relativePath,
       Readable.from(buffer),
     )
+    if (opts.asset)
+      await this.fileReferenceService.tagUploadedAsset(fileUrl, opts.asset)
 
     return {
       url: fileUrl,
