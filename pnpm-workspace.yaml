@@ -27,11 +27,11 @@ overrides:
   'eslint-plugin-react-hooks>zod-validation-error': 4.0.2
   'get-pixels@^3>request': ./external/request
   # Keep Better Auth server, client, and plugins on the same security release.
-  better-auth: 1.7.16
-  '@better-auth/api-key': 1.7.16
-  '@better-auth/core': 1.7.16
-  '@better-auth/expo': 1.7.16
-  '@better-auth/passkey': 1.7.16
+  better-auth: 1.7.18
+  '@better-auth/api-key': 1.7.18
+  '@better-auth/core': 1.7.18
+  '@better-auth/expo': 1.7.18
+  '@better-auth/passkey': 1.7.18
   kysely: 0.29.8
   mongodb: ~7.7.0
   pino: ./external/pino
