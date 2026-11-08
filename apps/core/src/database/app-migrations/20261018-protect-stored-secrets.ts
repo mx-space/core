@@ -1,9 +1,5 @@
 import { defaultKeyHasher } from '@better-auth/api-key'
-import {
-  parseEnvelope,
-  symmetricDecrypt,
-  symmetricEncrypt,
-} from 'better-auth/crypto'
+import { symmetricEncrypt } from 'better-auth/crypto'
 import { eq } from 'drizzle-orm'
 
 import { SECURITY } from '~/app.config'
@@ -16,6 +12,7 @@ import {
 } from '~/database/schema'
 import { HASHED_API_KEY_CONFIG_ID } from '~/modules/auth/auth.constant'
 import { encryptObject } from '~/modules/configs/configs.encrypt.util'
+import { unwrapOAuthToken } from '~/upgrade/oauth-token'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 import type { AppMigration } from './types'
@@ -96,14 +93,11 @@ export const migration: AppMigration = {
         for (const field of ['accessToken', 'refreshToken'] as const) {
           const token = row[field]
           if (!token) continue
-          if (token.startsWith('$ba$')) {
-            if (!parseEnvelope(token))
-              throw new Error('Malformed OAuth token envelope')
-            await symmetricDecrypt({ key: oauthKey, data: token })
-          } else {
+          const plain = await unwrapOAuthToken(token, SECURITY.jwtSecret)
+          if (!token.startsWith('$ba$')) {
             patch[field] = await symmetricEncrypt({
               key: oauthKey,
-              data: token,
+              data: plain,
             })
           }
         }

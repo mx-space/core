@@ -181,7 +181,9 @@ flowchart TD
 用户明确要求本 PR 删除非加密运行，已移除 enable/V2 模式分支、明文/ECB 写入、机器 ID 与短密钥派生；配置、Snippet、Webhook 固定 GCM，API Key 固定哈希，OAuth 不再在数据库 hook 中解密后写入。旧数据读取、离线检查和维护迁移保留。旧 true 标记仅提示弃用，显式 false/无效标记拒绝启动；字段密钥和 JWT 同时必填。
 
 - 定向 49 项测试通过，包括独立进程配置拒绝、无开关启动、历史 ECB、事务迁移与构建后 CLI 恢复演练。旧实现下新增启动测试有 6 项失败，固定 V2 写入测试亦先失败。
-- 完整 Core 回归：431 个文件、3573 项通过，11 项跳过；仍显式排除原有 Agent DI 夹具。JWT helper 另 4 项通过。
+- 完整 Core 回归：431 个文件、3576 项通过，11 项跳过；仍显式排除原有 Agent DI 夹具。JWT helper 另 4 项通过。
 - Core 生产构建、Core/E2E 类型检查、API envelope/验证配对检查、50 个迁移 lint、冻结 lockfile 校验通过；构建产物已不含关闭加密报错或 machine-id 回退。
 - 两份 Compose 均验证缺秘密拒绝、别名和主键优先级、app/migrate 同值；示例不再带关闭开关或公共生产秘密。PM2 与 CI/release 测试环境已同步。
 - mx-docs 的 3 项测试、build/check/links/pangu/lint 通过，生成 llms 内容包含新要求；v17.0.4 页面明确固定历史行为，当前开发分支说明明确强制加密已实现。保留既有 hint 和死链。
+
+最终独立审阅：无 Critical、1 项 Important、无 Minor。保留的旧凭据迁移会将历史 Better Auth hex 密文当作明文二次加密；已复用严格解封装逻辑，新增历史 token 保留/幂等、错误原 JWT、截断密文整批回滚 3 项行为回归，均先失败后通过。修复后完整回归为 431 个文件、3576 项通过、11 项跳过，排除项不变；重新构建和类型检查通过。未再次派发审阅，未操作生产。
