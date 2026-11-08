@@ -5,9 +5,24 @@ import { promisify } from 'node:util'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { runUpgradeCli } from '~/upgrade/cli'
+import { runUpgradeCli, upgradeConfigFromEnv } from '~/upgrade/cli'
 
 describe('upgrade CLI isolated process', () => {
+  it('matches runtime enable-flag precedence and boolean boundaries', () => {
+    expect(
+      upgradeConfigFromEnv({
+        MX_ENCRYPT_KEY: 'ab'.repeat(32),
+        MX_ENCRYPT_ENABLE: '',
+        ENCRYPT_ENABLE: 'true',
+      }).enable,
+    ).toBe(true)
+    expect(
+      upgradeConfigFromEnv({
+        MX_ENCRYPT_KEY: 'ab'.repeat(32),
+        MX_ENCRYPT_ENABLE: '1',
+      }).enable,
+    ).toBe(false)
+  })
   let context: Awaited<ReturnType<typeof createPgTestDatabase>>
   beforeAll(async () => {
     context = await createPgTestDatabase('mx_upgrade_cli')

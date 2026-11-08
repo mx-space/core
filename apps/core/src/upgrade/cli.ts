@@ -8,11 +8,11 @@ import { readUpgradeState, type UpgradeConfig } from './readiness'
 
 export function upgradeConfigFromEnv(env: NodeJS.ProcessEnv): UpgradeConfig {
   const key = env.MX_ENCRYPT_KEY || env.ENCRYPT_KEY || ''
-  const enabled = env.MX_ENCRYPT_ENABLE ?? env.ENCRYPT_ENABLE
+  const enabled = env.MX_ENCRYPT_ENABLE || env.ENCRYPT_ENABLE
   return {
     key,
-    enable: enabled === undefined ? !!key : /^(?:true|1)$/i.test(enabled),
-    v2: /^(?:true|1)$/i.test(env.MX_SECRET_STORAGE_V2 ?? ''),
+    enable: enabled === undefined ? !!key : enabled === 'true',
+    v2: env.MX_SECRET_STORAGE_V2 === '1' || env.MX_SECRET_STORAGE_V2 === 'true',
     jwtSecret: env.JWT_SECRET || env.JWTSECRET || '',
     algorithm: env.ENCRYPT_ALGORITHM || 'aes-256-ecb',
   }
@@ -62,9 +62,7 @@ export async function runUpgradeCli(
     user: env.PG_USER || 'mx',
     password: env.PG_PASSWORD || 'mx',
     database: env.PG_DATABASE || 'mx_core',
-    ssl: /^(?:true|1)$/i.test(env.PG_SSL ?? '')
-      ? { rejectUnauthorized: false }
-      : false,
+    ssl: env.PG_SSL === 'true' ? { rejectUnauthorized: false } : false,
     max: 1,
     connectionTimeoutMillis: 10000,
   })

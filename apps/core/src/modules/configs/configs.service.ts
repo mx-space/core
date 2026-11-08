@@ -32,6 +32,7 @@ import {
 import { configDtoMapping, IConfig } from './configs.interface'
 import type { OAuthConfig } from './configs.schema'
 import {
+  canonicalConfigRows,
   normalizeLegacyConfig,
   normalizeLegacyPatch,
   updateLegacyMedia,
@@ -260,7 +261,13 @@ export class ConfigsService implements OnModuleInit {
       ),
     )
     const newData = updatedConfigRow.value as IConfig[T]
-    const mergedFullConfig = Object.assign({}, config, { [key]: newData })
+    const mergedFullConfig = normalizeLegacyConfig(
+      Object.assign(
+        {},
+        key === 'ai' ? canonicalConfigRows(config as IConfig) : config,
+        { [key]: decryptObject(cloneDeep(newData), key) },
+      ),
+    )
 
     await this.setConfig(mergedFullConfig)
     this.eventManager.emit(
