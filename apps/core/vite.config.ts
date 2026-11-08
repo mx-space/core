@@ -77,6 +77,7 @@ export default defineConfig(({ command }) => {
           input: {
             main: resolve(__dirname, 'src/main.ts'),
             migrate: resolve(__dirname, 'src/migrate.ts'),
+            upgrade: resolve(__dirname, 'src/upgrade.ts'),
             'app-migrate': resolve(__dirname, 'src/app-migrate.ts'),
           },
           output: {
