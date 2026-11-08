@@ -43,6 +43,10 @@ export async function startMain() {
     }
 
     logger.log('Secret encryption is enabled')
+  } else {
+    logger.warn(
+      'Secret encryption is disabled (legacy compatibility mode). v18 will require ENCRYPT_ENABLE=true and a 64-character hexadecimal ENCRYPT_KEY; keep your existing key when upgrading.',
+    )
   }
 
   DEBUG_MODE.memoryDump && registerForMemoryDump()

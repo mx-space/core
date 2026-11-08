@@ -14,7 +14,12 @@ export const mapString = (key: string) => {
 
 export class EncryptUtil {
   static assertConfigured() {
-    if (!ENCRYPT.enable || !/^[\da-f]{64}$/i.test(ENCRYPT.key)) {
+    if (!ENCRYPT.enable) {
+      throw new Error(
+        'Secret encryption is disabled; set MX_ENCRYPT_ENABLE=true or ENCRYPT_ENABLE=true',
+      )
+    }
+    if (!/^[\da-f]{64}$/i.test(ENCRYPT.key)) {
       throw new Error(
         'Storing secrets requires a 64-character hexadecimal encryption key',
       )
@@ -28,6 +33,14 @@ export class EncryptUtil {
   static encrypt<T>(data: T, context = ''): T {
     if (typeof data === 'string') {
       if (!data) return data
+      // TODO(v18): remove the legacy plaintext escape hatch and require encryption.
+      if (
+        !ENCRYPT.enable &&
+        !SECRET_STORAGE_V2 &&
+        !EncryptUtil.isEncryptedString(data)
+      ) {
+        return data
+      }
       EncryptUtil.assertConfigured()
       let plain: string = data
       if (EncryptUtil.isEncryptedString(data)) {

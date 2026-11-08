@@ -2,11 +2,19 @@
 
 Core protects recoverable credentials with authenticated encryption and stores API keys as hashes. This does not isolate the encryption key from a compromised application host; external KMS integration is a separate step.
 
+## Temporary legacy escape hatch (v17 only)
+
+Existing installations can temporarily keep `ENCRYPT_ENABLE=false` (or `MX_ENCRYPT_ENABLE=false`) with `MX_SECRET_STORAGE_V2=false`. In this mode, legacy configuration and Snippet secrets continue to be read and written as plaintext in PostgreSQL and Redis. API responses still mask sensitive configuration fields. Startup logs a deprecation warning.
+
+This escape hatch does not bypass encryption checks for existing ciphertext, v2 writes, the secret backfill, or features that explicitly require encrypted storage (such as LobeHub authorization). To read existing ciphertext, enable encryption with its original key. Enabling encryption with a missing or invalid key still fails rather than falling back to plaintext.
+
+**v18 will require field encryption and an explicit 64-character hexadecimal encryption key.** Before upgrading to v18, set `ENCRYPT_ENABLE=true` (or `MX_ENCRYPT_ENABLE=true`) and configure `ENCRYPT_KEY` (or `MX_ENCRYPT_KEY`). Keep the original key when one already exists; configure a random key only for installations that have never encrypted data. Follow the rollout below separately to activate v2 writes and backfill existing stored credentials.
+
 ## Rollout
 
 This is an expand-before-contract rollout. Two replicas may overlap, so the new reader ships before new writes.
 
-1. Configure an explicit random 32-byte encryption key as 64 hexadecimal characters (`MX_ENCRYPT_KEY` or `ENCRYPT_KEY`) and a stable `JWT_SECRET`. Keep the existing keys when upgrading an installed instance. Machine identity is not an encryption secret. Writes of non-empty sensitive configuration require encryption to be enabled.
+1. Configure an explicit random 32-byte encryption key as 64 hexadecimal characters (`MX_ENCRYPT_KEY` or `ENCRYPT_KEY`), enable encryption, and configure a stable `JWT_SECRET`. Keep the existing keys when upgrading an installed instance. Machine identity is not an encryption secret.
 2. Deploy this version to **every replica** with `MX_SECRET_STORAGE_V2=false` (the default). This immediately fixes configuration plaintext writes, removes secret logging, and masks token details. Config and Snippet writes retain the legacy cipher format during this phase. Webhook and OAuth writes retain their old format so the preceding release can still read them.
 3. After every replica has the compatible reader, deploy `MX_SECRET_STORAGE_V2=true` to every replica. New configuration/Snippet secrets use AES-256-GCM; Webhook credentials are encrypted; API keys use Better Auth hashes; OAuth access/refresh tokens use Better Auth authenticated encryption. All replicas must finish this step before the backfill, so no legacy writer can reintroduce plaintext afterwards.
 4. Run the one-shot data migration using the same database, encryption key and JWT secret as the application:
@@ -23,7 +31,7 @@ After activation, rollback only to a version that understands the new formats. D
 
 ## Storage and API behavior
 
-- Sensitive configuration is encrypted **after merging**, before PostgreSQL and Redis writes. Blank secret fields retain the existing value. Responses sanitize stored objects without decrypting them.
+- With encryption enabled, sensitive configuration is encrypted **after merging**, before PostgreSQL and Redis writes. Blank secret fields retain the existing value. Responses sanitize stored objects without decrypting them, including in legacy plaintext mode.
 - The v2 envelope carries a format version, key fingerprint, random 96-bit nonce, authentication tag and ciphertext. AAD binds configuration secrets to their field paths and Snippet/Webhook secrets to their record and field. A wrong key, invalid context, corrupt envelope or encryption failure is an error; it is never a plaintext fallback. Legacy plaintext/ECB reads remain for the staged upgrade.
 - API keys are displayed only in the creation response. List/detail responses contain only the visible prefix. `mx-hashed-v1` identifies hashed records, so a hash copied from the database cannot authenticate through the legacy verifier. The legacy reader is retained for upgrade compatibility; migrated records always use the hashed configuration. Revocation uses the key ID and closes associated WebSocket connections on every replica through the existing Redis bus.
 - Password hashes, OAuth tokens, ID tokens and raw provider payloads are excluded from session profile responses.

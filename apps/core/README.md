@@ -238,7 +238,7 @@ pnpm test:watch                                           # watch mode
 | `REDIS_PORT` | Redis port | `6379` |
 | `REDIS_PASSWORD` | Redis password | — |
 | `SNOWFLAKE_WORKER_ID` | Snowflake ID worker ID (0–1023) | Required |
-| `ENCRYPT_ENABLE` | Enable field encryption | `false` |
+| `ENCRYPT_ENABLE` | Enable field encryption; `false` is a temporary v17 plaintext escape hatch. Encryption is required starting in v18 | `false` |
 | `ENCRYPT_KEY` | 64-char hex encryption key | — |
 | `MX_SECRET_STORAGE_V2` | Enable new secret formats after all replicas are upgraded; see [rollout guide](../../docs/security-secret-storage.md) | `false` |
 | `THROTTLE_TTL` | Rate limit window (seconds) | `10` |
