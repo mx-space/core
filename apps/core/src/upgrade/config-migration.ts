@@ -3,12 +3,16 @@ import { isDeepStrictEqual } from 'node:util'
 import { SnowflakeGenerator } from '@mx-space/db-schema/id'
 import type { PoolClient } from 'pg'
 
-import { visitConfigSecrets } from '../modules/configs/configs.secret-paths'
 import {
-  canonicalConfigRows,
-  normalizeLegacyConfig,
-} from '../modules/configs/legacy-config.util'
+  isValidStoredConfig,
+  loadCurrentConfig,
+} from '../modules/configs/configs.current'
+import { configSchemaMapping } from '../modules/configs/configs.schema'
 import type { SecretCodec } from '../utils/secret-codec'
+import {
+  normalizeLegacyConfig,
+  visitLegacyConfigSecrets,
+} from './legacy-config'
 
 export class ConfigMigrationError extends Error {
   constructor(
@@ -56,12 +60,18 @@ export async function migrateConfiguration(
   const plaintext = Object.fromEntries(
     rows.map((row) => [
       row.name,
-      visitConfigSecrets(row.value, row.name, (secret, path) =>
+      visitLegacyConfigSecrets(row.value, row.name, (secret, path) =>
         decrypt(secret, path),
       ),
     ]),
   )
-  const canonical = canonicalConfigRows(normalizeLegacyConfig(plaintext))
+  const canonical = loadCurrentConfig(normalizeLegacyConfig(plaintext))
+  for (const key of Object.keys(
+    configSchemaMapping,
+  ) as (keyof typeof configSchemaMapping)[]) {
+    if (!isValidStoredConfig(key, canonical[key]))
+      throw new ConfigMigrationError('CONFIG_SHAPE_UNSUPPORTED', key)
+  }
   const names = new Set(rows.map((row) => row.name))
   if (names.has('imageGenerationOptions') || names.has('ttsOptions'))
     names.add('ai')
@@ -69,7 +79,7 @@ export async function migrateConfiguration(
   names.delete('ttsOptions')
   for (const name of names) {
     const value = canonical[name] ?? plaintext[name]
-    const encrypted = visitConfigSecrets(value, name, (secret, path) => {
+    const encrypted = visitLegacyConfigSecrets(value, name, (secret, path) => {
       const previous = path
         .split('.')
         .reduce<any>((node, part) => node?.[part], raw)

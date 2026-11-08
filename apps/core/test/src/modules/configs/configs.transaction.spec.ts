@@ -22,7 +22,9 @@ describe('configuration commit boundary', () => {
   const emit = vi.fn()
   const bump = vi.fn()
   beforeAll(async () => {
-    context = await createPgTestDatabase('mx_config_commit')
+    context = await createPgTestDatabase('mx_config_commit', {
+      configCurrent: true,
+    })
     repository = new OptionsRepository(context.db, new SnowflakeService())
     await context.pool
       .query(`CREATE FUNCTION reject_config_commit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.value->>'title' = 'reject-commit' OR NEW.value->>'webUrl' = 'https://reject-commit.example' THEN RAISE EXCEPTION 'test commit rejection'; END IF; RETURN NEW; END $$;
@@ -75,22 +77,18 @@ describe('configuration commit boundary', () => {
     expect(await repository.get('seo')).toMatchObject({ title: 'after-commit' })
     expect(JSON.parse(cache).seo.title).toBe('after-commit')
   })
-  it('keeps conflicting stored secrets readable and requires an explicit replacement to save', async () => {
+  it('refuses unmigrated configuration without modifying stored conflicting secrets', async () => {
     await repository.upsert('membership', {
       apiKey: 'canonical-key',
       dodoApiKey: 'legacy-key',
     })
     await expect(
       service.patchAndValid('membership', { enabled: true }),
-    ).rejects.toMatchObject({ code: 'CONFIG_VALIDATION_FAILED' })
+    ).rejects.toThrow('migration')
     expect(await repository.get('membership')).toMatchObject({
       apiKey: 'canonical-key',
       dodoApiKey: 'legacy-key',
     })
-    await service.patchAndValid('membership', { apiKey: 'chosen-key' })
-    const stored = await repository.get<Record<string, unknown>>('membership')
-    expect(stored).not.toHaveProperty('dodoApiKey')
-    expect((await service.get('membership')).apiKey).toBe('chosen-key')
   })
   it('orders cache publication before allowing the next configuration writer', async () => {
     let entered!: () => void

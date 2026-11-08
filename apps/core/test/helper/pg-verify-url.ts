@@ -5,6 +5,7 @@ import { Pool } from 'pg'
 
 import * as schema from '~/database/schema'
 import { runSchemaMigrationFiles } from '~/processors/database/schema-migrator'
+import { CONFIG_FORMAT_MIGRATION_ID } from '~/shared/config-format'
 
 export function requirePgVerifyUrl() {
   const verifyUrl = process.env.PG_VERIFY_URL
@@ -18,6 +19,7 @@ export function requirePgVerifyUrl() {
 
 interface PgTestDatabaseOptions {
   migrate?: boolean
+  configCurrent?: boolean
 }
 
 export interface PgTestDatabase {
@@ -73,6 +75,12 @@ export async function createPgTestDatabase(
         '../../src/database/migrations',
       )
       await runSchemaMigrationFiles(pool, migrationsFolder)
+      // Runtime configuration fixtures opt in to the current app-data marker.
+      // Schema-only and migration regression fixtures remain unprepared.
+      if (options.configCurrent === true)
+        await pool.query('INSERT INTO _app_migrations (id) VALUES ($1)', [
+          CONFIG_FORMAT_MIGRATION_ID,
+        ])
     }
 
     return {

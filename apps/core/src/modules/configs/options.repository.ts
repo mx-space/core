@@ -4,12 +4,13 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 import type { Pool } from 'pg'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
-import { options } from '~/database/schema'
+import { appMigrations, options } from '~/database/schema'
 import {
   BaseRepository,
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
+import { CONFIG_FORMAT_MIGRATION_ID } from '~/shared/config-format'
 import { CONFIG_UPGRADE_LOCK } from '~/shared/config-lock'
 import { type EntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
@@ -72,6 +73,15 @@ export class OptionsRepository extends BaseRepository {
   }
 
   async findAll(): Promise<OptionRow[]> {
+    const [current] = await this.db
+      .select({ id: appMigrations.id })
+      .from(appMigrations)
+      .where(eq(appMigrations.id, CONFIG_FORMAT_MIGRATION_ID))
+      .limit(1)
+    if (!current)
+      throw new Error(
+        'Configuration data migration is required; run node migrate.mjs before starting the app',
+      )
     const rows = await this.db.select().from(options).orderBy(options.name)
     return rows.map(mapRow)
   }

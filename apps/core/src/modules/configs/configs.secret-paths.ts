@@ -14,11 +14,7 @@ function getEncryptedPaths(): Set<string> {
     return cachedEncryptedPaths
   }
 
-  cachedEncryptedPaths = new Set<string>([
-    'thirdPartyServiceIntegration.githubToken',
-    'membership.dodoApiKey',
-    'membership.dodoWebhookKey',
-  ])
+  cachedEncryptedPaths = new Set<string>()
 
   for (const [sectionKey, schema] of Object.entries(configSchemaMapping)) {
     const paths = collectEncryptedPathsFromSchema(schema, sectionKey)
@@ -213,18 +209,24 @@ export function visitConfigSecrets<T>(
   value: T,
   prefix: string,
   visit: (secret: string, path: string) => string,
+  isSecretPath: (path: string) => boolean = isEncryptedPath,
 ): T {
   if (typeof value === 'string')
-    return (isEncryptedPath(prefix) ? visit(value, prefix) : value) as T
+    return (isSecretPath(prefix) ? visit(value, prefix) : value) as T
   if (Array.isArray(value))
     return value.map((item, index) =>
-      visitConfigSecrets(item, `${prefix}.${index}`, visit),
+      visitConfigSecrets(item, `${prefix}.${index}`, visit, isSecretPath),
     ) as T
   if (value && typeof value === 'object')
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        visitConfigSecrets(item, prefix ? `${prefix}.${key}` : key, visit),
+        visitConfigSecrets(
+          item,
+          prefix ? `${prefix}.${key}` : key,
+          visit,
+          isSecretPath,
+        ),
       ]),
     ) as T
   return value

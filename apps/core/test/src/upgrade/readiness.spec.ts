@@ -89,4 +89,12 @@ describe('standalone upgrade readiness', () => {
       prepared: false,
     })
   })
+  it('requires the current configuration migration even when an older preparation marker exists', async () => {
+    await context.pool.query(
+      "DELETE FROM options; INSERT INTO categories (id,name,slug) VALUES ('700','Existing','existing') ON CONFLICT DO NOTHING; INSERT INTO _app_migrations (id) VALUES ('20261108-v18-prepared') ON CONFLICT DO NOTHING",
+    )
+    const report = await readUpgradeState(context.pool, config)
+    expect(report.status).toBe('needs-action')
+    expect(report.issues).toContainEqual({ code: 'CONFIG_MIGRATION_MISSING' })
+  })
 })

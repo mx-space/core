@@ -47,6 +47,7 @@ export async function prepareUpgrade(
       'LEGACY_CONFIG',
       'METRICS_INCOMPLETE',
       'PREPARATION_MARKER_MISSING',
+      'CONFIG_MIGRATION_MISSING',
     ])
     const blocking = before.issues.find((issue) => !allowed.has(issue.code))
     if (blocking) throw new UpgradeError(blocking.code, blocking.path)
@@ -103,6 +104,10 @@ export async function prepareUpgrade(
       }
     }
     changed += await backfillAiMetrics(client)
+    await client.query(
+      'INSERT INTO _app_migrations (id) VALUES ($1) ON CONFLICT (id) DO NOTHING',
+      [CONFIG_FORMAT_MIGRATION_ID],
+    )
     const after = await readUpgradeState(client, config)
     const residual = after.issues.find(
       (issue) => issue.code !== 'PREPARATION_MARKER_MISSING',
@@ -114,10 +119,7 @@ export async function prepareUpgrade(
         [PREPARED_MIGRATION_ID],
       )
     }
-    await client.query(
-      'INSERT INTO _app_migrations (id) VALUES ($1) ON CONFLICT (id) DO NOTHING',
-      [CONFIG_FORMAT_MIGRATION_ID],
-    )
+
     await client.query(options.dryRun ? 'ROLLBACK' : 'COMMIT')
     return {
       status: options.dryRun ? 'would-be-ready' : 'prepared',

@@ -2,8 +2,8 @@
 
 This unreleased branch now requires field encryption, an explicit hex64 key
 and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
-flags and machine-ID fallback have been removed. SDK 6 cleanup and column
-removal remain future work. These commands are not part of released v17.0.4.
+flags and machine-ID fallback have been removed. Canonical configuration migration and strict configuration PATCH validation
+are also enforced here. SDK 6 cleanup and column removal remain future work. These commands are not part of released v17.0.4.
 No minimum released preparation tag is established yet. Build and deploy this
 preparation code to every replica before using it; do not publish or migrate
 production as part of reviewing this branch.
@@ -58,11 +58,24 @@ requires recovering the original secret or reauthorizing the account.
 
 ## Explicit preparation
 
-Obtain this build without starting business replicas. Run the standalone
-check and rotate a short JWT during maintenance first. Remove old disable
-flags, then deploy the required secrets and this runtime to all replicas.
-Every new write is V2 automatically. Confirm no old writer remains. Use the original field key; only an instance that
-has never encrypted data may generate its first random key.
+Obtain this build without starting business replicas. Run check and rotate a
+short JWT during maintenance first. Stop every old replica/background writer,
+remove old encryption flags and use the persisted field/JWT secrets. Run
+`node migrate.mjs` (source: `pnpm -C apps/core migrate`) before startup. The
+mandatory `20261109-canonical-config` app-data migration converts old config
+rows atomically, rebinds secrets to new paths, deletes retired rows and then
+records completion. No activation flag is needed. This contract step requires
+a maintenance cutover: old versions must not write afterwards.
+
+The current runtime has no config conversion or synthetic media sections.
+Retired section reads/writes fail with CONFIG_NOT_FOUND; old/unknown declared
+fields fail with CONFIG_VALIDATION_FAILED. Partial updates, blank secret
+retention and freeform record keys remain supported. Startup refuses to load
+configuration without the migration record. Historical conversion lives only
+in release/offline upgrade code, including nested legacy SMTP options.
+
+Continue the explicit credential/metrics preparation before starting new
+replicas. All writers must already be stopped or use the current formats.
 
 ```sh
 pnpm -C apps/core upgrade:prepare --all-replicas-v2 --dry-run
@@ -77,7 +90,7 @@ and membership options to canonical storage, encrypts at new paths, hashes
 API keys once, protects OAuth, and fills missing AI metrics. Existing client
 API-key strings continue to verify. It writes the new marker only after no
 residuals remain. Malformed data or wrong secrets roll the whole transaction
-back. Unknown fields retained by v17 are not made strict in this phase.
+back. Current configuration PATCH validation is strict.
 
 Dry-run executes and rolls back the complete transaction. `would-be-ready`
 does not mean a marker was persisted. Repeated successful preparation is
@@ -87,11 +100,10 @@ authentication, OAuth, configuration consumption and AI metadata. Do not flush
 all Redis state.
 
 A blank canonical credential falls back to a populated legacy credential.
-Different nonempty old/new values report `CONFIG_SECRET_CONFLICT` with the
-field path and stop preparation. Reads stay compatible; to resolve the
-conflict, explicitly save the intended canonical credential in settings,
-then run check again. An unrelated partial save of that section is rejected
-so it cannot silently delete the other secret.
+Different nonempty old/new values report CONFIG_SECRET_CONFLICT and roll back
+the configuration batch. Resolve the values in the old installation or an
+isolated maintenance environment, then rerun; the new runtime cannot repair
+old shapes via PATCH. Never overwrite a lost key with a newly generated key.
 
 ## Built artifacts and containers
 

@@ -19,9 +19,13 @@ import {
 } from '~/processors/redis/config-version.service'
 import { RedisService } from '~/processors/redis/redis.service'
 import { getRedisKey } from '~/utils/redis.util'
-import { camelcaseKeys } from '~/utils/tool.util'
 
 import { backupEncryptionPublicKey } from '../backup/backup-crypto'
+import {
+  loadCurrentConfig,
+  normalizeConfigPatch,
+  unknownConfigPaths,
+} from './configs.current'
 import { generateDefaultConfig } from './configs.default'
 import {
   decryptObject,
@@ -31,14 +35,6 @@ import {
 } from './configs.encrypt.util'
 import { configDtoMapping, IConfig } from './configs.interface'
 import type { OAuthConfig } from './configs.schema'
-import {
-  canonicalConfigRows,
-  LegacyConfigConflictError,
-  legacySecretConflicts,
-  normalizeLegacyConfig,
-  normalizeLegacyPatch,
-  updateLegacyMedia,
-} from './legacy-config.util'
 import { OptionsRepository } from './options.repository'
 
 const aggregateConfigKeys = new Set<keyof IConfig>([
@@ -79,7 +75,6 @@ export class ConfigsService implements OnModuleInit {
   private readonly logger = new Logger(ConfigsService.name)
   private stageCache = false
   private stagedConfig?: IConfig
-  private sourceConfig: Record<string, any> = {}
   private configInitd = false
   private configInitPromise?: Promise<void>
 
@@ -168,16 +163,17 @@ export class ConfigsService implements OnModuleInit {
     const rows = await this.optionsRepository.findAll()
     const raw = Object.fromEntries(rows.map((row) => [row.name, row.value]))
     const plaintext = decryptObject(cloneDeep(raw))
-    this.sourceConfig = cloneDeep(plaintext)
     if (isDev) delete plaintext.url
-    await this.setConfig(
-      normalizeLegacyConfig(plaintext, { allowConflicts: true }),
-    )
+    await this.setConfig(loadCurrentConfig(plaintext))
   }
 
   public async get<T extends keyof IConfig>(
     key: T,
   ): Promise<Readonly<IConfig[T]>> {
+    if (!Object.hasOwn(configDtoMapping, key))
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
     const config = await this.getStoredConfig()
     return decryptObject(config[key], key)
   }
@@ -193,7 +189,7 @@ export class ConfigsService implements OnModuleInit {
 
     if (configCache) {
       try {
-        const configValue = JSON.parse(configCache) as IConfig
+        const configValue = loadCurrentConfig(JSON.parse(configCache))
         return configValue
       } catch (error) {
         await this.ensureConfigInitialized(true)
@@ -227,6 +223,10 @@ export class ConfigsService implements OnModuleInit {
   public async getForResponse<T extends keyof IConfig>(
     key: T,
   ): Promise<Readonly<IConfig[T]>> {
+    if (!Object.hasOwn(configDtoMapping, key))
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
     const config = await this.getStoredConfig()
     const value = config[key]
     return sanitizeConfigForResponse(value as object, key) as IConfig[T]
@@ -237,34 +237,6 @@ export class ConfigsService implements OnModuleInit {
     data: Partial<IConfig[T]>,
   ): Promise<IConfig[T]> {
     const config = await this.getConfig()
-    const conflicts = legacySecretConflicts(key, this.sourceConfig[key] ?? {})
-    for (const path of conflicts) {
-      const replacement = path
-        .split('.')
-        .reduce<any>((node, part) => node?.[part], data)
-      if (typeof replacement !== 'string' || !replacement)
-        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
-          message: `CONFIG_SECRET_CONFLICT (${key}.${path}); explicitly replace the canonical credential to resolve it`,
-        })
-    }
-    if (key === 'imageGenerationOptions' || key === 'ttsOptions') {
-      const canonical = updateLegacyMedia(config as IConfig, key, data)
-      const storedAi = await this.optionsRepository.upsert(
-        'ai',
-        encryptObject(cloneDeep(canonical.ai), 'ai'),
-      )
-      await this.optionsRepository.deleteByName?.('imageGenerationOptions')
-      await this.optionsRepository.deleteByName?.('ttsOptions')
-      await this.setConfig(canonical)
-      await this.eventManager.emit(
-        EventBusEvents.ConfigChanged,
-        storedAi.value,
-        {
-          scope: EventScope.TO_SYSTEM,
-        },
-      )
-      return encryptObject(cloneDeep(canonical[key]), key) as IConfig[T]
-    }
     const updatedConfigRow = await this.optionsRepository.upsert(
       key as string,
       encryptObject(
@@ -290,14 +262,10 @@ export class ConfigsService implements OnModuleInit {
       ),
     )
     const newData = updatedConfigRow.value as IConfig[T]
-    this.sourceConfig[key] = decryptObject(cloneDeep(newData), key)
-    const mergedFullConfig = normalizeLegacyConfig(
-      Object.assign(
-        {},
-        key === 'ai' ? canonicalConfigRows(config as IConfig) : config,
-        { [key]: decryptObject(cloneDeep(newData), key) },
-      ),
-    )
+    const mergedFullConfig = loadCurrentConfig({
+      ...config,
+      [key]: decryptObject(cloneDeep(newData), key),
+    })
 
     await this.setConfig(mergedFullConfig)
     this.eventManager.emit(
@@ -378,15 +346,19 @@ export class ConfigsService implements OnModuleInit {
     key: T,
     value: Partial<IConfig[T]>,
   ) {
-    try {
-      value = normalizeLegacyPatch(key, camelcaseKeys(value)) as any
-    } catch (error) {
-      if (error instanceof LegacyConfigConflictError)
-        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
-          message: error.message,
-        })
-      throw error
-    }
+    const dto = Object.hasOwn(configDtoMapping, key)
+      ? configDtoMapping[key]
+      : undefined
+    if (!dto)
+      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
+        id: key as string,
+      })
+    value = normalizeConfigPatch(dto, value)
+    const unknown = unknownConfigPaths(dto, value, key)
+    if (unknown.length)
+      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+        message: `Unknown configuration fields: ${unknown.join(', ')}`,
+      })
     value = removeEmptyEncryptedFields(value as object, key) as Partial<
       IConfig[T]
     >
@@ -399,12 +371,6 @@ export class ConfigsService implements OnModuleInit {
       value = await this.hydrateAiProviderApiKeys(value as any)
     }
 
-    const dto = configDtoMapping[key]
-    if (!dto) {
-      throw createAppException(AppErrorCode.CONFIG_NOT_FOUND, {
-        id: key as string,
-      })
-    }
     // If this is the comment settings and AI review is being enabled, validate the AI config
     if (key === 'commentOptions' && (value as any).aiReview === true) {
       const aiConfig = await this.get('ai')
@@ -447,22 +413,6 @@ export class ConfigsService implements OnModuleInit {
         instanceValue,
       )
       this.validateMailProvider(nextConfig)
-    }
-
-    if (key === 'imageGenerationOptions') {
-      const nextConfig = await this.buildNextConfigForValidation(
-        key,
-        instanceValue,
-      )
-      this.validateImageGenerationProvider(nextConfig)
-    }
-
-    if (key === 'ttsOptions') {
-      const nextConfig = await this.buildNextConfigForValidation(
-        key,
-        instanceValue,
-      )
-      this.validateTtsProvider(nextConfig)
     }
 
     switch (key) {
@@ -576,30 +526,6 @@ export class ConfigsService implements OnModuleInit {
     if (errors.length > 0) {
       throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
         message: errors.join('; '),
-      })
-    }
-  }
-
-  private validateImageGenerationProvider(config: IConfig) {
-    const { imageGenerationOptions } = config
-
-    if (
-      imageGenerationOptions.provider === 'custom' &&
-      !imageGenerationOptions.endpoint
-    ) {
-      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
-        message:
-          'imageGenerationOptions.endpoint: required when provider is "custom"',
-      })
-    }
-  }
-
-  private validateTtsProvider(config: IConfig) {
-    const { ttsOptions } = config
-
-    if (ttsOptions.provider === 'custom' && !ttsOptions.endpoint) {
-      throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
-        message: 'ttsOptions.endpoint: required when provider is "custom"',
       })
     }
   }
