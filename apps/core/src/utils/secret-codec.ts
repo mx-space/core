@@ -3,17 +3,8 @@ import crypto from 'node:crypto'
 const PREFIX = '$${mx}$$'
 const V2_PREFIX = `${PREFIX}v2.`
 
-export const mapString = (key: string) => {
-  if (!key || key.length > 64) throw new Error('Invalid encryption key length')
-  return key.length === 64
-    ? key
-    : crypto.createHash('sha256').update(`${key}mx-encrypt-salt`).digest('hex')
-}
-
 export interface SecretCodecOptions {
   key: string
-  enable: boolean
-  v2: boolean
   algorithm?: string
 }
 
@@ -22,11 +13,6 @@ export class SecretCodec {
   constructor(private readonly options: SecretCodecOptions) {}
 
   assertConfigured() {
-    if (!this.options.enable) {
-      throw new Error(
-        'Secret encryption is disabled; set MX_ENCRYPT_ENABLE=true or ENCRYPT_ENABLE=true',
-      )
-    }
     if (!/^[\da-f]{64}$/i.test(this.options.key)) {
       throw new Error(
         'Storing secrets requires a 64-character hexadecimal encryption key',
@@ -41,34 +27,14 @@ export class SecretCodec {
   encrypt<T>(data: T, context = ''): T {
     if (typeof data === 'string') {
       if (!data) return data
-      // TODO(v18): remove the legacy plaintext escape hatch and require encryption.
-      if (
-        !this.options.enable &&
-        !this.options.v2 &&
-        !this.isEncryptedString(data)
-      ) {
-        return data
-      }
       this.assertConfigured()
       let plain: string = data
       if (this.isEncryptedString(data)) {
         plain = this.decrypt(data, context)
-        if (data.startsWith(V2_PREFIX) || !this.options.v2) return data
+        if (data.startsWith(V2_PREFIX)) return data
       }
       if (!plain) return '' as T
       const key = Buffer.from(this.options.key, 'hex')
-      if (!this.options.v2) {
-        const cipher = crypto.createCipheriv(
-          this.options.algorithm || 'aes-256-ecb',
-          key,
-          '',
-        )
-        return (PREFIX +
-          Buffer.concat([
-            cipher.update(plain, 'utf8'),
-            cipher.final(),
-          ]).toString('base64')) as T
-      }
       const keyId = crypto
         .createHash('sha256')
         .update(key)

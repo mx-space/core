@@ -3,7 +3,6 @@ import { vi } from 'vitest'
 
 import { registerAiEnvironment } from '~/global/ai.global'
 
-process.env.MX_SECRET_STORAGE_V2 ??= 'true'
 process.env.JWT_SECRET ??=
   'mx-test-only-better-auth-secret-at-least-32-characters'
 process.env.TEST ??= '1'

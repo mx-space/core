@@ -6,7 +6,7 @@ import {
 } from 'better-auth/crypto'
 import { eq } from 'drizzle-orm'
 
-import { SECRET_STORAGE_V2, SECURITY } from '~/app.config'
+import { SECURITY } from '~/app.config'
 import {
   accounts,
   apiKeys,
@@ -26,9 +26,9 @@ export const migration: AppMigration = {
     'Protect existing credentials after every replica enables v2 writes',
   async up({ db, logger }) {
     EncryptUtil.assertConfigured()
-    if (!SECRET_STORAGE_V2 || !SECURITY.jwtSecret) {
+    if (!SECURITY.jwtSecret || SECURITY.jwtSecret.length < 32) {
       throw new Error(
-        'Secret migration requires MX_SECRET_STORAGE_V2=1 and JWT_SECRET',
+        'Secret migration requires JWT_SECRET of at least 32 characters',
       )
     }
     const oauthKey = {

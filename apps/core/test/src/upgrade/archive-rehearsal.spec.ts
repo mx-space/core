@@ -1,9 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { createCipheriv, randomBytes } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import JSZip from 'jszip'
+import { legacySecret } from 'test/helper/legacy-secret'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -19,13 +22,16 @@ describe.skipIf(!existsSync(entry))(
   () => {
     let source: Awaited<ReturnType<typeof createPgTestDatabase>>
     let target: Awaited<ReturnType<typeof createPgTestDatabase>>
+    let cliCwd: string
     beforeAll(async () => {
+      cliCwd = mkdtempSync(join(tmpdir(), 'mx-upgrade-rehearsal-'))
       source = await createPgTestDatabase('mx_archive_source')
       target = await createPgTestDatabase('mx_archive_target')
     })
     afterAll(async () => {
       await target?.close()
       await source?.close()
+      if (cliCwd) rmSync(cliCwd, { recursive: true })
     })
 
     it('restores ZIP/v1 contents using original keys, then prepares through the shipped entry', async (test) => {
@@ -40,15 +46,11 @@ describe.skipIf(!existsSync(entry))(
         return
       }
       const key = 'ab'.repeat(32)
-      const codec = new SecretCodec({ key, enable: true, v2: false })
       await source.pool.query(
         "INSERT INTO options (id, name, value) VALUES ('100', 'membership', $1)",
         [
           {
-            dodoApiKey: codec.encrypt(
-              'retained-billing-token',
-              'membership.dodoApiKey',
-            ),
+            dodoApiKey: legacySecret('retained-billing-token', key),
           },
         ],
       )
@@ -128,15 +130,17 @@ describe.skipIf(!existsSync(entry))(
       )
       const env = {
         ...process.env,
+        ENCRYPT_ENABLE: undefined,
+        MX_ENCRYPT_ENABLE: undefined,
+        MX_SECRET_STORAGE_V2: undefined,
         PG_URL: target.connectionString,
         MX_ENCRYPT_KEY: key,
-        MX_ENCRYPT_ENABLE: 'true',
-        MX_SECRET_STORAGE_V2: 'true',
         JWT_SECRET: 'private-rehearsal-jwt-123456789012345',
       }
       const run = (args: string[]) =>
         JSON.parse(
           execFileSync(process.execPath, [entry, ...args], {
+            cwd: cliCwd,
             env,
             encoding: 'utf8',
           }),
@@ -162,10 +166,7 @@ describe.skipIf(!existsSync(entry))(
         )
       ).rows[0].value
       expect(
-        new SecretCodec({ key, enable: true, v2: true }).decrypt(
-          canonical.apiKey,
-          'membership.apiKey',
-        ),
+        new SecretCodec({ key }).decrypt(canonical.apiKey, 'membership.apiKey'),
       ).toBe('retained-billing-token')
     }, 30000)
   },

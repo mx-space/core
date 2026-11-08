@@ -12,11 +12,7 @@ import type { BetterAuthOptions } from 'better-auth'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
-import {
-  hashPassword,
-  symmetricDecrypt,
-  verifyPassword,
-} from 'better-auth/crypto'
+import { hashPassword, verifyPassword } from 'better-auth/crypto'
 import { toNodeHandler } from 'better-auth/node'
 import {
   bearer,
@@ -28,12 +24,7 @@ import { and, eq } from 'drizzle-orm'
 import { customAlphabet } from 'nanoid'
 import wcmatch from 'wildcard-match'
 
-import {
-  API_VERSION,
-  CROSS_DOMAIN,
-  SECRET_STORAGE_V2,
-  SECURITY,
-} from '~/app.config'
+import { API_VERSION, CROSS_DOMAIN, SECURITY } from '~/app.config'
 import { db } from '~/processors/database/postgres.provider'
 
 import { APPLE_ORIGIN } from './apple-client-secret'
@@ -63,32 +54,12 @@ const deviceUserCodeAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const generateDeviceUserCode = customAlphabet(deviceUserCodeAlphabet, 8)
 const reviewDemoMutableProfileFields = new Set(['image', 'name'])
 
-// Compatibility release: all replicas can read encrypted OAuth tokens before v2 writes are enabled.
-async function preserveLegacyOAuthWrites(
-  account: Record<string, unknown>,
-  context: any,
-) {
-  if (SECRET_STORAGE_V2) return
-  const data = { ...account }
-  for (const field of ['accessToken', 'refreshToken']) {
-    const token = data[field]
-    if (typeof token === 'string' && token) {
-      data[field] = await symmetricDecrypt({
-        key: context.context.secretConfig,
-        data: token,
-      })
-    }
-  }
-  return { data }
-}
-
 export const reviewDemoDatabaseHooks: NonNullable<
   BetterAuthOptions['databaseHooks']
 > = {
   account: {
-    create: { before: preserveLegacyOAuthWrites },
     update: {
-      before: async (account, context) => {
+      before: async (_account, context) => {
         if (
           context?.path === '/change-password' &&
           isReviewDemoEmail(context.context.session?.user ?? {})
@@ -97,7 +68,6 @@ export const reviewDemoDatabaseHooks: NonNullable<
             message: 'app review demo credentials cannot be changed',
           })
         }
-        return preserveLegacyOAuthWrites(account, context)
       },
     },
   },
@@ -150,9 +120,7 @@ export const createCredentialSignInHook = (
 ) =>
   createAuthMiddleware(async (ctx) => {
     if (ctx.path === '/api-key/create') {
-      ctx.body.configId = SECRET_STORAGE_V2
-        ? HASHED_API_KEY_CONFIG_ID
-        : 'default'
+      ctx.body.configId = HASHED_API_KEY_CONFIG_ID
     }
     if (ctx.body?.role !== undefined) {
       throw new APIError('FORBIDDEN', {
