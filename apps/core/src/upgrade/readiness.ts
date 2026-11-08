@@ -194,9 +194,32 @@ export async function readUpgradeState(
         PREPARED_MIGRATION_ID,
       ])
     ).rowCount !== 0
-  const existing = await database.query(`SELECT EXISTS (
-    SELECT 1 FROM options UNION ALL SELECT 1 FROM readers UNION ALL SELECT 1 FROM posts UNION ALL SELECT 1 FROM notes UNION ALL SELECT 1 FROM pages UNION ALL SELECT 1 FROM snippets UNION ALL SELECT 1 FROM webhooks UNION ALL SELECT 1 FROM accounts UNION ALL SELECT 1 FROM api_keys UNION ALL SELECT 1 FROM ai_translations UNION ALL SELECT 1 FROM ai_insights
-  ) AS present`)
+  // A new database may contain migration ledgers, but no application data.
+  const tables = (
+    await database.query(
+      `SELECT tablename FROM pg_catalog.pg_tables
+    WHERE schemaname = 'public' AND tablename <> ALL($1::text[])`,
+      [
+        [
+          '_app_migrations',
+          '__drizzle_migrations',
+          'schema_migrations',
+          'data_migration_runs',
+          'mongo_id_map',
+          'auth_id_map',
+        ],
+      ],
+    )
+  ).rows
+  const probes = tables.map(
+    ({ tablename }) =>
+      `SELECT 1 FROM public."${String(tablename).replaceAll('"', '""')}"`,
+  )
+  const existing = await database.query(
+    probes.length
+      ? `SELECT EXISTS (${probes.join(' UNION ALL ')}) AS present`
+      : 'SELECT false AS present',
+  )
   const installation = existing.rows[0].present ? 'existing' : 'empty'
   if (
     counts.plaintext ||
