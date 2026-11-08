@@ -120,6 +120,47 @@ describe('createWriteAgentRuntime steer', () => {
   })
 })
 
+describe('createWriteAgentRuntime attachments', () => {
+  const attachments = {
+    files: [
+      { attach: true, content: '# terms', path: '/attachments/glossary.md' },
+    ],
+    images: [{ mimeType: 'image/png', url: 'https://cdn.test/shot.png' }],
+  }
+
+  it('sends attached images and files with the run', async () => {
+    const { deliver, requested, runtime } = setup()
+
+    const done = runtime.run({ ...runRequest(), attachments })
+    await flush()
+    const { payload } = requested[0]
+
+    expect(payload.images).toEqual(attachments.images)
+    expect(payload.files.map((file: { path: string }) => file.path)).toEqual([
+      '/selection.xml',
+      '/attachments/glossary.md',
+    ])
+    deliver('agent.done', { runId: payload.runId, status: 'complete' })
+    await done
+  })
+
+  it('sends attached images and files with a steer', async () => {
+    const { deliver, requested, runtime } = setup()
+    const done = runtime.run(runRequest())
+    await flush()
+    const runId = requested[0].payload.runId
+
+    await runtime.steer('like this', attachments)
+
+    expect(requested[1].payload.images).toEqual(attachments.images)
+    expect(
+      requested[1].payload.files.map((file: { path: string }) => file.path),
+    ).toContain('/attachments/glossary.md')
+    deliver('agent.done', { runId, status: 'complete' })
+    await done
+  })
+})
+
 describe('createWriteAgentRuntime conversation and wire state', () => {
   it('adopts the conversation id the server assigned', async () => {
     const { deliver, onConversation, requested, runtime } = setup()

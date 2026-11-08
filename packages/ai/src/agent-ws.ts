@@ -1,5 +1,7 @@
 import type { AiAgentSseEvent } from './ai-agent-sse'
 
+export const AGENT_ATTACHMENTS_DIR = '/attachments/'
+
 export const AgentWsEvents = {
   run: 'agent.run',
   toolResult: 'agent.tool.result',
@@ -39,6 +41,7 @@ export interface AgentRunPayload {
   toolsHash: string
   tools?: AgentToolSchema[]
   files: AgentFileFrame[]
+  images?: AgentToolImage[]
 }
 
 export interface ResolvedAgentRun {
@@ -51,6 +54,7 @@ export interface ResolvedAgentRun {
   system: string[]
   tools: AgentToolSchema[]
   files: AgentFileSnapshot[]
+  images?: AgentToolImage[]
 }
 
 export type AgentRunAck =
@@ -77,6 +81,7 @@ export interface AgentSteerPayload {
   runId: string
   user: string
   files: AgentFileFrame[]
+  images?: AgentToolImage[]
 }
 
 export interface AgentCancelPayload {
@@ -137,7 +142,12 @@ export interface AgentHistoryUsage {
 }
 
 export type AgentHistoryBubble =
-  | { type: 'user'; content: string }
+  | {
+      type: 'user'
+      content: string
+      images?: AgentToolImage[]
+      files?: string[]
+    }
   | { type: 'assistant'; content: string; usage?: AgentHistoryUsage }
   | {
       type: 'thinking'

@@ -1,8 +1,9 @@
-import type { AgentFileSnapshot } from '@mx-space/ai'
+import type { AgentFileSnapshot, AgentToolImage } from '@mx-space/ai'
 
 export interface AgentSteer {
   user: string
   files: AgentFileSnapshot[]
+  images?: AgentToolImage[]
 }
 
 export interface AgentSteerInbox {

@@ -348,6 +348,53 @@ describe('AiAgentRunService', () => {
     })
   })
 
+  it('sends the images a user attached and stores their URL', async () => {
+    const png = await sharp({
+      create: { width: 4, height: 4, channels: 3, background: '#000' },
+    })
+      .png()
+      .toBuffer()
+    const realFetch = globalThis.fetch
+    vi.stubGlobal('fetch', async (input: URL | string, init?: RequestInit) =>
+      String(input).startsWith('https://cdn.example.test/')
+        ? new Response(new Uint8Array(png), {
+            headers: { 'content-type': 'image/png' },
+          })
+        : realFetch(input, init),
+    )
+    torn.push(() => vi.unstubAllGlobals())
+    const ctx = setup(
+      [fauxAssistantMessage('a black square')],
+      emptyConversation(),
+    )
+    torn.push(ctx.teardown)
+
+    await ctx.service.run(
+      payload({
+        user: 'what is this',
+        images: [
+          { url: 'https://cdn.example.test/shot.png', mimeType: 'image/png' },
+        ],
+      }),
+      { sink: ctx.sink, signal: new AbortController().signal },
+    )
+
+    const sent = turnsOf(ctx.contexts[0])[0]
+    expect(sent.content).toEqual([
+      { type: 'text', text: 'what is this' },
+      { type: 'image', data: png.toString('base64'), mimeType: 'image/png' },
+    ])
+    const stored = ctx.conversations.get('conv-1')!.transcript.messages[0]
+    expect(stored.content).toEqual([
+      { type: 'text', text: 'what is this' },
+      {
+        type: 'image',
+        data: 'https://cdn.example.test/shot.png',
+        mimeType: 'image/png',
+      },
+    ])
+  })
+
   it('prepends a diff reminder when a read file changed since the last turn', async () => {
     const conversation = emptyConversation()
     conversation.transcript = {

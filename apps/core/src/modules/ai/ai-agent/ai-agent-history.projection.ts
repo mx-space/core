@@ -2,15 +2,19 @@ import type {
   AssistantMessage,
   Message as PiMessage,
   ToolResultMessage,
+  UserMessage,
 } from '@earendil-works/pi-ai'
 import {
+  AGENT_ATTACHMENTS_DIR,
   type AgentHistoryBubble,
   type AgentHistoryToolItem,
   type AgentHistoryUsage,
   FULL_RESULT_TOOLS,
 } from '@mx-space/ai'
 
-import { stripSystemReminder } from './ai-agent-vfs'
+import { stripSystemReminder, USER_ATTACHMENT_NOTE } from './ai-agent-vfs'
+
+type UserHistoryBubble = Extract<AgentHistoryBubble, { type: 'user' }>
 
 const FULL_RESULT_LIMIT = 4096
 const PREVIEW_LENGTH = 80
@@ -56,6 +60,39 @@ function settleItem(
         resultPreview: text.slice(0, PREVIEW_LENGTH),
         truncated: true,
       }
+}
+
+const ATTACHED_FILE_SUFFIX = ` ${USER_ATTACHMENT_NOTE}`
+
+const attachedFiles = (reminder: string) =>
+  reminder
+    .split('\n')
+    .filter(
+      (line) =>
+        line.startsWith(AGENT_ATTACHMENTS_DIR) &&
+        line.endsWith(ATTACHED_FILE_SUFFIX),
+    )
+    .map((line) => line.slice(0, -ATTACHED_FILE_SUFFIX.length))
+
+function projectUser(message: UserMessage): UserHistoryBubble {
+  const blocks = typeof message.content === 'string' ? null : message.content
+  const text = blocks
+    ? blocks
+        .flatMap((block) => (block.type === 'text' ? [block.text] : []))
+        .join('')
+    : (message.content as string)
+  const content = stripSystemReminder(text)
+  const reminder = text.slice(0, text.length - content.length)
+  const bubble: UserHistoryBubble = { type: 'user', content }
+  const images = (blocks ?? []).flatMap((block) =>
+    block.type === 'image' && /^https?:\/\//.test(block.data)
+      ? [{ url: block.data, mimeType: block.mimeType }]
+      : [],
+  )
+  if (images.length) bubble.images = images
+  const files = attachedFiles(reminder)
+  if (files.length) bubble.files = files
+  return bubble
 }
 
 function addUsage(
@@ -119,11 +156,7 @@ export function projectTranscriptToBubbles(
   messages.forEach((message, index) => {
     if (message.role === 'user') {
       closeTurn()
-      const text =
-        typeof message.content === 'string'
-          ? message.content
-          : textOf(message.content as ToolResultMessage['content'])
-      bubbles.push({ type: 'user', content: stripSystemReminder(text) })
+      bubbles.push(projectUser(message))
       return
     }
     if (message.role !== 'assistant') return

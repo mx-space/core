@@ -89,8 +89,8 @@ export function AgentPanel({ agent }: AgentPanelProps) {
         onAbort={agent.abort}
         onChange={setInput}
         onSelectModel={agent.selectModel}
-        onSend={(message) => {
-          agent.sendMessage(message)
+        onSend={(message, attachments) => {
+          agent.sendMessage(message, attachments)
           setInput('')
         }}
         providerGroups={agent.providerGroups}

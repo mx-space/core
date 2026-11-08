@@ -114,6 +114,38 @@ it('hydrates bubbles, review state and anchors from the conversation detail', as
   }
 })
 
+it('restores the attachments of a user message', async () => {
+  mocks.list.mockResolvedValue([meta('conv-1')])
+  mocks.detail.mockResolvedValue({
+    ...meta('conv-1'),
+    bubbles: [
+      {
+        type: 'user',
+        content: 'Widen this box',
+        images: [{ url: 'https://cdn.test/a/shot.png', mimeType: 'image/png' }],
+        files: ['/attachments/glossary.md'],
+      },
+    ],
+    reviewState: null,
+    anchors: [],
+  })
+  const view = renderManager('post:1')
+  try {
+    await view.render()
+
+    expect(view.store.getState().bubbles[0]).toEqual({
+      type: 'user',
+      content: 'Widen this box',
+      attachments: [
+        { kind: 'image', name: 'shot.png', url: 'https://cdn.test/a/shot.png' },
+        { kind: 'file', name: 'glossary.md' },
+      ],
+    })
+  } finally {
+    await view.unmount()
+  }
+})
+
 it('adopts a conversation the server created without any REST create call', async () => {
   const view = renderManager('post:1')
   try {

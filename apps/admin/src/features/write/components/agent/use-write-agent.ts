@@ -24,7 +24,11 @@ import { useI18n } from '~/i18n'
 import { adminQueryKeys } from '~/query/keys'
 import { getAdminSocket } from '~/socket/SocketBridge'
 import { bundledAgentSkillFiles } from '~/vendor/rich-editor/agent-skills/bundled'
-import type { AgentLoopHandle, AgentRuntime } from '~/vendor/rich-editor/types'
+import type {
+  AgentLoopHandle,
+  AgentRuntime,
+  AgentUserAttachments,
+} from '~/vendor/rich-editor/types'
 import {
   buildProposedState,
   buildReviewXml,
@@ -34,6 +38,11 @@ import {
 
 import { extractAgentOperationFromToolItem } from './agent-operations'
 import { createManagedAgentStore } from './agent-store'
+import {
+  type ComposerAttachment,
+  toAgentAttachments,
+  toBubbleAttachments,
+} from './composer-attachments'
 import type { SelectedAgentModel, UserChatBubble } from './types'
 import { useWriteEmbeds } from './use-write-embeds'
 import { createWriteAgentRuntime } from './write-agent-runtime'
@@ -59,7 +68,7 @@ export interface WriteAgentController {
   renameSession: (id: string, title: string) => void
   switchSession: (id: string) => void
   retryLoadSessions: () => void
-  sendMessage: (message: string) => void
+  sendMessage: (message: string, attachments?: ComposerAttachment[]) => void
   abort: () => void
   acceptBatch: (batchId: string) => void
   rejectBatch: (batchId: string) => void
@@ -274,7 +283,10 @@ export function useWriteAgent(opts: {
     })
   }, [documentBash, providerSessionId, selectedModel, store, t])
 
-  const sendMessage = (message: string) => {
+  const sendMessage = (
+    message: string,
+    attachments: ComposerAttachment[] = [],
+  ) => {
     const trimmed = message.trim()
     if (!trimmed) return
     if (!selectedModel || !agentRuntime) {
@@ -284,7 +296,8 @@ export function useWriteAgent(opts: {
     const ensureDocument = ensureDocumentRef.current
     if (ensureDocument && !documentRef.current?.active) {
       void ensureDocument().then((ready) => {
-        if (ready && documentRef.current?.active) sendMessage(message)
+        if (ready && documentRef.current?.active)
+          sendMessage(message, attachments)
       })
       return
     }
@@ -295,29 +308,38 @@ export function useWriteAgent(opts: {
 
     const loop = agentLoopRef.current
     const pinnedSelection = store.getState().pinnedSelection
-    const userBubble: UserChatBubble = pinnedSelection
-      ? { content: trimmed, selection: pinnedSelection, type: 'user' }
-      : { content: trimmed, type: 'user' }
+    const bubbleAttachments = toBubbleAttachments(attachments)
+    const userBubble: UserChatBubble = {
+      content: trimmed,
+      type: 'user',
+      ...(pinnedSelection ? { selection: pinnedSelection } : {}),
+      ...(bubbleAttachments.length ? { attachments: bubbleAttachments } : {}),
+    }
     store.getState().addBubble(userBubble)
 
+    const payload = toAgentAttachments(attachments)
     const running = activeRunRef.current
     if (running) {
-      void loop.steer(trimmed).then((steered) => {
-        if (!steered) void running.then(() => startRun(loop, trimmed))
+      void loop.steer(trimmed, payload).then((steered) => {
+        if (!steered) void running.then(() => startRun(loop, trimmed, payload))
       })
       return
     }
-    startRun(loop, trimmed)
+    startRun(loop, trimmed, payload)
   }
 
-  const startRun = (loop: AgentLoopHandle, message: string) => {
+  const startRun = (
+    loop: AgentLoopHandle,
+    message: string,
+    attachments?: AgentUserAttachments,
+  ) => {
     documentBash.beginRun()
     const shared = documentRef.current
     const turn = shared?.active
       ? shared.startAgentTurn(agentCommitMessage(message))
       : null
     turnRef.current = turn
-    const promise = loop.run(message).then(
+    const promise = loop.run(message, attachments).then(
       () => sessionManagerRef.current.onRunFinished(),
       (error: unknown) => {
         if ((error as Error)?.name === 'AbortError') return

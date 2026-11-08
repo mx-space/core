@@ -39,8 +39,9 @@ function AgentLoopCaptureInner({
   const loop = useMemo<AgentLoopHandle>(
     () => ({
       abort: () => abortRef.current?.abort(),
-      steer: (userInput) => latest.current.agentRuntime.steer(userInput),
-      run: async (userInput) => {
+      steer: (userInput, attachments) =>
+        latest.current.agentRuntime.steer(userInput, attachments),
+      run: async (userInput, attachments) => {
         abortRef.current?.abort()
         const controller = new AbortController()
         abortRef.current = controller
@@ -113,6 +114,7 @@ function AgentLoopCaptureInner({
           ),
           tools: tools ?? [],
           userInput,
+          attachments,
         })
         if (pinned) store.getState().clearPinnedSelection()
       },

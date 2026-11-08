@@ -74,6 +74,7 @@
 
 .agent-md :where(li)::marker {
   color: var(--color-fg-subtle);
+  font-variant-numeric: tabular-nums;
 }
 
 .agent-md :where(li:has(> input[type='checkbox'])) {
@@ -95,13 +96,16 @@
 
 .agent-md :where(code) {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 0.85em;
+  font-size: 0.86em;
+  letter-spacing: 0;
 }
 
 .agent-md :where(:not(pre) > code) {
-  padding: 0.1em 0.35em;
+  padding: 0.05em 0.3em;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--color-fg) 7%, transparent);
+  background: color-mix(in srgb, var(--color-fg) 5.5%, transparent);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .agent-md :where(pre) {
@@ -142,4 +146,34 @@
   margin: 1em 0;
   border: 0;
   border-top: 1px solid var(--color-border-strong);
+}
+
+@keyframes agent-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes agent-enter-user {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+.agent-enter {
+  animation: agent-enter 240ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.agent-enter-user {
+  transform-origin: right bottom;
+  animation: agent-enter-user 280ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-enter,
+  .agent-enter-user {
+    animation: none;
+  }
 }

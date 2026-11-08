@@ -28,6 +28,7 @@ import {
   createImageLoader,
   hydrateImages,
   toolResultContent,
+  userContent,
 } from './ai-agent-images'
 import { mapPiEventToSse } from './ai-agent-messages'
 import {
@@ -110,7 +111,11 @@ export class AiAgentRunService {
     const handle = await this.openTranscript(payload.conversationId)
     const { transcript } = handle
 
-    const appendUser = (text: string, files: AgentFileSnapshot[]) => {
+    const appendUser = (
+      text: string,
+      files: AgentFileSnapshot[],
+      images?: AgentToolImage[],
+    ) => {
       const reconciled = reconcileFiles(transcript.known, files)
       transcript.known = reconciled.known
       if (reconciled.paths.length) {
@@ -118,14 +123,16 @@ export class AiAgentRunService {
       }
       transcript.messages.push({
         role: 'user',
-        content: reconciled.reminder
-          ? `${reconciled.reminder}\n\n${text}`
-          : text,
+        content: userContent(
+          reconciled.reminder ? `${reconciled.reminder}\n\n${text}` : text,
+          images,
+        ),
         timestamp: Date.now(),
       })
     }
     const appendSteers = (steers: ReturnType<AgentSteerInbox['take']>) => {
-      for (const steer of steers) appendUser(steer.user, steer.files)
+      for (const steer of steers)
+        appendUser(steer.user, steer.files, steer.images)
       return steers.length > 0
     }
     const end = async (result: AgentRunResult) => {
@@ -134,7 +141,7 @@ export class AiAgentRunService {
       return result
     }
 
-    appendUser(payload.user, payload.files)
+    appendUser(payload.user, payload.files, payload.images)
     await handle.save()
 
     const serverNames = new Set(this.serverTools.map((t) => t.schema.name))

@@ -34,7 +34,6 @@ function render(bubble: ChatBubble) {
         getBatch: () => undefined,
         onAcceptBatch: () => {},
         onReapplyBatch: () => {},
-        onReapplyToolGroup: () => {},
         onRejectBatch: () => {},
       }),
     )
@@ -70,5 +69,24 @@ describe('AgentMessageItem assistant', () => {
 
     expect(view.querySelector('[data-agent-usage]')).toBeNull()
     expect(view.querySelector('.agent-md')).not.toBeNull()
+  })
+})
+
+describe('AgentMessageItem user', () => {
+  it('shows the attachments above the message', () => {
+    const view = render({
+      attachments: [
+        { kind: 'image', name: 'shot.png', url: 'https://cdn.test/shot.png' },
+        { kind: 'file', name: 'glossary.md', size: 2048 },
+      ],
+      content: 'Use these',
+      type: 'user',
+    } as ChatBubble)
+
+    expect(view.querySelector('img')?.getAttribute('src')).toBe(
+      'https://cdn.test/shot.png',
+    )
+    expect(view.textContent).toContain('glossary.md')
+    expect(view.textContent).toContain('2.0 KB')
   })
 })

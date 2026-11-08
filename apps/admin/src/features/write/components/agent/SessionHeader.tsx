@@ -94,9 +94,9 @@ export function SessionHeader(props: SessionHeaderProps) {
 
   if (loadError) {
     return (
-      <div className="flex h-9 shrink-0 items-center border-b border-border px-2">
+      <div className="flex h-11 shrink-0 items-center border-b border-border px-4">
         <button
-          className="flex flex-1 items-center gap-1.5 text-left text-xs text-red-600"
+          className="flex flex-1 items-center gap-1.5 text-left text-sm text-red-600 dark:text-red-400"
           onClick={onRetryLoad}
           type="button"
         >
@@ -114,17 +114,17 @@ export function SessionHeader(props: SessionHeaderProps) {
   })
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border px-2">
+    <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border pl-4 pr-2">
       <div className="flex min-w-0 flex-1 items-center">
         <DropdownMenu onOpenChange={setOpen} open={open}>
           <DropdownMenu.Trigger
-            className="flex min-w-0 items-center gap-1 text-sm font-medium text-fg"
+            className="flex min-w-0 items-center gap-1 text-base font-medium text-fg"
             type="button"
           >
             <span className="truncate">{activeTitle}</span>
             <ChevronDown
               aria-hidden="true"
-              className="size-3 shrink-0 opacity-50"
+              className="size-3.5 shrink-0 text-fg-subtle"
             />
           </DropdownMenu.Trigger>
           <DropdownMenu.Content className="max-h-64 w-64 overflow-y-auto">
@@ -182,7 +182,7 @@ export function SessionHeader(props: SessionHeaderProps) {
           title={t('write.agent.session.export')}
           type="button"
         >
-          <Download aria-hidden="true" className="size-3.5" />
+          <Download aria-hidden="true" className="size-4" />
         </button>
         <button
           className="flex size-7 items-center justify-center rounded-sm text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg"
@@ -190,7 +190,7 @@ export function SessionHeader(props: SessionHeaderProps) {
           title={t('write.agent.session.newTitle')}
           type="button"
         >
-          <Plus aria-hidden="true" className="size-3.5" />
+          <Plus aria-hidden="true" className="size-4" />
         </button>
         {activeSessionId ? (
           <button
@@ -199,7 +199,7 @@ export function SessionHeader(props: SessionHeaderProps) {
             title={t('write.agent.session.deleteTitle')}
             type="button"
           >
-            <Trash2 aria-hidden="true" className="size-3.5" />
+            <Trash2 aria-hidden="true" className="size-4" />
           </button>
         ) : null}
       </div>

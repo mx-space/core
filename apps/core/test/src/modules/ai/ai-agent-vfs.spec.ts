@@ -24,6 +24,16 @@ describe('reconcileFiles', () => {
     expect(result.paths).toEqual(['/selection.xml'])
   })
 
+  it('tells the model a user attachment lives only in the message', () => {
+    const result = reconcileFiles({}, [
+      { path: '/attachments/glossary.md', content: '# terms', attach: true },
+    ])
+
+    expect(result.reminder).toContain(
+      '/attachments/glossary.md (attached by the user, not a workspace file; full content below):\n# terms',
+    )
+  })
+
   it('skips an empty attachable file the agent has never seen', () => {
     const result = reconcileFiles({}, [
       { path: '/selection.xml', content: '', attach: true },

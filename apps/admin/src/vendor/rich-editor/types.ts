@@ -3,6 +3,7 @@ import type {
   AgentToolConfig,
   LitexmlRegistryProvider,
 } from '@haklex/rich-agent-core'
+import type { AgentFileSnapshot, AgentToolImage } from '@mx-space/ai'
 
 import type { RichEditorProps } from './core'
 
@@ -26,14 +27,23 @@ export type FileUpload = (
   opts?: { onProgress?: (percent: number) => void },
 ) => Promise<{ src: string }>
 
+export interface AgentUserAttachments {
+  files: AgentFileSnapshot[]
+  images: AgentToolImage[]
+}
+
 export interface AgentLoopHandle {
-  run: (userInput: string) => Promise<void>
-  steer: (userInput: string) => Promise<boolean>
+  run: (userInput: string, attachments?: AgentUserAttachments) => Promise<void>
+  steer: (
+    userInput: string,
+    attachments?: AgentUserAttachments,
+  ) => Promise<boolean>
   abort: () => void
 }
 
 export interface AgentRuntimeRunRequest {
   userInput: string
+  attachments?: AgentUserAttachments
   systemMessages: string[]
   tools: AgentToolConfig[]
   onOperationsChanged: (
@@ -45,7 +55,10 @@ export interface AgentRuntimeRunRequest {
 
 export interface AgentRuntime {
   run: (request: AgentRuntimeRunRequest) => Promise<void>
-  steer: (userInput: string) => Promise<boolean>
+  steer: (
+    userInput: string,
+    attachments?: AgentUserAttachments,
+  ) => Promise<boolean>
 }
 
 export type AgentLitexmlRegistryProvider = LitexmlRegistryProvider

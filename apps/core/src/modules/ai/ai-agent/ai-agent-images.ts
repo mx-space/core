@@ -35,6 +35,13 @@ export function toolResultContent(
   ]
 }
 
+export function userContent(
+  text: string,
+  images: AgentToolImage[] = [],
+): string | (TextContent | ImageContent)[] {
+  return images.length ? toolResultContent(text, images) : text
+}
+
 export async function hydrateImages(
   messages: Message[],
   load: ImageLoader,
@@ -51,8 +58,10 @@ export async function hydrateImages(
 
   return Promise.all(
     messages.map(async (message) => {
-      if (message.role !== 'toolResult') return message
+      if (message.role !== 'toolResult' && message.role !== 'user')
+        return message
       if (
+        typeof message.content === 'string' ||
         !message.content.some(
           (block) => block.type === 'image' && isRemoteReference(block.data),
         )
@@ -71,7 +80,7 @@ export async function hydrateImages(
               } satisfies TextContent)
         }),
       )
-      return { ...message, content }
+      return { ...message, content } as Message
     }),
   )
 }

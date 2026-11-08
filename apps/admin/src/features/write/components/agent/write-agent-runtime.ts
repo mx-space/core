@@ -41,11 +41,19 @@ export function createWriteAgentRuntime(
   }
 
   return {
-    steer: async (userInput) =>
+    steer: async (userInput, attachments) =>
       active
-        ? active.steer(userInput, options.workspace.snapshotFiles())
+        ? active.steer(
+            userInput,
+            [
+              ...options.workspace.snapshotFiles(),
+              ...(attachments?.files ?? []),
+            ],
+            attachments?.images,
+          )
         : false,
     run: async ({
+      attachments,
       onOperationsChanged,
       signal,
       systemMessages,
@@ -86,7 +94,11 @@ export function createWriteAgentRuntime(
         .run(
           {
             conversationId: options.getConversationId(),
-            files: options.workspace.snapshotFiles(),
+            files: [
+              ...options.workspace.snapshotFiles(),
+              ...(attachments?.files ?? []),
+            ],
+            images: attachments?.images,
             model: options.model.modelId,
             providerId: options.model.providerId,
             sessionId: options.sessionId,

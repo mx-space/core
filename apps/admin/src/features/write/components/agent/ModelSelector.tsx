@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Search, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, Search } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 
 import type { ProviderModelsResponse } from '~/api/ai'
@@ -142,12 +142,11 @@ export function ModelSelector({
   return (
     <Popover onOpenChange={handleOpenChange} open={open}>
       <Popover.Trigger
-        className="inline-flex items-center gap-1 text-xs text-fg-muted transition-colors hover:text-fg disabled:opacity-50"
+        className="inline-flex h-7 items-center gap-1 rounded-sm px-2 text-sm text-fg-muted transition-colors hover:bg-surface-inset hover:text-fg disabled:opacity-50"
         disabled={isEmpty}
         type="button"
       >
-        <Sparkles aria-hidden="true" className="size-3 shrink-0" />
-        <span className="max-w-[150px] truncate">
+        <span className="max-w-[180px] truncate">
           {isEmpty ? t('write.agent.modelNoConfig') : triggerLabel}
         </span>
         <ChevronDown aria-hidden="true" className="size-3 shrink-0" />

@@ -52,6 +52,18 @@ const fileFrame = z.union([
   }),
 ])
 
+const imageRefs = z
+  .array(
+    z.object({
+      url: z.url({ protocol: /^https?$/ }),
+      mimeType: z
+        .string()
+        .regex(/^image\//)
+        .optional(),
+    }),
+  )
+  .max(8)
+
 const toolSchema = z.object({
   name: z.string().min(1).max(128),
   description: z.string(),
@@ -70,6 +82,7 @@ const runSchema = z.object({
   toolsHash: z.string().min(1),
   tools: z.array(toolSchema).optional(),
   files: z.array(fileFrame),
+  images: imageRefs.optional(),
 })
 
 const toolResultSchema = z.object({
@@ -78,18 +91,7 @@ const toolResultSchema = z.object({
   content: z.string(),
   isError: z.boolean(),
   files: z.array(fileFrame).optional(),
-  images: z
-    .array(
-      z.object({
-        url: z.url({ protocol: /^https?$/ }),
-        mimeType: z
-          .string()
-          .regex(/^image\//)
-          .optional(),
-      }),
-    )
-    .max(8)
-    .optional(),
+  images: imageRefs.optional(),
 })
 
 const cancelSchema = z.object({ runId: z.string().min(1) })
@@ -98,6 +100,7 @@ const steerSchema = z.object({
   runId: z.string().min(1),
   user: z.string().min(1),
   files: z.array(fileFrame),
+  images: imageRefs.optional(),
 })
 
 interface PendingToolCall {
@@ -257,6 +260,7 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
           system: statics.value.system,
           tools: statics.value.tools,
           files: files.value,
+          images: payload.images,
         },
         {
           signal: run.controller.signal,
@@ -339,7 +343,7 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
   ): Promise<WsAckPayload> {
     const parsed = steerSchema.safeParse(raw)
     if (!parsed.success) return { ok: false, code: 'VALIDATION_FAILED' }
-    const { runId, user, files: frames } = parsed.data
+    const { runId, user, files: frames, images } = parsed.data
     const state = this.connections.get(ctx.connectionId)
     const run = state?.runs.get(runId)
     if (!state || !run || run.controller.signal.aborted) {
@@ -347,7 +351,7 @@ export class AiAgentWsHandler implements OnModuleInit, OnModuleDestroy {
     }
     const files = await state.wire.resolveFiles(run.conversationId, frames)
     if (!files.ok) return nack(files)
-    if (!run.inbox.push({ user, files: files.value })) {
+    if (!run.inbox.push({ user, files: files.value, images })) {
       return { ok: false, code: 'RUN_ENDED' }
     }
     return { ok: true }

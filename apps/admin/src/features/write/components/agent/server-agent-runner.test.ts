@@ -583,6 +583,43 @@ describe('createServerAgentRunner', () => {
     await expect(runner.steer('late', [])).resolves.toBe(false)
   })
 
+  it('sends the images attached to the run', async () => {
+    const fake = createFakeSocket()
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [],
+    })
+    const images = [{ mimeType: 'image/png', url: 'https://cdn.test/a.png' }]
+
+    const done = runner.run({ ...input, images })
+    await flush()
+    const runId = fake.requested[0].payload.runId
+
+    expect(fake.requested[0].payload.images).toEqual(images)
+    fake.deliver('agent.done', { runId, status: 'complete' })
+    await done
+  })
+
+  it('sends the images attached to a steer', async () => {
+    const fake = createFakeSocket()
+    const runner = createServerAgentRunner({
+      socket: fake.socket,
+      store: createAgentStore(),
+      tools: [],
+    })
+    const done = runner.run(input)
+    await flush()
+    const runId = fake.requested[0].payload.runId
+    const images = [{ mimeType: 'image/png', url: 'https://cdn.test/b.png' }]
+
+    await runner.steer('like this', [], images)
+
+    expect(fake.requested[1].payload.images).toEqual(images)
+    fake.deliver('agent.done', { runId, status: 'complete' })
+    await done
+  })
+
   it('reports a steer the server refused', async () => {
     const fake = createFakeSocket(
       { ok: true },

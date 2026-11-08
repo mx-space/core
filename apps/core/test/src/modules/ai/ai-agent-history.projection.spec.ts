@@ -71,6 +71,55 @@ describe('projectTranscriptToBubbles', () => {
     ).toEqual([{ type: 'user', content: 'Tighten the intro' }])
   })
 
+  it('keeps the images a user attached', () => {
+    expect(
+      projectTranscriptToBubbles(
+        [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Widen this box' },
+              {
+                type: 'image',
+                data: 'https://cdn.example.test/shot.png',
+                mimeType: 'image/png',
+              },
+            ],
+            timestamp: 1,
+          },
+        ],
+        [],
+      ),
+    ).toEqual([
+      {
+        type: 'user',
+        content: 'Widen this box',
+        images: [
+          { url: 'https://cdn.example.test/shot.png', mimeType: 'image/png' },
+        ],
+      },
+    ])
+  })
+
+  it('lists the files a user attached', () => {
+    expect(
+      projectTranscriptToBubbles(
+        [
+          user(
+            '<system-reminder>\n/attachments/glossary.md (attached by the user, not a workspace file; full content below):\nterm\n\n/doc.xml changed since you last saw it\n</system-reminder>\n\nUse these terms',
+          ),
+        ],
+        [],
+      ),
+    ).toEqual([
+      {
+        type: 'user',
+        content: 'Use these terms',
+        files: ['/attachments/glossary.md'],
+      },
+    ])
+  })
+
   it('turns thinking into a thinking bubble split into steps', () => {
     const [bubble] = projectTranscriptToBubbles(
       [

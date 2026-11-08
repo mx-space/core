@@ -7,6 +7,10 @@ import type { AgentHistoryBubble } from '@mx-space/ai'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+import type {
+  ChatAttachment,
+  UserChatBubble,
+} from '~/features/write/components/agent/types'
 import { translate } from '~/i18n/translate'
 
 import type { AgentConversation, AgentReviewAnchor } from '../api/ai-agent'
@@ -364,10 +368,35 @@ export function useAgentSessionManager({
   }
 }
 
+const basename = (path: string) =>
+  decodeURIComponent(path.split(/[?#]/)[0].split('/').pop() || path)
+
+function hydrateUserBubble(
+  bubble: Extract<AgentHistoryBubble, { type: 'user' }>,
+): ChatBubble {
+  const { files, images, ...rest } = bubble
+  const attachments: ChatAttachment[] = [
+    ...(images ?? []).map((image) => ({
+      kind: 'image' as const,
+      name: basename(image.url),
+      url: image.url,
+    })),
+    ...(files ?? []).map((path) => ({
+      kind: 'file' as const,
+      name: basename(path),
+    })),
+  ]
+  const user: UserChatBubble = attachments.length
+    ? { ...rest, attachments }
+    : rest
+  return user
+}
+
 function hydrateBubble(
   bubble: AgentHistoryBubble,
   describe: UseAgentSessionManagerOptions['describeToolCall'],
 ): ChatBubble {
+  if (bubble.type === 'user') return hydrateUserBubble(bubble)
   if (bubble.type !== 'tool_call_group') return bubble as ChatBubble
   return {
     ...bubble,

@@ -47,6 +47,7 @@ export interface ServerAgentRunInput {
   user: string
   system: string[]
   files: AgentFileSnapshot[]
+  images?: AgentToolImage[]
 }
 
 export interface ServerAgentRunnerConfig {
@@ -242,6 +243,7 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
           runId,
           sessionId: input.sessionId,
           user: input.user,
+          ...(input.images?.length ? { images: input.images } : {}),
           ...sentStatic,
         } satisfies AgentRunPayload)
       })
@@ -261,7 +263,11 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
     }
   }
 
-  async function steer(user: string, files: AgentFileSnapshot[]) {
+  async function steer(
+    user: string,
+    files: AgentFileSnapshot[],
+    images?: AgentToolImage[],
+  ) {
     const current = active
     if (!current) return false
     try {
@@ -272,6 +278,7 @@ export function createServerAgentRunner(config: ServerAgentRunnerConfig) {
           }),
           runId: current.runId,
           user,
+          ...(images?.length ? { images } : {}),
         } satisfies AgentSteerPayload),
       )
       wire.commitFiles(current.conversationId, files)

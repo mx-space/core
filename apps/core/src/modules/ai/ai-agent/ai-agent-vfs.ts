@@ -1,4 +1,4 @@
-import type { AgentFileSnapshot } from '@mx-space/ai'
+import { AGENT_ATTACHMENTS_DIR, type AgentFileSnapshot } from '@mx-space/ai'
 import { createTwoFilesPatch } from 'diff'
 
 export type KnownFiles = Record<string, string>
@@ -10,6 +10,8 @@ export interface FileReconcileResult {
 }
 
 const EMBEDS_DIR = '/embeds/'
+export const USER_ATTACHMENT_NOTE =
+  '(attached by the user, not a workspace file; full content below):'
 const REMINDER_OPEN = '<system-reminder>\n'
 const REMINDER_CLOSE = '\n</system-reminder>\n\n'
 
@@ -40,7 +42,10 @@ export function reconcileFiles(
     const previous = known[path]
     if (previous === undefined) {
       if (!attach || content.trim() === '') continue
-      sections.push(`${path} (attached by the user):\n${content}`)
+      const note = path.startsWith(AGENT_ATTACHMENTS_DIR)
+        ? USER_ATTACHMENT_NOTE
+        : '(attached by the user):'
+      sections.push(`${path} ${note}\n${content}`)
     } else if (previous === content) {
       continue
     } else if (path.startsWith(EMBEDS_DIR)) {

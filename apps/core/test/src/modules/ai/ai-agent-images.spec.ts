@@ -6,6 +6,7 @@ import {
   createImageLoader,
   hydrateImages,
   toolResultContent,
+  userContent,
 } from '~/modules/ai/ai-agent/ai-agent-images'
 
 const URL_A = 'https://cdn.example.test/versions/a.png'
@@ -32,7 +33,45 @@ describe('toolResultContent', () => {
   })
 })
 
+describe('userContent', () => {
+  it('stays a plain string without images', () => {
+    expect(userContent('hello', [])).toBe('hello')
+  })
+
+  it('appends image URL references after the text', () => {
+    expect(
+      userContent('see this', [{ url: URL_A, mimeType: 'image/png' }]),
+    ).toEqual([
+      { type: 'text', text: 'see this' },
+      { type: 'image', data: URL_A, mimeType: 'image/png' },
+    ])
+  })
+})
+
 describe('hydrateImages', () => {
+  it('loads image references in user messages', async () => {
+    const stored: UserMessage[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'see this' },
+          { type: 'image', data: URL_A, mimeType: 'image/png' },
+        ],
+        timestamp: 0,
+      },
+    ]
+
+    const hydrated = await hydrateImages(stored, async () => ({
+      data: 'QUJD',
+      mimeType: 'image/png',
+    }))
+
+    expect((hydrated[0] as UserMessage).content).toEqual([
+      { type: 'text', text: 'see this' },
+      { type: 'image', data: 'QUJD', mimeType: 'image/png' },
+    ])
+  })
+
   it('replaces URL references with loaded base64 without touching the stored transcript', async () => {
     const stored = [
       toolMessage([
