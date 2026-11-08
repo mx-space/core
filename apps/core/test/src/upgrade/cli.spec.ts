@@ -34,6 +34,24 @@ describe('upgrade CLI isolated process', () => {
   })
   afterAll(async () => context?.close())
 
+  it('rejects the removed prepare command without modifying the database', async () => {
+    const output: string[] = []
+    expect(
+      await runUpgradeCli(
+        ['prepare', '--all-replicas-v2'],
+        {
+          PG_URL: context.connectionString,
+          MX_ENCRYPT_KEY: 'ab'.repeat(32),
+          JWT_SECRET: 'long-enough-test-jwt-123456789012345',
+        },
+        (value) => output.push(value),
+      ),
+    ).toBe(1)
+    expect(
+      (await context.pool.query('SELECT id FROM _app_migrations')).rows,
+    ).toEqual([])
+  })
+
   it('reports bad runtime settings in a fresh process without bootstrap failure', async () => {
     const result = await promisify(execFile)(
       'node_modules/.bin/vite-node',

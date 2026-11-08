@@ -4,9 +4,9 @@ This unreleased branch now requires field encryption, an explicit hex64 key
 and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
 flags and machine-ID fallback have been removed. Canonical configuration migration and strict configuration PATCH validation
 are also enforced here. SDK 6 cleanup and column removal remain future work. These commands are not part of released v17.0.4.
-No minimum released preparation tag is established yet. Build and deploy this
-preparation code to every replica before using it; do not publish or migrate
-production as part of reviewing this branch.
+No minimum released preparation tag is established yet. Obtain this build
+without starting business replicas; do not publish or migrate production as
+part of reviewing this branch.
 
 ## Preconditions and checks
 
@@ -32,7 +32,8 @@ pnpm -C apps/core upgrade:check --json
 inspection failed. Reports contain counts, record paths and stable codes,
 never secret values. Missing/bad encryption settings and short JWT values do
 not prevent diagnostics. Empty installations do not need a historical marker.
-Existing installations require a new marker plus current data verification;
+Existing installations require the canonical configuration migration record
+and current data verification. There is no separate preparation marker;
 an old secret-migration ledger row alone is insufficient.
 
 ## Short JWT maintenance
@@ -56,7 +57,7 @@ must sign in again. The operator then applies the same new JWT to every
 replica before starting them. Missing original JWT plus encrypted tokens
 requires recovering the original secret or reauthorizing the account.
 
-## Explicit preparation
+## Release migration
 
 Obtain this build without starting business replicas. Run check and rotate a
 short JWT during maintenance first. Stop every old replica/background writer,
@@ -74,30 +75,27 @@ retention and freeform record keys remain supported. Startup refuses to load
 configuration without the migration record. Historical conversion lives only
 in release/offline upgrade code, including nested legacy SMTP options.
 
-Continue the explicit credential/metrics preparation before starting new
-replicas. All writers must already be stopped or use the current formats.
+The same release runner backfills AI metrics and always runs the v18
+`20261109-required-secret-storage` migration. It protects Snippet/Webhook
+secrets, hashes API keys and encrypts OAuth tokens. This uses a new migration
+ID so a historical opt-in credential migration cannot skip the v18 backfill.
+No activation flag or separate preparation command is required.
 
 ```sh
-pnpm -C apps/core upgrade:prepare --all-replicas-v2 --dry-run
-pnpm -C apps/core upgrade:prepare --all-replicas-v2
+pnpm -C apps/core migrate
 pnpm -C apps/core upgrade:check --json
 ```
 
-`--all-replicas-v2` is an operator attestation, not automatic cluster discovery.
-Preparation holds a PostgreSQL advisory lock shared by configuration PATCH.
-It decrypts secrets at their old AAD paths, converts legacy AI/media, GitHub
-and membership options to canonical storage, encrypts at new paths, hashes
-API keys once, protects OAuth, and fills missing AI metrics. Existing client
-API-key strings continue to verify. It writes the new marker only after no
-residuals remain. Malformed data or wrong secrets roll the whole transaction
-back. Current configuration PATCH validation is strict.
+Configuration conversion holds the database lock shared by configuration
+PATCH. Each migration records completion only after success; a failed batch
+rolls back and blocks deployment. Earlier successful migrations retain their
+ledger records and are skipped on retry. Existing API-key strings continue to
+verify; rerunning migrations does not rehash keys or rotate existing tokens.
+There is no independent prepare, preparation marker or dry-run command.
 
-Dry-run executes and rolls back the complete transaction. `would-be-ready`
-does not mean a marker was persisted. Repeated successful preparation is
-idempotent and does not rehash keys or rotate tokens. After a real commit,
-restart business replicas to retire old caches, then check original API-key
-authentication, OAuth, configuration consumption and AI metadata. Do not flush
-all Redis state.
+After migration and a successful check, start new business replicas and verify
+original API-key authentication, OAuth, configuration consumption and AI
+metadata. Do not flush all Redis state.
 
 A blank canonical credential falls back to a populated legacy credential.
 Different nonempty old/new values report CONFIG_SECRET_CONFLICT and roll back
@@ -107,8 +105,8 @@ old shapes via PATCH. Never overwrite a lost key with a newly generated key.
 
 ## Built artifacts and containers
 
-Run `node upgrade.mjs check --json`, `node upgrade.mjs prepare` or
-`node upgrade.mjs rotate-jwt` with the same arguments in the built output.
+Run `node migrate.mjs` for the release migration, `node upgrade.mjs check --json`
+for diagnostics or `node upgrade.mjs rotate-jwt` for maintenance rotation.
 Docker copies this entry and its shared chunks with the main application.
 A future preparation image can run the tool without starting app services:
 
@@ -144,7 +142,7 @@ Older versions require their old complete snapshot and secrets.
 
 The restore service does not currently provide automatic v18 isolation or
 preflight. Restore historical ZIP/v1 encrypted archives into an isolated
-preparation installation using original archive/field/JWT secrets, run schema
-migration and check/prepare, verify credentials and files, and only then plan
+maintenance installation using original archive/field/JWT secrets, run the
+release migration and check, verify credentials and files, and only then plan
 a v18 switch. Keep a pre-restore snapshot. Database replacement is atomic,
 file copying is separate; failures must not be reported as a complete restore.

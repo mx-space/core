@@ -22,17 +22,12 @@ import {
   type SecretStorageConfig,
 } from '../utils/secret-storage-config'
 
-export { oauthKey } from '../database/app-migrations/helpers/oauth-token'
-
-export const PREPARED_MIGRATION_ID = '20261108-v18-prepared'
-export { CONFIG_UPGRADE_LOCK } from '../shared/config-lock'
 export type UpgradeConfig = SecretStorageConfig
 export type UpgradeIssue = { code: string; path?: string }
 export type UpgradeReport = {
   target: 18
   status: 'ready' | 'needs-action' | 'error'
   installation: 'empty' | 'existing'
-  prepared: boolean
   counts: {
     plaintext: number
     ecb: number
@@ -197,12 +192,6 @@ export async function readUpgradeState(
     )
     counts.metricsMissing += result.rows[0].count
   }
-  const prepared =
-    (
-      await database.query('SELECT 1 FROM _app_migrations WHERE id = $1', [
-        PREPARED_MIGRATION_ID,
-      ])
-    ).rowCount !== 0
   // A new database may contain migration ledgers, but no application data.
   const tables = (
     await database.query(
@@ -236,7 +225,7 @@ export async function readUpgradeState(
     counts.plainApiKeys ||
     counts.plainOAuth
   )
-    issues.push({ code: 'CREDENTIALS_NEED_PREPARATION' })
+    issues.push({ code: 'CREDENTIALS_NEED_MIGRATION' })
   if (counts.legacyConfig) issues.push({ code: 'LEGACY_CONFIG' })
   if (counts.metricsMissing) issues.push({ code: 'METRICS_INCOMPLETE' })
   if (
@@ -248,13 +237,10 @@ export async function readUpgradeState(
     ).rowCount
   )
     issues.push({ code: 'CONFIG_MIGRATION_MISSING' })
-  if (installation === 'existing' && !prepared)
-    issues.push({ code: 'PREPARATION_MARKER_MISSING' })
   return {
     target: 18,
     status: issues.length ? 'needs-action' : 'ready',
     installation,
-    prepared,
     counts,
     issues,
   }
