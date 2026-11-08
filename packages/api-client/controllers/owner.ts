@@ -11,6 +11,7 @@ import type {
   UserModel,
 } from '~/models/user'
 import { autoBind } from '~/utils/auto-bind'
+
 import type { HTTPClient } from '../core'
 
 declare module '@mx-space/api-client' {
@@ -130,7 +131,9 @@ export class UserController<ResponseWrapper> implements IController {
     const normalized = this.normalizeToken(token)
 
     return this.proxy.check_logged.get<CheckLoggedResult>({
-      params: normalized ? { token: normalized } : undefined,
+      headers: normalized
+        ? { Authorization: `Bearer ${normalized}` }
+        : undefined,
     })
   }
 }

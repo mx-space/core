@@ -9,6 +9,7 @@ import type { PostModel } from '~/models/post'
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core/client'
+import { normalizeSortOrder } from './base'
 
 declare module '@mx-space/api-client' {
   interface HTTPClient<
@@ -22,7 +23,7 @@ declare module '@mx-space/api-client' {
 export type PostListOptions = {
   year?: number
   sortBy?: 'categoryId' | 'title' | 'createdAt' | 'modifiedAt' | 'pinAt'
-  sortOrder?: 1 | -1
+  sortOrder?: 1 | -1 | 'asc' | 'desc'
   truncate?: number
   /** 语言代码，用于获取翻译版本 */
   lang?: string
@@ -48,7 +49,7 @@ export class PostController<ResponseWrapper> implements IController {
         page,
         size: perPage,
         sortBy,
-        sortOrder,
+        sortOrder: normalizeSortOrder(sortOrder),
         year,
         truncate,
         lang,

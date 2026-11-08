@@ -1,7 +1,7 @@
 import type { ContentDocument, DraftModel } from '~/models/draft'
 
 import type { RecentActivities } from './activity'
-import { getJson } from './http'
+import { getJson, requestJson } from './http'
 
 export interface StatCount {
   allComments?: number
@@ -180,9 +180,9 @@ export function getSiteLikeCount() {
 }
 
 export function cleanCache() {
-  return getJson<void>('/clean_catch')
+  return requestJson<void>('/clean_catch', { method: 'POST' })
 }
 
 export function cleanRedis() {
-  return getJson<void>('/clean_redis')
+  return requestJson<void>('/clean_redis', { method: 'POST' })
 }

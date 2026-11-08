@@ -18,7 +18,7 @@ export async function getBackups() {
 }
 
 export function createBackup() {
-  return requestBlob('/backups/new')
+  return requestBlob('/backups/new', { method: 'POST' })
 }
 
 export function downloadBackup(filename: string) {

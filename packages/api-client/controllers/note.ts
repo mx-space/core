@@ -7,6 +7,7 @@ import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core/client'
 import type { SortOptions } from './base'
+import { normalizeSortOrder } from './base'
 
 declare module '@mx-space/api-client' {
   interface HTTPClient<
@@ -20,7 +21,7 @@ declare module '@mx-space/api-client' {
 export type NoteListOptions = {
   year?: number
   sortBy?: 'weather' | 'mood' | 'title' | 'createdAt' | 'modifiedAt'
-  sortOrder?: 1 | -1
+  sortOrder?: 1 | -1 | 'asc' | 'desc'
   lang?: string
   withSummary?: boolean
 }
@@ -149,7 +150,7 @@ export class NoteController<ResponseWrapper> implements IController {
         page,
         size: perPage,
         sortBy,
-        sortOrder,
+        sortOrder: normalizeSortOrder(sortOrder),
         year,
         lang,
         withSummary: withSummary ? '1' : undefined,
@@ -188,7 +189,13 @@ export class NoteController<ResponseWrapper> implements IController {
   ) {
     const { lang, ...sortOptions } = options
     return this.proxy.topics(topicId).get<PaginateResult<NoteModel>>({
-      params: { page, size, lang, ...sortOptions },
+      params: {
+        page,
+        size,
+        lang,
+        ...sortOptions,
+        sortOrder: normalizeSortOrder(sortOptions.sortOrder),
+      },
     })
   }
 

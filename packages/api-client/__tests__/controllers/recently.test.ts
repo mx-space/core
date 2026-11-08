@@ -55,11 +55,15 @@ describe('test recently client, /recently', () => {
     expect(data).toEqual(mocked)
   })
 
-  test('GET /attitude', async () => {
+  test('POST /attitude', async () => {
     const id = `1212121`
-    const mocked = mockResponse(`/recently/attitude/${id}?attitude=1`, {
-      code: 1,
-    })
+    const mocked = mockResponse(
+      `/recently/attitude/${id}`,
+      {
+        code: 1,
+      },
+      'post',
+    )
     const data = await client.recently.attitude(id, 1)
     expect(data).toEqual(mocked)
   })

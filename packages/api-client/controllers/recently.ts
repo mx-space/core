@@ -72,7 +72,7 @@ export class RecentlyController<ResponseWrapper> implements IController {
 
   /**  表态：点赞，点踩 */
   attitude(id: string, attitude: RecentlyAttitudeEnum) {
-    return this.proxy.attitude(id).get<{ code: RecentlyAttitudeResultEnum }>({
+    return this.proxy.attitude(id).post<{ code: RecentlyAttitudeResultEnum }>({
       params: {
         attitude,
       },

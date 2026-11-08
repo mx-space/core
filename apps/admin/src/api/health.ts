@@ -1,5 +1,8 @@
-import { getJson } from './http'
+import { requestJson } from './http'
 
 export function sendTestEmail() {
-  return getJson<{ message?: string; trace?: string }>('/health/email/test')
+  return requestJson<{ message?: string; trace?: string }>(
+    '/health/email/test',
+    { method: 'POST' },
+  )
 }

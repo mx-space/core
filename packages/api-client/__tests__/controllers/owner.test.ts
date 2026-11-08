@@ -52,7 +52,7 @@ describe('test owner client', () => {
   })
 
   test('GET /owner/check_logged', async () => {
-    const mocked = mockResponse('/owner/check_logged?token=token', {
+    const mocked = mockResponse('/owner/check_logged', {
       isGuest: true,
       ok: 0,
     })
