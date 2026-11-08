@@ -965,11 +965,11 @@ describe('ConfigsService', () => {
           apiKey: 'secret',
           defaultModel: '',
           enabled: true,
-          capabilities: expect.objectContaining({
+          capabilities: {
             text: false,
             image: true,
             speech: false,
-          }),
+          },
         },
       ]
       const { service } = createService(currentConfig)
