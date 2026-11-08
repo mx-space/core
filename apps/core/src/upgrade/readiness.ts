@@ -8,19 +8,17 @@ import {
   normalizeLegacyConfig,
 } from '../modules/configs/legacy-config.util'
 import { SecretCodec } from '../utils/secret-codec'
+import {
+  inspectSecretStorageConfig,
+  type SecretStorageConfig,
+} from '../utils/secret-storage-config'
 import { isEncryptedOAuth, unwrapOAuthToken } from './oauth-token'
 
 export { oauthKey } from './oauth-token'
 
 export const PREPARED_MIGRATION_ID = '20261108-v18-prepared'
 export { CONFIG_UPGRADE_LOCK } from '../shared/config-lock'
-export type UpgradeConfig = {
-  key: string
-  jwtSecret: string
-  enable: boolean
-  v2: boolean
-  algorithm?: string
-}
+export type UpgradeConfig = SecretStorageConfig
 export type UpgradeIssue = { code: string; path?: string }
 export type UpgradeReport = {
   target: 18
@@ -65,13 +63,8 @@ export async function readUpgradeState(
   database: UpgradeDatabase,
   config: UpgradeConfig,
 ): Promise<UpgradeReport> {
-  const issues: UpgradeIssue[] = []
+  const issues: UpgradeIssue[] = inspectSecretStorageConfig(config)
   const keyValid = /^[\da-f]{64}$/i.test(config.key)
-  if (!config.key) issues.push({ code: 'FIELD_KEY_MISSING' })
-  else if (!keyValid) issues.push({ code: 'FIELD_KEY_INVALID' })
-  if (!config.enable) issues.push({ code: 'ENCRYPTION_DISABLED' })
-  if (config.jwtSecret.length < 32) issues.push({ code: 'JWT_TOO_SHORT' })
-  if (!config.v2) issues.push({ code: 'V2_WRITES_DISABLED' })
   const counts: UpgradeReport['counts'] = {
     plaintext: 0,
     ecb: 0,
@@ -83,7 +76,7 @@ export async function readUpgradeState(
     encryptedOAuth: 0,
     metricsMissing: 0,
   }
-  const codec = new SecretCodec({ ...config, enable: true, v2: true })
+  const codec = new SecretCodec(config)
   const inspect = (secret: string, path: string) => {
     if (!secret) return secret
     if (secret.startsWith('$${mx}$$v2.')) counts.v2++

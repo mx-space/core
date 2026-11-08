@@ -2,20 +2,13 @@ import { parseArgs } from 'node:util'
 
 import { Pool } from 'pg'
 
+import { secretStorageConfigFromEnv } from '../utils/secret-storage-config'
 import { rotateJwtSecret } from './jwt-rotation'
 import { prepareUpgrade, UpgradeError } from './preparation'
 import { readUpgradeState, type UpgradeConfig } from './readiness'
 
 export function upgradeConfigFromEnv(env: NodeJS.ProcessEnv): UpgradeConfig {
-  const key = env.MX_ENCRYPT_KEY || env.ENCRYPT_KEY || ''
-  const enabled = env.MX_ENCRYPT_ENABLE || env.ENCRYPT_ENABLE
-  return {
-    key,
-    enable: enabled === undefined ? !!key : enabled === 'true',
-    v2: env.MX_SECRET_STORAGE_V2 === '1' || env.MX_SECRET_STORAGE_V2 === 'true',
-    jwtSecret: env.JWT_SECRET || env.JWTSECRET || '',
-    algorithm: env.ENCRYPT_ALGORITHM || 'aes-256-ecb',
-  }
+  return secretStorageConfigFromEnv(env)
 }
 
 export async function runUpgradeCli(

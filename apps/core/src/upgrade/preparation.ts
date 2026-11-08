@@ -39,7 +39,7 @@ export async function prepareUpgrade(
   if (!options.allReplicasV2)
     throw new UpgradeError('REPLICA_CONFIRMATION_REQUIRED')
   const client = await pool.connect()
-  const codec = new SecretCodec({ ...config, v2: true })
+  const codec = new SecretCodec(config)
   const ids = new SnowflakeGenerator({ workerId: 1023 })
   let changed = 0
   try {

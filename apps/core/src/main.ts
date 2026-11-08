@@ -21,7 +21,7 @@ export async function startMain() {
   initializeApp()
 
   const importStartedAt = performance.now()
-  const [{ bootstrap }, { CLUSTER, ENCRYPT }, { Cluster }] = await Promise.all([
+  const [{ bootstrap }, { CLUSTER }, { Cluster }] = await Promise.all([
     import('./bootstrap'),
     import('./app.config.js'),
     import('./cluster'),
@@ -32,21 +32,6 @@ export async function startMain() {
 
   if (!CLUSTER.enable || cluster.isPrimary || isMainCluster) {
     logger.log('cwd: ', cwd)
-  }
-
-  if (ENCRYPT.enable && ENCRYPT.key) {
-    const isValidKey = ENCRYPT.key.length === 64
-
-    if (!isValidKey) {
-      logger.error('encrypt key must be 64 length')
-      process.exit(1)
-    }
-
-    logger.log('Secret encryption is enabled')
-  } else {
-    logger.warn(
-      'Secret encryption is disabled (legacy compatibility mode). v18 will require ENCRYPT_ENABLE=true and a 64-character hexadecimal ENCRYPT_KEY; keep your existing key when upgrading.',
-    )
   }
 
   DEBUG_MODE.memoryDump && registerForMemoryDump()
