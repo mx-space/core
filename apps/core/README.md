@@ -223,7 +223,7 @@ pnpm test:watch                                           # watch mode
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `JWT_SECRET` | Secret for JWT signing | Required |
+| `JWT_SECRET` | Explicit secret for JWT signing and OAuth encryption, at least 32 characters | Required |
 | `ALLOWED_ORIGINS` | CORS allowed origins (comma-separated) | — |
 | `PG_URL` | Full PostgreSQL connection string | — |
 | `PG_HOST` | PostgreSQL host | `127.0.0.1` |
@@ -238,14 +238,15 @@ pnpm test:watch                                           # watch mode
 | `REDIS_PORT` | Redis port | `6379` |
 | `REDIS_PASSWORD` | Redis password | — |
 | `SNOWFLAKE_WORKER_ID` | Snowflake ID worker ID (0–1023) | Required |
-| `ENCRYPT_ENABLE` | Enable field encryption; `false` is a temporary v17 plaintext escape hatch. Encryption is required starting in v18 | `false` |
-| `ENCRYPT_KEY` | 64-char hex encryption key | — |
-| `MX_SECRET_STORAGE_V2` | Enable new secret formats after all replicas are upgraded; see [rollout guide](../../docs/security-secret-storage.md) | `false` |
+| `ENCRYPT_KEY` / `MX_ENCRYPT_KEY` | Required explicit 64-char hex field key; preserve the existing key | — |
+| `ENCRYPT_ENABLE` / `MX_ENCRYPT_ENABLE` / `MX_SECRET_STORAGE_V2` | Deprecated: remove these flags. Old true values are ignored; false values refuse startup | — |
 | `THROTTLE_TTL` | Rate limit window (seconds) | `10` |
 | `THROTTLE_LIMIT` | Max requests per window | `100` |
 | `PORT` | Server port | `2333` |
 | `TZ` | Timezone | `Asia/Shanghai` |
 | `DISABLE_CACHE` | Disable Redis caching | `false` |
+
+On this unreleased branch, field encryption and V2 writes are mandatory; `JWT_SECRET` must have at least 32 characters. See the [upgrade guide](../../docs/v18-preparation.md) before deploying to an existing instance.
 
 For managed Redis providers such as Upstash, pass the provider URI as
 `REDIS_CONNECTION_STRING=rediss://user:password@host:port`. The `rediss://`

@@ -1,6 +1,8 @@
 # v18 preparation (unreleased)
 
-This is the v17 preparation phase. v18 enforcement, SDK 6 cleanup and column
+This unreleased branch now requires field encryption, an explicit hex64 key
+and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
+flags and machine-ID fallback have been removed. SDK 6 cleanup and column
 removal remain future work. These commands are not part of released v17.0.4.
 No minimum released preparation tag is established yet. Build and deploy this
 preparation code to every replica before using it; do not publish or migrate
@@ -16,8 +18,9 @@ historical schema/data migrations before using this runner.
 The independent CLI consumes environment configuration, not the application's
 CLI/YAML flags. Supply the same effective `PG_URL` (preferred),
 `PG_CONNECTION_STRING` or `PG_HOST`/`PG_PORT`/`PG_USER`/`PG_PASSWORD`/`PG_DATABASE`,
-optional `PG_SSL`, `MX_ENCRYPT_KEY`/`ENCRYPT_KEY`, enable flag,
-`JWT_SECRET`/`JWTSECRET`, and `MX_SECRET_STORAGE_V2`. `.env` is loaded relative
+optional `PG_SSL`, `MX_ENCRYPT_KEY`/`ENCRYPT_KEY`, and
+`JWT_SECRET`/`JWTSECRET`. Remove the old encryption/V2 flags; explicit false
+values are diagnosed as `DEPRECATED_ENCRYPTION_FLAG`. `.env` is loaded relative
 to the command's working directory. It does not start HTTP, business services,
 background jobs or Redis. Migrate the schema separately first.
 
@@ -55,9 +58,10 @@ requires recovering the original secret or reauthorizing the account.
 
 ## Explicit preparation
 
-After every replica has the compatible reader, enable field encryption and
-V2 writes everywhere. Confirm no old writer remains. A short JWT must be
-rotated before enabling V2. Use the original field key; only an instance that
+Obtain this build without starting business replicas. Run the standalone
+check and rotate a short JWT during maintenance first. Remove old disable
+flags, then deploy the required secrets and this runtime to all replicas.
+Every new write is V2 automatically. Confirm no old writer remains. Use the original field key; only an instance that
 has never encrypted data may generate its first random key.
 
 ```sh
@@ -100,7 +104,10 @@ A future preparation image can run the tool without starting app services:
 docker compose run --rm --no-deps app node upgrade.mjs check --json
 ```
 
-The database must already be running. For JWT rotation mount both secret files
+The database must already be running. Compose requires nonempty persisted
+field/JWT values before launching any service. Use the source CLI or a direct
+`docker run` invocation to diagnose missing settings without Compose validation.
+For JWT rotation mount both secret files
 read-only and pass their in-container paths. Ensure the app replicas are
 stopped; `--no-deps` by itself does not stop an existing replica. Keep app and
 migration images pinned to the same verified release, not an unreviewed latest.

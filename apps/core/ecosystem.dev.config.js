@@ -1,4 +1,5 @@
 const { execSync } = require('node:child_process')
+
 const nodePath = execSync(`npm root --quiet -g`, { encoding: 'utf-8' }).split(
   '\n',
 )[0]
@@ -13,7 +14,7 @@ module.exports = {
       watch: false,
       instances: 2,
       max_memory_restart: '220M',
-      args: '--color --encrypt_enable',
+      args: '--color',
       env: {
         NODE_ENV: 'development',
         NODE_PATH: nodePath,

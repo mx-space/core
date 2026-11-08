@@ -2,53 +2,52 @@
 
 Core protects recoverable credentials with authenticated encryption and stores API keys as hashes. This does not isolate the encryption key from a compromised application host; external KMS integration is a separate step.
 
-## Temporary legacy escape hatch (v17 only)
+## Required configuration (unreleased branch)
 
-Existing installations can temporarily keep `ENCRYPT_ENABLE=false` (or `MX_ENCRYPT_ENABLE=false`) with `MX_SECRET_STORAGE_V2=false`. In this mode, legacy configuration and Snippet secrets continue to be read and written as plaintext in PostgreSQL and Redis. API responses still mask sensitive configuration fields. Startup logs a deprecation warning.
+Field encryption is the only runtime mode on this branch. Supply an explicit
+64-character hexadecimal `MX_ENCRYPT_KEY` or `ENCRYPT_KEY`, and a stable
+`JWT_SECRET` (alias `JWTSECRET`) of at least 32 characters. There is no
+machine-ID fallback or short-key derivation. Keep existing effective secrets;
+only an instance that has never encrypted data may generate its first random
+field key with `openssl rand -hex 32`. Persist secrets before starting and
+share the same values between app and migration services.
 
-This escape hatch does not bypass encryption checks for existing ciphertext, v2 writes, the secret backfill, or features that explicitly require encrypted storage (such as LobeHub authorization). To read existing ciphertext, enable encryption with its original key. Enabling encryption with a missing or invalid key still fails rather than falling back to plaintext.
+Remove `ENCRYPT_ENABLE`, `MX_ENCRYPT_ENABLE` and `MX_SECRET_STORAGE_V2`.
+Historical true values are accepted with a deprecation warning; false or
+other unsupported values fail before business startup. These flags no longer
+select a storage mode. Config/Snippet/Webhook writes always use authenticated
+V2 encryption, API-key writes always hash, and OAuth writes stay encrypted.
+`ENCRYPT_ALGORITHM` is used only to read historical ECB ciphertext.
 
-**v18 will require field encryption and an explicit 64-character hexadecimal encryption key.** Before upgrading to v18, set `ENCRYPT_ENABLE=true` (or `MX_ENCRYPT_ENABLE=true`) and configure `ENCRYPT_KEY` (or `MX_ENCRYPT_KEY`). Keep the original key when one already exists; configure a random key only for installations that have never encrypted data. Follow the rollout below separately to activate v2 writes and backfill existing stored credentials.
+The published v17.0.4 escape hatch is historical behavior, removed here.
+This branch is not released yet. The [preparation runbook](v18-preparation.md)
+explains standalone check/prepare and maintenance JWT rotation. The tools can
+inspect invalid settings without booting the application. Short JWT values
+must be rotated with the original secret before starting this runtime; do not
+replace their environment value alone.
 
-## v18 preparation tooling (unreleased)
+Before persistent backfill, stop old-format writers on every replica and
+background worker. `upgrade:prepare --all-replicas-v2` requires an explicit
+operator attestation and performs transactional conversion/verification.
+`migrate:secrets` remains an opt-in credential-only historical migration; its
+ledger is not proof that configuration and AI metadata are prepared. It no
+longer needs a V2 activation flag.
 
-The current branch adds a separate readiness/preparation ledger and standalone
-CLI. v17.0.4 does not contain these commands. Follow the
-[v18 preparation runbook](v18-preparation.md) after deploying a compatible
-preparation build. The older `migrate:secrets` ledger is not proof that legacy
-config and AI metadata are prepared. Never rotate a short JWT by replacing its
-environment value alone: use the maintenance file-based rewrap operation.
-
-## Original credential rollout
-
-This is an expand-before-contract rollout. Two replicas may overlap, so the new reader ships before new writes.
-
-1. Configure an explicit random 32-byte encryption key as 64 hexadecimal characters (`MX_ENCRYPT_KEY` or `ENCRYPT_KEY`), enable encryption, and configure a stable `JWT_SECRET`. Keep the existing keys when upgrading an installed instance. Machine identity is not an encryption secret.
-2. Deploy this version to **every replica** with `MX_SECRET_STORAGE_V2=false` (the default). This immediately fixes configuration plaintext writes, removes secret logging, and masks token details. Config and Snippet writes retain the legacy cipher format during this phase. Webhook and OAuth writes retain their old format so the preceding release can still read them.
-3. After every replica has the compatible reader, deploy `MX_SECRET_STORAGE_V2=true` to every replica. New configuration/Snippet secrets use AES-256-GCM; Webhook credentials are encrypted; API keys use Better Auth hashes; OAuth access/refresh tokens use Better Auth authenticated encryption. All replicas must finish this step before the backfill, so no legacy writer can reintroduce plaintext afterwards.
-4. Run the one-shot data migration using the same database, encryption key and JWT secret as the application:
-
-   ```sh
-   pnpm -C apps/core run migrate:secrets
-   ```
-
-   In the release container, the equivalent is to set `MX_SECRET_STORAGE_V2=true` and `MX_MIGRATE_SECRETS=1` for a one-shot `node migrate.mjs` invocation. Do not put `MX_MIGRATE_SECRETS` in the regular app environment. The migration is explicitly opt-in, transactional and repeatable; the standard app-migration ledger records completion. It does not change schema or contact credential providers.
-
-5. Refresh running instances after the backfill so old cached representations retire. Verify configuration consumption, API authentication and token revocation. Existing client API key strings remain valid after hashing.
-
-After activation, rollback only to a version that understands the new formats. Do not roll back to the preceding release or disable v2 writes again. Do not change encryption/JWT keys as part of this rollout. Key IDs identify the required encryption key; they do not provide automatic key rotation or recovery.
+After conversion, roll back only to a tested reader of the new formats.
+Neither disabling encryption nor switching back to old-format writes exists.
+Preserve original field/JWT secrets and snapshots for recovery.
 
 ## Storage and API behavior
 
-- With encryption enabled, sensitive configuration is encrypted **after merging**, before PostgreSQL and Redis writes. Blank secret fields retain the existing value. Responses sanitize stored objects without decrypting them, including in legacy plaintext mode.
-- The v2 envelope carries a format version, key fingerprint, random 96-bit nonce, authentication tag and ciphertext. AAD binds configuration secrets to their field paths and Snippet/Webhook secrets to their record and field. A wrong key, invalid context, corrupt envelope or encryption failure is an error; it is never a plaintext fallback. Legacy plaintext/ECB reads remain for the staged upgrade.
+- Sensitive configuration is encrypted **after merging**, before PostgreSQL and Redis writes. Blank secret fields retain the existing value. Responses sanitize stored objects without decrypting them, including when reading historical plaintext.
+- The v2 envelope carries a format version, key fingerprint, random 96-bit nonce, authentication tag and ciphertext. AAD binds configuration secrets to their field paths and Snippet/Webhook secrets to their record and field. A wrong key, invalid context, corrupt envelope or encryption failure is an error; it is never a plaintext fallback. Legacy plaintext/ECB reads remain for explicit upgrades and historical recovery.
 - API keys are displayed only in the creation response. List/detail responses contain only the visible prefix. `mx-hashed-v1` identifies hashed records, so a hash copied from the database cannot authenticate through the legacy verifier. The legacy reader is retained for upgrade compatibility; migrated records always use the hashed configuration. Revocation uses the key ID and closes associated WebSocket connections on every replica through the existing Redis bus.
 - Password hashes, OAuth tokens, ID tokens and raw provider payloads are excluded from session profile responses.
 - OAuth access/refresh token encryption uses `JWT_SECRET` as Better Auth key version 1. Encryption and authentication secrets must remain available for recovery of their respective data.
 
 ## Encrypted backups
 
-Enable **Settings → Storage → Backup → Backup encryption**. The browser generates a recovery key and displays it once, with copy and download actions. Confirm that you have saved it, then save the settings. Canceling the dialog leaves encryption disabled. No backup environment variable is required; this setting is independent of `MX_SECRET_STORAGE_V2` and field encryption. The browser must use HTTPS or localhost for Web Crypto.
+Enable **Settings → Storage → Backup → Backup encryption**. The browser generates a recovery key and displays it once, with copy and download actions. Confirm that you have saved it, then save the settings. Canceling the dialog leaves encryption disabled. No backup environment variable is required; this setting is independent of mandatory field encryption. The browser must use HTTPS or localhost for Web Crypto.
 
 Only the public key is sent to and stored by the server. The RSA-3072 private recovery key stays in the browser's temporary modal state until the user closes it; it is not put in application settings, browser storage or query caches. Every backup gets a fresh random AES-256-GCM data key, wrapped with RSA-OAEP-SHA256 and the configured public key. The versioned `.mxbackup` envelope includes the wrapped key, random 96-bit nonce and authentication tag; its header is authenticated. See the [Node crypto API](https://nodejs.org/api/crypto.html#cryptopublicencryptkey-buffer) for the platform primitives.
 
