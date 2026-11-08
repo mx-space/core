@@ -15,32 +15,36 @@ import {
 
 import { createdAt, pkText, refText, tsCol, updatedAt } from './columns'
 
+const translationColumns = () => ({
+  id: pkText(),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+  hash: text('hash').notNull(),
+  refId: refText('ref_id').notNull(),
+  refType: text('ref_type').notNull(),
+  lang: text('lang').notNull(),
+  sourceLang: text('source_lang').notNull(),
+  title: text('title').notNull(),
+  text: text('text').notNull(),
+  subtitle: text('subtitle'),
+  summary: text('summary'),
+  tags: text('tags')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  sourceModifiedAt: tsCol('source_modified_at'),
+  contentFormat: text('content_format'),
+  content: text('content'),
+  sourceBlockSnapshots: jsonb('source_block_snapshots').$type<unknown>(),
+  sourceMetaHashes: jsonb('source_meta_hashes').$type<unknown>(),
+})
+
 export const aiTranslations = pgTable(
   'ai_translations',
   {
-    id: pkText(),
-    createdAt: createdAt(),
-    updatedAt: updatedAt(),
-    hash: text('hash').notNull(),
-    refId: refText('ref_id').notNull(),
-    refType: text('ref_type').notNull(),
-    lang: text('lang').notNull(),
-    sourceLang: text('source_lang').notNull(),
-    title: text('title').notNull(),
-    text: text('text').notNull(),
-    subtitle: text('subtitle'),
-    summary: text('summary'),
-    tags: text('tags')
-      .array()
-      .notNull()
-      .default(sql`'{}'::text[]`),
-    sourceModifiedAt: tsCol('source_modified_at'),
+    ...translationColumns(),
     aiModel: text('ai_model'),
     aiProvider: text('ai_provider'),
-    contentFormat: text('content_format'),
-    content: text('content'),
-    sourceBlockSnapshots: jsonb('source_block_snapshots').$type<unknown>(),
-    sourceMetaHashes: jsonb('source_meta_hashes').$type<unknown>(),
   },
   (table) => [
     uniqueIndex('ai_translations_ref_lang_uniq').on(
@@ -99,21 +103,25 @@ export const aiSummaries = pgTable(
   ],
 )
 
+const insightsColumns = () => ({
+  id: pkText(),
+  createdAt: createdAt(),
+  refId: refText('ref_id').notNull(),
+  lang: text('lang').notNull(),
+  hash: text('hash').notNull(),
+  content: text('content').notNull(),
+  isTranslation: boolean('is_translation').notNull().default(false),
+  sourceInsightsId: refText('source_insights_id').references(
+    (): AnyPgColumn => aiInsights.id,
+    { onDelete: 'set null' },
+  ),
+  sourceLang: text('source_lang'),
+})
+
 export const aiInsights = pgTable(
   'ai_insights',
   {
-    id: pkText(),
-    createdAt: createdAt(),
-    refId: refText('ref_id').notNull(),
-    lang: text('lang').notNull(),
-    hash: text('hash').notNull(),
-    content: text('content').notNull(),
-    isTranslation: boolean('is_translation').notNull().default(false),
-    sourceInsightsId: refText('source_insights_id').references(
-      (): AnyPgColumn => aiInsights.id,
-      { onDelete: 'set null' },
-    ),
-    sourceLang: text('source_lang'),
+    ...insightsColumns(),
     modelInfo: jsonb('model_info').$type<Record<string, unknown> | null>(),
   },
   (table) => [
@@ -227,3 +235,11 @@ export const aiGenerationMetrics = pgTable(
     index('ai_generation_metrics_ref_id_idx').on(table.refId, table.createdAt),
   ],
 )
+
+/** Runtime mappings exclude retired columns; Drizzle Kit still sees the full tables above. */
+export function createAiRuntimeTables() {
+  return {
+    aiTranslations: pgTable('ai_translations', translationColumns()),
+    aiInsights: pgTable('ai_insights', insightsColumns()),
+  }
+}

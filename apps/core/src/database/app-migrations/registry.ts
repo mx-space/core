@@ -2,6 +2,7 @@ import { migration as recentlyDropEnrichmentColumns } from './20260515-recently-
 import { migration as treeContentRevisions } from './20260831-tree-content-revisions'
 import { migration as protectStoredSecrets } from './20261018-protect-stored-secrets'
 import { migration as mintLoroBlockIds } from './20261026-mint-loro-block-ids'
+import { migration as aiMetricsCoverage } from './20261108-ai-metrics-coverage'
 import type { AppMigration } from './types'
 
 /**
@@ -17,4 +18,5 @@ export const migrations: AppMigration[] = [
   treeContentRevisions,
   ...(process.env.MX_MIGRATE_SECRETS === '1' ? [protectStoredSecrets] : []),
   mintLoroBlockIds,
+  aiMetricsCoverage,
 ]

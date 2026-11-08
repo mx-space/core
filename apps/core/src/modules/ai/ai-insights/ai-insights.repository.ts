@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { aiInsights } from '~/database/schema'
@@ -14,7 +14,19 @@ import { SnowflakeService } from '~/shared/id/snowflake.service'
 
 import type { AiInsightsRow } from './ai-insights.types'
 
-const mapRow = (row: typeof aiInsights.$inferSelect): AiInsightsRow => ({
+const insightsProjection = {
+  ...getTableColumns(aiInsights),
+  modelInfo: sql<Record<
+    string,
+    unknown
+  > | null>`(select jsonb_build_object('model', m.model, 'provider', m.provider_id) from ai_generation_metrics m where m.resource_type = 'insights' and m.resource_id = ${sql.raw('"ai_insights"."id"')} order by m.created_at desc, m.id desc limit 1)`,
+}
+
+const mapRow = (
+  row: typeof aiInsights.$inferSelect & {
+    modelInfo?: Record<string, unknown> | null
+  },
+): AiInsightsRow => ({
   id: toEntityId(row.id) as EntityId,
   refId: toEntityId(row.refId) as EntityId,
   lang: row.lang,
@@ -25,7 +37,7 @@ const mapRow = (row: typeof aiInsights.$inferSelect): AiInsightsRow => ({
     ? (toEntityId(row.sourceInsightsId) as EntityId)
     : null,
   sourceLang: row.sourceLang,
-  modelInfo: row.modelInfo,
+  modelInfo: row.modelInfo ?? null,
   createdAt: row.createdAt,
 })
 
@@ -44,7 +56,7 @@ export class AiInsightsRepository extends BaseRepository {
   ): Promise<AiInsightsRow | null> {
     const refBig = parseEntityId(refId)
     const [row] = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(and(eq(aiInsights.refId, refBig), eq(aiInsights.lang, lang))!)
       .limit(1)
@@ -53,7 +65,7 @@ export class AiInsightsRepository extends BaseRepository {
 
   async findById(id: EntityId | string): Promise<AiInsightsRow | null> {
     const [row] = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(eq(aiInsights.id, parseEntityId(id)))
       .limit(1)
@@ -63,7 +75,7 @@ export class AiInsightsRepository extends BaseRepository {
   async listForRef(refId: EntityId | string): Promise<AiInsightsRow[]> {
     const refBig = parseEntityId(refId)
     const rows = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(eq(aiInsights.refId, refBig))
     return rows.map(mapRow)
@@ -74,7 +86,7 @@ export class AiInsightsRepository extends BaseRepository {
   ): Promise<AiInsightsRow[]> {
     if (!refIds.length) return []
     const rows = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(
         inArray(
@@ -96,7 +108,7 @@ export class AiInsightsRepository extends BaseRepository {
     ]
     if (lang) conds.push(eq(aiInsights.lang, lang))
     const [row] = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(and(...conds)!)
       .orderBy(desc(aiInsights.createdAt))
@@ -110,7 +122,7 @@ export class AiInsightsRepository extends BaseRepository {
     const offset = (page - 1) * size
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select(insightsProjection)
         .from(aiInsights)
         .orderBy(desc(aiInsights.createdAt))
         .limit(size)
@@ -197,7 +209,7 @@ export class AiInsightsRepository extends BaseRepository {
   }): Promise<AiInsightsRow> {
     const refBig = parseEntityId(input.refId)
     const [existing] = await this.db
-      .select()
+      .select(insightsProjection)
       .from(aiInsights)
       .where(
         and(eq(aiInsights.refId, refBig), eq(aiInsights.lang, input.lang))!,
@@ -214,7 +226,6 @@ export class AiInsightsRepository extends BaseRepository {
             ? parseEntityId(input.sourceInsightsId)
             : existing.sourceInsightsId,
           sourceLang: input.sourceLang ?? existing.sourceLang,
-          modelInfo: input.modelInfo ?? existing.modelInfo,
         })
         .where(eq(aiInsights.id, existing.id))
         .returning()
@@ -234,7 +245,6 @@ export class AiInsightsRepository extends BaseRepository {
           ? parseEntityId(input.sourceInsightsId)
           : null,
         sourceLang: input.sourceLang ?? null,
-        modelInfo: input.modelInfo ?? null,
       })
       .returning()
     return mapRow(row)
