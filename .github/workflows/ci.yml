@@ -73,6 +73,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test
+        env:
+          JWT_SECRET: test-docker-jwt-secret-at-least-32-characters
+          MX_ENCRYPT_KEY: '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab'
         run: |
           bash ./scripts/workflow/test-docker.sh
           sudo rm -rf ./data
@@ -121,7 +124,8 @@ jobs:
           PG_DATABASE: mx_core
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
-          JWT_SECRET: test-bundle-server-jwt-secret
+          JWT_SECRET: test-bundle-server-jwt-secret-at-least-32-characters
+          MX_ENCRYPT_KEY: '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab'
           MIGRATIONS_DIR: ${{ github.workspace }}/apps/core/src/database/migrations
 
   e2e:

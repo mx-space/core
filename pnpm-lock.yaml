@@ -923,9 +923,6 @@ importers:
       nanoid:
         specifier: 6.0.2
         version: 6.0.2
-      node-machine-id:
-        specifier: 1.1.12
-        version: 1.1.12
       nodemailer:
         specifier: 10.2.1
         version: 10.2.1
@@ -9930,9 +9927,6 @@ packages:
     resolution: {integrity: sha512-s0KzNOWwOJJgPG6wxg6cKohnAl9Wk/oW1KrQaVzJBjQwVcUGPQCzpR46Ximygjqj/3KhOrtJXnYMp/xYAXp75g==}
     engines: {node: '>=16.0.0'}
     hasBin: true
-
-  node-machine-id@1.1.12:
-    resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
 
   node-pty@1.1.0:
     resolution: {integrity: sha512-20JqtutY6JPXTUnL0ij1uad7Qe1baT46lyolh2sSENDd4sTzKZ4nmAFkeAARDKwmlLjPx6XKRlwRUxwjOy+lUg==}
@@ -21930,8 +21924,6 @@ snapshots:
       node-addon-api: 8.9.2
       node-gyp-build: 4.8.4
     optional: true
-
-  node-machine-id@1.1.12: {}
 
   node-pty@1.1.0:
     dependencies:

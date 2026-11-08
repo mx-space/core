@@ -15,7 +15,7 @@ module.exports = {
       watch: false,
       instances: cpuLen,
       max_memory_restart: '520M',
-      args: '--color --encrypt_enable',
+      args: '--color',
       env: {
         NODE_ENV: 'production',
         NODE_PATH: nodePath,
