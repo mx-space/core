@@ -1,3 +1,9 @@
+## [17.0.4](https://github.com/mx-space/core/compare/v17.0.3...v17.0.4) (2026-11-08)
+
+### Bug Fixes
+
+* **core:** restore legacy plaintext secret storage escape hatch ([c34c664](https://github.com/mx-space/core/commit/c34c66450af33652cedcbd198edc640aad1b3e91))
+
 ## [17.0.3](https://github.com/mx-space/core/compare/v17.0.2...v17.0.3) (2026-11-08)
 
 ### Features
