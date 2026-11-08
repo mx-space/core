@@ -199,3 +199,7 @@ flowchart TD
 - SDK 207 项通过；Core/Admin 生产构建、Core/Admin/SDK/E2E 类型检查、API envelope/验证配对检查、50 个 SQL 迁移 lint 通过。E2E 后端准备在 app.init 前运行真实 app-data runner。
 - mx-docs build/check/links/pangu/lint 与 3 项配置生成测试通过，llms 产物包含维护切换与新配置契约；既有 1 hint、1 死链保持。
 - 维护窗口是此次配置 contract 的部署条件：先停全部旧副本及后台写入者，再运行 migrate，完成准备后启动新服务。未执行线上迁移、未发布版本、未删除物理数据库列。
+
+最终配置审阅：无 Critical、2 项 Important、无 Minor。已修复「未覆盖的原始分区坏形状被默认值覆盖」和「缺少可选 GitHub 时其他第三方凭据被重置」两处数据保留问题，新增 5 项真实数据库回归并验证先失败后通过；修复后的配置/升级定向回归 67 项通过，构建、类型检查通过。未再次派发审阅。
+
+修复后完整 UTC/3 workers 回归实际结果：3576 项通过，11 项既定跳过，另 1 个未触及的 Push Relay SQL 迁移测试文件因 Redis 端口竞争在 setup 阶段失败、3 项未执行；该文件独立重跑 3 项全部通过。合计 3579 项行为已验证，所有代码断言通过；原完整命令因基础设施错误退出非零，不能称该次单命令全绿。Agent 排除项不变。67 项配置/升级定向回归及重新构建、类型检查通过；无未修复 Critical/Important 或延后 Minor，未再次派发审阅。

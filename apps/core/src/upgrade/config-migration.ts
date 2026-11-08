@@ -45,9 +45,7 @@ export async function migrateConfiguration(
   ).rows
   const raw = Object.fromEntries(rows.map((row) => [row.name, row.value]))
   for (const key of [
-    'ai',
-    'membership',
-    'thirdPartyServiceIntegration',
+    ...Object.keys(configSchemaMapping),
     'imageGenerationOptions',
     'ttsOptions',
   ]) {
