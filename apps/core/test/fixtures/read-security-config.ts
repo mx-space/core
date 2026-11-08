@@ -17,6 +17,15 @@ process.argv.splice(
   process.argv.length - 2,
   ...JSON.parse(process.env.SECURITY_CONFIG_TEST_ARGS || '[]'),
 )
-await import('../../src/app.config')
+if (process.env.SECURITY_CONFIG_TEST_CWD)
+  process.chdir(process.env.SECURITY_CONFIG_TEST_CWD)
+const { ENCRYPT } = await import('../../src/app.config')
+const { SecretCodec } = await import('../../src/utils/secret-codec')
+const codec = new SecretCodec(ENCRYPT)
+const encrypted =
+  process.env.SECURITY_CONFIG_TEST_CIPHERTEXT ||
+  codec.encrypt('fixture-secret', 'fixture.field')
 
-process.stdout.write('SECURITY_CONFIG_READY')
+process.stdout.write(
+  `SECURITY_CONFIG_READY\n${JSON.stringify({ encrypted, decrypted: codec.decrypt(encrypted, 'fixture.field') })}`,
+)
