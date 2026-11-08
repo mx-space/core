@@ -34,6 +34,29 @@ describe('upgrade CLI isolated process', () => {
   })
   afterAll(async () => context?.close())
 
+  it('diagnoses the removed algorithm setting through the standalone read-only check', async () => {
+    const output: string[] = []
+    expect(
+      await runUpgradeCli(
+        ['check', '--json'],
+        {
+          PG_URL: context.connectionString,
+          MX_ENCRYPT_KEY: 'ab'.repeat(32),
+          JWT_SECRET: 'long-enough-test-jwt-123456789012345',
+          ENCRYPT_ALGORITHM: 'aes-256-ecb',
+        },
+        (value) => output.push(value),
+      ),
+    ).toBe(2)
+    expect(JSON.parse(output[0]).issues).toContainEqual({
+      code: 'REMOVED_ENCRYPTION_OPTION',
+      path: 'ENCRYPT_ALGORITHM',
+    })
+    expect(
+      (await context.pool.query('SELECT id FROM _app_migrations')).rows,
+    ).toEqual([])
+  })
+
   it('rejects the removed prepare command without modifying the database', async () => {
     const output: string[] = []
     expect(

@@ -1,4 +1,7 @@
 import { execFile } from 'node:child_process'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
@@ -6,7 +9,8 @@ const validEnv = {
   MX_ENCRYPT_KEY: 'ab'.repeat(32),
   JWT_SECRET: 'runtime-jwt-secret-for-testing-1234567890',
 }
-async function boot(overrides: NodeJS.ProcessEnv = {}) {
+const coreCwd = fileURLToPath(new URL('../../../', import.meta.url))
+async function boot(overrides: NodeJS.ProcessEnv = {}, args: string[] = []) {
   const env = { ...process.env }
   for (const name of [
     'MX_ENCRYPT_KEY',
@@ -14,6 +18,7 @@ async function boot(overrides: NodeJS.ProcessEnv = {}) {
     'MX_ENCRYPT_ENABLE',
     'ENCRYPT_ENABLE',
     'MX_SECRET_STORAGE_V2',
+    'ENCRYPT_ALGORITHM',
     'JWT_SECRET',
     'JWTSECRET',
   ])
@@ -27,11 +32,12 @@ async function boot(overrides: NodeJS.ProcessEnv = {}) {
         'test/fixtures/read-security-config.ts',
       ],
       {
-        cwd: fileURLToPath(new URL('../../../', import.meta.url)),
+        cwd: coreCwd,
         env: {
           ...env,
           NODE_ENV: 'development',
           SECURITY_CONFIG_TEST_ENV: JSON.stringify(overrides),
+          SECURITY_CONFIG_TEST_ARGS: JSON.stringify(args),
         },
       },
     )
@@ -74,4 +80,34 @@ it('keeps key/JWT aliases and accepts old true flags as deprecated no-ops', asyn
   })
   expect(result.stdout, result.stderr).toContain('SECURITY_CONFIG_READY')
   expect(result.stderr).toContain('deprecated')
+})
+
+it.each(['', 'aes-256-ecb', 'aes-256-gcm'])(
+  'rejects the removed algorithm environment option even when its value is %j',
+  async (algorithm) => {
+    const result = await boot({ ...validEnv, ENCRYPT_ALGORITHM: algorithm })
+    expect(result).toHaveProperty('code', 1)
+    expect(result.stdout).not.toContain('SECURITY_CONFIG_READY')
+    expect(result.stderr).toContain('ENCRYPT_ALGORITHM')
+  },
+)
+
+it('rejects the removed algorithm command-line option', async () => {
+  const result = await boot(validEnv, ['--encrypt_algorithm', 'aes-256-ecb'])
+  expect(result).toHaveProperty('code', 1)
+  expect(result.stdout).not.toContain('SECURITY_CONFIG_READY')
+})
+
+it('rejects the removed algorithm YAML option', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'mx-algorithm-config-'))
+  try {
+    const file = join(directory, 'config.yml')
+    await writeFile(file, 'encrypt_algorithm: aes-256-ecb\n')
+    const result = await boot(validEnv, ['--config', relative(coreCwd, file)])
+    expect(result).toHaveProperty('code', 1)
+    expect(result.stdout).not.toContain('SECURITY_CONFIG_READY')
+    expect(result.stderr).toContain('encrypt_algorithm')
+  } finally {
+    await rm(directory, { recursive: true })
+  }
 })

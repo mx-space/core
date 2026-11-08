@@ -1,8 +1,7 @@
 export interface SecretStorageConfig {
   key: string
   jwtSecret: string
-  /** Used only when reading historical ECB ciphertext. */
-  algorithm?: string
+  removedOptions?: Record<string, unknown>
   deprecatedFlags?: Record<string, unknown>
 }
 
@@ -12,7 +11,7 @@ export function secretStorageConfigFromEnv(
   return {
     key: env.MX_ENCRYPT_KEY || env.ENCRYPT_KEY || '',
     jwtSecret: env.JWT_SECRET || env.JWTSECRET || '',
-    algorithm: env.ENCRYPT_ALGORITHM || 'aes-256-ecb',
+    removedOptions: { ENCRYPT_ALGORITHM: env.ENCRYPT_ALGORITHM },
     deprecatedFlags: {
       MX_ENCRYPT_ENABLE: env.MX_ENCRYPT_ENABLE,
       ENCRYPT_ENABLE: env.ENCRYPT_ENABLE,
@@ -28,6 +27,10 @@ export function inspectSecretStorageConfig(config: SecretStorageConfig) {
     issues.push({ code: 'FIELD_KEY_INVALID' })
   if (typeof config.jwtSecret !== 'string' || config.jwtSecret.length < 32)
     issues.push({ code: 'JWT_TOO_SHORT' })
+  for (const [path, value] of Object.entries(config.removedOptions ?? {})) {
+    if (value !== undefined)
+      issues.push({ code: 'REMOVED_ENCRYPTION_OPTION', path })
+  }
   for (const [path, value] of Object.entries(config.deprecatedFlags ?? {})) {
     if (
       value !== undefined &&
@@ -51,6 +54,8 @@ export function assertSecretStorageConfig(config: SecretStorageConfig) {
             return 'JWT_SECRET must be at least 32 characters; preserve existing secrets or use upgrade:rotate-jwt during maintenance'
           if (code === 'DEPRECATED_ENCRYPTION_FLAG')
             return `${path} is no longer supported: encryption and V2 writes are required. Remove this deprecated flag`
+          if (code === 'REMOVED_ENCRYPTION_OPTION')
+            return `${path} has been removed; field encryption is fixed to AES-256-GCM. Remove this option`
           return 'Encryption requires an explicit 64-character hexadecimal MX_ENCRYPT_KEY or ENCRYPT_KEY; preserve your existing key'
         })
         .join('\n'),
