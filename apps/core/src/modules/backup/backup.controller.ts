@@ -31,6 +31,13 @@ import { BackupUploadInterceptor, RestoreKeySchema } from './backup-restore'
 export class BackupController {
   constructor(private readonly backupService: BackupService) {}
 
+  @Post('/new')
+  @HttpCode(200)
+  @HTTPDecorators.RawResponse
+  async createNewBackupPost(@Res({ passthrough: true }) reply: FastifyReply) {
+    return this.createNewBackup(reply)
+  }
+
   @Get('/new')
   @HTTPDecorators.RawResponse
   async createNewBackup(@Res({ passthrough: true }) reply: FastifyReply) {

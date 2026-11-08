@@ -88,10 +88,24 @@ export class AppController {
     await this.redisService.cleanCatch()
   }
 
+  @Post('/clean_catch')
+  @HttpCache.disable
+  @Auth()
+  async cleanCatchPost() {
+    return this.cleanCatch()
+  }
+
   @Get('/clean_redis')
   @HttpCache.disable
   @Auth()
   async cleanAllRedisKey() {
     await this.redisService.cleanAllRedisKey()
+  }
+
+  @Post('/clean_redis')
+  @HttpCache.disable
+  @Auth()
+  async cleanAllRedisKeyPost() {
+    return this.cleanAllRedisKey()
   }
 }

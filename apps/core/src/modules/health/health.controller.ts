@@ -1,4 +1,4 @@
-import { Get } from '@nestjs/common'
+import { Get, HttpCode, Post } from '@nestjs/common'
 
 import { ApiController } from '~/common/decorators/api-controller.decorator'
 import { Auth } from '~/common/decorators/auth.decorator'
@@ -25,5 +25,12 @@ export class HealthController {
         trace: error.stack,
       }
     })
+  }
+
+  @Post('/email/test')
+  @HttpCode(200)
+  @Auth()
+  async testEmailPost() {
+    return this.testEmail()
   }
 }
