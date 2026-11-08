@@ -12,8 +12,8 @@ x-mx-env: &mx-env
   PG_DATABASE: mx_core
   SNOWFLAKE_WORKER_ID: '1'
   ALLOWED_ORIGINS: localhost
-  JWT_SECRET: YOUR_SUPER_SECURED_JWT_SECRET_STRING
-  MX_SECRET_STORAGE_V2: ${MX_SECRET_STORAGE_V2:-false}
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to your persisted secret of at least 32 characters}
+  MX_ENCRYPT_KEY: ${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:?Set MX_ENCRYPT_KEY or ENCRYPT_KEY to your persisted 64-character hexadecimal key}}
 
 # Bound crash artifacts and stdout/stderr even during dependency outages.
 x-runtime-safety: &runtime-safety

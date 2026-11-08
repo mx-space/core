@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import jwt from 'jsonwebtoken'
 
-import { ENCRYPT, SECURITY } from '~/app.config'
+import { SECURITY } from '~/app.config'
 import { RedisKeys } from '~/constants/cache.constant'
 import { getRedisKey } from '~/utils/redis.util'
 import { md5 } from '~/utils/tool.util'
@@ -23,14 +23,8 @@ export class JWTService {
       return
     }
 
-    const ENCRYPT_KEY = ENCRYPT.key
-
-    const secret =
-      SECURITY.jwtSecret ||
-      Buffer.from(ENCRYPT_KEY).toString('base64').slice(0, 15) ||
-      'asjhczxiucipoiopiqm2376'
-
-    this.secret = secret
+    // app.config validates the explicit JWT secret before any service starts.
+    this.secret = SECURITY.jwtSecret!
   }
 
   async verify(token: string) {
