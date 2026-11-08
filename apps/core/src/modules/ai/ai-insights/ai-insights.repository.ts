@@ -228,7 +228,7 @@ export class AiInsightsRepository extends BaseRepository {
           sourceLang: input.sourceLang ?? existing.sourceLang,
         })
         .where(eq(aiInsights.id, existing.id))
-        .returning()
+        .returning(insightsProjection)
       return mapRow(row)
     }
     const id = this.snowflake.nextId()
@@ -246,7 +246,7 @@ export class AiInsightsRepository extends BaseRepository {
           : null,
         sourceLang: input.sourceLang ?? null,
       })
-      .returning()
+      .returning(insightsProjection)
     return mapRow(row)
   }
 
@@ -275,7 +275,7 @@ export class AiInsightsRepository extends BaseRepository {
       .update(aiInsights)
       .set({ content })
       .where(eq(aiInsights.id, parseEntityId(id)))
-      .returning()
+      .returning(insightsProjection)
     return row ? mapRow(row) : null
   }
 

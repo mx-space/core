@@ -12,7 +12,7 @@ export function isEncryptedOAuth(token: string) {
   // Better Auth's legacy XChaCha20 payload: 24-byte nonce + 16-byte tag + text.
   return (
     token.startsWith('$ba$') ||
-    (token.length >= 80 && token.length % 2 === 0 && /^[\da-f]+$/i.test(token))
+    (token.length >= 80 && /^[\da-f]+$/i.test(token))
   )
 }
 

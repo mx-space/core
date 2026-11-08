@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { RedisKeys } from '~/constants/cache.constant'
 import { ConfigsService } from '~/modules/configs/configs.service'
+import { EncryptUtil } from '~/utils/encrypt.util'
 import { getRedisKey } from '~/utils/redis.util'
 
 const REVIEW_PASSWORD = 'persistent-review-password'
@@ -62,9 +63,15 @@ describe('review demo OAuth secret persistence', () => {
         secrets: { apple: { reviewDemoPassword: REVIEW_PASSWORD } },
       })
       const cachedOauth = JSON.parse(cachedConfig!).oauth
-      expect(cachedOauth.secrets.apple.reviewDemoPassword).toBe(
-        rawOauth.secrets.apple.reviewDemoPassword,
+      expect(cachedOauth.secrets.apple.reviewDemoPassword).not.toBe(
+        REVIEW_PASSWORD,
       )
+      expect(
+        EncryptUtil.decrypt(
+          cachedOauth.secrets.apple.reviewDemoPassword,
+          'oauth.secrets.apple.reviewDemoPassword',
+        ),
+      ).toBe(REVIEW_PASSWORD)
     }
 
     expect(redisClient.set).toHaveBeenCalledWith(

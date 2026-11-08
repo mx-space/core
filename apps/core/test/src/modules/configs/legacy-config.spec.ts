@@ -8,6 +8,43 @@ import { normalizeLegacyConfig } from '~/modules/configs/legacy-config.util'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 describe('canonical legacy config conversion', () => {
+  it('preserves populated legacy secrets when canonical fields are blank', () => {
+    const value = normalizeLegacyConfig({
+      membership: {
+        apiKey: '',
+        webhookSigningKey: '',
+        dodoApiKey: 'billing-key',
+        dodoWebhookKey: 'webhook-key',
+      },
+      thirdPartyServiceIntegration: {
+        github: { enabled: true, token: '' },
+        githubToken: 'github-key',
+      },
+    })
+    expect(value.membership).toMatchObject({
+      apiKey: 'billing-key',
+      webhookSigningKey: 'webhook-key',
+    })
+    expect(value.thirdPartyServiceIntegration.github.token).toBe('github-key')
+  })
+  it('blocks conflicting populated secrets instead of choosing and deleting one', () => {
+    expect(() =>
+      normalizeLegacyConfig({
+        membership: {
+          apiKey: 'canonical-private',
+          dodoApiKey: 'legacy-private',
+        },
+      }),
+    ).toThrow('CONFIG_SECRET_CONFLICT')
+    expect(() =>
+      normalizeLegacyConfig({
+        thirdPartyServiceIntegration: {
+          github: { token: 'canonical-private' },
+          githubToken: 'legacy-private',
+        },
+      }),
+    ).toThrow('CONFIG_SECRET_CONFLICT')
+  })
   it('moves decrypted legacy credentials and binds ciphertext to the new path', () => {
     const original = {
       thirdPartyServiceIntegration: {

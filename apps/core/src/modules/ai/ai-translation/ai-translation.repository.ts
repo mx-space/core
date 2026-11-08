@@ -392,7 +392,7 @@ export class AiTranslationRepository extends BaseRepository {
           ],
           set: updatableColumns,
         })
-        .returning()
+        .returning(translationProjection)
       return mapTranslation(row)
     })
   }
@@ -426,7 +426,7 @@ export class AiTranslationRepository extends BaseRepository {
       .update(aiTranslations)
       .set(update)
       .where(eq(aiTranslations.id, parseEntityId(id)))
-      .returning()
+      .returning(translationProjection)
     return row ? mapTranslation(row) : null
   }
 

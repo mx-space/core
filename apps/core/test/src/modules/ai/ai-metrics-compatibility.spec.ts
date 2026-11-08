@@ -50,6 +50,12 @@ describe('prepared AI repositories without retired columns', () => {
       aiModel: 'new-model',
       aiProvider: 'new-provider',
     })
+    expect(
+      await translation.updateById(created.id, { title: 'Edited' }),
+    ).toMatchObject({ aiModel: 'new-model', aiProvider: 'new-provider' })
+    expect(
+      await translation.upsert({ ...value, title: 'Edited again' } as any),
+    ).toMatchObject({ aiModel: 'new-model', aiProvider: 'new-provider' })
     expect(await translation.findByRef(refId, 'post', 'ja')).toBeTruthy()
     expect(await translation.findByRefAndLang(refId, 'ja')).toBeTruthy()
     expect(await translation.listByRefId(refId)).toHaveLength(1)
@@ -75,6 +81,14 @@ describe('prepared AI repositories without retired columns', () => {
     )
     expect(await insights.findById(created.id)).toMatchObject({
       content: 'Updated',
+      modelInfo: { model: 'new-model', provider: 'new-provider' },
+    })
+    expect(await insights.updateContent(created.id, 'Edited')).toMatchObject({
+      modelInfo: { model: 'new-model', provider: 'new-provider' },
+    })
+    expect(
+      await insights.upsert({ ...value, content: 'Edited again' }),
+    ).toMatchObject({
       modelInfo: { model: 'new-model', provider: 'new-provider' },
     })
     expect(await insights.findByRefAndLang(refId, 'ja')).toBeTruthy()

@@ -33,6 +33,8 @@ import { configDtoMapping, IConfig } from './configs.interface'
 import type { OAuthConfig } from './configs.schema'
 import {
   canonicalConfigRows,
+  LegacyConfigConflictError,
+  legacySecretConflicts,
   normalizeLegacyConfig,
   normalizeLegacyPatch,
   updateLegacyMedia,
@@ -75,6 +77,9 @@ function normalizeS3StorageOptionNulls<T extends object>(value: T): T {
 @Injectable()
 export class ConfigsService implements OnModuleInit {
   private readonly logger = new Logger(ConfigsService.name)
+  private stageCache = false
+  private stagedConfig?: IConfig
+  private sourceConfig: Record<string, any> = {}
   private configInitd = false
   private configInitPromise?: Promise<void>
 
@@ -99,10 +104,15 @@ export class ConfigsService implements OnModuleInit {
   }
 
   private async setConfig(config: IConfig) {
+    const encrypted = encryptObject(cloneDeep(config))
+    if (this.stageCache) {
+      this.stagedConfig = encrypted
+      return
+    }
     const redis = await this.getRedisClient()
     await redis.set(
       getRedisKey(RedisKeys.ConfigCache),
-      JSON.stringify(encryptObject(cloneDeep(config))),
+      JSON.stringify(encrypted),
     )
   }
 
@@ -158,8 +168,11 @@ export class ConfigsService implements OnModuleInit {
     const rows = await this.optionsRepository.findAll()
     const raw = Object.fromEntries(rows.map((row) => [row.name, row.value]))
     const plaintext = decryptObject(cloneDeep(raw))
+    this.sourceConfig = cloneDeep(plaintext)
     if (isDev) delete plaintext.url
-    await this.setConfig(normalizeLegacyConfig(plaintext))
+    await this.setConfig(
+      normalizeLegacyConfig(plaintext, { allowConflicts: true }),
+    )
   }
 
   public async get<T extends keyof IConfig>(
@@ -172,6 +185,8 @@ export class ConfigsService implements OnModuleInit {
   // Single entry point for config reads
   private async getStoredConfig(errorRetryCount = 3): Promise<IConfig> {
     await this.ensureConfigInitialized()
+    if (this.stageCache && this.stagedConfig)
+      return cloneDeep(this.stagedConfig)
 
     const redis = await this.getRedisClient()
     const configCache = await redis.get(getRedisKey(RedisKeys.ConfigCache))
@@ -222,18 +237,32 @@ export class ConfigsService implements OnModuleInit {
     data: Partial<IConfig[T]>,
   ): Promise<IConfig[T]> {
     const config = await this.getConfig()
+    const conflicts = legacySecretConflicts(key, this.sourceConfig[key] ?? {})
+    for (const path of conflicts) {
+      const replacement = path
+        .split('.')
+        .reduce<any>((node, part) => node?.[part], data)
+      if (typeof replacement !== 'string' || !replacement)
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `CONFIG_SECRET_CONFLICT (${key}.${path}); explicitly replace the canonical credential to resolve it`,
+        })
+    }
     if (key === 'imageGenerationOptions' || key === 'ttsOptions') {
       const canonical = updateLegacyMedia(config as IConfig, key, data)
-      await this.optionsRepository.upsert(
+      const storedAi = await this.optionsRepository.upsert(
         'ai',
         encryptObject(cloneDeep(canonical.ai), 'ai'),
       )
       await this.optionsRepository.deleteByName?.('imageGenerationOptions')
       await this.optionsRepository.deleteByName?.('ttsOptions')
       await this.setConfig(canonical)
-      await this.eventManager.emit(EventBusEvents.ConfigChanged, canonical.ai, {
-        scope: EventScope.TO_SYSTEM,
-      })
+      await this.eventManager.emit(
+        EventBusEvents.ConfigChanged,
+        storedAi.value,
+        {
+          scope: EventScope.TO_SYSTEM,
+        },
+      )
       return encryptObject(cloneDeep(canonical[key]), key) as IConfig[T]
     }
     const updatedConfigRow = await this.optionsRepository.upsert(
@@ -261,6 +290,7 @@ export class ConfigsService implements OnModuleInit {
       ),
     )
     const newData = updatedConfigRow.value as IConfig[T]
+    this.sourceConfig[key] = decryptObject(cloneDeep(newData), key)
     const mergedFullConfig = normalizeLegacyConfig(
       Object.assign(
         {},
@@ -308,16 +338,38 @@ export class ConfigsService implements OnModuleInit {
     value: Partial<IConfig[T]>,
   ) {
     if (this.optionsRepository.withConfigLock) {
-      return this.optionsRepository.withConfigLock(async (repository) => {
-        const scoped = new ConfigsService(
-          repository,
-          this.redisService,
-          this.configVersionService,
-          this.eventManager,
-        )
-        await scoped.ensureConfigInitialized()
-        return scoped.patchAndValidUnlocked(key, value)
-      })
+      const effects: Array<() => Promise<unknown>> = []
+      const publication = await this.optionsRepository.withConfigLock(
+        async (repository) => {
+          const versions = {
+            bump: (...args: Parameters<ConfigVersionService['bump']>) => {
+              effects.push(() => this.configVersionService.bump(...args))
+              return Promise.resolve(0)
+            },
+          } as ConfigVersionService
+          const events = {
+            emit: (...args: Parameters<EventManagerService['emit']>) => {
+              effects.push(() => this.eventManager.emit(...args))
+              return Promise.resolve()
+            },
+          } as EventManagerService
+          const scoped = new ConfigsService(
+            repository,
+            this.redisService,
+            versions,
+            events,
+          )
+          scoped.stageCache = true
+          await scoped.ensureConfigInitialized()
+          const result = await scoped.patchAndValidUnlocked(key, value)
+          return { result, config: scoped.stagedConfig! }
+        },
+        async ({ config }) => {
+          await this.setConfig(config)
+          for (const effect of effects) await effect()
+        },
+      )
+      return publication.result
     }
     return this.patchAndValidUnlocked(key, value)
   }
@@ -326,7 +378,15 @@ export class ConfigsService implements OnModuleInit {
     key: T,
     value: Partial<IConfig[T]>,
   ) {
-    value = normalizeLegacyPatch(key, camelcaseKeys(value)) as any
+    try {
+      value = normalizeLegacyPatch(key, camelcaseKeys(value)) as any
+    } catch (error) {
+      if (error instanceof LegacyConfigConflictError)
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: error.message,
+        })
+      throw error
+    }
     value = removeEmptyEncryptedFields(value as object, key) as Partial<
       IConfig[T]
     >

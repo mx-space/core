@@ -82,6 +82,13 @@ restart business replicas to retire old caches, then check original API-key
 authentication, OAuth, configuration consumption and AI metadata. Do not flush
 all Redis state.
 
+A blank canonical credential falls back to a populated legacy credential.
+Different nonempty old/new values report `CONFIG_SECRET_CONFLICT` with the
+field path and stop preparation. Reads stay compatible; to resolve the
+conflict, explicitly save the intended canonical credential in settings,
+then run check again. An unrelated partial save of that section is rejected
+so it cannot silently delete the other secret.
+
 ## Built artifacts and containers
 
 Run `node upgrade.mjs check --json`, `node upgrade.mjs prepare` or
