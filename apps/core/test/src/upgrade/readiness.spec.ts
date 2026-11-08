@@ -73,4 +73,14 @@ describe('standalone upgrade readiness', () => {
       before,
     )
   })
+  it('does not trust a marker over malformed canonical configuration', async () => {
+    await context.pool.query(
+      "DELETE FROM options; INSERT INTO _app_migrations (id) VALUES ('20261108-v18-prepared'); INSERT INTO options (id, name, value) VALUES ('300', 'membership', '42'::jsonb)",
+    )
+    expect(
+      (await readUpgradeState(context.pool, config)).issues.map(
+        (issue) => issue.code,
+      ),
+    ).toContain('CONFIG_SHAPE_UNSUPPORTED')
+  })
 })
