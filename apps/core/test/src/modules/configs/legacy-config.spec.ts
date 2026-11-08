@@ -1,13 +1,30 @@
 import { describe, expect, it } from 'vitest'
 
+import { encryptObject } from '~/modules/configs/configs.encrypt.util'
 import {
-  decryptObject,
-  encryptObject,
-} from '~/modules/configs/configs.encrypt.util'
-import { normalizeLegacyConfig } from '~/modules/configs/legacy-config.util'
+  normalizeLegacyConfig,
+  visitLegacyConfigSecrets,
+} from '~/upgrade/legacy-config'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 describe('canonical legacy config conversion', () => {
+  it('migrates nested SMTP connection options into the declared current fields', () => {
+    const config = normalizeLegacyConfig({
+      mailOptions: {
+        smtp: {
+          user: 'sender',
+          options: { host: 'smtp.example.test', port: 2525, secure: false },
+        },
+      },
+    })
+    expect(config.mailOptions.smtp).toMatchObject({
+      user: 'sender',
+      host: 'smtp.example.test',
+      port: 2525,
+      secure: false,
+    })
+    expect(config.mailOptions.smtp).not.toHaveProperty('options')
+  })
   it('preserves populated legacy secrets when canonical fields are blank', () => {
     const value = normalizeLegacyConfig({
       membership: {
@@ -69,7 +86,9 @@ describe('canonical legacy config conversion', () => {
       },
     }
     const converted = normalizeLegacyConfig(
-      decryptObject(structuredClone(original)),
+      visitLegacyConfigSecrets(structuredClone(original), '', (value, path) =>
+        EncryptUtil.decrypt(value, path),
+      ),
     )
     expect(converted.thirdPartyServiceIntegration.github.token).toBe(
       'github-secret',
@@ -90,26 +109,14 @@ describe('canonical legacy config conversion', () => {
     expect(normalizeLegacyConfig(converted)).toEqual(converted)
   })
 
-  it('retains legacy media views from canonical AI configuration', () => {
+  it('removes historical media sections while retaining credentials without an assignment', () => {
     const config = normalizeLegacyConfig({
-      imageGenerationOptions: {
-        enable: true,
-        apiKey: 'legacy-image',
-        model: 'image-model',
-        endpoint: 'https://api.example.com/v1',
-      },
+      imageGenerationOptions: { apiKey: 'unassigned-private' },
     })
-    const {
-      imageGenerationOptions: _image,
-      ttsOptions: _speech,
-      ...stored
-    } = config
-    expect(normalizeLegacyConfig(stored).imageGenerationOptions).toMatchObject({
-      enable: true,
-      apiKey: 'legacy-image',
-      model: 'image-model',
-      endpoint: 'https://api.example.com/v1',
-    })
+    expect(config).not.toHaveProperty('imageGenerationOptions')
+    expect(config).not.toHaveProperty('ttsOptions')
+    expect(config.ai.providers[0].apiKey).toBe('unassigned-private')
+    expect(config.ai.imageGeneration?.model).toBeUndefined()
   })
   it('retains leftover media credentials alongside an already-v2 AI row', () => {
     const converted = normalizeLegacyConfig({

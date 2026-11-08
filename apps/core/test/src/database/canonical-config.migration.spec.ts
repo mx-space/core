@@ -1,12 +1,30 @@
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 
 import { AppMigrationsService } from '~/database/app-migrations/app-migrations.service'
+import { OptionsRepository } from '~/modules/configs/options.repository'
+import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 const migrationId = '20261109-canonical-config'
 
+it('blocks configuration startup until the release migration has completed, including a new installation', async () => {
+  const context = await createPgTestDatabase('mx_config_guard', {
+    configCurrent: false,
+  })
+  try {
+    const repository = new OptionsRepository(context.db, new SnowflakeService())
+    await expect(repository.findAll()).rejects.toThrow('migration')
+    await new AppMigrationsService(context.db, context.pool).run()
+    await expect(repository.findAll()).resolves.toEqual([])
+  } finally {
+    await context.close()
+  }
+})
+
 it('automatically migrates old configuration rows before release startup and preserves credentials on rerun', async () => {
-  const context = await createPgTestDatabase('mx_canonical_config')
+  const context = await createPgTestDatabase('mx_canonical_config', {
+    configCurrent: false,
+  })
   try {
     await context.pool.query(
       `INSERT INTO options (id,name,value) VALUES ('100','membership',$1), ('101','thirdPartyServiceIntegration',$2), ('102','imageGenerationOptions',$3), ('103','ttsOptions',$4)`,
@@ -89,10 +107,12 @@ it('automatically migrates old configuration rows before release startup and pre
   }
 })
 
-it.each(['conflict', 'bad-ciphertext'])(
+it.each(['conflict', 'bad-ciphertext', 'bad-shape'])(
   'blocks release and rolls back every configuration row on %s',
   async (invalid) => {
-    const context = await createPgTestDatabase('mx_bad_config')
+    const context = await createPgTestDatabase('mx_bad_config', {
+      configCurrent: false,
+    })
     try {
       await context.pool.query(
         "INSERT INTO options (id,name,value) VALUES ('100','membership',$1), ('101','thirdPartyServiceIntegration',$2)",
@@ -100,6 +120,9 @@ it.each(['conflict', 'bad-ciphertext'])(
           {
             dodoApiKey: 'old-billing',
             ...(invalid === 'conflict' ? { apiKey: 'different-billing' } : {}),
+            ...(invalid === 'bad-shape'
+              ? { apiKey: { malformed: 'private-value' } }
+              : {}),
           },
           {
             githubToken:
@@ -115,7 +138,11 @@ it.each(['conflict', 'bad-ciphertext'])(
       await expect(
         new AppMigrationsService(context.db, context.pool).run(),
       ).rejects.toThrow(
-        invalid === 'conflict' ? 'CONFIG_SECRET_CONFLICT' : 'SECRET_UNREADABLE',
+        invalid === 'conflict'
+          ? 'CONFIG_SECRET_CONFLICT'
+          : invalid === 'bad-ciphertext'
+            ? 'SECRET_UNREADABLE'
+            : 'CONFIG_SHAPE_UNSUPPORTED',
       )
       expect(
         (await context.pool.query('SELECT * FROM options ORDER BY name')).rows,

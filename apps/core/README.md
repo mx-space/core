@@ -246,7 +246,9 @@ pnpm test:watch                                           # watch mode
 | `TZ` | Timezone | `Asia/Shanghai` |
 | `DISABLE_CACHE` | Disable Redis caching | `false` |
 
-On this unreleased branch, field encryption and V2 writes are mandatory; `JWT_SECRET` must have at least 32 characters. See the [upgrade guide](../../docs/v18-preparation.md) before deploying to an existing instance.
+On this unreleased branch, run the mandatory configuration data migration via `node migrate.mjs` before startup, after stopping all old replicas/background writers. Runtime configuration accepts only the current schema; retired sections and unknown declared fields are rejected. See the [migration guide](../../docs/v18-preparation.md).
+
+Field encryption and V2 writes are mandatory; `JWT_SECRET` must have at least 32 characters. See the [upgrade guide](../../docs/v18-preparation.md) before deploying to an existing instance.
 
 For managed Redis providers such as Upstash, pass the provider URI as
 `REDIS_CONNECTION_STRING=rediss://user:password@host:port`. The `rediss://`

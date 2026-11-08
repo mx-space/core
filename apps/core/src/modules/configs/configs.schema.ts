@@ -259,121 +259,6 @@ export const ImageStorageOptionsSchema = section('Image storage', {
   ),
 })
 
-// ==================== Image Generation Options ====================
-export const ImageGenerationOptionsSchema = section('AI image generation', {
-  enable: field.toggle(z.boolean().optional(), 'Enable AI image generation'),
-  provider: field.select(
-    z.enum(['openrouter', 'custom']).optional().default('openrouter'),
-    'Provider',
-    [
-      { label: 'OpenRouter', value: 'openrouter' },
-      { label: 'Custom', value: 'custom' },
-    ],
-    {
-      description:
-        'Endpoint preset — determines where generation requests are sent. "custom" requires Endpoint to be set.',
-    },
-  ),
-  apiKey: field.password(
-    z
-      .string()
-      .nullable()
-      .optional()
-      .transform((v) => (v === null ? '' : v)),
-    'API Key',
-  ),
-  endpoint: field.plain(
-    z
-      .string()
-      .nullable()
-      .optional()
-      .transform((v) => (v === null ? '' : v)),
-    'Endpoint',
-    { 'ui:options': { showWhen: { provider: 'custom' } } },
-  ),
-  model: field.plain(
-    z
-      .string()
-      .nullable()
-      .optional()
-      .transform((v) => (v === null ? '' : v)),
-    'Model',
-    { description: 'Image generation model id' },
-  ),
-  defaultAspectRatio: field.halfGrid(
-    z.string().optional().default('16:9'),
-    'Default aspect ratio',
-  ),
-  defaultQuality: field.select(
-    z.enum(['low', 'standard', 'high']).optional().default('standard'),
-    'Default quality',
-    [
-      { label: 'Low', value: 'low' },
-      { label: 'Standard', value: 'standard' },
-      { label: 'High', value: 'high' },
-    ],
-    { 'ui:options': { halfGrid: true } },
-  ),
-  defaultFormat: field.select(
-    z.enum(['png', 'jpeg', 'webp']).optional().default('png'),
-    'Default format',
-    [
-      { label: 'PNG', value: 'png' },
-      { label: 'JPEG', value: 'jpeg' },
-      { label: 'WebP', value: 'webp' },
-    ],
-    { 'ui:options': { halfGrid: true } },
-  ),
-})
-
-// ==================== TTS Options ====================
-export const TtsOptionsSchema = section('AI text to speech', {
-  enable: field.toggle(z.boolean().optional(), 'Enable AI narration'),
-  provider: field.select(
-    z.enum(['openrouter', 'openai', 'custom']).optional().default('openrouter'),
-    'Provider',
-    [
-      { label: 'OpenRouter', value: 'openrouter' },
-      { label: 'OpenAI', value: 'openai' },
-      { label: 'Custom', value: 'custom' },
-    ],
-    {
-      description:
-        'Endpoint preset. "custom" requires Endpoint to be set. The adapter appends /audio/speech.',
-    },
-  ),
-  apiKey: field.password(nullableStorageText(), 'API Key'),
-  endpoint: field.plain(nullableStorageText(), 'Endpoint', {
-    'ui:options': { showWhen: { provider: 'custom' } },
-  }),
-  model: field.plain(nullableStorageText(), 'Model', {
-    description: 'Speech model id, e.g. openai/gpt-4o-mini-tts-2025-12-15',
-  }),
-  voice: field.plain(nullableStorageText(), 'Voice', {
-    description: 'Voice id. Availability depends on the model.',
-  }),
-  speed: field.number(
-    z.coerce.number().min(0.25).max(4).optional().default(1),
-    'Speed',
-    { 'ui:options': { halfGrid: true } },
-  ),
-  maxCharsPerChunk: field.number(
-    z.coerce.number().int().min(200).max(4000).optional().default(1800),
-    'Max characters per request',
-    { 'ui:options': { halfGrid: true } },
-  ),
-  concurrency: field.number(
-    z.coerce.number().int().min(1).max(8).optional().default(3),
-    'Concurrent requests per task',
-    { 'ui:options': { halfGrid: true } },
-  ),
-  maxCharsPerRun: field.number(
-    z.coerce.number().int().min(1000).max(1000000).optional().default(120000),
-    'Max characters per run',
-    { 'ui:options': { halfGrid: true } },
-  ),
-})
-
 // ==================== Comment Upload Options ====================
 export const DraftCleanupOptionsSchema = section('Draft cleanup', {
   enable: field.toggle(
@@ -1269,8 +1154,6 @@ export const configSchemaMapping = {
   friendLinkOptions: FriendLinkOptionsSchema,
   backupOptions: BackupOptionsSchema,
   imageStorageOptions: ImageStorageOptionsSchema,
-  imageGenerationOptions: ImageGenerationOptionsSchema,
-  ttsOptions: TtsOptionsSchema,
   fileUploadOptions: FileUploadOptionsSchema,
   mediaProcessingOptions: MediaProcessingOptionsSchema,
   commentUploadOptions: CommentUploadOptionsSchema,
