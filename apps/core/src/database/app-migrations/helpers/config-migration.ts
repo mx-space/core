@@ -6,9 +6,10 @@ import type { PoolClient } from 'pg'
 import {
   isValidStoredConfig,
   loadCurrentConfig,
-} from '../modules/configs/configs.current'
-import { configSchemaMapping } from '../modules/configs/configs.schema'
-import type { SecretCodec } from '../utils/secret-codec'
+} from '~/modules/configs/configs.current'
+import { configSchemaMapping } from '~/modules/configs/configs.schema'
+import type { SecretCodec } from '~/utils/secret-codec'
+
 import {
   normalizeLegacyConfig,
   visitLegacyConfigSecrets,

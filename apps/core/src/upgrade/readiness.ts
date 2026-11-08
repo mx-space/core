@@ -1,5 +1,14 @@
 import type { Pool, PoolClient } from 'pg'
 
+import {
+  LegacyConfigConflictError,
+  normalizeLegacyConfig,
+  visitLegacyConfigSecrets,
+} from '../database/app-migrations/helpers/legacy-config'
+import {
+  isEncryptedOAuth,
+  unwrapOAuthToken,
+} from '../database/app-migrations/helpers/oauth-token'
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
 import {
   isValidStoredConfig,
@@ -12,14 +21,8 @@ import {
   inspectSecretStorageConfig,
   type SecretStorageConfig,
 } from '../utils/secret-storage-config'
-import {
-  LegacyConfigConflictError,
-  normalizeLegacyConfig,
-  visitLegacyConfigSecrets,
-} from './legacy-config'
-import { isEncryptedOAuth, unwrapOAuthToken } from './oauth-token'
 
-export { oauthKey } from './oauth-token'
+export { oauthKey } from '../database/app-migrations/helpers/oauth-token'
 
 export const PREPARED_MIGRATION_ID = '20261108-v18-prepared'
 export { CONFIG_UPGRADE_LOCK } from '../shared/config-lock'

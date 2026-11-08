@@ -3,7 +3,10 @@ import { readFile, stat } from 'node:fs/promises'
 import { symmetricEncrypt } from 'better-auth/crypto'
 import type { Pool } from 'pg'
 
-import { oauthKey, unwrapOAuthToken } from './oauth-token'
+import {
+  oauthKey,
+  unwrapOAuthToken,
+} from '../database/app-migrations/helpers/oauth-token'
 import { UpgradeError } from './preparation'
 import { CONFIG_UPGRADE_LOCK } from './readiness'
 

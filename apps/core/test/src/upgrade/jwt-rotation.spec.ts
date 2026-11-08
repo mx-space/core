@@ -6,8 +6,8 @@ import { symmetricDecrypt, symmetricEncrypt } from 'better-auth/crypto'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
+import { oauthKey } from '~/database/app-migrations/helpers/oauth-token'
 import { rotateJwtSecret } from '~/upgrade/jwt-rotation'
-import { oauthKey } from '~/upgrade/oauth-token'
 
 describe('maintenance JWT rotation', () => {
   let context: Awaited<ReturnType<typeof createPgTestDatabase>>
