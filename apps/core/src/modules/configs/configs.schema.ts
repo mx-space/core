@@ -1,7 +1,7 @@
 import { canonicalizeLanguageTag, isKnownLanguageTag } from '@mx-space/ai'
 import { z } from 'zod'
 
-import { zAllowedUrl } from '~/common/zod'
+import { zAllowedUrl } from '~/common/zod/primitives'
 import { AIProviderType } from '~/modules/ai/ai.types'
 
 import { field, section, withMeta } from './configs.zod-schema.util'
