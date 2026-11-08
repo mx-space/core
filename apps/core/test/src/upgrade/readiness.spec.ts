@@ -19,7 +19,6 @@ describe('standalone upgrade readiness', () => {
     expect(await readUpgradeState(context.pool, config)).toMatchObject({
       installation: 'empty',
       status: 'ready',
-      prepared: false,
     })
   })
 
@@ -71,7 +70,7 @@ describe('standalone upgrade readiness', () => {
   })
   it('does not trust a marker over malformed canonical configuration', async () => {
     await context.pool.query(
-      "DELETE FROM options; INSERT INTO _app_migrations (id) VALUES ('20261108-v18-prepared'); INSERT INTO options (id, name, value) VALUES ('300', 'membership', '42'::jsonb)",
+      "DELETE FROM options; INSERT INTO _app_migrations (id) VALUES ('20261109-canonical-config'); INSERT INTO options (id, name, value) VALUES ('300', 'membership', '42'::jsonb)",
     )
     expect(
       (await readUpgradeState(context.pool, config)).issues.map(
@@ -86,15 +85,25 @@ describe('standalone upgrade readiness', () => {
     expect(await readUpgradeState(context.pool, config)).toMatchObject({
       installation: 'existing',
       status: 'needs-action',
-      prepared: false,
     })
   })
-  it('requires the current configuration migration even when an older preparation marker exists', async () => {
+  it('requires the current configuration migration for an existing installation', async () => {
     await context.pool.query(
-      "DELETE FROM options; INSERT INTO categories (id,name,slug) VALUES ('700','Existing','existing') ON CONFLICT DO NOTHING; INSERT INTO _app_migrations (id) VALUES ('20261108-v18-prepared') ON CONFLICT DO NOTHING",
+      "DELETE FROM options; INSERT INTO categories (id,name,slug) VALUES ('700','Existing','existing') ON CONFLICT DO NOTHING",
     )
     const report = await readUpgradeState(context.pool, config)
     expect(report.status).toBe('needs-action')
     expect(report.issues).toContainEqual({ code: 'CONFIG_MIGRATION_MISSING' })
+  })
+
+  it('accepts current existing data after release migration without a separate preparation marker', async () => {
+    await context.pool.query(
+      "DELETE FROM options; DELETE FROM _app_migrations; INSERT INTO _app_migrations (id) VALUES ('20261109-canonical-config')",
+    )
+    expect(await readUpgradeState(context.pool, config)).toMatchObject({
+      installation: 'existing',
+      status: 'ready',
+      issues: [],
+    })
   })
 })

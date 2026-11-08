@@ -19,7 +19,6 @@
     "build": "npm run bundle",
     "dev": "cross-env NODE_ENV=development nodemon --signal SIGKILL --watch src --ext ts,json --exec \"vite-node src/dev.ts\"",
     "migrate": "vite-node src/migrate.ts",
-    "migrate:secrets": "cross-env MX_MIGRATE_SECRETS=1 vite-node src/app-migrate.ts",
     "migrate:app": "cross-env NODE_ENV=development vite-node src/app-migrate.ts",
     "lint:migrations": "tsx --tsconfig tsconfig.json scripts/lint-migrations.ts",
     "openapi:export": "vite-node scripts/export-openapi.ts",
@@ -47,7 +46,6 @@
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "publish": "bump",
     "upgrade:check": "vite-node --config vite.upgrade.config.ts src/upgrade.ts check",
-    "upgrade:prepare": "vite-node --config vite.upgrade.config.ts src/upgrade.ts prepare",
     "upgrade:rotate-jwt": "vite-node --config vite.upgrade.config.ts src/upgrade.ts rotate-jwt"
   },
   "bump": {
