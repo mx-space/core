@@ -8,6 +8,8 @@
 
 升级入口收口（2026-11-09）：按用户要求删除独立 prepare、dry-run 和准备标记。配置、凭据及 AI 指标统一由正式 `migrate` 完成；新增必跑 `20261109-required-secret-storage`，复用历史凭据转换行为，并以新迁移 ID 保证旧 opt-in 账本不会跳过本次回填。删除凭据迁移开关及专用脚本。独立 CLI 仅保留只读 check 和需要旧、新秘密文件的 JWT 维护轮换。
 
+算法收口（2026-11-09）：按用户要求删除 `ENCRYPT_ALGORITHM`、CLI `--encrypt_algorithm` 和 YAML `encrypt_algorithm`，字段新写入固定 AES-256-GCM（随机 96-bit nonce、128-bit tag、路径 AAD）。旧配置即使等于旧默认值或 GCM 也明确拒绝，check 对环境变量报告 `REMOVED_ENCRYPTION_OPTION`。历史读取固定为默认 AES-256-ECB；使用自定义历史算法的实例必须先用旧版、原密钥和原算法将相关凭据转换为 V2 并验证，再升级；旧快照隔离恢复仍需保留原设置。
+
 基线：Core `v17.0.4`（`c6551f15a`）；SDK `5.13.1`；官方文档仓库 `mx-space/docs` 的 `main`（`cc0f960`，Astro + Fumadocs）。版本号仅是核对基线，准备版和消费者的最低发布 tag 要以实际验证结果确定。
 
 ## 意图
@@ -53,7 +55,7 @@ API v4、wire 大小写/envelope 重做、SSE 帧协议重做、强制加密全�
 
 - 显式 `ENCRYPT_KEY`/`MX_ENCRYPT_KEY` 为 64 位十六进制；`JWT_SECRET` 至少 32 字符。保留既有别名优先级。
 - 新装生成每实例随机密钥并持久保存；现有密钥原样保留。生产模板不能内置公共有效密钥。
-- 工程选择：旧 `ENCRYPT_ENABLE=true`、`MX_SECRET_STORAGE_V2=true` 暂接受并提示可删除；显式 false 拒绝启动。新写入固定 V2，`ENCRYPT_ALGORITHM` 只服务历史读取。
+- 工程选择：旧 `ENCRYPT_ENABLE=true`、`MX_SECRET_STORAGE_V2=true` 暂接受并提示可删除；显式 false 拒绝启动。新写入固定 V2 AES-256-GCM，算法选择已删除，历史读取固定 AES-256-ECB。
 - 新装空库由发布前迁移初始化当前状态，不要求 v17 历史；既有实例需要准备完成。
 - 普通生产启动检查配置和 schema，不做业务数据迁移；部署前统一运行正式迁移。
 
@@ -225,3 +227,11 @@ flowchart TD
 - 修复后 18 个分区全部通过；实测 GitHub、会员、SMTP 与 AI 编辑器编辑、保存、刷新回显，5 个凭据原值保留且仍以 V2 认证加密。评论上传值改为 7 / 70 后刷新和数据库均一致。
 - Admin 73 项定向测试、Core 40 项定向测试通过；最终 Core 回归 3578 项通过、11 项跳过，明确排除既有 Agent 缺 DI 夹具。Core/Admin 构建及类型检查、API guards、定向 lint/format 与 diff 检查通过。
 - 实际截图和录像：[Admin 设置验收页](https://ryugi.innei.dev/a/48IrQ95Vj1VecQTZtWKtf)。文件与布局检查干净；用户已在验收页及对话中确认通过。验收覆盖设置的显示、提交和持久化，使用虚构凭据，不代表真实邮件、支付或模型服务商连通性验证。
+
+## 删除算法选择的验证（2026-11-09）
+
+- 删除 codec/config 的算法属性、CLI 参数及环境算法来源；env/YAML 旧项明确拒绝，Docker 日志固定标示 AES-256-GCM。历史默认 ECB 读取固定，不再受传入对象中的旧算法属性影响。
+- 7 项新增行为回归先失败后通过：环境变量为空/旧默认/GCM 均拒绝、CLI/YAML 拒绝、独立只读检查诊断且不写库、默认 ECB 升级后可用独立 Node AES-256-GCM 解密。25 项定向测试通过。
+- 完整回归 `TZ=UTC pnpm -C apps/core test run --maxWorkers=3 --exclude '**/admin-agent.e2e-spec.ts'` 退出 0：433 个文件通过、3 个跳过，3585 项通过、11 项跳过，包含构建产物的历史归档恢复及正式迁移演练。既有 Agent 缺 DI 夹具继续明确排除。
+- Core 生产构建、Core/E2E 类型检查、API envelope/验证检查、定向 ESLint/Prettier、入口脚本语法与 diff 检查通过。没有修改 Admin 设置流程或撤销已确认的验收。
+- mx-docs 同步环境变量、加密、v18 迁移及 Agent 参考；build/check/links/pangu/lint 与 3 项测试通过。生成的 llms 已核对算法删除和自定义历史算法的升级前转换要求；既有 1 hint、1 死链保持。未发版或运行生产迁移。

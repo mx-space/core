@@ -2,7 +2,8 @@
 
 This unreleased branch now requires field encryption, an explicit hex64 key
 and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
-flags and machine-ID fallback have been removed. Canonical configuration migration and strict configuration PATCH validation
+flags, algorithm selection and machine-ID fallback have been removed. Field
+writes are fixed to AES-256-GCM. Canonical configuration migration and strict configuration PATCH validation
 are also enforced here. SDK 6 cleanup and column removal remain future work. These commands are not part of released v17.0.4.
 No minimum released preparation tag is established yet. Obtain this build
 without starting business replicas; do not publish or migrate production as
@@ -14,6 +15,17 @@ Save database/files snapshots, the original field key, original JWT, and any
 archive recovery private key. Never replace existing secrets with newly
 generated ones to resolve a decryption error. Older instances complete their
 historical schema/data migrations before using this runner.
+
+Remove `ENCRYPT_ALGORITHM`, CLI `--encrypt_algorithm` and YAML
+`encrypt_algorithm`; these are rejected, including an empty environment value
+or the old default. `check` reports `REMOVED_ENCRYPTION_OPTION` for the environment
+variable. The historical field reader is fixed to AES-256-ECB; new writes use
+AES-256-GCM with a random 96-bit nonce and 128-bit authentication tag. If an
+instance used a different legacy algorithm, first convert its affected
+credentials to V2 on the prior version using the original key and algorithm,
+then verify the credentials before upgrading. Keep the original algorithm and
+key with old snapshots for isolated recovery; removing an option does not
+convert custom-algorithm ciphertext.
 
 The independent CLI consumes environment configuration, not the application's
 CLI/YAML flags. Supply the same effective `PG_URL` (preferred),

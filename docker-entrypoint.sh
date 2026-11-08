@@ -172,7 +172,7 @@ if [ -z "$encrypt_enable" ] && [ -n "${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}" ]; the
 fi
 log_kv "Encryption" "${encrypt_enable:-false}" "env:MX_ENCRYPT_ENABLE/ENCRYPT_ENABLE (+key implies true)"
 log_kv "Encrypt Key" "$(mask_secret_hint "${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}")" "env:MX_ENCRYPT_KEY/ENCRYPT_KEY"
-log_kv "Encrypt Algorithm" "${ENCRYPT_ALGORITHM:-<default>}" "$(env_source ENCRYPT_ALGORITHM '<default>')"
+log_kv "Encrypt Algorithm" "AES-256-GCM" "fixed"
 
 cluster_enable="$(parse_booleanish "${CLUSTER:-}")"
 log_kv "Cluster" "${cluster_enable:-false}" "$(env_source CLUSTER false)"

@@ -5,7 +5,6 @@ const V2_PREFIX = `${PREFIX}v2.`
 
 export interface SecretCodecOptions {
   key: string
-  algorithm?: string
 }
 
 /** No runtime config imports: usable by offline upgrade tools. */
@@ -101,11 +100,8 @@ export class SecretCodec {
       if (!/^[\d+/a-z]+={0,2}$/i.test(data.slice(PREFIX.length))) {
         throw new Error('Unsupported encrypted secret format')
       }
-      const decipher = crypto.createDecipheriv(
-        this.options.algorithm || 'aes-256-ecb',
-        key,
-        '',
-      )
+      // Read-only compatibility for the historical default format.
+      const decipher = crypto.createDecipheriv('aes-256-ecb', key, '')
       return Buffer.concat([
         decipher.update(Buffer.from(data.slice(PREFIX.length), 'base64')),
         decipher.final(),
