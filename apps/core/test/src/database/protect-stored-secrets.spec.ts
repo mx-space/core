@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 
 import { defaultKeyHasher } from '@better-auth/api-key'
-import { symmetricDecrypt } from 'better-auth/crypto'
+import { symmetricDecrypt, symmetricEncrypt } from 'better-auth/crypto'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 
 import { ENCRYPT, SECURITY } from '~/app.config'
@@ -17,6 +17,7 @@ import { SnippetRepository } from '~/modules/snippet/snippet.repository'
 import { WebhookRepository } from '~/modules/webhook/webhook.repository'
 import { __setTestPostgresInstance } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
+import { oauthKey } from '~/upgrade/oauth-token'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 it('upgrades real credential rows without changing their usable values, and can run twice', async () => {
@@ -193,3 +194,86 @@ it('upgrades real credential rows without changing their usable values, and can 
     await context.close()
   }
 }, 120_000)
+
+it('unwraps historical OAuth ciphertext before rewrapping and remains idempotent', async () => {
+  const context = await createPgTestDatabase('mx_secret_legacy_oauth')
+  try {
+    const legacy = await symmetricEncrypt({
+      key: SECURITY.jwtSecret!,
+      data: 'retained-provider-token',
+    })
+    expect(legacy).toMatch(/^[\da-f]+$/i)
+    await context.pool.query(
+      "INSERT INTO readers (id, name, email) VALUES ('owner', 'Owner', 'owner@example.test')",
+    )
+    await context.pool.query(
+      "INSERT INTO accounts (id,user_id,provider_id,access_token) VALUES ('oauth','owner','github',$1)",
+      [legacy],
+    )
+    const args = {
+      db: context.db,
+      pool: context.pool,
+      logger: { log: vi.fn() } as any,
+    }
+    await migration.up(args)
+    const token = (
+      await context.pool.query('SELECT access_token FROM accounts')
+    ).rows[0].access_token
+    expect(
+      await symmetricDecrypt({
+        key: oauthKey(SECURITY.jwtSecret!),
+        data: token,
+      }),
+    ).toBe('retained-provider-token')
+    await migration.up(args)
+    expect(
+      (await context.pool.query('SELECT access_token FROM accounts')).rows[0]
+        .access_token,
+    ).toBe(token)
+  } finally {
+    await context.close()
+  }
+})
+
+it.each(['wrong-key', 'truncated'])(
+  'rolls back the credential batch for %s historical OAuth ciphertext',
+  async (invalid) => {
+    const context = await createPgTestDatabase('mx_secret_bad_oauth')
+    try {
+      const original = await symmetricEncrypt({
+        key:
+          invalid === 'wrong-key'
+            ? 'another-original-jwt-at-least-32-characters'
+            : SECURITY.jwtSecret!,
+        data: 'retained-provider-token',
+      })
+      const token = invalid === 'truncated' ? original.slice(0, -1) : original
+      await context.pool.query(
+        "INSERT INTO readers (id, name, email) VALUES ('owner', 'Owner', 'owner@example.test')",
+      )
+      await context.pool.query(
+        "INSERT INTO api_keys (id,user_id,key) VALUES ('key','owner','original-client-key')",
+      )
+      await context.pool.query(
+        "INSERT INTO accounts (id,user_id,provider_id,access_token) VALUES ('oauth','owner','github',$1)",
+        [token],
+      )
+      await expect(
+        migration.up({
+          db: context.db,
+          pool: context.pool,
+          logger: { log: vi.fn() } as any,
+        }),
+      ).rejects.toThrow()
+      expect(
+        (await context.pool.query('SELECT access_token FROM accounts')).rows[0]
+          .access_token,
+      ).toBe(token)
+      expect(
+        (await context.pool.query('SELECT key FROM api_keys')).rows[0].key,
+      ).toBe('original-client-key')
+    } finally {
+      await context.close()
+    }
+  },
+)
