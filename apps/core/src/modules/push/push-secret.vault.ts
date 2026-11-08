@@ -1,17 +1,13 @@
 import crypto from 'node:crypto'
 
 import { ENCRYPT } from '~/app.config'
-import { mapString } from '~/utils/encrypt.util'
+import { EncryptUtil } from '~/utils/encrypt.util'
 
 const PREFIX = '$${push}$$v1.'
 
 export class PushSecretVault {
   static assertConfigured() {
-    if (!ENCRYPT.enable || !ENCRYPT.key) {
-      throw new Error(
-        'Push notifications require MX_ENCRYPT_KEY so source credentials are never stored in plaintext',
-      )
-    }
+    EncryptUtil.assertConfigured()
   }
 
   static encrypt(value: string) {
@@ -19,7 +15,7 @@ export class PushSecretVault {
     const nonce = crypto.randomBytes(12)
     const cipher = crypto.createCipheriv(
       'aes-256-gcm',
-      Buffer.from(mapString(ENCRYPT.key), 'hex'),
+      Buffer.from(ENCRYPT.key, 'hex'),
       nonce,
     )
     const ciphertext = Buffer.concat([
@@ -46,7 +42,7 @@ export class PushSecretVault {
     }
     const decipher = crypto.createDecipheriv(
       'aes-256-gcm',
-      Buffer.from(mapString(ENCRYPT.key), 'hex'),
+      Buffer.from(ENCRYPT.key, 'hex'),
       Buffer.from(nonceValue, 'base64url'),
     )
     decipher.setAuthTag(Buffer.from(tagValue, 'base64url'))

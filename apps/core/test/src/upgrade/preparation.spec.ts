@@ -1,5 +1,6 @@
 import { defaultKeyHasher } from '@better-auth/api-key'
 import { symmetricDecrypt, symmetricEncrypt } from 'better-auth/crypto'
+import { legacySecret } from 'test/helper/legacy-secret'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
@@ -16,8 +17,6 @@ describe('transactional v18 preparation', () => {
   const config = {
     key: 'ab'.repeat(32),
     jwtSecret: 'long-test-jwt-secret-1234567890123456789',
-    enable: true,
-    v2: true,
   }
   const codec = new SecretCodec(config)
   beforeAll(async () => {
@@ -35,10 +34,7 @@ describe('transactional v18 preparation', () => {
           dodoApiKey: codec.encrypt('billing-secret', 'membership.dodoApiKey'),
         },
         {
-          githubToken: new SecretCodec({ ...config, v2: false }).encrypt(
-            'github-secret',
-            'thirdPartyServiceIntegration.githubToken',
-          ),
+          githubToken: legacySecret('github-secret', config.key),
         },
         { enable: true, apiKey: 'image-secret', model: 'image-v1' },
       ],

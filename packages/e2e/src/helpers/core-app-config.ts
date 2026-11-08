@@ -36,8 +36,6 @@ const currentRedis = () => parseRedisUrl(process.env.REDIS_CONNECTION_STRING)
 export const PORT = process.env.PORT || 2333
 export const API_VERSION = 3
 export const DEMO_MODE = false
-export const SECRET_STORAGE_V2 =
-  parseBoolean(process.env.MX_SECRET_STORAGE_V2) ?? false
 
 export const CROSS_DOMAIN = {
   allowedOrigins: process.env.ALLOWED_ORIGINS
@@ -104,7 +102,6 @@ export const ENCRYPT = {
   key:
     process.env.MX_ENCRYPT_KEY ||
     '593f62860255feb0a914534a43814b9809cc7534da7f5485cd2e3d3c8609acab',
-  enable: true,
   algorithm: 'aes-256-ecb',
 }
 

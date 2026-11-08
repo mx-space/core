@@ -1,13 +1,11 @@
-import { ENCRYPT, SECRET_STORAGE_V2 } from '~/app.config'
+import { ENCRYPT } from '~/app.config'
 
 import { SecretCodec } from './secret-codec'
 
-export { mapString } from './secret-codec'
-
-/** v17 facade keeps runtime configuration and the plaintext escape hatch. */
+/** Runtime facade: authenticated V2 writes, historical plaintext/ECB reads. */
 export class EncryptUtil {
   private static codec() {
-    return new SecretCodec({ ...ENCRYPT, v2: SECRET_STORAGE_V2 })
+    return new SecretCodec(ENCRYPT)
   }
   static assertConfigured() {
     return this.codec().assertConfigured()

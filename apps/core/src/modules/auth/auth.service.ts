@@ -11,7 +11,6 @@ import { hashPassword } from 'better-auth/crypto'
 import { omit } from 'es-toolkit/compat'
 import { customAlphabet } from 'nanoid'
 
-import { SECRET_STORAGE_V2 } from '~/app.config'
 import { RequestContext } from '~/common/contexts/request.context'
 import { AppErrorCode, createAppException } from '~/common/errors'
 import { EventBusEvents } from '~/constants/event-bus.constant'
@@ -174,7 +173,7 @@ export class AuthService {
       body: {
         name: body.name,
         userId: ownerId,
-        configId: SECRET_STORAGE_V2 ? HASHED_API_KEY_CONFIG_ID : 'default',
+        configId: HASHED_API_KEY_CONFIG_ID,
         // Owner automation keys must not inherit the provider's 10-request daily quota.
         rateLimitEnabled: false,
         ...(expiresIn ? { expiresIn } : {}),
@@ -201,10 +200,8 @@ export class AuthService {
       name: model.name,
       start,
       prefix,
-      key: SECRET_STORAGE_V2
-        ? await defaultKeyHasher(model.token)
-        : model.token,
-      configId: SECRET_STORAGE_V2 ? HASHED_API_KEY_CONFIG_ID : 'default',
+      key: await defaultKeyHasher(model.token),
+      configId: HASHED_API_KEY_CONFIG_ID,
       userId: ownerId,
       referenceId: ownerId,
       enabled: true,

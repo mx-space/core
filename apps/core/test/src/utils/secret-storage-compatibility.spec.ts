@@ -5,56 +5,19 @@ import { reviewDemoDatabaseHooks } from '~/modules/auth/auth.implement'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
-const gate = vi.hoisted(() => ({ v2: false }))
-vi.mock('../../../src/app.config', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('~/app.config')>()),
-  get SECRET_STORAGE_V2() {
-    return gate.v2
-  },
-}))
-
-const encryptionConfig = { ...ENCRYPT }
-afterEach(() => {
-  Object.assign(ENCRYPT, encryptionConfig)
-  gate.v2 = false
+it('always writes authenticated V2 envelopes, even when obsolete codec options are supplied', async () => {
+  const { SecretCodec } = await import('~/utils/secret-codec')
+  const codec = new SecretCodec({
+    key: ENCRYPT.key,
+    enable: false,
+    v2: false,
+  } as any)
+  const encrypted = codec.encrypt('stored-secret', 'field')
+  expect(encrypted).toMatch(/^\$\$\{mx\}\$\$v2\./)
+  expect(codec.decrypt(encrypted, 'field')).toBe('stored-secret')
 })
 
-it('temporarily preserves legacy plaintext writes when encryption is disabled', () => {
-  ENCRYPT.enable = false
-  ENCRYPT.key = 'legacy-machine-id'
-  const data = { secret: 'legacy-secret', nested: ['another-secret', null, 42] }
-
-  expect(EncryptUtil.encrypt(data)).toEqual(data)
-  expect(EncryptUtil.decrypt(data)).toEqual(data)
-})
-
-it.each([false, true])(
-  'refuses to pass through existing ciphertext with encryption disabled (v2=%s)',
-  (v2) => {
-    gate.v2 = v2
-    const encrypted = EncryptUtil.encrypt('stored-secret', 'field')
-    gate.v2 = false
-    ENCRYPT.enable = false
-
-    expect(() => EncryptUtil.encrypt(encrypted, 'field')).toThrow(
-      'encryption is disabled',
-    )
-    expect(() => EncryptUtil.decrypt(encrypted, 'field')).toThrow(
-      'encryption is disabled',
-    )
-    expect(() => EncryptUtil.assertConfigured()).toThrow()
-  },
-)
-
-it('rejects invalid keys when legacy encryption is enabled', () => {
-  ENCRYPT.key = 'not-a-hex-key'
-
-  expect(() => EncryptUtil.encrypt('secret')).toThrow()
-})
-
-it('initializes and updates legacy plaintext configuration without exposing secrets in responses', async () => {
-  ENCRYPT.enable = false
-  ENCRYPT.key = 'legacy-machine-id'
+it('reads legacy plaintext configuration and encrypts updated storage and cache', async () => {
   let cache: string | null = null
   let stored: unknown
   const service = new ConfigsService(
@@ -81,50 +44,43 @@ it('initializes and updates legacy plaintext configuration without exposing secr
   )
 
   await service.onModuleInit()
-  expect(JSON.parse(cache!).backupOptions.secretKey).toBe('existing-secret')
+  expect(
+    EncryptUtil.decrypt(
+      JSON.parse(cache!).backupOptions.secretKey,
+      'backupOptions.secretKey',
+    ),
+  ).toBe('existing-secret')
   await expect(service.get('backupOptions')).resolves.toMatchObject({
     secretKey: 'existing-secret',
   })
   await service.patchAndValid('backupOptions', { secretKey: 'updated-secret' })
-  expect(stored).toMatchObject({ secretKey: 'updated-secret' })
-  expect(JSON.parse(cache!).backupOptions.secretKey).toBe('updated-secret')
+  expect((stored as any).secretKey).toMatch(/^\$\$\{mx\}\$\$v2\./)
+  expect(
+    EncryptUtil.decrypt((stored as any).secretKey, 'backupOptions.secretKey'),
+  ).toBe('updated-secret')
+  expect(
+    EncryptUtil.decrypt(
+      JSON.parse(cache!).backupOptions.secretKey,
+      'backupOptions.secretKey',
+    ),
+  ).toBe('updated-secret')
   await expect(service.getForResponse('backupOptions')).resolves.toMatchObject({
     secretKey: '',
   })
 })
 
-it('keeps legacy writes while reading new ciphertext during a rolling upgrade', () => {
-  gate.v2 = false
-  const legacy = EncryptUtil.encrypt('legacy-compatible', 'field')
-  expect(legacy).not.toContain('v2.')
-  gate.v2 = true
-  const upgraded = EncryptUtil.encrypt(legacy, 'field')
-  expect(upgraded).toContain('v2.')
-  gate.v2 = false
-  expect(EncryptUtil.decrypt(upgraded, 'field')).toBe('legacy-compatible')
-  expect(EncryptUtil.encrypt(upgraded, 'field')).toBe(upgraded)
-})
-
-it('keeps native OAuth encryption readable while preserving legacy write format until activation', async () => {
+it('keeps encrypted OAuth tokens encrypted at the database hook boundary', async () => {
   const key = {
     currentVersion: 1,
     keys: new Map([[1, SECURITY.jwtSecret!]]),
     legacySecret: SECURITY.jwtSecret!,
   }
   const encrypted = await symmetricEncrypt({ key, data: 'provider-token' })
-  const before = reviewDemoDatabaseHooks.account!.create!.before!
-  gate.v2 = false
-  const legacy = await before(
-    { accessToken: encrypted } as any,
+  const before = reviewDemoDatabaseHooks.account!.update!.before!
+  const account = { accessToken: encrypted }
+  const result = await before(
+    account as any,
     { context: { secretConfig: key } } as any,
   )
-  expect(legacy).toMatchObject({ data: { accessToken: 'provider-token' } })
-  gate.v2 = true
-  expect(
-    await before(
-      { accessToken: encrypted } as any,
-      { context: { secretConfig: key } } as any,
-    ),
-  ).toBeUndefined()
-  expect(ENCRYPT.enable).toBe(true)
+  expect((result ? result.data : account).accessToken).toBe(encrypted)
 })

@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { desc, eq, sql } from 'drizzle-orm'
 
-import { SECRET_STORAGE_V2 } from '~/app.config'
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { webhookEvents, webhooks } from '~/database/schema'
 import {
@@ -95,9 +94,7 @@ export class WebhookRepository extends BaseRepository {
         id,
         payloadUrl: input.payloadUrl,
         events: input.events,
-        secret: SECRET_STORAGE_V2
-          ? EncryptUtil.encrypt(input.secret, `webhooks.${id}.secret`)
-          : input.secret,
+        secret: EncryptUtil.encrypt(input.secret, `webhooks.${id}.secret`),
         enabled: input.enabled ?? true,
         scope: input.scope ?? null,
         timestamp: new Date(),
@@ -121,9 +118,7 @@ export class WebhookRepository extends BaseRepository {
     if (patch.payloadUrl !== undefined) update.payloadUrl = patch.payloadUrl
     if (patch.events !== undefined) update.events = patch.events
     if (patch.secret !== undefined)
-      update.secret = SECRET_STORAGE_V2
-        ? EncryptUtil.encrypt(patch.secret, `webhooks.${id}.secret`)
-        : patch.secret
+      update.secret = EncryptUtil.encrypt(patch.secret, `webhooks.${id}.secret`)
     if (patch.enabled !== undefined) update.enabled = patch.enabled
     if (patch.scope !== undefined) update.scope = patch.scope
     const [row] = await this.db
