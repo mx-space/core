@@ -7,6 +7,100 @@ import { EncryptUtil } from '~/utils/encrypt.util'
 
 const migrationId = '20261109-canonical-config'
 
+it.each([false, true])(
+  'preserves configured sibling integrations when converting a section without GitHub (legacy flat token=%s)',
+  async (legacy) => {
+    const context = await createPgTestDatabase('mx_integration_preservation', {
+      configCurrent: false,
+    })
+    try {
+      await context.pool.query(
+        "INSERT INTO options (id,name,value) VALUES ('100','thirdPartyServiceIntegration',$1)",
+        [
+          {
+            tmdb: {
+              enabled: true,
+              apiKey: EncryptUtil.encrypt(
+                'existing-tmdb-private',
+                'thirdPartyServiceIntegration.tmdb.apiKey',
+              ),
+            },
+            bangumi: { enabled: true, accessToken: 'existing-bangumi-private' },
+            ...(legacy ? { githubToken: 'imported-github-private' } : {}),
+          },
+        ],
+      )
+      await new AppMigrationsService(context.db, context.pool).run()
+      const value = (
+        await context.pool.query(
+          "SELECT value FROM options WHERE name='thirdPartyServiceIntegration'",
+        )
+      ).rows[0].value
+      expect(value.tmdb.enabled).toBe(true)
+      expect(
+        EncryptUtil.decrypt(
+          value.tmdb.apiKey,
+          'thirdPartyServiceIntegration.tmdb.apiKey',
+        ),
+      ).toBe('existing-tmdb-private')
+      expect(
+        EncryptUtil.decrypt(
+          value.bangumi.accessToken,
+          'thirdPartyServiceIntegration.bangumi.accessToken',
+        ),
+      ).toBe('existing-bangumi-private')
+      expect(value).not.toHaveProperty('githubToken')
+      if (legacy)
+        expect(
+          EncryptUtil.decrypt(
+            value.github.token,
+            'thirdPartyServiceIntegration.github.token',
+          ),
+        ).toBe('imported-github-private')
+    } finally {
+      await context.close()
+    }
+  },
+)
+
+it.each(['mailOptions', 'seo', 'backupOptions'])(
+  'rejects malformed raw %s without defaulting away its contents',
+  async (section) => {
+    const context = await createPgTestDatabase('mx_raw_config_preservation', {
+      configCurrent: false,
+    })
+    try {
+      await context.pool.query(
+        "INSERT INTO options (id,name,value) VALUES ('100',$1,$2),('101','membership',$3)",
+        [
+          section,
+          JSON.stringify(['unknown-private-content']),
+          { dodoApiKey: 'preserve-billing-private' },
+        ],
+      )
+      const before = (
+        await context.pool.query('SELECT * FROM options ORDER BY name')
+      ).rows
+      await expect(
+        new AppMigrationsService(context.db, context.pool).run(),
+      ).rejects.toThrow('CONFIG_SHAPE_UNSUPPORTED')
+      expect(
+        (await context.pool.query('SELECT * FROM options ORDER BY name')).rows,
+      ).toEqual(before)
+      expect(
+        (
+          await context.pool.query(
+            'SELECT id FROM _app_migrations WHERE id=$1',
+            [migrationId],
+          )
+        ).rowCount,
+      ).toBe(0)
+    } finally {
+      await context.close()
+    }
+  },
+)
+
 it('blocks configuration startup until the release migration has completed, including a new installation', async () => {
   const context = await createPgTestDatabase('mx_config_guard', {
     configCurrent: false,

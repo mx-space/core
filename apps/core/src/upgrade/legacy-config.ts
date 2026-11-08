@@ -249,26 +249,17 @@ export function normalizeAiConfig(
 export function normalizeThirdPartyConfig(
   raw: Record<string, any>,
 ): IConfig['thirdPartyServiceIntegration'] {
-  // Already new shape
-  if (raw?.github && typeof raw.github === 'object') {
-    return {
-      ...raw,
-      github: {
-        ...raw.github,
-        token: legacySecret(raw.github.token, raw.githubToken),
-      },
-    } as IConfig['thirdPartyServiceIntegration']
-  }
-  // Old flat shape — convert
+  const { githubToken, ...current } = raw
+  if (!Object.hasOwn(raw, 'githubToken'))
+    return current as IConfig['thirdPartyServiceIntegration']
+  // Converting GitHub must preserve every independent integration and secret.
   return {
-    github: { enabled: true, token: raw.githubToken || '' },
-    tmdb: { enabled: false, apiKey: '' },
-    bangumi: { enabled: true, accessToken: '' },
-    neodb: { enabled: true },
-    arxiv: { enabled: true },
-    leetcode: { enabled: true },
-    neteaseMusic: { enabled: true },
-    qqMusic: { enabled: true },
+    ...current,
+    github: {
+      enabled: true,
+      ...raw.github,
+      token: legacySecret(raw.github?.token, githubToken),
+    },
   } as IConfig['thirdPartyServiceIntegration']
 }
 
