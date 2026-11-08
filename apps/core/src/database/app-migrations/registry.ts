@@ -3,6 +3,7 @@ import { migration as treeContentRevisions } from './20260831-tree-content-revis
 import { migration as protectStoredSecrets } from './20261018-protect-stored-secrets'
 import { migration as mintLoroBlockIds } from './20261026-mint-loro-block-ids'
 import { migration as aiMetricsCoverage } from './20261108-ai-metrics-coverage'
+import { migration as canonicalConfig } from './20261109-canonical-config'
 import type { AppMigration } from './types'
 
 /**
@@ -19,4 +20,5 @@ export const migrations: AppMigration[] = [
   ...(process.env.MX_MIGRATE_SECRETS === '1' ? [protectStoredSecrets] : []),
   mintLoroBlockIds,
   aiMetricsCoverage,
+  canonicalConfig,
 ]

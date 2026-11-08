@@ -1,18 +1,12 @@
-import { isDeepStrictEqual } from 'node:util'
-
 import { defaultKeyHasher } from '@better-auth/api-key'
-import { SnowflakeGenerator } from '@mx-space/db-schema/id'
 import { symmetricEncrypt } from 'better-auth/crypto'
 import type { Pool } from 'pg'
 
 import { backfillAiMetrics } from '../database/app-migrations/20261108-ai-metrics-coverage'
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
-import { visitConfigSecrets } from '../modules/configs/configs.secret-paths'
-import {
-  canonicalConfigRows,
-  normalizeLegacyConfig,
-} from '../modules/configs/legacy-config.util'
+import { CONFIG_FORMAT_MIGRATION_ID } from '../shared/config-format'
 import { SecretCodec } from '../utils/secret-codec'
+import { migrateConfiguration } from './config-migration'
 import { unwrapOAuthToken } from './oauth-token'
 import {
   CONFIG_UPGRADE_LOCK,
@@ -40,7 +34,6 @@ export async function prepareUpgrade(
     throw new UpgradeError('REPLICA_CONFIRMATION_REQUIRED')
   const client = await pool.connect()
   const codec = new SecretCodec(config)
-  const ids = new SnowflakeGenerator({ workerId: 1023 })
   let changed = 0
   try {
     await client.query('BEGIN')
@@ -57,64 +50,7 @@ export async function prepareUpgrade(
     ])
     const blocking = before.issues.find((issue) => !allowed.has(issue.code))
     if (blocking) throw new UpgradeError(blocking.code, blocking.path)
-    const rows = (
-      await client.query(
-        'SELECT id, name, value FROM options ORDER BY name FOR UPDATE',
-      )
-    ).rows
-    const raw = Object.fromEntries(rows.map((row) => [row.name, row.value]))
-    for (const key of [
-      'ai',
-      'membership',
-      'thirdPartyServiceIntegration',
-      'imageGenerationOptions',
-      'ttsOptions',
-    ]) {
-      if (
-        key in raw &&
-        (!raw[key] || typeof raw[key] !== 'object' || Array.isArray(raw[key]))
-      )
-        throw new UpgradeError('CONFIG_SHAPE_UNSUPPORTED', key)
-    }
-    const plaintext = Object.fromEntries(
-      rows.map((row) => [
-        row.name,
-        visitConfigSecrets(row.value, row.name, (secret, path) =>
-          codec.decrypt(secret, path),
-        ),
-      ]),
-    )
-    const canonical = canonicalConfigRows(normalizeLegacyConfig(plaintext))
-    const names = new Set(rows.map((row) => row.name))
-    if (names.has('imageGenerationOptions') || names.has('ttsOptions'))
-      names.add('ai')
-    names.delete('imageGenerationOptions')
-    names.delete('ttsOptions')
-    for (const name of names) {
-      const value = canonical[name] ?? plaintext[name]
-      const encrypted = visitConfigSecrets(value, name, (secret, path) => {
-        const previous = path
-          .split('.')
-          .reduce<any>((node, part) => node?.[part], raw)
-        return typeof previous === 'string' &&
-          codec.isEncryptedString(previous) &&
-          codec.decrypt(previous, path) === secret
-          ? codec.encrypt(previous, path)
-          : codec.encrypt(secret, path)
-      })
-      if (isDeepStrictEqual(encrypted, raw[name])) continue
-      await client.query(
-        'INSERT INTO options (id, name, value) VALUES ($1, $2, $3) ON CONFLICT (name) DO UPDATE SET value = excluded.value',
-        [ids.nextId(), name, JSON.stringify(encrypted)],
-      )
-      changed++
-    }
-    changed +=
-      (
-        await client.query(
-          "DELETE FROM options WHERE name IN ('imageGenerationOptions', 'ttsOptions')",
-        )
-      ).rowCount ?? 0
+    changed += await migrateConfiguration(client, codec)
     for (const table of ['snippets', 'webhooks']) {
       for (const row of (
         await client.query(`SELECT id, secret FROM ${table} FOR UPDATE`)
@@ -178,6 +114,10 @@ export async function prepareUpgrade(
         [PREPARED_MIGRATION_ID],
       )
     }
+    await client.query(
+      'INSERT INTO _app_migrations (id) VALUES ($1) ON CONFLICT (id) DO NOTHING',
+      [CONFIG_FORMAT_MIGRATION_ID],
+    )
     await client.query(options.dryRun ? 'ROLLBACK' : 'COMMIT')
     return {
       status: options.dryRun ? 'would-be-ready' : 'prepared',
