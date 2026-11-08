@@ -61,6 +61,8 @@ describe('ConfigsService', () => {
       apiKey: 'image-secret',
       model: 'image-v2',
     })
+    await service.patchAndValid('ai', { imageGeneration: { enable: false } })
+    expect((await service.get('imageGenerationOptions')).enable).toBe(false)
     await service.patchAndValid('membership', {
       dodoApiKey: 'billing-secret',
     } as any)
@@ -348,7 +350,7 @@ describe('ConfigsService', () => {
       JSON.parse(redisClient.set.mock.calls[0][1]),
     )
     expect(cachedConfig.ai.providers).toHaveLength(1)
-    expect(cachedConfig.ai.providers[0].capabilities).toEqual({
+    expect(cachedConfig.ai.providers[0].capabilities).toMatchObject({
       text: false,
       image: true,
       speech: true,

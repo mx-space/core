@@ -74,4 +74,20 @@ describe('canonical legacy config conversion', () => {
       endpoint: 'https://api.example.com/v1',
     })
   })
+  it('retains leftover media credentials alongside an already-v2 AI row', () => {
+    const converted = normalizeLegacyConfig({
+      ai: { version: 2, providers: [], imageGeneration: { enable: false } },
+      imageGenerationOptions: {
+        apiKey: 'retained-legacy-key',
+        model: 'legacy-model',
+        enable: true,
+      },
+    })
+    expect(
+      converted.ai.providers?.some(
+        (provider) => provider.apiKey === 'retained-legacy-key',
+      ),
+    ).toBe(true)
+    expect(converted.ai.imageGeneration?.enable).toBe(false)
+  })
 })

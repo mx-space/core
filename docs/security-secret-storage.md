@@ -10,7 +10,16 @@ This escape hatch does not bypass encryption checks for existing ciphertext, v2 
 
 **v18 will require field encryption and an explicit 64-character hexadecimal encryption key.** Before upgrading to v18, set `ENCRYPT_ENABLE=true` (or `MX_ENCRYPT_ENABLE=true`) and configure `ENCRYPT_KEY` (or `MX_ENCRYPT_KEY`). Keep the original key when one already exists; configure a random key only for installations that have never encrypted data. Follow the rollout below separately to activate v2 writes and backfill existing stored credentials.
 
-## Rollout
+## v18 preparation tooling (unreleased)
+
+The current branch adds a separate readiness/preparation ledger and standalone
+CLI. v17.0.4 does not contain these commands. Follow the
+[v18 preparation runbook](v18-preparation.md) after deploying a compatible
+preparation build. The older `migrate:secrets` ledger is not proof that legacy
+config and AI metadata are prepared. Never rotate a short JWT by replacing its
+environment value alone: use the maintenance file-based rewrap operation.
+
+## Original credential rollout
 
 This is an expand-before-contract rollout. Two replicas may overlap, so the new reader ships before new writes.
 

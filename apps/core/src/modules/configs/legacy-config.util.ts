@@ -57,10 +57,6 @@ export function normalizeAiConfig(
     }
   })
 
-  if (storedAiConfig?.version === 2) {
-    return { ...aiConfig, version: 2, providers }
-  }
-
   const imageGeneration = {
     enable: legacyImageConfig.enable,
     model: undefined as { providerId: string; model?: string } | undefined,
@@ -96,6 +92,7 @@ export function normalizeAiConfig(
     )
     if (existing) {
       existing.capabilities = {
+        ...existing.capabilities,
         text: existing.capabilities?.text ?? true,
         image: existing.capabilities?.image || input.capability === 'image',
         speech: existing.capabilities?.speech || input.capability === 'speech',
@@ -169,13 +166,9 @@ export function normalizeAiConfig(
     }
   }
 
-  return {
-    ...aiConfig,
-    version: 2,
-    providers,
-    imageGeneration,
-    tts,
-  }
+  return storedAiConfig?.version === 2
+    ? { ...aiConfig, version: 2, providers }
+    : { ...aiConfig, version: 2, providers, imageGeneration, tts }
 }
 
 /**
