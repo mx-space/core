@@ -1,9 +1,13 @@
-import { parseEnvelope, symmetricDecrypt } from 'better-auth/crypto'
 import type { Pool, PoolClient } from 'pg'
 
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
+import { configSchemaMapping } from '../modules/configs/configs.schema'
 import { visitConfigSecrets } from '../modules/configs/configs.secret-paths'
+import { normalizeLegacyConfig } from '../modules/configs/legacy-config.util'
 import { SecretCodec } from '../utils/secret-codec'
+import { isEncryptedOAuth, unwrapOAuthToken } from './oauth-token'
+
+export { oauthKey } from './oauth-token'
 
 export const PREPARED_MIGRATION_ID = '20261108-v18-prepared'
 export const CONFIG_UPGRADE_LOCK = '5183248167463294042'
@@ -35,24 +39,18 @@ export type UpgradeReport = {
 }
 export type UpgradeDatabase = Pick<Pool | PoolClient, 'query'>
 
-export function oauthKey(secret: string) {
-  return {
-    currentVersion: 1,
-    keys: new Map([[1, secret]]),
-    legacySecret: secret,
-  }
-}
-
 export function isLegacyConfig(name: string, value: any): boolean {
   return (
     name === 'imageGenerationOptions' ||
     name === 'ttsOptions' ||
     (name === 'ai' && value?.version !== 2) ||
     (name === 'thirdPartyServiceIntegration' &&
-      !!value &&
+      value &&
+      typeof value === 'object' &&
       'githubToken' in value) ||
     (name === 'membership' &&
-      !!value &&
+      value &&
+      typeof value === 'object' &&
       ['dodoApiKey', 'dodoEnvironment', 'dodoWebhookKey'].some(
         (key) => key in value,
       ))
@@ -105,6 +103,39 @@ export async function readUpgradeState(
     if (row.value && typeof row.value === 'object')
       visitConfigSecrets(row.value, row.name, inspect)
   }
+  const knownRows = options.filter((row) => row.name in configSchemaMapping)
+  for (const row of knownRows) {
+    if (!row.value || typeof row.value !== 'object' || Array.isArray(row.value))
+      issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: row.name })
+  }
+  if (
+    keyValid &&
+    !issues.some(
+      (issue) =>
+        issue.code === 'SECRET_UNREADABLE' ||
+        issue.code === 'CONFIG_SHAPE_UNSUPPORTED',
+    )
+  ) {
+    try {
+      const raw = Object.fromEntries(
+        knownRows.map((row) => [
+          row.name,
+          visitConfigSecrets(row.value, row.name, (secret, path) =>
+            codec.decrypt(secret, path),
+          ),
+        ]),
+      )
+      const normalized = normalizeLegacyConfig(raw)
+      for (const row of knownRows) {
+        if (
+          !configSchemaMapping[row.name].safeParse(normalized[row.name]).success
+        )
+          issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: row.name })
+      }
+    } catch {
+      issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED' })
+    }
+  }
   for (const table of ['snippets', 'webhooks']) {
     for (const row of (await database.query(`SELECT id, secret FROM ${table}`))
       .rows) {
@@ -123,22 +154,14 @@ export async function readUpgradeState(
     for (const field of ['access_token', 'refresh_token']) {
       const token = row[field]
       if (!token) continue
-      if (!token.startsWith('$ba$')) {
+      if (!isEncryptedOAuth(token)) {
         counts.plainOAuth++
         continue
       }
       counts.encryptedOAuth++
-      if (!parseEnvelope(token))
-        issues.push({
-          code: 'OAUTH_UNREADABLE',
-          path: `accounts.${row.id}.${field}`,
-        })
-      else if (config.jwtSecret) {
+      if (config.jwtSecret) {
         try {
-          await symmetricDecrypt({
-            key: oauthKey(config.jwtSecret),
-            data: token,
-          })
+          await unwrapOAuthToken(token, config.jwtSecret)
         } catch {
           issues.push({
             code: 'OAUTH_UNREADABLE',

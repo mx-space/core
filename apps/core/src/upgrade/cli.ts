@@ -1,5 +1,6 @@
 import { Pool } from 'pg'
 
+import { prepareUpgrade, UpgradeError } from './preparation'
 import { readUpgradeState, type UpgradeConfig } from './readiness'
 
 export function upgradeConfigFromEnv(env: NodeJS.ProcessEnv): UpgradeConfig {
@@ -20,8 +21,17 @@ export async function runUpgradeCli(
   write = (output: string) => process.stdout.write(`${output}\n`),
 ): Promise<number> {
   const [command, ...flags] = args
-  if (command !== 'check' || flags.some((flag) => flag !== '--json')) {
-    write('Usage: upgrade check [--json]')
+  const allowedFlags =
+    command === 'prepare'
+      ? ['--json', '--dry-run', '--all-replicas-v2']
+      : ['--json']
+  if (
+    !['check', 'prepare'].includes(command) ||
+    flags.some((flag) => !allowedFlags.includes(flag))
+  ) {
+    write(
+      'Usage: upgrade check [--json] | prepare --all-replicas-v2 [--dry-run] [--json]',
+    )
     return 1
   }
   const pool = new Pool({
@@ -38,6 +48,14 @@ export async function runUpgradeCli(
     connectionTimeoutMillis: 10000,
   })
   try {
+    if (command === 'prepare') {
+      const result = await prepareUpgrade(pool, upgradeConfigFromEnv(env), {
+        allReplicasV2: flags.includes('--all-replicas-v2'),
+        dryRun: flags.includes('--dry-run'),
+      })
+      write(JSON.stringify(result))
+      return 0
+    }
     const client = await pool.connect()
     try {
       await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY')
@@ -52,13 +70,22 @@ export async function runUpgradeCli(
     } finally {
       client.release()
     }
-  } catch {
+  } catch (error) {
     // Driver/decryption messages can contain connection strings or stored values.
     write(
       JSON.stringify({
         target: 18,
         status: 'error',
-        issues: [{ code: 'UPGRADE_CHECK_FAILED' }],
+        issues: [
+          error instanceof UpgradeError
+            ? { code: error.code, path: error.path }
+            : {
+                code:
+                  command === 'check'
+                    ? 'UPGRADE_CHECK_FAILED'
+                    : 'UPGRADE_PREPARATION_FAILED',
+              },
+        ],
       }),
     )
     return 1
