@@ -83,4 +83,14 @@ describe('standalone upgrade readiness', () => {
       ),
     ).toContain('CONFIG_SHAPE_UNSUPPORTED')
   })
+  it('does not classify retained business data without an owner as a new empty installation', async () => {
+    await context.pool.query(
+      "DELETE FROM options; DELETE FROM _app_migrations; INSERT INTO categories (id, name, slug) VALUES ('400', 'Retained category', 'retained')",
+    )
+    expect(await readUpgradeState(context.pool, config)).toMatchObject({
+      installation: 'existing',
+      status: 'needs-action',
+      prepared: false,
+    })
+  })
 })
