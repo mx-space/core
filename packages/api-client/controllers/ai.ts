@@ -55,9 +55,9 @@ export class AIController<ResponseWrapper> implements IController {
 
   async generateSummary(articleId: string, lang = 'zh-CN', token = '') {
     return this.proxy.summaries.generate.post<AISummaryModel>({
-      params: {
-        token,
-      },
+      headers: token.trim()
+        ? { Authorization: `Bearer ${token.trim().replace(/^bearer\s+/i, '')}` }
+        : undefined,
       data: {
         lang,
         refId: articleId,

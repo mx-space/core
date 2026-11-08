@@ -8,6 +8,10 @@ export type SortOptions = {
   sortBy?: string
   sortOrder?: 1 | -1 | 'asc' | 'desc'
 }
+export function normalizeSortOrder(order: SortOptions['sortOrder']) {
+  return order === 1 ? 'asc' : order === -1 ? 'desc' : order
+}
+
 export abstract class BaseCrudController<T, ResponseWrapper> {
   base!: string
   constructor(protected client: HTTPClient) {
@@ -31,7 +35,12 @@ export abstract class BaseCrudController<T, ResponseWrapper> {
    */
   getAllPaginated(page?: number, perPage?: number, sortOption?: SortOptions) {
     return this.proxy.get<PaginateResult<T>>({
-      params: { page, size: perPage, ...sortOption },
+      params: {
+        page,
+        size: perPage,
+        ...sortOption,
+        sortOrder: normalizeSortOrder(sortOption?.sortOrder),
+      },
     })
   }
 }

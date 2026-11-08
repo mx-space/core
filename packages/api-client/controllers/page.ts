@@ -6,6 +6,7 @@ import type { PageModel } from '~/models/page'
 import { autoBind } from '~/utils/auto-bind'
 
 import type { HTTPClient } from '../core'
+import { normalizeSortOrder } from './base'
 
 declare module '@mx-space/api-client' {
   interface HTTPClient<
@@ -18,7 +19,7 @@ declare module '@mx-space/api-client' {
 
 export type PageListOptions = {
   sortBy?: 'order' | 'subtitle' | 'title' | 'createdAt' | 'modifiedAt'
-  sortOrder?: 1 | -1
+  sortOrder?: 1 | -1 | 'asc' | 'desc'
 }
 
 export class PageController<ResponseWrapper> implements IController {
@@ -40,7 +41,7 @@ export class PageController<ResponseWrapper> implements IController {
         page,
         size: perPage,
         sortBy,
-        sortOrder,
+        sortOrder: normalizeSortOrder(sortOrder),
       },
     })
   }
