@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
@@ -16,11 +17,15 @@ describe('upgrade CLI isolated process', () => {
   it('reports bad runtime settings in a fresh process without bootstrap failure', async () => {
     const result = await promisify(execFile)(
       'node_modules/.bin/vite-node',
-      ['src/upgrade.ts', 'check', '--json'],
+      [
+        '--config',
+        'vite.upgrade.config.ts',
+        'src/upgrade.ts',
+        'check',
+        '--json',
+      ],
       {
-        cwd: process.cwd().endsWith('/test')
-          ? `${process.cwd()}/..`
-          : process.cwd(),
+        cwd: fileURLToPath(new URL('../../../', import.meta.url)),
         env: {
           ...process.env,
           PG_URL: context.connectionString,
@@ -30,7 +35,7 @@ describe('upgrade CLI isolated process', () => {
         },
       },
     ).catch((error) => error)
-    expect(result.code).toBe(2)
+    expect(result.code, result.stdout + result.stderr).toBe(2)
     const report = JSON.parse(result.stdout.trim())
     expect(report.status).toBe('needs-action')
     expect(report.issues.map((issue) => issue.code)).toContain(
