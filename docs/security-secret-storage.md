@@ -4,13 +4,24 @@ Core protects recoverable credentials with authenticated encryption and stores A
 
 ## Required configuration (unreleased branch)
 
-Field encryption is the only runtime mode on this branch. Supply an explicit
+Field encryption is the only runtime mode on this branch. Production builds require an explicit
 64-character hexadecimal `MX_ENCRYPT_KEY` or `ENCRYPT_KEY`, and a stable
 `JWT_SECRET` (alias `JWTSECRET`) of at least 32 characters. There is no
 machine-ID fallback or short-key derivation. Keep existing effective secrets;
 only an instance that has never encrypted data may generate its first random
 field key with `openssl rand -hex 32`. Persist secrets before starting and
 share the same values between app and migration services.
+
+Source development startup may omit the field key. It creates a random hex64
+key in `tmp/dev-encryption.key` relative to the working directory, with mode
+`0600`, and reuses it across restarts and concurrent workers. An explicit
+CLI/YAML/environment key always takes precedence. Preserve the local key with
+the development database; an invalid local or explicit key fails instead of
+being replaced. AES-256-GCM writes and the JWT requirements stay the same.
+Release builds never use this fallback, even with `NODE_ENV=development`.
+Standalone upgrade diagnostics still require the effective key in environment
+configuration; copy the local key into the secret store when promoting a
+development database to production.
 
 Remove `ENCRYPT_ENABLE`, `MX_ENCRYPT_ENABLE` and `MX_SECRET_STORAGE_V2`.
 Historical true values are accepted with a deprecation warning; false or

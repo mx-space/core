@@ -6,6 +6,7 @@ import { Option, program } from 'commander'
 import { load as yamlLoad } from 'js-yaml'
 
 import { isDebugMode, isDev } from './global/env.global'
+import { resolveDevelopmentEncryptionKey } from './utils/development-encryption-key'
 import {
   parseRedisConnectionString,
   resolveRedisConnectionStringEnv,
@@ -269,7 +270,11 @@ export const THROTTLE_OPTIONS = {
 
 const secretStorageConfig = secretStorageConfigFromEnv(process.env)
 export const ENCRYPT = {
-  key: argv.encrypt_key || '',
+  key: resolveDevelopmentEncryptionKey(
+    argv.encrypt_key || '',
+    isDev,
+    path.join(process.cwd(), 'tmp'),
+  ),
 }
 assertSecretStorageConfig({
   ...ENCRYPT,
@@ -283,6 +288,10 @@ assertSecretStorageConfig({
     encrypt_enable: argv.encrypt_enable,
   },
 })
+if (isDev && !argv.encrypt_key)
+  console.warn(
+    'Using the local development encryption key at tmp/dev-encryption.key; preserve this file with your development database',
+  )
 
 export const TELEMETRY = {
   enable: !parseBooleanishValue(argv.disable_telemetry ?? MX_DISABLE_TELEMETRY),

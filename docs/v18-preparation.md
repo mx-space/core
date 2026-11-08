@@ -1,6 +1,6 @@
 # v18 preparation (unreleased)
 
-This unreleased branch now requires field encryption, an explicit hex64 key
+This unreleased branch now requires field encryption, an explicit hex64 key in production
 and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
 flags, algorithm selection and machine-ID fallback have been removed. Field
 writes are fixed to AES-256-GCM. Canonical configuration migration and strict configuration PATCH validation
@@ -8,6 +8,15 @@ are also enforced here. SDK 6 cleanup and column removal remain future work. The
 No minimum released preparation tag is established yet. Obtain this build
 without starting business replicas; do not publish or migrate production as
 part of reviewing this branch.
+
+Source development startup can omit the field key: a random private key is
+persisted in `tmp/dev-encryption.key` and reused on restart. Explicit keys
+take precedence; corrupt local keys are never replaced automatically. Preserve
+that file with the development database. Production builds and independent
+upgrade diagnostics still require an explicit effective field key; even
+`NODE_ENV=development` cannot enable this fallback in a release build. Supply
+the same local key explicitly before promoting a development database or
+checking it with the standalone CLI. JWT requirements are unchanged.
 
 ## Preconditions and checks
 
