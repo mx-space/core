@@ -28,9 +28,13 @@ export function normalizeConfigPatch(schema: z.ZodType, value: any): any {
   )
     return value
   const shape = typeof def.shape === 'function' ? def.shape() : def.shape
+  const declaredNames = new Map<string, string>(
+    Object.keys(shape).map((name) => [name.toLowerCase(), name]),
+  )
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
-      const name = key.replaceAll(/_(\w)/g, (_, c) => c.toUpperCase())
+      const camelName = key.replaceAll(/_(\w)/g, (_, c) => c.toUpperCase())
+      const name = declaredNames.get(camelName.toLowerCase()) ?? camelName
       return [
         name,
         shape[name] ? normalizeConfigPatch(shape[name], item) : item,
