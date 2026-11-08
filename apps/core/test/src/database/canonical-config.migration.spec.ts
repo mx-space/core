@@ -1,0 +1,135 @@
+import { createPgTestDatabase } from 'test/helper/pg-verify-url'
+
+import { AppMigrationsService } from '~/database/app-migrations/app-migrations.service'
+import { EncryptUtil } from '~/utils/encrypt.util'
+
+const migrationId = '20261109-canonical-config'
+
+it('automatically migrates old configuration rows before release startup and preserves credentials on rerun', async () => {
+  const context = await createPgTestDatabase('mx_canonical_config')
+  try {
+    await context.pool.query(
+      `INSERT INTO options (id,name,value) VALUES ('100','membership',$1), ('101','thirdPartyServiceIntegration',$2), ('102','imageGenerationOptions',$3), ('103','ttsOptions',$4)`,
+      [
+        {
+          enabled: true,
+          dodoApiKey: EncryptUtil.encrypt(
+            'billing-private',
+            'membership.dodoApiKey',
+          ),
+        },
+        {
+          githubToken: EncryptUtil.encrypt(
+            'github-private',
+            'thirdPartyServiceIntegration.githubToken',
+          ),
+        },
+        {
+          enable: true,
+          apiKey: EncryptUtil.encrypt(
+            'media-private',
+            'imageGenerationOptions.apiKey',
+          ),
+          endpoint: 'https://api.example.test/v1',
+          model: 'image-model',
+        },
+        {
+          enable: true,
+          apiKey: 'media-private',
+          endpoint: 'https://api.example.test/v1',
+          model: 'speech-model',
+          voice: 'retained-voice',
+        },
+      ],
+    )
+    const runner = new AppMigrationsService(context.db, context.pool)
+    await runner.run()
+    const rows = (
+      await context.pool.query('SELECT * FROM options ORDER BY name')
+    ).rows
+    const config = Object.fromEntries(rows.map((row) => [row.name, row.value]))
+    expect(config).not.toHaveProperty('imageGenerationOptions')
+    expect(config).not.toHaveProperty('ttsOptions')
+    expect(config.membership).not.toHaveProperty('dodoApiKey')
+    expect(
+      EncryptUtil.decrypt(config.membership.apiKey, 'membership.apiKey'),
+    ).toBe('billing-private')
+    expect(
+      EncryptUtil.decrypt(
+        config.thirdPartyServiceIntegration.github.token,
+        'thirdPartyServiceIntegration.github.token',
+      ),
+    ).toBe('github-private')
+    expect(config.ai.providers).toHaveLength(1)
+    expect(
+      EncryptUtil.decrypt(
+        config.ai.providers[0].apiKey,
+        'ai.providers.0.apiKey',
+      ),
+    ).toBe('media-private')
+    expect(config.ai.imageGeneration.model.model).toBe('image-model')
+    expect(config.ai.tts).toMatchObject({
+      enable: true,
+      model: { model: 'speech-model' },
+      voice: 'retained-voice',
+    })
+    expect(
+      (
+        await context.pool.query('SELECT id FROM _app_migrations WHERE id=$1', [
+          migrationId,
+        ])
+      ).rowCount,
+    ).toBe(1)
+    await runner.run()
+    expect(
+      (await context.pool.query('SELECT * FROM options ORDER BY name')).rows,
+    ).toEqual(rows)
+  } finally {
+    await context.close()
+  }
+})
+
+it.each(['conflict', 'bad-ciphertext'])(
+  'blocks release and rolls back every configuration row on %s',
+  async (invalid) => {
+    const context = await createPgTestDatabase('mx_bad_config')
+    try {
+      await context.pool.query(
+        "INSERT INTO options (id,name,value) VALUES ('100','membership',$1), ('101','thirdPartyServiceIntegration',$2)",
+        [
+          {
+            dodoApiKey: 'old-billing',
+            ...(invalid === 'conflict' ? { apiKey: 'different-billing' } : {}),
+          },
+          {
+            githubToken:
+              invalid === 'bad-ciphertext'
+                ? '$${mx}$$v2.invalid.envelope'
+                : 'github-private',
+          },
+        ],
+      )
+      const before = (
+        await context.pool.query('SELECT * FROM options ORDER BY name')
+      ).rows
+      await expect(
+        new AppMigrationsService(context.db, context.pool).run(),
+      ).rejects.toThrow(
+        invalid === 'conflict' ? 'CONFIG_SECRET_CONFLICT' : 'SECRET_UNREADABLE',
+      )
+      expect(
+        (await context.pool.query('SELECT * FROM options ORDER BY name')).rows,
+      ).toEqual(before)
+      expect(
+        (
+          await context.pool.query(
+            'SELECT id FROM _app_migrations WHERE id=$1',
+            [migrationId],
+          )
+        ).rowCount,
+      ).toBe(0)
+    } finally {
+      await context.close()
+    }
+  },
+)
