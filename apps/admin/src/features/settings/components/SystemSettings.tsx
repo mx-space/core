@@ -42,7 +42,7 @@ export function SystemSettings(props: {
 
   const optionsQuery = useQuery({
     enabled: Boolean(props.schema),
-    queryFn: getAllOptions,
+    queryFn: () => getAllOptions(props.schema),
     queryKey: adminQueryKeys.settings.options(),
   })
 

@@ -217,3 +217,11 @@ flowchart TD
 - 历史 ZIP/v1 归档恢复到隔离 PostgreSQL 后，经构建产物 `migrate.mjs` 和只读 check 验证原凭据保留。演练 fixture 同步覆盖两个 PG 连接别名，避免继承测试环境连接到其他库。
 - 原始全量命令确认既有 `admin-agent.e2e-spec.ts` 缺 `AiAgentConversationRepository`，初始化及清理失败；初次归档演练的连接别名问题修正后单独通过。最终明确排除该既有 Agent 夹具重跑：433 个文件通过、3 个文件跳过，3576 项通过、11 项跳过，退出 0。没有声称未排除夹具的原始命令全绿。
 - Core 构建、Core/E2E 类型检查、API envelope/验证检查、50 个迁移 lint、定向 ESLint/Prettier 和 diff 检查通过。官方文档 build/check/links/pangu/lint 与 3 项测试通过，生成 llms 已同步；保留既有 1 条 hint 与 1 条死链。
+
+## Admin 设置迁移验收（2026-11-09）
+
+- 通过当前分支启动隔离 PostgreSQL、Redis、Core 和 Admin，先写入旧 GitHub、会员、嵌套 SMTP、图片/TTS 配置，再执行正式迁移并以真实 owner 登录。
+- 18 个设置分区使用真实 Admin API 客户端读回保存，发现评论上传的 `singleFileSizeMB` / `readerTotalActiveBytesMB` 经 wire camelization 变成 `Mb`，导致输入为空且严格 PATCH 返回 422。新增 3 项回归先失败，再修复：后端按声明 schema 恢复字段大小写，Admin 按已有表单 schema 恢复值的键名，不增加请求或改变 wire/DB 名称；未知、退役字段仍拒绝。
+- 修复后 18 个分区全部通过；实测 GitHub、会员、SMTP 与 AI 编辑器编辑、保存、刷新回显，5 个凭据原值保留且仍以 V2 认证加密。评论上传值改为 7 / 70 后刷新和数据库均一致。
+- Admin 73 项定向测试、Core 40 项定向测试通过；最终 Core 回归 3578 项通过、11 项跳过，明确排除既有 Agent 缺 DI 夹具。Core/Admin 构建及类型检查、API guards、定向 lint/format 与 diff 检查通过。
+- 实际截图和录像：[Admin 设置验收页](https://ryugi.innei.dev/a/48IrQ95Vj1VecQTZtWKtf)。文件与布局检查干净；页面最终确认等待用户。验收覆盖设置的显示、提交和持久化，使用虚构凭据，不代表真实邮件、支付或模型服务商连通性验证。
