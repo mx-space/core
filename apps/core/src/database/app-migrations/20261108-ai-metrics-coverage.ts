@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from 'pg'
 
 import type { AppMigration } from './types'
 
-/** Reusable for explicit preparation; never overwrites a recorded generation. */
+/** Backfill missing metadata without overwriting a recorded generation. */
 export async function backfillAiMetrics(
   client: Pick<Pool | PoolClient, 'query'>,
 ): Promise<number> {

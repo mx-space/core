@@ -7,8 +7,8 @@ import {
   oauthKey,
   unwrapOAuthToken,
 } from '../database/app-migrations/helpers/oauth-token'
-import { UpgradeError } from './preparation'
-import { CONFIG_UPGRADE_LOCK } from './readiness'
+import { CONFIG_UPGRADE_LOCK } from '../shared/config-lock'
+import { UpgradeError } from './upgrade.error'
 
 async function readSecretFile(file: string) {
   try {

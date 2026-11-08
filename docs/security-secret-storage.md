@@ -21,17 +21,18 @@ V2 encryption, API-key writes always hash, and OAuth writes stay encrypted.
 
 The published v17.0.4 escape hatch is historical behavior, removed here.
 This branch is not released yet. The [preparation runbook](v18-preparation.md)
-explains standalone check/prepare and maintenance JWT rotation. The tools can
+explains release migration, standalone check and maintenance JWT rotation. The tools can
 inspect invalid settings without booting the application. Short JWT values
 must be rotated with the original secret before starting this runtime; do not
 replace their environment value alone.
 
 Before persistent backfill, stop old-format writers on every replica and
-background worker. `upgrade:prepare --all-replicas-v2` requires an explicit
-operator attestation and performs transactional conversion/verification.
-`migrate:secrets` remains an opt-in credential-only historical migration; its
-ledger is not proof that configuration and AI metadata are prepared. It no
-longer needs a V2 activation flag.
+background worker. `node migrate.mjs` (source: `pnpm -C apps/core migrate`)
+performs the mandatory configuration, credential and AI-metric migrations.
+The v18 credential migration has its own ledger ID, so an older opt-in
+credential backfill cannot bypass it. There is no separate prepare command,
+preparation marker or credential-migration activation flag. Run the read-only
+check after migration, then start the new business replicas.
 
 After conversion, roll back only to a tested reader of the new formats.
 Neither disabling encryption nor switching back to old-format writes exists.

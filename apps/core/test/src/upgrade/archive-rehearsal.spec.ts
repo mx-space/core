@@ -16,9 +16,12 @@ import { SecretCodec } from '~/utils/secret-codec'
 const entry = fileURLToPath(
   new URL('../../../out/upgrade.mjs', import.meta.url),
 )
+const migrateEntry = fileURLToPath(
+  new URL('../../../out/migrate.mjs', import.meta.url),
+)
 
-describe.skipIf(!existsSync(entry))(
-  'historical archive → private PG → built upgrade CLI',
+describe.skipIf(!existsSync(entry) || !existsSync(migrateEntry))(
+  'historical archive → private PG → built release migration',
   () => {
     let source: Awaited<ReturnType<typeof createPgTestDatabase>>
     let target: Awaited<ReturnType<typeof createPgTestDatabase>>
@@ -34,7 +37,7 @@ describe.skipIf(!existsSync(entry))(
       if (cliCwd) rmSync(cliCwd, { recursive: true })
     })
 
-    it('restores ZIP/v1 contents using original keys, then prepares through the shipped entry', async (test) => {
+    it('restores ZIP/v1 contents using original keys, then migrates through the shipped release entry', async (test) => {
       const url = new URL(source.connectionString)
       const container = execFileSync(
         'docker',
@@ -134,21 +137,30 @@ describe.skipIf(!existsSync(entry))(
         MX_ENCRYPT_ENABLE: undefined,
         MX_SECRET_STORAGE_V2: undefined,
         PG_URL: target.connectionString,
+        PG_CONNECTION_STRING: target.connectionString,
         MX_ENCRYPT_KEY: key,
         JWT_SECRET: 'private-rehearsal-jwt-123456789012345',
+        NODE_ENV: 'production',
+        SNOWFLAKE_WORKER_ID: '1',
+        MIGRATIONS_DIR: fileURLToPath(
+          new URL('../../../src/database/migrations', import.meta.url),
+        ),
       }
-      const run = (args: string[]) =>
-        JSON.parse(
-          execFileSync(process.execPath, [entry, ...args], {
-            cwd: cliCwd,
-            env,
-            encoding: 'utf8',
-          }),
-        )
-      expect(run(['prepare', '--all-replicas-v2', '--dry-run'])).toMatchObject({
-        status: 'would-be-ready',
-        dryRun: true,
-      })
+      const run = (args: string[]) => {
+        try {
+          return JSON.parse(
+            execFileSync(process.execPath, [entry, ...args], {
+              cwd: cliCwd,
+              env,
+              encoding: 'utf8',
+            }),
+          )
+        } catch (error) {
+          // Diagnostic reports intentionally omit stored secret values.
+          const { stdout, stderr } = error as { stdout: string; stderr: string }
+          throw new Error(`${stdout}\n${stderr}`, { cause: error })
+        }
+      }
       expect(
         (
           await target.pool.query(
@@ -156,10 +168,18 @@ describe.skipIf(!existsSync(entry))(
           )
         ).rows[0].value,
       ).toHaveProperty('dodoApiKey')
-      expect(run(['prepare', '--all-replicas-v2'])).toMatchObject({
-        status: 'prepared',
+      const migrationOutput = execFileSync(process.execPath, [migrateEntry], {
+        cwd: cliCwd,
+        env,
+        encoding: 'utf8',
       })
-      expect(run(['check', '--json'])).toMatchObject({ status: 'ready' })
+      const report = run(['check', '--json'])
+      expect(
+        report,
+        `${JSON.stringify(report)}\n${migrationOutput}`,
+      ).toMatchObject({
+        status: 'ready',
+      })
       const canonical = (
         await target.pool.query(
           "SELECT value FROM options WHERE name = 'membership'",
