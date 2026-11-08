@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { encryptObject } from '~/modules/configs/configs.encrypt.util'
 import {
   normalizeLegacyConfig,
   visitLegacyConfigSecrets,
-} from '~/upgrade/legacy-config'
+} from '~/database/app-migrations/helpers/legacy-config'
+import { encryptObject } from '~/modules/configs/configs.encrypt.util'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 describe('canonical legacy config conversion', () => {
