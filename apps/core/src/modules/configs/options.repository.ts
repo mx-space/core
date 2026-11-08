@@ -28,6 +28,19 @@ export class OptionsRepository extends BaseRepository {
     super(db)
   }
 
+  async withConfigLock<T>(
+    work: (repository: OptionsRepository) => Promise<T>,
+  ): Promise<T> {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(5183248167463294042::bigint)`,
+      )
+      return work(
+        new OptionsRepository(tx as unknown as AppDatabase, this.snowflake),
+      )
+    })
+  }
+
   async findAll(): Promise<OptionRow[]> {
     const rows = await this.db.select().from(options).orderBy(options.name)
     return rows.map(mapRow)

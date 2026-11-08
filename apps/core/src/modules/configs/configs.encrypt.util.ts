@@ -17,7 +17,11 @@ function getEncryptedPaths(): Set<string> {
     return cachedEncryptedPaths
   }
 
-  cachedEncryptedPaths = new Set<string>()
+  cachedEncryptedPaths = new Set<string>([
+    'thirdPartyServiceIntegration.githubToken',
+    'membership.dodoApiKey',
+    'membership.dodoWebhookKey',
+  ])
 
   for (const [sectionKey, schema] of Object.entries(configSchemaMapping)) {
     const paths = collectEncryptedPathsFromSchema(schema, sectionKey)
