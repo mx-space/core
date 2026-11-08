@@ -17,7 +17,14 @@ Historical true values are accepted with a deprecation warning; false or
 other unsupported values fail before business startup. These flags no longer
 select a storage mode. Config/Snippet/Webhook writes always use authenticated
 V2 encryption, API-key writes always hash, and OAuth writes stay encrypted.
-`ENCRYPT_ALGORITHM` is used only to read historical ECB ciphertext.
+Field writes use fixed AES-256-GCM with a fresh 96-bit nonce and a 128-bit
+authentication tag. `ENCRYPT_ALGORITHM`, `--encrypt_algorithm` and YAML
+`encrypt_algorithm` have been removed; supplying them fails even when set to
+the old default or AES-256-GCM. Remove the option rather than changing its value.
+The historical reader is fixed to the old default AES-256-ECB. Instances that
+used another legacy algorithm must convert all affected credentials to V2 on
+the prior version with their original algorithm and key before upgrading.
+Keep those original settings with historical backups for isolated recovery.
 
 The published v17.0.4 escape hatch is historical behavior, removed here.
 This branch is not released yet. The [preparation runbook](v18-preparation.md)

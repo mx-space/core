@@ -126,10 +126,6 @@ const commander = program
     ).default(ENCRYPT_KEY_FROM_ENV, '[configured]'),
   )
   .option('--encrypt_enable', 'deprecated no-op; encryption is always required')
-  .option(
-    '--encrypt_algorithm <string>',
-    'historical ciphertext read algorithm, default is aes-256-ecb',
-  )
   // throttle
   .option('--throttle_ttl <number>', 'throttle ttl')
   .option('--throttle_limit <number>', 'throttle limit')
@@ -274,11 +270,14 @@ export const THROTTLE_OPTIONS = {
 const secretStorageConfig = secretStorageConfigFromEnv(process.env)
 export const ENCRYPT = {
   key: argv.encrypt_key || '',
-  algorithm: argv.encrypt_algorithm || 'aes-256-ecb',
 }
 assertSecretStorageConfig({
   ...ENCRYPT,
   jwtSecret: SECURITY.jwtSecret || '',
+  removedOptions: {
+    ...secretStorageConfig.removedOptions,
+    encrypt_algorithm: argv.encrypt_algorithm,
+  },
   deprecatedFlags: {
     ...secretStorageConfig.deprecatedFlags,
     encrypt_enable: argv.encrypt_enable,
