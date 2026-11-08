@@ -1,3 +1,9 @@
+## [17.0.3](https://github.com/mx-space/core/compare/v17.0.2...v17.0.3) (2026-11-08)
+
+### Features
+
+* refine the write agent chat panel, add attachments and a send animation ([d436a76](https://github.com/mx-space/core/commit/d436a7629e6a262db122596f4cc071a2f95c8e61))
+
 ## [17.0.2](https://github.com/mx-space/core/compare/v17.0.1...v17.0.2) (2026-11-08)
 
 ### Features

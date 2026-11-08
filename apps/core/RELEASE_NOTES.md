@@ -1,28 +1,22 @@
 ## TL;DR
 
-The writing agent can now edit Excalidraw drawings and dynamic components in an article, read images, and insert images it generates.
+The write agent chat panel now folds every turn into one expandable trace row, and messages accept image and text-file attachments.
 
 ## Highlights
 
-Embedded content is now part of the agent's workspace. Excalidraw drawings, dynamic components and images from your own storage appear as files under `/embeds`, so the agent edits a drawing or a component the same way it edits the article. Each edit is saved as a new, immutable version tied to the current draft, so the published article keeps working until you publish again. Excalidraw text is remeasured after an edit, so labels stay centred.
+Each agent turn used to scatter its thinking and tool calls across separate cards that pushed the conversation down the page. They now collapse into a single summary row that expands while the turn is still running and settles into a compact record once it finishes, so a long agent session reads as a conversation rather than a log. Message bubbles, the review card and the composer were restyled alongside it, and newly sent messages animate into place.
 
-Dynamic components now go through the normal proposal review instead of a separate preview card, and are added to the component catalog when you accept them. A component's name, description and props schema live in a `.meta.json` file next to it. If someone else changes a drawing while the agent is working, that block keeps their version and the agent is told, while the rest of its edits still apply.
+Messages in the write agent can now carry images and text files. Images are attached by uploading, pasting with <kbd>Cmd</kbd>+<kbd>V</kbd>, or dragging them onto the composer, and plain-text files are folded into the prompt. The server keeps attachments under a dedicated `/attachments/` path in the agent workspace, sends images to the model as image content, and marks them as user-provided rather than workspace files so the agent does not treat them as editable documents.
 
-The agent can look at images in the article with a multimodal model, and images it generates are saved into the workspace so it can insert them directly. Uploads made in a draft are protected from orphan-file cleanup while the draft still has unsaved edits.
+Reopening a conversation restores its attachments: transcripts are projected back into history bubbles with their image references and attached-file list intact, so past turns look the same as when they were sent.
 
 ## Changes
 
 ### Features
-- The writing agent edits Excalidraw drawings, dynamic components and images through `/embeds`, and can view and generate images ([497c149](https://github.com/mx-space/core/commit/497c1490412027d5e4fd9a8f8c3e732568c46dba))
-- Articles get a language field preset that suggests common languages and accepts any valid language tag ([8be5b8c](https://github.com/mx-space/core/commit/8be5b8c030b71576a41b9fe864fb9986621ccdd1))
 
-### Bug Fixes
-- Requests without an `Origin` header (image loads, server-side fetches) no longer fail with a 500 when no allowed-origin list is configured ([1899da8](https://github.com/mx-space/core/commit/1899da8db9ff3eaf6a9547ee8de6e8d3351c9dfa))
-
-## Upgrade Notes
-
-- This release adds migration `0049` (two nullable columns and an index on `file_references`). Run the release-phase migration (`mx-migrate`) before starting the new server; it is additive and safe for rolling deploys.
+- Attach images and text files to write-agent messages; attachments are persisted with the conversation and rehydrated when history is reloaded ([d436a76](https://github.com/mx-space/core/commit/d436a7629e6a262db122596f4cc071a2f95c8e61))
+- Fold each turn's thinking and tool calls into one expandable summary row, with restyled bubbles, review card and composer, and an animation for newly sent messages ([d436a76](https://github.com/mx-space/core/commit/d436a7629e6a262db122596f4cc071a2f95c8e61))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v17.0.1...v17.0.2
+**Full Changelog**: https://github.com/mx-space/core/compare/v17.0.2...v17.0.3
