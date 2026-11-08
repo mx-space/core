@@ -1,13 +1,12 @@
 import { cloneDeep } from 'es-toolkit/compat'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
-
-import { generateDefaultConfig } from '../modules/configs/configs.default'
-import type { IConfig } from '../modules/configs/configs.interface'
+import { generateDefaultConfig } from '~/modules/configs/configs.default'
+import type { IConfig } from '~/modules/configs/configs.interface'
 import {
   isEncryptedPath,
   visitConfigSecrets,
-} from '../modules/configs/configs.secret-paths'
+} from '~/modules/configs/configs.secret-paths'
 
 const legacyDefaults = {
   image: {

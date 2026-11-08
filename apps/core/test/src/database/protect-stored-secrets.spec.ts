@@ -6,6 +6,7 @@ import { createPgTestDatabase } from 'test/helper/pg-verify-url'
 
 import { ENCRYPT, SECURITY } from '~/app.config'
 import { migration } from '~/database/app-migrations/20261018-protect-stored-secrets'
+import { oauthKey } from '~/database/app-migrations/helpers/oauth-token'
 import { CreateAuth } from '~/modules/auth/auth.implement'
 import { AuthRepository } from '~/modules/auth/auth.repository'
 import { AuthService } from '~/modules/auth/auth.service'
@@ -17,7 +18,6 @@ import { SnippetRepository } from '~/modules/snippet/snippet.repository'
 import { WebhookRepository } from '~/modules/webhook/webhook.repository'
 import { __setTestPostgresInstance } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
-import { oauthKey } from '~/upgrade/oauth-token'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 it('upgrades real credential rows without changing their usable values, and can run twice', async () => {

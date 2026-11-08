@@ -1,9 +1,9 @@
 import { ENCRYPT } from '~/app.config'
 import { CONFIG_FORMAT_MIGRATION_ID } from '~/shared/config-format'
 import { CONFIG_UPGRADE_LOCK } from '~/shared/config-lock'
-import { migrateConfiguration } from '~/upgrade/config-migration'
 import { SecretCodec } from '~/utils/secret-codec'
 
+import { migrateConfiguration } from './helpers/config-migration'
 import type { AppMigration } from './types'
 
 export const migration: AppMigration = {

@@ -12,9 +12,9 @@ import {
 } from '~/database/schema'
 import { HASHED_API_KEY_CONFIG_ID } from '~/modules/auth/auth.constant'
 import { encryptObject } from '~/modules/configs/configs.encrypt.util'
-import { unwrapOAuthToken } from '~/upgrade/oauth-token'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
+import { unwrapOAuthToken } from './helpers/oauth-token'
 import type { AppMigration } from './types'
 
 export const migration: AppMigration = {

@@ -3,11 +3,11 @@ import { symmetricEncrypt } from 'better-auth/crypto'
 import type { Pool } from 'pg'
 
 import { backfillAiMetrics } from '../database/app-migrations/20261108-ai-metrics-coverage'
+import { migrateConfiguration } from '../database/app-migrations/helpers/config-migration'
+import { unwrapOAuthToken } from '../database/app-migrations/helpers/oauth-token'
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
 import { CONFIG_FORMAT_MIGRATION_ID } from '../shared/config-format'
 import { SecretCodec } from '../utils/secret-codec'
-import { migrateConfiguration } from './config-migration'
-import { unwrapOAuthToken } from './oauth-token'
 import {
   CONFIG_UPGRADE_LOCK,
   oauthKey,
