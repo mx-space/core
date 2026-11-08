@@ -88,8 +88,38 @@ export interface UpdateOwnerData {
   username?: string
 }
 
-export function getAllOptions() {
-  return getJson<SystemOptions>('/options')
+function restoreFormFieldKeys(
+  value: unknown,
+  fields: ConfigFormField[],
+): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value
+  const source = value as Record<string, unknown>
+  const keys = new Map(
+    Object.keys(source).map((key) => [key.toLowerCase(), key]),
+  )
+  const result = { ...source }
+  for (const field of fields) {
+    const key = keys.get(field.key.toLowerCase())
+    if (key === undefined) continue
+    result[field.key] = field.fields?.length
+      ? restoreFormFieldKeys(source[key], field.fields)
+      : source[key]
+    if (key !== field.key) delete result[key]
+  }
+  return result
+}
+
+export async function getAllOptions(schema?: ConfigFormSchema) {
+  const options = await getJson<SystemOptions>('/options')
+  if (!schema) return options
+  const result = { ...options }
+  for (const group of schema.groups)
+    for (const section of group.sections)
+      result[section.key] = restoreFormFieldKeys(
+        options[section.key],
+        section.fields,
+      )
+  return result
 }
 
 export function getFormSchema() {

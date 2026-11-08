@@ -23,6 +23,21 @@ function createService(rows: { name: string; value: unknown }[] = []) {
   return { service, repository, cache: () => cache }
 }
 
+it.each([
+  { single_file_size_mb: 7, reader_total_active_bytes_mb: 70 },
+  { singleFileSizeMb: 7, readerTotalActiveBytesMb: 70 },
+])(
+  'accepts serialized acronym fields from the settings client: %j',
+  async (value) => {
+    const { service } = createService()
+    await service.patchAndValid('commentUploadOptions', value as any)
+    expect(await service.get('commentUploadOptions')).toMatchObject({
+      singleFileSizeMB: 7,
+      readerTotalActiveBytesMB: 70,
+    })
+  },
+)
+
 it('exposes only current configuration and rejects retired sections without writes', async () => {
   const { service, repository } = createService()
   const config = await service.getConfigForResponse()
