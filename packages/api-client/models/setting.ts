@@ -11,15 +11,12 @@ export declare class UrlOptionModel {
   serverUrl: string
   wsUrl: string
 }
-declare class SmtpOptionsModel {
-  port?: number
-  host?: string
-  secure?: boolean
-}
 declare class SmtpConfigModel {
   user?: string
   pass?: string
-  options?: SmtpOptionsModel
+  host?: string
+  port?: number
+  secure?: boolean
 }
 declare class ResendConfigModel {
   apiKey?: string
@@ -67,7 +64,29 @@ export declare class AdminExtraModel {
 }
 
 export declare class ThirdPartyServiceIntegrationModel {
-  githubToken?: string
+  github?: { enabled?: boolean; token?: string }
+  tmdb?: { enabled?: boolean; apiKey?: string }
+  bangumi?: { enabled?: boolean; accessToken?: string }
+  neodb?: { enabled?: boolean }
+  arxiv?: { enabled?: boolean }
+  leetcode?: { enabled?: boolean }
+  neteaseMusic?: { enabled?: boolean }
+  qqMusic?: { enabled?: boolean }
+  openGraph?: {
+    enabled?: boolean
+    fetchMode?: 'fetch' | 'browser'
+    timeoutMs?: number
+    maxBodyBytes?: number
+    screenshot?: {
+      enabled?: boolean
+      maxItems?: number
+      maxTotalBytes?: number
+      maxBytesPerImage?: number
+      webpQuality?: number
+    }
+  }
+  twelveData?: { enabled?: boolean; apiKey?: string }
+  polygon?: { enabled?: boolean; apiKey?: string }
 }
 
 export interface IConfig {

@@ -37,6 +37,19 @@ After conversion, roll back only to a tested reader of the new formats.
 Neither disabling encryption nor switching back to old-format writes exists.
 Preserve original field/JWT secrets and snapshots for recovery.
 
+## Configuration migration before startup
+
+The current-only config runtime requires the mandatory
+`20261109-canonical-config` data migration via `node migrate.mjs` (source:
+`pnpm -C apps/core migrate`). Stop all old replicas and background writers
+before this contract migration. It converts old GitHub/membership/media and
+nested SMTP options, encrypts credentials at their new AAD paths and removes
+retired configuration rows. Invalid shapes, unreadable secrets and conflicting
+credentials roll back the config batch and block deployment. No activation
+flag is needed. Startup requires the migration ledger; configuration reads
+and PATCH no longer convert legacy data. Retired sections/unknown fields fail
+explicitly. Historical conversion remains in release/offline upgrade code.
+
 ## Storage and API behavior
 
 - Sensitive configuration is encrypted **after merging**, before PostgreSQL and Redis writes. Blank secret fields retain the existing value. Responses sanitize stored objects without decrypting them, including when reading historical plaintext.

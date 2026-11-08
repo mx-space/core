@@ -1,17 +1,22 @@
 import type { Pool, PoolClient } from 'pg'
 
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
-import { configSchemaMapping } from '../modules/configs/configs.schema'
-import { visitConfigSecrets } from '../modules/configs/configs.secret-paths'
 import {
-  LegacyConfigConflictError,
-  normalizeLegacyConfig,
-} from '../modules/configs/legacy-config.util'
+  isValidStoredConfig,
+  loadCurrentConfig,
+} from '../modules/configs/configs.current'
+import { configSchemaMapping } from '../modules/configs/configs.schema'
+import { CONFIG_FORMAT_MIGRATION_ID } from '../shared/config-format'
 import { SecretCodec } from '../utils/secret-codec'
 import {
   inspectSecretStorageConfig,
   type SecretStorageConfig,
 } from '../utils/secret-storage-config'
+import {
+  LegacyConfigConflictError,
+  normalizeLegacyConfig,
+  visitLegacyConfigSecrets,
+} from './legacy-config'
 import { isEncryptedOAuth, unwrapOAuthToken } from './oauth-token'
 
 export { oauthKey } from './oauth-token'
@@ -44,6 +49,10 @@ export function isLegacyConfig(name: string, value: any): boolean {
   return (
     name === 'imageGenerationOptions' ||
     name === 'ttsOptions' ||
+    (name === 'mailOptions' &&
+      value?.smtp &&
+      typeof value.smtp === 'object' &&
+      'options' in value.smtp) ||
     (name === 'ai' && value?.version !== 2) ||
     (name === 'thirdPartyServiceIntegration' &&
       value &&
@@ -97,9 +106,13 @@ export async function readUpgradeState(
   for (const row of options) {
     if (isLegacyConfig(row.name, row.value)) counts.legacyConfig++
     if (row.value && typeof row.value === 'object')
-      visitConfigSecrets(row.value, row.name, inspect)
+      visitLegacyConfigSecrets(row.value, row.name, inspect)
   }
-  const knownRows = options.filter((row) => row.name in configSchemaMapping)
+  const knownRows = options.filter(
+    (row) =>
+      row.name in configSchemaMapping ||
+      ['imageGenerationOptions', 'ttsOptions'].includes(row.name),
+  )
   for (const row of knownRows) {
     if (!row.value || typeof row.value !== 'object' || Array.isArray(row.value))
       issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: row.name })
@@ -116,17 +129,17 @@ export async function readUpgradeState(
       const raw = Object.fromEntries(
         knownRows.map((row) => [
           row.name,
-          visitConfigSecrets(row.value, row.name, (secret, path) =>
+          visitLegacyConfigSecrets(row.value, row.name, (secret, path) =>
             codec.decrypt(secret, path),
           ),
         ]),
       )
-      const normalized = normalizeLegacyConfig(raw)
-      for (const row of knownRows) {
-        if (
-          !configSchemaMapping[row.name].safeParse(normalized[row.name]).success
-        )
-          issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: row.name })
+      const normalized = loadCurrentConfig(normalizeLegacyConfig(raw))
+      for (const key of Object.keys(
+        configSchemaMapping,
+      ) as (keyof typeof configSchemaMapping)[]) {
+        if (!isValidStoredConfig(key, normalized[key]))
+          issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: key })
       }
     } catch (error) {
       issues.push(
@@ -223,6 +236,15 @@ export async function readUpgradeState(
     issues.push({ code: 'CREDENTIALS_NEED_PREPARATION' })
   if (counts.legacyConfig) issues.push({ code: 'LEGACY_CONFIG' })
   if (counts.metricsMissing) issues.push({ code: 'METRICS_INCOMPLETE' })
+  if (
+    installation === 'existing' &&
+    !(
+      await database.query('SELECT 1 FROM _app_migrations WHERE id = $1', [
+        CONFIG_FORMAT_MIGRATION_ID,
+      ])
+    ).rowCount
+  )
+    issues.push({ code: 'CONFIG_MIGRATION_MISSING' })
   if (installation === 'existing' && !prepared)
     issues.push({ code: 'PREPARATION_MARKER_MISSING' })
   return {

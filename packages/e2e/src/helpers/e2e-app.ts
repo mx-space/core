@@ -78,6 +78,9 @@ export async function createE2EBackend(): Promise<E2EBackend> {
   // was set. Match production bootstrap; do not pull in platform-socket.io.
   app.useWebSocketAdapter(createWsAdapter(app))
 
+  const { AppMigrationsService } =
+    await import('~/database/app-migrations/app-migrations.service')
+  await app.get(AppMigrationsService).run()
   await app.init()
   await app.getHttpAdapter().getInstance().ready()
   await app.listen(0, '127.0.0.1')

@@ -22,11 +22,9 @@ export const generateDefaultConfig: () => IConfig = () => ({
     smtp: {
       user: '',
       pass: '',
-      options: {
-        host: '',
-        port: 465,
-        secure: true,
-      },
+      host: '',
+      port: 465,
+      secure: true,
     },
     resend: {
       apiKey: '',
@@ -83,28 +81,6 @@ export const generateDefaultConfig: () => IConfig = () => ({
     customDomain: '',
     prefix: '',
     commentUploadPrefix: '',
-  },
-  imageGenerationOptions: {
-    enable: false,
-    provider: 'openrouter',
-    apiKey: '',
-    endpoint: '',
-    model: '',
-    defaultAspectRatio: '16:9',
-    defaultQuality: 'standard',
-    defaultFormat: 'png',
-  },
-  ttsOptions: {
-    enable: false,
-    provider: 'openrouter',
-    apiKey: '',
-    endpoint: '',
-    model: '',
-    voice: '',
-    speed: 1,
-    maxCharsPerChunk: 1800,
-    concurrency: 3,
-    maxCharsPerRun: 120000,
   },
   fileUploadOptions: {
     enableCustomNaming: false,

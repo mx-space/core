@@ -21,7 +21,9 @@ import { oauthKey } from '~/upgrade/oauth-token'
 import { EncryptUtil } from '~/utils/encrypt.util'
 
 it('upgrades real credential rows without changing their usable values, and can run twice', async () => {
-  const context = await createPgTestDatabase('mx_secret_verify')
+  const context = await createPgTestDatabase('mx_secret_verify', {
+    configCurrent: true,
+  })
   __setTestPostgresInstance(context.pool, context.db)
   try {
     const cipher = crypto.createCipheriv(

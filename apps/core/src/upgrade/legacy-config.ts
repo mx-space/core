@@ -2,8 +2,39 @@ import { cloneDeep } from 'es-toolkit/compat'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
 
-import { generateDefaultConfig } from './configs.default'
-import type { IConfig } from './configs.interface'
+import { generateDefaultConfig } from '../modules/configs/configs.default'
+import type { IConfig } from '../modules/configs/configs.interface'
+import {
+  isEncryptedPath,
+  visitConfigSecrets,
+} from '../modules/configs/configs.secret-paths'
+
+const legacyDefaults = {
+  image: {
+    enable: false,
+    provider: 'openrouter',
+    apiKey: '',
+    endpoint: '',
+    model: '',
+    defaultAspectRatio: '16:9',
+    defaultQuality: 'standard' as 'low' | 'standard' | 'high',
+    defaultFormat: 'png' as 'png' | 'jpeg' | 'webp',
+  },
+  tts: {
+    enable: false,
+    provider: 'openrouter',
+    apiKey: '',
+    endpoint: '',
+    model: '',
+    voice: '',
+    speed: 1,
+    maxCharsPerChunk: 1800,
+    concurrency: 3,
+    maxCharsPerRun: 120000,
+  },
+}
+type LegacyImageConfig = typeof legacyDefaults.image
+type LegacyTtsConfig = typeof legacyDefaults.tts
 
 export class LegacyConfigConflictError extends Error {
   readonly code = 'CONFIG_SECRET_CONFLICT'
@@ -12,7 +43,7 @@ export class LegacyConfigConflictError extends Error {
   }
 }
 
-export function legacySecretConflicts(
+function legacySecretConflicts(
   key: string,
   raw: Record<string, any>,
 ): string[] {
@@ -69,8 +100,8 @@ function extractGoogleVertexProjectId(endpoint: string): string | undefined {
 export function normalizeAiConfig(
   storedAiConfig: Record<string, any> | undefined,
   aiConfig: IConfig['ai'],
-  legacyImageConfig: IConfig['imageGenerationOptions'],
-  legacyTtsConfig: IConfig['ttsOptions'],
+  legacyImageConfig: LegacyImageConfig,
+  legacyTtsConfig: LegacyTtsConfig,
 ): IConfig['ai'] {
   const providers = (aiConfig.providers ?? []).map((provider) => {
     const endpoint = provider.endpoint?.trim() ?? ''
@@ -212,8 +243,8 @@ export function normalizeAiConfig(
 }
 
 /**
- * Backward-compat: migrate old flat { githubToken } to new nested
- * { github: { enabled, token } } shape at read time.
+ * Historical data conversion: flat { githubToken } to nested
+ * { github: { enabled, token } }. Never called by the configuration runtime.
  */
 export function normalizeThirdPartyConfig(
   raw: Record<string, any>,
@@ -258,11 +289,8 @@ export function normalizeMembershipConfig(
 }
 
 /** Input must be decrypted at its original paths before calling this converter. */
-export function normalizeLegacyConfig(
-  raw: Record<string, any>,
-  options: { allowConflicts?: boolean } = {},
-): IConfig {
-  if (!options.allowConflicts) {
+export function normalizeLegacyConfig(raw: Record<string, any>): IConfig {
+  {
     for (const key of ['membership', 'thirdPartyServiceIntegration']) {
       const conflict = legacySecretConflicts(key, raw[key] ?? {})[0]
       if (conflict) throw new LegacyConfigConflictError(`${key}.${conflict}`)
@@ -287,93 +315,35 @@ export function normalizeLegacyConfig(
   delete (config.thirdPartyServiceIntegration as any).githubToken
   for (const key of ['dodoApiKey', 'dodoEnvironment', 'dodoWebhookKey'])
     delete (config.membership as any)[key]
+  if (raw.mailOptions?.smtp?.options) {
+    const { options, ...smtp } = raw.mailOptions.smtp
+    config.mailOptions.smtp = { ...options, ...smtp }
+  }
   config.ai = normalizeAiConfig(
     raw.ai,
     config.ai,
-    config.imageGenerationOptions,
-    config.ttsOptions,
+    { ...legacyDefaults.image, ...raw.imageGenerationOptions },
+    { ...legacyDefaults.tts, ...raw.ttsOptions },
   )
-  {
-    for (const [section, feature, legacyId] of [
-      [
-        'imageGenerationOptions',
-        'imageGeneration',
-        '__legacy_image_generation__',
-      ],
-      ['ttsOptions', 'tts', '__legacy_tts__'],
-    ] as const) {
-      const route = config.ai[feature]
-      const provider =
-        (config.ai.providers ?? []).find(
-          (p) => p.id === route?.model?.providerId,
-        ) ?? (config.ai.providers ?? []).find((p) => p.id === legacyId)
-      const { model: assignment, ...settings } = route ?? {}
-      ;(config as any)[section] = {
-        ...config[section],
-        ...settings,
-        ...(provider
-          ? {
-              apiKey: provider.apiKey,
-              endpoint: provider.endpoint,
-              model: assignment?.model ?? provider.defaultModel,
-              provider: provider.endpoint?.includes('openrouter.ai')
-                ? 'openrouter'
-                : 'custom',
-            }
-          : {}),
-      }
-    }
-  }
   return config
 }
 
-/** Canonical storage has one source for media credentials and assignments. */
-export function canonicalConfigRows(config: IConfig): Record<string, unknown> {
-  const {
-    imageGenerationOptions: _image,
-    ttsOptions: _speech,
-    ...canonical
-  } = config
-  return canonical
-}
-
-export function normalizeLegacyPatch(key: keyof IConfig, input: object) {
-  const value = cloneDeep(input) as Record<string, any>
-  const conflict = legacySecretConflicts(key, value)[0]
-  if (conflict) throw new LegacyConfigConflictError(`${key}.${conflict}`)
-  if (key === 'thirdPartyServiceIntegration' && 'githubToken' in value) {
-    value.github = {
-      ...value.github,
-      token: legacySecret(value.github?.token, value.githubToken),
-    }
-    delete value.githubToken
-  }
-  if (key === 'membership') {
-    for (const [old, current] of [
-      ['dodoApiKey', 'apiKey'],
-      ['dodoWebhookKey', 'webhookSigningKey'],
-      ['dodoEnvironment', 'environment'],
-    ]) {
-      if (old in value)
-        value[current] = legacySecret(value[current], value[old])
-      delete value[old]
-    }
-  }
-  return value
-}
-
-export function updateLegacyMedia(
-  config: IConfig,
-  section: 'imageGenerationOptions' | 'ttsOptions',
-  value: object,
-): IConfig {
-  const updated = { ...config, [section]: { ...config[section], ...value } }
-  // Reuse the import converter, then expose the v17 view from the canonical result.
-  updated.ai = normalizeAiConfig(
-    undefined,
-    updated.ai,
-    updated.imageGenerationOptions,
-    updated.ttsOptions,
+const oldSecretPaths = new Set([
+  'imageGenerationOptions.apiKey',
+  'ttsOptions.apiKey',
+  'thirdPartyServiceIntegration.githubToken',
+  'membership.dodoApiKey',
+  'membership.dodoWebhookKey',
+])
+export function visitLegacyConfigSecrets<T>(
+  value: T,
+  prefix: string,
+  visit: (secret: string, path: string) => string,
+): T {
+  return visitConfigSecrets(
+    value,
+    prefix,
+    visit,
+    (path) => oldSecretPaths.has(path) || isEncryptedPath(path),
   )
-  return normalizeLegacyConfig(updated)
 }
