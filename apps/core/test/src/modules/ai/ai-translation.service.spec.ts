@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createAiGenerationMetricsMock } from '@/helper/ai-generation-metrics-mock'
 import { createPgRepositoryMock, now } from '@/helper/pg-repository-mock'
 import { AppException } from '~/common/errors/exception.types'
+import { BusinessEvents } from '~/constants/business-event.constant'
 import { CollectionRefTypes } from '~/constants/db.constant'
 import type { AiService } from '~/modules/ai/ai.service'
 import type { AiInFlightService } from '~/modules/ai/ai-inflight/ai-inflight.service'
@@ -114,6 +115,7 @@ const createService = () => {
     aiTaskService,
     configService,
     databaseService,
+    eventManager,
     generationMetrics,
     lexicalService,
     lexicalStrategy,
@@ -639,6 +641,7 @@ describe('AiTranslationService — force regeneration', () => {
         aiService,
         configService,
         databaseService,
+        eventManager,
         generationMetrics,
         lexicalStrategy,
         repository,
@@ -654,6 +657,9 @@ describe('AiTranslationService — force regeneration', () => {
       })
       repository.findByRef.mockResolvedValue(null)
       repository.upsert.mockResolvedValue(row())
+      repository.findById.mockResolvedValue(
+        row({ aiModel: 'model-x', aiProvider: 'provider-x' }),
+      )
       let writerUsage: any
       let reviewerUsage: any
       aiService.getTranslationModelWithInfo.mockImplementation(
@@ -692,7 +698,19 @@ describe('AiTranslationService — force regeneration', () => {
         },
       )
       stubLeaderRun(aiInFlightService)
-      await service.generateTranslation('post-1', 'en')
+      const result = await service.generateTranslation('post-1', 'en')
+      expect(result).toMatchObject({
+        aiModel: 'model-x',
+        aiProvider: 'provider-x',
+      })
+      expect(eventManager.emit).toHaveBeenCalledWith(
+        BusinessEvents.TRANSLATION_CREATE,
+        expect.objectContaining({
+          aiModel: 'model-x',
+          aiProvider: 'provider-x',
+        }),
+        expect.anything(),
+      )
       expect(generationMetrics.record).toHaveBeenCalledWith(
         expect.objectContaining({
           usage: expect.objectContaining({

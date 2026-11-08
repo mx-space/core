@@ -902,25 +902,23 @@ export class AiTranslationService
           usage,
         })
 
+        const hydrated =
+          (await this.aiTranslationRepository.findById(persisted.id)) ??
+          persisted
+
         if (existing) {
           this.logger.log(
             `AI translation updated: article=${articleId} target=${targetLang}`,
           )
-          this.emitTranslationEvent(
-            BusinessEvents.TRANSLATION_UPDATE,
-            persisted,
-          )
+          this.emitTranslationEvent(BusinessEvents.TRANSLATION_UPDATE, hydrated)
         } else {
           this.logger.log(
             `AI translation created: article=${articleId} target=${targetLang}`,
           )
-          this.emitTranslationEvent(
-            BusinessEvents.TRANSLATION_CREATE,
-            persisted,
-          )
+          this.emitTranslationEvent(BusinessEvents.TRANSLATION_CREATE, hydrated)
         }
 
-        return { result: persisted, resultId: persisted.id }
+        return { result: hydrated, resultId: persisted.id }
       },
       parseResult: async (resultId) => {
         const doc = await this.aiTranslationRepository.findById(resultId)

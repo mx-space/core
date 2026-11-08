@@ -1,5 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { eq, sql } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import type { Pool } from 'pg'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { options } from '~/database/schema'
@@ -8,6 +10,7 @@ import {
   toEntityId,
 } from '~/processors/database/base.repository'
 import type { AppDatabase } from '~/processors/database/postgres.provider'
+import { CONFIG_UPGRADE_LOCK } from '~/shared/config-lock'
 import { type EntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -30,15 +33,42 @@ export class OptionsRepository extends BaseRepository {
 
   async withConfigLock<T>(
     work: (repository: OptionsRepository) => Promise<T>,
+    afterCommit?: (value: T) => Promise<void>,
   ): Promise<T> {
-    return this.db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(5183248167463294042::bigint)`,
-      )
-      return work(
-        new OptionsRepository(tx as unknown as AppDatabase, this.snowflake),
-      )
-    })
+    const client = await (
+      this.db as AppDatabase & { $client: Pool }
+    ).$client.connect()
+    let committed = false
+    let locked = false
+    let destroy = false
+    try {
+      await client.query('BEGIN')
+      await client.query("SET LOCAL lock_timeout = '10s'")
+      await client.query('SELECT pg_advisory_lock($1::bigint)', [
+        CONFIG_UPGRADE_LOCK,
+      ])
+      locked = true
+      const scopedDb = drizzle(client, { casing: 'snake_case' }) as AppDatabase
+      const value = await work(new OptionsRepository(scopedDb, this.snowflake))
+      await client.query('COMMIT')
+      committed = true
+      await afterCommit?.(value)
+      return value
+    } catch (error) {
+      if (!committed)
+        await client.query('ROLLBACK').catch(() => {
+          destroy = true
+        })
+      throw error
+    } finally {
+      if (locked)
+        await client
+          .query('SELECT pg_advisory_unlock($1::bigint)', [CONFIG_UPGRADE_LOCK])
+          .catch(() => {
+            destroy = true
+          })
+      client.release(destroy)
+    }
   }
 
   async findAll(): Promise<OptionRow[]> {

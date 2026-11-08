@@ -3,14 +3,17 @@ import type { Pool, PoolClient } from 'pg'
 import { HASHED_API_KEY_CONFIG_ID } from '../modules/auth/auth.constant'
 import { configSchemaMapping } from '../modules/configs/configs.schema'
 import { visitConfigSecrets } from '../modules/configs/configs.secret-paths'
-import { normalizeLegacyConfig } from '../modules/configs/legacy-config.util'
+import {
+  LegacyConfigConflictError,
+  normalizeLegacyConfig,
+} from '../modules/configs/legacy-config.util'
 import { SecretCodec } from '../utils/secret-codec'
 import { isEncryptedOAuth, unwrapOAuthToken } from './oauth-token'
 
 export { oauthKey } from './oauth-token'
 
 export const PREPARED_MIGRATION_ID = '20261108-v18-prepared'
-export const CONFIG_UPGRADE_LOCK = '5183248167463294042'
+export { CONFIG_UPGRADE_LOCK } from '../shared/config-lock'
 export type UpgradeConfig = {
   key: string
   jwtSecret: string
@@ -132,8 +135,12 @@ export async function readUpgradeState(
         )
           issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED', path: row.name })
       }
-    } catch {
-      issues.push({ code: 'CONFIG_SHAPE_UNSUPPORTED' })
+    } catch (error) {
+      issues.push(
+        error instanceof LegacyConfigConflictError
+          ? { code: error.code, path: error.path }
+          : { code: 'CONFIG_SHAPE_UNSUPPORTED' },
+      )
     }
   }
   for (const table of ['snippets', 'webhooks']) {

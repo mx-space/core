@@ -134,4 +134,19 @@ describe('maintenance JWT rotation', () => {
     ).rejects.toThrow('OAUTH_UNREADABLE')
     expect(await snapshot()).toEqual(before)
   })
+  it('rejects truncated legacy ciphertext and rolls back earlier token changes', async () => {
+    const bare = await symmetricEncrypt({
+      key: oldSecret,
+      data: 'legacy-provider-token',
+    })
+    await context.pool.query(
+      "UPDATE accounts SET access_token = $1 WHERE id = 'b'",
+      [bare.slice(0, -1)],
+    )
+    const before = await snapshot()
+    await expect(rotateJwtSecret(context.pool, input)).rejects.toThrow(
+      'OAUTH_UNREADABLE',
+    )
+    expect(await snapshot()).toEqual(before)
+  })
 })

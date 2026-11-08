@@ -107,12 +107,13 @@ export class MultilangGenerationService {
           model: generated.model,
           usage: generated.usage,
         })
-        adapter.emitGenerated(doc, {
+        const hydrated = (await adapter.findById(view.id)) ?? doc
+        adapter.emitGenerated(hydrated, {
           refId: options.refId,
           sourceLang: options.lang,
           sourceHash: contentMd5,
         })
-        return { result: doc, resultId: view.id }
+        return { result: hydrated, resultId: view.id }
       },
       parseResult: async (resultId) => {
         const doc = await adapter.findById(resultId)
@@ -187,7 +188,10 @@ export class MultilangGenerationService {
         })
         const totalCost = generated.usage.cost?.total ?? 0
         if (options.onCost && totalCost > 0) await options.onCost(totalCost)
-        return { result: doc, resultId: view.id }
+        return {
+          result: (await adapter.findById(view.id)) ?? doc,
+          resultId: view.id,
+        }
       },
       parseResult: async (resultId) => {
         const doc = await adapter.findById(resultId)

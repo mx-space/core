@@ -10,6 +10,7 @@ interface FakeDoc {
   content: string
   isTranslation: boolean
   sourceLang: string | null
+  modelInfo?: { model: string; provider: string }
 }
 
 const createHarness = (overrides?: {
@@ -101,6 +102,7 @@ const createHarness = (overrides?: {
 
   return {
     adapter,
+    docs,
     aiInFlightService,
     configService,
     context,
@@ -111,6 +113,26 @@ const createHarness = (overrides?: {
 }
 
 describe('MultilangGenerationService.executeMultilangTask', () => {
+  it('hydrates insights after recording current generation metrics before emitting', async () => {
+    const { adapter, context, docs, generationMetrics, service } =
+      createHarness({ adapter: { feature: 'insights' } })
+    generationMetrics.record.mockImplementation(async (input: any) => {
+      const doc = docs.get(input.resourceId)!
+      docs.set(doc.id, {
+        ...doc,
+        modelInfo: { model: input.model, provider: input.providerId },
+      })
+    })
+    await service.executeMultilangTask(
+      adapter,
+      { refId: 'post-1', targetLanguages: [] },
+      context as any,
+    )
+    expect(adapter.emitGenerated).toHaveBeenCalledWith(
+      expect.objectContaining({ modelInfo: { model: 'm', provider: 'p' } }),
+      expect.anything(),
+    )
+  })
   it('generates the base in the source language, then translates the remaining targets', async () => {
     const { adapter, context, service } = createHarness()
 

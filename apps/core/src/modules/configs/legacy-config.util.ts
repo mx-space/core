@@ -5,6 +5,46 @@ import { AIProviderType } from '~/modules/ai/ai.types'
 import { generateDefaultConfig } from './configs.default'
 import type { IConfig } from './configs.interface'
 
+export class LegacyConfigConflictError extends Error {
+  readonly code = 'CONFIG_SECRET_CONFLICT'
+  constructor(public readonly path: string) {
+    super(`CONFIG_SECRET_CONFLICT (${path})`)
+  }
+}
+
+export function legacySecretConflicts(
+  key: string,
+  raw: Record<string, any>,
+): string[] {
+  const pairs =
+    key === 'membership'
+      ? [
+          ['apiKey', 'dodoApiKey'],
+          ['webhookSigningKey', 'dodoWebhookKey'],
+        ]
+      : key === 'thirdPartyServiceIntegration'
+        ? [['github.token', 'githubToken']]
+        : []
+  return pairs
+    .filter(([current, old]) => {
+      const value = current
+        .split('.')
+        .reduce<any>((node, part) => node?.[part], raw)
+      return (
+        typeof value === 'string' &&
+        value !== '' &&
+        typeof raw[old] === 'string' &&
+        raw[old] !== '' &&
+        value !== raw[old]
+      )
+    })
+    .map(([current]) => current)
+}
+
+function legacySecret(current: any, previous: any) {
+  return current === '' || current == null ? (previous ?? '') : current
+}
+
 function isGoogleVertexEndpoint(endpoint: string): boolean {
   try {
     const url = new URL(endpoint)
@@ -180,7 +220,13 @@ export function normalizeThirdPartyConfig(
 ): IConfig['thirdPartyServiceIntegration'] {
   // Already new shape
   if (raw?.github && typeof raw.github === 'object') {
-    return raw as IConfig['thirdPartyServiceIntegration']
+    return {
+      ...raw,
+      github: {
+        ...raw.github,
+        token: legacySecret(raw.github.token, raw.githubToken),
+      },
+    } as IConfig['thirdPartyServiceIntegration']
   }
   // Old flat shape — convert
   return {
@@ -202,14 +248,26 @@ export function normalizeMembershipConfig(
 
   return {
     ...providerConfig,
-    apiKey: providerConfig.apiKey ?? dodoApiKey ?? '',
-    webhookSigningKey: providerConfig.webhookSigningKey ?? dodoWebhookKey ?? '',
+    apiKey: legacySecret(providerConfig.apiKey, dodoApiKey),
+    webhookSigningKey: legacySecret(
+      providerConfig.webhookSigningKey,
+      dodoWebhookKey,
+    ),
     environment: providerConfig.environment ?? dodoEnvironment ?? 'live_mode',
   } as IConfig['membership']
 }
 
 /** Input must be decrypted at its original paths before calling this converter. */
-export function normalizeLegacyConfig(raw: Record<string, any>): IConfig {
+export function normalizeLegacyConfig(
+  raw: Record<string, any>,
+  options: { allowConflicts?: boolean } = {},
+): IConfig {
+  if (!options.allowConflicts) {
+    for (const key of ['membership', 'thirdPartyServiceIntegration']) {
+      const conflict = legacySecretConflicts(key, raw[key] ?? {})[0]
+      if (conflict) throw new LegacyConfigConflictError(`${key}.${conflict}`)
+    }
+  }
   const config = generateDefaultConfig()
   for (const key of Object.keys(config) as Array<keyof IConfig>) {
     if (raw[key] && typeof raw[key] === 'object' && !Array.isArray(raw[key])) {
@@ -281,8 +339,13 @@ export function canonicalConfigRows(config: IConfig): Record<string, unknown> {
 
 export function normalizeLegacyPatch(key: keyof IConfig, input: object) {
   const value = cloneDeep(input) as Record<string, any>
+  const conflict = legacySecretConflicts(key, value)[0]
+  if (conflict) throw new LegacyConfigConflictError(`${key}.${conflict}`)
   if (key === 'thirdPartyServiceIntegration' && 'githubToken' in value) {
-    value.github = { token: value.githubToken, ...value.github }
+    value.github = {
+      ...value.github,
+      token: legacySecret(value.github?.token, value.githubToken),
+    }
     delete value.githubToken
   }
   if (key === 'membership') {
@@ -291,7 +354,8 @@ export function normalizeLegacyPatch(key: keyof IConfig, input: object) {
       ['dodoWebhookKey', 'webhookSigningKey'],
       ['dodoEnvironment', 'environment'],
     ]) {
-      if (old in value && !(current in value)) value[current] = value[old]
+      if (old in value)
+        value[current] = legacySecret(value[current], value[old])
       delete value[old]
     }
   }

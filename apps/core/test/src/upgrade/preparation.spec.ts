@@ -146,6 +146,31 @@ describe('transactional v18 preparation', () => {
     ).rejects.toThrow('SECRET_UNREADABLE')
     expect(await snapshot()).toEqual(before)
   })
+  it('rolls back when mixed config contains conflicting secrets', async () => {
+    await context.pool.query(
+      "UPDATE options SET value = $1 WHERE name = 'membership'",
+      [{ apiKey: 'canonical-private', dodoApiKey: 'legacy-private' }],
+    )
+    const before = await snapshot()
+    await expect(
+      prepareUpgrade(context.pool, config, { allReplicasV2: true }),
+    ).rejects.toThrow('CONFIG_SECRET_CONFLICT')
+    expect(await snapshot()).toEqual(before)
+  })
+  it('rolls back on truncated legacy OAuth ciphertext rather than wrapping it as plaintext', async () => {
+    const bare = await symmetricEncrypt({
+      key: config.jwtSecret,
+      data: 'original-provider-token',
+    })
+    await context.pool.query('UPDATE accounts SET access_token = $1', [
+      bare.slice(0, -1),
+    ])
+    const before = await snapshot()
+    await expect(
+      prepareUpgrade(context.pool, config, { allReplicasV2: true }),
+    ).rejects.toThrow('OAUTH_UNREADABLE')
+    expect(await snapshot()).toEqual(before)
+  })
   it('upgrades a legacy Better Auth bare-hex token without double encryption', async () => {
     const bare = await symmetricEncrypt({
       key: config.jwtSecret,
