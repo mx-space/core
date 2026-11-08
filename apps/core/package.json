@@ -47,7 +47,8 @@
     "docs": "npx @compodoc/compodoc -p tsconfig.json -s -d docs",
     "publish": "bump",
     "upgrade:check": "vite-node --config vite.upgrade.config.ts src/upgrade.ts check",
-    "upgrade:prepare": "vite-node --config vite.upgrade.config.ts src/upgrade.ts prepare"
+    "upgrade:prepare": "vite-node --config vite.upgrade.config.ts src/upgrade.ts prepare",
+    "upgrade:rotate-jwt": "vite-node --config vite.upgrade.config.ts src/upgrade.ts rotate-jwt"
   },
   "bump": {
     "before": [

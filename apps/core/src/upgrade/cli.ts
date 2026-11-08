@@ -1,5 +1,8 @@
+import { parseArgs } from 'node:util'
+
 import { Pool } from 'pg'
 
+import { rotateJwtSecret } from './jwt-rotation'
 import { prepareUpgrade, UpgradeError } from './preparation'
 import { readUpgradeState, type UpgradeConfig } from './readiness'
 
@@ -21,14 +24,32 @@ export async function runUpgradeCli(
   write = (output: string) => process.stdout.write(`${output}\n`),
 ): Promise<number> {
   const [command, ...flags] = args
-  const allowedFlags =
-    command === 'prepare'
-      ? ['--json', '--dry-run', '--all-replicas-v2']
-      : ['--json']
-  if (
-    !['check', 'prepare'].includes(command) ||
-    flags.some((flag) => !allowedFlags.includes(flag))
-  ) {
+  let values: ReturnType<typeof parseArgs>['values']
+  try {
+    values = parseArgs({
+      args: flags,
+      options: {
+        json: { type: 'boolean' },
+        ...(command === 'prepare'
+          ? {
+              'dry-run': { type: 'boolean' as const },
+              'all-replicas-v2': { type: 'boolean' as const },
+            }
+          : {}),
+        ...(command === 'rotate-jwt'
+          ? {
+              'maintenance-confirmed': { type: 'boolean' as const },
+              'old-jwt-file': { type: 'string' as const },
+              'new-jwt-file': { type: 'string' as const },
+            }
+          : {}),
+      },
+    }).values
+  } catch {
+    write('Invalid upgrade arguments')
+    return 1
+  }
+  if (!['check', 'prepare', 'rotate-jwt'].includes(command)) {
     write(
       'Usage: upgrade check [--json] | prepare --all-replicas-v2 [--dry-run] [--json]',
     )
@@ -48,6 +69,20 @@ export async function runUpgradeCli(
     connectionTimeoutMillis: 10000,
   })
   try {
+    if (command === 'rotate-jwt') {
+      if (
+        typeof values['old-jwt-file'] !== 'string' ||
+        typeof values['new-jwt-file'] !== 'string'
+      )
+        throw new UpgradeError('JWT_FILE_PATHS_REQUIRED')
+      const result = await rotateJwtSecret(pool, {
+        maintenanceConfirmed: values['maintenance-confirmed'] === true,
+        oldJwtFile: values['old-jwt-file'],
+        newJwtFile: values['new-jwt-file'],
+      })
+      write(JSON.stringify(result))
+      return 0
+    }
     if (command === 'prepare') {
       const result = await prepareUpgrade(pool, upgradeConfigFromEnv(env), {
         allReplicasV2: flags.includes('--all-replicas-v2'),
