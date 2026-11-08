@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { desc, eq, inArray } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
@@ -16,6 +16,7 @@ import type { AppDatabase } from '~/processors/database/postgres.provider'
 import { parseEntityId } from '~/shared/id/entity-id'
 
 import { DEFAULT_SUMMARY_LANG } from '../ai.constants'
+import { latestMetricField } from '../ai-generation-metrics/legacy-metadata'
 import type {
   InsightsAsset,
   SummaryAsset,
@@ -174,7 +175,11 @@ export class AiOverviewRepository extends BaseRepository {
         hash: aiTranslations.hash,
         lang: aiTranslations.lang,
         sourceLang: aiTranslations.sourceLang,
-        aiModel: aiTranslations.aiModel,
+        aiModel: latestMetricField(
+          'translation',
+          sql.raw('"ai_translations"."id"'),
+          'model',
+        ),
         createdAt: aiTranslations.createdAt,
         updatedAt: aiTranslations.updatedAt,
       })

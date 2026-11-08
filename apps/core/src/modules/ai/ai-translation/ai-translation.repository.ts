@@ -1,5 +1,14 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, inArray, or, type SQL, sql } from 'drizzle-orm'
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  or,
+  type SQL,
+  sql,
+} from 'drizzle-orm'
 
 import { PG_DB_TOKEN } from '~/constants/system.constant'
 import {
@@ -21,6 +30,7 @@ import { type EntityId, parseEntityId } from '~/shared/id/entity-id'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 import { ContentFormat } from '~/shared/types/content-format.type'
 
+import { latestMetricField } from '../ai-generation-metrics/legacy-metadata'
 import type {
   AiTranslationRevision,
   AiTranslationRow,
@@ -28,8 +38,25 @@ import type {
 } from './ai-translation.types'
 import type { TranslationEntryKeyPath } from './translation-entry.types'
 
+const translationProjection = {
+  ...getTableColumns(aiTranslations),
+  aiModel: latestMetricField(
+    'translation',
+    sql.raw('"ai_translations"."id"'),
+    'model',
+  ),
+  aiProvider: latestMetricField(
+    'translation',
+    sql.raw('"ai_translations"."id"'),
+    'provider_id',
+  ),
+}
+
 const mapTranslation = (
-  row: typeof aiTranslations.$inferSelect,
+  row: typeof aiTranslations.$inferSelect & {
+    aiModel?: string | null
+    aiProvider?: string | null
+  },
 ): AiTranslationRow => ({
   id: toEntityId(row.id) as EntityId,
   hash: row.hash,
@@ -43,8 +70,8 @@ const mapTranslation = (
   summary: row.summary,
   tags: row.tags,
   sourceModifiedAt: row.sourceModifiedAt,
-  aiModel: row.aiModel,
-  aiProvider: row.aiProvider,
+  aiModel: row.aiModel ?? null,
+  aiProvider: row.aiProvider ?? null,
   contentFormat: row.contentFormat,
   content: row.content,
   sourceBlockSnapshots: row.sourceBlockSnapshots,
@@ -83,7 +110,7 @@ export class AiTranslationRepository extends BaseRepository {
   ): Promise<AiTranslationRow | null> {
     const refBig = parseEntityId(refId)
     const [row] = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(
         and(
@@ -102,7 +129,7 @@ export class AiTranslationRepository extends BaseRepository {
   ): Promise<AiTranslationRow | null> {
     const refBig = parseEntityId(refId)
     const [row] = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(
         and(eq(aiTranslations.refId, refBig), eq(aiTranslations.lang, lang))!,
@@ -141,7 +168,7 @@ export class AiTranslationRepository extends BaseRepository {
 
   async findById(id: EntityId | string): Promise<AiTranslationRow | null> {
     const [row] = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(eq(aiTranslations.id, parseEntityId(id)))
       .limit(1)
@@ -150,7 +177,7 @@ export class AiTranslationRepository extends BaseRepository {
 
   async listByRefId(refId: EntityId | string): Promise<AiTranslationRow[]> {
     const rows = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(eq(aiTranslations.refId, parseEntityId(refId)))
       .orderBy(desc(aiTranslations.createdAt))
@@ -162,7 +189,7 @@ export class AiTranslationRepository extends BaseRepository {
   ): Promise<AiTranslationRow[]> {
     if (!refIds.length) return []
     const rows = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(
         inArray(
@@ -180,7 +207,7 @@ export class AiTranslationRepository extends BaseRepository {
   ): Promise<AiTranslationRow[]> {
     if (!refIds.length) return []
     const rows = await this.db
-      .select()
+      .select(translationProjection)
       .from(aiTranslations)
       .where(
         and(
@@ -269,7 +296,7 @@ export class AiTranslationRepository extends BaseRepository {
     const offset = (page - 1) * size
     const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select(translationProjection)
         .from(aiTranslations)
         .orderBy(desc(aiTranslations.createdAt))
         .limit(size)
@@ -303,8 +330,6 @@ export class AiTranslationRepository extends BaseRepository {
       summary: input.summary,
       tags: input.tags ?? [],
       sourceModifiedAt: input.sourceModifiedAt,
-      aiModel: input.aiModel,
-      aiProvider: input.aiProvider,
       contentFormat: input.contentFormat,
       content: input.content,
       sourceBlockSnapshots: input.sourceBlockSnapshots,
@@ -389,8 +414,6 @@ export class AiTranslationRepository extends BaseRepository {
     if (patch.tags !== undefined) update.tags = patch.tags
     if (patch.sourceModifiedAt !== undefined)
       update.sourceModifiedAt = patch.sourceModifiedAt
-    if (patch.aiModel !== undefined) update.aiModel = patch.aiModel
-    if (patch.aiProvider !== undefined) update.aiProvider = patch.aiProvider
     if (patch.contentFormat !== undefined)
       update.contentFormat = patch.contentFormat
     if (patch.content !== undefined) update.content = patch.content
