@@ -26,11 +26,11 @@ vi.mock('@haklex/rich-ext-nested-doc', async () => {
   }
 })
 
-vi.mock('@haklex/rich-ext-excalidraw', async () => {
+vi.mock('@haklex/rich-ext-whiteboard', async () => {
   const { createElement } = await import('react')
 
   return {
-    ExcalidrawConfigProvider: (props: any) =>
+    WhiteboardConfigProvider: (props: any) =>
       createElement('excalidraw-config-provider', props, props.children),
   }
 })

@@ -5,9 +5,9 @@ import type { RichDiffLayout } from '@haklex/rich-diff'
 import { RichDiff } from '@haklex/rich-diff'
 import { codeSnippetNodes } from '@haklex/rich-ext-code-snippet/static'
 import { embedNodes } from '@haklex/rich-ext-embed/static'
-import { ExcalidrawNode } from '@haklex/rich-ext-excalidraw/static'
 import { galleryNodes } from '@haklex/rich-ext-gallery/static'
 import { nestedDocNodes } from '@haklex/rich-ext-nested-doc/static'
+import { WhiteboardNode } from '@haklex/rich-ext-whiteboard/static'
 import type { SerializedEditorState } from 'lexical'
 import { createRoot } from 'react-dom/client'
 
@@ -16,7 +16,7 @@ import { EnrichmentFetcherProvider } from '../components/EnrichmentLinkCardConte
 import { enhancedRendererConfig } from '../core'
 
 const extraNodes = [
-  ExcalidrawNode,
+  WhiteboardNode,
   ...embedNodes,
   ...galleryNodes,
   ...codeSnippetNodes,

@@ -7,12 +7,12 @@ import {
 import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
 import { embedEditNodes, EmbedPlugin } from '@haklex/rich-ext-embed'
-import {
-  ExcalidrawEditNode,
-  ExcalidrawPlugin,
-} from '@haklex/rich-ext-excalidraw'
 import { galleryEditNodes } from '@haklex/rich-ext-gallery'
 import { stepsEditNodes } from '@haklex/rich-ext-steps/edit'
+import {
+  WhiteboardEditNode,
+  WhiteboardPlugin,
+} from '@haklex/rich-ext-whiteboard'
 import { BlockHandlePlugin } from '@haklex/rich-plugin-block-handle'
 import { FloatingToolbarPlugin } from '@haklex/rich-plugin-floating-toolbar'
 import { FloatingLinkEditorPlugin } from '@haklex/rich-plugin-link-edit'
@@ -45,7 +45,7 @@ import { RichRenderer } from './RichRenderer'
 
 const defaultExtraNodes = [
   CatalogDynamicEditNode,
-  ExcalidrawEditNode,
+  WhiteboardEditNode,
   ...embedEditNodes,
   ...linkCardEditNodes,
   ...katexEditNodes,
@@ -156,7 +156,7 @@ export function RichEditor({
             renderExtraActions={renderLinkExtraActions}
           />
           <DynamicInsertPlugin />
-          <ExcalidrawPlugin />
+          <WhiteboardPlugin />
           <EmbedPlugin selfHostnames={selfHostnames} />
           <MapPlugin trackUpload={trackUpload} />
           <AfilmoryPlugin />

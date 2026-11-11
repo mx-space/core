@@ -17,12 +17,12 @@ import {
   AgentSelectionPinPlugin,
   DiffReviewOverlayPlugin,
 } from '@haklex/rich-ext-ai-agent'
-import { ExcalidrawConfigProvider } from '@haklex/rich-ext-excalidraw'
 import {
   NestedDocDialogEditorProvider,
   nestedDocEditNodes,
   NestedDocPlugin,
 } from '@haklex/rich-ext-nested-doc'
+import { WhiteboardConfigProvider } from '@haklex/rich-ext-whiteboard'
 import { AgentStreamPlugin } from '@haklex/rich-plugin-agent-stream'
 import { ImageEditModalPlugin } from '@haklex/rich-plugin-image-editor'
 import type { LexicalEditor } from 'lexical'
@@ -85,7 +85,7 @@ export function ReactEditorPane({
     <EnrichmentFetcherProvider value={fetchEnrichment ?? null}>
       <NestedDocDialogEditorProvider value={NestedDocDialogEditor}>
         <DialogStackProvider>
-          <ExcalidrawConfigProvider
+          <WhiteboardConfigProvider
             saveSnapshot={saveExcalidrawSnapshot}
             apiUrl={apiUrl}
           >
@@ -125,7 +125,7 @@ export function ReactEditorPane({
                 privacy={imageGpsPrivacy}
               />
             </RichEditor>
-          </ExcalidrawConfigProvider>
+          </WhiteboardConfigProvider>
         </DialogStackProvider>
       </NestedDocDialogEditorProvider>
     </EnrichmentFetcherProvider>

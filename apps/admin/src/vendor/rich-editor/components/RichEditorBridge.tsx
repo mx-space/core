@@ -2,11 +2,11 @@ import '@haklex/rich-plugin-agent-stream/style.css'
 import './setup-enrichment-linkcard'
 
 import { DialogStackProvider } from '@haklex/rich-editor-ui'
-import { ExcalidrawConfigProvider } from '@haklex/rich-ext-excalidraw'
 import {
   NestedDocDialogEditorProvider,
   nestedDocEditNodes,
 } from '@haklex/rich-ext-nested-doc'
+import { WhiteboardConfigProvider } from '@haklex/rich-ext-whiteboard'
 import { AgentStreamPlugin } from '@haklex/rich-plugin-agent-stream'
 import type { LexicalEditor } from 'lexical'
 import type { ReactNode } from 'react'
@@ -44,7 +44,7 @@ export function RichEditorBridge({
     <EnrichmentFetcherProvider value={fetchEnrichment ?? null}>
       <NestedDocDialogEditorProvider value={NestedDocDialogEditor}>
         <DialogStackProvider>
-          <ExcalidrawConfigProvider
+          <WhiteboardConfigProvider
             saveSnapshot={saveExcalidrawSnapshot}
             apiUrl={apiUrl}
           >
@@ -62,7 +62,7 @@ export function RichEditorBridge({
               <AgentStreamPlugin agentName="AI" />
               {children}
             </RichEditor>
-          </ExcalidrawConfigProvider>
+          </WhiteboardConfigProvider>
         </DialogStackProvider>
       </NestedDocDialogEditorProvider>
     </EnrichmentFetcherProvider>

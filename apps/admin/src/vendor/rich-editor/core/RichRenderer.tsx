@@ -6,10 +6,10 @@ import { chatNodes } from '@haklex/rich-ext-chat/static'
 import { codeSnippetNodes } from '@haklex/rich-ext-code-snippet/static'
 import { DynamicNode } from '@haklex/rich-ext-dynamic/static'
 import { embedNodes } from '@haklex/rich-ext-embed/static'
-import { ExcalidrawNode } from '@haklex/rich-ext-excalidraw/static'
 import { galleryNodes } from '@haklex/rich-ext-gallery/static'
 import { nestedDocNodes } from '@haklex/rich-ext-nested-doc/static'
 import { stepsNodes } from '@haklex/rich-ext-steps/static'
+import { WhiteboardNode } from '@haklex/rich-ext-whiteboard/static'
 import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
 import { useCallback, useMemo } from 'react'
 
@@ -19,7 +19,7 @@ import { enhancedRendererConfig } from './configs/enhanced-renderer-config'
 
 const defaultExtraNodes = [
   DynamicNode,
-  ExcalidrawNode,
+  WhiteboardNode,
   ...embedNodes,
   ...galleryNodes,
   ...codeSnippetNodes,
