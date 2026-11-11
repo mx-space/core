@@ -1,6 +1,6 @@
 ---
 name: excalidraw-editing
-description: How to read and change an Excalidraw drawing stored at /embeds/<id>.excalidraw — translating labels, fixing text, recoloring, adding shapes, or starting a new drawing. Load before editing any .excalidraw file.
+description: How to read and change a whiteboard drawing stored at /embeds/<id>.excalidraw — translating labels, fixing text, recoloring, adding shapes, rich text cards, svg illustrations and shadows, or starting a new drawing. Load before editing any .excalidraw file.
 ---
 
 # Editing Excalidraw drawings
@@ -25,6 +25,52 @@ Each `<excalidraw>` block in `/doc.xml` names its file, for example `<excalidraw
 - Colors are `strokeColor` and `backgroundColor` as hex strings; keep the palette the drawing already uses.
 - To add a shape, copy an existing element of the same type, give it a new unique `id`, and move it with `x` and `y`. Put it before the closing `]` of `elements`.
 - Remove an element by deleting its object; also delete text elements whose `containerId` pointed to it.
+
+## Clean boards, cards and illustrations
+
+The whiteboard draws three things excalidraw.com does not. Use them for boards that should look designed rather than sketched: sticky notes, labelled timelines, a title with a small illustration.
+
+- Clean style: write `"roughness": 0` and `"fillStyle": "solid"` on each element, and `"fontFamily": 2` on `text` for a sans-serif font (`5` is handwritten, `3` monospace).
+- Shadow: `"shadow": true` on a `rectangle`, `ellipse`, `diamond`, `image`, `svg` or `richtext` adds one soft drop shadow. Other types ignore it.
+- `svg`: `{"type":"svg","id":"…","x":…,"y":…,"width":48,"height":100,"svg":"<svg viewBox=\"0 0 48 100\">…</svg>"}`. The source is fitted into `width` × `height` keeping its aspect ratio, so give the root a `viewBox`. Inline every shape and colour; scripts and external files do not load. Dark mode leaves it uninverted. To change the drawing, rewrite `svg`.
+- `richtext`: a card holding a small Lexical document in `content`:
+
+  ```json
+  {
+    "type": "richtext",
+    "id": "card-brew",
+    "x": 60,
+    "y": 280,
+    "width": 150,
+    "height": 96,
+    "backgroundColor": "#f3c4d8",
+    "shadow": true,
+    "content": {
+      "root": {
+        "type": "root",
+        "children": [
+          {
+            "type": "heading",
+            "tag": "h3",
+            "children": [{ "type": "text", "text": "Brew" }]
+          },
+          {
+            "type": "paragraph",
+            "children": [
+              { "type": "text", "text": "Mila", "style": "color: #6b6b6b" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+  - Blocks: `paragraph`, `heading` (`tag` `h1`–`h6`), `quote`, `list` (`listType` `"bullet"` or `"number"`) of `listitem`s. Inline: `text`, `linebreak`, `link` (`url`, http/https/mailto).
+  - `text.format` is a bit mask: `1` bold, `2` italic, `4` strikethrough, `8` underline, `16` code, `128` highlight. `text.style` takes `color` and `background-color`.
+  - `width` is fixed and the text wraps inside it. `height` is a minimum: a card whose content needs more room grows when the board is shown, so give cards in one row the same `height` and do not compute it from the text.
+  - Defaults when left out: yellow `#ffec99`, no border, clean, rounded corners.
+  - To change a card's text, change the `text` nodes inside `content`; `grep -n '"text"'` finds them too.
 
 ## New or copied drawings
 

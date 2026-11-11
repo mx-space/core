@@ -93,6 +93,19 @@ describe('bundledAgentSkills', () => {
     )
   })
 
+  it('teaches the whiteboard-only elements', () => {
+    const skill = bundledAgentSkills.find(
+      (item) => item.name === 'excalidraw-editing',
+    )!
+    for (const term of [
+      /"shadow": true/,
+      /"type": ?"svg"/,
+      /"type": ?"richtext"/,
+    ]) {
+      expect(skill.body).toMatch(term)
+    }
+  })
+
   it('teaches dynamic components through /embeds files, not the old tools', () => {
     const skill = bundledAgentSkills.find(
       (item) => item.name === 'dynamic-component-design',
