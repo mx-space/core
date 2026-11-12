@@ -142,7 +142,12 @@ export class AuthRepository extends BaseRepository {
       .values({
         id: input.id,
         userId: input.userId,
-        accountId: input.accountId ?? null,
+        // Better Auth looks up password credentials by both userId and
+        // accountId. providerAccountId is a separate legacy field.
+        accountId:
+          input.providerId === 'credential'
+            ? input.userId
+            : (input.accountId ?? null),
         providerId: input.providerId,
         providerAccountId: input.providerAccountId ?? null,
         password: input.password ?? null,

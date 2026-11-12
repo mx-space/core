@@ -68,6 +68,38 @@ Resolve any returned rows using verified provider identities before deployment.
 Do not merge accounts by email or automatically delete duplicate rows. This
 preflight is an operator step; local tests do not inspect the production database.
 
+## Password credential account IDs
+
+Better Auth requires password accounts to have `provider_id = 'credential'`
+and `account_id = user_id`. The Drizzle property `accountId` maps to the SQL
+column `account_id`; `provider_account_id` is a separate legacy field and
+does not satisfy the password-account lookup.
+
+The owner and review-demo creation paths previously populated only
+`provider_account_id`, leaving `account_id` null. Such accounts can reject a
+correct password after a Better Auth upgrade. Account creation now enforces
+the linked user's ID for all password credentials while preserving external
+OAuth account IDs.
+
+The release-phase app-data migration `20261113-credential-account-ids`
+repairs null, empty, and stale password-account IDs. It runs through the
+normal `mx-migrate` / `pnpm -C apps/core run migrate` path and is idempotent;
+no schema migration or password reset is required. Password hashes, OAuth
+accounts, sessions, and Passkeys are preserved.
+
+If a user has multiple password-account rows, the migration stops without
+changing any accounts. Resolve those rows using verified account ownership
+before retrying; the migration does not choose a password or merge rows.
+The affected users can be identified with this read-only query:
+
+```sql
+SELECT user_id, count(*) AS credential_count
+FROM accounts
+WHERE provider_id = 'credential'
+GROUP BY user_id
+HAVING count(*) > 1;
+```
+
 ## Deployment and validation
 
 1. Install with `pnpm install --frozen-lockfile` and build Core and Admin together.
