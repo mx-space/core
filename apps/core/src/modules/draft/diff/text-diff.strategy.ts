@@ -1,4 +1,5 @@
 import DiffMatchPatch from 'diff-match-patch'
+
 import type { DiffStrategy } from './diff-strategy.interface'
 
 const dmp = new DiffMatchPatch()

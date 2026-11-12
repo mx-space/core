@@ -16,7 +16,6 @@ export interface S3UploaderOptions {
 const S3_TRANSPORT_DIAGNOSTIC_BEGIN = 'begin=S3_TRANSPORT_DIAGNOSTIC'
 const S3_TRANSPORT_DIAGNOSTIC_END = 'end=S3_TRANSPORT_DIAGNOSTIC'
 // Keep the deployment contract's lowercase hexadecimal grammar literal.
-// eslint-disable-next-line unicorn/better-regex
 const S3_TRANSPORT_DIAGNOSTIC_NONCE_PATTERN = /^[0-9a-f]{32}$/
 
 const S3_TRANSPORT_NAMES = [

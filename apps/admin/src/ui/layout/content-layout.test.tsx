@@ -4,7 +4,11 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { I18nProvider } from '~/i18n'
-import { ContentLayout, ContentLayoutSlot } from '~/ui/layout/content-layout'
+import {
+  AsidePanel,
+  ContentLayout,
+  ContentLayoutSlot,
+} from '~/ui/layout/content-layout'
 
 interface Harness {
   container: HTMLDivElement
@@ -231,14 +235,26 @@ describe('ContentLayout', () => {
     expect(sheet!.textContent).toContain('slot-portal-content')
   })
 
-  it('invokes onCloseAside when the bottom sheet close button is clicked on mobile', () => {
+  it('closes the mobile aside through its slotted panel header', () => {
     stubMatchMedia(false)
     const onCloseAside = vi.fn()
     render(
       createElement(ContentLayout, {
         open: true,
         onCloseAside,
-        children: createElement('div', null, 'main-content'),
+        children: [
+          createElement('div', { key: 'main' }, 'main-content'),
+          createElement(ContentLayoutSlot, {
+            active: true,
+            id: 'closable-aside',
+            key: 'aside',
+            children: createElement(AsidePanel, {
+              onClose: onCloseAside,
+              title: 'Details',
+              children: 'aside-content',
+            }),
+          }),
+        ],
       }),
     )
 

@@ -1,4 +1,5 @@
 import { create } from 'jsondiffpatch'
+
 import type { DiffStrategy } from './diff-strategy.interface'
 
 const diffpatcher = create({

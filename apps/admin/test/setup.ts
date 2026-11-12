@@ -38,6 +38,14 @@ if (
     () => []
 }
 
+// Happy DOM eagerly creates Animation.finished and rejects it on cancel even
+// when nobody reads that promise. Chromium does not report that as unhandled.
+// Disable the incomplete WAAPI implementation so Motion uses its real JS
+// animation path. Native animation cancellation is verified in Chromium.
+if (typeof Element !== 'undefined') {
+  Reflect.deleteProperty(Element.prototype, 'animate')
+}
+
 // Most UI tests mount components with raw `react-dom/client` and skip the
 // app providers. Replace `~/i18n` with a stub so `useI18n()` works outside an
 // `I18nProvider`. Translation lookups use the real zh-CN message table so

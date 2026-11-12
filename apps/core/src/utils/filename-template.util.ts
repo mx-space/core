@@ -129,7 +129,6 @@ export function replaceFilenameTemplate(
   result = result.replaceAll('{uuid}', () => generateUuid())
 
   // Random string with custom length: {str-<n>}
-  // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{str-(\d+)\}/g, (_match, length) => {
     const len = Number.parseInt(length, 10)
     return customAlphabet(alphabet)(len)
@@ -147,7 +146,6 @@ export function replaceFilenameTemplate(
   result = result.replaceAll('{readerId}', readerId)
 
   // Local folder placeholder: {localFolder:<n>}
-  // eslint-disable-next-line unicorn/better-regex
   result = result.replaceAll(/\{localFolder:(\d+)\}/g, (_match, level) => {
     const lvl = Number.parseInt(level, 10)
     return extractFolderLevel(localFolderPath, lvl)

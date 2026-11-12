@@ -1,13 +1,27 @@
 import { randomUUID } from 'node:crypto'
 
-import type { AgentRunPayload } from '@mx-space/ai'
+import {
+  type AgentRunPayload,
+  hashAgentValue,
+  type ResolvedAgentRun,
+} from '@mx-space/ai'
+import {
+  createPgTestDatabase,
+  type PgTestDatabase,
+} from 'test/helper/pg-verify-url'
 import { redisHelper } from 'test/helper/redis-mock.helper'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { BusinessEvents } from '~/constants/business-event.constant'
+import { PG_DB_TOKEN } from '~/constants/system.constant'
 import { AiAgentWsHandler } from '~/modules/ai/ai-agent/ai-agent.ws'
+import { AiAgentConversationRepository } from '~/modules/ai/ai-agent/ai-agent-conversation.repository'
 import type { AgentRunOptions } from '~/modules/ai/ai-agent/ai-agent-run.service'
 import { AiAgentRunService } from '~/modules/ai/ai-agent/ai-agent-run.service'
+import {
+  SnowflakeGenerator,
+  SnowflakeService,
+} from '~/shared/id/snowflake.service'
 
 import {
   createGatewayApp,
@@ -18,11 +32,12 @@ import {
 vi.setConfig({ testTimeout: 15_000 })
 
 type FakeRun = (
-  payload: AgentRunPayload,
+  payload: ResolvedAgentRun,
   options: AgentRunOptions,
 ) => Promise<{ status: 'complete' | 'aborted' | 'failed'; error?: string }>
 
 const runService = { run: vi.fn<FakeRun>() }
+let emptyContextHash: string
 
 function runPayload(runId: string): AgentRunPayload {
   return {
@@ -32,26 +47,44 @@ function runPayload(runId: string): AgentRunPayload {
     model: 'm',
     providerId: 'p',
     system: [],
+    systemHash: emptyContextHash,
     user: 'hello',
     tools: [],
+    toolsHash: emptyContextHash,
     files: [],
   }
 }
 
 describe('admin gateway agent.* frames', () => {
   let testApp: GatewayTestApp
+  let database: PgTestDatabase | undefined
 
   beforeAll(async () => {
+    emptyContextHash = await hashAgentValue([])
     const helper = await redisHelper
     const opts = helper.CacheService.getClient().options
+    database = await createPgTestDatabase('mx_agent_gateway')
     testApp = await createGatewayApp(
       { port: opts.port as number, host: opts.host as string },
-      [AiAgentWsHandler, { provide: AiAgentRunService, useValue: runService }],
+      [
+        AiAgentWsHandler,
+        AiAgentConversationRepository,
+        { provide: PG_DB_TOKEN, useValue: database.db },
+        {
+          provide: SnowflakeService,
+          useValue: new SnowflakeGenerator({ workerId: 1 }),
+        },
+        { provide: AiAgentRunService, useValue: runService },
+      ],
     )
   })
 
   afterAll(async () => {
-    await testApp.close()
+    try {
+      await testApp?.close()
+    } finally {
+      await database?.close()
+    }
   })
 
   async function connectOwner() {
@@ -81,8 +114,18 @@ describe('admin gateway agent.* frames', () => {
     try {
       const ackId = randomUUID()
       client.send('agent.run', runPayload('r1'), ackId)
-      expect((await client.waitForAck(ackId)).payload).toMatchObject({
+      const ack = await client.waitForAck(ackId)
+      expect(ack.payload).toMatchObject({
         ok: true,
+        conversationId: expect.any(String),
+      })
+      const conversation = await testApp.moduleRef
+        .get(AiAgentConversationRepository)
+        .findById((ack.payload as { conversationId: string }).conversationId)
+      expect(conversation).toMatchObject({
+        sessionId: 'post:r1',
+        model: 'm',
+        providerId: 'p',
       })
 
       const call = await client.waitFor((e) => e.event === 'agent.tool.call')
@@ -217,7 +260,14 @@ describe('admin gateway agent.* frames', () => {
     runService.run.mockImplementationOnce(async () => ({ status: 'complete' }))
     const first = await connectOwner()
     const second = await connectOwner()
-    const conversationId = `conv-${randomUUID()}`
+    const conversation = await testApp!.moduleRef
+      .get(AiAgentConversationRepository)
+      .create({
+        sessionId: 'post:r7',
+        model: 'm',
+        providerId: 'p',
+      })
+    const conversationId = String(conversation.id)
     try {
       const a = randomUUID()
       first.send('agent.run', { ...runPayload('r7'), conversationId }, a)

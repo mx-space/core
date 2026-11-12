@@ -70,7 +70,6 @@ marked.use({
         return `<a target="_blank" class="mention" rel="noreferrer nofollow" href="${urlPrefix}${username}">${username}</a>`
       },
       tokenizer(src) {
-        // eslint-disable-next-line unicorn/better-regex -- its autofix (`\]` -> `]`) conflicts with regexp/strict
         const rule = /^(?<prefix>GH|TW|TG)@(?<name>\w+)\s?(?!\[.*?\])/
         const match = rule.exec(src)
         if (match) {

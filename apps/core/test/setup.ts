@@ -1,7 +1,5 @@
 import { mkdirSync } from 'node:fs'
 
-import { RedisMemoryServer } from 'redis-memory-server'
-
 import {
   DATA_DIR,
   STATIC_FILE_DIR,
@@ -14,6 +12,10 @@ import {
   startPgTestContainer,
   stopPgTestContainer,
 } from './helper/pg-testcontainer'
+import {
+  findRedisSystemBinary,
+  startTestRedis,
+} from './helper/redis-test-server'
 
 export async function setup() {
   mkdirSync(DATA_DIR, { recursive: true })
@@ -23,11 +25,13 @@ export async function setup() {
   mkdirSync(THEME_DIR, { recursive: true })
 
   // Initialize Redis and PostgreSQL test container.
-  await Promise.all([RedisMemoryServer.create(), startPgTestContainer()]).then(
-    async ([redis]) => {
-      await redis.stop()
-    },
-  )
+  const systemBinary = findRedisSystemBinary()
+  await Promise.all([
+    startTestRedis({ binary: systemBinary ? { systemBinary } : undefined }),
+    startPgTestContainer(),
+  ]).then(async ([redis]) => {
+    await redis.stop()
+  })
 }
 export async function teardown() {
   await stopPgTestContainer()

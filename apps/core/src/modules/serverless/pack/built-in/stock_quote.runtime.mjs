@@ -58,7 +58,9 @@ export default async function handler(ctx) {
         }))
         .filter((p) => Number.isFinite(p.close))
     }
-  } catch {}
+  } catch {
+    // Sparkline data is optional; return the quote when the time series is unavailable.
+  }
 
   const fiftyTwoWeek = quote.fifty_two_week
   const result = {

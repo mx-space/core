@@ -8,7 +8,8 @@ import {
   readDocContent,
 } from '@mx-space/editor/loro'
 import { LoroDoc } from 'loro-crdt'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { AGENT_MARKERS } from 'ryugi-detect-agent'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WebSocketServer } from 'ws'
 
 import { makeTmpHome } from './_helpers'
@@ -142,8 +143,11 @@ async function startFake(): Promise<Fake> {
 function run(fake: Fake, args: string[], stdin?: string) {
   return new Promise<{ code: number | null; stdout: string; stderr: string }>(
     (resolve, reject) => {
+      const env = { ...process.env }
+      for (const marker of AGENT_MARKERS) delete env[marker]
+      env.CLAUDECODE = '1'
       const child = spawn('npx', ['tsx', bin, '--api-url', fake.url, ...args], {
-        env: { ...process.env, CLAUDECODE: '1', AI_AGENT: '' },
+        env,
         stdio: ['pipe', 'pipe', 'pipe'],
       })
       let stdout = ''
@@ -168,6 +172,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await new Promise<void>((resolve) => fake.server.close(() => resolve()))
   cleanup()
+  vi.unstubAllEnvs()
 })
 
 describe('mxs draft cat', () => {
@@ -304,6 +309,9 @@ describe('mxs draft patch', () => {
   }, 60_000)
 
   it('shows an agent caret named after the detected agent', async () => {
+    vi.stubEnv('CODEX_THREAD_ID', 'host-codex-session')
+    vi.stubEnv('CLAUDE_CODE_IS_COWORK', '1')
+    vi.stubEnv('AI_AGENT', 'cursor')
     const ids = blockIds(fake.doc)
     await run(
       fake,

@@ -1,6 +1,6 @@
 import {
-  EventScope,
   type BusinessEvents,
+  EventScope,
 } from '~/constants/business-event.constant'
 
 const VISITOR_EVENT_KEY = Symbol('VISITOR_EVENT')

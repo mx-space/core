@@ -3,8 +3,9 @@ import type {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common'
-import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 import type { FastifyReply } from 'fastify'
+
+import type { FastifyBizRequest } from '~/transformers/get-req.transformer'
 
 const ALLOWED_METHODS = 'GET,HEAD,PUT,PATCH,POST,DELETE'
 const ALLOWED_HEADERS = [

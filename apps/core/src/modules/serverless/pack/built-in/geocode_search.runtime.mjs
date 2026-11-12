@@ -14,7 +14,7 @@ export default async function handler(ctx) {
 
   const url = `${PLACE_URL}?${new URLSearchParams({
     key: gaodemapKey,
-    keywords: keywords.replace(/\s/g, '|'),
+    keywords: keywords.replaceAll(/\s/g, '|'),
   })}`
 
   try {

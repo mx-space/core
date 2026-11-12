@@ -26,7 +26,9 @@ export class RolesGuard extends AuthGuard implements CanActivate {
     try {
       await super.canActivate(context)
       hasAdminAccess = true
-    } catch {}
+    } catch {
+      // Reader sessions can still authorize routes after owner authentication fails.
+    }
 
     const session = await this.authService.getSessionUser(request.raw)
     const readerId = session?.user?.id || request.user?.id
