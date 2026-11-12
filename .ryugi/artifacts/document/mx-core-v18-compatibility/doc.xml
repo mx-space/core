@@ -1,0 +1,771 @@
+<doc>
+  <h1 id="O1uWs_c6">mx-core v18：兼容性收口与文档迁移</h1>
+  <p id="CM-Tx2j7">当前开发分支已强制显式字段密钥、至少 32 字符 JWT 与固定 V2 写入，并新增发布前必跑的 20261109-canonical-config 数据迁移。旧配置在 DB 中转换、重加密并删除旧行；配置服务、schema 与 PATCH 只认规范结构，历史转换器仅在发布迁移和离线工具中调用。部署须先停止旧副本及后台写入者。最新 Core 共 3579 项行为已验证（3576 项完整运行通过，3 项因 Redis 端口竞争独立重跑通过），11 项既定跳过，原有 Agent DI 夹具仍显式排除；该次完整命令含基础设施错误，不称单命令全绿。单次独立审阅发现的两处数据保留问题已通过 5 项先失败后通过的数据库回归修复。mx-docs 已同步迁移和严格配置契约，保留 v17.0.4 历史边界。Core PR #2914 与 mx-docs PR #52 互相链接；尚未合并或发版，未操作线上数据；其他 API/SDK 清理及物理列删除仍在后续阶段。</p>
+  <h2 id="zYylq_4S">我们已经决定了什么</h2>
+  <ul id="dqFSFLo5">
+    <li>你的决定：v17.0.4 保留关闭加密的临时逃生口；下个大版本 v18 将字段加密和显式密钥作为必填。</li>
+    <li>你的决定：先讨论要结束哪些兼容，再决定升级说明和 mx-docs 的修改范围。</li>
+    <li>你的决定（第一轮提交）：v18 统一 V2 写入，结束旧格式写入并退役兼容开关。</li>
+    <li>你的决定（第一轮提交）：保留历史密文/明文的读取和迁移、旧备份恢复，以及旧密码登录后升级能力。</li>
+    <li>你的决定（第一轮提交）：只支持完成准备的 v17.x 直接升级 v18；更老版本先完成既有迁移。</li>
+    <li>你的决定（第一轮提交）：纳入 comments 的 state 查询别名和 recently 表态 GET 的移除，先迁移 SDK 与消费者。</li>
+    <li>你的决定（第一轮提交）：旧 AI、第三方服务和会员配置先持久化迁移，再结束读取兼容；无效参数及错误日志一并清理。</li>
+    <li>你的决定（第一轮提交）：文档分两批；先修正 v17 与补历史指南，v18 发布时切默认说明并保留旧版关键入口。</li>
+    <li>你的决定（第二轮提交）：摘要与精读的普通 GET 只读，生成由明确动作触发。</li>
+    <li>你的决定（第二轮提交）：备份、清缓存和测试邮件等非流式执行 GET 改为执行方法；现有 GET SSE 入口及帧格式保留。</li>
+    <li>你的决定（第二轮提交）：配置写入拒绝未知字段，保留大小写归一化与自由 JSON 子树。</li>
+    <li>你的决定（第二轮提交）：AI 元数据分阶段统一到 generationMetrics；先停止旧列引用，再在 v18 移除旧响应字段与旧列。</li>
+    <li>你的决定（第二轮提交）：服务端排序值统一 asc / desc，先由兼容 SDK 转换数字调用并迁移官方消费者。</li>
+    <li>你的决定（第二轮提交）：协调发布 SDK 大版本，清理确认废弃项；不自动删除 api-client/legacy 和 CLI 的 V2 适配。</li>
+    <li>你的决定（第二轮提交）：保留其他有效路由别名，文档标明规范入口；长期 /objects 与 /fn 地址保留。</li>
+    <li>我的建议：每个破坏项都应有旧用法、新用法、受影响对象、迁移办法和完成验证。缺少这些信息的兼容先不删除。</li>
+  </ul>
+  <h2 id="-7I9UG9G">当前基线与设计目标</h2>
+  <p id="9OwuPjEM">本轮以已发布的 v17.0.4（c6551f15a）为 Core 基线。当前环境没有找到名为 mx-docs 的本地 checkout，我先按官方仓库 mx-space/docs 的 main（cc0f960，2026-10-04）核对。v18 可以把部署要求和写入格式收口，但删除旧数据读取能力应单独决策，不能因为关闭了旧写入开关，就让升级实例读不出已有凭据或历史备份。</p>
+  <p id="HjGIARoY">已确定的改动覆盖安全存储、明确废弃的接口、旧配置转换、AI 读取与生成、配置验证、AI 指标旧列，以及 SDK 的大版本清理。Core 与 SDK 各自说明破坏性变更，CLI 的 V2 适配和其他有效路由别名继续保留。</p>
+  <p id="aZcfEKec">本次目标是让安全存储、读取与生成、配置写入和已废弃接口都有明确契约，并让现有实例在仍可服务的准备版本中发现和处理升级问题。所有已选范围都进入下述设计；实现顺序分为兼容准备、数据迁移、v18 收口和文档切换，不在同一次滚动部署中直接删除旧副本仍使用的数据库结构。</p>
+  <h2 id="0Nbs06f2">设计目标与范围边界</h2>
+  <ul id="jNLJ1DCV">
+    <li><b>目标：</b>v18 新写入只有一种凭据保护格式；准备条件可自动检查；API 行为、SDK 类型和公开文档一致；升级和恢复都有真实验证。</li>
+    <li><b>不纳入：</b>API v4、响应 envelope 或 wire 大小写重做、SSE 帧协议重做、强制加密全部备份、密码算法强制重置、历史 SQL 迁移删除、长期资源 URL 改名。</li>
+    <li><b>约束：</b>Dokploy 多副本滚动发布，迁移先于新副本启动；schema contract 只能发生在前一发布版本已停止所有旧列引用之后。任务队列、会话、文件和其他并行工作不得因升级清理而被整体清空。</li>
+    <li><b>交付物：</b>Core 准备版和 v18、SDK 兼容版和下一大版本、必要的 Admin/CLI/官方主题适配、升级检查与迁移工具、mx-docs 两批更新、版本矩阵及验收记录。</li>
+  </ul>
+  <h2 id="yIbMuDW5">实施契约：安全配置、迁移与恢复</h2>
+  <h3 id="S4gKDC7X">v18 的启动条件</h3>
+  <p id="nxPUy91f">所有运行模式都要求显式提供 64 位十六进制 ENCRYPT_KEY 或 MX_ENCRYPT_KEY，不再回退到机器标识；JWT_SECRET 至少 32 字符。别名优先级保持现状。新装生成每实例随机密钥并持久保存，现有已加密实例保留原有效密钥。</p>
+  <p id="s-tICgkp"><b>我的实现选择：</b>ENCRYPT_ENABLE=true 和 MX_SECRET_STORAGE_V2=true 仅作为过渡旧配置接受并提示可删除，不再控制写入模式；显式 false 启动失败并链接升级步骤。ENCRYPT_ALGORITHM 仅用于历史密文读取，新写入固定为 V2 算法。开发与测试使用独立的测试密钥，不为生产打包通用默认密钥。</p>
+  <p id="6pHRlhuN">现有实例必须通过准备检查；新装空数据库由发布前迁移初始化当前格式，不要求一份不存在的 v17 历史。启动阶段只验证配置、schema 和准备状态，不启动数据回填或改写业务记录。</p>
+  <h3 id="Oc4r7oaB">准备命令与可验证状态</h3>
+  <p id="6Sj_4i1T">准备版新增只读 upgrade:check 和显式 upgrade:prepare 命令，具体脚本放置与内部模块划分交给实现者。check 输出人可读摘要和机器可读报告，包含：是否为新装、准备版本、缺失配置、密文类型计数、旧配置计数、指标覆盖情况和迁移状态；退出码区分 ready、needs-action 与检查失败。报告不得包含任何秘密值。</p>
+  <p id="SfvEavpS">prepare 复用 slim app-data runner、数据库 advisory lock 和迁移账本，支持 dry-run 与幂等重试。迁移成功、残留检查通过后才记录新的 v18 准备完成状态；不能仅凭旧 protect-stored-secrets 的账本行认定已准备。检查“全部副本已经停止旧写入”必须是部署步骤的前置条件，迁移器不能从单个进程猜测集群状态。</p>
+  <p id="4cFRGTNj"><b>转换顺序：</b>先识别旧记录来源并按旧字段路径解密，转换为新 AI/第三方/会员配置，再按新字段路径加密并持久化；补齐 Snippet、Webhook、API Key 与 OAuth 的 V2 存量；再检查无旧写入残留、指标映射和新形状。API Key 原始字符串对客户端保持可用，存储转换为哈希后不能用复制出的哈希直接认证。</p>
+  <p id="vdHerVRZ">现有转换器不是直接删除：抽成迁移/导入/恢复共用的版本化转换模块。v18 常规启动与读取不再做旧配置归一化，旧备份恢复则在对外提供服务前显式运行相同转换、验证并重建相关缓存。错误原密钥、损坏密文或未知格式不得回落成成功的明文值。</p>
+  <p id="LRbAn-gJ">准备版中仍需兼容的旧配置写请求在持久化边界转换到新形状，旧 API 读取可临时从新形状派生；迁移后不得由旧客户端把旧形状重新写回数据库。v18 才移除这些入口级转换，届时未知/旧字段得到明确错误。转换与常规配置 PATCH 必须串行保护同一配置记录。</p>
+  <h3 id="q8x9Sm5L">短 JWT_SECRET 的具体处理</h3>
+  <p id="hIdgYtnn"><b>我的实现选择：</b>不截断、不补齐、不自动覆盖原 JWT。准备工具单列需要轮换的实例；由操作者在维护窗口暂停所有业务副本和后台写入，用只读秘密文件提供旧、新 JWT 给独立迁移进程。工具在事务内用旧 JWT 验证/解封装现有 OAuth 密文，再用新 JWT 封装，明文旧记录按已知存储契约转换。工具只接收文件路径，不把秘密放进命令行或日志。</p>
+  <p id="kOyXE8Js">迁移提交后，操作者将所有副本配置为同一新 JWT 再启动；此流程明确要求重新登录，既有 OAuth provider token 保留且不主动联系服务商。原字段加密密钥和 API Key 字符串不随此次轮换改变。解密失败时整批回滚，不清空账户 token；缺少原 JWT 且已有密文的实例应阻塞并报告受影响记录，由操作者恢复原秘密或另行完成账户重新授权。</p>
+  <p id="MKH-W63d">短 JWT 且没有现有 OAuth 密文的实例也要明确记录轮换与会话影响。任何 JWT 轮换都先保存原秘密与数据库快照，不能只改环境变量后再尝试解密。历史版本若曾使用 machine-id 加密，准备期需先从原主机取得等效密钥并显式保存，不能用新随机密钥替换。</p>
+  <h3 id="reSj_Sxe">AI 旧列的安全收尾</h3>
+  <p id="B48Rvytr">准备版先补齐 generationMetrics，停止运行时 SELECT、INSERT、UPDATE、RETURNING 对 ai_translations.ai_model / ai_provider 和 ai_insights.model_info 的引用，包括隐式全列展开；旧 v17 API 字段由新指标派生以保持 v17 契约。物理列此时保留。</p>
+  <p id="01yGf7kd">全部服务副本运行这个准备版并完成数据覆盖验证后，v18 的发布前迁移才删除旧列，随后从 v18 views、SDK v6 和 Admin 移除旧响应字段与 fallback。相关响应缓存使用新版本命名或定向失效，不全量清 Redis。迁移须通过 lint:migrations 及旧准备版副本与新 schema 共存验证。</p>
+  <h2 id="LSqsowhQ">实施契约：API、配置和消费者</h2>
+  <table id="OuZRDicM">
+    <tr>
+      <th>
+        <p>入口</p>
+      </th>
+      <th>
+        <p>v18 行为</p>
+      </th>
+      <th>
+        <p>兼容准备</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /ai/summaries/article/:id 与 /ai/insights/article/:id</p>
+      </td>
+      <td>
+        <p>只读，缺生成结果返回 JSON data: null；资源不存在、隐藏、会员等权限判断仍按原语义执行，不因只读放宽。普通 GET 不调用模型。</p>
+      </td>
+      <td>
+        <p>SDK v6 的读取方法明确为可空；访问准备版时带 onlyDb=true。v18 继续识别旧 onlyDb 参数但它不再启用生成。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>AI 显式生成</p>
+      </td>
+      <td>
+        <p>继续使用既有生成任务或显式生成入口。现有 GET SSE 的 token/done/error 帧、权限和 EventSource 消费方式保持。</p>
+      </td>
+      <td>
+        <p>主题缺结果显示“尚未生成”；不自动重试生成。站长通过发布任务或明确按钮操作创建资源。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /comments?state=</p>
+      </td>
+      <td>
+        <p>明确返回验证错误并指向 tab，不能删除字段后静默忽略；评论状态更新 body 的 state 仍有效。</p>
+      </td>
+      <td>
+        <p>SDK/CLI 用 tab；Admin 的旧书签 state 到 tab 转换可留在客户端。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /recently/attitude/:id</p>
+      </td>
+      <td>
+        <p>移除写操作，只接受已有 POST；保留现有 attitude 查询参数及业务结果。</p>
+      </td>
+      <td>
+        <p>兼容 SDK 先将该方法改为 POST，官方主题升级。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /backups/new</p>
+      </td>
+      <td>
+        <p>改为 POST /backups/new；保留二进制下载、文件名、内容类型和既有权限，不复用上传恢复的 POST /backups。</p>
+      </td>
+      <td>
+        <p>准备版同时提供新 POST 和旧 GET；Admin requestBlob 支持明确的 POST。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /clean_catch、/clean_redis、/health/email/test</p>
+      </td>
+      <td>
+        <p>路径暂不改名，分别改为 POST；响应与权限按原端点契约，v18 不再允许 GET 执行。</p>
+      </td>
+      <td>
+        <p>准备版增加 POST，Admin 与脚本迁新方法；旧 GET 留到 v18 才移除。测试邮件验收使用测试替身，不擅自发送真实邮件。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>sortOrder / sort_order</p>
+      </td>
+      <td>
+        <p>只接受 asc / desc；数字及数字字符串 1 / -1 返回验证错误。</p>
+      </td>
+      <td>
+        <p>兼容 SDK 先转换数字调用；SDK v6 类型仅字符串，官方主题与 CLI 统一使用字符串。</p>
+      </td>
+    </tr>
+  </table>
+  <p id="D85jsKXC">非法输入继续走现有错误 envelope；业务 JSON 保持 data / meta，wire 仍为 snake_case。缺结果的 null 必须通过当前 ResponseInterceptor 包装，不能手工构造导致重复 envelope。执行 GET 删除后应返回无副作用的 404/405；具体由路由器决定，不新增会继续执行旧动作的重定向。</p>
+  <h3 id="M2v2xGS7">严格配置写入</h3>
+  <p id="Csq0ZL2P">只收紧配置 PATCH/初始化配置写入的 schema：在当前大小写归一化之后，未知的声明字段路径产生 HTTP 400 CONFIG_VALIDATION_FAILED，列出路径且不含值。已声明嵌套对象也校验未知键；record、自由 JSON、meta、Snippet payload 的动态键不被扩成严格对象。保留部分更新和空秘密字段保留原值的既有语义。</p>
+  <p id="IalZZV0J">准备阶段迁移现有旧配置；客户端不得把响应遮蔽字段、内部字段或旧形状整块原样写回。Admin 和 CLI 的实际 PATCH 流程必须用真实请求回放验证，避免仅测试几个静态 schema 常量。</p>
+  <h3 id="1qpl4HbZ">SDK、CLI 和版本矩阵</h3>
+  <p id="0YspXADw"><b>我的实现选择：</b>当前 SDK 为 5.13.1，下一大版本目标为 6.x。先发 5.x 兼容版：速记 POST、排序输出规范化、新执行方法和必要认证修正；保留 v5 的已承诺签名，标记废弃，不在 patch 里删除。SDK 6.x 删除确认失效的 getDeepReading、getMasterInfo 别名、误导的 query token 参数及通用 ResponseMeta 废弃类型，采用当前仍实际存在的任务/鉴权入口。仍应工作的认证能力必须有替代调用示例，不能只删方法。</p>
+  <p id="vvIiFjal">SDK v6 的普通 AI 读取在准备版和 v18 上都只读，并用 generationMetrics 展示元数据。api-client/legacy 子入口、CLI 的 V2 响应适配保留；CLI 访问 Core v18 使用 API v3 的 profile，不把服务端版本号当成 API 版本。其他有效路由别名保持，文档标规范入口，长期资源地址继续可用。</p>
+  <table id="kqtkNNV_">
+    <tr>
+      <th>
+        <p>组合</p>
+      </th>
+      <th>
+        <p>支持边界</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>准备版 Core v17.x + 原客户端</p>
+      </td>
+      <td>
+        <p>准备阶段保持旧 HTTP 方法和旧 API 字段可用；尚未完成客户端迁移时不切 v18。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>准备版 Core v17.x + SDK 兼容 5.x</p>
+      </td>
+      <td>
+        <p>可提前迁移 POST、规范排序和认证调用，为下一大版本做准备。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>准备版 Core v17.x + SDK 6.x / 新官方主题</p>
+      </td>
+      <td>
+        <p>支持；SDK 显式只读，新入口都已在准备版提供。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>Core v18 + 匹配的内置 Admin、SDK 6.x、已验证 CLI/主题版本</p>
+      </td>
+      <td>
+        <p>正式支持。发布时填写实测 tag/版本，不使用“最新版”代替确切组合。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>Core v18 + 未适配的客户端</p>
+      </td>
+      <td>
+        <p>旧执行 GET、数字排序、旧字段可能失败；不能声明兼容。除已确定移除的契约外，长期别名和 SDK legacy 适配仍保留。</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="NtJRqqc6">第一轮已确认的改动与源码证据</h2>
+  <table id="vLA0FmRL">
+    <tr>
+      <th>
+        <p>兼容项</p>
+      </th>
+      <th>
+        <p>已确认的 v18 边界</p>
+      </th>
+      <th>
+        <p>影响与前置条件</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>关闭字段加密、无显式密钥、machine-id 回退</p>
+      </td>
+      <td>
+        <p>已确定结束。启动要求显式提供 64 位十六进制密钥；关闭加密直接给出明确错误。</p>
+      </td>
+      <td>
+        <p>现有未加密实例必须先完成准备。已有密钥继续使用，不在普通升级中重新生成。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>MX_SECRET_STORAGE_V2=false 的旧写入模式</p>
+      </td>
+      <td>
+        <p>已确认：结束旧格式写入，统一配置及 Snippet 的 AES-GCM、Webhook 加密、API Key 哈希与 OAuth 加密；退役滚动升级开关。</p>
+      </td>
+      <td>
+        <p>需要稳定且至少 32 字符的 JWT_SECRET，以及既有凭据 backfill 和多副本切换方案。短 JWT 实例的处理路径尚需在正式设计中补齐。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /comments?state= 的旧列表过滤参数</p>
+      </td>
+      <td>
+        <p>已确认移除这个查询别名，统一使用 tab。</p>
+      </td>
+      <td>
+        <p>0 → unread、1 → read、2 → junk，all → all。仅移除列表查询别名，评论状态字段和修改状态操作仍有效。当前 Admin 列表已发送 tab。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>GET /recently/attitude/:id 的写操作</p>
+      </td>
+      <td>
+        <p>已确认在消费者准备完成后移除，统一使用已有 POST 接口。</p>
+      </td>
+      <td>
+        <p>当前 api-client 的 attitude() 仍发送 GET，Yohaku 的速记页面正在调用它。必须先发布兼容 SDK 并升级消费者，不能直接删除服务端路由。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>启动时转换旧 AI、第三方服务、会员配置</p>
+      </td>
+      <td>
+        <p>已确认用一次性、可重复的数据迁移替代长期读取兼容，迁移后只接受新形状。</p>
+      </td>
+      <td>
+        <p>包括独立 imageGenerationOptions / ttsOptions、githubToken、dodoApiKey 等。当前 normalize 后主要写 Redis，不能把“后台看起来正常”当成数据库已迁移。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>已无效果的启动参数与 MongoDB 启动摘要</p>
+      </td>
+      <td>
+        <p>已确认移除 --disable_cache、--http_cache_ttl、--color 等无效参数声明，清理 MongoDB 摘要与废弃别名。</p>
+      </td>
+      <td>
+        <p>带旧 CLI 参数的启动脚本需要调整；MongoDB 摘要清理属于日志纠错，不是再次迁移数据库。PostgreSQL 迁移历史保留。</p>
+      </td>
+    </tr>
+  </table>
+  <details id="d_conjZE" summary="当前源码与消费者证据" open="false">
+    <ul>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/app.config.ts">app.config.ts</a>：V2 开关、JWT 长度前提和机器标识回退；<a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/utils/encrypt.util.ts">encrypt.util.ts</a>：v17 逃生口、ECB 与 GCM 读写。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/comment/comment.service.ts">评论过滤兼容</a>和<a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/recently/recently.controller.ts">速记 GET 废弃标记</a>均真实存在；<a href="https://github.com/mx-space/core/blob/v17.0.4/packages/api-client/controllers/recently.ts">SDK 的 attitude()</a> 仍使用 GET。本地 Yohaku/apps/web 的 thinking/item.tsx 调用了该方法。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/configs/configs.service.ts">ConfigsService</a> 中存在 normalizeAiConfig、normalizeThirdPartyConfig 和 normalizeMembershipConfig，初始化后的 setConfig 只写 Redis。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/database/app-migrations/registry.ts">迁移注册表</a>目前仅在 MX_MIGRATE_SECRETS=1 时注册凭据 backfill。schema 已是最新并不能证明凭据已完成加固。</li>
+    </ul>
+  </details>
+  <h3 id="SVvy6KMH">继续保留的兼容边界</h3>
+  <ul id="r9Ds5OFA">
+    <li><b>旧数据读取：</b>ECB / 历史明文的迁移读取、旧 ZIP 和 v1 加密备份恢复、旧 bcrypt 密码登录及登录后的自动升级。停止旧写入不意味着让已有数据失效。</li>
+    <li><b>有明确用途的环境变量别名：</b>MX_ENCRYPT_KEY / ENCRYPT_KEY、REDIS_URL 等。它们服务于不同部署平台，删除收益很低；文档应该写清优先级。</li>
+    <li><b>当前有效协议：</b>/api/v3、响应 envelope、wire snake_case 不因服务端版本升到 v18 而一起重做。请求大小写归一化也先保留。</li>
+    <li><b>独立包的兼容承诺：</b>api-client/legacy 和 CLI 的 V2 响应适配先单独审计、按包版本决定，不捆绑删除；CLI 默认 API 版本仍回落到 2，是独立的候选改进。</li>
+    <li><b>历史迁移与当前 REST 写入口：</b>不删除 SQL 迁移链和迁移账本；Drafts 中名为 legacyWrite 的路径仍被当前 REST create/update 使用，不能按名字当成废代码。</li>
+  </ul>
+  <h2 id="w7tbE500">第二轮已确认：隐式行为与兼容收尾</h2>
+  <p id="2gnuixb8">第二轮七项均已提交。下表保留发现时的证据，并记录确认后的边界；不再作为开放候选。</p>
+  <table id="IA24lgwk">
+    <tr>
+      <th>
+        <p>候选项</p>
+      </th>
+      <th>
+        <p>当前证据</p>
+      </th>
+      <th>
+        <p>建议与影响</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p><b>读取 AI 资源不再隐式生成</b></p>
+      </td>
+      <td>
+        <p>摘要和精读的 GET /article/:id 在缺少结果且未传 onlyDb 时会进入生成逻辑。Yohaku 的 getInsights() 调用未设置 onlyDb。</p>
+      </td>
+      <td>
+        <p>已确认普通 GET 只读，缺结果返回 data: null，生成通过明确的任务或生成动作触发。官方前端展示尚未生成状态，不自动以另一请求恢复旧的隐式生成行为。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><b>所有执行类 GET 的 HTTP 语义</b></p>
+      </td>
+      <td>
+        <p>除了速记表态，还有 GET /backups/new、/clean_catch、/clean_redis、/health/email/test。AI /article/:id/generate 则是现有 GET SSE 入口。</p>
+      </td>
+      <td>
+        <p>已确认备份、清缓存、测试邮件改为 POST；现有 GET SSE 与 token/done/error 帧协议保留。备份创建使用 POST /backups/new，不与上传恢复的 POST /backups 冲突。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><b>未知配置字段不再静默忽略</b></p>
+      </td>
+      <td>
+        <p>section() 使用 z.object()，ConfigsService 返回 safeParse 的 result.data。实际 SeoSchema.safeParse({ nonexistentConfigFlag: true }) 成功且丢弃该字段。</p>
+      </td>
+      <td>
+        <p>已确认配置写入拒绝未知字段并报告路径。保留请求大小写归一化；meta、Snippet JSON 等自由结构继续允许自定义键，不做全局严格化。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><b>完成 AI 元数据的数据库 contract</b></p>
+      </td>
+      <td>
+        <p>0029 迁移写明 ai_translations.ai_model / ai_provider 和 ai_insights.model_info 等待一个版本后删除。但当前翻译仍双写，repository 仍读取旧列，SDK 与 Admin 仍暴露或回退到旧字段。</p>
+      </td>
+      <td>
+        <p>已确认统一到 generationMetrics。准备版补齐指标、停止所有旧列引用，并从新指标派生旧响应字段维持 v17 API；v18 再移除旧响应字段及物理列。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>数字排序参数 1 / -1</p>
+      </td>
+      <td>
+        <p>zSortOrder 专门把数字及数字字符串转换为 asc / desc；SDK 类型仍允许数字，Yohaku 的文章列表和话题页面仍传数字。</p>
+      </td>
+      <td>
+        <p>已确认服务端统一为 asc / desc。兼容 SDK 先规范化输出，SDK v6 类型及官方消费者改用字符串，再收紧服务端。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>SDK 已废弃或失效的方法、参数、类型</p>
+      </td>
+      <td>
+        <p>getDeepReading() 注释确认对应功能已从 Core 移除；getMasterInfo() 只是别名；checkTokenValid(token) 和 generateSummary(..., token) 仍传 query token，但 Core 已只识别 x-api-key；ResponseMeta 已有更具体的替代类型。</p>
+      </td>
+      <td>
+        <p>已确认协调 SDK 下一大版本并发布明确版本矩阵。修复仍应工作的认证能力；删除死接口和误导参数，独立说明 SDK 的破坏性变更。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>重复路由入口</p>
+      </td>
+      <td>
+        <p>同时存在 /owner 与 /user、/recently 与 /shorthand、/options 与 /config、/serverless 与 /fn、/objects 与 /files，以及备份恢复的多条等价路径。</p>
+      </td>
+      <td>
+        <p>已确认保留有效别名，文档标规范入口；不追加删除管理别名。/objects 与 /fn 等持久资源/函数地址继续可用。</p>
+      </td>
+    </tr>
+  </table>
+  <details id="5Ewo3Y53" summary="补充源码证据与阶段限制" open="false">
+    <ul>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/ai/ai-summary/ai-summary.service.ts">摘要 getOrGenerateSummaryForArticle()</a> 与 <a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/ai/ai-insights/ai-insights.service.ts">精读 getOrGenerateInsightsForArticle()</a>：onlyDb 为真才在缺结果时直接返回。对应 schema 没有将其默认设为真。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/backup/backup.controller.ts">备份创建与恢复路由</a>、<a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/app.controller.ts">清缓存路由</a>和<a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/health/health.controller.ts">测试邮件路由</a>均真实存在；本轮仅阅读源码，没有调用这些执行接口。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/configs/configs.zod-schema.util.ts">section()</a> 与 <a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/modules/configs/configs.service.ts">validWithDto()</a>：未知配置可被静默丢弃，已用独立 schema 解析验证，未读写实际实例配置。</li>
+      <li><a href="https://github.com/mx-space/core/blob/v17.0.4/apps/core/src/database/migrations/0029_ai_generation_metrics.sql">0029_ai_generation_metrics.sql</a>、<a href="https://github.com/mx-space/core/blob/v17.0.4/packages/db-schema/src/schema/ai.ts">当前数据库 schema</a>与翻译服务确认旧列仍被使用。按仓库 mx-migration-author 规则，删除前必须先发布完全停止旧引用的版本。</li>
+      <li>内部 @deprecated 的缓存封装、decorator、DTO 名字可以作为重构处理；它们不自动构成用户需要阅读的 Breaking Changes。MongoDB ObjectId 校验残留也应作为准确性审计，不包装为新的 ID 格式切换。</li>
+    </ul>
+  </details>
+  <p id="9Ha737v-"><b>mx-docs 追加内容：</b>在 v18 指南提供 HTTP 方法及路径对照、读取与生成边界、未知配置错误示例、sortOrder 的旧新取值、AI 元数据旧新字段，以及 Core / Admin / SDK / CLI / 主题的最低兼容版本表。对长期资源 URL 明确保留策略，不让主题和持久文章内容因清理路由而断链。</p>
+  <h2 id="pAsj_AGx">发布阶段与回退边界</h2>
+  <table id="4MYtvWF9">
+    <tr>
+      <th>
+        <p>阶段</p>
+      </th>
+      <th>
+        <p>必须完成</p>
+      </th>
+      <th>
+        <p>暂不做</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>文档第一批</p>
+      </td>
+      <td>
+        <p>修正当前 v17 事实，补 v15–v17 迁移入口，发布明确标注为计划的 v18 预告与准备说明。</p>
+      </td>
+      <td>
+        <p>不把当前默认页面提前写成已强制 v18。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>兼容准备版 v17.x</p>
+      </td>
+      <td>
+        <p>新增 POST、新 SDK 适配、旧配置转换模块、只读检查、显式迁移和 JWT 轮换工具；AI 指标先补齐并完全停止旧列引用。</p>
+      </td>
+      <td>
+        <p>不删旧数据库列，不让旧 v17 API 的已承诺字段消失，不强制关闭现有 v17 逃生口。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>实例准备</p>
+      </td>
+      <td>
+        <p>所有副本先到准备版；保存原密钥；必要时维护窗口轮换 JWT；启用字段加密，所有副本切 V2 后完成持久化迁移和 backfill；迁官方客户端并通过 readiness 检查。</p>
+      </td>
+      <td>
+        <p>旧写入副本尚在运行时不记录准备完成；不能把 v17.0.4 直接宣传为最终准备版。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>v18 RC</p>
+      </td>
+      <td>
+        <p>在隔离数据库、Redis 和备份副本上真实演练三类加密状态、滚动发布、回退、恢复及完整消费者流程。</p>
+      </td>
+      <td>
+        <p>不在真实站点上试验迁移可逆性或触发真实邮件。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>v18 正式版</p>
+      </td>
+      <td>
+        <p>发布前迁移执行允许的 contract；部署匹配的 Core/Admin，发布 SDK 6.x 和实测版本矩阵；切 mx-docs 默认文档与示例。</p>
+      </td>
+      <td>
+        <p>不删除或移动已发布标签；不全量清 Redis；不强制用户重建已有 API Key。</p>
+      </td>
+    </tr>
+  </table>
+  <p id="b67wFcU7">回退最低版本是“已经停止旧列引用、可读 V2、能读新配置”的实测准备版，不是任意 v17。v18 删除列后回退代码不自动恢复 schema；回到更老版本需要完整的迁移前备份与当时的秘密，并按离线恢复步骤进行。文档必须分别说明代码回退和数据库/文件恢复，不能写成 down/up 即可。</p>
+  <p id="ygVROVt8">历史备份继续可读，但恢复不是绕过准备检查的入口：先验证归档、收集当时的字段密钥/JWT/备份私钥，隔离验证旧数据转换，再对外提供服务。若运行环境无法完成自动隔离预检，应提供离线恢复到准备版 → prepare → v18 的明确路径；不允许显示恢复成功后再把未迁移数据库交给业务请求。旧秘密不得作为新的公共日志或持久表字段保存。</p>
+  <h2 id="quPxkABp">验收与实施者可以自行决定的事项</h2>
+  <ul id="0Oq-XpMX">
+    <li>密钥缺失、非 hex、显式禁用、短 JWT 均得到可区分的检查结果；新装、历史明文、ECB、V2 都完成真实准备与启动。</li>
+    <li>错误原字段密钥、错误旧 JWT、损坏密文或未知存储形状会使迁移失败且不写完成标记；幂等重跑不重复哈希或重置 API Key。</li>
+    <li>AI 普通 GET 缺结果时返回 data: null，且模型、任务和写仓库均未被调用；现有权限、SSE 帧与原 GET 流式入口保持。</li>
+    <li>旧执行 GET 不产生副作用；新 POST 的鉴权、响应、文件下载和前端操作全部实测。SDK 5.x 兼容版、SDK 6.x 与准备版/v18 分别验证。</li>
+    <li>未知配置字段被拒绝；合法部分更新、空秘密保留、自由 JSON 和现有大小写归一化仍可用；数字排序明确失败，SDK 转换后排序结果正确。</li>
+    <li>对删除旧列后的 schema 运行准备版代码，确认没有显式/隐式旧列引用；新指标覆盖旧记录，旧准备版仍可回退运行。</li>
+    <li>历史 ZIP、v1/v2 加密归档恢复路径和原秘密需求验证；恢复失败不报告成功，不把未准备数据直接暴露给业务。</li>
+    <li>mx-docs 按仓库要求完成构建、Astro check、产物死链、pangu、lint 和预览；实际复制生成的 YAML 并解析验证，检查默认 v18 与历史 v17 的版本标识及 llms 产物。</li>
+  </ul>
+  <p id="ciA1sUCH">实现者可决定内部模块划分、CLI 参数布局、事务批次和测试 fixture 组织；必须满足上述行为与失败边界。准备版最低版本号、具体迁移 id 和官方消费者最低 tag 由实施与发布验证后固定，不在设计阶段虚构。不得用常量表快照或源码文本匹配替代升级与请求行为测试。</p>
+  <p id="VTo9sZm0">当前基线已有 admin-agent.e2e-spec.ts 缺 AiAgentConversationRepository 的测试装配失败；它不属于本设计的功能变更。后续验证需明确列出其状态，不能把它掩盖为全量通过；仅在实际影响本次验收时另行处理。</p>
+  <h2 id="afOtcP_d">设计记录与交付位置</h2>
+  <p id="d5mnWj5d">本轮使用的唯一讨论文档为 document/mx-core-v18-compatibility，路径 .ryugi/artifacts/document/mx-core-v18-compatibility/doc.xml，链接 https://ryugi.innei.dev/a/ZTsqm6DOJbAGibGoCjgD1。两轮十三项选择及处理说明保留在文末；没有使用 UI mockup 或改变现有 Admin/文档视觉风格。</p>
+  <p id="LxjRFILY">设计确认后的规范文件拟保存到 docs/ryugi/specs/2026-11-08-mx-core-v18-compatibility-design.md；内容应自包含并保留本页的决策、源码基线、发布阶段与验收，不要求实施者另查聊天记录。正式文档站为 mx-space/docs（Astro + Fumadocs），不是将 Core 内部设计直接贴为用户指南。</p>
+  <h2 id="97c3Fnoj">升级路径与发布说明</h2>
+  <p id="dl13aB9A">已确认：只支持从“完成准备的最新 v17.x”直接升 v18。更老版本先按历史指南补到 v17；不宣称任意旧版本都能直接 pull latest。v17.0.4 已带新密文读取器，后续准备版本需补齐检查与持久化迁移，确切最低版本在实施与验证后固定。</p>
+  <mermaid id="KlTkrNjV">flowchart TD
+    A[旧版本实例] --&gt; B[按既有指南升级到准备版 v17.x]
+    B --&gt; C[保留原密钥并检查显式加密配置]
+    C --&gt; D[完成旧配置持久化转换及消费者准备]
+    D --&gt; F[所有副本切换 V2 后执行凭据 backfill]
+    F --&gt; H[验证准备条件并部署 v18]
+    H --&gt; I[验证登录、配置、发布、API Key、OAuth 和备份恢复]
+  </mermaid>
+  <steps id="8iuWhXcc">
+    <step id="s_js1b6of2" title="先做可检查的准备">
+      <p>保存数据库、数据目录和密钥；检查密钥格式、短 JWT、旧配置形状、消费者版本与 migration ledger。检查只输出字段或记录计数，不输出秘密值。</p>
+    </step>
+    <step id="s_icsbtwhk" title="把转换放到发布前阶段">
+      <p>配置转换和凭据 backfill 应作为独立、可重复的迁移任务，成功后才能切服务。运行时不偷偷做不可见的数据修复。先确保全部旧副本都停止旧格式写入，再 backfill，避免明文被重新写回。</p>
+    </step>
+    <step id="s_6g8b22iy" title="为错误准备明确出口">
+      <p>缺密钥、密钥格式错误、未完成准备和旧配置未迁移应分别报错，并链接对应升级步骤。密钥丢失不能以生成新密钥来“修复”。</p>
+    </step>
+    <step id="s_lf1ua0gc" title="发布前跑真实升级与恢复演练">
+      <p>覆盖原先未加密、已有 ECB、已用 V2 三种实例；验证登录、OAuth、旧 API Key 可用性、配置保存与遮蔽、文章发布、SDK 调用和历史备份恢复。多副本切换与回滚边界需要单独验证。</p>
+    </step>
+  </steps>
+  <alert id="TnYhjdPD" type="important">
+    <p>此前日志里的 JWT_SECRET 只有 19 字符。既然已确认统一 V2，就必须给这类实例单独提供密钥轮换或重新授权步骤，并说明会话影响；不能在通用升级命令里直接覆盖 JWT_SECRET。已有 OAuth 密文依赖原 JWT_SECRET。</p>
+  </alert>
+  <h3 id="nfuRCq-1">对外说明怎么写</h3>
+  <p id="5SHziG54">每项破坏性变更只回答五件事：哪些实例受影响；过去怎样、现在怎样；升级前做什么；做完如何验证；允许退回到哪里。把已在 v15–v17 发生的变更与本次 v18 的新变更分开，不让文档补课看起来像 v18 再次破坏兼容。</p>
+  <codeblock id="Es3QhVy-" lang="markdown">- **字段加密**：v18 不再支持关闭加密或机器标识回退。
+  **影响**：未配置显式 ENCRYPT_KEY，或仍关闭加密的现有实例。
+  **Migration**：先升级到准备版 v17.x，保留或配置合法密钥并完成准备检查，再部署 v18。
+  **验证**：健康检查、登录、读取并保存敏感配置、历史凭据可用。
+  **回退**：只回到确认支持当前密文格式的版本；保留数据库与原密钥。
+</codeblock>
+  <details id="Abe__KCZ" summary="后续实施设计必须补齐的技术约束" open="false">
+    <ul>
+      <li>当前 migrate.mjs 串联 schema 与 slim app-data runner；不应重新引入整个业务 AppModule。新的准备条件也应覆盖自定义 Docker 编排和源码部署。</li>
+      <li>旧配置要先转换并持久化，再完成敏感字段 backfill。V2 密文绑定字段路径，迁移字段时需按原路径解密、按新路径加密，不能直接搬运字符串。</li>
+      <li>旧备份恢复后也可能重新出现旧数据，因此即使运行时已完成收口，恢复/导入流程仍需要转换能力。不能只检查一次迁移账本就假定以后永远没有旧格式。</li>
+      <li>历史 bcrypt 密码无法在不知道明文密码的前提下批量重哈希；当前登录时升级路径应保留。</li>
+    </ul>
+  </details>
+  <h2 id="WJOoLO02">mx-docs 修改地图</h2>
+  <p id="CGb2gywW">官方文档当前迁移导航只覆盖到 v14，存在已经落后于 v17 的内容。已确认分两批：先修正当前发布版本的事实并发布 v18 预告；v18 真正发布时，再切换默认示例与必填要求。预告不能写成已经生效的行为。</p>
+  <table id="pLpKOldm">
+    <tr>
+      <th>
+        <p>页面或文件</p>
+      </th>
+      <th>
+        <p>现状或缺口</p>
+      </th>
+      <th>
+        <p>建议修改</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/configure/encryption.mdx">configure/encryption.mdx</a></p>
+      </td>
+      <td>
+        <p>仍写可选加密、machine-id 回退、短密钥派生和 hex 不在启动时校验；并建议报错后重新生成密钥。</p>
+      </td>
+      <td>
+        <p>先按 v17 修正严格密钥校验与逃生口边界；v18 时改为强制配置。区分字段密钥、JWT_SECRET 与备份恢复私钥，并写清已有密钥不得随意替换。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/configure/environment.mdx">configure/environment.mdx</a></p>
+      </td>
+      <td>
+        <p>缺少 V2 / backfill 变量；JWT 建议 16–32；Redis 优先级表述自相矛盾。</p>
+      </td>
+      <td>
+        <p>标注版本与必填条件，写清 REDIS_CONNECTION_STRING → REDIS_CONNECTION → REDIS_URL 的真实优先级。先记录 v17 行为，v18 删除退役选项并列迁移替代。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/deploy/docker.mdx">deploy/docker.mdx</a> 与 <a href="https://github.com/mx-space/docs/blob/main/src/components/env-variable-config.tsx">env-variable-config.tsx</a></p>
+      </td>
+      <td>
+        <p>把加密作为选项；YAML 生成器却生成 - KEY=value 列表，与页面要求的 x-mx-env 映射不符。</p>
+      </td>
+      <td>
+        <p>新装示例生成随机、持久保存的实例密钥；修正复制结果为 KEY: value 并正确引用字符串。迁移与 app 共用环境；固定已发布版本的镜像与编排链接。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/getting-started/quick-start.mdx">getting-started/quick-start.mdx</a></p>
+      </td>
+      <td>
+        <p>承诺无需填写环境变量、全部默认即可启动。</p>
+      </td>
+      <td>
+        <p>v18 的快速体验也必须创建并保存随机密钥；不能用公开示例密钥维持“零配置”承诺。保持步骤短，并与正式部署使用同一配置契约。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/deploy/source.mdx">deploy/source.mdx</a></p>
+      </td>
+      <td>
+        <p>仍写 Node 22.12+、可选密钥，示例缺发布前迁移步骤。</p>
+      </td>
+      <td>
+        <p>Node 26 已是 v15 的要求，应立即纠正。v18 示例补必填配置、迁移前置与统一构建入口，不重复执行等价构建命令。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/use/backup-restore.mdx">use/backup-restore.mdx</a></p>
+      </td>
+      <td>
+        <p>只有 ZIP 流程，缺加密备份、恢复私钥和格式区别。</p>
+      </td>
+      <td>
+        <p>补 .mxbackup、公钥与私钥分工、旧格式恢复、凭据原密钥仍需保留。明确字段加密必填不等于备份加密也必填。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/use/ai-features.mdx">use/ai-features.mdx</a>、<a href="https://github.com/mx-space/docs/blob/main/content/docs/use/comments.mdx">use/comments.mdx</a>、configure/account-security.mdx</p>
+      </td>
+      <td>
+        <p>AI 语言示例仍以 zh/en/ja 为主；评论页只写三个标签；未说明准备期的凭据迁移。</p>
+      </td>
+      <td>
+        <p>按当前真实配置与 UI 核对；补 BCP 47、六个评论 tab、旧配置转换和 Token 只显示一次的操作说明。开发者参数变更集中放升级指南，不塞进普通使用步骤。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>新增 migrate/v17-to-v18.mdx；更新 migrate/index.mdx、meta.json、use/update.mdx</p>
+      </td>
+      <td>
+        <p>尚无 v18 入口。</p>
+      </td>
+      <td>
+        <p>提供影响矩阵、准备条件、Docker/源码/多副本步骤、验证和回退边界；在更新页直接链接，不仅贴一串提交记录。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>补 v14-to-v15、v15-to-v16、v16-to-v17 迁移页与导航</p>
+      </td>
+      <td>
+        <p>已发布的大版本缺升级入口。</p>
+      </td>
+      <td>
+        <p>分别补 Node 26、BCP 47 语言代码，以及 v17 Agent 协议与旧对话清空说明。这些是历史变更，不列成 v18 新破坏项。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><a href="https://github.com/mx-space/docs/blob/main/content/docs/deploy/agent.mdx">deploy/agent.mdx</a>、public/agent-skills/*、llms.txt / llms-full.txt</p>
+      </td>
+      <td>
+        <p>Agent 部署模板未覆盖必填字段加密密钥。</p>
+      </td>
+      <td>
+        <p>同步 Agent 使用的材料和生成产物，避免人读的页面更新了，Agent 还照旧模板部署。LLM 目录是构建生成，验证产物即可，不手工拼接副本。</p>
+      </td>
+    </tr>
+  </table>
+  <h3 id="xNKgar7b">文档发布节奏</h3>
+  <ol id="uiW_XmBI">
+    <li><b>现在：</b>修正 v17 事实、补缺失的 v15–v17 迁移页，单独标注“v18 准备中”的预告，不提前改变当前版本说明。</li>
+    <li><b>准备版 v17.x：</b>发布检查工具、一次性配置迁移、新 POST、旧列解除引用和 SDK 兼容版，提供可以照着完成的准备指南；这些范围已在两轮提交中确认。</li>
+    <li><b>v18 RC：</b>用实际升级演练核实指南中的每条命令，覆盖三种既有加密状态、源码和 Docker、多副本以及历史备份恢复。</li>
+    <li><b>v18 正式版：</b>发布必填配置与新装示例、保留固定到 v17 的部署/加密说明入口，并给旧入口加版本标识与升级链接。Core README、.env、Compose 和 mx-docs 同一批核对。</li>
+  </ol>
+  <p id="Vmuyf4sv">正式修改 mx-docs 时按其仓库要求验证：build、Astro check、产物死链、pangu、lint，并预览配置生成器复制出的 YAML。讨论阶段未运行构建，也未修改这些正式页面。</p>
+  <h2 id="a6YEpE00">第二轮：已提交的选择</h2>
+  <details id="wC68wYiX" summary="展开查看第二轮七项选择及处理结果" open="false">
+    <p id="H2SVVEoj">七项均已按推荐提交并应用到设计。它们确认本次范围，尚不表示已经开始实现或发布。</p>
+    <h3 id="ceazVCDU">1. 摘要与精读的普通 GET 是否只读？</h3>
+    <p id="yi28mH9b">我的推荐：缺结果返回空结果，由发布流程或明确的生成动作创建；保留现有的权限与付费校验，前端显示尚未生成的状态。</p>
+    <p id="5BYaey3q"><ask id="ai-read-only" recommend="read-only"><option value="read-only">GET 只读，生成显式触发</option><option value="keep-on-demand">继续支持读取时按需生成</option></ask></p>
+    <p id="bW1e6u6i">理由：区分“读取内容”和“调用模型产生新资源”，也能明确访客访问是否应触发生成。</p>
+    <h3 id="KSMRRLpq">2. 其余执行类 GET 这次收口到哪里？</h3>
+    <p id="Vp3a-9OV">我的推荐：备份、清缓存、测试邮件改为执行类方法；现有 GET SSE 生成入口暂留，帧格式保持不变。</p>
+    <p id="PsIDzLox"><ask id="execution-get-scope" recommend="non-stream"><option value="non-stream">改非流式执行 GET，SSE 暂留</option><option value="including-sse">SSE 生成也迁到 POST</option><option value="defer">这次只改已确认的速记表态</option></ask></p>
+    <p id="b3N4k2tb">理由：SSE 还涉及 EventSource 与主题消费方式，和普通管理接口的迁移成本不同。</p>
+    <h3 id="P3h7Avkh">3. 配置写入是否拒绝未知字段？</h3>
+    <p id="bq9UBIR-">我的推荐：未知配置项返回明确验证错误；已确定的旧字段先经迁移准备，大小写归一化和自由 JSON 内容仍保留。</p>
+    <p id="grkzKG9R"><ask id="strict-config-fields" recommend="reject"><option value="reject">拒绝未知配置字段</option><option value="strip">继续静默忽略未知字段</option></ask></p>
+    <p id="G6QAPSjB">理由：用户或脚本拼错字段时，不应得到看似成功但实际没有生效的结果。</p>
+    <h3 id="YjSVrak-">4. 是否完成 AI 元数据旧字段与旧列的收尾？</h3>
+    <p id="TXSzjgDi">我的推荐：纳入，准备版先补齐 generationMetrics 并停止旧列引用，v18 再删旧响应字段和旧列；v17 的旧响应可从新指标派生，避免提前破坏 API。</p>
+    <p id="N0eFqKhv"><ask id="ai-metrics-contract" recommend="include"><option value="include">分阶段纳入 v18</option><option value="defer">本轮继续保留旧字段和列</option></ask></p>
+    <p id="Rcix5aW8">理由：现有迁移已经规划了这个 contract 阶段，但当前旧副本仍在使用这些列，必须先消除引用。</p>
+    <h3 id="PHo4zzW3">5. 服务端是否结束数字排序值兼容？</h3>
+    <p id="wygnQQnX">我的推荐：服务端统一 asc / desc；准备版 SDK 先把已有 1 / -1 调用转换为字符串，再升级官方消费者。</p>
+    <p id="vnXR4OAQ"><ask id="numeric-sort-values" recommend="canonical"><option value="canonical">服务端统一字符串，SDK 先适配</option><option value="keep-numeric">服务端继续接受数字排序</option></ask></p>
+    <p id="xXjGORRa">理由：已有明确的规范值和转换关系，迁移不需要重做分页或排序功能。</p>
+    <h3 id="bHLPc6sx">6. SDK 是否单独安排一次大版本清理？</h3>
+    <p id="winq_iq6">我的推荐：与 Core v18 协调发布 SDK 大版本，清理已失效接口、query token 参数、旧方法别名和废弃类型；api-client/legacy 与 CLI 的 V2 适配不在这项中自动删除。</p>
+    <p id="taRrgJrn"><ask id="sdk-major-cleanup" recommend="coordinated-major"><option value="coordinated-major">协调 SDK 大版本，清理确认废弃项</option><option value="compatibility-only">SDK 只做本次必须的兼容适配</option></ask></p>
+    <p id="kYtOlmvF">理由：服务端与 SDK 的破坏性变更需要分别说明，版本矩阵应给出可直接采用的组合。</p>
+    <h3 id="YK-aY-C1">7. 其他重复路由入口是否一起删除？</h3>
+    <p id="WJrjTOuK">我的推荐：这次保留有效别名，文档标明规范入口；/objects 和 /fn 等长期资源/函数地址明确保留。已在第一轮同意删除的 state 查询和速记表态 GET 不受这一项影响。</p>
+    <p id="7XBR7tZf"><ask id="route-aliases-scope" recommend="document-only"><option value="document-only">保留有效别名，文档统一规范入口</option><option value="management-only">审计后删除纯管理别名，长期 URL 保留</option></ask></p>
+    <p id="U6hTsMG4">理由：重复入口不等于无人使用，长期链接的稳定性也不同于管理客户端的一次调用。</p>
+  </details>
+  <h2 id="njlg3rv3">第一轮：已提交的选择</h2>
+  <details id="D_p6LKeH" summary="展开查看第一轮六项选择及处理结果" open="false">
+    <h3 id="rNUYuCdL">1. 分岔项：安全存储这次是否直接统一到 V2？</h3>
+    <p id="F-olfJXa">我的推荐：字段加密必填之外，同时结束旧格式写入；具体迁移命令、JWT 轮换办法和回退最低版本在这一项选定后展开。</p>
+    <p id="LQ6HyI3Z"><ask id="v2-write-scope" recommend="unify"><option value="unify">统一 V2 写入，移除兼容开关</option><option value="required-only">只强制字段加密，旧写入格式暂留</option></ask></p>
+    <p id="lAALC_Yo">理由：否则 v18 即便强制加密，仍会保留 ECB 和部分凭据明文写入分支，安全收口不完整。</p>
+    <h3 id="4ytx6Pi8">2. 旧数据、旧备份与旧密码的读取是否继续保留？</h3>
+    <p id="O-VYunhk">我的推荐：保留迁移/恢复读取器及 bcrypt 登录后升级；不把历史数据无法读取当作清理目标。</p>
+    <p id="98D7Y8jd"><ask id="legacy-readers" recommend="keep"><option value="keep">保留旧格式读取与恢复能力</option><option value="migration-only">运行时仅新格式，旧格式只走专用迁移工具</option></ask></p>
+    <p id="HGNUCyeh">理由：新写入可以收紧，历史备份和无法批量重哈希的密码仍需要可用的恢复路径。</p>
+    <h3 id="drrwijst">3. 是否要求先完成准备版 v17.x，再升级 v18？</h3>
+    <p id="o5JLrkT3">我的推荐：要求经过准备版本并通过检查；更老版本按历史迁移链先补到 v17。</p>
+    <p id="vzaFyNma"><ask id="upgrade-floor" recommend="prepared-v17"><option value="prepared-v17">只支持准备完成的 v17.x 直接升级</option><option value="direct-older">同时建设旧版本直接升级路径</option></ask></p>
+    <p id="8BdPg_1G">理由：可以把旧配置、缺失密钥和消费者问题暴露在服务仍正常运行的准备阶段，减少切换时失败。</p>
+    <h3 id="LruqHEAb">4. 这次是否删除已废弃的外部接口别名？</h3>
+    <p id="ysg_GM1K">我的推荐：包含 comments 列表的 state 查询别名与 recently 表态 GET；以兼容 SDK 已发布、官方消费者已升级为移除门槛。</p>
+    <p id="OONu2Hvq"><ask id="deprecated-api-scope" recommend="include"><option value="include">纳入 v18，先迁消费者再移除</option><option value="defer">v18 聚焦安全，接口别名留待后续</option></ask></p>
+    <p id="M96jSc2D">理由：两者已有明确替代，不需要重做 API 版本或响应格式，但当前速记 SDK 调用确实必须先修。</p>
+    <h3 id="p2jnMqWI">5. 旧配置转换是否改成一次性持久化迁移？</h3>
+    <p id="STTbu-LD">我的推荐：纳入本轮，迁移 AI、第三方服务与会员配置后移除对应读取兼容；无效 CLI 参数与错误日志一并清理。</p>
+    <p id="vQud0bFA"><ask id="legacy-config-scope" recommend="migrate"><option value="migrate">迁移后收口为新配置形状</option><option value="keep">暂时继续在运行时转换</option></ask></p>
+    <p id="PMSvHPYZ">理由：这类兼容隐藏了真实数据库状态，持续保留会让后续迁移和文档更难判断。</p>
+    <h3 id="S4GEYXtB">6. 文档是否分成“当前版本纠错”和“v18 切换”两批？</h3>
+    <p id="eG0Qjq41">我的推荐：先按 v17 修正文档和补历史指南；正式发布 v18 时切默认文档，并保留 v17 的关键部署说明入口。</p>
+    <p id="hXwWaDN1"><ask id="docs-rollout" recommend="two-phases"><option value="two-phases">分两批，保留旧版本关键入口</option><option value="single-cutover">全部等到 v18 发布时一次更新</option></ask></p>
+    <p id="vz4ax_LB">理由：现在的文档已有会影响部署的事实错误，不必等到 v18；同时不能把尚未实现的要求描述成当前行为。</p>
+  </details>
+  <h2 id="jIKxqP2S">最终设计确认</h2>
+  <p id="j_KY20hf">独立实施者已按完整设计检查“是否还需要会改变实现范围的关键答案”，结果为 nothing important left。此检查不是代码测试或上线验收；本轮尚未实现功能。</p>
+  <p id="aZc_nbWy">下面是我补齐的工程选择，请在确认前重点核对：</p>
+  <table id="IJCCFOPb">
+    <tr>
+      <th>
+        <p>选择</p>
+      </th>
+      <th>
+        <p>设计中的处理</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>短 JWT</p>
+      </td>
+      <td>
+        <p>维护窗口内用秘密文件提供旧、新 JWT，事务重封装 OAuth token，然后所有副本使用新 JWT；明确要求重新登录，不清空 token，不改变原字段密钥或 API Key 字符串。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>旧开关</p>
+      </td>
+      <td>
+        <p>v18 对显式 false 给出迁移错误；true 暂接受并提示可删除。新写入恒定 V2，旧算法设置只服务历史读取。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>发布次序</p>
+      </td>
+      <td>
+        <p>先发准备版 v17.x 与 SDK 5.x 兼容版，完成旧列解除引用、迁移和消费者准备；再协调 v18、匹配 Admin、SDK 6.x 与正式文档切换。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>HTTP 与恢复细节</p>
+      </td>
+      <td>
+        <p>非流式执行接口保持原路径改 POST；普通 AI GET 缺结果返回 data: null。历史备份需转换验证后再服务，不能自动预检的环境提供离线准备路径。</p>
+      </td>
+    </tr>
+  </table>
+  <p id="oklm1u_4"><ask id="v18-design-confirmation" recommend="prepare"><option value="prepare">确认设计，开始准备版实施</option><option value="design-only">确认设计，暂不开始实施</option><option value="revise">需要调整设计，先看我的评论</option></ask></p>
+  <p id="fczTj9LN">选择开始实施后，先保存并提交自包含规范文件，再按已确认设计推进准备版；不直接发布 v18 或操作真实站点数据。</p>
+  <h2 id="TVV55-WS">Admin 设置页验收（2026-11-09）</h2>
+  <p id="4AUY6vOg">隔离数据库中的旧配置经正式迁移后，实测 GitHub、会员、SMTP 与 AI 编辑器的保存和刷新回显；5 个凭据原值保留且仍以 V2 加密。18 个设置分区的真实 Admin 客户端读回保存检查发现评论上传 MB 字段的大小写不匹配；补充 3 项先失败后通过的回归后，18 个分区全部通过。后端依 schema 还原已声明字段名，前端依同一表单 schema 还原输入值键名，未知字段仍严格拒绝。实际截图和保存录像如下，用户已在验收页及对话中确认通过。</p>
+  <p id="4H_ayUQ1"><ref artboard="verify-admin-settings" to="48IrQ95Vj1VecQTZtWKtf" group="comment-upload" /></p>
+</doc>
+

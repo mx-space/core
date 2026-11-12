@@ -1,0 +1,452 @@
+<doc>
+  <h1 id="yi_JyR8V">编辑器 agent：会话状态归服务端（设计）</h1>
+  <p id="68pgGgC7">本文是可直接照着实现的设计，各节可评论；君批准后存入 <code>docs/ryugi/specs/2026-11-07-agent-session-state-design.md</code>。标「吾定」者为吾之取舍，请重点看。</p>
+  <h2 id="J3xPsrv3">1. 意图</h2>
+  <p id="yadT98q3">服务端在 run 内已维护完整 transcript，WS 连接也是有状态的。现状却是：</p>
+  <ul id="tFmN35oA">
+    <li>客户端每次 run、steer、tool result 都重传 system 文本、tool schema 和文件全文；</li>
+    <li>DB 同一段对话存两份：UI bubbles（<code>messages</code>）和模型历史（<code>transcript</code>），互不同步。</li>
+  </ul>
+  <p id="pmFvEWk5">本项目改成：<b>transcript 为唯一来源，传输只发增量</b>。会话数据是一次性的，君定：<b>旧数据全部丢弃，旧逻辑一次清干净，不做任何兼容</b>。</p>
+  <h2 id="o4cvZdv4">2. 目标与非目标</h2>
+  <table id="QJC3_LbZ">
+    <tr>
+      <th>
+        <p>目标</p>
+      </th>
+      <th>
+        <p>非目标</p>
+      </th>
+      <th>
+        <p>反目标（不得发生）</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>同一连接内，不变的 system / tools 只发一次；文件只发补丁</p>
+      </td>
+      <td>
+        <p>上下文压缩、旧 tool result 折叠（君定不做）</p>
+      </td>
+      <td>
+        <p>保留任何只为兼容而存在的代码路径</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>会话表重建：只存 transcript 与 review_state，没有 <code>messages</code></p>
+      </td>
+      <td>
+        <p>断连后续接 run（君定维持中止）</p>
+      </td>
+      <td>
+        <p>模型看到的 transcript 内容与改动前不同</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>会话由服务端创建；删除连接内存路径、bubbles 回填、REST 建会话、messages 同步等全部旧逻辑</p>
+      </td>
+      <td>
+        <p>保留旧会话；新旧 admin 与 server 互相兼容（君定都不要）</p>
+      </td>
+      <td>
+        <p>补丁基线错位导致服务端拿到错误的文件内容</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="Zez_4Wn-">3. 约束</h2>
+  <ul id="zS0EbMVa">
+    <li>Dokploy 两副本滚动部署，新旧 pod 并存数十秒，schema 迁移在发版前单独执行。本项目<b>例外于 expand-contract</b>（君定）：切换的数十秒内，旧 pod 与旧页面的 agent 请求会失败，可以接受；数据可丢，旧代码路径不留。</li>
+    <li>新版 admin 不兼容旧版 server，旧页面也不兼容新版 server（君定）。</li>
+    <li>core 以破坏性大版本发布，release note 写明：AI agent 会话数据清空，admin 与 server 须同版本（君定）。</li>
+    <li>WS 连接固定在一个 pod 上，按连接放在内存的缓存可用；跨连接不共享。</li>
+    <li><code>transcript</code> 用 <code>json</code> 而非 <code>jsonb</code>，以保住 provider 的 prompt cache 前缀（现有注释）；新列沿用此规则。</li>
+  </ul>
+  <h2 id="dm-Qpqe1">4. 决策一览</h2>
+  <table id="MmQXtXNK">
+    <tr>
+      <th>
+        <p>事项</p>
+      </th>
+      <th>
+        <p>决定</p>
+      </th>
+      <th>
+        <p>出处</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>唯一来源</p>
+      </td>
+      <td>
+        <p>服务端 transcript；UI 由它派生</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>reviewState</p>
+      </td>
+      <td>
+        <p>会话行独立列 <code>review_state</code>，变化时小步更新</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>system / tools 去重</p>
+      </td>
+      <td>
+        <p>内容哈希引用，按连接缓存，未命中回 <code>CONTEXT_MISSING</code></p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>文件去重</p>
+      </td>
+      <td>
+        <p>基准哈希 + 补丁，不符回 NACK 补发全文；run、steer、tool result 共用</p>
+      </td>
+      <td>
+        <p>君定；三处共用为吾定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>会话创建</p>
+      </td>
+      <td>
+        <p>服务端在 <code>agent.run</code> 时创建，ack 返回 id</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>历史加载</p>
+      </td>
+      <td>
+        <p>服务端投影成精简 bubbles</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>选区标记、错误气泡</p>
+      </td>
+      <td>
+        <p>不持久化</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>旧会话</p>
+      </td>
+      <td>
+        <p>全部丢弃，表重建</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>兼容</p>
+      </td>
+      <td>
+        <p>不做：一次发版，新旧 admin / server 互不兼容，旧逻辑全删</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>运行中断连</p>
+      </td>
+      <td>
+        <p>中止 run，transcript 保留</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>上下文压缩</p>
+      </td>
+      <td>
+        <p>不做</p>
+      </td>
+      <td>
+        <p>君定</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="hZct1ls2">5. 设计</h2>
+  <mermaid id="dnL3SXMm">sequenceDiagram
+  participant C as Admin 客户端
+  participant S as AiAgentWsHandler
+  participant R as AiAgentRunService
+  participant DB as ai_agent_conversations
+  C-&gt;&gt;S: agent.run {systemHash, toolsHash, files: hash/patch, conversationId?}
+  alt 缓存未命中 / 基线不符
+    S--&gt;&gt;C: ack {ok:false, code: CONTEXT_MISSING | FILE_BASE_MISMATCH}
+    C-&gt;&gt;S: agent.run（补发全文）
+  end
+  S-&gt;&gt;DB: conversationId 为空则建行
+  S--&gt;&gt;C: ack {ok:true, conversationId}
+  S-&gt;&gt;R: run(解析后的完整 payload)
+  R-&gt;&gt;DB: save transcript
+  R--&gt;&gt;C: agent.event / agent.tool.call
+  C-&gt;&gt;S: agent.tool.result（request，files 用补丁）
+  R--&gt;&gt;C: agent.done
+  C-&gt;&gt;DB: PUT review-state（审阅状态变化时）</mermaid>
+  <h3 id="jhPeA3DZ">5.1 数据模型与迁移</h3>
+  <p id="m_EAO2u9">一个迁移，丢表重建，表名不变（吾定：新表本可原地 ALTER，但君要求从零来过，重建最干净）：</p>
+  <codeblock id="o463BcDC" lang="sql">-- migration-lint:allow=drop-table reason=agent conversations are disposable; owner chose to discard all data
+DROP TABLE IF EXISTS &quot;ai_agent_conversations&quot;;
+CREATE TABLE &quot;ai_agent_conversations&quot; (
+  &quot;id&quot; text PRIMARY KEY NOT NULL,
+  &quot;session_id&quot; text NOT NULL,
+  &quot;model&quot; text NOT NULL,
+  &quot;provider_id&quot; text NOT NULL,
+  &quot;title&quot; text,
+  &quot;transcript&quot; json NOT NULL,
+  &quot;review_state&quot; json,
+  &quot;created_at&quot; timestamp with time zone DEFAULT now() NOT NULL,
+  &quot;updated_at&quot; timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE INDEX &quot;ai_agent_conversation_session_idx&quot; ON &quot;ai_agent_conversations&quot; (&quot;session_id&quot;);</codeblock>
+  <ul id="0Hz1QYnf">
+    <li>以上 SQL 只是示意；实际由 <code>drizzle-kit generate</code> 生成，列类型和默认值以现有的 <code>pkText</code>、<code>createdAt</code>、<code>updatedAt</code> 为准，lint 规则名以 <code>lint-migrations.ts</code> 为准。</li>
+    <li><code>model</code>、<code>provider_id</code> 改为 NOT NULL，因为会话只会在 run 时创建，那时两者必有（吾定）。</li>
+    <li><code>transcript</code> 改为 NOT NULL，建行时写入 <code>{ messages: [], known: {} }</code>（吾定）。</li>
+  </ul>
+  <p id="tJ8Puvo7"><code>review_state</code> 的形状（吾定，不改 haklex 的 ReviewBatch 类型）：</p>
+  <codeblock id="ba5QDD7P" lang="ts">interface StoredReviewState {
+  reviewState: AgentStoreReviewState      // @haklex/rich-agent-core 原样
+  anchors: Record&lt;string, string&gt;         // batchId -&gt; 产生该 batch 的 toolCallId
+}</codeblock>
+  <h3 id="ym5G62Ch">5.2 WS 协议（<code>packages/ai/src/agent-ws.ts</code>）</h3>
+  <codeblock id="b0mdzBTc" lang="ts">type AgentFileFrame =
+  | { path: string; attach?: boolean; content: string }                  // 全文
+  | { path: string; attach?: boolean; baseHash: string; patch: string }  // 补丁
+  | { path: string; attach?: boolean; hash: string }                     // 未变
+
+interface AgentRunPayload {
+  runId: string
+  sessionId: string
+  conversationId: string | null
+  model: string
+  providerId: string
+  user: string
+  systemHash: string
+  system?: string[]              // 仅在服务端未缓存时发送
+  toolsHash: string
+  tools?: AgentToolSchema[]      // 同上
+  files: AgentFileFrame[]
+}
+// agent.steer: { runId, user, files: AgentFileFrame[] }
+// agent.tool.result: 由 send 改为 request（需要 ack），files?: AgentFileFrame[]
+
+// ack
+{ ok: true, conversationId }                                   // run 成功
+{ ok: false, code: &apos;CONTEXT_MISSING&apos;, missing: (&apos;system&apos; | &apos;tools&apos;)[] }
+{ ok: false, code: &apos;FILE_BASE_MISMATCH&apos;, paths: string[] }</codeblock>
+  <ul id="bjNGqON2">
+    <li><b>哈希</b>：SHA-256 十六进制。system / tools 对 <code>JSON.stringify(value)</code> 取哈希，文件对内容字符串取哈希。浏览器用 <code>crypto.subtle</code>，服务端用 <code>node:crypto</code>；两端共用 <code>packages/ai</code> 里的同一个序列化函数（吾定）。</li>
+    <li><b>服务端缓存</b>：每个连接一个 <code>Map&lt;hash, value&gt;</code>。收到全文时用服务端算出的哈希入缓存，与客户端给的不符则回 <code>VALIDATION_FAILED</code>。断连时随连接一起清掉。</li>
+    <li><b>文件基线</b>：服务端为每个连接、每个会话存一份 <code>baseline: Record&lt;path, content&gt;</code>，内容是客户端最近一次上报的全文。它与 run 内的 <code>known</code>（模型已见）是两回事，不可混用。补丁格式用 <code>diff</code> 包的 unified patch：服务端 <code>applyPatch(baseline[path], patch)</code>，失败也回 <code>FILE_BASE_MISMATCH</code>。</li>
+    <li><b>客户端镜像</b>：客户端按会话保存同样的 baseline，只在收到 ack ok 后更新。socket 状态离开 <code>open</code> 时清空，重连后的首帧直接发全文。收到 NACK 后，对列出的路径补发全文，只重试一次，再失败按 run 失败处理。ws-client 现在在 ack 失败时只保留 <code>code</code>，要改为把 <code>missing</code>、<code>paths</code> 一起带给调用方。</li>
+    <li><b>不兼容旧 payload</b>：<code>systemHash</code> 与 <code>toolsHash</code> 必填，旧形状直接回 <code>VALIDATION_FAILED</code>（君定不兼容）。</li>
+  </ul>
+  <h3 id="3w6rMuIp">5.3 会话创建与运行</h3>
+  <ul id="VYqZSAEQ">
+    <li><code>handleRun</code>：<code>conversationId</code> 为空时，先建行（sessionId、model、providerId），再加 Redis 锁；ack 返回新 id。</li>
+    <li><code>AiAgentRunService.openTranscript</code>：只读 <code>transcript</code>。删除连接内存分支、由 bubbles 重建的分支，以及 <code>bubblesToHistory</code>、<code>toPiMessages</code>、<code>withoutPendingUser</code>。</li>
+    <li><code>ConnectionState.memory</code> 删除。</li>
+    <li>新文档在保存前没有 id，首个 run 的 <code>sessionId</code> 是随机 UUID。文档 id 出现后，客户端用 <code>PATCH /conversations/:id</code> 把该会话的 <code>sessionId</code> 改成 <code>&lt;kind&gt;:&lt;id&gt;</code>，然后再按新 id 刷新会话列表。这取代现有的 <code>adoptInMemory</code> 分支（吾定）。</li>
+    <li>客户端：删除 <code>useAgentSessionManager</code> 里的 <code>startCreation</code>、<code>ensureConversation</code> 的 REST 创建、epoch 与 pending creation 状态。<code>createWriteAgentRuntime</code> 不再调 <code>ensureConversation</code>，而是从 run 的 ack 取 <code>conversationId</code>，回写 activeSessionId，并把新会话插进会话列表。</li>
+    <li>标题：客户端在该会话第一次 <code>agent.done</code>（status complete）后，若无标题，调用现有的 <code>POST /conversations/:id/title</code>。服务端 <code>generateTitle</code> 改为从 transcript 取第一条 user 消息，并去掉开头的 <code>&lt;system-reminder&gt;</code>。</li>
+  </ul>
+  <h3 id="wmngal9o">5.4 历史投影（服务端）</h3>
+  <p id="1d7pQbxb"><code>GET /ai/agent/conversations/:id</code> 返回 <code>{ ...meta, bubbles, reviewState, anchors }</code>。<code>bubbles</code> 由 <code>projectTranscriptToBubbles(transcript.messages, anchors)</code> 生成，新文件为 <code>ai-agent-history.projection.ts</code>。输出类型 <code>AgentHistoryBubble</code> 定义在 <code>packages/ai</code>，结构与 <code>@haklex/rich-agent-core</code> 的 ChatBubble 一致，core 不引入 haklex（吾定）。</p>
+  <table id="rk_NbLzV">
+    <tr>
+      <th>
+        <p>transcript 元素</p>
+      </th>
+      <th>
+        <p>投影成</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>user</p>
+      </td>
+      <td>
+        <p>user bubble；去掉开头那段 <code>&lt;system-reminder&gt;…&lt;/system-reminder&gt;\n\n</code>（格式由 <code>appendUser</code> 生成，确定可剥）</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>assistant 的 thinking 块</p>
+      </td>
+      <td>
+        <p>thinking bubble（<code>steps</code> 按空行切分，与实时流一致）</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>assistant 的 text 块</p>
+      </td>
+      <td>
+        <p>assistant bubble；一轮内各次 call 的 <code>usage</code> 累加，挂在该轮最后一个 assistant bubble 上</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>assistant 的 toolCall 块 + 对应 toolResult</p>
+      </td>
+      <td>
+        <p>tool_call_group 的 item：状态取自 toolResult 的 isError，没有结果时记为 error。<code>result</code> 保留全文的条件：不超过 4 KB，或能解析为含 <code>op</code> 的编辑操作（重放功能要用），或工具名在 <code>packages/ai</code> 导出的 <code>FULL_RESULT_TOOLS</code> 清单里（dynamic component 卡片要解析 <code>readDynamicDraft</code> / <code>readDynamicReceipt</code>，吾定）；否则只给 <code>resultPreview</code>（前 80 字）并标 <code>truncated: true</code>（阈值吾定）</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>anchors 中的 batch</p>
+      </td>
+      <td>
+        <p>diff_review bubble，插在其 anchorToolCallId 那个 item 所在的 group 之后</p>
+      </td>
+    </tr>
+  </table>
+  <p id="W4u-jrRR">客户端 hydration：用本地 toolMap 的 <code>describeCall</code> 补上 item 的 <code>description</code>；选区标记和错误气泡不恢复（君定）。</p>
+  <h3 id="hhEtaQDt">5.5 reviewState 持久化</h3>
+  <ul id="O-52oXci">
+    <li>新接口 <code>PUT /ai/agent/conversations/:id/review-state</code>，body 为 <code>StoredReviewState</code>；bodyLimit 沿用 32 MB，因为 batch 内含文档快照。</li>
+    <li>客户端：<code>onOperationsChanged</code> 增加 <code>toolCallId</code> 参数（<code>ServerAgentRunner.runClientTool</code> 已持有它），<code>AgentLoopCapture</code> 新建 batch 时记入 anchors。review state 变化时防抖上传，复用现有 syncMessages 的防抖节奏。</li>
+    <li>删除 <code>withEmbeddedReviewState</code> 与 <code>REVIEW_STATE_SENTINEL</code>。</li>
+  </ul>
+  <h3 id="xaY6eWuG">5.6 接口增删（一次完成）</h3>
+  <table id="a10WIAvl">
+    <tr>
+      <th>
+        <p>接口 / 代码</p>
+      </th>
+      <th>
+        <p>处理</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p><code>POST /conversations</code></p>
+      </td>
+      <td>
+        <p>删除</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><code>PATCH / PUT /conversations/:id/messages</code></p>
+      </td>
+      <td>
+        <p>删除</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><code>GET /conversations</code>、<code>PATCH /conversations/:id</code>、<code>DELETE</code>、<code>POST …/title</code></p>
+      </td>
+      <td>
+        <p>保留；返回值不再含 messages</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><code>GET /conversations/:id</code></p>
+      </td>
+      <td>
+        <p>返回投影 bubbles + reviewState + anchors</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p><code>PUT /conversations/:id/review-state</code></p>
+      </td>
+      <td>
+        <p>新增</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>admin <code>api/ai-agent.ts</code></p>
+      </td>
+      <td>
+        <p>删掉 create / append / replace 三个函数</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>admin <code>useAgentSessionManager</code></p>
+      </td>
+      <td>
+        <p>删掉 messages 同步、<code>withEmbeddedReviewState</code>、<code>REVIEW_STATE_SENTINEL</code>、创建竞态相关状态，只留：会话列表、切换与 hydration、review state 同步、标题触发、sessionId 改挂</p>
+      </td>
+    </tr>
+  </table>
+  <h2 id="7xqTRG0f">6. 测试要点</h2>
+  <ul id="0YnpUlDK" type="check">
+    <li checked="false">协议：首个 run 发全文，第二个 run 只发哈希，服务端解析出与第一次相同的 system / tools。</li>
+    <li checked="false">CONTEXT_MISSING：清掉缓存后，客户端补发一次并成功。</li>
+    <li checked="false">文件补丁：基线一致时服务端还原的内容逐字节等于客户端全文；基线不符时回 NACK，补发后成功；重连后首帧发全文。</li>
+    <li checked="false">tool.result 改为 request 后，bash 工具上报的 touched files 走补丁。</li>
+    <li checked="false">会话创建：conversationId 为空的 run 会建行并在 ack 返回；同一会话并发 run 仍被锁挡住。</li>
+    <li checked="false">投影：thinking、text、tool call、usage、reminder 剥离、大结果截断、op 结果保留全文、diff_review 位置，各有一个用例。</li>
+    <li checked="false">旧 payload 形状（无哈希）被拒，回 <code>VALIDATION_FAILED</code>。</li>
+    <li checked="false">迁移经 <code>lint:migrations</code> 检查通过（带 allow 注释）；本地执行 <code>migrate</code> 后启动守卫 <code>assertSchemaCurrent</code> 通过。</li>
+  </ul>
+  <h2 id="ycLCk9H3">7. 留给实现者</h2>
+  <ul id="P8cD29wl">
+    <li>哈希序列化函数与补丁工具放在 <code>packages/ai</code> 的哪个文件。</li>
+    <li>客户端 baseline 镜像放在 runner 还是 runtime 层，只要满足&quot;ack 后才更新、断连清空&quot;即可。</li>
+    <li>review state 上传的具体防抖时长。</li>
+    <li>测试的拆分方式与文件位置。</li>
+  </ul>
+  <h2 id="Tqf-gAPR">8. 用到的 artifact</h2>
+  <ul id="5_hSk5g1">
+    <li>白板 <code>whiteboard/editor-agent-pipeline</code>（https://ryugi.innei.dev/a/cZdDsbJj3tUeYOQUYy0wE）：现状链路图，本设计以它为起点，未在其上做决定。</li>
+    <li>本文 <code>document/agent-session-state</code>：两轮问答，结论均已写入第 4 节。</li>
+  </ul>
+  <details id="qopZSbwZ" summary="第 2 轮（已答，结论见第 4 节）" open="false">
+    <p>1. 打开历史会话时，客户端拿到什么？<ask id="history-load" recommend="server-projection"><option value="server-projection">服务端把 transcript 投影成精简 bubbles 下发：大 tool result 只给预览，能重放的编辑操作保留全文</option><option value="client-replay">下发完整 transcript，由客户端按实时流的同一套逻辑重放</option></ask></p>
+    <p>2. 只用于显示的数据要不要存？<ask id="display-only" recommend="drop"><option value="drop">不存；重新打开会话后这两样不再显示</option><option value="sidecar">存进 review_state 同列的 ui 字段，按 transcript 下标对应</option></ask></p>
+    <p>3. 已有的旧会话怎么处理？<ask id="legacy-rows" recommend="convert"><option value="convert">发版前的迁移把旧行转换掉：没有 transcript 的由 bubbles 重建（只剩文字），reviewState 移到新列</option><option value="drop">直接清空旧会话</option><option value="lazy">不迁移，读取时按需兼容</option></ask></p>
+    <p>4. run 进行中 WS 断开，怎么办？<ask id="disconnect-run" recommend="abort"><option value="abort">维持现状：中止 run，已写入的 transcript 保留</option><option value="resume">run 继续跑，客户端重连后接上</option></ask></p>
+  </details>
+  <details id="QTUK4YYG" summary="第 1 轮（已答，结论见「已定」）" open="false">
+    <p>1. 以哪份为准？<ask id="source-of-truth" recommend="transcript"><option value="transcript">服务端 transcript 为唯一来源，UI 由它派生</option><option value="bubbles">bubbles 为唯一来源，transcript 由它派生</option><option value="both">两份都留，但由服务端统一写</option></ask></p>
+    <p>2. reviewState 存在哪里？<ask id="review-state-home" recommend="column"><option value="column">会话行单独一列 review_state，接受 / 拒绝时用一个小请求更新</option><option value="transcript">并入 transcript，作为事件记录</option><option value="client">只存客户端（localStorage），不入库</option></ask></p>
+    <p>3. system 文本与 tool schema 如何去重？<ask id="static-context" recommend="hash"><option value="hash">按内容哈希引用：首次发全文，之后只发哈希；服务端未命中就回 CONTEXT_MISSING，客户端补发</option><option value="session-open">建会话时发一次，之后 run 不再带</option><option value="keep">维持每次全发</option></ask></p>
+    <p>4. 文件快照如何去重？<ask id="file-delta" recommend="hash-patch"><option value="hash-patch">发&quot;基准哈希 + 补丁&quot;；服务端核对 known 的哈希，不符时回 NACK，客户端补发全文</option><option value="hash-only">只发哈希，内容变了才发全文</option><option value="keep">维持全文</option></ask></p>
+    <p>5. 由谁创建会话？<ask id="conversation-owner" recommend="server"><option value="server">服务端在 agent.run 时创建，并在 ack 中返回 id；删除无会话的内存路径</option><option value="client">维持客户端先走 REST 创建</option></ask></p>
+    <p>7. 有没有让君想改这一块的具体事故或场景？<ask id="trigger-moment" placeholder="例如：某次长会话卡顿、保存失败、DB 行过大" /></p>
+  </details>
+</doc>
+

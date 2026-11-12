@@ -1,0 +1,403 @@
+{
+  "version": 1,
+  "threads": [
+    {
+      "id": "V-CBJTE54b",
+      "anchor": {
+        "blockId": "*",
+        "quote": "",
+        "submit": true,
+        "asks": [
+          "v2-write-scope",
+          "legacy-readers",
+          "upgrade-floor",
+          "deprecated-api-scope",
+          "legacy-config-scope",
+          "docs-rollout"
+        ]
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:08:27.454Z",
+      "statusBy": "human",
+      "messages": [
+        {
+          "id": "xxvxZLu22x",
+          "author": "human",
+          "name": "Innei",
+          "avatar": "/api/avatar/github/Innei",
+          "text": "Submitted the answers",
+          "at": "2026-11-08T12:08:27.454Z"
+        }
+      ]
+    },
+    {
+      "id": "5Ru5-04owP",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "v2-write-scope",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.250Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "2Hob0gg68a",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：v18 统一 V2 写入，结束旧格式写入并退役兼容开关；升级流程已删除保留旧写入的分支。",
+          "at": "2026-11-08T12:11:10.250Z"
+        }
+      ]
+    },
+    {
+      "id": "e2XquoXlog",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "legacy-readers",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.363Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "kmUU9mGHX7",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：保留历史密文/明文的读取与迁移、旧备份恢复和旧密码登录后升级能力。",
+          "at": "2026-11-08T12:11:10.363Z"
+        }
+      ]
+    },
+    {
+      "id": "xciyCDw8Vj",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "upgrade-floor",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.478Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "Jl_VG12hJR",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：只支持完成准备的 v17.x 直接升级；确切准备版版本号在实施验证后固定。",
+          "at": "2026-11-08T12:11:10.478Z"
+        }
+      ]
+    },
+    {
+      "id": "zQyGAi4qjm",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "deprecated-api-scope",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.593Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "9IqE9A7CYD",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：移除 comments 的 state 查询别名和 recently 表态 GET，先迁移 SDK 与消费者；新增候选另列第二轮。",
+          "at": "2026-11-08T12:11:10.593Z"
+        }
+      ]
+    },
+    {
+      "id": "82QALgVEWv",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "legacy-config-scope",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.710Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "6dHcOnJ_qe",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：旧 AI、第三方服务和会员配置先持久化迁移，再结束读取兼容；无效参数和错误日志一并清理。",
+          "at": "2026-11-08T12:11:10.710Z"
+        }
+      ]
+    },
+    {
+      "id": "C-YBdMTX4N",
+      "anchor": {
+        "blockId": "D_p6LKeH",
+        "quote": "",
+        "ask": "docs-rollout",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:11:10.821Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "derPYEp7Gy",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已采纳并移入已确定：文档分两批，先修正 v17 与补历史指南，v18 发布时切换默认说明并保留旧版关键入口。",
+          "at": "2026-11-08T12:11:10.821Z"
+        }
+      ]
+    },
+    {
+      "id": "6rNoPoEO8T",
+      "anchor": {
+        "blockId": "*",
+        "quote": "",
+        "submit": true,
+        "asks": [
+          "ai-read-only",
+          "execution-get-scope",
+          "strict-config-fields",
+          "ai-metrics-contract",
+          "numeric-sort-values",
+          "sdk-major-cleanup",
+          "route-aliases-scope"
+        ]
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:15:14.258Z",
+      "statusBy": "human",
+      "messages": [
+        {
+          "id": "amDfxl1R8T",
+          "author": "human",
+          "name": "Innei",
+          "avatar": "/api/avatar/github/Innei",
+          "text": "Submitted the answers",
+          "at": "2026-11-08T12:15:14.258Z"
+        }
+      ]
+    },
+    {
+      "id": "yJHmw_SLB9",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "ai-read-only",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.095Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "3Z_CdoSREd",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：普通摘要/精读 GET 只读，缺结果 data: null；显式生成与既有权限保留，前端不隐式补生成。",
+          "at": "2026-11-08T12:25:03.095Z"
+        }
+      ]
+    },
+    {
+      "id": "Xk7JCpB7i5",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "execution-get-scope",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.215Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "QnRzd4owzl",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：备份、清缓存、测试邮件改 POST；现有 GET SSE 与帧格式保留，准备版先增加新方法。",
+          "at": "2026-11-08T12:25:03.215Z"
+        }
+      ]
+    },
+    {
+      "id": "CjSEHIK9L3",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "strict-config-fields",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.338Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "8ibv8h56sd",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：配置写入拒绝未知字段并报告路径；保留大小写归一化、合法部分更新和自由 JSON。",
+          "at": "2026-11-08T12:25:03.338Z"
+        }
+      ]
+    },
+    {
+      "id": "r0k9l3psOc",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "ai-metrics-contract",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.462Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "Py8Db4TuO_",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：准备版补指标并停止所有旧列引用，维持 v17 响应契约；v18 再删除旧字段和列。",
+          "at": "2026-11-08T12:25:03.462Z"
+        }
+      ]
+    },
+    {
+      "id": "Y3rCTvrNdZ",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "numeric-sort-values",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.584Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "I2g68pc5aw",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：服务端只接受 asc/desc；先发转换数字输出的兼容 SDK，并迁移官方消费者。",
+          "at": "2026-11-08T12:25:03.584Z"
+        }
+      ]
+    },
+    {
+      "id": "TYEtqgvSU3",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "sdk-major-cleanup",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.705Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "rM4UzugR7p",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：协调 SDK 6.x 清理确认废弃项；先发 5.x 兼容版，不自动删除 legacy 子入口或 CLI V2 适配。",
+          "at": "2026-11-08T12:25:03.705Z"
+        }
+      ]
+    },
+    {
+      "id": "hmEjvYXRPi",
+      "anchor": {
+        "blockId": "wC68wYiX",
+        "quote": "",
+        "ask": "route-aliases-scope",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:25:03.828Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "Z6-d93imDk",
+          "author": "agent",
+          "name": "Codex",
+          "text": "已确认并写入设计：保留其他有效路由别名，文档标明规范入口，长期资源和函数地址继续可用。",
+          "at": "2026-11-08T12:25:03.828Z"
+        }
+      ]
+    },
+    {
+      "id": "rYMtTsICUE",
+      "anchor": {
+        "blockId": "oklm1u_4",
+        "quote": "",
+        "ask": "v18-design-confirmation",
+        "choice": "prepare",
+        "answer": null
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:36:10.191Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "BmOTlL_82C",
+          "author": "agent",
+          "name": "Codex",
+          "text": "Answered v18-design-confirmation",
+          "at": "2026-11-08T12:36:10.191Z"
+        }
+      ]
+    },
+    {
+      "id": "b3iP6X6ArW",
+      "anchor": {
+        "blockId": "*",
+        "quote": "",
+        "submit": true,
+        "asks": [
+          "v18-design-confirmation"
+        ]
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:36:10.308Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "nWhi30c2l5",
+          "author": "agent",
+          "name": "Codex",
+          "text": "Submitted the answers",
+          "at": "2026-11-08T12:36:10.308Z"
+        }
+      ]
+    },
+    {
+      "id": "sZVxoX2w8r",
+      "anchor": {
+        "blockId": "oklm1u_4",
+        "quote": "",
+        "ask": "v18-design-confirmation",
+        "note": true
+      },
+      "status": "open",
+      "statusAt": "2026-11-08T12:38:20.503Z",
+      "statusBy": "agent",
+      "messages": [
+        {
+          "id": "lm4VTre5_l",
+          "author": "agent",
+          "name": "Codex",
+          "text": "用户已在聊天中明确开始实施。完整规范已保存并提交；执行 v17 兼容准备阶段，不发布 v18，不操作线上数据。",
+          "at": "2026-11-08T12:38:20.503Z"
+        }
+      ]
+    }
+  ]
+}
