@@ -1,3 +1,9 @@
+## [17.0.5](https://github.com/mx-space/core/compare/v17.0.4...v17.0.5) (2026-11-13)
+
+### Bug Fixes
+
+* **auth:** restore password credentials after Better Auth upgrades ([9c2ad71](https://github.com/mx-space/core/commit/9c2ad7148abf13e5895203e5bf744ff821e84096))
+
 ## [17.0.4](https://github.com/mx-space/core/compare/v17.0.3...v17.0.4) (2026-11-08)
 
 ### Bug Fixes
