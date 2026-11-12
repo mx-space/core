@@ -3,10 +3,16 @@ import { createHmac, randomUUID } from 'node:crypto'
 import { hash } from 'bcryptjs'
 import { verifyPassword } from 'better-auth/crypto'
 import { createPgTestDatabase } from 'test/helper/pg-verify-url'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { SECURITY } from '~/app.config'
+import { AppMigrationsService } from '~/database/app-migrations/app-migrations.service'
+import { migrations } from '~/database/app-migrations/registry'
 import { CreateAuth } from '~/modules/auth/auth.implement'
+import { AuthRepository } from '~/modules/auth/auth.repository'
+import { AuthService } from '~/modules/auth/auth.service'
+import { OwnerRepository } from '~/modules/owner/owner.repository'
+import { ReaderRepository } from '~/modules/reader/reader.repository'
 import { __setTestPostgresInstance } from '~/processors/database/postgres.provider'
 import { SnowflakeService } from '~/shared/id/snowflake.service'
 
@@ -31,7 +37,12 @@ describe('Better Auth upgrade with persisted credentials', () => {
   })
 
   afterAll(async () => {
+    __setTestPostgresInstance(null, null)
     await context?.close()
+  })
+
+  beforeEach(async () => {
+    await context.pool.query('TRUNCATE readers, _app_migrations CASCADE')
   })
 
   async function seedOwner() {
@@ -44,6 +55,188 @@ describe('Better Auth upgrade with persisted credentials', () => {
     )
     return { id, username }
   }
+
+  async function expectPasswordLogin(owner: { id: string; username: string }) {
+    const usernameSignIn = await auth.api.signInUsername({
+      body: { username: owner.username, password },
+    })
+    const emailSignIn = await auth.api.signInEmail({
+      body: { email: `${owner.username}@example.test`, password },
+    })
+    expect(usernameSignIn.user.id).toBe(owner.id)
+    expect(emailSignIn.user.id).toBe(owner.id)
+  }
+
+  async function runCredentialRepair() {
+    // Run the actual release-phase registry, with unrelated historical work
+    // already recorded as applied. An unregistered repair leaves login broken.
+    await context.pool.query(
+      `INSERT INTO _app_migrations (id)
+       SELECT unnest($1::text[]) ON CONFLICT DO NOTHING`,
+      [
+        migrations
+          .filter(({ id }) => id !== '20261113-credential-account-ids')
+          .map(({ id }) => id),
+      ],
+    )
+    await new AppMigrationsService(context.db, context.pool).run()
+  }
+
+  it('allows a newly created owner to sign in with username and email', async () => {
+    const snowflake = new SnowflakeService()
+    const readerRepository = new ReaderRepository(context.db)
+    const service = new AuthService(
+      new AuthRepository(context.db),
+      readerRepository,
+      new OwnerRepository(context.db),
+      { get: () => auth, set: () => {} },
+      snowflake,
+      { emit: () => false } as any,
+    )
+    await service.createOwnerByCredential({
+      username: 'new_owner',
+      mail: 'new_owner@example.test',
+      password,
+    })
+    const owner = await readerRepository.findByUsername('new_owner')
+    expect(owner).not.toBeNull()
+    await expectPasswordLogin({ id: owner!.id, username: 'new_owner' })
+  })
+
+  it.each([undefined, null, '', 'legacy-mongo-user-id'])(
+    'creates usable credentials when the caller supplies accountId=%s',
+    async (accountId) => {
+      const owner = await seedOwner()
+      await new AuthRepository(context.db).createAccount({
+        id: randomUUID(),
+        userId: owner.id,
+        providerId: 'credential',
+        providerAccountId: owner.id,
+        accountId,
+        password: legacyScryptHash,
+      })
+      await expectPasswordLogin(owner)
+    },
+  )
+
+  it('preserves external OAuth identities when creating an account', async () => {
+    const owner = await seedOwner()
+    const account = await new AuthRepository(context.db).createAccount({
+      id: randomUUID(),
+      userId: owner.id,
+      providerId: 'github',
+      accountId: 'github-user-42',
+      providerAccountId: 'github-user-42',
+    })
+    const { rows } = await context.pool.query(
+      'SELECT account_id FROM accounts WHERE id = $1',
+      [account.id],
+    )
+    expect(rows[0].account_id).toBe('github-user-42')
+  })
+
+  it.each([null, '', 'legacy-mongo-user-id'])(
+    'restores persisted credentials with account_id=%s during release migration',
+    async (accountId) => {
+      const owner = await seedOwner()
+      const credentialId = randomUUID()
+      await context.pool.query(
+        `INSERT INTO accounts (id, user_id, account_id, provider_id, password)
+         VALUES ($1, $2, $3, 'credential', $4)`,
+        [credentialId, owner.id, accountId, legacyScryptHash],
+      )
+      await expect(
+        auth.api.signInUsername({
+          body: { username: owner.username, password },
+        }),
+      ).rejects.toMatchObject({ status: 'UNAUTHORIZED' })
+
+      await runCredentialRepair()
+      await expectPasswordLogin(owner)
+      const { rows } = await context.pool.query(
+        'SELECT password FROM accounts WHERE id = $1',
+        [credentialId],
+      )
+      expect(rows[0].password).toBe(legacyScryptHash)
+
+      // Re-running the repair itself must be harmless, even before its ledger
+      // row is recorded following a successful migration.
+      await context.pool.query('DELETE FROM _app_migrations WHERE id = $1', [
+        '20261113-credential-account-ids',
+      ])
+      const before = (await context.pool.query('SELECT * FROM accounts')).rows
+      await runCredentialRepair()
+      expect((await context.pool.query('SELECT * FROM accounts')).rows).toEqual(
+        before,
+      )
+    },
+  )
+
+  it('leaves valid credentials, OAuth accounts, sessions and passkeys unchanged during repair', async () => {
+    const owner = await seedOwner()
+    await context.pool.query(
+      `INSERT INTO accounts (id, user_id, account_id, provider_id, password, access_token)
+       VALUES ('valid', $1, $1, 'credential', $2, NULL),
+              ('oauth', $1, 'github-user-42', 'github', NULL, 'oauth-token')`,
+      [owner.id, legacyScryptHash],
+    )
+    await context.pool.query(
+      `INSERT INTO sessions (id, user_id, token, expires_at)
+       VALUES ('session', $1, 'existing-token', now() + interval '1 hour')`,
+      [owner.id],
+    )
+    await context.pool.query(
+      `INSERT INTO passkeys (id, user_id, credential_id, public_key)
+       VALUES ('passkey', $1, 'existing-credential', 'existing-public-key')`,
+      [owner.id],
+    )
+    const accountsBefore = (await context.pool.query('SELECT * FROM accounts'))
+      .rows
+    const sessionsBefore = (await context.pool.query('SELECT * FROM sessions'))
+      .rows
+    const passkeysBefore = (await context.pool.query('SELECT * FROM passkeys'))
+      .rows
+    await runCredentialRepair()
+    expect((await context.pool.query('SELECT * FROM accounts')).rows).toEqual(
+      accountsBefore,
+    )
+    expect((await context.pool.query('SELECT * FROM sessions')).rows).toEqual(
+      sessionsBefore,
+    )
+    expect((await context.pool.query('SELECT * FROM passkeys')).rows).toEqual(
+      passkeysBefore,
+    )
+    await expectPasswordLogin(owner)
+  })
+
+  it('refuses ambiguous credential rows without partially repairing other users', async () => {
+    const owner = await seedOwner()
+    const other = await seedOwner()
+    await context.pool.query(
+      `INSERT INTO accounts (id, user_id, account_id, provider_id, password)
+       VALUES ('duplicate-a', $1, NULL, 'credential', $3),
+              ('duplicate-b', $1, 'legacy-user-id', 'credential', $3),
+              ('unambiguous', $2, NULL, 'credential', $3)`,
+      [owner.id, other.id, legacyScryptHash],
+    )
+    const before = (
+      await context.pool.query('SELECT * FROM accounts ORDER BY id')
+    ).rows
+    await expect(runCredentialRepair()).rejects.toThrow(
+      /multiple credential accounts/i,
+    )
+    expect(
+      (await context.pool.query('SELECT * FROM accounts ORDER BY id')).rows,
+    ).toEqual(before)
+    expect(
+      (
+        await context.pool.query(
+          'SELECT id FROM _app_migrations WHERE id = $1',
+          ['20261113-credential-account-ids'],
+        )
+      ).rows,
+    ).toHaveLength(0)
+  })
 
   it.each(['bcrypt', 'scrypt'] as const)(
     'accepts a stored %s password without an account schema migration',
