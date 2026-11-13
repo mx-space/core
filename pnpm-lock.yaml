@@ -221,7 +221,7 @@ overrides:
   '@esbuild-kit/core-utils>esbuild': 0.25.12
   '@cloudflare/workers-types': 5.20261028.1
   '@fastify/static': 10.1.8
-  brace-expansion@<1.1.16: 1.1.21
+  brace-expansion@<1.1.16: 1.1.22
   brace-expansion@>=2.0.0 <2.1.2: 2.1.7
   brace-expansion@>=3.0.0 <5.0.8: 5.0.12
   dompurify: 3.4.17
@@ -1951,7 +1951,7 @@ packages:
     peerDependencies:
       '@better-auth/core': 1.7.16
       '@better-auth/utils': ^0.4.2 || ^0.5.0
-      kysely: 0.29.7
+      kysely: 0.29.8
     peerDependenciesMeta:
       kysely:
         optional: true
@@ -6727,8 +6727,8 @@ packages:
   bowser@2.14.1:
     resolution: {integrity: sha512-tzPjzCxygAKWFOJP011oxFHs57HzIhOEracIgAePE4pqB3LikALKnSzUyU4MGs9/iCEUuHlAJTjTc5M+u7YEGg==}
 
-  brace-expansion@1.1.21:
-    resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
+  brace-expansion@1.1.22:
+    resolution: {integrity: sha512-CKLDTuSsN0+r1ThM0WkzzBI7dnPI6xEGfa/JnVYIK9JNBA1N1NyPwXVHor//NKD/y3sDxp764sZdLhFK7pH8XQ==}
 
   brace-expansion@2.1.7:
     resolution: {integrity: sha512-uZbew1NqdmPDTMJ8ah1y+b+9QEJrfkXFk3RcTQw3X0jW/xRUvFKsg1CfQdSYGdTbXZWExtU3J3ccxtnfw1Fi0g==}
@@ -18150,7 +18150,7 @@ snapshots:
 
   bowser@2.14.1: {}
 
-  brace-expansion@1.1.21:
+  brace-expansion@1.1.22:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
@@ -21784,7 +21784,7 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.21
+      brace-expansion: 1.1.22
 
   minimatch@5.1.9:
     dependencies:
