@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "12.3.2",
-    "@swc/core": "1.16.21",
+    "@swc/core": "1.16.22",
     "@testcontainers/postgresql": "^12.2.1",
     "@types/node": "26.6.6",
     "@types/pg": "^8.23.1",
