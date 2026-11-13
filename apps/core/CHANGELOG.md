@@ -1,3 +1,19 @@
+## [17.1.0](https://github.com/mx-space/core/compare/v17.0.5...v17.1.0) (2026-11-14)
+
+### Bug Fixes
+
+* **core:** close preparation review safety and compatibility gaps ([115f741](https://github.com/mx-space/core/commit/115f741171fd6f671db6857bf3991f96743e4968))
+* **core:** isolate upgrade CLI from application Vite transforms ([36a2191](https://github.com/mx-space/core/commit/36a219160d7361e40726dd869ea1700c33498914))
+* **core:** require truly empty application data for new-install readiness ([3d083cd](https://github.com/mx-space/core/commit/3d083cdcb95efdb7d55354d9c95cc1eff4d7cf8a))
+* stabilize preparation release validation ([ac72d1c](https://github.com/mx-space/core/commit/ac72d1ccdef94157039f47f8f696a997c032119f))
+
+### Features
+
+* **core:** add compatible POST maintenance actions ([0576bc5](https://github.com/mx-space/core/commit/0576bc555ae6e4f8292b82fc66ac21d4e4b2acac))
+* **core:** add standalone v18 readiness diagnostics ([d701c19](https://github.com/mx-space/core/commit/d701c195d4861b2ece41d6014e70d0eb2238e4f0))
+* **core:** prepare existing installations transactionally for v18 ([90593d9](https://github.com/mx-space/core/commit/90593d98e25fbab4c396cfea4495e6e1ff79bf30))
+* **core:** rotate JWT secrets during explicit maintenance ([2731cef](https://github.com/mx-space/core/commit/2731cef62edf578437071c08848c49ec9a971c66))
+
 ## [17.0.5](https://github.com/mx-space/core/compare/v17.0.4...v17.0.5) (2026-11-13)
 
 ### Bug Fixes
