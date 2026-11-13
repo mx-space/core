@@ -300,13 +300,14 @@ Inspired in part by [nodepress](https://github.com/surmon-china/nodepress).
 
 Since 2021-08-31.
 
-## Preparing for v18 (unreleased)
+## Preparing for v18 with v17.1.0
 
-This branch adds standalone `upgrade:check`, `upgrade:prepare` and
-`upgrade:rotate-jwt` tooling. These commands are not in v17.0.4; a minimum
-released preparation tag and client matrix will be recorded after release
-verification. v17 behavior remains compatible, including legacy GET actions
-and SDK 5.x signatures. No columns are dropped in this phase.
+Core v17.1.0 adds standalone `upgrade:check`, `upgrade:prepare` and
+`upgrade:rotate-jwt` tooling. Deploy this release to every replica before
+preparing existing data; v17.0.5 and earlier do not contain these commands.
+v17 behavior remains compatible, including legacy GET actions and SDK 5.x
+signatures. No columns are dropped in this phase. Minimum client versions for
+v18 will be recorded after separate release verification.
 
 See the [preparation runbook](../../docs/v18-preparation.md) for read-only
 diagnostics, dry-run/transactional preparation, original-secret requirements

@@ -1,10 +1,10 @@
-# v18 preparation (unreleased)
+# Preparing for v18 with Core v17.1.0
 
-This is the v17 preparation phase. v18 enforcement, SDK 6 cleanup and column
-removal remain future work. These commands are not part of released v17.0.4.
-No minimum released preparation tag is established yet. Build and deploy this
-preparation code to every replica before using it; do not publish or migrate
-production as part of reviewing this branch.
+Core v17.1.0 introduces the compatible v17 preparation phase. v18 enforcement,
+SDK 6 cleanup and column removal remain future work. v17.0.5 and earlier do
+not contain these commands. Deploy v17.1.0 to every replica before enabling
+V2 writes or running preparation. Upgrading the application alone does not
+mark an existing installation as prepared.
 
 ## Preconditions and checks
 
@@ -94,7 +94,7 @@ so it cannot silently delete the other secret.
 Run `node upgrade.mjs check --json`, `node upgrade.mjs prepare` or
 `node upgrade.mjs rotate-jwt` with the same arguments in the built output.
 Docker copies this entry and its shared chunks with the main application.
-A future preparation image can run the tool without starting app services:
+The v17.1.0 image can run the tool without starting app services:
 
 ```sh
 docker compose run --rm --no-deps app node upgrade.mjs check --json
@@ -102,8 +102,8 @@ docker compose run --rm --no-deps app node upgrade.mjs check --json
 
 The database must already be running. For JWT rotation mount both secret files
 read-only and pass their in-container paths. Ensure the app replicas are
-stopped; `--no-deps` by itself does not stop an existing replica. Keep app and
-migration images pinned to the same verified release, not an unreviewed latest.
+stopped; `--no-deps` by itself does not stop an existing replica. Pin both app
+and migration images to `innei/mx-server:17.1.0` for this preparation release.
 
 ## Compatibility and recovery
 
@@ -119,9 +119,10 @@ public signatures remain. Admin uses POST for backup creation, cache clearing
 and test mail. SDK/CLI/theme minimum published versions are not yet verified;
 do not advertise an unsupported v18 compatibility matrix.
 
-Rollback code only to an actually tested preparation build. The minimum
-published tag remains unset. Code rollback does not reverse schema/data.
-Older versions require their old complete snapshot and secrets.
+Core v17.1.0 is the first preparation release. Before treating it as a rollback
+target, verify the prepared installation with that exact build and its original
+secrets. Code rollback does not reverse schema/data. Older versions require
+their old complete snapshot and secrets.
 
 The restore service does not currently provide automatic v18 isolation or
 preflight. Restore historical ZIP/v1 encrypted archives into an isolated
