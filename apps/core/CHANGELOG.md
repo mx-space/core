@@ -1,3 +1,9 @@
+## [18.0.1](https://github.com/mx-space/core/compare/v18.0.0...v18.0.1) (2026-11-14)
+
+### Bug Fixes
+
+* **docker:** accept either field key variable on older Compose ([3857035](https://github.com/mx-space/core/commit/385703537c30190fccc6c28b63fc2c32e2c5883e))
+
 ## [18.0.0](https://github.com/mx-space/core/compare/v17.1.0...v18.0.0) (2026-11-14)
 
 ### ⚠ BREAKING CHANGES
