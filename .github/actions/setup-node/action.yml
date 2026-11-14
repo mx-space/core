@@ -6,6 +6,10 @@ inputs:
     description: 'Node.js version to use'
     required: false
     default: '26.x'
+  registry-url:
+    description: 'Registry written to the generated .npmrc for publishing'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -14,6 +18,7 @@ runs:
       uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
 
     - name: Setup pnpm
       # v6.1.0 is the first release with pnpm 12 support (native binary

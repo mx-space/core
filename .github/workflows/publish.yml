@@ -1,0 +1,126 @@
+on:
+  push:
+    tags:
+      - 'api-client@*'
+      - 'cli@*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package directory under packages/'
+        required: true
+        type: choice
+        options:
+          - api-client
+          - cli
+
+name: Publish package
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-${{ github.ref }}-${{ inputs.package }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.package || github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve package
+        id: pkg
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PACKAGE: ${{ inputs.package }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            dir="${REF_NAME%%@*}"
+            tag_version="${REF_NAME#*@}"
+          else
+            dir="$INPUT_PACKAGE"
+            tag_version=""
+          fi
+          case "$dir" in
+            api-client|cli) ;;
+            *) echo "::error::Unknown package '$dir'"; exit 1 ;;
+          esac
+          version="$(node -p "require('./packages/$dir/package.json').version")"
+          if [ -n "$tag_version" ] && [ "$tag_version" != "$version" ]; then
+            echo "::error::Tag $REF_NAME does not match packages/$dir/package.json version $version"
+            exit 1
+          fi
+          if [[ "$version" == *-* ]]; then
+            dist_tag=next
+          else
+            dist_tag=latest
+          fi
+          {
+            echo "name=$dir"
+            echo "dir=packages/$dir"
+            echo "version=$version"
+            echo "dist-tag=$dist_tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node
+        with:
+          node-version: '26.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install npm with trusted publishing support
+        run: |
+          npm install -g npm@12.2.2
+          npm --version
+
+      - name: Typecheck
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: pnpm run typecheck
+
+      - name: Test
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: pnpm run test
+        env:
+          CI: true
+
+      - name: Build
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: pnpm run build
+
+      - name: Smoke-test the CLI binary
+        if: steps.pkg.outputs.name == 'cli'
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        run: node bin/mxs.cjs --version
+
+      - name: Pack
+        id: pack
+        working-directory: ${{ steps.pkg.outputs.dir }}
+        env:
+          PACKAGE: ${{ steps.pkg.outputs.name }}
+        run: |
+          dest="$RUNNER_TEMP/pack"
+          mkdir -p "$dest"
+          pnpm pack --pack-destination "$dest"
+          tarball="$(ls "$dest"/*.tgz)"
+          manifest="$(tar -xOzf "$tarball" package/package.json)"
+          if grep -q '"workspace:' <<< "$manifest"; then
+            echo "::error::Packed manifest still contains workspace: ranges"
+            echo "$manifest"
+            exit 1
+          fi
+          if [ "$PACKAGE" = "cli" ] && ! tar -tzf "$tarball" | grep -qx 'package/bin/mxs.cjs'; then
+            echo "::error::bin/mxs.cjs is missing from the tarball"
+            exit 1
+          fi
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          DIST_TAG: ${{ steps.pkg.outputs.dist-tag }}
+        run: npm publish "$TARBALL" --provenance --access public --tag "$DIST_TAG"
