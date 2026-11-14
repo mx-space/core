@@ -233,7 +233,7 @@ overrides:
   isomorphic-fetch>node-fetch: 2.7.0
   js-yaml@>=4.0.0 <4.3.0: 4.3.2
   js-yaml@>=5.0.0 <5.3.0: 5.4.3
-  postcss@<8.5.18: 8.5.32
+  postcss@<8.5.18: 8.5.33
   protobufjs@>=7.5.0 <7.6.5: 7.6.6
   sharp: 0.35.5
   tar@<=7.5.17: 7.5.22
@@ -1948,7 +1948,7 @@ packages:
     peerDependencies:
       '@better-auth/core': 1.7.16
       '@better-auth/utils': ^0.4.2 || ^0.5.0
-      kysely: 0.29.8
+      kysely: 0.29.9
     peerDependenciesMeta:
       kysely:
         optional: true
