@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg'
 
 import {
+  dropUndeclaredConfigFields,
   LegacyConfigConflictError,
   normalizeLegacyConfig,
   visitLegacyConfigSecrets,
@@ -132,7 +133,9 @@ export async function readUpgradeState(
           ),
         ]),
       )
-      const normalized = loadCurrentConfig(normalizeLegacyConfig(raw))
+      const legacy = normalizeLegacyConfig(raw)
+      dropUndeclaredConfigFields(legacy)
+      const normalized = loadCurrentConfig(legacy)
       for (const key of Object.keys(
         configSchemaMapping,
       ) as (keyof typeof configSchemaMapping)[]) {

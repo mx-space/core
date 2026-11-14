@@ -254,3 +254,45 @@ it.each(['conflict', 'bad-ciphertext', 'bad-shape'])(
     }
   },
 )
+
+it('drops fields no schema declares so long-lived installations can migrate', async () => {
+  const context = await createPgTestDatabase('mx_stale_config_fields', {
+    configCurrent: false,
+  })
+  try {
+    await context.pool.query(
+      "INSERT INTO options (id,name,value) VALUES ('100','adminExtra',$1),('101','ai',$2)",
+      [
+        {
+          title: 'retired-title',
+          enableAdminProxy: false,
+          gaodemapKey: EncryptUtil.encrypt(
+            'map-private',
+            'adminExtra.gaodemapKey',
+          ),
+        },
+        { enableTranslation: true, summaryMinTextLength: 300 },
+      ],
+    )
+    await new AppMigrationsService(context.db, context.pool).run()
+    const stored = Object.fromEntries(
+      (await context.pool.query('SELECT name, value FROM options')).rows.map(
+        (row) => [row.name, row.value],
+      ),
+    )
+    expect(stored.adminExtra).not.toHaveProperty('title')
+    expect(stored.adminExtra.enableAdminProxy).toBe(false)
+    expect(
+      EncryptUtil.decrypt(
+        stored.adminExtra.gaodemapKey,
+        'adminExtra.gaodemapKey',
+      ),
+    ).toBe('map-private')
+    expect(stored.ai).not.toHaveProperty('summaryMinTextLength')
+    expect(stored.ai.enableTranslation).toBe(true)
+    const repository = new OptionsRepository(context.db, new SnowflakeService())
+    await expect(repository.findAll()).resolves.toHaveLength(2)
+  } finally {
+    await context.close()
+  }
+})
