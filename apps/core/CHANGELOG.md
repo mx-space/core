@@ -1,3 +1,26 @@
+## [18.0.0](https://github.com/mx-space/core/compare/v17.1.0...v18.0.0) (2026-11-14)
+
+### ⚠ BREAKING CHANGES
+
+* **security:** field encryption is mandatory. Production requires an explicit 64-character hexadecimal `MX_ENCRYPT_KEY` or `ENCRYPT_KEY` and a `JWT_SECRET` of at least 32 characters; disabling encryption or V2 writes fails at startup and the machine-ID fallback is gone.
+* **core:** remove `ENCRYPT_ALGORITHM`, `--encrypt_algorithm` and YAML `encrypt_algorithm`. Field writes use fixed AES-256-GCM; only the default ECB legacy reader remains. Custom legacy algorithms require conversion on the prior version before upgrading.
+* **config:** legacy configuration is converted once by the release migration. The runtime accepts only the current schema, and configuration writes reject unknown declared fields.
+
+### Bug Fixes
+
+* **config:** drop undeclared stored fields during canonical migration ([a6df268](https://github.com/mx-space/core/commit/a6df268e9085e05f3a52569ad06ccd0f952fa9cd))
+* **config:** preserve raw configuration and sibling credentials during migration ([373da58](https://github.com/mx-space/core/commit/373da58c0c70e14ddfc743f01748defc9646e370))
+* **configs:** preserve schema field casing in admin settings ([1d6f22b](https://github.com/mx-space/core/commit/1d6f22baa2baa29b3c54beb57fa65c82302d772c))
+* **security:** require encrypted storage and retire legacy writers ([0e6c51d](https://github.com/mx-space/core/commit/0e6c51db1f1701fe27b3378e1daea4b62b1019a0))
+* **security:** unwrap historical OAuth ciphertext before migration ([32c58bc](https://github.com/mx-space/core/commit/32c58bcdb4936993478b35e207e25825517d2329))
+
+### Features
+
+* **config:** remove runtime legacy configuration compatibility ([dab2ce7](https://github.com/mx-space/core/commit/dab2ce76fed58609dca42e497585fe52d145b9da))
+* **core:** persist automatic development encryption keys ([efa0c87](https://github.com/mx-space/core/commit/efa0c8783f43a6b255a8329ab04ee904dbdb3fd0))
+* **core:** remove encryption algorithm selection ([2abd543](https://github.com/mx-space/core/commit/2abd54359c6d1529e1b3bc606a39ef54e2518264))
+* **db:** migrate legacy configuration in the release phase ([e8c5f90](https://github.com/mx-space/core/commit/e8c5f90739ff1fdc23fd0a7fb980801a506305ba))
+
 ## [17.1.0](https://github.com/mx-space/core/compare/v17.0.5...v17.1.0) (2026-11-14)
 
 ### Bug Fixes
