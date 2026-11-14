@@ -11,6 +11,7 @@ import { configSchemaMapping } from '~/modules/configs/configs.schema'
 import type { SecretCodec } from '~/utils/secret-codec'
 
 import {
+  dropUndeclaredConfigFields,
   normalizeLegacyConfig,
   visitLegacyConfigSecrets,
 } from './legacy-config'
@@ -28,6 +29,7 @@ export class ConfigMigrationError extends Error {
 export async function migrateConfiguration(
   client: Pick<PoolClient, 'query'>,
   codec: SecretCodec,
+  onDroppedFields?: (paths: string[]) => void,
 ) {
   codec.assertConfigured()
   const ids = new SnowflakeGenerator({ workerId: 1023 })
@@ -64,7 +66,10 @@ export async function migrateConfiguration(
       ),
     ]),
   )
-  const canonical = loadCurrentConfig(normalizeLegacyConfig(plaintext))
+  const normalized = normalizeLegacyConfig(plaintext)
+  const dropped = dropUndeclaredConfigFields(normalized)
+  if (dropped.length) onDroppedFields?.(dropped)
+  const canonical = loadCurrentConfig(normalized)
   for (const key of Object.keys(
     configSchemaMapping,
   ) as (keyof typeof configSchemaMapping)[]) {

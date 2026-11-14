@@ -21,6 +21,10 @@ export const migration: AppMigration = {
       const changed = await migrateConfiguration(
         client,
         new SecretCodec(ENCRYPT),
+        (paths) =>
+          logger.warn(
+            `Dropped ${paths.length} configuration fields no schema declares: ${paths.join(', ')}`,
+          ),
       )
       await client.query('COMMIT')
       logger.log(`Migrated ${changed} configuration records`)

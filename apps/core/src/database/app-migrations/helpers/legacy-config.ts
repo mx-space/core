@@ -1,8 +1,10 @@
 import { cloneDeep } from 'es-toolkit/compat'
 
 import { AIProviderType } from '~/modules/ai/ai.types'
+import { unknownConfigPaths } from '~/modules/configs/configs.current'
 import { generateDefaultConfig } from '~/modules/configs/configs.default'
 import type { IConfig } from '~/modules/configs/configs.interface'
+import { configSchemaMapping } from '~/modules/configs/configs.schema'
 import {
   isEncryptedPath,
   visitConfigSecrets,
@@ -316,6 +318,25 @@ export function normalizeLegacyConfig(raw: Record<string, any>): IConfig {
     { ...legacyDefaults.tts, ...raw.ttsOptions },
   )
   return config
+}
+
+export function dropUndeclaredConfigFields(config: IConfig): string[] {
+  const dropped: string[] = []
+  for (const [key, schema] of Object.entries(configSchemaMapping)) {
+    const section = (config as any)[key]
+    for (const path of unknownConfigPaths(schema, section, key)) {
+      const parts = path.split('.')
+      const field = parts.pop()!
+      const parent = parts
+        .slice(1)
+        .reduce<any>((node, part) => node?.[part], section)
+      if (parent && typeof parent === 'object') {
+        delete parent[field]
+        dropped.push(path)
+      }
+    }
+  }
+  return dropped
 }
 
 const oldSecretPaths = new Set([
