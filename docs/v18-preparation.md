@@ -1,13 +1,18 @@
-# v18 preparation (unreleased)
+# Upgrading to Core v18
 
-This unreleased branch now requires field encryption, an explicit hex64 key in production
+Core v18 requires field encryption, an explicit hex64 key in production
 and a JWT of at least 32 characters. Plaintext/ECB writes, encryption-disable
 flags, algorithm selection and machine-ID fallback have been removed. Field
 writes are fixed to AES-256-GCM. Canonical configuration migration and strict configuration PATCH validation
-are also enforced here. SDK 6 cleanup and column removal remain future work. These commands are not part of released v17.0.4.
-No minimum released preparation tag is established yet. Obtain this build
-without starting business replicas; do not publish or migrate production as
-part of reviewing this branch.
+are also enforced. SDK 6 cleanup and column removal remain future work.
+Upgrade from v17.1.0: v17.0.5 and earlier complete their own migrations
+first. Running the v17.1.0 `upgrade:prepare` beforehand is optional; the v18
+release migration converts unprepared and prepared installations alike.
+Obtain this build without starting business replicas.
+
+Stored configuration fields that no schema declares are removed by the
+release migration and listed by path in its log. Keep the pre-upgrade
+snapshot if you need their values.
 
 Source development startup can omit the field key: a random private key is
 persisted in `tmp/dev-encryption.key` and reused on restart. Explicit keys
@@ -129,7 +134,7 @@ old shapes via PATCH. Never overwrite a lost key with a newly generated key.
 Run `node migrate.mjs` for the release migration, `node upgrade.mjs check --json`
 for diagnostics or `node upgrade.mjs rotate-jwt` for maintenance rotation.
 Docker copies this entry and its shared chunks with the main application.
-A future preparation image can run the tool without starting app services:
+The v18 image can run the tool without starting app services:
 
 ```sh
 docker compose run --rm --no-deps app node upgrade.mjs check --json
