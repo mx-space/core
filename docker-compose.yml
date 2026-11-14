@@ -13,7 +13,7 @@ x-mx-env: &mx-env
   SNOWFLAKE_WORKER_ID: '1'
   ALLOWED_ORIGINS: localhost
   JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to your persisted secret of at least 32 characters}
-  MX_ENCRYPT_KEY: ${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:?Set MX_ENCRYPT_KEY or ENCRYPT_KEY to your persisted 64-character hexadecimal key}}
+  MX_ENCRYPT_KEY: ${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}
 
 # Bound crash artifacts and stdout/stderr even during dependency outages.
 x-runtime-safety: &runtime-safety

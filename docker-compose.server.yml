@@ -21,7 +21,7 @@ x-mx-env: &mx-env
   # REDIS_PASSWORD: ${REDIS_PASSWORD:-}
 
   # Required persisted secrets, shared by the application and migration runner.
-  MX_ENCRYPT_KEY: ${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:?Set MX_ENCRYPT_KEY or ENCRYPT_KEY to your persisted 64-character hexadecimal key}}
+  MX_ENCRYPT_KEY: ${MX_ENCRYPT_KEY:-${ENCRYPT_KEY:-}}
   JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to your persisted secret of at least 32 characters}
   JWT_EXPIRE: ${JWT_EXPIRE:-}
 

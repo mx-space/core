@@ -142,8 +142,9 @@ The v18 image can run the tool without starting app services:
 docker compose run --rm --no-deps app node upgrade.mjs check --json
 ```
 
-The database must already be running. Compose requires nonempty persisted
-field/JWT values before launching any service. Use the source CLI or a direct
+The database must already be running. Compose requires a nonempty JWT before
+launching any service; a missing field key is reported by the migration
+process instead. Use the source CLI or a direct
 `docker run` invocation to diagnose missing settings without Compose validation.
 For JWT rotation mount both secret files
 read-only and pass their in-container paths. Ensure the app replicas are
