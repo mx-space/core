@@ -66,7 +66,9 @@ an old secret-migration ledger row alone is insufficient.
 
 Stop all application replicas, background jobs and other business writers.
 Read the old JWT from the existing secret store into a protected secret file;
-generate and save a distinct new JWT of at least 32 characters in another.
+generate and save a distinct new JWT of at least 32 characters in another,
+for example `umask 077; openssl rand -hex 32 > /secure/new-jwt` (64
+characters; one trailing newline in either file is ignored).
 The command takes file paths only and never rewrites either file:
 
 ```sh
