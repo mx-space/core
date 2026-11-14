@@ -2,6 +2,8 @@ on:
   push:
     tags-ignore:
       - 'v*'
+      - 'api-client@*'
+      - 'cli@*'
     paths-ignore:
       - CHANGELOG.MD
       - 'apps/ios/**'

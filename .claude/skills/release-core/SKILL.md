@@ -12,8 +12,8 @@ Helper scripts live in `.claude/skills/release-core/scripts/` (each `cd`s to rep
 | Pipeline | Where | What ships | After `git push` |
 |----------|-------|------------|------------------|
 | **A. Server** | `apps/core` | DockerHub `innei/mx-server` + GitHub Release zip + Dokploy redeploy | `release.yml` triggers on tag `v*` |
-| **B. api-client** | `packages/api-client` | npm `@mx-space/api-client` | `api-client.yml` runs CI only; agent publishes locally |
-| **C. cli** | `packages/cli` | npm `@mx-space/cli` (binary `mxs`) | no workflow; agent publishes locally |
+| **B. api-client** | `packages/api-client` | npm `@mx-space/api-client` | `publish.yml` publishes on tag `api-client@X.Y.Z` |
+| **C. cli** | `packages/cli` | npm `@mx-space/cli` (binary `mxs`) | `publish.yml` publishes on tag `cli@X.Y.Z` |
 
 CI runs lint, typecheck, and smoke tests on the tag — don't re-run them locally before tagging; fix forward via a follow-up patch if CI fails.
 
@@ -120,17 +120,23 @@ gh run watch <run-id>
 
 ## B/C. npm package release (api-client / cli)
 
-No tag, no changelog file. Decide the version via `preflight.sh api-client` or `preflight.sh cli` — same conventional rules, except cli is `0.y.z`: treat `feat:` AND breaking both as minor; `1.0.0` is reserved for the deliberate API freeze. Preflight uses the package's current version commit as the baseline; if it prints a baseline warning, inspect the recent commits manually before choosing. State the version to the user, then:
+No changelog file. Publishing runs in CI through npm trusted publishing (OIDC): `.github/workflows/publish.yml` triggers on `api-client@X.Y.Z` / `cli@X.Y.Z` tags, typechecks, tests, builds, packs with pnpm (so `workspace:*` ranges are rewritten) and publishes the tarball with provenance. The agent never publishes from the local machine.
+
+Decide the version via `preflight.sh api-client` or `preflight.sh cli` — same conventional rules, except cli is `0.y.z`: treat `feat:` AND breaking both as minor; `1.0.0` is reserved for the deliberate API freeze. Preflight uses the package's current version commit as the baseline; if it prints a baseline warning, inspect the recent commits manually before choosing. State the version to the user, then:
 
 ```bash
-bash .claude/skills/release-core/scripts/release-package.sh api-client X.Y.Z
-# or
-bash .claude/skills/release-core/scripts/release-package.sh cli X.Y.Z
+(cd packages/<pkg> && npm pkg set version=X.Y.Z)
+git add packages/<pkg>/package.json
+git commit -m "chore(release): bump <name> to vX.Y.Z" --no-verify
+git push
+git tag <pkg>@X.Y.Z && git push origin <pkg>@X.Y.Z
+gh run watch "$(gh run list --workflow=publish.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+npm view <name> version
 ```
 
-Does: assert `npm whoami` (if not logged in, ask the user to `npm login` — don't bypass) → verify no tracked files are already changed → fetch origin and abort if `origin/master` moved since preflight → run package `typecheck` and `test` → rebuild `dist/` → (cli only) smoke-test `bin/mxs.cjs --version` and `npm pack --dry-run` with a hard check that `bin/mxs.cjs` is in the tarball → set version → commit `chore(release): bump <name> to vX.Y.Z` → push → `pnpm publish --access=public --no-git-checks` → `npm view <name> version`.
+The tag must equal the version in `package.json`; the workflow refuses a mismatch. A version with a prerelease suffix is published under the `next` dist-tag, anything else under `latest`.
 
-Why those flags: `pnpm publish` (not npm) rewrites `workspace:*` deps to real ranges — npm ships them verbatim and the package breaks on install. `--no-git-checks` because unrelated untracked files (surfaced as `WARN` in preflight — confirm they're unrelated before running) would abort the publish.
+Each package needs a trusted publisher on npmjs.com (package Settings → Trusted Publisher → GitHub Actions: organization `mx-space`, repository `core`, workflow `publish.yml`, no environment). A publish that fails with an authentication error means that entry is missing or does not match; ask the user to fix it, then re-run the failed job.
 
 cli extras: never edit the `bin` map (`mxs` → `./bin/mxs.cjs` is load-bearing). After ~60s propagation, `npx --yes @mx-space/cli@X.Y.Z --version` should print `X.Y.Z`; if `command not found: mxs`, inspect `npm view @mx-space/cli bin` before publishing a fix.
 
@@ -143,7 +149,7 @@ Consumer bumps (Yohaku pins `@mx-space/api-client`) are out of scope unless the 
 | Failed before `git push` | stop; show `git status` and `git diff`; preserve release edits for inspection; ask the user before manually reversing release-only hunks or deleting a local-only tag |
 | Commit pushed, tag push failed | `git push origin vX.Y.Z` |
 | Tag pushed, CI failed or critical bug shipped | fix forward with the next patch — never re-tag or delete |
-| npm publish failed after commit/push | resolve, re-run `pnpm publish --access=public --no-git-checks` from the package dir (rebuild `dist/` first if missing) |
+| npm publish failed after commit/push | read the failed `publish.yml` job, fix the cause, re-run the job; a code fix needs the next version and a new tag |
 | Wrong version on npm | publish a corrected next version; do not use `npm unpublish` without explicit user approval and package-impact verification |
 | Release notes wrong after publish | `gh release edit vX.Y.Z --notes-file apps/core/RELEASE_NOTES.md` — tag and assets untouched |
 
@@ -154,7 +160,6 @@ Consumer bumps (Yohaku pins `@mx-space/api-client`) are out of scope unless the 
 - Any `RED` from preflight
 - Major bump — confirm breaking scope with the user
 - `apps/admin` changed but its version didn't move
-- `npm whoami` empty before a package publish
 - Pipelines mixed up (e.g. `v*` tag for a package-only change)
 
 ## Fallback

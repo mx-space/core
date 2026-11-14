@@ -8,6 +8,11 @@
   },
   "license": "MIT",
   "author": "Innei",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mx-space/core.git",
+    "directory": "packages/api-client"
+  },
   "files": [
     "dist"
   ],
