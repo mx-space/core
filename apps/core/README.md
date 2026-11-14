@@ -246,7 +246,7 @@ pnpm test:watch                                           # watch mode
 | `TZ` | Timezone | `Asia/Shanghai` |
 | `DISABLE_CACHE` | Disable Redis caching | `false` |
 
-On this unreleased branch, run the mandatory configuration data migration via `node migrate.mjs` before startup, after stopping all old replicas/background writers. Runtime configuration accepts only the current schema; retired sections and unknown declared fields are rejected. See the [migration guide](../../docs/v18-preparation.md).
+In v18, run the mandatory configuration data migration via `node migrate.mjs` before startup, after stopping all old replicas/background writers. Runtime configuration accepts only the current schema; retired sections and unknown declared fields are rejected. See the [migration guide](../../docs/v18-preparation.md).
 
 Field encryption and V2 writes are mandatory; `JWT_SECRET` must have at least 32 characters. See the [upgrade guide](../../docs/v18-preparation.md) before deploying to an existing instance.
 
@@ -303,15 +303,13 @@ Inspired in part by [nodepress](https://github.com/surmon-china/nodepress).
 
 Since 2021-08-31.
 
-## Preparing for v18 (unreleased)
+## Upgrading to v18
 
-This branch adds standalone `upgrade:check` and `upgrade:rotate-jwt` tooling.
+v18 ships standalone `upgrade:check` and `upgrade:rotate-jwt` tooling.
 Configuration, credential and metric backfills run through the mandatory
-release-phase `migrate` command. These changes are not in v17.0.4; a minimum
-released preparation tag and client matrix will be recorded after release
-verification. Legacy GET actions and SDK 5.x signatures remain, while this
-branch requires encryption and canonical configuration. No columns are
-dropped in this phase.
+release-phase `migrate` command. Upgrade from v17.1.0. Legacy GET actions and
+SDK 5.x signatures remain, while v18 requires encryption and canonical
+configuration. No columns are dropped in this release.
 
 See the [preparation runbook](../../docs/v18-preparation.md) for read-only
 diagnostics, release-phase migration, original-secret requirements

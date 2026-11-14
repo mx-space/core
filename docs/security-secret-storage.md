@@ -2,9 +2,9 @@
 
 Core protects recoverable credentials with authenticated encryption and stores API keys as hashes. This does not isolate the encryption key from a compromised application host; external KMS integration is a separate step.
 
-## Required configuration (unreleased branch)
+## Required configuration
 
-Field encryption is the only runtime mode on this branch. Production builds require an explicit
+Field encryption is the only runtime mode in v18. Production builds require an explicit
 64-character hexadecimal `MX_ENCRYPT_KEY` or `ENCRYPT_KEY`, and a stable
 `JWT_SECRET` (alias `JWTSECRET`) of at least 32 characters. There is no
 machine-ID fallback or short-key derivation. Keep existing effective secrets;
@@ -38,7 +38,7 @@ the prior version with their original algorithm and key before upgrading.
 Keep those original settings with historical backups for isolated recovery.
 
 The published v17.0.4 escape hatch is historical behavior, removed here.
-This branch is not released yet. The [preparation runbook](v18-preparation.md)
+The [upgrade guide](v18-preparation.md)
 explains release migration, standalone check and maintenance JWT rotation. The tools can
 inspect invalid settings without booting the application. Short JWT values
 must be rotated with the original secret before starting this runtime; do not
