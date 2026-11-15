@@ -101,7 +101,7 @@ overrides:
   'postcss@<8.5.18': 8.5.33
   'protobufjs@>=7.5.0 <7.6.5': 7.6.6
   sharp: 0.35.5
-  'tar@<=7.5.17': 7.5.22
+  'tar@<=7.5.17': 7.5.23
 publicHoistPattern:
   - '*fastify*'
   - mongodb
