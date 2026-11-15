@@ -278,8 +278,8 @@ importers:
         specifier: ^3.16.0
         version: 3.16.0
       redis-memory-server:
-        specifier: 0.17.1
-        version: 0.17.1(supports-color@10.2.2)
+        specifier: 0.17.2
+        version: 0.17.2(supports-color@10.2.2)
       rimraf:
         specifier: 6.1.4
         version: 6.1.4
@@ -10659,11 +10659,6 @@ packages:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
     engines: {node: '>=4'}
 
-  redis-memory-server@0.17.1:
-    resolution: {integrity: sha512-obdMVFkzLRM+NaCeuZObYNUY5klmAvv91Hq8UBtGsz6YbZd1s5DauaZpIbmjkDoMgxagWIP3/UJiSkuarXTlBg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   redis-memory-server@0.17.2:
     resolution: {integrity: sha512-Ko8c2zgBBsAqIvrqae28hXlw0kvmrfMNa8gsMw/KHQkLMTS87xinR1KzmmL637R9kkj9sOEp7WV7mZpMEtcXDA==}
     engines: {node: '>=18'}
@@ -10818,10 +10813,6 @@ packages:
 
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
-
-  rimraf@5.0.10:
-    resolution: {integrity: sha512-l0OE8wL34P4nJH/H2ffoaniAokM2qSmrtXHmlpvYr5AVVX8msAyW0l8NVJFDxlSK4u3Uh/f41cQheDVdnYijwQ==}
-    hasBin: true
 
   rimraf@6.1.4:
     resolution: {integrity: sha512-Fk3reQDVPZUMbEm7Zwxz03BWQMW3V5buSk9aU8OckTrO8A1nQtbqvYsAantGNermwsIsXcuOBqcoJ3HuMELctw==}
@@ -22663,7 +22654,7 @@ snapshots:
 
   redis-errors@1.2.0: {}
 
-  redis-memory-server@0.17.1(supports-color@10.2.2):
+  redis-memory-server@0.17.2(supports-color@10.2.2):
     dependencies:
       camelcase: 6.3.0
       cross-spawn: 7.0.6
@@ -22673,7 +22664,6 @@ snapshots:
       get-port: 5.1.1
       https-proxy-agent: 7.0.6(supports-color@10.2.2)
       lockfile: 1.0.4
-      rimraf: 5.0.10
       semver: 7.8.5
       tar: 7.5.22
       tmp: 0.2.7
@@ -22872,10 +22862,6 @@ snapshots:
   reusify@1.1.0: {}
 
   rfdc@1.4.1: {}
-
-  rimraf@5.0.10:
-    dependencies:
-      glob: 10.5.0
 
   rimraf@6.1.4:
     dependencies:
