@@ -236,7 +236,7 @@ overrides:
   postcss@<8.5.18: 8.5.33
   protobufjs@>=7.5.0 <7.6.5: 7.6.6
   sharp: 0.35.5
-  tar@<=7.5.17: 7.5.22
+  tar@<=7.5.17: 7.5.23
 
 packageExtensionsChecksum: sha256-gDwxkGbKamzkwKMTPk01xwitLPwTc5VxPRKkVZiNVH0=
 
@@ -11389,8 +11389,8 @@ packages:
   tar-stream@3.2.2:
     resolution: {integrity: sha512-+8NeqHRjQWH9nYlwo2gamAMImZCVzI4UoEgDpWorBt9OEfppiZn+uSkskzQKPWIZyji/C8fpWO7u69G0DX0tbg==}
 
-  tar@7.5.22:
-    resolution: {integrity: sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==}
+  tar@7.5.23:
+    resolution: {integrity: sha512-lkukzdoGngZHJZXxW4S/E4Fp9ghTDlyZXrQGRNoJ/LXvDKcXUTq2sg5yQe74po7Voea6n/IN09+wE/QvJMiifA==}
     engines: {node: '>=18'}
 
   teex@1.0.1:
@@ -22716,7 +22716,7 @@ snapshots:
       https-proxy-agent: 7.0.6(supports-color@10.2.2)
       lockfile: 1.0.4
       semver: 7.8.5
-      tar: 7.5.22
+      tar: 7.5.23
       tmp: 0.2.7
     transitivePeerDependencies:
       - supports-color
@@ -22732,7 +22732,7 @@ snapshots:
       https-proxy-agent: 7.0.6(supports-color@5.5.0)
       lockfile: 1.0.4
       semver: 7.8.5
-      tar: 7.5.22
+      tar: 7.5.23
       tmp: 0.2.7
     transitivePeerDependencies:
       - supports-color
@@ -23588,7 +23588,7 @@ snapshots:
       - bare-buffer
       - react-native-b4a
 
-  tar@7.5.22:
+  tar@7.5.23:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
