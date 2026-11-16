@@ -23,7 +23,7 @@ runs:
     - name: Setup pnpm
       # v6.1.0 is the first release with pnpm 12 support (native binary
       # bootstrap); the floating `v6` tag still points at v6.0.10.
-      uses: pnpm/action-setup@v6.1.0
+      uses: pnpm/action-setup@v6.1.1
       with:
         run_install: true
         cache: true
