@@ -197,6 +197,6 @@
     "vite-node": "^6.0.0",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "5.0.5",
-    "zod-compiler": "2.0.7"
+    "zod-compiler": "2.0.8"
   }
 }
