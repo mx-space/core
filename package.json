@@ -38,7 +38,7 @@
     "@types/node": "26.6.6",
     "cross-env": "10.1.0",
     "eslint": "^10.13.0",
-    "lint-staged": "17.6.0",
+    "lint-staged": "17.6.1",
     "prettier": "3.9.10",
     "prettier-package-json": "2.8.0",
     "prettier-plugin-ember-template-tag": "2.1.8",
