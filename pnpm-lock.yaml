@@ -555,7 +555,7 @@ importers:
         version: 0.7.6
       just-bash:
         specifier: ^3.6.0
-        version: 3.6.0(supports-color@10.2.2)
+        version: 3.6.1(supports-color@10.2.2)
       katex:
         specifier: ^0.19.0
         version: 0.19.1
@@ -9054,8 +9054,8 @@ packages:
   jszip@3.10.2:
     resolution: {integrity: sha512-3l+rb15IOWtUhU0H5MFqES/T6Kh7abYwjosBey/vD6hDt8zoEffkSC5Ws5SGtgVw3gBx2NEbhTeSW1+kWkpyTQ==}
 
-  just-bash@3.6.0:
-    resolution: {integrity: sha512-2COjEgcHdqKXeQSiNfPAHmpwQx4S8wATaIwog83g2t645U5tom6FED4CBBdr3M+0ioX4xZ26eODw3/nD6RQ6xw==}
+  just-bash@3.6.1:
+    resolution: {integrity: sha512-+osGKzPqnX4sdOBsaHFJvg1cr3izbkj3c3cyxnK6TLEHUOQrGdtylsrg8p5QjiWqBpyzylAyAY0CPd4KCQ9EUw==}
     engines: {node: '>=20.19'}
     hasBin: true
 
@@ -11295,10 +11295,6 @@ packages:
 
   strnum@2.4.2:
     resolution: {integrity: sha512-rDG3Ah4TV0k1hWvLSzkZtMmLN9+eS+h3knq4MP6A42Y3Yh5qGNnOUs1jJkoSr8FG5dsL28c7KgkIBzSEykqtuw==}
-
-  strtok3@10.3.5:
-    resolution: {integrity: sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==}
-    engines: {node: '>=18'}
 
   strtok3@10.6.3:
     resolution: {integrity: sha512-MD8mENgyXMr2mDaDfzP3RWYDSyYQxIIou7HhCiCJiBekrsoDtUG0id3vYnjDfY9ndOEbazFXe13Qw6u/1AB8ew==}
@@ -19795,7 +19791,7 @@ snapshots:
   file-type@21.3.4(supports-color@10.2.2):
     dependencies:
       '@tokenizer/inflate': 0.4.1(supports-color@10.2.2)
-      strtok3: 10.3.5
+      strtok3: 10.6.3
       token-types: 6.1.2
       uint8array-extras: 1.6.0
     transitivePeerDependencies:
@@ -19804,7 +19800,7 @@ snapshots:
   file-type@21.3.4(supports-color@5.5.0):
     dependencies:
       '@tokenizer/inflate': 0.4.1(supports-color@5.5.0)
-      strtok3: 10.3.5
+      strtok3: 10.6.3
       token-types: 6.1.2
       uint8array-extras: 1.6.0
     transitivePeerDependencies:
@@ -20835,7 +20831,7 @@ snapshots:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
 
-  just-bash@3.6.0(supports-color@10.2.2):
+  just-bash@3.6.1(supports-color@10.2.2):
     dependencies:
       diff: 8.0.4
       fast-xml-parser: 5.11.2
@@ -23475,10 +23471,6 @@ snapshots:
   strnum@2.4.2:
     dependencies:
       anynum: 1.0.1
-
-  strtok3@10.3.5:
-    dependencies:
-      '@tokenizer/token': 0.3.0
 
   strtok3@10.6.3:
     dependencies:
