@@ -1,3 +1,16 @@
+## [18.1.0](https://github.com/mx-space/core/compare/v18.0.1...v18.1.0) (2026-11-19)
+
+### Bug Fixes
+
+* **ai-agent:** fence the fetched page title as untrusted web content ([db349aa](https://github.com/mx-space/core/commit/db349aac52beb8f1b7a4facbc1dcceea7e2ac908))
+
+### Features
+
+* **ai-agent:** add web tool profiles for OpenRouter and DeepSeek ([c08a950](https://github.com/mx-space/core/commit/c08a95065e6c08fbe297f3be12faa1995f39e7c4))
+* **ai-agent:** gate agent web search behind an AI settings route ([29ee4fd](https://github.com/mx-space/core/commit/29ee4fdc5ccfa2d7653d97d35ceb9c7f78787876))
+* **ai-agent:** give the agent web search on OpenRouter and DeepSeek ([0d7967b](https://github.com/mx-space/core/commit/0d7967bd9c29cb2396e5f9c712571b4c2d2671c7))
+* **ai:** pass provider-native tools and raw stream chunks through streamMessage ([014b884](https://github.com/mx-space/core/commit/014b8840ddb51eef08ad31b7ed2493a3234094e7))
+
 ## [18.0.1](https://github.com/mx-space/core/compare/v18.0.0...v18.0.1) (2026-11-14)
 
 ### Bug Fixes
