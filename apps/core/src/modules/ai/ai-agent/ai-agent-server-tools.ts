@@ -33,6 +33,8 @@ export interface AgentArticleSource {
 
 export interface AgentServerToolContext {
   excludeRefId?: string
+  /** Run abort signal; tools doing network I/O must honor it. */
+  signal?: AbortSignal
 }
 
 export interface AgentServerToolOutcome {
