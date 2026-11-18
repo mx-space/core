@@ -1,92 +1,40 @@
-import type {
-  MetaFieldDescriptor,
-  MetaFieldsSchema,
-} from '~/vendor/rich-editor/utils/meta-tools'
+import type { MetaFieldsSchema } from '~/vendor/rich-editor/utils/meta-tools'
+
+import {
+  type AgentMetaContext,
+  type AgentMetaFormState,
+  categoryField,
+  coordinatesField,
+  coverField,
+  EMPTY_AGENT_META_CONTEXT,
+  type FieldRegistry,
+  flagField,
+  metaField,
+  passwordField,
+  passwordProtectedField,
+  publicAtField,
+  relatedField,
+  requireBoolean,
+  requireInteger,
+  slugField,
+  splitCommaList,
+  textField,
+  toCount,
+  topicField,
+} from './agent-meta-field-kit'
+
+export type {
+  AgentMetaContext,
+  AgentMetaEntity,
+  AgentMetaFormState,
+} from './agent-meta-field-kit'
 
 type WriteKind = 'note' | 'page' | 'post'
 
-export interface AgentMetaFormState {
-  bookmark: boolean
-  contentFormat: 'lexical' | 'markdown'
-  copyright: boolean
-  freeUntil: string
-  freeWindowHours: string
-  isPremium: boolean
-  location: string
-  mood: string
-  order: string
-  pin: boolean
-  pinOrder: string
-  previewBlocks: string
-  purchaseEnabled: boolean
-  slug: string
-  subtitle: string
-  summary: string
-  tags: string
-  title: string
-  weather: string
+const COMMON_TAIL_FIELDS: FieldRegistry = {
+  cover: coverField,
+  meta: metaField,
 }
-
-interface AgentMetaField {
-  descriptor: MetaFieldDescriptor
-  read: (state: AgentMetaFormState) => unknown
-  write: (state: AgentMetaFormState, value: unknown) => AgentMetaFormState
-}
-
-type FieldRegistry = Record<string, AgentMetaField>
-
-const toText = (value: unknown) => String(value ?? '')
-const toCount = (value: unknown) => String(Number(value ?? 0) || 0)
-
-function requireBoolean(key: string, value: unknown) {
-  if (typeof value !== 'boolean') {
-    throw new TypeError(`${key} must be a boolean`)
-  }
-  return value
-}
-
-function requireInteger(key: string, value: unknown, min: number) {
-  const parsed = typeof value === 'string' ? Number(value) : value
-  if (typeof parsed !== 'number' || !Number.isInteger(parsed) || parsed < min) {
-    throw new TypeError(`${key} must be an integer >= ${min}`)
-  }
-  return parsed
-}
-
-function splitCommaList(value: string) {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
-
-function textField(description: string, key: keyof AgentMetaFormState) {
-  return {
-    descriptor: { description, type: 'string' },
-    read: (state) => state[key],
-    write: (state, value) => ({ ...state, [key]: toText(value) }),
-  } satisfies AgentMetaField
-}
-
-function flagField(description: string, key: keyof AgentMetaFormState) {
-  return {
-    descriptor: { description, type: 'boolean' },
-    read: (state) => state[key],
-    write: (state, value) => ({ ...state, [key]: Boolean(value) }),
-  } satisfies AgentMetaField
-}
-
-const slugField = (example?: string): AgentMetaField => ({
-  descriptor: {
-    description: example
-      ? 'URL path segment; prefer lowercase English words joined with hyphens.'
-      : 'URL path segment; may be empty (then the nid path is used).',
-    ...(example ? { example } : {}),
-    type: 'string',
-  },
-  read: (state) => state.slug,
-  write: (state, value) => ({ ...state, slug: toText(value) }),
-})
 
 const PAYWALL_FIELDS: FieldRegistry = {
   isPremium: {
@@ -162,6 +110,7 @@ const PAYWALL_FIELDS: FieldRegistry = {
 const POST_FIELDS: FieldRegistry = {
   title: textField('Post title', 'title'),
   slug: slugField('my-first-post'),
+  category: categoryField,
   tags: {
     descriptor: { description: 'Post tag list', type: 'string[]' },
     read: (state) => splitCommaList(state.tags),
@@ -195,16 +144,24 @@ const POST_FIELDS: FieldRegistry = {
     read: (state) => Number(state.pinOrder) || 0,
     write: (state, value) => ({ ...state, pinOrder: toCount(value) }),
   },
+  related: relatedField,
   ...PAYWALL_FIELDS,
+  ...COMMON_TAIL_FIELDS,
 }
 
 const NOTE_FIELDS: FieldRegistry = {
   title: textField('Note title', 'title'),
   slug: slugField(),
+  topic: topicField,
   mood: textField('Mood', 'mood'),
   weather: textField('Weather', 'weather'),
   bookmark: flagField('Whether to mark as a bookmarked memory.', 'bookmark'),
+  publicAt: publicAtField,
   location: textField('Location text (optional).', 'location'),
+  coordinates: coordinatesField,
+  passwordProtected: passwordProtectedField,
+  password: passwordField,
+  ...COMMON_TAIL_FIELDS,
 }
 
 const PAGE_FIELDS: FieldRegistry = {
@@ -219,6 +176,7 @@ const PAGE_FIELDS: FieldRegistry = {
     read: (state) => Number(state.order) || 0,
     write: (state, value) => ({ ...state, order: toCount(value) }),
   },
+  ...COMMON_TAIL_FIELDS,
 }
 
 const REGISTRY: Record<WriteKind, FieldRegistry> = {
@@ -246,11 +204,13 @@ export function getWriteAgentMetaSchema(kind: WriteKind): MetaFieldsSchema {
 export function getWriteAgentMetaFields(
   kind: WriteKind,
   state: AgentMetaFormState,
+  context: Partial<AgentMetaContext> = {},
 ): Record<string, unknown> {
+  const resolved = { ...EMPTY_AGENT_META_CONTEXT, ...context }
   return Object.fromEntries(
     Object.entries(REGISTRY[kind]).map(([key, field]) => [
       key,
-      field.read(state),
+      field.read(state, resolved),
     ]),
   )
 }
@@ -259,11 +219,13 @@ export function applyWriteAgentMetaUpdates<S extends AgentMetaFormState>(
   kind: WriteKind,
   state: S,
   updates: Record<string, unknown>,
+  context: Partial<AgentMetaContext> = {},
 ): S {
+  const resolved = { ...EMPTY_AGENT_META_CONTEXT, ...context }
   const fields = REGISTRY[kind]
   let next: AgentMetaFormState = state
   for (const [key, field] of Object.entries(fields)) {
-    if (key in updates) next = field.write(next, updates[key])
+    if (key in updates) next = field.write(next, updates[key], resolved)
   }
   return next as S
 }

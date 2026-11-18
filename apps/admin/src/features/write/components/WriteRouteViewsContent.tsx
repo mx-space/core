@@ -2107,13 +2107,20 @@ function WritePage(props: { kind: WriteKind }) {
     })
   }
 
-  const getAgentMetaFields = () => getWriteAgentMetaFields(props.kind, state)
+  const agentMetaContext = { categories, relatedPosts, topics }
+  const getAgentMetaFields = () =>
+    getWriteAgentMetaFields(props.kind, state, agentMetaContext)
 
   const applyAgentMetaUpdates = (updates: Record<string, unknown>) => {
-    applyWriteAgentMetaUpdates(props.kind, state, updates)
+    applyWriteAgentMetaUpdates(props.kind, state, updates, agentMetaContext)
     draftSession.markDirty()
     setState((previous) =>
-      applyWriteAgentMetaUpdates(props.kind, previous, updates),
+      applyWriteAgentMetaUpdates(
+        props.kind,
+        previous,
+        updates,
+        agentMetaContext,
+      ),
     )
   }
 
