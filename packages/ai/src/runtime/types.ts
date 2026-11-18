@@ -105,6 +105,13 @@ export interface StreamMessageOptions extends Omit<
   sessionId?: string
   systemPrompt?: string
   tools?: Tool[]
+  /**
+   * Provider-native tool definitions appended verbatim to the request
+   * payload's `tools` array (e.g. OpenRouter `openrouter:web_search`).
+   */
+  providerTools?: Record<string, unknown>[]
+  /** Receives every raw provider stream chunk before pi-ai parses it. */
+  onProviderStreamEvent?: (chunk: unknown) => void
 }
 
 export interface ModelInfo {

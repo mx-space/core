@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+import type { AssistantMessage } from '@earendil-works/pi-ai'
 import {
   fauxAssistantMessage,
   fauxText,
@@ -412,6 +416,146 @@ describe('PiRuntimeAdapter', () => {
       expect(requestHeaders[0]?.get('x-session-id')).toBe(
         'mx-core-affinity-test',
       )
+    })
+
+    describe('provider passthrough', () => {
+      const fixture = readFileSync(
+        resolve(
+          __dirname,
+          '../../../fixtures/ai-agent-sse/openrouter-web-search.sse',
+        ),
+        'utf8',
+      )
+      const functionTool = {
+        name: 'read_article',
+        description: 'Read an article',
+        parameters: Type.Object({ id: Type.String() }),
+      }
+
+      function captureRequests(reply: () => Response) {
+        registerBuiltInApiProviders()
+        const tools: unknown[][] = []
+        vi.spyOn(globalThis, 'fetch').mockImplementation(
+          async (input, init) => {
+            const raw =
+              input instanceof Request ? await input.text() : String(init?.body)
+            const body: unknown = JSON.parse(raw)
+            tools.push(
+              body &&
+                typeof body === 'object' &&
+                'tools' in body &&
+                Array.isArray(body.tools)
+                ? body.tools
+                : [],
+            )
+            return reply()
+          },
+        )
+        return tools
+      }
+
+      const stopReply = () =>
+        new Response(JSON.stringify({ error: { message: 'stop' } }), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 400,
+        })
+
+      function openRouterAdapter() {
+        return new PiRuntimeAdapter({
+          apiKey: 'test-key',
+          endpoint: 'https://openrouter.ai/api/v1',
+          model: 'deepseek/deepseek-v4.1-flash',
+          providerId: 'openrouter',
+          providerType: AIProviderType.OpenAICompatible,
+        })
+      }
+
+      function hasAnnotations(chunk: unknown): boolean {
+        if (!chunk || typeof chunk !== 'object' || !('choices' in chunk))
+          return false
+        const { choices } = chunk
+        if (!Array.isArray(choices)) return false
+        const delta: unknown = choices[0]?.delta
+        return (
+          !!delta &&
+          typeof delta === 'object' &&
+          'annotations' in delta &&
+          Array.isArray(delta.annotations) &&
+          delta.annotations.length > 0
+        )
+      }
+
+      it('appends providerTools verbatim after the function tools', async () => {
+        const requests = captureRequests(stopReply)
+        const providerTools = [
+          { type: 'openrouter:web_search', parameters: { max_uses: 5 } },
+          { type: 'openrouter:web_fetch' },
+        ]
+        for await (const _ of openRouterAdapter().streamMessage({
+          messages: [{ role: 'user', content: 'probe' }],
+          tools: [functionTool],
+          providerTools,
+        })) {
+          // drain
+        }
+        expect(requests).toHaveLength(1)
+        expect(requests[0]).toHaveLength(3)
+        expect(requests[0][0]).toMatchObject({
+          type: 'function',
+          function: { name: 'read_article' },
+        })
+        expect(requests[0].slice(1)).toEqual(providerTools)
+      })
+
+      it('creates the tools array when only providerTools are given', async () => {
+        const requests = captureRequests(stopReply)
+        for await (const _ of openRouterAdapter().streamMessage({
+          messages: [{ role: 'user', content: 'probe' }],
+          providerTools: [{ type: 'openrouter:web_fetch' }],
+        })) {
+          // drain
+        }
+        expect(requests[0]).toEqual([{ type: 'openrouter:web_fetch' }])
+      })
+
+      it('leaves the payload tools untouched without providerTools', async () => {
+        const requests = captureRequests(stopReply)
+        for await (const _ of openRouterAdapter().streamMessage({
+          messages: [{ role: 'user', content: 'probe' }],
+          tools: [functionTool],
+        })) {
+          // drain
+        }
+        expect(requests[0]).toHaveLength(1)
+      })
+
+      it('parses an OpenRouter web-search stream and exposes raw chunks', async () => {
+        captureRequests(
+          () =>
+            new Response(fixture, {
+              headers: { 'Content-Type': 'text/event-stream' },
+              status: 200,
+            }),
+        )
+        const chunks: unknown[] = []
+        let final: AssistantMessage | undefined
+        for await (const event of openRouterAdapter().streamMessage({
+          messages: [{ role: 'user', content: 'latest node?' }],
+          tools: [functionTool],
+          providerTools: [{ type: 'openrouter:web_search' }],
+          onProviderStreamEvent: (chunk) => chunks.push(chunk),
+        })) {
+          if (event.type === 'done') final = event.message
+          if (event.type === 'error') throw new Error(event.error.errorMessage)
+        }
+        expect(chunks.filter(hasAnnotations)).toHaveLength(6)
+        const blocks = final?.content ?? []
+        expect(blocks.some((block) => block.type === 'toolCall')).toBe(false)
+        const text = blocks
+          .map((block) => (block.type === 'text' ? block.text : ''))
+          .join('')
+        expect(text).toContain('v26.13.1')
+      })
     })
   })
 

@@ -812,6 +812,14 @@ export class PiRuntimeAdapter implements IModelRuntime {
       signal: options.signal,
       reasoningEffort: options.reasoningEffort,
     })
+    const { providerTools, onProviderStreamEvent } = options
+    if (providerTools?.length) {
+      piOptions.onPayload = (payload) =>
+        appendProviderTools(payload, providerTools)
+    }
+    if (onProviderStreamEvent) {
+      piOptions.onProviderStreamEvent = (chunk) => onProviderStreamEvent(chunk)
+    }
     return this.streamModel(this.model, context, piOptions)
   }
 
@@ -1025,4 +1033,14 @@ export class PiRuntimeAdapter implements IModelRuntime {
       return url
     }
   }
+}
+
+function appendProviderTools(
+  payload: unknown,
+  providerTools: Record<string, unknown>[],
+): unknown {
+  if (!payload || typeof payload !== 'object') return undefined
+  const existing =
+    'tools' in payload && Array.isArray(payload.tools) ? payload.tools : []
+  return { ...payload, tools: [...existing, ...providerTools] }
 }
