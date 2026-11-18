@@ -43,7 +43,13 @@ const help = registerCommandHelp({
     },
     {
       name: 'publish',
-      args: ['<id>', '[--silent]', '[--open]'],
+      args: [
+        '<id>',
+        '[--silent]',
+        '[--open]',
+        '[--expected-head <revisionId>]',
+        '[--expected-published <revisionId|none>]',
+      ],
       description: 'publish a draft as a live post/note/page',
     },
     {

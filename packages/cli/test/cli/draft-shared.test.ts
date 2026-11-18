@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Effect, Layer, Option } from 'effect'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
@@ -8,7 +8,10 @@ import {
   saveDraftPayload,
   splitDraftBody,
 } from '../../src/cli/draft/_shared'
-import type { ApiService } from '../../src/services/Api'
+import { publish } from '../../src/cli/draft/publish'
+import { Api, type ApiService } from '../../src/services/Api'
+import { Renderer } from '../../src/services/Renderer'
+import { handler } from '../helper/handler'
 
 const revision = {
   content: null,
@@ -170,5 +173,47 @@ describe('draft publish --ai', () => {
         }),
       }),
     )
+  })
+})
+
+describe('draft publish revision checks', () => {
+  it.each([
+    ['stale-draft-revision', 'published-1', 'draft head changed'],
+    ['draft-2', 'none', 'published revision changed'],
+  ])('refuses to queue a job with stale expectations (%s, %s)', async (
+    expectedHead,
+    expectedPublished,
+    message,
+  ) => {
+    const request = vi.fn(() =>
+      Effect.succeed({
+        data: {
+          id: 'branch-1',
+          document: {
+            ref_type: 'post',
+            published_revision_id: 'published-1',
+          },
+          head_revision: { ...revision, id: 'draft-2' },
+          head_revision_id: 'draft-2',
+        },
+      }),
+    )
+    const layer = Layer.merge(
+      Layer.succeed(Api, { request } as unknown as ApiService),
+      Renderer.Default,
+    )
+    const flags = {
+      ai: Option.none<string>(),
+      expectedHead: Option.some(expectedHead),
+      expectedPublished: Option.some(expectedPublished),
+      id: 'branch-1',
+      open: false,
+      silent: true,
+    }
+
+    await expect(
+      Effect.runPromise(handler(publish)(flags).pipe(Effect.provide(layer))),
+    ).rejects.toThrow(message)
+    expect(request.mock.calls).toEqual([['/drafts/branch-1']])
   })
 })

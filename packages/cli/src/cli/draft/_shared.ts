@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 
 import { Generic } from '../../domain/errors'
+import { camelizeDeep } from '../../domain/wire-case'
 import type { ApiService } from '../../services/Api'
 
 const DRAFT_CORE_KEYS = new Set([
@@ -69,20 +70,6 @@ export const splitDraftBody = (
     draftBody.typeSpecificData = typeSpecificData
   }
   return draftBody
-}
-
-/** The server serializes response keys to snake_case; normalize back. */
-export const camelizeDeep = (value: unknown): unknown => {
-  if (Array.isArray(value)) return value.map(camelizeDeep)
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
-        k.replaceAll(/_([\da-z])/g, (_, c: string) => c.toUpperCase()),
-        camelizeDeep(v),
-      ]),
-    )
-  }
-  return value
 }
 
 /** Single-object responses may arrive wrapped in an outer `data` envelope. */

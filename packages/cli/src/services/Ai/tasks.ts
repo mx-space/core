@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 
 import { AiTaskCreateFailed, AiTaskFailed } from '../../domain/errors'
+import { camelizeDeep } from '../../domain/wire-case'
 import type { ApiError, ApiService } from '../Api'
 import { asRecord, unwrapData } from './shared'
 import type {
@@ -18,7 +19,7 @@ interface CreateTaskEnvelope {
 }
 
 const readCreateTask = (raw: unknown): CreateTaskEnvelope => {
-  const inner = asRecord(unwrapData(raw))
+  const inner = asRecord(camelizeDeep(unwrapData(raw)))
   return {
     taskId: typeof inner.taskId === 'string' ? inner.taskId : undefined,
     created: typeof inner.created === 'boolean' ? inner.created : undefined,
@@ -38,7 +39,7 @@ interface TaskRecord {
 }
 
 const readTaskRecord = (raw: unknown): TaskRecord => {
-  const inner = asRecord(unwrapData(raw))
+  const inner = asRecord(camelizeDeep(unwrapData(raw)))
   const result = asRecord(inner.result)
   const payload = asRecord(inner.payload)
   const errField = inner.error

@@ -680,6 +680,8 @@ Example profile config:
 
 ## Collaborative drafts
 
+`mxs draft publish <id>` queues the draft's current head for publication. If a script has checked a specific revision first, pass `--expected-head <revisionId>` and `--expected-published <revisionId|none>` to refuse publication if either revision changed. Use `none` when the draft has never been published.
+
 `mxs draft cat` and `mxs draft patch` read and edit a draft through the same live collaboration room the admin write page uses, so an agent's edits appear in an open editor as they land, with the agent's name on its cursor. Each call joins the room, works on the latest state and leaves; nothing is kept on disk. See `mxs skill get commands-draft`.
 
 ```bash
