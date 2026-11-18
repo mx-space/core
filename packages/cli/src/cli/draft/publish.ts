@@ -2,7 +2,7 @@ import { Effect, Option } from 'effect'
 import { Argument, Command, Flag } from 'effect/cli'
 
 import { openAdminDraftEdit } from '../../domain/admin-link'
-import { Generic } from '../../domain/errors'
+import { Generic, ValidationFailed } from '../../domain/errors'
 import { Api } from '../../services/Api'
 import { Renderer } from '../../services/Renderer'
 import { openFlag, silentFlag } from '../post/_flags'
@@ -20,11 +20,30 @@ const ai = Flag.String('ai').pipe(
   ),
   Flag.optional,
 )
+const expectedHead = Flag.String('expected-head').pipe(
+  Flag.withDescription(
+    'refuse if the draft head differs from this revision id',
+  ),
+  Flag.optional,
+)
+const expectedPublished = Flag.String('expected-published').pipe(
+  Flag.withDescription(
+    'refuse if the published revision differs from this id; use "none" for a new draft',
+  ),
+  Flag.optional,
+)
 
 export const publish = Command.make(
   'publish',
-  { ai, id, open: openFlag, silent: silentFlag },
-  ({ ai, id, open, silent }) =>
+  {
+    ai,
+    expectedHead,
+    expectedPublished,
+    id,
+    open: openFlag,
+    silent: silentFlag,
+  },
+  ({ ai, expectedHead, expectedPublished, id, open, silent }) =>
     Effect.gen(function* () {
       const aiResources = yield* Effect.try({
         try: () => Option.getOrUndefined(Option.map(ai, parseAiResourcesFlag)),
@@ -38,6 +57,27 @@ export const publish = Command.make(
       if (!draft) {
         return yield* Effect.fail(
           new Generic({ message: `draft not found: ${id}` }),
+        )
+      }
+      if (
+        Option.isSome(expectedHead) &&
+        draft.headRevisionId !== expectedHead.value
+      ) {
+        return yield* Effect.fail(
+          new ValidationFailed({
+            message: `draft head changed: expected ${expectedHead.value}, found ${draft.headRevisionId}`,
+          }),
+        )
+      }
+      const publishedRevision = draft.document.publishedRevisionId ?? 'none'
+      if (
+        Option.isSome(expectedPublished) &&
+        publishedRevision !== expectedPublished.value
+      ) {
+        return yield* Effect.fail(
+          new ValidationFailed({
+            message: `published revision changed: expected ${expectedPublished.value}, found ${publishedRevision}`,
+          }),
         )
       }
       const resource = REF_TYPE_TO_RESOURCE[draft.document.refType]

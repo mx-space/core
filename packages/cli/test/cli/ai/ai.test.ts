@@ -182,6 +182,51 @@ describe('Ai.regenSummary + waitForTask', () => {
     expect(err).toBeInstanceOf(AiTaskFailed)
   })
 
+  it('creates and polls a job when the API returns snake_case task fields', async () => {
+    const taskId = 'wire-task'
+    const refId = '012345678901234567'
+    const { layer: http, recorder } = testHttpLayer({
+      [`POST ${URL_TASK_POST}`]: {
+        status: 200,
+        body: { data: { task_id: taskId, created: false } },
+      },
+      [`GET ${taskUrl(taskId)}`]: {
+        status: 200,
+        body: {
+          data: {
+            status: 'completed',
+            total_cost: '0.42',
+            total_tokens: 237,
+            result: { result_ids: ['summary-1'] },
+            payload: { ref_id: refId, target_languages: ['ja'] },
+          },
+        },
+      },
+    })
+    const result = await Effect.runPromise(
+      Effect.gen(function* () {
+        const ai = yield* Ai
+        const created = yield* ai.regenSummary({ refId })
+        expect(created.created).toBe(false)
+        return yield* ai.waitForTask(created.taskId, { type: created.type })
+      }).pipe(Effect.provide(buildLayer(http))),
+    )
+
+    expect(recorder.calls.map((call) => call.url)).toEqual([
+      URL_TASK_POST,
+      taskUrl(taskId),
+    ])
+    expect(result).toMatchObject({
+      status: 'completed',
+      taskId,
+      refId,
+      targetLanguages: ['ja'],
+      totalCost: 0.42,
+      totalTokens: 237,
+      resultIds: ['summary-1'],
+    })
+  })
+
   it('throws AiTaskFailed on partial_failed', async () => {
     const TASK_ID = '01HPARTIAL'
     const { layer: http } = testHttpLayer({
