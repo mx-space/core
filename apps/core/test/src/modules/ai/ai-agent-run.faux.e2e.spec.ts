@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import type { Context } from '@earendil-works/pi-ai'
 import { fauxAssistantMessage, fauxToolCall } from '@earendil-works/pi-ai'
+import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
 import type {
   AgentServerEvent,
   AgentToolResultPayload,
@@ -30,7 +34,11 @@ type Step = Parameters<
   ReturnType<typeof withFauxAi>['registration']['setResponses']
 >[0][number]
 
-function setup(responses: Step[], conversation?: StoredConversation) {
+function setup(
+  responses: Step[],
+  conversation?: StoredConversation,
+  endpoint = `https://${PROVIDER}.example.com`,
+) {
   const contexts: Context[] = []
   const recorded = responses.map(
     (step) =>
@@ -67,7 +75,7 @@ function setup(responses: Step[], conversation?: StoredConversation) {
           name: 'Faux',
           type: AIProviderType.OpenAICompatible,
           apiKey: 'k',
-          endpoint: `https://${PROVIDER}.example.com`,
+          endpoint,
           defaultModel: MODEL_ID,
           enabled: true,
         },
@@ -581,6 +589,238 @@ describe('AiAgentRunService', () => {
       ])
       expect(messages[3]).toMatchObject({ content: 'never mind' })
       expect(inbox.push({ user: 'again', files: [] })).toBe(false)
+    })
+  })
+
+  describe('web tools', () => {
+    const fixture = readFileSync(
+      resolve(
+        __dirname,
+        '../../../fixtures/ai-agent-sse/openrouter-web-search.sse',
+      ),
+      'utf8',
+    )
+
+    function sse(...chunks: unknown[]) {
+      return `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join('')}data: [DONE]\n\n`
+    }
+
+    function chunk(delta: Record<string, unknown>, extra = {}) {
+      return {
+        id: 'gen-test',
+        object: 'chat.completion.chunk',
+        created: 1,
+        model: MODEL_ID,
+        choices: [{ index: 0, delta, finish_reason: null }],
+        ...extra,
+      }
+    }
+
+    function finish(reason: string, executed: number) {
+      return {
+        ...chunk({}),
+        choices: [{ index: 0, delta: {}, finish_reason: reason }],
+        usage: {
+          prompt_tokens: 1,
+          completion_tokens: 1,
+          total_tokens: 2,
+          server_tool_use_details: {
+            web_search_requests: executed,
+            tool_calls_requested: executed,
+            tool_calls_executed: executed,
+          },
+        },
+      }
+    }
+
+    /** Real openai-completions over a mocked OpenRouter endpoint. */
+    function openRouter(replies: string[]) {
+      const ctx = setup([], emptyConversation(), 'https://openrouter.ai/api/v1')
+      ctx.teardown()
+      registerBuiltInApiProviders()
+      const requestTools: unknown[][] = []
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+        const raw =
+          input instanceof Request ? await input.text() : String(init?.body)
+        const body: unknown = raw ? JSON.parse(raw) : null
+        requestTools.push(
+          body &&
+            typeof body === 'object' &&
+            'tools' in body &&
+            Array.isArray(body.tools)
+            ? body.tools
+            : [],
+        )
+        const reply = replies.shift()
+        if (reply === undefined) throw new Error('unexpected model request')
+        return new Response(reply, {
+          headers: { 'Content-Type': 'text/event-stream' },
+          status: 200,
+        })
+      })
+      return { ...ctx, requestTools }
+    }
+
+    function toolTypes(tools: unknown[]) {
+      return tools.flatMap((tool) =>
+        tool && typeof tool === 'object' && 'type' in tool
+          ? [String(tool.type)]
+          : [],
+      )
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('runs DeepSeek web_search through the DeepSeek Search API', async () => {
+      const ctx = setup(
+        [
+          fauxAssistantMessage(
+            [fauxToolCall('web_search', { query: 'node latest' })],
+            { stopReason: 'toolUse' },
+          ),
+          fauxAssistantMessage('Node 26.13.1'),
+        ],
+        emptyConversation(),
+        'https://api.deepseek.com',
+      )
+      torn.push(ctx.teardown)
+      const searches: Array<{ url: string; auth: string | null }> = []
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+        searches.push({
+          url: String(input),
+          auth: new Headers(init?.headers).get('authorization'),
+        })
+        return new Response(
+          JSON.stringify({
+            results: [
+              {
+                title: 'Node.js 26.13.1',
+                url: 'https://nodejs.org/en/blog/release/v26.13.1',
+                summary: 'Security release.',
+                snippet: '',
+                content: '',
+                site_name: 'Node.js',
+                site_icon: null,
+                date: null,
+                rerank_score: 2,
+                authority: 4,
+              },
+            ],
+          }),
+          { headers: { 'Content-Type': 'application/json' }, status: 200 },
+        )
+      })
+
+      const result = await ctx.service.run(payload(), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      })
+
+      expect(result.status).toBe('complete')
+      expect(
+        systemOf(ctx.contexts[0])
+          .toolsAdded.map((t) => t.name)
+          .sort(),
+      ).toEqual([
+        'bash',
+        'read_article',
+        'search_articles',
+        'web_fetch',
+        'web_search',
+      ])
+      expect(systemOf(ctx.contexts[0]).content).toContain(
+        'untrusted_web_content',
+      )
+      expect(searches).toEqual([
+        { url: 'https://api.deepseek.com/v1/tools/search', auth: 'Bearer k' },
+      ])
+      const messages = ctx.conversations.get('conv-1')!.transcript.messages
+      const toolResult = messages.find((m) => m.role === 'toolResult')
+      expect(JSON.stringify(toolResult)).toContain(
+        'https://nodejs.org/en/blog/release/v26.13.1',
+      )
+    })
+
+    it('injects OpenRouter web tools and surfaces citations as tool items', async () => {
+      const ctx = openRouter([fixture])
+
+      const result = await ctx.service.run(payload(), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      })
+
+      expect(result.status).toBe('complete')
+      expect(toolTypes(ctx.requestTools[0])).toEqual([
+        'function',
+        'function',
+        'function',
+        'openrouter:web_search',
+        'openrouter:web_fetch',
+      ])
+      const calls = ctx.events.flatMap((event) =>
+        event.type === 'toolcall_end' ? [event.toolCall] : [],
+      )
+      expect(calls.map((call) => call.name)).toEqual([
+        'web_search',
+        'web_search',
+      ])
+      const results = ctx.events.flatMap((event) =>
+        event.type === 'tool_result' ? [event] : [],
+      )
+      expect(results.map((r) => r.toolCallId)).toEqual(
+        calls.map((call) => call.id),
+      )
+      expect(results[0].content).toContain(
+        'https://nodejs.org/en/about/previous-releases',
+      )
+      const firstText = ctx.events.findIndex((e) => e.type === 'text_delta')
+      const lastCall = ctx.events.findLastIndex(
+        (e) => e.type === 'toolcall_end',
+      )
+      expect(lastCall).toBeLessThan(firstText)
+      const messages = ctx.conversations.get('conv-1')!.transcript.messages
+      expect(messages.map((m) => m.role)).toEqual(['user', 'assistant'])
+      expect(JSON.stringify(messages)).not.toContain('web_search')
+    })
+
+    it('stops injecting OpenRouter web tools once the run limit is spent', async () => {
+      const ctx = openRouter([
+        sse(
+          chunk({
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              {
+                index: 0,
+                id: 'call_1',
+                type: 'function',
+                function: {
+                  name: 'search_articles',
+                  arguments: '{"keyword":"rust"}',
+                },
+              },
+            ],
+          }),
+          finish('tool_calls', 20),
+        ),
+        sse(chunk({ role: 'assistant', content: 'done' }), finish('stop', 0)),
+      ])
+
+      const result = await ctx.service.run(payload(), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      })
+
+      expect(result.status).toBe('complete')
+      expect(ctx.requestTools).toHaveLength(2)
+      expect(toolTypes(ctx.requestTools[0])).toContain('openrouter:web_search')
+      expect(
+        toolTypes(ctx.requestTools[1]).filter((t) =>
+          t.startsWith('openrouter:'),
+        ),
+      ).toEqual([])
     })
   })
 })
