@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "admin",
+      "name": "Admin dashboard",
+      "description": "The admin app: page layout, settings, templates.",
+      "paths": [
+        "apps/admin/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "auth",
+      "name": "Auth & onboarding",
+      "description": "Signing in, first-run onboarding and entering your own space.",
+      "paths": [],
+      "aliases": []
+    },
+    {
+      "id": "ai-agent",
+      "name": "AI & writing agent",
+      "description": "The editor agent, its chat panel and session state, and AI provider access.",
+      "paths": [
+        "apps/agent-ui/**",
+        "packages/ai/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "drafts-collab",
+      "name": "Drafts & collaboration",
+      "description": "Drafts, co-authors and real-time collaborative writing.",
+      "paths": [
+        "packages/editor/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "content",
+      "name": "Content model",
+      "description": "Posts, notes, pages and their metadata fields.",
+      "paths": [
+        "apps/core/**",
+        "packages/db-schema/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "files",
+      "name": "Files & embeds",
+      "description": "Uploads and embedded resources.",
+      "paths": [],
+      "aliases": []
+    },
+    {
+      "id": "release",
+      "name": "Release & compatibility",
+      "description": "Version upgrades, migrations and compatibility work.",
+      "paths": [
+        "codemod/**",
+        "packages/mongo-pg-cli/**"
+      ],
+      "aliases": []
+    }
+  ]
+}

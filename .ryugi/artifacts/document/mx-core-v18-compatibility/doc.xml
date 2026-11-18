@@ -1,5 +1,105 @@
 <doc>
   <h1 id="O1uWs_c6">mx-core v18：兼容性收口与文档迁移</h1>
+  <h2 id="5hKO1OV5">v17.1.0 发布后的推进建议（2026-11-14）</h2>
+  <p id="ImlRrfTa">v17.1.0（afdaaec36）已发布并上线，内置 Admin 8.4.70；发布流水线、主线 CI、双架构镜像和线上健康状态已验证。下面是我的推进建议，尚未执行，也不改变此前确认的 13 项范围。v18 继续以安全、配置与 API 兼容性收口为目标。</p>
+  <p id="zWxk555n">当前 v18 代码位于 codex/v18-preparation（988ff353d），对应 <a href="https://github.com/mx-space/core/pull/2914">Core #2914</a>；配套文档为 <a href="https://github.com/mx-space/docs/pull/52">mx-docs #52</a>。本次实时读取确认两个 PR 均仍开放、未合并。该分支已实现强制加密、固定 V2、规范配置迁移与严格写入，但尚未带上 v17.1.0 基线中的凭据 accountId 修复、相应迁移、依赖升级和验证补丁。</p>
+  <alert id="kW2qV8UL" type="important">
+    <p>发 beta 前先拆发布通道。当前 .github/workflows/release.yml 匹配所有 v* 标签，在第 223 行无条件写 latest，第 235–247 行在镜像合并后触发生产 Dokploy；第 109 行的 prerelease 判断也不能正确识别完整的 beta/RC 标签。预发布必须使用独立标签和隔离环境，稳定 latest 与生产部署只接受正式版本。</p>
+  </alert>
+  <mermaid id="tU6Tf28r">flowchart TD
+    A[已上线 v17.1.0] --&gt; B[建立 v18 集成基线并拆分预发布通道]
+    B --&gt; C[真实快照的 v17.1.0 准备与恢复演练]
+    B --&gt; D[SDK 5.x 兼容版与官方消费者提前迁移]
+    C --&gt; E[完成 v18 行为和数据库收口]
+    D --&gt; E
+    E --&gt; F[Core v18 beta 与 SDK 6 beta 组合验证]
+    F --&gt; G[RC 升级 恢复 回退演练]
+    G --&gt; H[正式版与默认文档切换]
+  </mermaid>
+  <h3 id="gYGJQQED">建议的执行顺序与放行条件</h3>
+  <table id="7uvml8Xd">
+    <tr>
+      <th>
+        <p>阶段</p>
+      </th>
+      <th>
+        <p>具体交付</p>
+      </th>
+      <th>
+        <p>进入下一阶段的条件</p>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <p>1. 集成与发布通道</p>
+      </td>
+      <td>
+        <p>从 v17.1.0 建立 v18 集成分支，接入 #2914 中 v18 特有改动；维护线继续接 v17 修复。保留原分支与已有工作。为 beta/RC 修正 GitHub prerelease 标识、镜像标签和部署目标。</p>
+      </td>
+      <td>
+        <p>最新登录修复及迁移保留，Core/Admin/CLI 回归通过；预发布不会改变稳定 latest，也不会调用生产 webhook。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>2. 数据与消费者准备，可同时推进</p>
+      </td>
+      <td>
+        <p>使用保留原秘密的真实快照，在隔离环境完成 v17.1.0 check → dry-run → prepare → check，以及恢复验证。发布 SDK 5.x 兼容改动，逐项更新 Admin、CLI 和 Yohaku 的真实请求。</p>
+      </td>
+      <td>
+        <p>原 API Key、OAuth、密码登录和配置值保持；AI 指标覆盖通过；消费者不再发送即将移除的请求形状。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>3. v18 契约与 SDK 6</p>
+      </td>
+      <td>
+        <p>完成普通 AI GET 只读、缺失结果可空；移除已确认的执行 GET、评论查询 state 别名和数值排序；同步 SDK 6、Admin、CLI 和主题。最后移除 AI 旧响应字段与物理列，并处理相关缓存。</p>
+      </td>
+      <td>
+        <p>每个破坏项都有实际调用、替代路径与行为回归；SSE、权限、wire 格式和保留的长期 URL 不变；准备版在删列 schema 上仍可读写。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>4. beta 与 RC</p>
+      </td>
+      <td>
+        <p>先在隔离环境跑 Core 18 beta + SDK 6 beta；同时验证 SDK 6 对 v17.1.0 的兼容读取。RC 使用真实快照验证新装、准备后升级、失败重试、历史备份恢复和代码回退。</p>
+      </td>
+      <td>
+        <p>矩阵填写真实版本；正式迁移可重跑，错误秘密不产生部分成功；部署和恢复指南中的每条命令均有实跑证据。</p>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <p>5. 正式发布</p>
+      </td>
+      <td>
+        <p>协调 Core 18、SDK 6、匹配的内置 Admin、已验证 CLI/主题与 mx-docs 默认入口；保留固定到 v17.1.0 的准备与恢复说明。</p>
+      </td>
+      <td>
+        <p>RC 门槛全部通过，现场配置和恢复材料齐全；发布后核对实际镜像、服务版本、关键凭据与读写行为。</p>
+      </td>
+    </tr>
+  </table>
+  <h3 id="1QEaQsP8">已经看到的具体兼容差距</h3>
+  <ul id="PFbRMeqD">
+    <li>Yohaku 的 apps/web/package.json 仍固定 @mx-space/api-client 5.13.0；帖子列表通过 post.proxy.get 直接发送 sortOrder: -1/1。SDK 的规范化目前在具名方法里，原始 proxy 调用仍须实际修改和验证。</li>
+    <li>CLI 的 AI summary/insights by-article 命令将 only-db 默认设为 false，说明仍承诺缺失时自动生成。需要将读取与显式生成的命令语义、帮助文案、空结果反馈一起调整。</li>
+    <li>v18 分支已删除 githubToken、smtp.options 等公开类型，但包版本仍为 5.13.1。兼容 5.x 发布只带保留签名的传输修正，这些类型删除归入 SDK 6。</li>
+    <li>集成时重点保留 v17.0.5/v17.1.0 的密码账户 accountId 修复及 20261113-credential-account-ids 迁移；当前旧 v18 分支尚未包含它们。</li>
+  </ul>
+  <h3 id="gsTBWlMZ">升级与恢复的固定边界</h3>
+  <p id="OglRLl9-">v17.1.0 有独立 prepare 和 dry-run；现有 v18 分支已按后续决定删除这些入口，配置、凭据和指标统一进入正式 migrate。这两个版本的指南必须分别写清，尤其要验证已在 v17.1.0 准备的数据经过 v18 migrate 后，不会重复哈希 API Key、错误封装 OAuth 或丢失配置。</p>
+  <p id="skdaWyCW">列删除继续遵守 expand-contract，先确认所有目标副本运行 v17.1.0 且指标覆盖通过。v18 配置 contract 切换使用维护窗口，先停止旧副本和后台写入者，再运行发布前迁移。普通启动只做检查。回退测试使用 v17.1.0 的实际构建验证新 schema；更老版本使用完整旧快照及原秘密。</p>
+  <p id="YAtNrFfi"><b>我的建议：</b>下一步先完成第 1 阶段，并建立“破坏项 → 真实调用 → 最低客户端版本 → 回归证据”的清单。随后并行推进隔离快照演练和 SDK 5.x/消费者适配。生产 prepare 与 JWT 轮换仍需单独安排维护窗口，本轮只补推进建议，未执行这些操作。</p>
+  <details id="GAPbyvSM" summary="本次核对依据与验证限制" open="false">
+    <p>本地读取 master afdaaec36 与 codex/v18-preparation 988ff353d 的源码差异、发布工作流、SDK 类型、CLI AI 命令及 Yohaku 实际调用；通过 GitHub 连接器核对两个 PR 的当前状态。本轮没有运行 v18 构建、集成测试或生产升级检查，不把旧分支的验收记录视作最新集成基线的通过结果。</p>
+  </details>
+  <h2 id="5j8jU752">此前 v18 分支的实现与讨论记录</h2>
   <p id="CM-Tx2j7">当前开发分支已强制显式字段密钥、至少 32 字符 JWT 与固定 V2 写入，并新增发布前必跑的 20261109-canonical-config 数据迁移。旧配置在 DB 中转换、重加密并删除旧行；配置服务、schema 与 PATCH 只认规范结构，历史转换器仅在发布迁移和离线工具中调用。部署须先停止旧副本及后台写入者。最新 Core 共 3579 项行为已验证（3576 项完整运行通过，3 项因 Redis 端口竞争独立重跑通过），11 项既定跳过，原有 Agent DI 夹具仍显式排除；该次完整命令含基础设施错误，不称单命令全绿。单次独立审阅发现的两处数据保留问题已通过 5 项先失败后通过的数据库回归修复。mx-docs 已同步迁移和严格配置契约，保留 v17.0.4 历史边界。Core PR #2914 与 mx-docs PR #52 互相链接；尚未合并或发版，未操作线上数据；其他 API/SDK 清理及物理列删除仍在后续阶段。</p>
   <h2 id="zYylq_4S">我们已经决定了什么</h2>
   <ul id="dqFSFLo5">
