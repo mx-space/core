@@ -1,3 +1,4 @@
+import type { WebSearchVendor } from '@mx-space/ai'
 import { useQuery } from '@tanstack/react-query'
 import { Pencil, Plus, Settings, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -25,7 +26,10 @@ import type {
   AIProviderConfig,
   AIProviderModel,
 } from '../../types/settings'
-import { formatAIProviderLabel } from '../../utils/settings'
+import {
+  formatAIProviderLabel,
+  listWebSearchProviders,
+} from '../../utils/settings'
 import { EmptyState, FieldShell, SettingsSection } from '../SettingsPrimitives'
 import { AIModelAssignmentField } from './AIModelAssignmentField'
 import { AIProviderDrawer } from './AIProviderDrawer'
@@ -111,6 +115,10 @@ export function AIConfigEditor(props: {
   const providerModels = modelsQuery.data ?? {}
   const speechProviderModels = speechModelsQuery.data ?? {}
   const imageProviderModels = imageModelsQuery.data ?? {}
+  const webSearchProviders = listWebSearchProviders(providers)
+  const webSearchVendor = webSearchProviders.find(
+    ({ provider }) => provider.id === props.value.webSearch?.providerId,
+  )?.vendor
 
   const updateConfig = (patch: Partial<AIConfig>) =>
     props.onChange({ ...props.value, ...patch })
@@ -148,6 +156,7 @@ export function AIConfigEditor(props: {
       props.value.insightsTranslationModel,
       props.value.imageGeneration?.model,
       props.value.tts?.model,
+      props.value.webSearch,
     ]
     if (references.some((assignment) => assignment?.providerId === id)) {
       toast.warning(t('settings.ai.error.providerInUse'))
@@ -578,6 +587,39 @@ export function AIConfigEditor(props: {
           </div>
         </FeatureSection>
 
+        <FeatureSection
+          assignment={
+            <FieldShell label={t('settings.ai.field.webSearchProvider')}>
+              <SelectField<string>
+                aria-label={t('settings.ai.field.webSearchProvider')}
+                onValueChange={(providerId) =>
+                  updateConfig({
+                    webSearch: { ...props.value.webSearch, providerId },
+                  })
+                }
+                options={webSearchProviders.map(({ provider }) => ({
+                  label: formatAIProviderLabel(provider),
+                  value: provider.id,
+                }))}
+                value={props.value.webSearch?.providerId ?? ''}
+              />
+            </FieldShell>
+          }
+          description={t('settings.ai.section.webSearchDescription')}
+          enabled={Boolean(props.value.webSearch?.enable)}
+          onEnabledChange={(enable) =>
+            updateConfig({ webSearch: { ...props.value.webSearch, enable } })
+          }
+          title={t('settings.ai.section.webSearch')}
+          toggleLabel={t('settings.ai.switch.enableWebSearch')}
+        >
+          <p className="text-xs text-fg-subtle">
+            {t(
+              webSearchHintKey(webSearchVendor, webSearchProviders.length > 0),
+            )}
+          </p>
+        </FeatureSection>
+
         <SettingsSection
           description={t('settings.ai.section.otherModelsDescription')}
           title={t('settings.ai.section.otherModels')}
@@ -677,6 +719,17 @@ function ProviderRow(props: {
       </Button>
     </div>
   )
+}
+
+function webSearchHintKey(
+  vendor: WebSearchVendor | undefined,
+  hasProviders: boolean,
+): TranslationKey {
+  if (vendor === 'openrouter') return 'settings.ai.hint.webSearchOpenRouter'
+  if (vendor === 'deepseek') return 'settings.ai.hint.webSearchDeepSeek'
+  return hasProviders
+    ? 'settings.ai.hint.webSearchPick'
+    : 'settings.ai.hint.webSearchNoProvider'
 }
 
 function FeatureSection(props: {

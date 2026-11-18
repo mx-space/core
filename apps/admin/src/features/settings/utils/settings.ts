@@ -1,3 +1,4 @@
+import { resolveWebSearchVendor, type WebSearchVendor } from '@mx-space/ai'
 import {
   Bell,
   CreditCard,
@@ -203,6 +204,18 @@ export function formatAIProviderLabel(provider: AIProviderConfig) {
     (option) => option.value === provider.type,
   )
   return option ? t(option.labelKey) : provider.type
+}
+
+/** Enabled providers that can serve the editor agent's web search. */
+export function listWebSearchProviders(
+  providers: AIProviderConfig[],
+): Array<{ provider: AIProviderConfig; vendor: WebSearchVendor }> {
+  return providers.flatMap((provider) => {
+    const vendor = provider.enabled
+      ? resolveWebSearchVendor(provider)
+      : undefined
+    return vendor ? [{ provider, vendor }] : []
+  })
 }
 
 export function getDefaultAIModel(type: AIProviderType) {

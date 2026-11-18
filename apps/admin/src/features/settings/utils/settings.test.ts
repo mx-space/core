@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   coerceAIProviderType,
+  listWebSearchProviders,
   matchRegistryModel,
   mergeModelOptions,
   normalizeAIConfig,
@@ -316,4 +317,46 @@ it('preserves a saved decision provider and assignment when reopening settings',
     capabilities: { decision: true, text: false },
   })
   expect(resolvePiProviderId(reopened.providers![0])).toBeNull()
+})
+
+describe('listWebSearchProviders', () => {
+  const base = {
+    apiKey: 'k',
+    defaultModel: 'm',
+    enabled: true,
+    name: '',
+    type: 'openai-compatible' as const,
+  }
+
+  it('offers enabled OpenRouter and DeepSeek providers with their vendor', () => {
+    expect(
+      listWebSearchProviders([
+        { ...base, id: 'or', endpoint: 'https://openrouter.ai/api/v1' },
+        { ...base, id: 'ds', endpoint: 'https://api.deepseek.com' },
+        { ...base, id: 'oa', endpoint: 'https://api.openai.com/v1' },
+      ]).map(({ provider, vendor }) => [provider.id, vendor]),
+    ).toEqual([
+      ['or', 'openrouter'],
+      ['ds', 'deepseek'],
+    ])
+  })
+
+  it('skips disabled providers and OpenRouter over other protocols', () => {
+    expect(
+      listWebSearchProviders([
+        {
+          ...base,
+          id: 'off',
+          enabled: false,
+          endpoint: 'https://api.deepseek.com',
+        },
+        {
+          ...base,
+          id: 'or-anthropic',
+          type: 'anthropic',
+          endpoint: 'https://openrouter.ai/api',
+        },
+      ]),
+    ).toEqual([])
+  })
 })

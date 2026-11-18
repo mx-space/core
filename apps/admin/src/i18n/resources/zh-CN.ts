@@ -2274,6 +2274,18 @@ export const zhCN = {
   'settings.ai.switch.enableTranslation': '启用 AI 翻译',
   'settings.ai.switch.enableTranslationReview': '启用翻译审稿',
   'settings.ai.switch.enableTts': '启用 AI 语音生成',
+  'settings.ai.section.webSearch': 'Agent 联网搜索',
+  'settings.ai.section.webSearchDescription':
+    '让编辑器 agent 通过提供商自带的搜索查资料、读网页。开启并选好搜索提供商后，agent 才会拿到 web_search 和 web_fetch 工具。',
+  'settings.ai.switch.enableWebSearch': '为 agent 启用联网搜索',
+  'settings.ai.field.webSearchProvider': '搜索提供商',
+  'settings.ai.hint.webSearchOpenRouter':
+    'OpenRouter 的搜索在模型请求里执行，只有 agent 使用这个提供商时才会生效；按 OpenRouter 的搜索价格计费。',
+  'settings.ai.hint.webSearchDeepSeek':
+    '对任意 agent 模型生效：用这个提供商的 key 调 DeepSeek Search / Fetch API，按成功请求计费。',
+  'settings.ai.hint.webSearchPick': '选择一个 OpenRouter 或 DeepSeek 提供商。',
+  'settings.ai.hint.webSearchNoProvider':
+    '请先添加并启用一个 OpenRouter 或 DeepSeek 提供商。',
   'settings.ai.switch.enableTranslationReviewDescription':
     '开启后翻译 agent 可发起审稿，并按 issues 驱动修订。',
   'settings.ai.switch.insightsTargetLanguages': '精读目标语言',

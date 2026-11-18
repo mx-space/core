@@ -2390,6 +2390,18 @@ export const enUS = {
   'settings.ai.switch.enableTranslation': 'Enable AI translation',
   'settings.ai.switch.enableTranslationReview': 'Enable translation review',
   'settings.ai.switch.enableTts': 'Enable AI speech generation',
+  'settings.ai.section.webSearch': 'Agent web search',
+  'settings.ai.section.webSearchDescription':
+    "Let the editor agent look things up and read pages through a provider's built-in search. The agent only gets the web_search and web_fetch tools once this is on and a search provider is picked.",
+  'settings.ai.switch.enableWebSearch': 'Enable web search for the agent',
+  'settings.ai.field.webSearchProvider': 'Search provider',
+  'settings.ai.hint.webSearchOpenRouter':
+    'OpenRouter search runs inside the model request, so it only applies when the agent uses this same provider. Billed at OpenRouter search prices.',
+  'settings.ai.hint.webSearchDeepSeek':
+    "Works with any agent model: calls the DeepSeek Search / Fetch API with this provider's key, billed per successful request.",
+  'settings.ai.hint.webSearchPick': 'Pick an OpenRouter or DeepSeek provider.',
+  'settings.ai.hint.webSearchNoProvider':
+    'Add and enable an OpenRouter or DeepSeek provider first.',
   'settings.ai.switch.enableTranslationReviewDescription':
     'When enabled, the translation agent may request review and apply issue-driven revisions.',
   'settings.ai.switch.insightsTargetLanguages': 'Insights target languages',

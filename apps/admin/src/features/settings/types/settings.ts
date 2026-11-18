@@ -80,6 +80,10 @@ export interface AIConfig {
     speed?: number
     voice?: string
   }
+  webSearch?: {
+    enable?: boolean
+    providerId?: string | null
+  }
   writerModel?: AIModelAssignment | null
 }
 
