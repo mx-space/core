@@ -17,7 +17,7 @@
 
 - Anthropic、Google Vertex、OpenAI 官方、generic、lobehub、typesafe：本版不接。
 - 自建搜索后端（Tavily/Exa 直连）、core 自己抓网页（undici + Readability / agent-browser）：不做。
-- 任何设置项或 admin 设置页改动：不加。provider 匹配到 profile 即启用。
+- ~~任何设置项或 admin 设置页改动：不加。~~ 已由「6. 设置开关」修订取代。
 - 摘要、翻译、insights 等非 agent 的 AI 功能：请求体不变。
 
 ## 反目标
@@ -126,6 +126,17 @@ onProviderStreamEvent?: (chunk: unknown) => void
 
 - OpenRouter：`max_uses: 5` 限制单次请求内的搜索次数；另外每次 run 累计每次模型调用最后一个 chunk 的 `usage.server_tool_use_details.tool_calls_executed`，到 20 次后，后续模型调用不再传 `providerTools`（我的判断，和 DeepSeek 保持同一上限）。
 - DeepSeek：单次 run 内 `web_search` + `web_fetch` 合计最多 20 次，超出返回 `isError` 提示「本轮联网次数已用完」。
+
+### 6. 设置开关（2026-11-19 修订，取代「不加设置项」）
+
+站长要求联网能力由 AI 设置显式开启：
+
+- 配置：`ai.webSearch = { enable: boolean (默认 false), providerId?: string | null }`（`configs.schema.ts` 的 `AIWebSearchFeatureSchema`）。
+- 只有 `enable` 为真、且 `providerId` 指向一个已启用、能提供搜索的 provider 时，agent 才会拿到 web 工具和 system 说明；否则请求与未接入前完全一致。
+- 哪些 provider 能当搜索提供商：`@mx-space/ai` 的 `resolveWebSearchVendor`（admin 与 core 共用）——host 为 `openrouter.ai` 且类型为 openai-compatible → `openrouter`；host 为 `api.deepseek.com` → `deepseek`。
+- 保存校验：开启时 provider 必须存在、已启用且能提供搜索，否则 `CONFIG_VALIDATION_FAILED`。
+- 生效范围：DeepSeek 搜索由 core 调 Search / Fetch API，对任意 agent 模型生效（用搜索提供商的 key）；OpenRouter 搜索挂在模型请求上，只有 agent 使用的正是该 OpenRouter provider 时才注入（我的判断，设置页有提示）。
+- admin：AI 设置新增「Agent 联网搜索」功能块（开关 + 搜索提供商下拉 + 按 vendor 的说明），删除被引用的 provider 时给出「正在使用」提示。
 
 ## 实施第 0 步：探测（2026-11-19 已完成）
 

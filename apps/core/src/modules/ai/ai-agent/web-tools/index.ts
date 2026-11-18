@@ -1,7 +1,6 @@
-import { deriveProviderId } from '@mx-space/ai/runtime'
+import { resolveWebSearchVendor } from '@mx-space/ai'
 
 import type { AIProviderConfig } from '~/modules/ai/ai.types'
-import { AIProviderType } from '~/modules/ai/ai.types'
 
 import { createDeepSeekProfile } from './deepseek'
 import { openRouterProfile } from './openrouter'
@@ -10,18 +9,15 @@ import type { WebToolProfile } from './web-tools.types'
 export * from './web-tools.types'
 
 /**
- * Web tools come from the provider the agent runs on; providers without a
- * profile get none, and their request payloads stay untouched.
+ * Web tools a provider can serve; providers without a built-in search get
+ * none, and their request payloads stay untouched.
  */
 export function resolveWebToolProfile(
   provider: Pick<AIProviderConfig, 'type' | 'endpoint' | 'apiKey'>,
 ): WebToolProfile | undefined {
-  if (!provider.endpoint?.trim()) return undefined
-  switch (deriveProviderId(provider.endpoint, provider.type)) {
+  switch (resolveWebSearchVendor(provider)) {
     case 'openrouter': {
-      return provider.type === AIProviderType.OpenAICompatible
-        ? openRouterProfile
-        : undefined
+      return openRouterProfile
     }
     case 'deepseek': {
       return createDeepSeekProfile(provider.apiKey)

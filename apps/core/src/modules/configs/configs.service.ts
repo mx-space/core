@@ -1,3 +1,4 @@
+import { resolveWebSearchVendor } from '@mx-space/ai'
 import type { OnModuleInit } from '@nestjs/common'
 import { Injectable, Logger } from '@nestjs/common'
 import { cloneDeep, merge, mergeWith } from 'es-toolkit/compat'
@@ -656,6 +657,23 @@ export class ConfigsService implements OnModuleInit {
       throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
         message: 'ai.tts.voice: required when TTS is enabled',
       })
+    }
+
+    const webSearch = aiConfig.webSearch
+    if (webSearch?.enable) {
+      const provider = aiConfig.providers?.find(
+        (candidate) => candidate.id === webSearch.providerId,
+      )
+      if (!provider?.enabled) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: 'ai.webSearch.providerId: an enabled provider is required',
+        })
+      }
+      if (!resolveWebSearchVendor(provider)) {
+        throw createAppException(AppErrorCode.CONFIG_VALIDATION_FAILED, {
+          message: `ai.webSearch.providerId: provider "${provider.id}" has no built-in web search (OpenRouter or DeepSeek)`,
+        })
+      }
     }
   }
 

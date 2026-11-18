@@ -472,6 +472,72 @@ describe('ConfigsService', () => {
       ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
     })
 
+    describe('agent web search', () => {
+      function withProviders() {
+        const currentConfig = generateDefaultConfig()
+        currentConfig.ai.providers = [
+          {
+            id: 'deepseek',
+            name: 'DeepSeek',
+            type: AIProviderType.OpenAICompatible,
+            apiKey: 'secret',
+            endpoint: 'https://api.deepseek.com',
+            defaultModel: 'deepseek-v4-flash',
+            enabled: true,
+          },
+          {
+            id: 'openai',
+            name: 'OpenAI',
+            type: AIProviderType.OpenAICompatible,
+            apiKey: 'secret',
+            endpoint: 'https://api.openai.com/v1',
+            defaultModel: 'gpt-5-mini',
+            enabled: true,
+          },
+        ]
+        return currentConfig
+      }
+
+      it('saves an enabled search route to a DeepSeek provider', async () => {
+        const currentConfig = withProviders()
+        const { service } = createService(currentConfig)
+
+        const result = await service.patchAndValid('ai', {
+          ...currentConfig.ai,
+          webSearch: { enable: true, providerId: 'deepseek' },
+        })
+
+        expect(result.webSearch).toEqual({
+          enable: true,
+          providerId: 'deepseek',
+        })
+      })
+
+      it('rejects enabled search without a provider', async () => {
+        const currentConfig = withProviders()
+        const { service } = createService(currentConfig)
+
+        await expect(
+          service.patchAndValid('ai', {
+            ...currentConfig.ai,
+            webSearch: { enable: true, providerId: null },
+          }),
+        ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+      })
+
+      it('rejects a provider that has no web search', async () => {
+        const currentConfig = withProviders()
+        const { service } = createService(currentConfig)
+
+        await expect(
+          service.patchAndValid('ai', {
+            ...currentConfig.ai,
+            webSearch: { enable: true, providerId: 'openai' },
+          }),
+        ).rejects.toMatchObject({ code: AppErrorCode.CONFIG_VALIDATION_FAILED })
+      })
+    })
+
     it('clears persisted media routes when an assignment is explicitly null', async () => {
       const currentConfig = generateDefaultConfig()
       currentConfig.ai.imageGeneration.model = {

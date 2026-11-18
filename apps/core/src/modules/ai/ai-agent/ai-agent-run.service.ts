@@ -18,6 +18,7 @@ import {
 import { Injectable, Logger } from '@nestjs/common'
 
 import { AppErrorCode, createAppException } from '~/common/errors'
+import type { AIConfig } from '~/modules/configs/configs.schema'
 import { ConfigsService } from '~/modules/configs/configs.service'
 import { FileReferenceService } from '~/modules/file/file-reference.service'
 
@@ -43,6 +44,7 @@ import {
   resolveWebToolProfile,
   WEB_TOOL_RUN_LIMIT,
   type WebToolActivity,
+  type WebToolProfile,
 } from './web-tools'
 
 const MAX_MODEL_CALLS = 40
@@ -111,7 +113,9 @@ export class AiAgentRunService {
     payload: ResolvedAgentRun,
     { sink, signal, inbox = createSteerInbox() }: AgentRunOptions,
   ): Promise<AgentRunResult> {
-    const provider = await this.resolveProvider(payload.providerId)
+    const { provider, webProfile } = await this.resolveProvider(
+      payload.providerId,
+    )
     const runtime = createModelRuntime(provider, payload.model)
     const loadImage = createImageLoader({
       allowedHosts: await this.fileReferenceService.collectAllowedImageHosts(),
@@ -156,7 +160,6 @@ export class AiAgentRunService {
     appendUser(payload.user, payload.files, payload.images)
     await handle.save()
 
-    const webProfile = resolveWebToolProfile(provider)
     const serverTools = new Map(
       [
         ...this.articleTools,
@@ -422,8 +425,30 @@ export class AiAgentRunService {
         message: `Provider "${providerId}" not found or disabled`,
       })
     }
-    return provider
+    return { provider, webProfile: resolveWebSearch(aiConfig, provider) }
   }
+}
+
+/**
+ * Web tools exist only when settings enable web search with a search
+ * provider. OpenRouter search rides on the model request, so it applies only
+ * when the agent runs on that same provider; DeepSeek search works for any.
+ */
+function resolveWebSearch(
+  aiConfig: AIConfig,
+  agentProvider: { id: string },
+): WebToolProfile | undefined {
+  const settings = aiConfig.webSearch
+  if (!settings?.enable || !settings.providerId) return undefined
+  const searchProvider = aiConfig.providers?.find(
+    (p) => p.id === settings.providerId && p.enabled,
+  )
+  if (!searchProvider) return undefined
+  const profile = resolveWebToolProfile(searchProvider)
+  if (profile?.kind === 'inject' && searchProvider.id !== agentProvider.id) {
+    return undefined
+  }
+  return profile
 }
 
 function toolResult(

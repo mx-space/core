@@ -196,6 +196,10 @@ export const generateDefaultConfig: () => IConfig = () => ({
       concurrency: 3,
       maxCharsPerRun: 120000,
     },
+    webSearch: {
+      enable: false,
+      providerId: undefined,
+    },
   },
   oauth: {
     providers: [],

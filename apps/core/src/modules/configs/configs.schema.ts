@@ -904,6 +904,15 @@ const AITtsFeatureSchema = withMeta(
   { title: 'AI text to speech feature', 'ui:options': { type: 'hidden' } },
 )
 
+const AIWebSearchFeatureSchema = withMeta(
+  z.object({
+    enable: z.boolean().optional().default(false),
+    /** Provider whose built-in web search serves the editor agent. */
+    providerId: z.string().nullish(),
+  }),
+  { title: 'AI agent web search', 'ui:options': { type: 'hidden' } },
+)
+
 const languageTagList = () =>
   z
     .preprocess(
@@ -1058,6 +1067,7 @@ export const AISchema = section('AI settings', {
   ),
   imageGeneration: AIImageGenerationFeatureSchema.optional(),
   tts: AITtsFeatureSchema.optional(),
+  webSearch: AIWebSearchFeatureSchema.optional(),
 })
 export type AIConfig = z.infer<typeof AISchema>
 

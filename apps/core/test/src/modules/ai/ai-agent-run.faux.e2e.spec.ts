@@ -34,10 +34,22 @@ type Step = Parameters<
   ReturnType<typeof withFauxAi>['registration']['setResponses']
 >[0][number]
 
+interface SetupOptions {
+  /** Endpoint of the provider the agent runs on. */
+  endpoint?: string
+  /** Providers configured besides the agent's own. */
+  extraProviders?: Array<Record<string, unknown>>
+  webSearch?: { enable: boolean; providerId: string | null }
+}
+
 function setup(
   responses: Step[],
   conversation?: StoredConversation,
-  endpoint = `https://${PROVIDER}.example.com`,
+  {
+    endpoint = `https://${PROVIDER}.example.com`,
+    extraProviders = [],
+    webSearch,
+  }: SetupOptions = {},
 ) {
   const contexts: Context[] = []
   const recorded = responses.map(
@@ -79,7 +91,9 @@ function setup(
           defaultModel: MODEL_ID,
           enabled: true,
         },
+        ...extraProviders,
       ],
+      webSearch,
     })),
   }
   const articles: AgentArticleSource = {
@@ -635,7 +649,10 @@ describe('AiAgentRunService', () => {
 
     /** Real openai-completions over a mocked OpenRouter endpoint. */
     function openRouter(replies: string[]) {
-      const ctx = setup([], emptyConversation(), 'https://openrouter.ai/api/v1')
+      const ctx = setup([], emptyConversation(), {
+        endpoint: 'https://openrouter.ai/api/v1',
+        webSearch: { enable: true, providerId: PROVIDER },
+      })
       ctx.teardown()
       registerBuiltInApiProviders()
       const requestTools: unknown[][] = []
@@ -673,7 +690,68 @@ describe('AiAgentRunService', () => {
       vi.restoreAllMocks()
     })
 
-    it('runs DeepSeek web_search through the DeepSeek Search API', async () => {
+    const deepSeekSearch = {
+      id: 'ds',
+      name: 'DeepSeek',
+      type: AIProviderType.OpenAICompatible,
+      apiKey: 'ds-key',
+      endpoint: 'https://api.deepseek.com',
+      defaultModel: 'deepseek-v4-flash',
+      enabled: true,
+    }
+
+    function toolNames(ctx: { contexts: Context[] }) {
+      return systemOf(ctx.contexts[0])
+        .toolsAdded.map((t) => t.name)
+        .sort()
+    }
+
+    it('keeps web tools off until web search is enabled in settings', async () => {
+      const ctx = setup([fauxAssistantMessage('ok')], emptyConversation(), {
+        endpoint: 'https://api.deepseek.com',
+      })
+      torn.push(ctx.teardown)
+
+      await ctx.service.run(payload(), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      })
+
+      expect(toolNames(ctx)).toEqual([
+        'bash',
+        'read_article',
+        'search_articles',
+      ])
+      expect(systemOf(ctx.contexts[0]).content).toBe('You edit documents.')
+    })
+
+    it('does not inject OpenRouter search into an agent on another provider', async () => {
+      const ctx = setup([fauxAssistantMessage('ok')], emptyConversation(), {
+        extraProviders: [
+          {
+            ...deepSeekSearch,
+            id: 'or',
+            endpoint: 'https://openrouter.ai/api/v1',
+          },
+        ],
+        webSearch: { enable: true, providerId: 'or' },
+      })
+      torn.push(ctx.teardown)
+
+      await ctx.service.run(payload(), {
+        sink: ctx.sink,
+        signal: new AbortController().signal,
+      })
+
+      expect(toolNames(ctx)).toEqual([
+        'bash',
+        'read_article',
+        'search_articles',
+      ])
+      expect(systemOf(ctx.contexts[0]).content).toBe('You edit documents.')
+    })
+
+    it('serves web_search from the configured DeepSeek search provider', async () => {
       const ctx = setup(
         [
           fauxAssistantMessage(
@@ -683,7 +761,10 @@ describe('AiAgentRunService', () => {
           fauxAssistantMessage('Node 26.13.1'),
         ],
         emptyConversation(),
-        'https://api.deepseek.com',
+        {
+          extraProviders: [deepSeekSearch],
+          webSearch: { enable: true, providerId: 'ds' },
+        },
       )
       torn.push(ctx.teardown)
       const searches: Array<{ url: string; auth: string | null }> = []
@@ -719,11 +800,7 @@ describe('AiAgentRunService', () => {
       })
 
       expect(result.status).toBe('complete')
-      expect(
-        systemOf(ctx.contexts[0])
-          .toolsAdded.map((t) => t.name)
-          .sort(),
-      ).toEqual([
+      expect(toolNames(ctx)).toEqual([
         'bash',
         'read_article',
         'search_articles',
@@ -734,7 +811,10 @@ describe('AiAgentRunService', () => {
         'untrusted_web_content',
       )
       expect(searches).toEqual([
-        { url: 'https://api.deepseek.com/v1/tools/search', auth: 'Bearer k' },
+        {
+          url: 'https://api.deepseek.com/v1/tools/search',
+          auth: 'Bearer ds-key',
+        },
       ])
       const messages = ctx.conversations.get('conv-1')!.transcript.messages
       const toolResult = messages.find((m) => m.role === 'toolResult')
