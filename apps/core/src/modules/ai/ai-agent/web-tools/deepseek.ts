@@ -183,14 +183,15 @@ function createTools(apiKey: string, budget: WebToolBudget): AgentServerTool[] {
         const offset = parsed.data.offset ?? 0
         const slice = content.slice(offset, offset + PAGE_CHARS)
         const end = offset + slice.length
-        const header = [`title: ${title || '(none)'}`, `url: ${url}`]
+        // Only core-produced lines sit outside the fence; the page title is page-controlled.
+        const header = [`url: ${url}`]
         if (offset > 0 || end < content.length) {
           header.push(
             `range: characters ${offset}-${end} of total ${content.length} characters${end < content.length ? `; continue with offset ${end}` : ''}`,
           )
         }
         return {
-          content: `${header.join('\n')}\n\n${untrusted('web_fetch', slice)}`,
+          content: `${header.join('\n')}\n\n${untrusted('web_fetch', `title: ${title || '(none)'}\n\n${slice}`)}`,
           isError: false,
         }
       },
