@@ -4197,6 +4197,11 @@ export const enUS = {
   'write.premium.paywall.context.image': '[Image]',
   'write.premium.paywall.context.other': '[{type}]',
   'write.premium.paywall.context.readersStop': 'Readers stop here · block {n}',
+  'write.publishConfirm.aiSkip': 'Skip this time',
+  'write.publishConfirm.aiSkipped':
+    'No AI resources will be generated this time; existing ones stay as they are. Your last choices are kept for the next publish.',
+  'write.publishConfirm.aiSkippedMetaOnly':
+    'Only metadata changed. Existing AI resources still match the content and will not be regenerated.',
   'write.publishConfirm.aiDescription':
     'For each resource, skip it, generate it before going live (publishing waits for it), or after going live (generated in the background). Unselected existing resources are preserved.',
   'write.publishConfirm.aiTitle': 'Update AI resources too (optional)',

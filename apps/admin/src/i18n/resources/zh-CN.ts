@@ -3986,6 +3986,11 @@ export const zhCN = {
   'write.premium.paywall.context.image': '[图片]',
   'write.premium.paywall.context.other': '[{type}]',
   'write.premium.paywall.context.readersStop': '读者读到这里 · 第 {n} 块',
+  'write.publishConfirm.aiSkip': '本次跳过',
+  'write.publishConfirm.aiSkipped':
+    '本次不生成 AI 资源，现有资源保持不变；上次的生成选择会保留到下次发布。',
+  'write.publishConfirm.aiSkippedMetaOnly':
+    '本次只修改了元信息，现有 AI 资源仍与正文一致，不会重新生成。',
   'write.publishConfirm.aiDescription':
     '每项选择不生成、上线前生成（等待完成再上线）或上线后生成（先上线，后台生成）。未选择的现有资源不会被删除。',
   'write.publishConfirm.aiTitle': '同时更新 AI 资源（可选）',

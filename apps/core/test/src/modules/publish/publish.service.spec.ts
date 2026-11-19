@@ -122,12 +122,14 @@ const harness = (options: { crdt?: boolean; online?: boolean } = {}) => {
     confirmDiverged = false,
     aiResources?: unknown,
     revisionId: string = branch.headRevisionId,
+    rememberAiResources?: boolean,
   ) =>
     service.create({
       aiResources,
       branchId: branch.id,
       confirmDiverged,
       expectedPublishedRevisionId: branch.document.publishedRevisionId,
+      rememberAiResources,
       revisionId,
     } as never)
   const run = async (signal = new AbortController().signal) => {
@@ -363,6 +365,15 @@ describe('PublishService AI resource memory', () => {
       remembered,
     )
   })
+
+  it('keeps the remembered choices when the publish skips AI', async () => {
+    const { branch, create, drafts, run } = harness()
+    await create(false, [], branch.headRevisionId, false)
+
+    await run()
+
+    expect(drafts.setPublishAiResources).not.toHaveBeenCalled()
+  })
 })
 
 describe('CreatePublishJobSchema aiResources', () => {
@@ -386,5 +397,9 @@ describe('CreatePublishJobSchema aiResources', () => {
 
   it('leaves aiResources undefined when omitted', () => {
     expect(CreatePublishJobSchema.parse(base).aiResources).toBeUndefined()
+  })
+
+  it('remembers AI choices unless told otherwise', () => {
+    expect(CreatePublishJobSchema.parse(base).rememberAiResources).toBe(true)
   })
 })

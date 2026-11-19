@@ -28,6 +28,8 @@ export const CreatePublishJobSchema = z.object({
   branchId: zEntityId,
   confirmDiverged: z.boolean().default(false),
   expectedPublishedRevisionId: zEntityId.nullable(),
+  /** `false` publishes without overwriting the remembered AI choices. */
+  rememberAiResources: z.boolean().default(true),
   revisionId: zEntityId,
 })
 

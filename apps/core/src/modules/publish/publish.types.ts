@@ -24,6 +24,8 @@ export interface PublishTaskPayload {
   operation: PublishOperation
   refId: string | null
   refType: DraftRefType
+  /** Absent on tasks created before the flag existed; treated as `true`. */
+  rememberAiResources?: boolean
   revisionId: string
   snapshot: PublishSnapshot
 }

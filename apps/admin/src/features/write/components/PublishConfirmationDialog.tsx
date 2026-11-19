@@ -12,6 +12,7 @@ import type { TranslationKey } from '~/i18n/types'
 import { Modal, ModalFooter, ModalHeader } from '~/ui/feedback/modal'
 import { Button } from '~/ui/primitives/button'
 import { SegmentedControl } from '~/ui/primitives/segmented-control'
+import { Switch } from '~/ui/primitives/switch'
 import { cn } from '~/utils/cn'
 
 import {
@@ -32,7 +33,12 @@ export function PublishConfirmationDialog(props: {
   diverged: boolean
   kind: 'note' | 'page' | 'post'
   onClose: () => void
-  onConfirm: (resources: PublishAiResourceRequest[]) => void
+  /** Whether title or body differs from the online version. */
+  contentChanged: boolean
+  onConfirm: (input: {
+    aiResources: PublishAiResourceRequest[]
+    rememberAiResources: boolean
+  }) => void
   onReviewDiff?: () => void
   otherBranchCount: number
   open: boolean
@@ -46,16 +52,26 @@ export function PublishConfirmationDialog(props: {
   const [choices, setChoices] = useState<PublishAiChoices>(
     emptyPublishAiChoices,
   )
+  const [skipAi, setSkipAi] = useState(false)
 
   useEffect(() => {
-    if (props.open) setChoices(choicesFromRequests(props.rememberedResources))
-  }, [props.open, props.rememberedResources])
+    if (!props.open) return
+    setChoices(choicesFromRequests(props.rememberedResources))
+    setSkipAi(!props.contentChanged)
+  }, [props.contentChanged, props.open, props.rememberedResources])
 
   const isAvailable = (resource: PublishAiResource) =>
     !getUnavailableKey(resource, props.aiConfig, props.contentFormat)
   const requests =
     props.kind === 'page' ? [] : toPublishAiRequests(choices, isAvailable)
-  const confirm = () => props.onConfirm(requests)
+  // A skipped round submits no resources and leaves the remembered choices
+  // untouched, so the next body edit still pre-fills them.
+  const confirm = () =>
+    props.onConfirm(
+      skipAi
+        ? { aiResources: [], rememberAiResources: false }
+        : { aiResources: requests, rememberAiResources: true },
+    )
   const choiceOptions: { label: string; value: PublishAiChoice }[] = [
     { label: t('write.publishAi.modeNone'), value: 'none' },
     { label: t('write.publishAi.modeSync'), value: 'sync' },
@@ -132,68 +148,86 @@ export function PublishConfirmationDialog(props: {
 
         {props.kind !== 'page' ? (
           <section className="mt-5">
-            <h3 className="text-sm font-medium text-fg">
-              {t('write.publishConfirm.aiTitle')}
-            </h3>
-            <p className="mt-1 text-xs leading-5 text-fg-muted">
-              {t('write.publishConfirm.aiDescription')}
-            </p>
-            <div className="mt-3 flex flex-col divide-y divide-border rounded-lg border border-border">
-              {publishAiResourceOrder.map((resource) => {
-                const unavailable = getUnavailableKey(
-                  resource,
-                  props.aiConfig,
-                  props.contentFormat,
-                )
-                return (
-                  <div
-                    className={cn(
-                      'flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 text-sm',
-                      unavailable && 'pointer-events-none opacity-55',
-                    )}
-                    key={resource}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-medium text-fg">
-                        {t(publishAiResourceLabels[resource])}
-                      </span>
-                      {unavailable ? (
-                        <span className="mt-0.5 block text-xs text-fg-muted">
-                          {t(unavailable)}
-                        </span>
-                      ) : null}
-                    </span>
-                    <SegmentedControl
-                      aria-label={t(publishAiResourceLabels[resource])}
-                      onValueChange={(value) =>
-                        setChoices((current) => ({
-                          ...current,
-                          [resource]: value,
-                        }))
-                      }
-                      options={choiceOptions}
-                      value={choices[resource]}
-                    />
-                  </div>
-                )
-              })}
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-sm font-medium text-fg">
+                {t('write.publishConfirm.aiTitle')}
+              </h3>
+              <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-fg-muted">
+                {t('write.publishConfirm.aiSkip')}
+                <Switch checked={skipAi} onCheckedChange={setSkipAi} />
+              </label>
             </div>
-            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg bg-surface-inset px-3 py-2.5 text-xs">
-              <dt className="text-fg-muted">
-                {t('write.publishAi.summaryWait')}
-              </dt>
-              <dd className="min-w-0 text-fg">
-                {namesFor('sync').join('、') ||
-                  t('write.publishAi.summaryWaitNone')}
-              </dd>
-              <dt className="text-fg-muted">
-                {t('write.publishAi.summaryLater')}
-              </dt>
-              <dd className="min-w-0 text-fg">
-                {namesFor('async').join('、') ||
-                  t('write.publishAi.summaryLaterNone')}
-              </dd>
-            </dl>
+            {skipAi ? (
+              <p className="mt-3 rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm leading-6 text-fg-muted">
+                {t(
+                  props.contentChanged
+                    ? 'write.publishConfirm.aiSkipped'
+                    : 'write.publishConfirm.aiSkippedMetaOnly',
+                )}
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 text-xs leading-5 text-fg-muted">
+                  {t('write.publishConfirm.aiDescription')}
+                </p>
+                <div className="mt-3 flex flex-col divide-y divide-border rounded-lg border border-border">
+                  {publishAiResourceOrder.map((resource) => {
+                    const unavailable = getUnavailableKey(
+                      resource,
+                      props.aiConfig,
+                      props.contentFormat,
+                    )
+                    return (
+                      <div
+                        className={cn(
+                          'flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 text-sm',
+                          unavailable && 'pointer-events-none opacity-55',
+                        )}
+                        key={resource}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium text-fg">
+                            {t(publishAiResourceLabels[resource])}
+                          </span>
+                          {unavailable ? (
+                            <span className="mt-0.5 block text-xs text-fg-muted">
+                              {t(unavailable)}
+                            </span>
+                          ) : null}
+                        </span>
+                        <SegmentedControl
+                          aria-label={t(publishAiResourceLabels[resource])}
+                          onValueChange={(value) =>
+                            setChoices((current) => ({
+                              ...current,
+                              [resource]: value,
+                            }))
+                          }
+                          options={choiceOptions}
+                          value={choices[resource]}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+                <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-lg bg-surface-inset px-3 py-2.5 text-xs">
+                  <dt className="text-fg-muted">
+                    {t('write.publishAi.summaryWait')}
+                  </dt>
+                  <dd className="min-w-0 text-fg">
+                    {namesFor('sync').join('、') ||
+                      t('write.publishAi.summaryWaitNone')}
+                  </dd>
+                  <dt className="text-fg-muted">
+                    {t('write.publishAi.summaryLater')}
+                  </dt>
+                  <dd className="min-w-0 text-fg">
+                    {namesFor('async').join('、') ||
+                      t('write.publishAi.summaryLaterNone')}
+                  </dd>
+                </dl>
+              </>
+            )}
           </section>
         ) : null}
       </div>

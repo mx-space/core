@@ -39,6 +39,7 @@ export function createPublishJob(input: {
   branchId: string
   confirmDiverged: boolean
   expectedPublishedRevisionId: string | null
+  rememberAiResources: boolean
   revisionId: string
 }) {
   return postJson<{ created: boolean; taskId: string }, typeof input>(

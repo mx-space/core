@@ -1,3 +1,4 @@
+import { normalizeSerializedEditorState } from '@haklex/rich-editor/static'
 import { projectAgentDiffNodesToFactualState } from '@haklex/rich-ext-ai-agent/static'
 import { analyzeMxMarkdown, mxLexicalToMarkdown } from '@mx-space/editor'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -1508,6 +1509,27 @@ function WritePage(props: { kind: WriteKind }) {
   )
   const canSubmitPublication =
     !isEditing || !isPublished || draftFingerprint !== publishedFingerprint
+  // Metadata-only edits (category, tags, slug, cover…) leave AI resources
+  // valid. For Lexical the JSON is the source of truth; its Markdown is derived.
+  const publishedBodyKey = useMemo(
+    () =>
+      publishedContent?.contentFormat === 'lexical'
+        ? lexicalDocumentKey(publishedContent.content)
+        : publishedContent?.text.trim(),
+    [publishedContent],
+  )
+  const draftBodyKey = useMemo(
+    () =>
+      state.contentFormat === 'lexical'
+        ? lexicalDocumentKey(state.content)
+        : state.text.trim(),
+    [state.content, state.contentFormat, state.text],
+  )
+  const publishedBodyChanged =
+    !publishedContent ||
+    state.title !== publishedContent.title ||
+    state.contentFormat !== (publishedContent.contentFormat ?? 'markdown') ||
+    draftBodyKey !== publishedBodyKey
   const publishOperation = !isEditing
     ? 'first-publish'
     : isPublished
@@ -1761,9 +1783,17 @@ function WritePage(props: { kind: WriteKind }) {
       taskId: string
     },
     unknown,
-    { aiResources: PublishAiResourceRequest[]; confirmDiverged: boolean }
+    {
+      aiResources: PublishAiResourceRequest[]
+      confirmDiverged: boolean
+      rememberAiResources: boolean
+    }
   >({
-    mutationFn: async ({ aiResources, confirmDiverged }) => {
+    mutationFn: async ({
+      aiResources,
+      confirmDiverged,
+      rememberAiResources,
+    }) => {
       const requiresMigration =
         isEditing &&
         publishedContent?.contentFormat === 'markdown' &&
@@ -1817,6 +1847,7 @@ function WritePage(props: { kind: WriteKind }) {
         aiResources: props.kind === 'page' ? [] : aiResources,
         branchId: draft.id,
         confirmDiverged,
+        rememberAiResources,
         expectedPublishedRevisionId: draft.document.publishedRevisionId,
         revisionId: draft.headRevisionId,
       })
@@ -2826,6 +2857,7 @@ function WritePage(props: { kind: WriteKind }) {
       <PublishConfirmationDialog
         aiConfig={aiPublishOptionsQuery.data}
         contentFormat={state.contentFormat}
+        contentChanged={publishedBodyChanged}
         diverged={publishIsDiverged}
         otherBranchCount={Math.max(
           0,
@@ -2833,11 +2865,12 @@ function WritePage(props: { kind: WriteKind }) {
         )}
         kind={props.kind}
         onClose={() => setPublishConfirmOpen(false)}
-        onConfirm={(resources) => {
+        onConfirm={({ aiResources, rememberAiResources }) => {
           setPublishConfirmOpen(false)
           saveMutation.mutate({
-            aiResources: resources,
+            aiResources,
             confirmDiverged: publishIsDiverged,
+            rememberAiResources,
           })
         }}
         onReviewDiff={
@@ -5581,6 +5614,20 @@ function parseSerializedEditorState(
   }
 
   return undefined
+}
+
+/**
+ * Comparable form of a Lexical document. The editor re-serializes on every
+ * update (key order, trimmed boundary newlines), so comparing raw strings
+ * reports an untouched document as changed.
+ */
+function lexicalDocumentKey(content: string | undefined): string {
+  const parsed = parseSerializedEditorState(
+    stripPendingAgentDiffs(content ?? ''),
+  )
+  return parsed
+    ? serializeListKey([normalizeSerializedEditorState(parsed)])
+    : ''
 }
 
 function hasLexicalContent(content: string) {

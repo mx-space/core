@@ -171,6 +171,7 @@ export class PublishService implements OnModuleInit {
           ? 'online-update'
           : 'republish',
       refId: branch.document.refId,
+      rememberAiResources: dto.rememberAiResources,
       refType: branch.document.refType,
       revisionId: revision.id,
       snapshot: structuredClone(revision),
@@ -230,7 +231,9 @@ export class PublishService implements OnModuleInit {
     }
 
     await this.startAsyncResources(byMode('async'), committed.id, result)
-    await this.drafts.setPublishAiResources(payload.documentId, aiResources)
+    if (payload.rememberAiResources !== false) {
+      await this.drafts.setPublishAiResources(payload.documentId, aiResources)
+    }
 
     result.newerDraftChanges = await this.hasNewerBranchHead(payload)
     await context.setResult(result)
