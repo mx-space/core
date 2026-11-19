@@ -382,6 +382,9 @@ importers:
       '@haklex/rich-ext-nested-doc':
         specifier: 0.65.7
         version: 0.65.7(6fad02720323b7283c41036279f381cf)
+      '@haklex/rich-ext-poll':
+        specifier: 0.65.7
+        version: 0.65.7(edc53bb4b48534dd1f309f86571ee44d)
       '@haklex/rich-ext-steps':
         specifier: 0.65.7
         version: 0.65.7(94eb43c495bb1638dcf471d1cd895ba3)

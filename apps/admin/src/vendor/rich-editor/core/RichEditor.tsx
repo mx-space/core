@@ -8,6 +8,7 @@ import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
 import { embedEditNodes, EmbedPlugin } from '@haklex/rich-ext-embed'
 import { galleryEditNodes } from '@haklex/rich-ext-gallery'
+import { pollEditNodes } from '@haklex/rich-ext-poll/edit'
 import { stepsEditNodes } from '@haklex/rich-ext-steps/edit'
 import {
   WhiteboardEditNode,
@@ -53,6 +54,7 @@ const defaultExtraNodes = [
   ...codeSnippetEditNodes,
   ...chatEditNodes,
   ...stepsEditNodes,
+  ...pollEditNodes,
   AfilmoryNode,
   MapNode,
   StockNode,

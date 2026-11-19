@@ -19,6 +19,8 @@ import { CodeSnippetRenderer } from '@haklex/rich-ext-code-snippet/renderer'
 import { DYNAMIC_NODE_KEY } from '@haklex/rich-ext-dynamic/static'
 import { GALLERY_NODE_KEY } from '@haklex/rich-ext-gallery/node'
 import { GalleryRenderer } from '@haklex/rich-ext-gallery/renderer'
+import { POLL_NODE_KEY } from '@haklex/rich-ext-poll/node'
+import { PollRenderer } from '@haklex/rich-ext-poll/renderer'
 import { STEPS_NODE_KEY } from '@haklex/rich-ext-steps/node'
 import { StepsRenderer } from '@haklex/rich-ext-steps/renderer'
 import { AlertRenderer } from '@haklex/rich-renderer-alert/static'
@@ -52,6 +54,7 @@ export const enhancedRendererConfig: RendererConfig = {
   [MAP_NODE_KEY]: MapBlockReadonly,
   [MENTION_NODE_KEY]: MentionRenderer,
   [MERMAID_NODE_KEY]: MermaidRenderer,
+  [POLL_NODE_KEY]: PollRenderer,
   [RUBY_NODE_KEY]: RubyRenderer,
   [VIDEO_NODE_KEY]: VideoRenderer,
   File: FileRenderer,

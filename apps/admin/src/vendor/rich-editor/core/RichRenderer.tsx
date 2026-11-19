@@ -8,6 +8,7 @@ import { DynamicNode } from '@haklex/rich-ext-dynamic/static'
 import { embedNodes } from '@haklex/rich-ext-embed/static'
 import { galleryNodes } from '@haklex/rich-ext-gallery/static'
 import { nestedDocNodes } from '@haklex/rich-ext-nested-doc/static'
+import { pollNodes } from '@haklex/rich-ext-poll/static'
 import { stepsNodes } from '@haklex/rich-ext-steps/static'
 import { WhiteboardNode } from '@haklex/rich-ext-whiteboard/static'
 import type { Klass, LexicalNode, SerializedEditorState } from 'lexical'
@@ -25,6 +26,7 @@ const defaultExtraNodes = [
   ...codeSnippetNodes,
   ...chatNodes,
   ...stepsNodes,
+  ...pollNodes,
   ...nestedDocNodes,
   MapNode,
   AfilmoryNode,

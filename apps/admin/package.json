@@ -38,6 +38,7 @@
     "@haklex/rich-ext-embed": "0.65.7",
     "@haklex/rich-ext-gallery": "0.65.7",
     "@haklex/rich-ext-nested-doc": "0.65.7",
+    "@haklex/rich-ext-poll": "0.65.7",
     "@haklex/rich-ext-steps": "0.65.7",
     "@haklex/rich-ext-whiteboard": "0.65.7",
     "@haklex/rich-plugin-agent-stream": "0.65.7",
