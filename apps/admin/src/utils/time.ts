@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { format as f } from 'date-fns'
 
 import { translate } from '~/i18n/translate'

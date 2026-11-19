@@ -159,7 +159,6 @@ function Field(props: { children: ReactNode; label: string }) {
 
 function parseDebugPayload(source: string) {
   const replacedSource = source.replaceAll(
-    // eslint-disable-next-line unicorn/better-regex
     /(\{\{(.*?)\}\})/g,
     (_match, _placeholder, type: string) => generateFakeData(type),
   )

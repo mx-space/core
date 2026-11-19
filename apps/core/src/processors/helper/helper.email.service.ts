@@ -97,9 +97,9 @@ export class EmailService implements OnModuleInit, OnModuleDestroy {
   async deleteTemplate(type: string) {
     await this.assetService
       .removeUserCustomAsset(`/email-template/${type}.template.ejs`)
-      .catch((error) => {
-        if ((error?.message as string).includes('no such file or directory'))
-          return
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error)
+        if (message.includes('no such file or directory')) return
         throw error
       })
   }

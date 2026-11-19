@@ -1,7 +1,11 @@
 import { fileURLToPath } from 'node:url'
 
-import ts from 'typescript'
-import { describe, expect, it } from 'vitest'
+import path from 'node:path'
+
+import { afterAll, describe, expect, it } from 'vitest'
+
+import { ScriptTarget } from 'tsrs/ast'
+import { API, ModuleKind, ModuleResolutionKind } from 'tsrs/sync'
 
 import { BusinessEvents } from '../src/event.enum'
 import { clearedEvent, snapshotEvent } from './fixtures/companion-presence-event.fixture'
@@ -9,6 +13,14 @@ import { clearedEvent, snapshotEvent } from './fixtures/companion-presence-event
 const fixturePath = fileURLToPath(
   new URL('./fixtures/companion-presence-event.fixture.ts', import.meta.url),
 )
+
+const packageRoot = fileURLToPath(new URL('..', import.meta.url))
+
+const api = new API({ cwd: packageRoot })
+
+afterAll(() => {
+  api.close()
+})
 
 describe('Companion presence event contract', () => {
   it('uses one public event for snapshot and clear state changes', () => {
@@ -24,30 +36,23 @@ describe('Companion presence event contract', () => {
   })
 
   it('type-checks EventPayloadMapping and GenericEvent against public state', () => {
-    const program = ts.createProgram({
-      rootNames: [fixturePath],
-      options: {
-        module: ts.ModuleKind.ESNext,
-        moduleResolution: ts.ModuleResolutionKind.Bundler,
-        skipLibCheck: true,
-        strict: true,
-        target: ts.ScriptTarget.ES2020,
-        types: ['node'],
-      },
+    const program = api.createProgram([fixturePath], {
+      module: ModuleKind.ESNext,
+      moduleResolution: ModuleResolutionKind.Bundler,
+      skipLibCheck: true,
+      strict: true,
+      target: ScriptTarget.ES2020,
+      types: ['node'],
     })
-    const diagnostics = ts
-      .getPreEmitDiagnostics(program)
-      .filter(
-        (diagnostic) =>
-          diagnostic.file &&
-          fileURLToPath(new URL(`file://${diagnostic.file.fileName}`)) ===
-            fixturePath,
-      )
+    const diagnostics = [
+      ...program.getSyntacticDiagnostics(fixturePath),
+      ...program.getSemanticDiagnostics(fixturePath),
+    ].filter(
+      (diagnostic) =>
+        diagnostic.fileName &&
+        path.resolve(diagnostic.fileName) === fixturePath,
+    )
 
-    expect(
-      diagnostics.map((diagnostic) =>
-        ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
-      ),
-    ).toEqual([])
+    expect(diagnostics.map((diagnostic) => diagnostic.text)).toEqual([])
   })
 })

@@ -49,6 +49,7 @@ export enum BusinessEvents {
   IMAGE_REFRESH = 'image.refresh',
   IMAGE_FETCH = 'image.fetch',
   ADMIN_NOTIFICATION = 'admin.notification',
+  DRAFT_UPDATE = 'draft.update',
   ACTIVITY_LIKE = 'activity.like',
   ACTIVITY_UPDATE_PRESENCE = 'activity.update_presence',
   ACTIVITY_LEAVE_PRESENCE = 'activity.leave_presence',
@@ -168,6 +169,7 @@ export interface CommentRow {
   url: string | null
   text: string
   state: number
+  moderationStatus?: string | null
   parentCommentId: string | null
   rootCommentId: string | null
   replyCount: number
@@ -441,7 +443,7 @@ export type PublicLiveDeskStateV2 = {
   epoch: string
   revision: number
   projection: {
-    availability: 'idle' | 'active'
+    availability: 'active' | 'idle'
     updatedAt: string
     expiresAt: string
     application: {
@@ -452,13 +454,13 @@ export type PublicLiveDeskStateV2 = {
     } | null
     media: {
       sessionId: string
-      kind: 'unknown' | 'music' | 'podcast' | 'video'
+      kind: 'music' | 'podcast' | 'unknown' | 'video'
       title: string | null
       artist: string | null
       album: string | null
       player: { displayName: string } | null
       playback: {
-        state: 'playing' | 'paused'
+        state: 'paused' | 'playing'
         durationMs: number | null
         positionMs: number | null
         anchorAt: string

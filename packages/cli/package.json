@@ -60,34 +60,35 @@
     "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-litexml": "0.65.7",
-    "loro-crdt": "^1.17.1"
+    "@haklex/rich-litexml": "0.67.0",
+    "loro-crdt": "^1.18.0"
   },
   "devDependencies": {
-    "@clack/prompts": "^1.8.1",
-    "@effect/platform-node": "4.0.7",
-    "@effect/vitest": "4.0.7",
-    "@haklex/rich-collab-loro": "0.65.7",
-    "@haklex/rich-headless": "0.65.7",
+    "@clack/prompts": "^1.9.0",
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@haklex/rich-collab-loro": "0.67.0",
+    "@haklex/rich-headless": "0.67.0",
     "@lexical/headless": "^0.53.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
     "@types/node": "26.6.6",
     "@types/semver": "7.8.0",
     "@types/ws": "8.18.2",
-    "better-auth": "^1.7.16",
-    "effect": "4.0.7",
-    "fast-xml-parser": "5.11.2",
+    "better-auth": "^1.7.26",
+    "effect": "4.1.4",
+    "fast-xml-parser": "5.12.1",
     "get-east-asian-width": "^1.7.0",
     "lexical": "^0.53.0",
     "minisearch": "^7.2.0",
     "open": "^11.0.4",
+    "redis": "6.3.1",
     "ryugi-detect-agent": "^0.1.0",
-    "semver": "7.8.5",
+    "semver": "7.8.6",
     "tsdown": "0.23.7",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "tsx": "^4.23.15",
-    "vitest": "5.0.5",
-    "ws": "8.22.0"
+    "vitest": "5.1.1",
+    "ws": "8.23.0"
   }
 }

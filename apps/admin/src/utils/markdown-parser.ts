@@ -1,6 +1,5 @@
 import { load } from 'js-yaml'
 
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 export class ParseMarkdownYAML {
   constructor(private strList: string[]) {}
 

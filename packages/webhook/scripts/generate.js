@@ -5,35 +5,53 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import prettier from 'prettier'
-import ts from 'typescript'
+import {
+  isComputedPropertyName,
+  isIdentifier,
+  isInterfaceDeclaration,
+  isPropertyAccessExpression,
+  isPropertySignatureDeclaration,
+  isStringLiteral,
+  isTypeAliasDeclaration,
+  ScriptKind,
+} from 'tsrs/ast'
+import { API } from 'tsrs/sync'
+
+const api = new API({ cwd: process.cwd() })
+
+function parseSourceFile(fileName) {
+  const content = fs.readFileSync(fileName, 'utf8')
+  return api.createSourceFile(fileName, content, {
+    scriptKind: ScriptKind.TS,
+  }).sourceFile
+}
 
 function generateGenericEventType(fileName) {
-  const program = ts.createProgram([fileName], {})
-  const sourceFile = program.getSourceFile(fileName)
+  const sourceFile = parseSourceFile(fileName)
 
   let genericEventType = '// Auto Generaged type.\nexport type GenericEvent =\n'
 
-  ts.forEachChild(sourceFile, (node) => {
+  sourceFile.forEachChild((node) => {
     if (
-      ts.isInterfaceDeclaration(node) &&
+      isInterfaceDeclaration(node) &&
       node.name.text === 'EventPayloadMapping'
     ) {
       node.members.forEach((member) => {
-        if (ts.isPropertySignature(member) && member.type) {
+        if (isPropertySignatureDeclaration(member) && member.type) {
           const key = member.name
           let eventType = ''
           let isLiteralType = false
 
           if (
-            ts.isComputedPropertyName(key) &&
-            ts.isPropertyAccessExpression(key.expression)
+            isComputedPropertyName(key) &&
+            isPropertyAccessExpression(key.expression)
           ) {
             eventType = key.expression.name.text
-          } else if (ts.isIdentifier(key) && key.escapedText) {
+          } else if (isIdentifier(key) && key.text) {
             // Handle string key like 'health_check'
-            eventType = key.escapedText
+            eventType = key.text
             isLiteralType = true
-          } else if (ts.isStringLiteral(key)) {
+          } else if (isStringLiteral(key)) {
             // Handle string literal types like 'health-check'
             eventType = key.text
             isLiteralType = true
@@ -68,16 +86,13 @@ const newGenericEventType = generateGenericEventType(fileName)
 
 function replaceGenericEventType(fileName, newGenericEventType) {
   const fileContent = fs.readFileSync(fileName, 'utf8')
-  const sourceFile = ts.createSourceFile(
-    fileName,
-    fileContent,
-    ts.ScriptTarget.Latest,
-    true,
-  )
+  const sourceFile = api.createSourceFile(fileName, fileContent, {
+    scriptKind: ScriptKind.TS,
+  }).sourceFile
   let startPos = -1
   let endPos = -1
-  ts.forEachChild(sourceFile, (node) => {
-    if (ts.isTypeAliasDeclaration(node) && node.name.text === 'GenericEvent') {
+  sourceFile.forEachChild((node) => {
+    if (isTypeAliasDeclaration(node) && node.name.text === 'GenericEvent') {
       startPos = node.pos
       endPos = node.end
     }
@@ -121,4 +136,4 @@ async function main() {
   fs.writeFileSync(outputPath, formatted)
 }
 
-main()
+main().finally(() => api.close())

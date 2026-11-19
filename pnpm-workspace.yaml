@@ -22,24 +22,19 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
 overrides:
-  'eslint-plugin-react-compiler>zod': 3.25.76
-  # React Hooks 7 imports the /v4 entry when using Zod 4.
-  'eslint-plugin-react-hooks>zod-validation-error': 4.0.2
   'get-pixels@^3>request': ./external/request
   # Keep Better Auth server, client, and plugins on the same security release.
-  better-auth: 1.7.25
-  '@better-auth/api-key': 1.7.25
-  '@better-auth/core': 1.7.25
-  '@better-auth/expo': 1.7.25
-  '@better-auth/passkey': 1.7.25
+  better-auth: 1.7.26
+  '@better-auth/api-key': 1.7.26
+  '@better-auth/core': 1.7.26
+  '@better-auth/expo': 1.7.26
+  '@better-auth/passkey': 1.7.26
   kysely: 0.29.9
-  mongodb: ~7.7.0
+  mongodb: ~7.9.0
   pino: ./external/pino
-  rolldown: 1.2.19
+  rolldown: 1.3.3
   'tsdown@0.22.8>rolldown-plugin-dts': 0.27.14
-  semver: 7.8.5
-  # Compiler API for code generation and declaration bundling; typechecks use tsrs.
-  typescript: 6.0.3
+  semver: 7.8.6
   undici: ^8.12.3
   whatwg-url: 17.1.2
   zod: 4.6.7
@@ -49,13 +44,13 @@ overrides:
   'tmp@<0.2.6': 0.2.7
   'uuid@<11.1.1': 11.1.1
   jose: 6.2.17
-  lucide-react: 1.63.0
+  lucide-react: 1.75.0
   '@codemirror/state': 6.7.6
   '@codemirror/view': 6.43.15
   '@codemirror/commands': 6.11.1
   '@codemirror/language': 6.13.1
   # Keep the Markdown code plugin and editor on one Shiki runtime.
-  shiki: ^4.5.0
+  shiki: ^4.6.0
   # Editor stack tracks a single lexical runtime copy; keep in lockstep with
   # the @haklex/* peer floor (^0.53 as of @haklex 0.61.0).
   lexical: 0.53.0
@@ -84,15 +79,15 @@ overrides:
   '@lexical/utils': 0.53.0
   '@lexical/yjs': 0.53.0
   '@esbuild-kit/core-utils>esbuild': 0.25.12
-  '@cloudflare/workers-types': 5.20261028.1
-  '@fastify/static': 10.1.8
+  '@cloudflare/workers-types': 5.20261118.1
+  '@fastify/static': 10.1.11
   'brace-expansion@<1.1.16': 1.1.22
   'brace-expansion@>=2.0.0 <2.1.2': 2.1.8
   'brace-expansion@>=3.0.0 <5.0.8': 5.0.13
   dompurify: 3.4.18
   'fast-uri@>=3.0.0 <3.1.4': 3.1.9
   'fast-uri@>=4.0.0 <4.1.1': 4.1.5
-  fast-xml-parser: 5.11.2
+  fast-xml-parser: 5.12.1
   find-my-way: 9.9.0
   immutable: 4.3.9
   'isomorphic-fetch>node-fetch': 2.7.0
@@ -105,10 +100,13 @@ overrides:
 publicHoistPattern:
   - '*fastify*'
   - mongodb
-  - '*eslint*'
   - '*webpack*'
   - '*@codemirror*'
 strictPeerDependencies: false
+# Peers are declared explicitly. Auto-installing optional peers would re-add
+# packages we intentionally dropped (eslint for vite-plugin-checker, two
+# typescript copies for lexical/tsconfck that split the editor type identity).
+autoInstallPeers: false
 # Nest 12 peers that have not cut a v12 major yet. Keep @nestjs/throttler 6.5.0.
 packageExtensions:
   '@nestjs/throttler':

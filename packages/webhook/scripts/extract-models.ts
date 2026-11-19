@@ -12,7 +12,25 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import prettier from 'prettier'
-import ts from 'typescript'
+import {
+  isEnumDeclaration,
+  isIdentifier,
+  isInterfaceDeclaration,
+  isPropertySignatureDeclaration,
+  isStringLiteral,
+  isTypeAliasDeclaration,
+  isVariableStatement,
+  ScriptKind,
+  SyntaxKind,
+} from 'tsrs/ast'
+import type {
+  EnumDeclaration,
+  InterfaceDeclaration,
+  SourceFile,
+  TypeAliasDeclaration,
+} from 'tsrs/ast'
+import { API, TypeFormatFlags } from 'tsrs/sync'
+import type { Checker } from 'tsrs/sync'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const coreRoot = path.resolve(__dirname, '../../../apps/core/src')
@@ -178,25 +196,25 @@ function transformTypeText(text: string): string {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function parseSource(filePath: string): ts.SourceFile {
+const api = new API({ cwd: path.resolve(__dirname, '../../..') })
+
+function parseSource(filePath: string): SourceFile {
   const content = fs.readFileSync(filePath, 'utf-8')
-  return ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true)
+  return api.createSourceFile(filePath, content, {
+    scriptKind: ScriptKind.TS,
+  }).sourceFile
 }
 
-const resolveCoreCompilerOptions = (): ts.CompilerOptions => {
+const resolveCoreCompilerOptions = () => {
   const configPath = path.resolve(coreRoot, '../tsconfig.json')
-  const config = ts.readConfigFile(configPath, ts.sys.readFile)
+  const config = api.readConfigFile(configPath)
   if (config.error) {
-    throw new Error(
-      ts.flattenDiagnosticMessageText(config.error.messageText, '\n'),
-    )
+    throw new Error(config.error.text)
   }
 
-  return ts.parseJsonConfigFileContent(
-    config.config,
-    ts.sys,
-    path.dirname(configPath),
-  ).options
+  return api.parseJsonConfigFileContent(config.config, {
+    configDirectory: path.dirname(configPath),
+  }).options
 }
 
 const coreCompilerOptions = resolveCoreCompilerOptions()
@@ -204,33 +222,30 @@ const coreCompilerOptions = resolveCoreCompilerOptions()
 function loadSource(
   filePath: string,
   resolveTypes: boolean,
-): { checker?: ts.TypeChecker; sourceFile: ts.SourceFile } {
+): { checker?: Checker; sourceFile: SourceFile } {
   if (!resolveTypes) {
     return { sourceFile: parseSource(filePath) }
   }
 
-  const program = ts.createProgram({
-    rootNames: [filePath],
-    options: coreCompilerOptions,
-  })
+  const program = api.createProgram([filePath], coreCompilerOptions)
   const sourceFile = program.getSourceFile(filePath)
   if (!sourceFile) {
     throw new Error(`[extract-models] Cannot load source: ${filePath}`)
   }
 
-  return { checker: program.getTypeChecker(), sourceFile }
+  return { checker: program.project.checker, sourceFile }
 }
 
 /** Collect top-level `const x = 'value'` bindings (for enum initializers). */
-function collectConstValues(sourceFile: ts.SourceFile): Record<string, string> {
+function collectConstValues(sourceFile: SourceFile): Record<string, string> {
   const values: Record<string, string> = {}
-  ts.forEachChild(sourceFile, (node) => {
-    if (ts.isVariableStatement(node)) {
+  sourceFile.forEachChild((node) => {
+    if (isVariableStatement(node)) {
       for (const decl of node.declarationList.declarations) {
         if (
-          ts.isIdentifier(decl.name) &&
+          isIdentifier(decl.name) &&
           decl.initializer &&
-          ts.isStringLiteral(decl.initializer)
+          isStringLiteral(decl.initializer)
         ) {
           values[decl.name.text] = `'${decl.initializer.text}'`
         }
@@ -242,8 +257,8 @@ function collectConstValues(sourceFile: ts.SourceFile): Record<string, string> {
 
 /** Extract an enum declaration. */
 function extractEnum(
-  sourceFile: ts.SourceFile,
-  node: ts.EnumDeclaration,
+  sourceFile: SourceFile,
+  node: EnumDeclaration,
   constValues: Record<string, string>,
 ): string {
   const name = node.name.text
@@ -267,8 +282,8 @@ function extractEnum(
 
 /** Extract an interface declaration. */
 function extractInterface(
-  sourceFile: ts.SourceFile,
-  node: ts.InterfaceDeclaration,
+  sourceFile: SourceFile,
+  node: InterfaceDeclaration,
 ): string {
   const name = node.name.text
 
@@ -281,9 +296,9 @@ function extractInterface(
   let heritage = ''
   if (node.heritageClauses) {
     for (const clause of node.heritageClauses) {
-      if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+      if (clause.token === SyntaxKind.ExtendsKeyword) {
         const types = clause.types.map((t) =>
-          transformTypeText(t.expression.getText(sourceFile)),
+          transformTypeText(t.getText(sourceFile)),
         )
         heritage = ` extends ${types.join(', ')}`
       }
@@ -292,10 +307,11 @@ function extractInterface(
 
   const properties: string[] = []
   for (const member of node.members) {
-    if (!ts.isPropertySignature(member)) continue
+    if (!isPropertySignatureDeclaration(member)) continue
 
     const propName = member.name.getText(sourceFile)
-    const optional = member.questionToken ? '?' : ''
+    const optional =
+      member.postfixToken?.kind === SyntaxKind.QuestionToken ? '?' : ''
 
     let typeText = 'any'
     if (member.type) {
@@ -311,8 +327,8 @@ function extractInterface(
 
 /** Extract a type alias declaration. */
 function extractTypeAlias(
-  sourceFile: ts.SourceFile,
-  node: ts.TypeAliasDeclaration,
+  sourceFile: SourceFile,
+  node: TypeAliasDeclaration,
 ): string {
   const originalName = node.name.text
   const targetName = symbolRemap[originalName] || originalName
@@ -336,14 +352,18 @@ function extractTypeAlias(
 
 /** Resolve an inferred type alias into a self-contained structural type. */
 function extractResolvedTypeAlias(
-  checker: ts.TypeChecker,
-  node: ts.TypeAliasDeclaration,
+  checker: Checker,
+  sourceFile: SourceFile,
+  node: TypeAliasDeclaration,
 ): string {
   const type = checker.getTypeAtLocation(node)
+  if (!type) {
+    throw new Error(`[extract-models] Cannot resolve type ${node.name.text}`)
+  }
   const typeText = checker.typeToString(
     type,
     node,
-    ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+    TypeFormatFlags.NoTruncation | TypeFormatFlags.InTypeAlias,
   )
 
   return `export type ${node.name.text} = ${transformTypeText(typeText)}`
@@ -383,18 +403,15 @@ async function main() {
 
     let found = false
 
-    ts.forEachChild(sourceFile, (node) => {
-      if (
-        ts.isEnumDeclaration(node) &&
-        source.enums?.includes(node.name.text)
-      ) {
+    sourceFile.forEachChild((node) => {
+      if (isEnumDeclaration(node) && source.enums?.includes(node.name.text)) {
         output.push(extractEnum(sourceFile, node, constValues))
         output.push('')
         found = true
       }
 
       if (
-        ts.isInterfaceDeclaration(node) &&
+        isInterfaceDeclaration(node) &&
         source.interfaces?.includes(node.name.text)
       ) {
         output.push(extractInterface(sourceFile, node))
@@ -403,7 +420,7 @@ async function main() {
       }
 
       if (
-        ts.isTypeAliasDeclaration(node) &&
+        isTypeAliasDeclaration(node) &&
         source.resolvedTypes?.includes(node.name.text)
       ) {
         if (!checker) {
@@ -411,13 +428,13 @@ async function main() {
             `[extract-models] Missing type checker for ${node.name.text}`,
           )
         }
-        output.push(extractResolvedTypeAlias(checker, node))
+        output.push(extractResolvedTypeAlias(checker, sourceFile, node))
         output.push('')
         found = true
       }
 
       if (
-        ts.isTypeAliasDeclaration(node) &&
+        isTypeAliasDeclaration(node) &&
         (source.types?.includes(node.name.text) ||
           source.typeAliases?.includes(node.name.text))
       ) {
@@ -466,7 +483,9 @@ async function main() {
   console.log(`✓ Generated ${outputPath}`)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+main()
+  .catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+  .finally(() => api.close())

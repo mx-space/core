@@ -126,6 +126,7 @@ const skipHiddenLineSelectionFilter = EditorState.transactionFilter.of((tr) => {
   ) {
     const prevLine = line.number > 1 ? doc.line(line.number - 1) : null
     const nextLine = line.number < doc.lines ? doc.line(line.number + 1) : null
+    // eslint-disable-next-line no-console -- dev-only hidden-line trace
     console.log('[CM WYSIWYG] hidden-line-adjust', {
       line: {
         number: line.number,

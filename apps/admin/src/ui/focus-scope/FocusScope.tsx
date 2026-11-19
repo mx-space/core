@@ -61,7 +61,6 @@ export function FocusScope({
   useEffect(() => {
     if (!DEV) return
     if (!isActive) return
-    // eslint-disable-next-line no-console
     console.info('[FocusScope] active →', scopeId, ref.current)
   }, [scopeId, isActive])
 
