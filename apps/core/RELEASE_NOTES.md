@@ -1,24 +1,29 @@
 ## TL;DR
 
-The editor agent can now search the web and read pages through OpenRouter or DeepSeek, switched on from a new AI settings section.
+Updating a published article after editing only its metadata no longer regenerates AI resources, and posts with polls no longer lose them in the editor.
 
 ## Highlights
 
-The writing agent can now look things up online. When web search is on, the agent gets `web_search` and `web_fetch` tools, so it can check facts, find recent information and read links you give it. It decides when to search, then cites the URLs it relied on. Search results and pages are marked as untrusted, and the agent is told never to follow instructions found in them.
+The publish dialog has a new "Skip this time" switch for AI resources. It turns on by itself when the title and body match the online version, so changing a category, tags, slug, cover or pin goes straight through without regenerating summaries, insights, translations or narration. Lexical articles are compared by their normalized document, not their Markdown, so clicking around the editor does not count as a change.
 
-Web search is off by default. Turn it on under AI settings → Agent web search and pick a search provider. A DeepSeek provider works with any agent model and uses the DeepSeek Search and Fetch API with that provider's key. An OpenRouter provider uses OpenRouter's built-in web tools, which only apply when the agent runs on that same provider. Each agent turn is capped at 20 web calls.
+Skipping leaves your remembered AI choices untouched. The next time you change the body, the dialog still pre-selects what you picked last time instead of "Skip" for everything. You can also turn the switch on manually to publish a body edit without any AI work.
+
+The admin editor now supports poll blocks. Opening an article that contained a poll used to drop the block from the editor and from the autosaved draft. Polls now load, render and save like any other block.
 
 ## Changes
 
 ### Features
 
-- Agent web search and page reading through DeepSeek's Search & Fetch API or OpenRouter's built-in web tools, with a per-turn limit and an untrusted-content fence ([0d7967b](https://github.com/mx-space/core/commit/0d7967bd9c29cb2396e5f9c712571b4c2d2671c7), [c08a950](https://github.com/mx-space/core/commit/c08a95065e6c08fbe297f3be12faa1995f39e7c4), [014b884](https://github.com/mx-space/core/commit/014b8840ddb51eef08ad31b7ed2493a3234094e7))
-- New AI settings section to enable agent web search and choose its provider; saving rejects providers without built-in search ([29ee4fd](https://github.com/mx-space/core/commit/29ee4fdc5ccfa2d7653d97d35ceb9c7f78787876), [8dc01e2](https://github.com/mx-space/core/commit/8dc01e237b34ce085c3542ea274d651d9c7927d4))
+- Publish dialog can skip AI resources for one update; it defaults to skipping when only metadata changed, and a skipped update keeps the remembered AI choices ([f7fd6e5](https://github.com/mx-space/core/commit/f7fd6e5196b17a04b5b3c4de380a020e8a7d2683))
 
 ### Bug Fixes
 
-- A fetched page's title can no longer break out of the untrusted-content fence shown to the agent ([db349aa](https://github.com/mx-space/core/commit/db349aac52beb8f1b7a4facbc1dcceea7e2ac908))
+- The admin editor keeps poll blocks instead of dropping them when an article is opened and autosaved ([c327706](https://github.com/mx-space/core/commit/c32770660709318349222e32197c204d99d6a046))
+
+## Upgrade Notes
+
+If you opened an article with a poll in an earlier admin, check its draft history and restore a version that still contains the poll before publishing it.
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v18.0.1...v18.1.0
+**Full Changelog**: https://github.com/mx-space/core/compare/v18.1.0...v18.2.0

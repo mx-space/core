@@ -1,3 +1,9 @@
+## [18.2.0](https://github.com/mx-space/core/compare/v18.1.0...v18.2.0) (2026-11-19)
+
+### Features
+
+* **publish:** skip AI resources for metadata-only updates ([f7fd6e5](https://github.com/mx-space/core/commit/f7fd6e5196b17a04b5b3c4de380a020e8a7d2683))
+
 ## [18.1.0](https://github.com/mx-space/core/compare/v18.0.1...v18.1.0) (2026-11-19)
 
 ### Bug Fixes
