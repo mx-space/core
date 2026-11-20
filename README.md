@@ -67,7 +67,6 @@ flowchart LR
 | [`packages/ai`](./packages/ai) | `@mx-space/ai` | Shared AI contracts (SSE event unions) for server and clients. |
 | [`packages/push-protocol`](./packages/push-protocol) | `@mx-space/push-protocol` | Versioned protocol shared by mx-core and Push Relay. |
 | [`packages/webhook`](./packages/webhook) | `@mx-space/webhook` | Signature-verified webhook handler SDK. |
-| [`packages/mongo-pg-cli`](./packages/mongo-pg-cli) | `@mx-space/mongo-pg-cli` | One-shot v11→v12 (MongoDB→PostgreSQL) data migration. |
 | [`packages/e2e`](./packages/e2e) | — | End-to-end test suite (Vitest + testcontainers). |
 
 ## Layout
@@ -118,12 +117,12 @@ Run from the repo root:
 | `pnpm test` | Core test suite (Vitest) |
 | `pnpm e2e` | End-to-end suite |
 | `pnpm typecheck` | Core typecheck + controller/validate guards |
-| `pnpm lint` / `pnpm format` | ESLint / Prettier |
+| `pnpm lint` / `pnpm format` | oxlint / Prettier |
 
 ## Conventions
 
 - **Response envelope** — success: `{ data, meta? }`; error: `{ error: { code, message, details? } }`. Code is camelCase end-to-end; the wire format is snake_case. Full detail in the [core README](./apps/core#api-response-format).
-- **Migrations** — forward SQL migrations run as a one-shot release-phase step, never on boot. Historical MongoDB → PostgreSQL data lives in `packages/mongo-pg-cli`. Upgrade notes: [core README · Upgrading](./apps/core#upgrading).
+- **Migrations** — forward SQL migrations run as a one-shot release-phase step, never on boot. The historical MongoDB → PostgreSQL data migration shipped as the separately published [`@mx-space/mongo-pg-cli`](https://www.npmjs.com/package/@mx-space/mongo-pg-cli) npm package (no longer in this repo). Upgrade notes: [core README · Upgrading](./apps/core#upgrading).
 
 ## Related Projects
 

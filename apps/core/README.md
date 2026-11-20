@@ -158,7 +158,8 @@ src/
 ```
 
 > The historical MongoDB → PostgreSQL data migration has been extracted into a
-> dedicated CLI: [`packages/mongo-pg-cli`](../../packages/mongo-pg-cli).
+> dedicated, separately published CLI:
+> [`@mx-space/mongo-pg-cli`](https://www.npmjs.com/package/@mx-space/mongo-pg-cli).
 
 ## Application Flow
 

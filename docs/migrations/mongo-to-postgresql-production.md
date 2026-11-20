@@ -15,7 +15,7 @@ switch are complete.
 | Source database | MongoDB, read-only during the migration window. |
 | Target database | PostgreSQL 16+. |
 | Schema migration | Drizzle SQL migrations under `apps/core/src/database/migrations`. |
-| Data migration | [`@mx-space/mongo-pg-cli`](https://github.com/mx-space/core/tree/master/packages/mongo-pg-cli) (separately published npm package; ships every Drizzle migration SQL file inside its bundle). |
+| Data migration | [`@mx-space/mongo-pg-cli`](https://www.npmjs.com/package/@mx-space/mongo-pg-cli) (separately published npm package, no longer in this repo; ships every Drizzle migration SQL file inside its bundle). |
 | Canonical IDs | PostgreSQL `bigint` Snowflake IDs, serialized as strings at API boundaries. |
 | Mongo `_id` retention | Stored only in migration support tables such as `mongo_id_map`. |
 | Runtime rollback | Return to the pre-cutover MongoDB snapshot and previous application version. |
