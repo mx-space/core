@@ -792,8 +792,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ws-client
       '@nestjs/cache-manager':
-        specifier: 12.0.2
-        version: 12.0.2(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))(@nestjs/core@12.3.2)(cache-manager@7.2.9)(keyv@5.6.0)(rxjs@7.8.2)
+        specifier: 12.0.5
+        version: 12.0.5(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))(@nestjs/core@12.3.2)(cache-manager@7.2.9)(keyv@5.6.0)(rxjs@7.8.2)
       '@nestjs/common':
         specifier: 12.3.2
         version: 12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0)
@@ -4293,8 +4293,8 @@ packages:
       '@emnapi/core': ^1.7.1 || 2.0.0-beta.2
       '@emnapi/runtime': ^1.7.1 || 2.0.0-beta.2
 
-  '@nestjs/cache-manager@12.0.2':
-    resolution: {integrity: sha512-Z3tW9itvr75gLPt+nWJinu4JJxi7qveTw3IU3/kPAqfwF0m6pwzcdoWXA9fj+qGg79Gxbye55cocItTohkOEGw==}
+  '@nestjs/cache-manager@12.0.5':
+    resolution: {integrity: sha512-1PRcMKocr8YfFjop58wINxBfgF72AfnZdtjXxDnuPGbMl7NUjinYMsnTkeBlZSjqQL7d5uJTcz/86LMQ0i7JiQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     peerDependencies:
       '@nestjs/common': ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0
@@ -15542,7 +15542,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@nestjs/cache-manager@12.0.2(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))(@nestjs/core@12.3.2)(cache-manager@7.2.9)(keyv@5.6.0)(rxjs@7.8.2)':
+  '@nestjs/cache-manager@12.0.5(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))(@nestjs/core@12.3.2)(cache-manager@7.2.9)(keyv@5.6.0)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0)
       '@nestjs/core': 12.3.2(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@5.5.0))(@nestjs/websockets@12.3.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
