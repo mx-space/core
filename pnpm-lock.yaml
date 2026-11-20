@@ -1071,9 +1071,6 @@ importers:
       drizzle-kit:
         specifier: ^0.31.11
         version: 0.31.11
-      mongodb:
-        specifier: ~7.9.0
-        version: 7.9.0(@mongodb-js/zstd@7.0.0)(@noble/hashes@2.4.0)
       nodemon:
         specifier: ^3.1.14
         version: 3.1.14

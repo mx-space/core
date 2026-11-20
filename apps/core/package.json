@@ -184,7 +184,6 @@
     "@types/ws": "8.18.2",
     "@vitest/coverage-v8": "^5.1.1",
     "drizzle-kit": "^0.31.11",
-    "mongodb": "~7.9.0",
     "nodemon": "^3.1.14",
     "redis-memory-server": "^0.17.1",
     "rimraf": "6.1.4",
