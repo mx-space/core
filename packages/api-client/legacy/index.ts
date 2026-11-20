@@ -1,5 +1,5 @@
-import type { HTTPClient } from '~/index'
-import { createClient } from '~/index'
+import type { HTTPClient } from '../index'
+import { createClient } from '../index'
 import type { IRequestAdapter } from '~/interfaces/adapter'
 import type { ClientOptions } from '~/interfaces/client'
 import { isPlainObject } from '~/utils'

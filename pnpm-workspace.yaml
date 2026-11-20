@@ -22,6 +22,17 @@ allowBuilds:
   workerd: true
 overrides:
   'get-pixels@^3>request': ./external/request
+  # just-bash ships a typescript dependency it never imports at runtime (checked
+  # its dist), and lexical/tsconfck/tsdown only declare optional typescript
+  # peers. Typechecks and code generation run on tsrs. Only api-client's bundled
+  # d.ts still needs the classic compiler (its chunk graph resolves the package
+  # root through `exports`), so its devDependency is the single remaining copy.
+  'just-bash>typescript': '-'
+  'run>typescript': '-'
+  'tsconfck>typescript': '-'
+  'vite-plugin-checker>typescript': '-'
+  'lexical>typescript': '-'
+  '@lexical/*>typescript': '-'
   # Keep Better Auth server, client, and plugins on the same security release.
   better-auth: 1.7.26
   '@better-auth/api-key': 1.7.26

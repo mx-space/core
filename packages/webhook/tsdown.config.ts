@@ -4,6 +4,6 @@ export default defineConfig({
   clean: true,
   target: 'es2020',
   entry: ['src/index.ts'],
-  dts: true,
+  dts: { generator: 'tsrs' },
   format: ['cjs', 'esm'],
 })

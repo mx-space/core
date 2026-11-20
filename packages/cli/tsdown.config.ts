@@ -5,7 +5,7 @@ export default defineConfig({
   target: 'es2022',
   entry: ['src/bin/mxs.ts', 'src/index.ts'],
   outDir: 'dist',
-  dts: { eager: true },
+  dts: { eager: true, generator: 'tsrs' },
   format: ['esm'],
   platform: 'node',
   deps: {

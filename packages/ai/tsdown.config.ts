@@ -16,7 +16,7 @@ export default defineConfig({
     'src/translation/index.ts',
   ],
   outDir: 'dist',
-  dts: true,
+  dts: { generator: 'tsrs' },
   format: ['esm'],
   platform: 'neutral',
   sourcemap: true,

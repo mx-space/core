@@ -5,7 +5,7 @@ export default defineConfig({
   target: 'es2022',
   entry: ['src/index.ts', 'src/schema/index.ts', 'src/id/index.ts'],
   outDir: 'dist',
-  dts: true,
+  dts: { generator: 'tsrs' },
   format: ['esm'],
   platform: 'neutral',
   sourcemap: true,

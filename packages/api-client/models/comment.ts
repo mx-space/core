@@ -1,6 +1,5 @@
-import { CollectionRefTypes } from '@mx-space/db-schema'
-
 import type { CategoryModel } from './category'
+import { CollectionRefTypes } from './ref-types'
 
 export { CollectionRefTypes }
 

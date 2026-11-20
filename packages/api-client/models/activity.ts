@@ -1,6 +1,5 @@
-import type { CollectionRefTypes } from '@mx-space/db-schema'
-
 import type { CategoryModel } from './category'
+import type { CollectionRefTypes } from './ref-types'
 
 export interface ActivityPresence {
   operationTime: number
