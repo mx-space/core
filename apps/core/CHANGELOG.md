@@ -1,3 +1,10 @@
+## [18.2.1](https://github.com/mx-space/core/compare/v18.2.0...v18.2.1) (2026-11-20)
+
+### Bug Fixes
+
+* **deps:** update dependency @earendil-works/pi-agent-core to v0.99.2 ([#2902](https://github.com/mx-space/core/issues/2902)) ([28ab515](https://github.com/mx-space/core/commit/28ab515910b7a89acc8c42fe7ca20f4fe020e0b9))
+* **deps:** update dependency @earendil-works/pi-ai to v0.99.2 ([#2903](https://github.com/mx-space/core/issues/2903)) ([6025e95](https://github.com/mx-space/core/commit/6025e95657c4e686fd506ff81504656898a16ab0))
+
 ## [18.2.0](https://github.com/mx-space/core/compare/v18.1.0...v18.2.0) (2026-11-19)
 
 ### Features
