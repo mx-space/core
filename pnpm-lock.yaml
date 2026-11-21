@@ -222,7 +222,7 @@ overrides:
   '@lexical/yjs': 0.53.0
   '@esbuild-kit/core-utils>esbuild': 0.25.12
   '@cloudflare/workers-types': 5.20261118.1
-  '@fastify/static': 10.1.11
+  '@fastify/static': 10.1.12
   brace-expansion@<1.1.16: 1.1.22
   brace-expansion@>=2.0.0 <2.1.2: 2.1.8
   brace-expansion@>=3.0.0 <5.0.8: 5.0.13
@@ -737,8 +737,8 @@ importers:
         specifier: 10.1.9
         version: 10.1.9
       '@fastify/static':
-        specifier: 10.1.11
-        version: 10.1.11
+        specifier: 10.1.12
+        version: 10.1.12
       '@haklex/rich-collab-loro':
         specifier: 0.67.0
         version: 0.67.0(lexical@0.53.0(typescript@6.0.3))(loro-crdt@1.18.0)
@@ -810,7 +810,7 @@ importers:
         version: 12.0.1(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(reflect-metadata@0.2.2)
       '@nestjs/platform-fastify':
         specifier: 12.5.1
-        version: 12.5.1(@fastify/multipart@10.1.9)(@fastify/static@10.1.11)(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.5.1)(rxjs@7.8.2)
+        version: 12.5.1(@fastify/multipart@10.1.9)(@fastify/static@10.1.12)(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.5.1)(rxjs@7.8.2)
       '@nestjs/platform-ws':
         specifier: 12.5.1
         version: 12.5.1(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/websockets@12.5.1)(rxjs@7.8.2)
@@ -2611,8 +2611,8 @@ packages:
   '@fastify/send@4.2.1':
     resolution: {integrity: sha512-zOB8L9z444PnGbd1Nd7gNXPz/7bnDR8Z4KNTNSwLVQuE3cTGsU9qUj1N4SjXKK0Tq4cauZYTwB+tqvlqosuKsw==}
 
-  '@fastify/static@10.1.11':
-    resolution: {integrity: sha512-WjEpDqkzOziIipghh4ki3ZNfLCmI1kRWlYKar3+9FiuY2LzoeogKiDqxIH68r6vYUSxvUzyEiV1BOP0yfW+glQ==}
+  '@fastify/static@10.1.12':
+    resolution: {integrity: sha512-D0pmf8OgurIsKiIjxC8ZJP/bCYnUSAiU6PS/se/6Me63UoliAu8FqrzDRX8FdgJMqFMXy45ISlfUZ1Gi6AJnqA==}
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -4134,7 +4134,7 @@ packages:
     resolution: {integrity: sha512-Ltp2VQrGDP2RcHYUVL0UyQcwes4UVxQjWyv2ULzQ3zU8IYWXfvgeqOdDoxoNoeG3jyD3gnBugkikmr6nuKPI2Q==}
     peerDependencies:
       '@fastify/multipart': ^10.1.0
-      '@fastify/static': 10.1.11
+      '@fastify/static': 10.1.12
       '@fastify/view': ^10.0.0 || ^11.0.0 || ^12.0.0
       '@nestjs/common': ^12.0.0
       '@nestjs/core': ^12.0.0
@@ -12054,7 +12054,7 @@ snapshots:
       http-errors: 2.0.1
       mime: 3.0.0
 
-  '@fastify/static@10.1.11':
+  '@fastify/static@10.1.12':
     dependencies:
       '@fastify/accept-negotiator': 2.1.2
       '@fastify/error': 4.2.1
@@ -13670,7 +13670,7 @@ snapshots:
       '@nestjs/common': 12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2)
       reflect-metadata: 0.2.2
 
-  '@nestjs/platform-fastify@12.5.1(@fastify/multipart@10.1.9)(@fastify/static@10.1.11)(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.5.1)(rxjs@7.8.2)':
+  '@nestjs/platform-fastify@12.5.1(@fastify/multipart@10.1.9)(@fastify/static@10.1.12)(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.5.1)(rxjs@7.8.2)':
     dependencies:
       '@fastify/cors': 11.4.1
       '@fastify/formbody': 9.0.1
@@ -13686,7 +13686,7 @@ snapshots:
       tslib: 2.9.1
     optionalDependencies:
       '@fastify/multipart': 10.1.9
-      '@fastify/static': 10.1.11
+      '@fastify/static': 10.1.12
 
   '@nestjs/platform-ws@12.5.1(@nestjs/common@12.5.1(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/websockets@12.5.1)(rxjs@7.8.2)':
     dependencies:
