@@ -1242,8 +1242,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(effect@4.1.4)(redis@6.3.1)
       '@effect/vitest':
-        specifier: 4.1.4
-        version: 4.1.4(effect@4.1.4)(vitest@5.1.1)
+        specifier: 4.1.5
+        version: 4.1.5(effect@4.1.4)(vitest@5.1.1)
       '@haklex/rich-collab-loro':
         specifier: 0.67.0
         version: 0.67.0(lexical@0.53.0(typescript@6.0.3))(loro-crdt@1.18.0)
@@ -2200,10 +2200,10 @@ packages:
       effect: ^4.1.5
       redis: '>=5.1.0 <7.0.0'
 
-  '@effect/vitest@4.1.4':
-    resolution: {integrity: sha512-AKpZ6zKihCRhY7hDbiQ2yp/krw+afIkxDRjFMwwzMiyhd0iYk0WaHa9J6GGC7TUF/C7HP2dZyMVq5xC0Qm/2/g==}
+  '@effect/vitest@4.1.5':
+    resolution: {integrity: sha512-18u1013wkJtSelk1ZYLc/5aUnluTQyDfi2hAemkJW1GQ9qXw4mtPSiSf0AXZPhesmGCvG1Dk2C4JYD2sz+R72w==}
     peerDependencies:
-      effect: ^4.1.4
+      effect: ^4.1.5
       vitest: '>=5.0.0 <6.0.0'
 
   '@emnapi/core@2.0.0-beta.2':
@@ -11740,7 +11740,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/vitest@4.1.4(effect@4.1.4)(vitest@5.1.1)':
+  '@effect/vitest@4.1.5(effect@4.1.4)(vitest@5.1.1)':
     dependencies:
       effect: 4.1.4
       vitest: 5.1.1(@types/node@26.6.6)(@vitest/coverage-v8@5.1.1)(happy-dom@21.0.4)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
