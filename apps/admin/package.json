@@ -76,7 +76,7 @@
     "@mx-space/ws-client": "workspace:*",
     "@pierre/diffs": "1.6.4",
     "@rehookify/datepicker": "6.6.8",
-    "@tanstack/react-query": "5.108.0",
+    "@tanstack/react-query": "5.108.2",
     "@types/canvas-confetti": "1.9.0",
     "@uswriting/exiftool": "^1.0.9",
     "@xterm/addon-fit": "0.11.0",
