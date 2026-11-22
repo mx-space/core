@@ -849,7 +849,7 @@ importers:
         version: 1.0.5
       dodopayments:
         specifier: ^2.63.0
-        version: 2.63.0
+        version: 2.63.1
       dotenv:
         specifier: ^18.0.5
         version: 18.0.10
@@ -6923,8 +6923,8 @@ packages:
     resolution: {integrity: sha512-avsq/xk4YPIrn0CgleX5bjT9Y8IT1p9PxrNQ++RBQ2WEyFfHCTDsT9kmyxz+H/axnjAwg8wJWEIuPGOUuNupiA==}
     engines: {node: '>= 14.17'}
 
-  dodopayments@2.63.0:
-    resolution: {integrity: sha512-rxpmOOoTRGHZQ9e1/7IdcBK+B8h32wDMveF1S0SjOvaKbe+wC6bGg8KEoBJ8YsdZAFJOcwhiLJql2ev+UwufvQ==}
+  dodopayments@2.63.1:
+    resolution: {integrity: sha512-8tlZTOM//+pjtfIqzLHXfDwq+zAIe/uyRtXJ0ezbJUBNEUHREqy6LHvzSdalUoWaorgkoSaDK3TY7oo+PjC61g==}
     hasBin: true
 
   dom-serializer@2.0.0:
@@ -16397,7 +16397,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  dodopayments@2.63.0:
+  dodopayments@2.63.1:
     dependencies:
       standardwebhooks: 1.3.0
 
