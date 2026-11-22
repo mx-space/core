@@ -1027,7 +1027,7 @@ importers:
         version: 1.16.22
       '@testcontainers/postgresql':
         specifier: ^12.2.1
-        version: 12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)
+        version: 12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)
       '@types/babel__core':
         specifier: 7.20.5
         version: 7.20.5
@@ -1090,7 +1090,7 @@ importers:
         version: 0.35.5(@types/node@26.6.6)
       testcontainers:
         specifier: ^12.2.1
-        version: 12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)
+        version: 12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)
       tsrs:
         specifier: 0.20.1-ts7.1.0-beta
         version: 0.20.1-ts7.1.0-beta
@@ -1356,7 +1356,7 @@ importers:
         version: 1.16.22
       '@testcontainers/postgresql':
         specifier: ^12.2.1
-        version: 12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)
+        version: 12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
@@ -1374,7 +1374,7 @@ importers:
         version: 8.23.1
       testcontainers:
         specifier: ^12.2.1
-        version: 12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)
+        version: 12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)
       tsrs:
         specifier: 0.20.1-ts7.1.0-beta
         version: 0.20.1-ts7.1.0-beta
@@ -5398,8 +5398,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@testcontainers/postgresql@12.2.1':
-    resolution: {integrity: sha512-MIbI5KjZ9M4SY4+xzxg/w4ZLBeV+Jd6ognXoWn7dh/mhIhBbn7ss0MiZHNg2XbCbu03BW9YQ9+H9xW8PFkJWaA==}
+  '@testcontainers/postgresql@12.2.2':
+    resolution: {integrity: sha512-ePhFeUswU6aHJ1HETznfnVKuR0KYtGkMfqE1DTltgSt21WokXFby/I+c7g/fPXSE9sfxfE+GtyoUeohejpVcSA==}
 
   '@tokenizer/inflate@0.4.1':
     resolution: {integrity: sha512-2mAv+8pkG6GIZiF1kNg1jAjh27IDxEPKwdGul3snfztFerfPGI1LjDezZp3i7BElXompqEtPmoPx6c2wgtWsOA==}
@@ -5744,12 +5744,6 @@ packages:
 
   '@types/serve-static@2.2.0':
     resolution: {integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==}
-
-  '@types/ssh2-streams@0.1.13':
-    resolution: {integrity: sha512-faHyY3brO9oLEA0QlcO8N2wT7R0+1sHWZvQ+y3rMLwdY1ZyS1z0W3t65j9PqT4HmQ6ALzNe7RZlNuCNE0wBSWA==}
-
-  '@types/ssh2@0.5.52':
-    resolution: {integrity: sha512-lbLLlXxdCZOSJMCInKH2+9V/77ET2J6NPQHpFI0kda61Dd1KglJs+fPQBchizmzYSOJBgdTajhPqBO1xxLywvg==}
 
   '@types/ssh2@1.15.6':
     resolution: {integrity: sha512-oGdxhBqcRTwSTKFm+9EiKzkNVYRLEFkcW44lhguvBalGJbWfGnDt/ezwSUZc+SF9m9bMc3VyklNAtp7zICjS5w==}
@@ -9743,9 +9737,6 @@ packages:
   sql.js@1.16.0:
     resolution: {integrity: sha512-q/JOZuJfmVh8Zf8Eo+cMJvtxAWeWBqTfJ6AQYGXZmcaLGHMwhA2niH3fQYHrBtPeOss1ttzHec07K5+rHaMRMw==}
 
-  ssh-remote-port-forward@1.0.4:
-    resolution: {integrity: sha512-x0LV1eVDwjf1gmG7TTnfqIzf+3VPRz7vrNIjX6oYLbeCrf/PeVY6hkT68Mg+q02qXxQhrLjB0jfgvhevoCRmLQ==}
-
   ssh2@1.17.0:
     resolution: {integrity: sha512-wPldCk3asibAjQ/kziWQQt1Wh3PgDFpC0XpwclzKcdT1vql6KeYxf5LIt4nlFkUeR8WuphYMKqUA56X4rjbfgQ==}
     engines: {node: '>=10.16.0'}
@@ -9920,8 +9911,8 @@ packages:
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
 
-  testcontainers@12.2.1:
-    resolution: {integrity: sha512-JfbCyOvLdzatwgqUI3AvYCwRW0P5mCkKQVBPO8U5qSH1efC2kHvnfWmi9VHloy1rAFG2MEqWZObRH4bq0gU1kQ==}
+  testcontainers@12.2.2:
+    resolution: {integrity: sha512-ndmRB+wQnCd7YkelXoUtLVUFUQ3CrbIPmldSWzY8p1pXy09lBC/Hm99RYRCL2brHve/xNWCJX35173peMj5LUg==}
     engines: {node: '>= 22.22'}
 
   text-decoder@1.2.7:
@@ -14845,9 +14836,9 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  '@testcontainers/postgresql@12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)':
+  '@testcontainers/postgresql@12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)':
     dependencies:
-      testcontainers: 12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2)
+      testcontainers: 12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2)
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -15222,15 +15213,6 @@ snapshots:
     dependencies:
       '@types/http-errors': 2.0.5
       '@types/node': 26.6.6
-
-  '@types/ssh2-streams@0.1.13':
-    dependencies:
-      '@types/node': 26.6.6
-
-  '@types/ssh2@0.5.52':
-    dependencies:
-      '@types/node': 26.6.6
-      '@types/ssh2-streams': 0.1.13
 
   '@types/ssh2@1.15.6':
     dependencies:
@@ -19545,11 +19527,6 @@ snapshots:
 
   sql.js@1.16.0: {}
 
-  ssh-remote-port-forward@1.0.4:
-    dependencies:
-      '@types/ssh2': 0.5.52
-      ssh2: 1.17.0
-
   ssh2@1.17.0:
     dependencies:
       asn1: 0.2.6
@@ -19779,7 +19756,7 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
-  testcontainers@12.2.1(bare-buffer@3.7.3)(supports-color@10.2.2):
+  testcontainers@12.2.2(bare-buffer@3.7.3)(supports-color@10.2.2):
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/dockerode': 4.0.2
@@ -19792,7 +19769,7 @@ snapshots:
       get-port: 5.1.1
       proper-lockfile: 4.1.2
       properties-reader: 3.0.1(supports-color@10.2.2)
-      ssh-remote-port-forward: 1.0.4
+      ssh2: 1.17.0
       tar-fs: 3.1.3(bare-buffer@3.7.3)
       tmp: 0.2.7
       undici: 8.12.4
