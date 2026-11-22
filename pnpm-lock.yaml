@@ -1240,10 +1240,10 @@ importers:
         version: 1.9.0
       '@effect/platform-node':
         specifier: 4.1.5
-        version: 4.1.5(effect@4.1.4)(redis@6.3.1)
+        version: 4.1.5(effect@4.1.5)(redis@6.3.1)
       '@effect/vitest':
         specifier: 4.1.5
-        version: 4.1.5(effect@4.1.4)(vitest@5.1.1)
+        version: 4.1.5(effect@4.1.5)(vitest@5.1.1)
       '@haklex/rich-collab-loro':
         specifier: 0.67.0
         version: 0.67.0(lexical@0.53.0(typescript@6.0.3))(loro-crdt@1.18.0)
@@ -1272,8 +1272,8 @@ importers:
         specifier: 1.7.26
         version: 1.7.26(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@cloudflare/workers-types@5.20261118.1)(@types/pg@8.23.1)(kysely@0.29.9)(pg@8.23.1)(sql.js@1.16.0))(pg@8.23.1)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@5.1.1)
       effect:
-        specifier: 4.1.4
-        version: 4.1.4
+        specifier: 4.1.5
+        version: 4.1.5
       fast-xml-parser:
         specifier: 5.12.1
         version: 5.12.1
@@ -7100,8 +7100,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@4.1.4:
-    resolution: {integrity: sha512-Tgrv/9FN+TZYyOn8XSli+fVqAfwDrDAkiX5Uu9vztINb675VTQdhD0gWI5Kzvhlh9QqzjZvw72iugqw5pwoghQ==}
+  effect@4.1.5:
+    resolution: {integrity: sha512-xyR20KhQI0vg2gD8ILUSQRTTESEYJ0JKdP+QD8J37xbwPTqXRxFM/l0+vUVD9fuSvoYruoTqyt33C4FZv1s4TQ==}
 
   ejs@7.0.2:
     resolution: {integrity: sha512-LcDSEP6Oclb9sTiSyG0MpG0RuKvLDRxCOOt+2sIk+kdk1rMkFU8SRnT0qaNt5zvU0LOV1YXXOvIoZL/sKwabvw==}
@@ -11721,28 +11721,28 @@ snapshots:
 
   '@earendil-works/pi-telemetry@0.99.2': {}
 
-  '@effect/platform-node-shared@4.1.5(effect@4.1.4)':
+  '@effect/platform-node-shared@4.1.5(effect@4.1.5)':
     dependencies:
       '@types/ws': 8.18.2
-      effect: 4.1.4
+      effect: 4.1.5
       ws: 8.23.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.1.5(effect@4.1.4)(redis@6.3.1)':
+  '@effect/platform-node@4.1.5(effect@4.1.5)(redis@6.3.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.1.5(effect@4.1.4)
-      effect: 4.1.4
+      '@effect/platform-node-shared': 4.1.5(effect@4.1.5)
+      effect: 4.1.5
       redis: 6.3.1
       undici: 8.12.4
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/vitest@4.1.5(effect@4.1.4)(vitest@5.1.1)':
+  '@effect/vitest@4.1.5(effect@4.1.5)(vitest@5.1.1)':
     dependencies:
-      effect: 4.1.4
+      effect: 4.1.5
       vitest: 5.1.1(@types/node@26.6.6)(@vitest/coverage-v8@5.1.1)(happy-dom@21.0.4)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   '@emnapi/core@2.0.0-beta.2':
@@ -16484,7 +16484,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@4.1.4: {}
+  effect@4.1.5: {}
 
   ejs@7.0.2: {}
 
