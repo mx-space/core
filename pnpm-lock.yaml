@@ -962,8 +962,8 @@ importers:
         specifier: 0.2.2
         version: 0.2.2
       remove-markdown:
-        specifier: 0.8.0
-        version: 0.8.0
+        specifier: 0.8.1
+        version: 0.8.1
       remove-md-codeblock:
         specifier: 0.0.4
         version: 0.0.4
@@ -9530,8 +9530,8 @@ packages:
   remend@1.5.0:
     resolution: {integrity: sha512-A65+1l1jPGiZZsLD6QqL7foG8KBK2xMIjlr5Vm8R3kGAnVinjxFhdhHf3/zU5wPHrrsC87KqHztG7p1TD5i1HQ==}
 
-  remove-markdown@0.8.0:
-    resolution: {integrity: sha512-VP1v6BYAa6VlLPHzr3JpVDV+f2IHqLKBauXZm08alrB9rJC4mQ1IoePsWOzpJx8GTfFwF+j6fmCtI8DLh1qIdA==}
+  remove-markdown@0.8.1:
+    resolution: {integrity: sha512-vMYUaV+6fFY0IbO7sig/ZaZM3Kj/jZV8/TEqan/dR/U25AGGPKnM6j0SwljWH9uN0ph+F5w8DJ91IQOyKqb1yw==}
 
   remove-md-codeblock@0.0.4:
     resolution: {integrity: sha512-DE77wmQz99pE0Ma3SjOt1+ihHkzGgLHtSR58XzGWHvcCkQFfdV/YRAbRruHpBRrcppCLEMW+iJoSy/VpIaq7UA==}
@@ -19421,7 +19421,7 @@ snapshots:
 
   remend@1.5.0: {}
 
-  remove-markdown@0.8.0: {}
+  remove-markdown@0.8.1: {}
 
   remove-md-codeblock@0.0.4: {}
 
