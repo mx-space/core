@@ -69,7 +69,7 @@
     "@earendil-works/pi-agent-core": "0.99.2",
     "@earendil-works/pi-ai": "0.99.2",
     "@fastify/multipart": "10.1.9",
-    "@fastify/static": "10.1.11",
+    "@fastify/static": "10.1.12",
     "@haklex/rich-collab-loro": "0.67.0",
     "@haklex/rich-headless": "0.67.0",
     "@innei/message-engine": "0.5.0",
