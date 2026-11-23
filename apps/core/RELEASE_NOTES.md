@@ -1,13 +1,12 @@
 ## TL;DR
 
-Internal maintenance release; no user-facing changes.
+Dependency refresh: the AI runtime moves to pi-ai 1.6, which retries more transient provider errors, alongside NestJS 12.6 and Better Auth 1.7.27.
 
 ## Changes
 
-- Refreshed workspace dependencies to their latest patch/minor releases (NestJS 12.5.1, `@haklex/*` 0.67.0, better-auth 1.7.26, rolldown 1.3.3, vite 8.3.8, `@earendil-works/pi-*` 0.99.2).
-- Replaced ESLint with oxlint for repository linting and moved declaration builds/codegen to tsrs.
-- Removed the finished `packages/mongo-pg-cli` migration tool from the monorepo; the published `@mx-space/mongo-pg-cli` npm package remains available for v11 → v12 data migrations.
+- The AI runtime (pi-ai / pi-agent-core) is upgraded from 0.99 to 1.6. More transient provider failures (connection resets, gateway and upstream errors, Cloudflare 525) are now retried automatically, and Anthropic requests continue server-side message threads instead of resending the whole conversation. Tool arguments are validated and coerced against their JSON Schema by pi's own validator. ([ff7860a](https://github.com/mx-space/core/commit/ff7860a07604ef11e85dd40a1dd587422da7625c))
+- Server dependencies are refreshed to their latest patch and minor releases, including NestJS 12.6.0, Better Auth 1.7.27, undici 8.13.1, nodemailer 10.6.1 and @fastify/static 10.1.12. ([d314260](https://github.com/mx-space/core/commit/d31426045fa72157b3bc368bd0998c69be892cf9))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v18.2.0...v18.2.1
+**Full Changelog**: https://github.com/mx-space/core/compare/v18.2.1...v18.2.2

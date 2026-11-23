@@ -1,3 +1,5 @@
+## [18.2.2](https://github.com/mx-space/core/compare/v18.2.1...v18.2.2) (2026-11-23)
+
 ## [18.2.1](https://github.com/mx-space/core/compare/v18.2.0...v18.2.1) (2026-11-20)
 
 ### Bug Fixes
