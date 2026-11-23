@@ -1,3 +1,9 @@
+## [18.2.3](https://github.com/mx-space/core/compare/v18.2.2...v18.2.3) (2026-11-23)
+
+### Bug Fixes
+
+* **deps:** stop forcing rolldown 1.3 onto vite ([adc1a95](https://github.com/mx-space/core/commit/adc1a954e74ee042a0bcf80a74150dbe3f3fa90f))
+
 ## [18.2.2](https://github.com/mx-space/core/compare/v18.2.1...v18.2.2) (2026-11-23)
 
 ## [18.2.1](https://github.com/mx-space/core/compare/v18.2.0...v18.2.1) (2026-11-20)
