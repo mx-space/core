@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/better-regex */
-import type { TSchema } from '@earendil-works/pi-ai'
 import JSON5 from 'json5'
 import { jsonrepair } from 'jsonrepair'
+import type { TSchema } from 'typebox'
 import { Value } from 'typebox/value'
 
 import { type AiLogger, createAiLogger } from '../environment'

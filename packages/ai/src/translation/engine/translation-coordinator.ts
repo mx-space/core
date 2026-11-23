@@ -1,4 +1,4 @@
-import { Type } from '@earendil-works/pi-ai'
+import { Type } from 'typebox'
 
 import type { EngineTool, SubAgentSpec } from '../../engine'
 import { invokeSubAgent, runEngineLoop, VirtualFs } from '../../engine'

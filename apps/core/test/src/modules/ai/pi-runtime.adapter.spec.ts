@@ -7,7 +7,6 @@ import {
   fauxText,
   fauxThinking,
   fauxToolCall,
-  Type,
 } from '@earendil-works/pi-ai'
 import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
 import {
@@ -15,6 +14,7 @@ import {
   PiRuntimeAdapter,
   resolveOpenAICompatibleBaseUrl,
 } from '@mx-space/ai/runtime'
+import { Type } from 'typebox'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { withFauxAi } from '@/helper/faux-ai.helper'

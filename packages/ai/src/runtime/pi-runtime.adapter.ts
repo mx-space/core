@@ -7,9 +7,7 @@ import type {
   Message as PiMessage,
   Model,
   ProviderStreamOptions,
-  Static,
   Tool,
-  TSchema,
 } from '@earendil-works/pi-ai'
 import { isContextOverflow, validateToolCall } from '@earendil-works/pi-ai'
 import { complete, stream } from '@earendil-works/pi-ai/compat'
@@ -19,6 +17,7 @@ import {
 } from '@earendil-works/pi-ai/providers/all'
 import { isPlainObject } from 'es-toolkit/compat'
 import { jsonrepair } from 'jsonrepair'
+import type { Static, TSchema } from 'typebox'
 import { Value } from 'typebox/value'
 
 import { createAiLogger, isAiDebugEnabled } from '../environment'

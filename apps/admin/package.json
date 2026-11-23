@@ -141,7 +141,7 @@
     "code-inspector-plugin": "2.0.9",
     "happy-dom": "^20.14.5",
     "tailwindcss": "^4.3.3",
-    "tsrs": "0.20.1-ts7.1.0-beta",
+    "tsrs": "7.1.0-beta.tsrs4",
     "vite": "8.3.8",
     "vite-plugin-checker": "0.14.5",
     "vitest": "^5.1.1"

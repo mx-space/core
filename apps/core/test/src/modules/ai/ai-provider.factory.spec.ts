@@ -1,6 +1,6 @@
-import { Type } from '@earendil-works/pi-ai'
 import { registerBuiltInApiProviders } from '@earendil-works/pi-ai/compat'
 import { createModelRuntime, PiRuntimeAdapter } from '@mx-space/ai/runtime'
+import { Type } from 'typebox'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AIProviderType } from '~/modules/ai/ai.types'

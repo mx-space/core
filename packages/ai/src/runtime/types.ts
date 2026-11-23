@@ -1,9 +1,5 @@
-import type {
-  Api,
-  Message as PiMessage,
-  Tool,
-  TSchema,
-} from '@earendil-works/pi-ai'
+import type { Api, Message as PiMessage, Tool } from '@earendil-works/pi-ai'
+import type { TSchema } from 'typebox'
 
 import type { ModelPricing } from './model-pricing'
 import type { AIProviderType } from './provider.types'

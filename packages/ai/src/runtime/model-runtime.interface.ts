@@ -1,8 +1,5 @@
-import type {
-  AssistantMessageEventStream,
-  Static,
-  TSchema,
-} from '@earendil-works/pi-ai'
+import type { AssistantMessageEventStream } from '@earendil-works/pi-ai'
+import type { Static, TSchema } from 'typebox'
 
 import type { AIProviderCapability } from './provider.types'
 import type {

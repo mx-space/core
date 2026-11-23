@@ -1,5 +1,5 @@
-import type { TSchema } from '@earendil-works/pi-ai'
-import { Type } from '@earendil-works/pi-ai'
+import type { TSchema } from 'typebox'
+import { Type } from 'typebox'
 
 import type { EngineTool, SubAgentSpec, VirtualFs } from '../../engine'
 import { invokeSubAgent } from '../../engine'

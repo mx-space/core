@@ -1,4 +1,4 @@
-import type { TSchema } from '@earendil-works/pi-ai'
+import type { TSchema } from 'typebox'
 import { Value } from 'typebox/value'
 
 export interface EngineToolResult {

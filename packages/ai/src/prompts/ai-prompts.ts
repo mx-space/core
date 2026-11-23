@@ -1,5 +1,5 @@
-import type { TSchema } from '@earendil-works/pi-ai'
-import { Type } from '@earendil-works/pi-ai'
+import type { TSchema } from 'typebox'
+import { Type } from 'typebox'
 
 import type { ReasoningEffort } from '../runtime/types'
 import COMMENT_SCORE_SYSTEM from './comment-score.system.md?raw'

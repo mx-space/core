@@ -92,8 +92,8 @@
     "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@earendil-works/pi-agent-core": "0.99.2",
-    "@earendil-works/pi-ai": "0.99.2",
+    "@earendil-works/pi-agent-core": "1.6.0",
+    "@earendil-works/pi-ai": "1.6.0",
     "@haklex/rich-headless": "0.67.0",
     "@innei/message-engine": "0.5.0",
     "diff": "9.0.0",
@@ -106,7 +106,7 @@
   "devDependencies": {
     "@types/node": "26.6.6",
     "tsdown": "0.23.7",
-    "tsrs": "0.20.1-ts7.1.0-beta",
+    "tsrs": "7.1.0-beta.tsrs4",
     "vitest": "5.1.1"
   }
 }
