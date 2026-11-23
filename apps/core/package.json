@@ -133,7 +133,7 @@
     "mime-types": "^3.0.2",
     "mkdirp": "^3.0.1",
     "nanoid": "6.0.2",
-    "nodemailer": "10.6.0",
+    "nodemailer": "10.6.1",
     "object-scan": "^20.0.4",
     "octokit": "^5.0.5",
     "ofetch": "1.5.1",
