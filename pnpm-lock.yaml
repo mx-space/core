@@ -1112,8 +1112,8 @@ importers:
         specifier: 5.1.1
         version: 5.1.1(@types/node@26.6.6)(@vitest/coverage-v8@5.1.1)(happy-dom@21.0.4)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       zod-compiler:
-        specifier: 2.0.12
-        version: 2.0.12(@swc/core@1.16.22)(esbuild@0.28.2)(rolldown@1.3.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(zod@4.6.7)
+        specifier: 2.0.14
+        version: 2.0.14(@swc/core@1.16.22)(esbuild@0.28.2)(rolldown@1.3.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(zod@4.6.7)
 
   apps/telemetry:
     dependencies:
@@ -10739,8 +10739,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod-compiler@2.0.12:
-    resolution: {integrity: sha512-9JHQ0nebEpJyPY7xWHfHvaLb4G5UMDQiVjv2XLoQiR7AAj7/YrMlMtUA3lT35AMDfhUXtZ5Als1iFDWjXTf3dA==}
+  zod-compiler@2.0.14:
+    resolution: {integrity: sha512-kBc2k2F28tL+iDkL5L0HFxyqhEdmk7MURLblTZtgwAFsib2ZEhza9MXG8DJV0afV1Jn0dAtAT8QlglIW8ch62g==}
     hasBin: true
     peerDependencies:
       '@rsbuild/core': ^1.0.0 || ^2.0.0
@@ -20583,7 +20583,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.8.0
 
-  zod-compiler@2.0.12(@swc/core@1.16.22)(esbuild@0.28.2)(rolldown@1.3.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(zod@4.6.7):
+  zod-compiler@2.0.14(@swc/core@1.16.22)(esbuild@0.28.2)(rolldown@1.3.3)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))(zod@4.6.7):
     dependencies:
       '@jridgewell/remapping': 2.3.5
       acorn: 8.19.0
