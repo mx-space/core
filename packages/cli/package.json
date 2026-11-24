@@ -60,15 +60,15 @@
     "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@haklex/rich-litexml": "0.67.1",
+    "@haklex/rich-litexml": "0.67.2",
     "loro-crdt": "^1.18.0"
   },
   "devDependencies": {
     "@clack/prompts": "^1.9.0",
     "@effect/platform-node": "4.1.5",
     "@effect/vitest": "4.1.5",
-    "@haklex/rich-collab-loro": "0.67.1",
-    "@haklex/rich-headless": "0.67.1",
+    "@haklex/rich-collab-loro": "0.67.2",
+    "@haklex/rich-headless": "0.67.2",
     "@lexical/headless": "^0.53.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
