@@ -94,7 +94,7 @@ function locate(xml: string, search: string): Match {
   return { count: hits.length, start, end }
 }
 
-const escapeText = (xml: string) =>
+const escapeMarkup = (xml: string) =>
   xml
     .split(/(<[^>]*>)/)
     .map((part, i) =>
@@ -105,6 +105,12 @@ const escapeText = (xml: string) =>
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&apos;'),
     )
+    .join('')
+
+const escapeText = (xml: string) =>
+  xml
+    .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
+    .map((part, i) => (i % 2 === 1 ? part : escapeMarkup(part)))
     .join('')
 
 function currentBlockHint(xml: string, search: string): string {

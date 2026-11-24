@@ -75,6 +75,16 @@ describe('applyPatchBlocks', () => {
     expect(out).toContain('<p id="p2">花了两个周末。</p>')
   })
 
+  it('keeps CDATA bodies verbatim, angle brackets and quotes included', () => {
+    const chart =
+      '<chart id="c1"><![CDATA[{"source":"git cat-file -s <commit>:skills/<name>/SKILL.md","x":"k"}]]></chart>'
+    const out = applyPatchBlocks(
+      doc,
+      parsePatchBlocks(block('<p id="p3">重复的一句。</p>', chart)),
+    )
+    expect(out).toContain(chart)
+  })
+
   it('escapes raw ampersands in REPLACE text', () => {
     const out = applyPatchBlocks(
       doc,
