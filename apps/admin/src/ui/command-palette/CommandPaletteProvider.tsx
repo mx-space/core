@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 import { appRoutes } from 'virtual:admin-routes'
 
 import { useI18n } from '~/i18n'
@@ -18,7 +18,7 @@ export function CommandPaletteProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    return tinykeys(window, {
+    return bindPageShortcuts({
       '$mod+KeyK': (event) => {
         event.preventDefault()
         setOpen((value) => !value)

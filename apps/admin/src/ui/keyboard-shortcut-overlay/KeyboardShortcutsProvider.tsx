@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 
 import { ShortcutOverlay } from './ShortcutOverlay'
 
@@ -78,15 +78,8 @@ export function KeyboardShortcutsProvider(props: PropsWithChildren) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    return tinykeys(window, {
+    return bindPageShortcuts({
       'Shift+?': (event) => {
-        const target = event.target
-        if (
-          target instanceof HTMLElement &&
-          target.matches('input, textarea, select, [contenteditable="true"]')
-        ) {
-          return
-        }
         event.preventDefault()
         setIsOpen((value) => !value)
       },

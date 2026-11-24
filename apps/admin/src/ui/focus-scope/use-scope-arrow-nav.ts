@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import type { KeybindingsMap } from 'tinykeys'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 
-import { isItemVisible, isTextInputTarget } from './dom-utils'
+import { isItemVisible } from './dom-utils'
 import { getActiveScopeId, setLastFocusedItem } from './hooks'
 
 export interface UseScopeArrowNavOptions {
@@ -221,7 +221,6 @@ export function useScopeArrowNav(options: UseScopeArrowNavOptions): void {
         // branches of MasterDetailLayout) already handled this event.
         if (lastHandledEvent === event) return
         if (!isReachable()) return
-        if (isTextInputTarget(event.target)) return
         lastHandledEvent = event
         event.preventDefault()
         handler(event)
@@ -246,6 +245,6 @@ export function useScopeArrowNav(options: UseScopeArrowNavOptions): void {
         })
       }
     }
-    return tinykeys(window, map)
+    return bindPageShortcuts(map)
   }, [options.enabled])
 }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 
-import { isItemVisible, isTextInputTarget } from './dom-utils'
+import { isItemVisible } from './dom-utils'
 import { getActiveScopeId, getLastFocusedItem, setActiveScope } from './hooks'
 import { notifyScopeItemFocus } from './use-scope-arrow-nav'
 
@@ -146,12 +146,11 @@ export function useScopeSwitcher(options: UseScopeSwitcherOptions = {}): void {
     const gated =
       (handler: (event: KeyboardEvent) => void) => (event: KeyboardEvent) => {
         if (!getActiveScopeId()) return
-        if (isTextInputTarget(event.target)) return
         event.preventDefault()
         handler(event)
       }
 
-    return tinykeys(window, {
+    return bindPageShortcuts({
       ArrowLeft: gated(() => move(-1)),
       ArrowRight: gated(() => move(1)),
       h: gated(() => move(-1)),

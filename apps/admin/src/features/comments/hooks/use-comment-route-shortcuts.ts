@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 
 import type { CommentTab } from '~/models/comment'
 
@@ -16,7 +16,7 @@ export function useCommentRouteShortcuts(deps: UseCommentRouteShortcutsDeps) {
   useEffect(() => {
     if (!enabled) return
     if (typeof window === 'undefined') return
-    return tinykeys(window, {
+    return bindPageShortcuts({
       'g u': () => navigateTab('unread'),
       'g r': () => navigateTab('read'),
       'g j': () => navigateTab('junk'),

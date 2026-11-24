@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { tinykeys } from 'tinykeys'
+import { bindPageShortcuts } from '~/ui/focus-scope/bind-page-shortcuts'
 import type { KeybindingsMap } from 'tinykeys'
 import type { ListAction } from './types'
 
@@ -76,6 +76,6 @@ export function useListShortcuts<T>(
       }
     }
 
-    return tinykeys(window, map)
+    return bindPageShortcuts(map)
   }, [shortcutKeyBag, options.enabled])
 }

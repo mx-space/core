@@ -1,6 +1,8 @@
 import { useAtom, useAtomValue } from 'jotai'
 import { useCallback, useEffect } from 'react'
 
+import { isTextInputTarget } from '~/ui/focus-scope/dom-utils'
+
 import {
   SIDEBAR_WIDTH_DEFAULT,
   SIDEBAR_WIDTH_MAX,
@@ -15,17 +17,6 @@ function clampWidth(raw: unknown): number {
   if (raw < SIDEBAR_WIDTH_MIN) return SIDEBAR_WIDTH_MIN
   if (raw > SIDEBAR_WIDTH_MAX) return SIDEBAR_WIDTH_MAX
   return raw
-}
-
-function isEditableTarget(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false
-  const tag = el.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
-  if (el.isContentEditable) return true
-  // jsdom fallback — isContentEditable can be unreliable
-  const ce = el.getAttribute('contenteditable')
-  if (ce === '' || ce === 'true' || ce === 'plaintext-only') return true
-  return false
 }
 
 export interface SidebarLayoutApi {
@@ -55,7 +46,11 @@ export function useSidebarLayout(): SidebarLayoutApi {
       const mod = e.metaKey || e.ctrlKey
       if (!mod) return
       if (e.shiftKey || e.altKey) return
-      if (isEditableTarget(document.activeElement)) return
+      if (
+        isTextInputTarget(e.target) ||
+        isTextInputTarget(document.activeElement)
+      )
+        return
       e.preventDefault()
       toggle()
     }

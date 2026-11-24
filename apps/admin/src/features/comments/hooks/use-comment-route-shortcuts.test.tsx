@@ -29,7 +29,10 @@ function mount(): Harness {
   }
 }
 
-function dispatchKey(init: KeyboardEventInit & { code?: string }) {
+function dispatchKey(
+  init: KeyboardEventInit & { code?: string },
+  target: EventTarget = window,
+) {
   act(() => {
     const event = new KeyboardEvent('keydown', { bubbles: true, ...init })
     const code = init.code ?? deriveCode(init.key ?? '')
@@ -48,7 +51,7 @@ function dispatchKey(init: KeyboardEventInit & { code?: string }) {
         },
       })
     }
-    window.dispatchEvent(event)
+    target.dispatchEvent(event)
   })
 }
 
@@ -87,6 +90,30 @@ afterEach(() => {
 })
 
 describe('useCommentRouteShortcuts', () => {
+  it.each(['.monaco-editor', '.cm-editor', '[contenteditable="true"]'])(
+    'keeps typing inside %s from activating route shortcuts',
+    (selector) => {
+      const focusComposer = vi.fn()
+      act(() => {
+        harness.root.render(
+          createElement(Probe, {
+            focusComposer,
+            focusSearch: vi.fn(),
+            navigateTab: vi.fn(),
+          }),
+        )
+      })
+      const editor = document.createElement('div')
+      if (selector.startsWith('.')) editor.className = selector.slice(1)
+      else editor.setAttribute('contenteditable', 'true')
+      const child = document.createElement('span')
+      editor.append(child)
+      harness.container.append(editor)
+      dispatchKey({ key: 'r' }, child)
+      expect(focusComposer).not.toHaveBeenCalled()
+    },
+  )
+
   it('"g u" navigates to the unread tab', () => {
     const navigateTab = vi.fn()
     act(() => {

@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 
+import { isTextInputTarget } from '~/ui/focus-scope/dom-utils'
+
 import type { SnippetModel } from '~/models/snippet'
 
 import type { SnippetTreeFolder } from '../components/SnippetList'
@@ -25,14 +27,6 @@ interface UseTreeKeyboardArgs {
   onEscape?: () => boolean
   searchInputRef: React.RefObject<HTMLInputElement | null>
   disabled?: boolean
-}
-
-function isTextInputTarget(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false
-  const tag = el.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return true
-  if (el.isContentEditable) return true
-  return false
 }
 
 export function useTreeKeyboard(args: UseTreeKeyboardArgs): void {

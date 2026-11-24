@@ -2,6 +2,8 @@ import { Search } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef } from 'react'
 
+import { isTextInputTarget } from '~/ui/focus-scope/dom-utils'
+
 import { useI18n } from '~/i18n'
 
 interface SearchRowProps {
@@ -22,10 +24,7 @@ export function SearchRow(props: SearchRowProps) {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key !== '/') return
-      const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase()
-      if (tag === 'input' || tag === 'textarea') return
-      const editable = (event.target as HTMLElement | null)?.isContentEditable
-      if (editable) return
+      if (isTextInputTarget(event.target)) return
       event.preventDefault()
       inputRef.current?.focus()
     }

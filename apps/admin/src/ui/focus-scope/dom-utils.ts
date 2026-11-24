@@ -14,8 +14,15 @@ export function isItemVisible(el: HTMLElement): boolean {
 }
 
 export function isTextInputTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  if (target.isContentEditable) return true
-  const tag = target.tagName
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+  if (!(target instanceof Element)) return false
+  if (target.closest('input, textarea, select, .monaco-editor, .cm-editor')) {
+    return true
+  }
+  const editable = target.closest('[contenteditable]')
+  return (
+    (target instanceof HTMLElement && target.isContentEditable) ||
+    editable?.matches(
+      '[contenteditable=""], [contenteditable="true" i], [contenteditable="plaintext-only" i]',
+    ) === true
+  )
 }
