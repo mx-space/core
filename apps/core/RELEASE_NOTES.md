@@ -1,12 +1,12 @@
 ## TL;DR
 
-Fixes the blank admin dashboard from v18.2.1–v18.2.2, which failed to load with "Uncaught SyntaxError: missing ) after argument list".
+Typing in the admin snippet editor now keeps focus in the editor, including when a letter also serves as a navigation shortcut.
 
 ## Changes
 
-- The bundled admin dashboard (`/proxy/qaqdmin`) loads again. A workspace-wide bundler pin built the admin with a rolldown version Vite does not support, which left invalid code at every lazy-loaded route and stopped the whole app from loading. Vite now uses its own supported rolldown version. ([adc1a95](https://github.com/mx-space/core/commit/adc1a954e74ee042a0bcf80a74150dbe3f3fa90f))
-- Security updates for build and test dependencies (happy-dom 21.0.4, fast-uri 4.2.3). ([c3e9aab](https://github.com/mx-space/core/commit/c3e9aab6c), [5af2b72](https://github.com/mx-space/core/commit/5af2b72aa))
+- Page shortcuts now respect Monaco, CodeMirror, and rich-text editing. Typing `h` in a snippet keeps the caret in place, and keyboard navigation still works outside the editor. ([561a9c7](https://github.com/mx-space/core/commit/561a9c71b067ce9502fb7616ec98006b5549aa83))
+- The bundled editor uses haklex 0.67.1, which rounds the checkbox corners in Ink checklists. ([0b1c5e1](https://github.com/mx-space/core/commit/0b1c5e1bd))
 
 ---
 
-**Full Changelog**: https://github.com/mx-space/core/compare/v18.2.2...v18.2.3
+**Full Changelog**: https://github.com/mx-space/core/compare/v18.2.3...v18.2.4

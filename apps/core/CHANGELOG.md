@@ -1,3 +1,9 @@
+## [18.2.4](https://github.com/mx-space/core/compare/v18.2.3...v18.2.4) (2026-11-24)
+
+### Bug Fixes
+
+* **admin:** keep keyboard focus in code and rich-text editors ([561a9c7](https://github.com/mx-space/core/commit/561a9c71b067ce9502fb7616ec98006b5549aa83))
+
 ## [18.2.3](https://github.com/mx-space/core/compare/v18.2.2...v18.2.3) (2026-11-23)
 
 ### Bug Fixes
