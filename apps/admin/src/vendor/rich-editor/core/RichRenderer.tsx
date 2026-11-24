@@ -2,6 +2,7 @@ import type { RichRendererProps as BaseRichRendererProps } from '@haklex/rich-co
 import { RichRenderer as BaseRichRenderer } from '@haklex/rich-compose'
 import type { RendererConfig, RichEditorVariant } from '@haklex/rich-editor'
 import { NestedContentRendererProvider } from '@haklex/rich-editor'
+import { ChartNode } from '@haklex/rich-ext-chart/static'
 import { chatNodes } from '@haklex/rich-ext-chat/static'
 import { codeSnippetNodes } from '@haklex/rich-ext-code-snippet/static'
 import { DynamicNode } from '@haklex/rich-ext-dynamic/static'
@@ -25,6 +26,7 @@ const defaultExtraNodes = [
   ...galleryNodes,
   ...codeSnippetNodes,
   ...chatNodes,
+  ChartNode,
   ...stepsNodes,
   ...pollNodes,
   ...nestedDocNodes,

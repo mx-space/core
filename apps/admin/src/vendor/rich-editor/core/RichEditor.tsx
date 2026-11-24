@@ -4,6 +4,7 @@ import {
   NestedContentRendererProvider,
   RichEditor as BaseRichEditor,
 } from '@haklex/rich-editor'
+import { ChartEditNode } from '@haklex/rich-ext-chart'
 import { chatEditNodes } from '@haklex/rich-ext-chat'
 import { codeSnippetEditNodes } from '@haklex/rich-ext-code-snippet'
 import { embedEditNodes, EmbedPlugin } from '@haklex/rich-ext-embed'
@@ -53,6 +54,7 @@ const defaultExtraNodes = [
   ...galleryEditNodes,
   ...codeSnippetEditNodes,
   ...chatEditNodes,
+  ChartEditNode,
   ...stepsEditNodes,
   ...pollEditNodes,
   AfilmoryNode,

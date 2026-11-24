@@ -123,4 +123,40 @@ describe('RichEditor', () => {
       question: poll.question,
     })
   })
+  it('keeps chart blocks when loading a document', async () => {
+    const spec = JSON.stringify({
+      data: [{ after: 9, before: 36, component: 'Toolbar' }],
+      series: [{ key: 'before' }, { key: 'after' }],
+      type: 'bar',
+      version: 1,
+      x: 'component',
+    })
+    const chartDocument = {
+      root: {
+        ...pollDocument.root,
+        children: [
+          pollDocument.root.children[0],
+          { spec, type: 'chart', version: 1 },
+        ],
+      },
+    } as unknown as SerializedEditorState
+    let editor: LexicalEditor | null = null
+    await act(async () => {
+      root.render(
+        createElement(RichEditor, {
+          initialValue: chartDocument,
+          onEditorReady: (ready: LexicalEditor | null) => {
+            editor = ready
+          },
+        }),
+      )
+    })
+
+    expect(editor).not.toBeNull()
+    const children = editor!.getEditorState().toJSON().root.children
+    expect(children).toHaveLength(2)
+    expect(children.find((node) => node.type === 'chart')).toMatchObject({
+      spec,
+    })
+  })
 })
