@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/node": "26.6.6",
     "tsdown": "0.23.7",
-    "tsrs": "7.1.0-beta.tsrs4",
+    "tsrs": "7.1.0-beta.tsrs5",
     "vitest": "5.1.1"
   }
 }
