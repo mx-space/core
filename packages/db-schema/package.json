@@ -62,6 +62,6 @@
     "@cloudflare/workers-types": "5.20261121.1",
     "@types/node": "26.6.6",
     "tsdown": "0.23.7",
-    "tsrs": "7.1.0-beta.tsrs4"
+    "tsrs": "7.1.0-beta.tsrs5"
   }
 }
