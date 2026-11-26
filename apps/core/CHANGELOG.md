@@ -1,3 +1,10 @@
+## [18.2.6](https://github.com/mx-space/core/compare/v18.2.5...v18.2.6) (2026-11-26)
+
+### Bug Fixes
+
+* **admin:** match write editor width to Yohaku article width ([fffa51a](https://github.com/mx-space/core/commit/fffa51acf9e5ebe9c5297d27a09d0a898f6e92a2))
+* **deps:** update dependency @tanstack/react-query to v5.108.4 ([#2952](https://github.com/mx-space/core/issues/2952)) ([5e5e081](https://github.com/mx-space/core/commit/5e5e08111399f0cdeb53c9551fef9aa049453db4))
+
 ## [18.2.5](https://github.com/mx-space/core/compare/v18.2.4...v18.2.5) (2026-11-25)
 
 ## [18.2.4](https://github.com/mx-space/core/compare/v18.2.3...v18.2.4) (2026-11-24)
