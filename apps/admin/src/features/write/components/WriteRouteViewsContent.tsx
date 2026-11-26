@@ -220,6 +220,18 @@ import { PeerAvatars } from './collab/PeerAvatars'
 import { RemoteCarets } from './collab/RemoteCarets'
 
 type WriteKind = 'note' | 'page' | 'post'
+
+// Measured from Yohaku's published layout (14px root, lg:pr-14 comment gutter on post/page) so drafts wrap like the live article.
+const YOHAKU_ARTICLE_WIDTH: Record<
+  WriteKind,
+  { body: number; column: number }
+> = {
+  note: { body: 750, column: 750 },
+  page: { body: 847, column: 896 },
+  post: { body: 871, column: 920 },
+}
+// haklex ContentEditable pads vars.spacing.md on each side of the editable text.
+const RICH_CONTENT_INLINE_PADDING = 16
 type ContentFormat = 'lexical' | 'markdown'
 type NoteCoordinates = { latitude: number; longitude: number }
 
@@ -2329,6 +2341,13 @@ function WritePage(props: { kind: WriteKind }) {
       : baseRelationQuery.data?.relation === 'descendant' ||
         baseRelationQuery.data?.relation === 'diverged'
   const draftKindText = getDraftKindLabel(props.kind)
+  const articleWidth = YOHAKU_ARTICLE_WIDTH[props.kind]
+  const lexicalBodyWidth = articleWidth.body + RICH_CONTENT_INLINE_PADDING * 2
+  const writeColumnStyle = {
+    maxWidth: `calc(${Math.max(articleWidth.column, lexicalBodyWidth)}px + 1.5rem)`,
+  }
+  const writeBodyMaxWidth =
+    state.contentFormat === 'lexical' ? `${lexicalBodyWidth}px` : 'none'
   const isDirty = draftSession.hasUnsavedChanges()
   const metaStatus = computeMetaStatus({
     hasConflict: Boolean(draftConflict),
@@ -2557,7 +2576,10 @@ function WritePage(props: { kind: WriteKind }) {
               innerClassName="min-h-full bg-background"
             >
               <main className="flex min-h-full min-w-0 flex-col bg-background">
-                <div className="mx-auto w-full max-w-5xl shrink-0 px-3 pt-8">
+                <div
+                  className="mx-auto w-full shrink-0 px-3 pt-8"
+                  style={writeColumnStyle}
+                >
                   {draftConflict ? (
                     <div className="mb-3 -mt-4">
                       <DraftConflictBanner
@@ -2639,46 +2661,54 @@ function WritePage(props: { kind: WriteKind }) {
                     state.contentFormat !== 'lexical' && 'pb-[200px]',
                   )}
                 >
-                  <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-3">
-                    {state.contentFormat === 'lexical' ? (
-                      <RichWriteSurface
-                        agentVisible={agentVisible}
-                        autoFocus={isEditing}
-                        content={state.content}
-                        contentClassName="!min-h-[60dvh] flex-1 px-0 pt-3 pb-[200px]"
-                        kind={props.kind}
-                        key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
-                        getMetaFields={getAgentMetaFields}
-                        metaFieldsSchema={getWriteAgentMetaSchema(props.kind)}
-                        onContentChange={(content) =>
-                          updateField('content', content)
-                        }
-                        crdt={draftSession.crdt}
-                        ensureDocument={draftSession.ensureCrdt}
-                        onMetaFieldsUpdate={applyAgentMetaUpdates}
-                        onPinSelection={() => setAsidePanel('agent')}
-                        onTextChange={(text) => updateField('text', text)}
-                        draftId={draftId || routeDraftId || undefined}
-                        refId={isEditing ? id : routeDraftId || undefined}
-                        surfaceClassName="flex min-h-[70dvh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
-                        surfaceStyle={
-                          {
-                            '--rc-max-width': 'none',
-                          } as CSSProperties
-                        }
-                      />
-                    ) : (
-                      <>
-                        <CodeMirrorEditor
+                  <div
+                    className="mx-auto flex w-full flex-1 flex-col px-3"
+                    style={writeColumnStyle}
+                  >
+                    <div
+                      className="flex w-full flex-1 flex-col"
+                      style={{ maxWidth: writeBodyMaxWidth }}
+                    >
+                      {state.contentFormat === 'lexical' ? (
+                        <RichWriteSurface
+                          agentVisible={agentVisible}
                           autoFocus={isEditing}
-                          className="min-h-136 rounded-none border-0 bg-transparent px-0 py-6 phone:py-3"
-                          onChange={(value) => updateField('text', value)}
-                          style={{ minHeight: '34rem' }}
-                          text={state.text}
+                          content={state.content}
+                          contentClassName="!min-h-[60dvh] flex-1 px-0 pt-3 pb-[200px]"
+                          kind={props.kind}
+                          key={`${props.kind}:${id || 'new'}:${state.contentFormat}`}
+                          getMetaFields={getAgentMetaFields}
+                          metaFieldsSchema={getWriteAgentMetaSchema(props.kind)}
+                          onContentChange={(content) =>
+                            updateField('content', content)
+                          }
+                          crdt={draftSession.crdt}
+                          ensureDocument={draftSession.ensureCrdt}
+                          onMetaFieldsUpdate={applyAgentMetaUpdates}
+                          onPinSelection={() => setAsidePanel('agent')}
+                          onTextChange={(text) => updateField('text', text)}
+                          draftId={draftId || routeDraftId || undefined}
+                          refId={isEditing ? id : routeDraftId || undefined}
+                          surfaceClassName="flex min-h-[70dvh] flex-1 flex-col rounded-none border-0 bg-transparent dark:bg-transparent"
+                          surfaceStyle={
+                            {
+                              '--rc-max-width': 'none',
+                            } as CSSProperties
+                          }
                         />
-                        <ImageDropZone />
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <CodeMirrorEditor
+                            autoFocus={isEditing}
+                            className="min-h-136 rounded-none border-0 bg-transparent px-0 py-6 phone:py-3"
+                            onChange={(value) => updateField('text', value)}
+                            style={{ minHeight: '34rem' }}
+                            text={state.text}
+                          />
+                          <ImageDropZone />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </main>
