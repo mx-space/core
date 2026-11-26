@@ -72,7 +72,7 @@
     "@lexical/headless": "^0.53.0",
     "@mx-space/api-client": "workspace:*",
     "@mx-space/editor": "workspace:*",
-    "@types/node": "26.6.6",
+    "@types/node": "26.6.11",
     "@types/semver": "7.8.0",
     "@types/ws": "8.18.2",
     "better-auth": "^1.7.27",
