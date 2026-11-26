@@ -47,7 +47,7 @@
     "typecheck": "tsrs -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/node": "26.6.6",
+    "@types/node": "26.6.11",
     "@types/ws": "8.18.2",
     "tsdown": "0.23.7",
     "tsrs": "7.1.0-beta.tsrs5",
