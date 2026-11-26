@@ -96,7 +96,7 @@ overrides:
   'fast-uri@>=3.0.0 <3.1.4': 3.1.9
   'fast-uri@>=4.0.0 <4.2.3': 4.2.3
   fast-xml-parser: 5.12.1
-  find-my-way: 9.9.0
+  find-my-way: 9.10.2
   immutable: 4.3.9
   'isomorphic-fetch>node-fetch': 2.7.0
   'js-yaml@>=4.0.0 <4.3.0': 4.3.2
